@@ -19,7 +19,7 @@ sudo apt install mysql-server
 
 #### WINDOWS
 
-Download mysql installer from [mysql installer](https://dev.mysql.com/downloads/installer/)
+Download mysql installer from [mysql installer](https://dev.mysql.com/downloads/installer/).
 
 ### SETUP DATABASE
 
@@ -27,7 +27,7 @@ Download mysql installer from [mysql installer](https://dev.mysql.com/downloads/
 
 ```bash
 sudo systectl start mysql
-sudo mysql -u root -p # no password for root is set by default (should be changed whatever you want)
+sudo mysql -u root -p # No password for root is set by default (should be changed in the future to whatever you want).
 ```
 
 #### WINDOWS
@@ -41,23 +41,23 @@ mysql -u root -p # no password for root is set by default (should be changed wha
 #### DATABASE
 
 ```sql
-/* Remember to change root's password (good practice for security)*/
+/* Remember to change root's password (good practice for security). */
 ALTER USER 'root'@'[server (localhost for now)]' IDENTIFIED WITH mysql_native_password BY '[new_password]';
 
-/* Import the database snapshot */
-source [absolute path to the db-snapshot.sql file]
+/* Import the database snapshot. */
+source [absolute-path-to-the-db-snapshot.sql-file]
 
-/* Create a new user for managing the articles database */
+/* Create a new user for managing the articles database. */
 CREATE USER '[user]'@'[server (localhost for now)]' IDENTIFIED BY '[password]';
 
-/* Make the new user the 'owner' of the newly created database */
+/* Make the new user the 'owner' of the newly created database. */
 GRANT ALL PRIVILEGES ON articles.* TO '[user]'@'[server (localhost for now)]';
 
-/* You can now exit the mysql cli */
+/* You can now exit the mysql cli. */
 FLUSH PRIVILEGES;
 EXIT;
 ```
 
 ```bash
-mysql -u [new_user] -p # From now on you should log in as the user created in the step above
+mysql -u [new_user] -p # From now on you should log in as the user created in the step above.
 ```

@@ -3,6 +3,7 @@
 ## RUN
 
 ```bash
+cd src
 go run .
 ```
 

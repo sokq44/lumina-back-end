@@ -10,6 +10,7 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
+import axios from "axios";
 
 const registerFormSchema = z
   .object({
@@ -17,8 +18,11 @@ const registerFormSchema = z
       .string()
       .min(5, { message: "Must be at least 5 characters long." })
       .max(50, { message: "Can't be longer than 50 characters." }),
-    email: z.string().email().min(1, { message: "This field is required." }),
-    password: z.string().min(1, { message: "This field is required" }),
+    email: z
+      .string()
+      .email({ message: "Ivalid email." })
+      .min(1, { message: "This field is required." }),
+    password: z.string().min(1, { message: "This field is required." }),
     repeatPass: z.string(),
   })
   .refine((data) => data.password === data.repeatPass, {
@@ -38,7 +42,17 @@ const RegisterPage = () => {
   });
 
   const registerFormOnSubmit = (values: z.infer<typeof registerFormSchema>) => {
-    console.log(values);
+    axios
+      .post("/api/register", {
+        body: {
+          username: values.username,
+          email: values.email,
+          password: values.password,
+        },
+      })
+      .then((response) => {
+        console.log(response);
+      });
   };
 
   return (
@@ -60,7 +74,7 @@ const RegisterPage = () => {
                   <FormControl>
                     <Input
                       type="text"
-                      placeholder={field.name}
+                      placeholder="Username"
                       autoComplete="off"
                       className="font-semibold transition-all duration-300"
                       {...field}
@@ -78,7 +92,7 @@ const RegisterPage = () => {
                   <FormControl>
                     <Input
                       type="email"
-                      placeholder={field.name}
+                      placeholder="Email"
                       autoComplete="off"
                       className="font-semibold transition-all duration-300"
                       {...field}
@@ -96,7 +110,7 @@ const RegisterPage = () => {
                   <FormControl>
                     <Input
                       type="password"
-                      placeholder={field.name}
+                      placeholder="Password"
                       autoComplete="off"
                       className="font-semibold transition-all duration-300"
                       {...field}
@@ -114,7 +128,7 @@ const RegisterPage = () => {
                   <FormControl>
                     <Input
                       type="password"
-                      placeholder="repeat password"
+                      placeholder="Repeat password"
                       autoComplete="off"
                       className="font-semibold transition-all duration-300"
                       {...field}

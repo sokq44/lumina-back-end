@@ -61,3 +61,11 @@ EXIT;
 ```bash
 mysql -u [new_user] -p # From now on you should log in as the user created in the step above.
 ```
+
+```
+DB_USER="[user]"
+DB_PASSWD="[password]"
+DB_HOST="[address]"
+DB_PORT="[port]"
+DB_DBNAME="[database name]"
+```

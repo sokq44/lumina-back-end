@@ -1,12 +1,28 @@
 package handlers
 
 import (
+	database "backend/db"
+	"encoding/json"
 	"log"
 	"net/http"
 )
 
+type User struct {
+	username string `json:username`
+	email    string `json:email`
+	passowrd string `json:password`
+}
+
 func RegisterUser(responseWriter http.ResponseWriter, request *http.Request) {
-	log.Printf("REGISTER REQUEST:\n %v\n", *request)
-	responseWriter.WriteHeader(http.StatusOK)
-	responseWriter.Write([]byte("User registered successfully"))
+	var u User
+
+	if err := json.NewDecoder(request.Body).Decode(&u); err != nil {
+		responseWriter.WriteHeader(http.StatusBadRequest)
+	} else {
+		if err := database.DB.Ping(); err != nil {
+			log.Fatal(err)
+		}
+	}
+
+	responseWriter.WriteHeader(http.StatusCreated)
 }

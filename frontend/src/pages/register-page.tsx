@@ -1,7 +1,7 @@
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import axios from "axios";
 import { z } from "zod";
-import { Input } from "@/components/ui/input";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import {
   Form,
   FormControl,
@@ -9,8 +9,8 @@ import {
   FormItem,
   FormMessage,
 } from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import axios from "axios";
 
 const registerFormSchema = z
   .object({
@@ -42,17 +42,13 @@ const RegisterPage = () => {
   });
 
   const registerFormOnSubmit = (values: z.infer<typeof registerFormSchema>) => {
-    axios
-      .post("/api/register", {
-        body: {
-          username: values.username,
-          email: values.email,
-          password: values.password,
-        },
-      })
-      .then((response) => {
-        console.log(response);
-      });
+    axios.post("/api/register", {
+      body: {
+        username: values.username,
+        email: values.email,
+        password: values.password,
+      },
+    });
   };
 
   return (

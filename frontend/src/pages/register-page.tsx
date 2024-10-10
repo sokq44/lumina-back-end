@@ -43,11 +43,9 @@ const RegisterPage = () => {
 
   const registerFormOnSubmit = (values: z.infer<typeof registerFormSchema>) => {
     axios.post("/api/register", {
-      body: {
-        username: values.username,
-        email: values.email,
-        password: values.password,
-      },
+      username: values.username,
+      email: values.email,
+      password: values.password,
     });
   };
 

@@ -5,8 +5,8 @@ USE articles;
 CREATE TABLE
     users (
         id VARCHAR(36) PRIMARY KEY NOT NULL DEFAULT (uuid ()),
-        name VARCHAR(50) NOT NULL,
+        username VARCHAR(50) NOT NULL,
         email VARCHAR(255) NOT NULL,
         password VARCHAR(64) NOT NULL,
-        verified BOOLEAN NOT NULL
+        verified BOOLEAN NOT NULL DEFAULT FALSE
     )

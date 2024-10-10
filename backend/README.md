@@ -62,6 +62,10 @@ EXIT;
 mysql -u [new_user] -p # From now on you should log in as the user created in the step above.
 ```
 
+### .env File
+
+In order for the backend to work you need to create a .env file in the /backend directory
+
 ```
 DB_USER="[user]"
 DB_PASSWD="[password]"

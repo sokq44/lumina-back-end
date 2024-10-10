@@ -2,29 +2,41 @@ package database
 
 import (
 	"database/sql"
+	"errors"
+	"fmt"
 	"log"
-	"os"
 
 	"github.com/go-sql-driver/mysql"
 )
 
-func OpenDbConnection() *sql.DB {
+var db *sql.DB = nil
+
+func OpenDbConnection(user string, passwd string, net string, host string, port string, dbname string) {
 	dbConfig := mysql.Config{
-		User:   os.Getenv("DB_USER"),
-		Passwd: os.Getenv("DB_PASSWD"),
-		Net:    "tcp",
-		Addr:   os.Getenv("DB_HOST") + ":" + os.Getenv("DB_PORT"),
-		DBName: os.Getenv("DB_DBNAME"),
+		User:   user,
+		Passwd: passwd,
+		Net:    net,
+		Addr:   fmt.Sprintf("%s:%s", host, port),
+		DBName: dbname,
 	}
 
-	db, err := sql.Open("mysql", dbConfig.FormatDSN())
+	var err error
+	db, err = sql.Open("mysql", dbConfig.FormatDSN())
 
 	if err != nil {
-		log.Fatalln("Failed to open the database!")
-		return nil
+		log.Fatalln("failed to open the connection with database")
 	}
 
-	return db
+	err = db.Ping()
+	if err != nil {
+		log.Fatalln("Failed to connect to the database:", err)
+	}
 }
 
-var DB = OpenDbConnection()
+func GetDbConnection() (*sql.DB, error) {
+	if db == nil {
+		return nil, errors.New("no connection present")
+	}
+
+	return db, nil
+}

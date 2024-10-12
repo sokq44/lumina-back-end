@@ -1,4 +1,4 @@
-package handlers
+package userHandlers
 
 import (
 	database "backend/db"
@@ -20,15 +20,18 @@ type User struct {
 // Verify request for any sql injection.
 // check whether user with a certain username or email already exists.
 
-func RegisterUser(responseWriter http.ResponseWriter, request *http.Request) {
+func RegisterUserHandler(responseWriter http.ResponseWriter, request *http.Request) {
 	var u User
 	db, err := database.GetDbConnection()
 
 	if err != nil {
+		fmt.Fprintln(responseWriter, "There was a problem with getting database connection.")
 		responseWriter.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 
 	if err := json.NewDecoder(request.Body).Decode(&u); err != nil {
+		fmt.Fprintln(responseWriter, "There was a problem with decoding the request body.")
 		responseWriter.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -38,6 +41,7 @@ func RegisterUser(responseWriter http.ResponseWriter, request *http.Request) {
 
 	if err != nil {
 		log.Println(err.Error())
+		fmt.Fprintf(responseWriter, "There was a problem with executing a query for regitering the user.")
 		responseWriter.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -48,5 +52,6 @@ func RegisterUser(responseWriter http.ResponseWriter, request *http.Request) {
 		log.Println("Register: Rows affected:", affectedRows)
 	}
 
+	fmt.Fprintln(responseWriter, "User registered successfully")
 	responseWriter.WriteHeader(http.StatusCreated)
 }

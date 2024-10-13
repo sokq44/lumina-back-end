@@ -2,6 +2,7 @@ package userHandlers
 
 import (
 	database "backend/db"
+	hashing "backend/utils"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -36,7 +37,7 @@ func RegisterUserHandler(responseWriter http.ResponseWriter, request *http.Reque
 		return
 	}
 
-	query := fmt.Sprintf("INSERT INTO users (username, email, password) values ('%s', '%s', '%s')", u.Username, u.Email, u.Password)
+	query := fmt.Sprintf("INSERT INTO users (username, email, password) values ('%s', '%s', '%s')", u.Username, u.Email, hashing.SHA256(u.Password))
 	queryResult, err := db.Exec(query)
 
 	if err != nil {
@@ -52,6 +53,5 @@ func RegisterUserHandler(responseWriter http.ResponseWriter, request *http.Reque
 		log.Println("Register: Rows affected:", affectedRows)
 	}
 
-	fmt.Fprintln(responseWriter, "User registered successfully")
 	responseWriter.WriteHeader(http.StatusCreated)
 }

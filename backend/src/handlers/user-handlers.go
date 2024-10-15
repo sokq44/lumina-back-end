@@ -16,7 +16,6 @@ type User struct {
 }
 
 // TODO:
-// Hash the user's password.
 // Implement some email verification.
 // Verify request for any sql injection.
 // check whether user with a certain username or email already exists.
@@ -37,12 +36,11 @@ func RegisterUserHandler(responseWriter http.ResponseWriter, request *http.Reque
 		return
 	}
 
-	query := fmt.Sprintf("INSERT INTO users (username, email, password) values ('%s', '%s', '%s')", u.Username, u.Email, hashing.SHA256(u.Password))
-	queryResult, err := db.Exec(query)
+	queryResult, err := db.Exec("INSERT INTO users (username, email, password) values (?, ?, ?)", u.Username, u.Email, hashing.SHA256(u.Password))
 
 	if err != nil {
 		log.Println(err.Error())
-		fmt.Fprintf(responseWriter, "There was a problem with executing a query for regitering the user.")
+		fmt.Fprintln(responseWriter, "There was a problem with executing a query for regitering the user.")
 		responseWriter.WriteHeader(http.StatusInternalServerError)
 		return
 	}

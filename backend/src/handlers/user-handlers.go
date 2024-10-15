@@ -7,6 +7,7 @@ import (
 	"errors"
 	"log"
 	"net/http"
+	"regexp"
 )
 
 type User struct {
@@ -17,6 +18,11 @@ type User struct {
 
 // TODO:
 // Implement some email verification.
+
+func validEmail(email string){
+	emailRegex := regexp.MustCompile(`^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$`)
+	return emailRegex.MatchString(email)
+}
 
 func userExists(u User, db *sql.DB) (bool, error) {
 	var id string
@@ -56,6 +62,18 @@ func RegisterUserHandler(responseWriter http.ResponseWriter, request *http.Reque
 
 	if exists {
 		responseWriter.WriteHeader(http.StatusConflict)
+		return
+	}
+
+	validEmail, err := validEmail(u.Email)
+
+	if err != nil {
+		responseWriter.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if validEmail == false {
+		responseWriter.WriteHeader(http.StatusBadRequest)
 		return
 	}
 

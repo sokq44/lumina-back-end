@@ -16,10 +16,15 @@ var PORT uint16 = 3000
 func main() {
 	err := godotenv.Load()
 	if err != nil {
-		log.Fatal("Error loading .env file")
+		log.Fatal(err.Error())
+		return
 	}
 
-	database.OpenDbConnection(os.Getenv("DB_USER"), os.Getenv("DB_PASSWD"), "tcp", os.Getenv("DB_HOST"), os.Getenv("DB_PORT"), os.Getenv("DB_DBNAME"))
+	err = database.OpenDbConnection(os.Getenv("DB_USER"), os.Getenv("DB_PASSWD"), "tcp", os.Getenv("DB_HOST"), os.Getenv("DB_PORT"), os.Getenv("DB_DBNAME"))
+	if err != nil {
+		log.Fatal(err.Error())
+		return
+	}
 
 	http.HandleFunc("/register", user.RegisterUserHandler)
 

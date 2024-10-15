@@ -4,14 +4,13 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"log"
 
 	"github.com/go-sql-driver/mysql"
 )
 
 var db *sql.DB = nil
 
-func OpenDbConnection(user string, passwd string, net string, host string, port string, dbname string) {
+func OpenDbConnection(user string, passwd string, net string, host string, port string, dbname string) error {
 	dbConfig := mysql.Config{
 		User:   user,
 		Passwd: passwd,
@@ -24,13 +23,15 @@ func OpenDbConnection(user string, passwd string, net string, host string, port 
 	db, err = sql.Open("mysql", dbConfig.FormatDSN())
 
 	if err != nil {
-		log.Fatalln("failed to open the connection with database")
+		return errors.New("failed to open the connection with database")
 	}
 
 	err = db.Ping()
 	if err != nil {
-		log.Fatalln("Failed to connect to the database:", err)
+		return errors.New("Failed to connect to the database: " + err.Error())
 	}
+
+	return nil
 }
 
 func GetDbConnection() (*sql.DB, error) {

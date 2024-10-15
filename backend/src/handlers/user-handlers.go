@@ -3,8 +3,9 @@ package userHandlers
 import (
 	database "backend/db"
 	hashing "backend/utils"
+	"database/sql"
 	"encoding/json"
-	"fmt"
+	"errors"
 	"log"
 	"net/http"
 )
@@ -17,30 +18,51 @@ type User struct {
 
 // TODO:
 // Implement some email verification.
-// Verify request for any sql injection.
-// check whether user with a certain username or email already exists.
+
+func userExists(u User, db *sql.DB) (bool, error) {
+	var id string
+
+	err := db.QueryRow("SELECT id FROM users WHERE username=? or email=?;", u.Username, u.Password).Scan(&id)
+
+	if err == sql.ErrNoRows {
+		return false, nil
+	} else if err != nil {
+		log.Println(err.Error())
+		return false, errors.New("error while trying to execute the query for checking whether a user exists")
+	}
+
+	return true, nil
+}
 
 func RegisterUserHandler(responseWriter http.ResponseWriter, request *http.Request) {
 	var u User
 	db, err := database.GetDbConnection()
 
 	if err != nil {
-		fmt.Fprintln(responseWriter, "There was a problem with getting database connection.")
 		responseWriter.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	if err := json.NewDecoder(request.Body).Decode(&u); err != nil {
-		fmt.Fprintln(responseWriter, "There was a problem with decoding the request body.")
 		responseWriter.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	exists, err := userExists(u, db)
+
+	if err != nil {
+		responseWriter.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if exists {
+		responseWriter.WriteHeader(http.StatusConflict)
 		return
 	}
 
 	queryResult, err := db.Exec("INSERT INTO users (username, email, password) values (?, ?, ?)", u.Username, u.Email, hashing.SHA256(u.Password))
 
 	if err != nil {
-		log.Println(err.Error())
-		fmt.Fprintln(responseWriter, "There was a problem with executing a query for regitering the user.")
 		responseWriter.WriteHeader(http.StatusInternalServerError)
 		return
 	}

@@ -1,8 +1,8 @@
 package main
 
 import (
-	database "backend/db"
-	user "backend/handlers"
+	"backend/handlers"
+	"backend/utils"
 	"fmt"
 	"log"
 	"net/http"
@@ -20,13 +20,13 @@ func main() {
 		return
 	}
 
-	err = database.OpenDbConnection(os.Getenv("DB_USER"), os.Getenv("DB_PASSWD"), "tcp", os.Getenv("DB_HOST"), os.Getenv("DB_PORT"), os.Getenv("DB_DBNAME"))
+	err = utils.OpenDbConnection(os.Getenv("DB_USER"), os.Getenv("DB_PASSWD"), "tcp", os.Getenv("DB_HOST"), os.Getenv("DB_PORT"), os.Getenv("DB_DBNAME"))
 	if err != nil {
 		log.Fatal(err.Error())
 		return
 	}
 
-	http.HandleFunc("/register", user.RegisterUserHandler)
+	http.HandleFunc("/register", handlers.RegisterUserHandler)
 
 	log.Printf("Serving on http://localhost:%d", PORT)
 	if err := http.ListenAndServe(fmt.Sprintf(":%d", PORT), nil); err != nil {

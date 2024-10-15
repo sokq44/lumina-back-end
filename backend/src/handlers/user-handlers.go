@@ -1,8 +1,7 @@
-package userHandlers
+package handlers
 
 import (
-	database "backend/db"
-	hashing "backend/utils"
+	"backend/utils"
 	"database/sql"
 	"encoding/json"
 	"errors"
@@ -22,7 +21,7 @@ type User struct {
 func userExists(u User, db *sql.DB) (bool, error) {
 	var id string
 
-	err := db.QueryRow("SELECT id FROM users WHERE username=? or email=?;", u.Username, u.Password).Scan(&id)
+	err := db.QueryRow("SELECT id FROM users WHERE username=? or email=?;", u.Username, u.Email).Scan(&id)
 
 	if err == sql.ErrNoRows {
 		return false, nil
@@ -36,7 +35,7 @@ func userExists(u User, db *sql.DB) (bool, error) {
 
 func RegisterUserHandler(responseWriter http.ResponseWriter, request *http.Request) {
 	var u User
-	db, err := database.GetDbConnection()
+	db, err := utils.GetDbConnection()
 
 	if err != nil {
 		responseWriter.WriteHeader(http.StatusInternalServerError)
@@ -60,7 +59,7 @@ func RegisterUserHandler(responseWriter http.ResponseWriter, request *http.Reque
 		return
 	}
 
-	queryResult, err := db.Exec("INSERT INTO users (username, email, password) values (?, ?, ?)", u.Username, u.Email, hashing.SHA256(u.Password))
+	queryResult, err := db.Exec("INSERT INTO users (username, email, password) values (?, ?, ?)", u.Username, u.Email, utils.SHA256(u.Password))
 
 	if err != nil {
 		responseWriter.WriteHeader(http.StatusInternalServerError)

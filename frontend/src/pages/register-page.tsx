@@ -42,7 +42,7 @@ const RegisterPage = () => {
   });
 
   const registerFormOnSubmit = (values: z.infer<typeof registerFormSchema>) => {
-    axios.post("/api/register", {
+    axios.post("/api/user/register", {
       username: values.username,
       email: values.email,
       password: values.password,

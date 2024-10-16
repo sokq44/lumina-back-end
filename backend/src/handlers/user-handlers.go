@@ -35,12 +35,7 @@ func userExists(u User, db *sql.DB) (bool, error) {
 
 func RegisterUserHandler(responseWriter http.ResponseWriter, request *http.Request) {
 	var u User
-	db, err := utils.GetDbConnection()
-
-	if err != nil {
-		responseWriter.WriteHeader(http.StatusInternalServerError)
-		return
-	}
+	db := utils.Db.Connection
 
 	if err := json.NewDecoder(request.Body).Decode(&u); err != nil {
 		responseWriter.WriteHeader(http.StatusBadRequest)

@@ -2,15 +2,24 @@ package utils
 
 import (
 	"database/sql"
-	"errors"
 	"fmt"
 
 	"github.com/go-sql-driver/mysql"
 )
 
-var db *sql.DB = nil
+type Database struct {
+	Connection *sql.DB
+	User       string
+	Passwd     string
+	Net        string
+	Host       string
+	Port       string
+	DBName     string
+}
 
-func OpenDbConnection(user string, passwd string, net string, host string, port string, dbname string) error {
+var Db Database
+
+func (db *Database) OpenDbConnection(user string, passwd string, net string, host string, port string, dbname string) (string, error) {
 	dbConfig := mysql.Config{
 		User:   user,
 		Passwd: passwd,
@@ -20,24 +29,23 @@ func OpenDbConnection(user string, passwd string, net string, host string, port 
 	}
 
 	var err error
-	db, err = sql.Open("mysql", dbConfig.FormatDSN())
+	db.Connection, err = sql.Open("mysql", dbConfig.FormatDSN())
 
 	if err != nil {
-		return errors.New("failed to open the connection with database")
+		return "", fmt.Errorf("failed to open the connection with database: %v", err.Error())
 	}
 
-	err = db.Ping()
+	err = db.Connection.Ping()
 	if err != nil {
-		return errors.New("Failed to connect to the database: " + err.Error())
+		return "", fmt.Errorf("failed to connect to the database: %v", err.Error())
 	}
 
-	return nil
-}
+	db.User = user
+	db.Passwd = passwd
+	db.Net = net
+	db.Host = host
+	db.Port = port
+	db.DBName = dbname
 
-func GetDbConnection() (*sql.DB, error) {
-	if db == nil {
-		return nil, errors.New("no connection present")
-	}
-
-	return db, nil
+	return fmt.Sprintf("connected to dbms server: %v:%v", host, port), nil
 }

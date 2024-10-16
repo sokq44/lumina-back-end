@@ -36,6 +36,7 @@ func userExists(u User, db *sql.DB) (bool, error) {
 func RegisterUserHandler(responseWriter http.ResponseWriter, request *http.Request) {
 	var u User
 	db := utils.Db.Connection
+	smtp := utils.Smtp
 
 	if err := json.NewDecoder(request.Body).Decode(&u); err != nil {
 		responseWriter.WriteHeader(http.StatusBadRequest)
@@ -45,6 +46,7 @@ func RegisterUserHandler(responseWriter http.ResponseWriter, request *http.Reque
 	exists, err := userExists(u, db)
 
 	if err != nil {
+		log.Println(err)
 		responseWriter.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -54,9 +56,16 @@ func RegisterUserHandler(responseWriter http.ResponseWriter, request *http.Reque
 		return
 	}
 
+	if err = smtp.SendEmail(u.Email, "Subject: Testing email\r\n", "TEST"); err != nil {
+		log.Println(err)
+		responseWriter.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 	queryResult, err := db.Exec("INSERT INTO users (username, email, password) values (?, ?, ?)", u.Username, u.Email, utils.SHA256(u.Password))
 
 	if err != nil {
+		log.Println(err)
 		responseWriter.WriteHeader(http.StatusInternalServerError)
 		return
 	}

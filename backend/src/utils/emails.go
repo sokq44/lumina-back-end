@@ -3,7 +3,6 @@ package utils
 import (
 	"crypto/tls"
 	"fmt"
-	"log"
 	"net/smtp"
 )
 
@@ -55,11 +54,9 @@ func (client *SmtpClient) SendEmail(receiver string, subject string, body string
 
 	msg := []byte(fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: %s\r\n\r\n%s", client.From, receiver, subject, body))
 
-	log.Printf("Sending email to %s with subject %s", receiver, subject)
 	if err := smtp.SendMail(addr, auth, client.From, []string{receiver}, msg); err != nil {
 		return err
 	}
-	log.Println("Email sent successfully")
 
 	return nil
 }

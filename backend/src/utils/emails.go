@@ -3,6 +3,7 @@ package utils
 import (
 	"crypto/tls"
 	"fmt"
+	"log"
 	"net/smtp"
 )
 
@@ -56,6 +57,19 @@ func (client *SmtpClient) SendEmail(receiver string, subject string, body string
 
 	if err := smtp.SendMail(addr, auth, client.From, []string{receiver}, msg); err != nil {
 		return err
+	}
+
+	log.Println("Email sent to:", receiver)
+
+	return nil
+}
+
+func (client *SmtpClient) SendVerificationEmail(receiver string, token string) error {
+	emailBody := fmt.Sprintf("Verification Link: %s", token)
+
+	err := client.SendEmail(receiver, "Subject: Email Verification\r\n", emailBody)
+	if err != nil {
+		return fmt.Errorf("error while trying to send a verification email: %v", err.Error())
 	}
 
 	return nil

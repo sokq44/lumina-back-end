@@ -1,6 +1,7 @@
 package utils
 
 import (
+	"backend/config"
 	"crypto/tls"
 	"fmt"
 	"log"
@@ -17,13 +18,19 @@ type SmtpClient struct {
 
 var Smtp SmtpClient
 
-func (client *SmtpClient) OpenSmtpConnection(from string, user string, passwd string, host string, port string) (string, error) {
+func init() {
+	from := config.AppContext["SMTP_FROM"]
+	user := config.AppContext["SMTP_USER"]
+	passwd := config.AppContext["SMTP_PASSWD"]
+	host := config.AppContext["SMTP_HOST"]
+	port := config.AppContext["SMTP_PORT"]
+
 	auth := smtp.PlainAuth("", user, passwd, host)
 
 	addr := fmt.Sprintf("%s:%s", host, port)
 	conn, err := smtp.Dial(addr)
 	if err != nil {
-		return "", fmt.Errorf("failed to connect to the SMTP server: %v", err.Error())
+		log.Fatalf("failed to connect to the SMTP server: %v", err.Error())
 	}
 	defer conn.Close()
 
@@ -32,20 +39,20 @@ func (client *SmtpClient) OpenSmtpConnection(from string, user string, passwd st
 		ServerName:         host,
 	}
 	if err = conn.StartTLS(tlsConfig); err != nil {
-		return "", fmt.Errorf("failed to start TLS: %v", err)
+		log.Fatalf("failed to start TLS: %v", err)
 	}
 
 	if err = conn.Auth(auth); err != nil {
-		return "", fmt.Errorf("failed to authenticate with the SMTP server: %v", err)
+		log.Fatalf("failed to authenticate with the SMTP server: %v", err)
 	}
 
-	client.From = from
-	client.User = user
-	client.Passwd = passwd
-	client.Host = host
-	client.Port = port
+	Smtp.From = from
+	Smtp.User = user
+	Smtp.Passwd = passwd
+	Smtp.Host = host
+	Smtp.Port = port
 
-	return fmt.Sprintf("connected to smtp server: %v:%v", host, port), nil
+	log.Printf("connected to smtp server: %v:%v", host, port)
 }
 
 func (client *SmtpClient) SendEmail(receiver string, subject string, body string) error {
@@ -65,7 +72,7 @@ func (client *SmtpClient) SendEmail(receiver string, subject string, body string
 }
 
 func (client *SmtpClient) SendVerificationEmail(receiver string, token string) error {
-	emailBody := fmt.Sprintf("Verification Link: %s", token)
+	emailBody := fmt.Sprintf("Verification Link: %s/verify-email?tk=%s", config.AppContext["FRONT_ADDR"], token)
 
 	err := client.SendEmail(receiver, "Subject: Email Verification\r\n", emailBody)
 	if err != nil {

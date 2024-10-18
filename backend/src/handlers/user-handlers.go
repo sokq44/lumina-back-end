@@ -14,7 +14,6 @@ import (
 
 func RegisterUserHandler(responseWriter http.ResponseWriter, request *http.Request) {
 	var u models.User
-	// smtp := utils.Smtp
 
 	if err := json.NewDecoder(request.Body).Decode(&u); err != nil {
 		responseWriter.WriteHeader(http.StatusBadRequest)
@@ -66,4 +65,8 @@ func RegisterUserHandler(responseWriter http.ResponseWriter, request *http.Reque
 	}
 
 	responseWriter.WriteHeader(http.StatusCreated)
+}
+
+func VerifyEmailHandler(responseWriter http.ResponseWriter, request *http.Request) {
+
 }

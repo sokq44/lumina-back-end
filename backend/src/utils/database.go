@@ -1,11 +1,13 @@
 package utils
 
 import (
+	"backend/config"
 	"backend/models"
 	"database/sql"
 	"errors"
 	"fmt"
 	"log"
+	"os"
 	"time"
 
 	"github.com/go-sql-driver/mysql"
@@ -14,17 +16,18 @@ import (
 
 type Database struct {
 	Connection *sql.DB
-	User       string
-	Passwd     string
-	Net        string
-	Host       string
-	Port       string
-	DBName     string
 }
 
 var Db Database
 
-func (db *Database) OpenDbConnection(user string, passwd string, net string, host string, port string, dbname string) (string, error) {
+func init() {
+	user := config.AppContext["DB_USER"]
+	passwd := config.AppContext["DB_PASSWD"]
+	net := config.AppContext["DB_NET"]
+	host := config.AppContext["DB_HOST"]
+	port := config.AppContext["DB_PORT"]
+	dbname := config.AppContext["DB_DBNAME"]
+
 	dbConfig := mysql.Config{
 		User:   user,
 		Passwd: passwd,
@@ -34,25 +37,18 @@ func (db *Database) OpenDbConnection(user string, passwd string, net string, hos
 	}
 
 	var err error
-	db.Connection, err = sql.Open("mysql", dbConfig.FormatDSN())
+	Db.Connection, err = sql.Open("mysql", dbConfig.FormatDSN())
 
 	if err != nil {
-		return "", fmt.Errorf("failed to open the connection with database: %v", err.Error())
+		log.Fatalf("failed to open the connection with database: %v", err.Error())
 	}
 
-	err = db.Connection.Ping()
+	err = Db.Connection.Ping()
 	if err != nil {
-		return "", fmt.Errorf("failed to connect to the database: %v", err.Error())
+		log.Fatalf("failed to connect to the database: %v", err.Error())
 	}
 
-	db.User = user
-	db.Passwd = passwd
-	db.Net = net
-	db.Host = host
-	db.Port = port
-	db.DBName = dbname
-
-	return fmt.Sprintf("connected to dbms server: %v:%v", host, port), nil
+	log.Printf("connected to dbms server: %v:%v", os.Getenv("DB_HOST"), os.Getenv("DB_PORT"))
 }
 
 func (db *Database) CreateUser(u models.User) (string, error) {
@@ -90,4 +86,16 @@ func (db *Database) CreateEmailValidation(userId, token string, expires time.Tim
 	}
 
 	return nil
+}
+
+func (db *Database) GetEmailValidation(token string) (string, time.Time, error) {
+	var userId string
+	var expires time.Time
+
+	err := db.Connection.QueryRow("SELECT expires, user_id FROM email_validation WHERE token=?", token).Scan(&expires, &userId)
+	if err != nil {
+		return "", time.Time{}, fmt.Errorf("error while retrieving email validation data: %v", err.Error())
+	}
+
+	return userId, expires, nil
 }

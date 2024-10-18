@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"time"
 
 	"github.com/go-sql-driver/mysql"
@@ -15,8 +16,11 @@ import (
 )
 
 type Database struct {
-	Connection *sql.DB
+	Connection      *sql.DB
+	CleanupInterval time.Duration
 }
+
+const TIME_LAYOUT = "2006-01-02 15:04:05"
 
 var Db Database
 
@@ -28,6 +32,14 @@ func init() {
 	port := config.AppContext["DB_PORT"]
 	dbname := config.AppContext["DB_DBNAME"]
 
+	var err error
+
+	cleanupInterval, err := strconv.Atoi(config.AppContext["DB_CLEANUP_INTERVAL"])
+	if err != nil {
+		log.Fatalf("failed to convert cleanup interval from value from string to int: %v", err.Error())
+	}
+	Db.CleanupInterval = time.Duration(cleanupInterval)
+
 	dbConfig := mysql.Config{
 		User:   user,
 		Passwd: passwd,
@@ -36,7 +48,6 @@ func init() {
 		DBName: dbname,
 	}
 
-	var err error
 	Db.Connection, err = sql.Open("mysql", dbConfig.FormatDSN())
 
 	if err != nil {
@@ -49,6 +60,8 @@ func init() {
 	}
 
 	log.Printf("connected to dbms server: %v:%v", os.Getenv("DB_HOST"), os.Getenv("DB_PORT"))
+
+	go Db.StartHandlingUnverifiedUsers()
 }
 
 func (db *Database) CreateUser(u models.User) (string, error) {
@@ -89,8 +102,8 @@ func (db *Database) VerifyUser(userId string) error {
 }
 
 // FIXME:
-// This method should take models.EmailValidation as an argument.
-func (db *Database) CreateEmailValidation(userId, token string, expires time.Time) error {
+// This method should take models.EmailVerification as an argument.
+func (db *Database) CreateEmailVerification(userId, token string, expires time.Time) error {
 	_, err := db.Connection.Exec("INSERT INTO email_verification (token, expires, user_id) values (?, ?, ?)", token, expires, userId)
 
 	if err != nil {
@@ -100,7 +113,34 @@ func (db *Database) CreateEmailValidation(userId, token string, expires time.Tim
 	return nil
 }
 
-func (db *Database) GetEmailValidationFromToken(token string) (models.EmailValidation, error) {
+func (db *Database) GetExpiredEmailVerifications() ([]models.EmailVerification, error) {
+	rows, err := db.Connection.Query("SELECT * FROM email_verification WHERE expires <= NOW();")
+
+	if err != nil {
+		return nil, fmt.Errorf("error while trying to retrieve unverified email va: %v", err.Error())
+	}
+
+	var unverified []models.EmailVerification
+	for rows.Next() {
+		var verification models.EmailVerification
+		var rawTime string
+		if err := rows.Scan(&verification.Id, &verification.Token, &rawTime, &verification.UserId); err != nil {
+			return nil, fmt.Errorf("error while trying to scan from one of the retrieved unverified email verifications: %v", err.Error())
+		}
+
+		parsed, err := sqlDatetimeToTime(rawTime)
+		if err != nil {
+			return nil, err
+		}
+
+		verification.Expires = parsed
+		unverified = append(unverified, verification)
+	}
+
+	return unverified, nil
+}
+
+func (db *Database) GetEmailVerificationFromToken(token string) (models.EmailVerification, error) {
 	var id string
 	var tk string
 	var userId string
@@ -108,31 +148,73 @@ func (db *Database) GetEmailValidationFromToken(token string) (models.EmailValid
 
 	err := db.Connection.QueryRow("SELECT id, token, expires, user_id FROM email_verification WHERE token=?", token).Scan(&id, &tk, &expires, &userId)
 	if err != nil {
-		return models.EmailValidation{}, fmt.Errorf("error while retrieving email validation data: %v", err.Error())
+		return models.EmailVerification{}, fmt.Errorf("error while retrieving email verification data: %v", err.Error())
 	}
 
-	const layout = "2006-01-02 15:04:05"
-	expiresTime, err := time.Parse(layout, expires)
+	expiresTime, err := sqlDatetimeToTime(expires)
 	if err != nil {
-		return models.EmailValidation{}, fmt.Errorf("error while parsing datetime from the database: %v", err.Error())
+		return models.EmailVerification{}, err
 	}
 
-	emailValidation := models.EmailValidation{
+	emailVerification := models.EmailVerification{
 		Id:      id,
 		Token:   tk,
 		UserId:  userId,
 		Expires: expiresTime,
 	}
 
-	return emailValidation, nil
+	return emailVerification, nil
 }
 
-func (db *Database) DeleteEmailValidation(id string) error {
+func (db *Database) DeleteEmailVerification(id string) error {
 	_, err := db.Connection.Exec("DELETE FROM email_verification WHERE id=?", id)
 
 	if err != nil {
-		return fmt.Errorf("error while trying to remove an email validation row: %v", err.Error())
+		return fmt.Errorf("error while trying to remove an email verification row: %v", err.Error())
 	}
 
 	return nil
+}
+
+func (db *Database) CleanDb() error {
+	expired, err := db.GetExpiredEmailVerifications()
+	if err != nil {
+		return err
+	}
+
+	for _, e := range expired {
+		if err = db.DeleteEmailVerification(e.Id); err != nil {
+			return err
+		}
+	}
+
+	_, err = db.Connection.Exec("DELETE FROM users WHERE verified=FALSE;")
+	if err != nil {
+		return fmt.Errorf("error while trying to delete all of the unverified users: %v", err.Error())
+	}
+
+	return nil
+}
+
+func (db *Database) StartHandlingUnverifiedUsers() {
+	ticker := time.NewTicker(time.Minute * 1)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		if err := db.CleanDb(); err != nil {
+			log.Println(err.Error())
+			break
+		}
+		log.Println("deleted all unverified users and hunging email verification from the database")
+	}
+}
+
+func sqlDatetimeToTime(t string) (time.Time, error) {
+
+	parsed, err := time.Parse(TIME_LAYOUT, t)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("error while parsing datetime from the database: %v", err.Error())
+	}
+
+	return parsed, nil
 }

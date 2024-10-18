@@ -2,7 +2,7 @@ package models
 
 import "time"
 
-type EmailValidation struct {
+type EmailVerification struct {
 	Id      string
 	Token   string
 	UserId  string

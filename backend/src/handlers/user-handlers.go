@@ -54,7 +54,7 @@ func RegisterUserHandler(responseWriter http.ResponseWriter, request *http.Reque
 		return
 	}
 
-	err = utils.Db.CreateEmailValidation(userId, token, time.Now().Add(time.Hour*3))
+	err = utils.Db.CreateEmailVerification(userId, token, time.Now().Add(time.Hour*3))
 
 	if err != nil {
 		log.Println(err)
@@ -92,7 +92,7 @@ func VerifyEmailHandler(responseWriter http.ResponseWriter, request *http.Reques
 		return
 	}
 
-	emailValidation, err := utils.Db.GetEmailValidationFromToken(body.Token)
+	emailValidation, err := utils.Db.GetEmailVerificationFromToken(body.Token)
 	if err != nil {
 		log.Println(err.Error())
 		responseWriter.WriteHeader(http.StatusInternalServerError)
@@ -105,7 +105,7 @@ func VerifyEmailHandler(responseWriter http.ResponseWriter, request *http.Reques
 		return
 	}
 
-	if err = utils.Db.DeleteEmailValidation(emailValidation.Id); err != nil {
+	if err = utils.Db.DeleteEmailVerification(emailValidation.Id); err != nil {
 		log.Println(err.Error())
 		responseWriter.WriteHeader(http.StatusInternalServerError)
 		return

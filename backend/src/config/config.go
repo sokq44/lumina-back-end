@@ -20,7 +20,7 @@ func init() {
 		return
 	}
 
-	AppContext = make(map[string]string, 13)
+	AppContext = make(map[string]string, 14)
 
 	AppContext["PORT"] = os.Getenv("APP_PORT")
 	AppContext["FRONT_ADDR"] = os.Getenv("APP_FRONT_ADDR")
@@ -31,6 +31,7 @@ func init() {
 	AppContext["DB_HOST"] = os.Getenv("DB_HOST")
 	AppContext["DB_PORT"] = os.Getenv("DB_PORT")
 	AppContext["DB_DBNAME"] = os.Getenv("DB_DBNAME")
+	AppContext["DB_CLEANUP_INTERVAL"] = os.Getenv("DB_CLEANUP_INTERVAL")
 
 	AppContext["SMTP_FROM"] = os.Getenv("SMTP_FROM")
 	AppContext["SMTP_USER"] = os.Getenv("SMTP_USER")

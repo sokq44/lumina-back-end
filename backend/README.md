@@ -68,9 +68,22 @@ mysql -u [new_user] -p # From now on you should log in as the user created in th
 In order for the backend to work you need to create a .env file in the /backend directory
 
 ```
-DB_USER="[user]"
-DB_PASSWD="[password]"
-DB_HOST="[address]"
-DB_PORT="[port]"
-DB_DBNAME="[database name]"
+# APPLICATION INFORMATION
+APP_PORT="[backend app port, must be different than frontend if running both on one machine]"
+APP_FRONT_ADDR="[frontend address, for vite it defaults to http://localhost:5173]"
+
+# DATABASE CREDENTIALS
+DB_USER="[mysql user]"
+DB_PASSWD="[user's passwod]"
+DB_NET="tcp"
+DB_HOST="[mysql host, localhost for now]"
+DB_PORT="[mysql port, defaults to 3306]"
+DB_DBNAME="articles"
+
+# SMTP CREDENTIALS
+SMTP_FROM="[rich out to [sokq44](https://github.com/sokq44) for this]"
+SMTP_USER="[rich out to [sokq44](https://github.com/sokq44) for this]"
+SMTP_PASSWD="[rich out to [sokq44](https://github.com/sokq44) for this]"
+SMTP_HOST="[rich out to [sokq44](https://github.com/sokq44) for this]"
+SMTP_PORT="[rich out to [sokq44](https://github.com/sokq44) for this]"
 ```

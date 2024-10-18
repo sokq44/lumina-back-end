@@ -10,6 +10,7 @@ import (
 
 // TODO:
 // Better looking email verification template.
+// Write our own smtp server rather than using the SES Service from Amazon Web Services.
 
 type SmtpClient struct {
 	From   string

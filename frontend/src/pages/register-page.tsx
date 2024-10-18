@@ -11,6 +11,8 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 
 const registerFormSchema = z
   .object({
@@ -31,6 +33,9 @@ const registerFormSchema = z
   });
 
 const RegisterPage = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
   const registerForm = useForm<z.infer<typeof registerFormSchema>>({
     resolver: zodResolver(registerFormSchema),
     defaultValues: {
@@ -41,12 +46,26 @@ const RegisterPage = () => {
     },
   });
 
-  const registerFormOnSubmit = (values: z.infer<typeof registerFormSchema>) => {
-    axios.post("/api/user/register", {
+  const registerFormOnSubmit = async (
+    values: z.infer<typeof registerFormSchema>
+  ) => {
+    const response = await axios.post("/api/user/register", {
       username: values.username,
       email: values.email,
       password: values.password,
     });
+
+    if (response.status == 201) {
+      navigate("/verify-email", {
+        state: { email: values.email },
+      });
+    } else {
+      toast({
+        variant: "destructive",
+        title: "Problem with registering",
+        description: `Server response: ${response.status}`,
+      });
+    }
   };
 
   return (

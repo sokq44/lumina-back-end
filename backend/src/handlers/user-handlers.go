@@ -12,7 +12,17 @@ import (
 // TODO:
 // Implement some email verification.
 
+// not allowed
+// conflict
+// bad request
+// internal server error
+// created
 func RegisterUserHandler(responseWriter http.ResponseWriter, request *http.Request) {
+	if request.Method != http.MethodPost {
+		responseWriter.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
 	var u models.User
 
 	if err := json.NewDecoder(request.Body).Decode(&u); err != nil {
@@ -68,5 +78,24 @@ func RegisterUserHandler(responseWriter http.ResponseWriter, request *http.Reque
 }
 
 func VerifyEmailHandler(responseWriter http.ResponseWriter, request *http.Request) {
+	if request.Method != http.MethodPatch {
+		responseWriter.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
 
+	var token string
+	if err := json.NewDecoder(request.Body).Decode(&token); err != nil {
+		responseWriter.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	userId, expires, err := utils.Db.GetEmailValidation(token)
+	if err != nil {
+		log.Println(err.Error())
+		responseWriter.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	log.Println(userId, expires)
+	responseWriter.WriteHeader(http.StatusNoContent)
 }

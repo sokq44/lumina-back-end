@@ -56,7 +56,7 @@ const RegisterPage = () => {
     });
 
     if (response.status == 201) {
-      navigate("/verify-email", {
+      navigate("/verify-email-info", {
         state: { email: values.email },
       });
     } else {

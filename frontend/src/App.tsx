@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import EmailVerifiedPage from "./pages/email-verified-page";
 import VerifyEmailPage from "@/pages/verify-email-page";
@@ -10,7 +11,7 @@ const router = createBrowserRouter([
     element: <RegisterPage />,
   },
   {
-    path: "/verify-email",
+    path: "/verify-email/:token",
     element: <EmailVerifiedPage />,
   },
   {
@@ -19,11 +20,24 @@ const router = createBrowserRouter([
   },
 ]);
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      refetchOnWindowFocus: false,
+      refetchOnMount: false,
+      refetchOnReconnect: false,
+      retry: false,
+    },
+  },
+});
+
 export default function App() {
   return (
     <>
-      <RouterProvider router={router} />
-      <Toaster />
+      <QueryClientProvider client={queryClient}>
+        <RouterProvider router={router} />
+        <Toaster />
+      </QueryClientProvider>
     </>
   );
 }

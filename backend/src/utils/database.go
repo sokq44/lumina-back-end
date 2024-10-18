@@ -78,6 +78,16 @@ func (db *Database) UserExists(u models.User) (bool, error) {
 	return true, nil
 }
 
+func (db *Database) VerifyUser(userId string) error {
+	_, err := db.Connection.Exec("UPDATE users SET verified=TRUE WHERE id=?", userId)
+
+	if err != nil {
+		return fmt.Errorf("error while trying to verify a user: %v", err.Error())
+	}
+
+	return nil
+}
+
 func (db *Database) CreateEmailValidation(userId, token string, expires time.Time) error {
 	_, err := db.Connection.Exec("INSERT INTO email_validation (token, expires, user_id) values (?, ?, ?)", token, expires, userId)
 
@@ -90,12 +100,18 @@ func (db *Database) CreateEmailValidation(userId, token string, expires time.Tim
 
 func (db *Database) GetEmailValidation(token string) (string, time.Time, error) {
 	var userId string
-	var expires time.Time
+	var expires string
 
 	err := db.Connection.QueryRow("SELECT expires, user_id FROM email_validation WHERE token=?", token).Scan(&expires, &userId)
 	if err != nil {
 		return "", time.Time{}, fmt.Errorf("error while retrieving email validation data: %v", err.Error())
 	}
 
-	return userId, expires, nil
+	const layout = "2006-01-02 15:04:05"
+	expiresTime, err := time.Parse(layout, expires)
+	if err != nil {
+		return "", time.Time{}, fmt.Errorf("error while parsing datetime from the database: %v", err.Error())
+	}
+
+	return userId, expiresTime, nil
 }

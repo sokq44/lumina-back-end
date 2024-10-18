@@ -9,14 +9,6 @@ import (
 	"time"
 )
 
-// TODO:
-// Implement some email verification.
-
-// not allowed
-// conflict
-// bad request
-// internal server error
-// created
 func RegisterUserHandler(responseWriter http.ResponseWriter, request *http.Request) {
 	if request.Method != http.MethodPost {
 		responseWriter.WriteHeader(http.StatusMethodNotAllowed)
@@ -83,19 +75,35 @@ func VerifyEmailHandler(responseWriter http.ResponseWriter, request *http.Reques
 		return
 	}
 
-	var token string
-	if err := json.NewDecoder(request.Body).Decode(&token); err != nil {
+	type RequestBody struct {
+		Token string `json:"token"`
+	}
+
+	var body RequestBody
+	if err := json.NewDecoder(request.Body).Decode(&body); err != nil {
+		log.Println("Problem while decoding!")
 		responseWriter.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	userId, expires, err := utils.Db.GetEmailValidation(token)
+	userId, expires, err := utils.Db.GetEmailValidation(body.Token)
 	if err != nil {
 		log.Println(err.Error())
 		responseWriter.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	log.Println(userId, expires)
+	if expires.Before(time.Now()) {
+		log.Println("token expired")
+		responseWriter.WriteHeader(http.StatusGone)
+		return
+	}
+
+	if err = utils.Db.VerifyUser(userId); err != nil {
+		log.Println(err.Error())
+		responseWriter.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
 	responseWriter.WriteHeader(http.StatusNoContent)
 }

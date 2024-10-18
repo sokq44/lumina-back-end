@@ -72,7 +72,7 @@ func (client *SmtpClient) SendEmail(receiver string, subject string, body string
 }
 
 func (client *SmtpClient) SendVerificationEmail(receiver string, token string) error {
-	emailBody := fmt.Sprintf("Verification Link: %s/verify-email?tk=%s", config.AppContext["FRONT_ADDR"], token)
+	emailBody := fmt.Sprintf("Verification Link: %s/verify-email/%s", config.AppContext["FRONT_ADDR"], token)
 
 	err := client.SendEmail(receiver, "Subject: Email Verification\r\n", emailBody)
 	if err != nil {

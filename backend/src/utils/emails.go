@@ -69,8 +69,6 @@ func (client *SmtpClient) SendEmail(receiver string, subject string, body string
 		return err
 	}
 
-	log.Println("Email sent to:", receiver)
-
 	return nil
 }
 

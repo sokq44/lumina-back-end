@@ -9,8 +9,7 @@ import (
 	"time"
 )
 
-// TODO:
-// Test the handlers => (No matter how, your creativity is the only barrier here)
+const EMAIL_VER_TIME = time.Duration(time.Hour * 3)
 
 func RegisterUserHandler(responseWriter http.ResponseWriter, request *http.Request) {
 	if request.Method != http.MethodPost {
@@ -54,7 +53,11 @@ func RegisterUserHandler(responseWriter http.ResponseWriter, request *http.Reque
 		return
 	}
 
-	err = utils.Db.CreateEmailVerification(userId, token, time.Now().Add(time.Hour*3))
+	err = utils.Db.CreateEmailVerification(models.EmailVerification{
+		Token:   token,
+		UserId:  userId,
+		Expires: time.Now().Add(EMAIL_VER_TIME),
+	})
 
 	if err != nil {
 		log.Println(err)
@@ -72,9 +75,6 @@ func RegisterUserHandler(responseWriter http.ResponseWriter, request *http.Reque
 	responseWriter.WriteHeader(http.StatusCreated)
 }
 
-// FIXME:
-// When the verification token has expired, it should be removed as well as the uncerified
-// user who generated the token.
 func VerifyEmailHandler(responseWriter http.ResponseWriter, request *http.Request) {
 	if request.Method != http.MethodPatch {
 		responseWriter.WriteHeader(http.StatusMethodNotAllowed)

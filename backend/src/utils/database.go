@@ -76,6 +76,16 @@ func (db *Database) CreateUser(u models.User) (string, error) {
 	return id, nil
 }
 
+func (db *Database) DeleteUser(id string) error {
+	_, err := db.Connection.Exec("DELETE FROM users WHERE id=?", id)
+
+	if err != nil {
+		return fmt.Errorf("error while trying to delete a user: %v", err.Error())
+	}
+
+	return nil
+}
+
 func (db *Database) UserExists(u models.User) (bool, error) {
 	var id string
 
@@ -101,10 +111,8 @@ func (db *Database) VerifyUser(userId string) error {
 	return nil
 }
 
-// FIXME:
-// This method should take models.EmailVerification as an argument.
-func (db *Database) CreateEmailVerification(userId, token string, expires time.Time) error {
-	_, err := db.Connection.Exec("INSERT INTO email_verification (token, expires, user_id) values (?, ?, ?)", token, expires, userId)
+func (db *Database) CreateEmailVerification(e models.EmailVerification) error {
+	_, err := db.Connection.Exec("INSERT INTO email_verification (token, expires, user_id) values (?, ?, ?)", e.Token, e.Expires, e.UserId)
 
 	if err != nil {
 		return fmt.Errorf("error while creating an email_verification row: %v", err.Error())
@@ -186,18 +194,16 @@ func (db *Database) CleanDb() error {
 		if err = db.DeleteEmailVerification(e.Id); err != nil {
 			return err
 		}
-	}
-
-	_, err = db.Connection.Exec("DELETE FROM users WHERE verified=FALSE;")
-	if err != nil {
-		return fmt.Errorf("error while trying to delete all of the unverified users: %v", err.Error())
+		if err = db.DeleteUser(e.UserId); err != nil {
+			return err
+		}
 	}
 
 	return nil
 }
 
 func (db *Database) StartHandlingUnverifiedUsers() {
-	ticker := time.NewTicker(time.Minute * 1)
+	ticker := time.NewTicker(Db.CleanupInterval)
 	defer ticker.Stop()
 
 	for range ticker.C {

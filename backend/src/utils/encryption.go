@@ -9,7 +9,8 @@ import (
 )
 
 // TODO:
-// a 128 characters length string encryption for the email validation
+// Write random 128 character string generator by yourself.
+// Write uuid generation by yourself.
 
 type Encryption struct {
 	H []uint32
@@ -19,7 +20,6 @@ var Encryptor Encryption = Encryption{
 	H: []uint32{0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19},
 }
 
-/* ------------------------------------------------------ SHA256 methods ------------------------------------------------------ */
 func (encryptor *Encryption) SHA256(str string) string {
 	bytes := []byte(str)
 	padded := encryptor.Pad(bytes)
@@ -130,12 +130,8 @@ func (encryptor *Encryption) Majority(x, y, z uint32) uint32 {
 	return (x & y) ^ (x & z) ^ (y & z)
 }
 
-/* -------------------------------------------------------------------------------------------------------------------------- */
-
-/* ---------------------------------- Random string (used for email validation mainly) ---------------------------------- */
-
-// TODO:
-// Write this whole thing by yourself
+// FIXME:
+// This function should be written in an original fashion rather than using a ready solution.
 func (encryptor *Encryption) RandomString(length int) (string, error) {
 	bytes := make([]byte, length)
 	if _, err := rand.Read(bytes); err != nil {
@@ -150,5 +146,3 @@ func (encryptor *Encryption) RandomString(length int) (string, error) {
 
 	return randomString, nil
 }
-
-/* -------------------------------------------------------------------------------------------------------------------------- */

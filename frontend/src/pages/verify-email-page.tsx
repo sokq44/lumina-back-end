@@ -1,4 +1,4 @@
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 const VerifyEmailPage = () => {
   const { state } = useLocation();
@@ -13,6 +13,10 @@ const VerifyEmailPage = () => {
           <span className="text-slate-600">{state.email}</span>. Check your
           inbox for the verification link. If You can't see it, then check the
           spam folder.
+          <br />
+          <Link className="font-bold underline text-slate-600" to={"/"}>
+            Back to the home page
+          </Link>
         </span>
       </div>
     </div>

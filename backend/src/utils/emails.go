@@ -8,6 +8,9 @@ import (
 	"net/smtp"
 )
 
+// TODO:
+// Better looking email verification template.
+
 type SmtpClient struct {
 	From   string
 	User   string

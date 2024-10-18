@@ -9,6 +9,9 @@ import (
 	"time"
 )
 
+// TODO:
+// Test the handlers => (No matter how, your creativity is the only barrier here)
+
 func RegisterUserHandler(responseWriter http.ResponseWriter, request *http.Request) {
 	if request.Method != http.MethodPost {
 		responseWriter.WriteHeader(http.StatusMethodNotAllowed)
@@ -69,6 +72,9 @@ func RegisterUserHandler(responseWriter http.ResponseWriter, request *http.Reque
 	responseWriter.WriteHeader(http.StatusCreated)
 }
 
+// FIXME:
+// When the verification token has expired, it should be removed as well as the uncerified
+// user who generated the token.
 func VerifyEmailHandler(responseWriter http.ResponseWriter, request *http.Request) {
 	if request.Method != http.MethodPatch {
 		responseWriter.WriteHeader(http.StatusMethodNotAllowed)
@@ -86,20 +92,26 @@ func VerifyEmailHandler(responseWriter http.ResponseWriter, request *http.Reques
 		return
 	}
 
-	userId, expires, err := utils.Db.GetEmailValidation(body.Token)
+	emailValidation, err := utils.Db.GetEmailValidationFromToken(body.Token)
 	if err != nil {
 		log.Println(err.Error())
 		responseWriter.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	if expires.Before(time.Now()) {
+	if emailValidation.Expires.Before(time.Now()) {
 		log.Println("token expired")
 		responseWriter.WriteHeader(http.StatusGone)
 		return
 	}
 
-	if err = utils.Db.VerifyUser(userId); err != nil {
+	if err = utils.Db.DeleteEmailValidation(emailValidation.Id); err != nil {
+		log.Println(err.Error())
+		responseWriter.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if err = utils.Db.VerifyUser(emailValidation.UserId); err != nil {
 		log.Println(err.Error())
 		responseWriter.WriteHeader(http.StatusInternalServerError)
 		return

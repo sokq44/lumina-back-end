@@ -88,30 +88,51 @@ func (db *Database) VerifyUser(userId string) error {
 	return nil
 }
 
+// FIXME:
+// This method should take models.EmailValidation as an argument.
 func (db *Database) CreateEmailValidation(userId, token string, expires time.Time) error {
-	_, err := db.Connection.Exec("INSERT INTO email_validation (token, expires, user_id) values (?, ?, ?)", token, expires, userId)
+	_, err := db.Connection.Exec("INSERT INTO email_verification (token, expires, user_id) values (?, ?, ?)", token, expires, userId)
 
 	if err != nil {
-		return fmt.Errorf("error while creating an email_validation row: %v", err.Error())
+		return fmt.Errorf("error while creating an email_verification row: %v", err.Error())
 	}
 
 	return nil
 }
 
-func (db *Database) GetEmailValidation(token string) (string, time.Time, error) {
+func (db *Database) GetEmailValidationFromToken(token string) (models.EmailValidation, error) {
+	var id string
+	var tk string
 	var userId string
 	var expires string
 
-	err := db.Connection.QueryRow("SELECT expires, user_id FROM email_validation WHERE token=?", token).Scan(&expires, &userId)
+	err := db.Connection.QueryRow("SELECT id, token, expires, user_id FROM email_verification WHERE token=?", token).Scan(&id, &tk, &expires, &userId)
 	if err != nil {
-		return "", time.Time{}, fmt.Errorf("error while retrieving email validation data: %v", err.Error())
+		return models.EmailValidation{}, fmt.Errorf("error while retrieving email validation data: %v", err.Error())
 	}
 
 	const layout = "2006-01-02 15:04:05"
 	expiresTime, err := time.Parse(layout, expires)
 	if err != nil {
-		return "", time.Time{}, fmt.Errorf("error while parsing datetime from the database: %v", err.Error())
+		return models.EmailValidation{}, fmt.Errorf("error while parsing datetime from the database: %v", err.Error())
 	}
 
-	return userId, expiresTime, nil
+	emailValidation := models.EmailValidation{
+		Id:      id,
+		Token:   tk,
+		UserId:  userId,
+		Expires: expiresTime,
+	}
+
+	return emailValidation, nil
+}
+
+func (db *Database) DeleteEmailValidation(id string) error {
+	_, err := db.Connection.Exec("DELETE FROM email_verification WHERE id=?", id)
+
+	if err != nil {
+		return fmt.Errorf("error while trying to remove an email validation row: %v", err.Error())
+	}
+
+	return nil
 }

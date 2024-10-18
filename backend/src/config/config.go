@@ -7,6 +7,11 @@ import (
 	"github.com/joho/godotenv"
 )
 
+// TODO:
+// Write an original system for retireving sensitive data. It doesn't have to
+// support only [.env] files, could be replaced with some [.json] reader
+// or something.
+
 var AppContext map[string]string
 
 func init() {

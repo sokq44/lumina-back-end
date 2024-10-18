@@ -1,0 +1,17 @@
+package models
+
+import "time"
+
+type User struct {
+	Id       string
+	Username string `json:"username"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type EmailVerification struct {
+	Id      string
+	Token   string
+	UserId  string
+	Expires time.Time
+}

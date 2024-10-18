@@ -3,6 +3,7 @@
 ## RUN
 
 ```bash
+cd src
 go run .
 ```
 
@@ -61,3 +62,30 @@ EXIT;
 ```bash
 mysql -u [new_user] -p # From now on you should log in as the user created in the step above.
 ```
+
+### .env File
+
+In order for the backend to work you need to create a .env file in the /backend directory
+
+```
+# APPLICATION INFORMATION
+APP_PORT="[backend app port, must be different than frontend if running both on one machine]"
+APP_FRONT_ADDR="[frontend address, for vite it defaults to http://localhost:5173]"
+
+# DATABASE CREDENTIALS
+DB_USER="[mysql user]"
+DB_PASSWD="[user's passwod]"
+DB_NET="tcp"
+DB_HOST="[mysql host, localhost for now]"
+DB_PORT="[mysql port, defaults to 3306]"
+DB_DBNAME="articles"
+
+# SMTP CREDENTIALS
+SMTP_FROM="[address from which emails are sent via smtp]"
+SMTP_USER="[smtp user]"
+SMTP_PASSWD="[smtp user's password]"
+SMTP_HOST="[smtp server's host]"
+SMTP_PORT="[smtp server's port]"
+```
+
+Reach out to [sokq44](https://github.com/sokq44) for the SMTP credentials.

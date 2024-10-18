@@ -81,9 +81,11 @@ DB_PORT="[mysql port, defaults to 3306]"
 DB_DBNAME="articles"
 
 # SMTP CREDENTIALS
-SMTP_FROM="[rich out to [sokq44](https://github.com/sokq44) for this]"
-SMTP_USER="[rich out to [sokq44](https://github.com/sokq44) for this]"
-SMTP_PASSWD="[rich out to [sokq44](https://github.com/sokq44) for this]"
-SMTP_HOST="[rich out to [sokq44](https://github.com/sokq44) for this]"
-SMTP_PORT="[rich out to [sokq44](https://github.com/sokq44) for this]"
+SMTP_FROM="[address from which emails are sent via smtp]"
+SMTP_USER="[smtp user]"
+SMTP_PASSWD="[smtp user's password]"
+SMTP_HOST="[smtp server's host]"
+SMTP_PORT="[smtp server's port]"
 ```
+
+Reach out to [sokq44](https://github.com/sokq44) for the SMTP credentials.

@@ -5,19 +5,23 @@ import (
 	"encoding/base64"
 	"encoding/binary"
 	"fmt"
+	"log"
 	"math"
 )
 
 // TODO:
-// Write random 128 character string generator by yourself.
 // Write uuid generation by yourself.
 
 type Cryptography struct {
 	H []uint32
 }
 
-var Crypto Cryptography = Cryptography{
-	H: []uint32{0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19},
+var Crypto Cryptography
+
+func (crypto *Cryptography) Init() {
+	crypto.H = []uint32{0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19}
+
+	log.Println("initialized the cryptography service")
 }
 
 func (crypto *Cryptography) SHA256(str string) string {

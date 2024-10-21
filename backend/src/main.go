@@ -3,12 +3,18 @@ package main
 import (
 	"backend/config"
 	"backend/handlers"
+	"backend/utils"
 	"fmt"
 	"log"
 	"net/http"
 )
 
 func main() {
+	utils.Db.Init()
+	utils.JWT.Init()
+	utils.Smtp.Init()
+	utils.Crypto.Init()
+
 	http.HandleFunc("/user/register", handlers.RegisterUserHandler)
 	http.HandleFunc("/user/verify-email", handlers.VerifyEmailHandler)
 

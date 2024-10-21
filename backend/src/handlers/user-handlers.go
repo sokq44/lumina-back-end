@@ -45,7 +45,7 @@ func RegisterUserHandler(responseWriter http.ResponseWriter, request *http.Reque
 		return
 	}
 
-	token, err := utils.Encryptor.RandomString(128)
+	token, err := utils.Crypto.RandomString(128)
 
 	if err != nil {
 		log.Println(err)

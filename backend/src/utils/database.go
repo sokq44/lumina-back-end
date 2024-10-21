@@ -20,11 +20,9 @@ type Database struct {
 	CleanupInterval time.Duration
 }
 
-const TIME_LAYOUT = "2006-01-02 15:04:05"
-
 var Db Database
 
-func init() {
+func (db *Database) Init() {
 	user := config.AppContext["DB_USER"]
 	passwd := config.AppContext["DB_PASSWD"]
 	net := config.AppContext["DB_NET"]
@@ -38,7 +36,7 @@ func init() {
 	if err != nil {
 		log.Fatalf("failed to convert cleanup interval from value from string to int: %v", err.Error())
 	}
-	Db.CleanupInterval = time.Duration(cleanupInterval)
+	db.CleanupInterval = time.Duration(cleanupInterval)
 
 	dbConfig := mysql.Config{
 		User:   user,
@@ -48,20 +46,20 @@ func init() {
 		DBName: dbname,
 	}
 
-	Db.Connection, err = sql.Open("mysql", dbConfig.FormatDSN())
+	db.Connection, err = sql.Open("mysql", dbConfig.FormatDSN())
 
 	if err != nil {
 		log.Fatalf("failed to open the connection with database: %v", err.Error())
 	}
 
-	err = Db.Connection.Ping()
+	err = db.Connection.Ping()
 	if err != nil {
 		log.Fatalf("failed to connect to the database: %v", err.Error())
 	}
 
-	log.Printf("connected to dbms server: %v:%v", os.Getenv("DB_HOST"), os.Getenv("DB_PORT"))
+	log.Printf("intialized the database service(%v:%v)", os.Getenv("DB_HOST"), os.Getenv("DB_PORT"))
 
-	go Db.StartHandlingUnverifiedUsers()
+	go db.StartHandlingUnverifiedUsers()
 }
 
 func (db *Database) CreateUser(u models.User) (string, error) {
@@ -217,7 +215,7 @@ func (db *Database) StartHandlingUnverifiedUsers() {
 
 func sqlDatetimeToTime(t string) (time.Time, error) {
 
-	parsed, err := time.Parse(TIME_LAYOUT, t)
+	parsed, err := time.Parse("2006-01-02 15:04:05", t)
 	if err != nil {
 		return time.Time{}, fmt.Errorf("error while parsing datetime from the database: %v", err.Error())
 	}

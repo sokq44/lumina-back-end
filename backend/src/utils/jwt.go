@@ -1,19 +1,27 @@
 package utils
 
 import (
+	"backend/config"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"log"
 )
 
-type JWT struct {
-	Header    string
-	Payload   string
-	Signature string
+type JsonWebToken struct {
+	Secret string
 }
 
-func (jwt *JWT) CreateHeader() (string, error) {
+var JWT JsonWebToken
+
+func (jwt *JsonWebToken) Init() {
+	jwt.Secret = config.AppContext["JWT_SECRET"]
+
+	log.Println("initialized the JWT service")
+}
+
+func (jwt *JsonWebToken) CreateHeader() (string, error) {
 	header := map[string]string{
 		"typ": "JWT",
 		"alg": "HS256",
@@ -27,7 +35,7 @@ func (jwt *JWT) CreateHeader() (string, error) {
 	return Crypto.Base64UrlEncode(headerJson), nil
 }
 
-func (jwt *JWT) CreatePayload(claims map[string]interface{}) (string, error) {
+func (jwt *JsonWebToken) CreatePayload(claims map[string]interface{}) (string, error) {
 	payloadJson, err := json.Marshal(claims)
 	if err != nil {
 		return "", fmt.Errorf("error while trying to create a payload for a JWT: %v", err.Error())
@@ -36,38 +44,28 @@ func (jwt *JWT) CreatePayload(claims map[string]interface{}) (string, error) {
 	return Crypto.Base64UrlEncode(payloadJson), nil
 }
 
-// Signature generates the JWT signature for the header and payload using HMAC SHA256.
 // FIXME: Replace native HMAC and SHA256 with custom implementation when available.
-func (jwt *JWT) CreateSignature(headerPayload, secret string) string {
+func (jwt *JsonWebToken) CreateSignature(headerPayload, secret string) string {
 	h := hmac.New(sha256.New, []byte(secret))
 	h.Write([]byte(headerPayload))
 
 	return Crypto.Base64UrlEncode(h.Sum(nil))
 }
 
-func (jwt *JWT) New(secret string, claims map[string]interface{}) (JWT, error) {
+func (jwt *JsonWebToken) CreateJWT(claims map[string]interface{}) (string, error) {
 	header, err := jwt.CreateHeader()
 	if err != nil {
-		return JWT{}, err
+		return "", err
 	}
 
 	payload, err := jwt.CreatePayload(claims)
 	if err != nil {
-		return JWT{}, err
+		return "", err
 	}
 
 	headerPayload := fmt.Sprintf("%s.%s", header, payload)
-	signature := jwt.CreateSignature(headerPayload, secret)
-
-	newJWT := JWT{
-		Header:    header,
-		Payload:   payload,
-		Signature: signature,
-	}
+	signature := jwt.CreateSignature(headerPayload, jwt.Secret)
+	newJWT := fmt.Sprintf("%s.%s.%s", header, payload, signature)
 
 	return newJWT, nil
-}
-
-func (jwt *JWT) ToString() string {
-	return fmt.Sprintf("%s.%s.%s", jwt.Header, jwt.Payload, jwt.Signature)
 }

@@ -22,7 +22,7 @@ type SmtpClient struct {
 
 var Smtp SmtpClient
 
-func init() {
+func (client *SmtpClient) Init() {
 	from := config.AppContext["SMTP_FROM"]
 	user := config.AppContext["SMTP_USER"]
 	passwd := config.AppContext["SMTP_PASSWD"]
@@ -50,13 +50,13 @@ func init() {
 		log.Fatalf("failed to authenticate with the SMTP server: %v", err)
 	}
 
-	Smtp.From = from
-	Smtp.User = user
-	Smtp.Passwd = passwd
-	Smtp.Host = host
-	Smtp.Port = port
+	client.From = from
+	client.User = user
+	client.Passwd = passwd
+	client.Host = host
+	client.Port = port
 
-	log.Printf("connected to smtp server: %v:%v", host, port)
+	log.Printf("initialized the smtp service (%v:%v)", host, port)
 }
 
 func (client *SmtpClient) SendEmail(receiver string, subject string, body string) error {

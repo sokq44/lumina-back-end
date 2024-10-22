@@ -99,6 +99,27 @@ func (db *Database) UserExists(u models.User) (bool, error) {
 	return true, nil
 }
 
+func (db *Database) GetUserByEmail(email string) (models.User, error) {
+	var id string
+	var username string
+	var password string
+	var verified bool
+
+	err := db.Connection.QueryRow("SELECT id, username, password, verified FROM users WHERE email=?", email).Scan(&id, &username, &password, &verified)
+	if err != nil {
+		return models.User{}, fmt.Errorf("error while trying to get a user by email: %v", err)
+	}
+
+	user := models.User{
+		Id:       id,
+		Username: username,
+		Password: password,
+		Verified: verified,
+	}
+
+	return user, nil
+}
+
 func (db *Database) VerifyUser(userId string) error {
 	_, err := db.Connection.Exec("UPDATE users SET verified=TRUE WHERE id=?", userId)
 

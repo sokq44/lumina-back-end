@@ -29,7 +29,7 @@ func (jwt *JsonWebToken) CreateHeader() (string, error) {
 
 	headerJson, err := json.Marshal(header)
 	if err != nil {
-		return "", fmt.Errorf("error while trying to create a header for a JWT: %v", err.Error())
+		return "", fmt.Errorf("error while trying to create a header for a JWT: %v", err)
 	}
 
 	return Crypto.Base64UrlEncode(headerJson), nil

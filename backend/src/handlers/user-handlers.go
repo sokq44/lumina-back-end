@@ -119,3 +119,33 @@ func VerifyEmailHandler(responseWriter http.ResponseWriter, request *http.Reques
 
 	responseWriter.WriteHeader(http.StatusNoContent)
 }
+
+func LoginHandler(responseWriter http.ResponseWriter, request *http.Request) {
+	if request.Method != http.MethodPost {
+		responseWriter.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+	type RequestBody struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+
+	var body RequestBody
+	if err := json.NewDecoder(request.Body).Decode(&body); err != nil {
+		responseWriter.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	log.Println(body)
+
+	user, err := utils.Db.GetUserByEmail(body.Email)
+	if err != nil {
+		log.Println(err)
+		return
+	}
+
+	log.Println(user)
+
+	responseWriter.WriteHeader(http.StatusOK)
+}

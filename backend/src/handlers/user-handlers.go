@@ -10,8 +10,6 @@ import (
 	"time"
 )
 
-const EMAIL_VER_TIME = time.Duration(time.Hour * 3) // Should be configurable through the [.env] file
-
 func RegisterUserHandler(responseWriter http.ResponseWriter, request *http.Request) {
 	if request.Method != http.MethodPost {
 		responseWriter.WriteHeader(http.StatusMethodNotAllowed)

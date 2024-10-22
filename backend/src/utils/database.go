@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"strconv"
 	"time"
 
 	"github.com/go-sql-driver/mysql"
@@ -23,19 +22,14 @@ type Database struct {
 var Db Database
 
 func (db *Database) Init() {
-	user := config.AppContext["DB_USER"]
-	passwd := config.AppContext["DB_PASSWD"]
-	net := config.AppContext["DB_NET"]
-	host := config.AppContext["DB_HOST"]
-	port := config.AppContext["DB_PORT"]
-	dbname := config.AppContext["DB_DBNAME"]
+	user := config.AppContext["DB_USER"].(string)
+	passwd := config.AppContext["DB_PASSWD"].(string)
+	net := config.AppContext["DB_NET"].(string)
+	host := config.AppContext["DB_HOST"].(string)
+	port := config.AppContext["DB_PORT"].(string)
+	dbname := config.AppContext["DB_DBNAME"].(string)
+	cleanupInterval := config.AppContext["DB_CLEANUP_INTERVAL"].(int)
 
-	var err error
-
-	cleanupInterval, err := strconv.Atoi(config.AppContext["DB_CLEANUP_INTERVAL"])
-	if err != nil {
-		log.Fatalf("failed to convert cleanup interval from value from string to int: %v", err.Error())
-	}
 	db.CleanupInterval = time.Duration(cleanupInterval)
 
 	dbConfig := mysql.Config{
@@ -46,6 +40,7 @@ func (db *Database) Init() {
 		DBName: dbname,
 	}
 
+	var err error
 	db.Connection, err = sql.Open("mysql", dbConfig.FormatDSN())
 
 	if err != nil {

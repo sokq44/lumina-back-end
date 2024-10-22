@@ -1,4 +1,4 @@
-import axios from "axios";
+import axios, { AxiosError } from "axios";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -49,21 +49,23 @@ const RegisterPage = () => {
   const registerFormOnSubmit = async (
     values: z.infer<typeof registerFormSchema>
   ) => {
-    const response = await axios.post("/api/user/register", {
-      username: values.username,
-      email: values.email,
-      password: values.password,
-    });
-
-    if (response.status == 201) {
-      navigate("/verify-email-info", {
-        state: { email: values.email },
+    try {
+      const response = await axios.post("/api/user/register", {
+        username: values.username,
+        email: values.email,
+        password: values.password,
       });
-    } else {
+
+      if (response.status == 201) {
+        navigate("/verify-email-info", {
+          state: { email: values.email },
+        });
+      }
+    } catch (err) {
       toast({
         variant: "destructive",
         title: "Problem with registering",
-        description: `Server response: ${response.status}`,
+        description: (err as AxiosError).message,
       });
     }
   };

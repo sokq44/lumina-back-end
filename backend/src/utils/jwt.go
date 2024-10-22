@@ -6,19 +6,20 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
-	"log"
 )
 
 type JsonWebToken struct {
 	Secret string
 }
 
-var JWT JsonWebToken
+type Claims map[string]interface{}
 
-func (jwt *JsonWebToken) Init() {
-	jwt.Secret = config.AppContext["JWT_SECRET"]
+func NewJWT() *JsonWebToken {
+	jwt := JsonWebToken{
+		Secret: config.AppContext["JWT_SECRET"].(string),
+	}
 
-	log.Println("initialized the JWT service")
+	return &jwt
 }
 
 func (jwt *JsonWebToken) CreateHeader() (string, error) {
@@ -35,7 +36,7 @@ func (jwt *JsonWebToken) CreateHeader() (string, error) {
 	return Crypto.Base64UrlEncode(headerJson), nil
 }
 
-func (jwt *JsonWebToken) CreatePayload(claims map[string]interface{}) (string, error) {
+func (jwt *JsonWebToken) CreatePayload(claims Claims) (string, error) {
 	payloadJson, err := json.Marshal(claims)
 	if err != nil {
 		return "", fmt.Errorf("error while trying to create a payload for a JWT: %v", err.Error())
@@ -44,7 +45,7 @@ func (jwt *JsonWebToken) CreatePayload(claims map[string]interface{}) (string, e
 	return Crypto.Base64UrlEncode(payloadJson), nil
 }
 
-// FIXME: Replace native HMAC and SHA256 with custom implementation when available.
+// FIXME: Replace native HMAC-SHA256 with custom implementation when available.
 func (jwt *JsonWebToken) CreateSignature(headerPayload, secret string) string {
 	h := hmac.New(sha256.New, []byte(secret))
 	h.Write([]byte(headerPayload))
@@ -52,7 +53,7 @@ func (jwt *JsonWebToken) CreateSignature(headerPayload, secret string) string {
 	return Crypto.Base64UrlEncode(h.Sum(nil))
 }
 
-func (jwt *JsonWebToken) CreateJWT(claims map[string]interface{}) (string, error) {
+func (jwt *JsonWebToken) CreateJWT(claims Claims) (string, error) {
 	header, err := jwt.CreateHeader()
 	if err != nil {
 		return "", err

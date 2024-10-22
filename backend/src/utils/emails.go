@@ -23,11 +23,11 @@ type SmtpClient struct {
 var Smtp SmtpClient
 
 func (client *SmtpClient) Init() {
-	from := config.AppContext["SMTP_FROM"]
-	user := config.AppContext["SMTP_USER"]
-	passwd := config.AppContext["SMTP_PASSWD"]
-	host := config.AppContext["SMTP_HOST"]
-	port := config.AppContext["SMTP_PORT"]
+	from := config.AppContext["SMTP_FROM"].(string)
+	user := config.AppContext["SMTP_USER"].(string)
+	passwd := config.AppContext["SMTP_PASSWD"].(string)
+	host := config.AppContext["SMTP_HOST"].(string)
+	port := config.AppContext["SMTP_PORT"].(string)
 
 	auth := smtp.PlainAuth("", user, passwd, host)
 

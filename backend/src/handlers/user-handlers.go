@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"backend/config"
 	"backend/models"
 	"backend/utils"
 	"encoding/json"
@@ -9,7 +10,7 @@ import (
 	"time"
 )
 
-const EMAIL_VER_TIME = time.Duration(time.Hour * 3)
+const EMAIL_VER_TIME = time.Duration(time.Hour * 3) // Should be configurable through the [.env] file
 
 func RegisterUserHandler(responseWriter http.ResponseWriter, request *http.Request) {
 	if request.Method != http.MethodPost {
@@ -37,6 +38,7 @@ func RegisterUserHandler(responseWriter http.ResponseWriter, request *http.Reque
 		return
 	}
 
+	u.Password = utils.Crypto.SHA256(u.Password)
 	userId, err := utils.Db.CreateUser(u)
 
 	if err != nil {
@@ -53,11 +55,13 @@ func RegisterUserHandler(responseWriter http.ResponseWriter, request *http.Reque
 		return
 	}
 
-	err = utils.Db.CreateEmailVerification(models.EmailVerification{
+	duration := time.Duration(config.AppContext["EMAIL_VER_TIME"].(int))
+	verification := models.EmailVerification{
 		Token:   token,
 		UserId:  userId,
-		Expires: time.Now().Add(EMAIL_VER_TIME),
-	})
+		Expires: time.Now().Add(duration),
+	}
+	err = utils.Db.CreateEmailVerification(verification)
 
 	if err != nil {
 		log.Println(err)
@@ -137,15 +141,32 @@ func LoginHandler(responseWriter http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	log.Println(body)
-
 	user, err := utils.Db.GetUserByEmail(body.Email)
 	if err != nil {
 		log.Println(err)
 		return
 	}
 
-	log.Println(user)
+	hashedPasswd := utils.Crypto.SHA256(body.Password)
+	if !user.Verified || hashedPasswd != user.Password {
+		responseWriter.WriteHeader(http.StatusForbidden)
+		return
+	}
 
+	jwt := utils.NewJWT()
+	expires := time.Duration(config.AppContext["JWT_EXP_TIME"].(int))
+	claims := utils.Claims{
+		"user": user.Id,
+		"exp":  time.Now().Add(expires).Unix(),
+	}
+
+	token, err := jwt.CreateJWT(claims)
+	if err != nil {
+		log.Println(err)
+		responseWriter.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	responseWriter.Header().Set("Authorization", "Bearer "+token)
 	responseWriter.WriteHeader(http.StatusOK)
 }

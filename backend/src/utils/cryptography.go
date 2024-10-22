@@ -5,7 +5,6 @@ import (
 	"encoding/base64"
 	"encoding/binary"
 	"fmt"
-	"log"
 	"math"
 )
 
@@ -18,23 +17,20 @@ type Cryptography struct {
 
 var Crypto Cryptography
 
-func (crypto *Cryptography) Init() {
-	crypto.H = []uint32{0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19}
-
-	log.Println("initialized the cryptography service")
-}
-
 func (crypto *Cryptography) SHA256(str string) string {
+	hashValues := make([]uint32, 8)
+	copy(hashValues, crypto.H)
+
 	bytes := []byte(str)
 	padded := crypto.Pad(bytes)
 	chunks := crypto.Chunks(padded)
 
 	for _, chunk := range chunks {
-		crypto.ProcessChunk(chunk, &crypto.H)
+		crypto.ProcessChunk(chunk, &hashValues)
 	}
 
 	var output string
-	for _, h := range crypto.H {
+	for _, h := range hashValues {
 		output += fmt.Sprintf("%08x", h)
 	}
 

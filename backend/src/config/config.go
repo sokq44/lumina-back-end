@@ -3,6 +3,7 @@ package config
 import (
 	"log"
 	"os"
+	"strconv"
 
 	"github.com/joho/godotenv"
 )
@@ -12,7 +13,10 @@ import (
 // support only [.env] files, could be replaced with some [.json] reader
 // or something.
 
-var AppContext map[string]string
+type ContextItem interface{}
+type Context map[string]ContextItem
+
+var AppContext Context
 
 func init() {
 	if err := godotenv.Load(); err != nil {
@@ -20,23 +24,53 @@ func init() {
 		return
 	}
 
-	AppContext = map[string]string{
-		"PORT":       os.Getenv("APP_PORT"),
-		"FRONT_ADDR": os.Getenv("APP_FRONT_ADDR"),
-		"JWT_SECRET": os.Getenv("APP_JWT_SECRET"),
+	AppContext = Context{
+		"PORT":           getEnvString("APP_PORT"),
+		"FRONT_ADDR":     getEnvString("APP_FRONT_ADDR"),
+		"EMAIL_VER_TIME": getEnvNumber("APP_EMAIL_VER_TIME"),
+		"JWT_SECRET":     getEnvString("APP_JWT_SECRET"),
+		"JWT_EXP_TIME":   getEnvNumber("APP_JWT_EXP_TIME"),
 
-		"DB_USER":             os.Getenv("DB_USER"),
-		"DB_PASSWD":           os.Getenv("DB_PASSWD"),
-		"DB_NET":              os.Getenv("DB_NET"),
-		"DB_HOST":             os.Getenv("DB_HOST"),
-		"DB_PORT":             os.Getenv("DB_PORT"),
-		"DB_DBNAME":           os.Getenv("DB_DBNAME"),
-		"DB_CLEANUP_INTERVAL": os.Getenv("DB_CLEANUP_INTERVAL"),
+		"DB_USER":             getEnvString("DB_USER"),
+		"DB_PASSWD":           getEnvString("DB_PASSWD"),
+		"DB_NET":              getEnvString("DB_NET"),
+		"DB_HOST":             getEnvString("DB_HOST"),
+		"DB_PORT":             getEnvString("DB_PORT"),
+		"DB_DBNAME":           getEnvString("DB_DBNAME"),
+		"DB_CLEANUP_INTERVAL": getEnvNumber("DB_CLEANUP_INTERVAL"),
 
-		"SMTP_FROM":   os.Getenv("SMTP_FROM"),
-		"SMTP_USER":   os.Getenv("SMTP_USER"),
-		"SMTP_PASSWD": os.Getenv("SMTP_PASSWD"),
-		"SMTP_HOST":   os.Getenv("SMTP_HOST"),
-		"SMTP_PORT":   os.Getenv("SMTP_PORT"),
+		"SMTP_FROM":   getEnvString("SMTP_FROM"),
+		"SMTP_USER":   getEnvString("SMTP_USER"),
+		"SMTP_PASSWD": getEnvString("SMTP_PASSWD"),
+		"SMTP_HOST":   getEnvString("SMTP_HOST"),
+		"SMTP_PORT":   getEnvString("SMTP_PORT"),
 	}
+}
+
+func getEnvString(key string) ContextItem {
+	value := os.Getenv(key)
+
+	if value == "" {
+		log.Fatalf("error while trying to get the value of %v key from the .env file", key)
+		return nil
+	}
+
+	return value
+}
+
+func getEnvNumber(key string) ContextItem {
+	value := os.Getenv(key)
+
+	if value == "" {
+		log.Fatalf("error while trying to get the value of %v key from the .env file", key)
+		return nil
+	}
+
+	valueNumber, err := strconv.Atoi(value)
+	if err != nil {
+		log.Fatalf("error while trying to convert string value to number: %v", err)
+		return nil
+	}
+
+	return valueNumber
 }

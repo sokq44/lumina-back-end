@@ -1,4 +1,4 @@
-package utils
+package cryptography
 
 import (
 	"crypto/rand"
@@ -8,27 +8,15 @@ import (
 	"math"
 )
 
-// TODO:
-// Write uuid generation by yourself.
-
-type Cryptography struct {
-	H []uint32
-}
-
-var Crypto Cryptography = Cryptography{
-	H: []uint32{0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19},
-}
-
-func (crypto *Cryptography) SHA256(str string) string {
-	hashValues := make([]uint32, 8)
-	copy(hashValues, crypto.H)
+func Sha256(str string) string {
+	hashValues := []uint32{0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19}
 
 	bytes := []byte(str)
-	padded := crypto.Pad(bytes)
-	chunks := crypto.Chunks(padded)
+	padded := Pad(bytes)
+	chunks := Chunks(padded)
 
 	for _, chunk := range chunks {
-		crypto.ProcessChunk(chunk, &hashValues)
+		ProcessChunk(chunk, &hashValues)
 	}
 
 	var output string
@@ -39,7 +27,7 @@ func (crypto *Cryptography) SHA256(str string) string {
 	return output
 }
 
-func (crypto *Cryptography) Pad(bytes []byte) []byte {
+func Pad(bytes []byte) []byte {
 	originalLen := len(bytes) * 8
 
 	bytes = append(bytes, 0x80)
@@ -55,7 +43,7 @@ func (crypto *Cryptography) Pad(bytes []byte) []byte {
 	return bytes
 }
 
-func (crypto *Cryptography) Chunks(bytes []byte) [][]byte {
+func Chunks(bytes []byte) [][]byte {
 	newLen := int(math.Ceil(float64(len(bytes)) / 64))
 	chunks := make([][]byte, newLen)
 
@@ -73,7 +61,7 @@ func (crypto *Cryptography) Chunks(bytes []byte) [][]byte {
 	return chunks
 }
 
-func (crypto *Cryptography) ProcessChunk(chunk []byte, H *[]uint32) {
+func ProcessChunk(chunk []byte, H *[]uint32) {
 	var K = []uint32{
 		0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5, 0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
 		0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3, 0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
@@ -90,13 +78,13 @@ func (crypto *Cryptography) ProcessChunk(chunk []byte, H *[]uint32) {
 		W[i] = binary.BigEndian.Uint32(chunk[i*4 : (i*4)+4])
 	}
 	for i := 16; i < 64; i++ {
-		W[i] = crypto.RotateShiftMix(W[i-2], 17, 19, 10) + W[i-7] + crypto.RotateShiftMix(W[i-15], 7, 18, 3) + W[i-16]
+		W[i] = RotateShiftMix(W[i-2], 17, 19, 10) + W[i-7] + RotateShiftMix(W[i-15], 7, 18, 3) + W[i-16]
 	}
 
 	a, b, c, d, e, f, g, h := (*H)[0], (*H)[1], (*H)[2], (*H)[3], (*H)[4], (*H)[5], (*H)[6], (*H)[7]
 	for i := 0; i < 64; i++ {
-		T1 := h + crypto.MajorRotationMix(e, 6, 11, 25) + crypto.Ch(e, f, g) + K[i] + W[i]
-		T2 := crypto.MajorRotationMix(a, 2, 13, 22) + crypto.Majority(a, b, c)
+		T1 := h + MajorRotationMix(e, 6, 11, 25) + Ch(e, f, g) + K[i] + W[i]
+		T2 := MajorRotationMix(a, 2, 13, 22) + Majority(a, b, c)
 		h = g
 		g = f
 		f = e
@@ -116,29 +104,26 @@ func (crypto *Cryptography) ProcessChunk(chunk []byte, H *[]uint32) {
 	(*H)[7] += h
 }
 
-func (crypto *Cryptography) RotateShiftMix(x uint32, rotateA int, rotateB int, shift int) uint32 {
+func RotateShiftMix(x uint32, rotateA int, rotateB int, shift int) uint32 {
 	return (x>>rotateA | x<<(32-rotateA)) ^ (x>>rotateB | x<<(32-rotateB)) ^ (x >> shift)
 }
 
-func (crypto *Cryptography) MajorRotationMix(x uint32, rotateA int, rotateB int, rotateC int) uint32 {
+func MajorRotationMix(x uint32, rotateA int, rotateB int, rotateC int) uint32 {
 	return (x>>rotateA | x<<(32-rotateA)) ^ (x>>rotateB | x<<(32-rotateB)) ^ (x>>rotateC | x<<(32-rotateC))
 }
 
-func (crypto *Cryptography) Ch(x, y, z uint32) uint32 {
+func Ch(x, y, z uint32) uint32 {
 	return (x & y) ^ (^x & z)
 }
 
-func (crypto *Cryptography) Majority(x, y, z uint32) uint32 {
+func Majority(x, y, z uint32) uint32 {
 	return (x & y) ^ (x & z) ^ (y & z)
 }
 
-// FIXME:
-// This function shouldn't use the native base64 package but rather our own version which
-// hasn't been created yet
-func (crypto *Cryptography) RandomString(length int) (string, error) {
+func RandomString(length int) (string, error) {
 	bytes := make([]byte, length)
 	if _, err := rand.Read(bytes); err != nil {
-		return "", fmt.Errorf("error while generating a random string: %s", err.Error())
+		return "", fmt.Errorf("error while generating a random string: %v", err)
 	}
 
 	randomString := base64.URLEncoding.EncodeToString(bytes)
@@ -150,9 +135,6 @@ func (crypto *Cryptography) RandomString(length int) (string, error) {
 	return randomString, nil
 }
 
-// FIXME:
-// This function shouldn't use the native base64 package but rather our own version which
-// hasn't been created yet
-func (crypto *Cryptography) Base64UrlEncode(input []byte) string {
+func Base64UrlEncode(input []byte) string {
 	return base64.RawURLEncoding.EncodeToString(input)
 }

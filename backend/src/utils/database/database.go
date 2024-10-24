@@ -1,4 +1,4 @@
-package utils
+package database
 
 import (
 	"backend/config"
@@ -19,16 +19,16 @@ type Database struct {
 	CleanupInterval time.Duration
 }
 
-var Db Database
+var db Database
 
-func (db *Database) Init() {
-	user := config.AppContext["DB_USER"].(string)
-	passwd := config.AppContext["DB_PASSWD"].(string)
-	net := config.AppContext["DB_NET"].(string)
-	host := config.AppContext["DB_HOST"].(string)
-	port := config.AppContext["DB_PORT"].(string)
-	dbname := config.AppContext["DB_DBNAME"].(string)
-	cleanupInterval := config.AppContext["DB_CLEANUP_INTERVAL"].(int)
+func InitDb() {
+	user := config.Application.DB_USER
+	passwd := config.Application.DB_PASSWD
+	net := config.Application.DB_NET
+	host := config.Application.DB_HOST
+	port := config.Application.DB_PORT
+	dbname := config.Application.DB_DBNAME
+	cleanupInterval := config.Application.DB_CLEANUP_INTERVAL
 
 	db.CleanupInterval = time.Duration(cleanupInterval)
 
@@ -52,9 +52,13 @@ func (db *Database) Init() {
 		log.Fatalf("failed to connect to the database: %v", err.Error())
 	}
 
-	log.Printf("intialized the database service(%v:%v)", os.Getenv("DB_HOST"), os.Getenv("DB_PORT"))
+	log.Printf("intialized the database service (%v:%v)", os.Getenv("DB_HOST"), os.Getenv("DB_PORT"))
 
 	go db.StartHandlingUnverifiedUsers()
+}
+
+func GetDb() *Database {
+	return &db
 }
 
 func (db *Database) CreateUser(u models.User) (string, error) {
@@ -217,7 +221,7 @@ func (db *Database) CleanDb() error {
 }
 
 func (db *Database) StartHandlingUnverifiedUsers() {
-	ticker := time.NewTicker(Db.CleanupInterval)
+	ticker := time.NewTicker(db.CleanupInterval)
 	defer ticker.Stop()
 
 	for range ticker.C {

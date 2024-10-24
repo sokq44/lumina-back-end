@@ -3,14 +3,19 @@ package handlers
 import (
 	"backend/config"
 	"backend/models"
-	"backend/utils"
+	"backend/utils/cryptography"
+	"backend/utils/database"
+	"backend/utils/emails"
+	"backend/utils/jwt"
 	"encoding/json"
 	"log"
 	"net/http"
 	"time"
 )
 
-func RegisterUserHandler(responseWriter http.ResponseWriter, request *http.Request) {
+var db *database.Database = database.GetDb()
+
+func RegisterUser(responseWriter http.ResponseWriter, request *http.Request) {
 	if request.Method != http.MethodPost {
 		responseWriter.WriteHeader(http.StatusMethodNotAllowed)
 		return
@@ -23,8 +28,7 @@ func RegisterUserHandler(responseWriter http.ResponseWriter, request *http.Reque
 		return
 	}
 
-	exists, err := utils.Db.UserExists(u)
-
+	exists, err := db.UserExists(u)
 	if err != nil {
 		log.Println(err)
 		responseWriter.WriteHeader(http.StatusInternalServerError)
@@ -36,8 +40,8 @@ func RegisterUserHandler(responseWriter http.ResponseWriter, request *http.Reque
 		return
 	}
 
-	u.Password = utils.Crypto.SHA256(u.Password)
-	userId, err := utils.Db.CreateUser(u)
+	u.Password = cryptography.Sha256(u.Password)
+	userId, err := db.CreateUser(u)
 
 	if err != nil {
 		log.Println(err)
@@ -45,7 +49,7 @@ func RegisterUserHandler(responseWriter http.ResponseWriter, request *http.Reque
 		return
 	}
 
-	token, err := utils.Crypto.RandomString(128)
+	token, err := cryptography.RandomString(128)
 
 	if err != nil {
 		log.Println(err)
@@ -53,21 +57,22 @@ func RegisterUserHandler(responseWriter http.ResponseWriter, request *http.Reque
 		return
 	}
 
-	duration := time.Duration(config.AppContext["EMAIL_VER_TIME"].(int))
+	duration := time.Duration(config.Application.EMAIL_VER_TIME)
 	verification := models.EmailVerification{
 		Token:   token,
 		UserId:  userId,
 		Expires: time.Now().Add(duration),
 	}
-	err = utils.Db.CreateEmailVerification(verification)
-
+	err = db.CreateEmailVerification(verification)
 	if err != nil {
 		log.Println(err)
 		responseWriter.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
-	err = utils.Smtp.SendVerificationEmail(u.Email, token)
+	em := emails.GetEmails()
+
+	err = em.SendVerificationEmail(u.Email, token)
 	if err != nil {
 		log.Println(err)
 		responseWriter.WriteHeader(http.StatusInternalServerError)
@@ -77,7 +82,7 @@ func RegisterUserHandler(responseWriter http.ResponseWriter, request *http.Reque
 	responseWriter.WriteHeader(http.StatusCreated)
 }
 
-func VerifyEmailHandler(responseWriter http.ResponseWriter, request *http.Request) {
+func VerifyEmail(responseWriter http.ResponseWriter, request *http.Request) {
 	if request.Method != http.MethodPatch {
 		responseWriter.WriteHeader(http.StatusMethodNotAllowed)
 		return
@@ -94,7 +99,7 @@ func VerifyEmailHandler(responseWriter http.ResponseWriter, request *http.Reques
 		return
 	}
 
-	emailValidation, err := utils.Db.GetEmailVerificationFromToken(body.Token)
+	emailValidation, err := db.GetEmailVerificationFromToken(body.Token)
 	if err != nil {
 		log.Println(err.Error())
 		responseWriter.WriteHeader(http.StatusInternalServerError)
@@ -107,13 +112,13 @@ func VerifyEmailHandler(responseWriter http.ResponseWriter, request *http.Reques
 		return
 	}
 
-	if err = utils.Db.DeleteEmailVerification(emailValidation.Id); err != nil {
+	if err = db.DeleteEmailVerification(emailValidation.Id); err != nil {
 		log.Println(err.Error())
 		responseWriter.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	if err = utils.Db.VerifyUser(emailValidation.UserId); err != nil {
+	if err = db.VerifyUser(emailValidation.UserId); err != nil {
 		log.Println(err.Error())
 		responseWriter.WriteHeader(http.StatusInternalServerError)
 		return
@@ -122,7 +127,7 @@ func VerifyEmailHandler(responseWriter http.ResponseWriter, request *http.Reques
 	responseWriter.WriteHeader(http.StatusNoContent)
 }
 
-func LoginHandler(responseWriter http.ResponseWriter, request *http.Request) {
+func LoginUser(responseWriter http.ResponseWriter, request *http.Request) {
 	if request.Method != http.MethodPost {
 		responseWriter.WriteHeader(http.StatusMethodNotAllowed)
 		return
@@ -139,26 +144,26 @@ func LoginHandler(responseWriter http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	user, err := utils.Db.GetUserByEmail(body.Email)
+	user, err := db.GetUserByEmail(body.Email)
 	if err != nil {
 		log.Println(err)
+		responseWriter.WriteHeader(http.StatusNotFound)
 		return
 	}
 
-	hashedPasswd := utils.Crypto.SHA256(body.Password)
+	hashedPasswd := cryptography.Sha256(body.Password)
 	if !user.Verified || hashedPasswd != user.Password {
 		responseWriter.WriteHeader(http.StatusForbidden)
 		return
 	}
 
-	jwt := utils.NewJWT()
-	expires := time.Duration(config.AppContext["JWT_EXP_TIME"].(int))
-	claims := utils.Claims{
+	expires := time.Duration(config.Application.JWT_EXP_TIME)
+	claims := jwt.Claims{
 		"user": user.Id,
 		"exp":  time.Now().Add(expires).Unix(),
 	}
 
-	token, err := jwt.CreateJWT(claims)
+	token, err := jwt.Generate(claims)
 	if err != nil {
 		log.Println(err)
 		responseWriter.WriteHeader(http.StatusInternalServerError)

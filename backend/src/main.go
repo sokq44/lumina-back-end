@@ -3,21 +3,23 @@ package main
 import (
 	"backend/config"
 	"backend/handlers"
-	"backend/utils"
+	"backend/utils/database"
+	"backend/utils/emails"
 	"fmt"
 	"log"
 	"net/http"
 )
 
 func main() {
-	utils.Db.Init()
-	utils.Smtp.Init()
+	config.InitConfig()
+	database.InitDb()
+	emails.InitEmails()
 
-	http.HandleFunc("/user/register", handlers.RegisterUserHandler)
-	http.HandleFunc("/user/verify-email", handlers.VerifyEmailHandler)
-	http.HandleFunc("/user/login", handlers.LoginHandler)
+	http.HandleFunc("/user/register", handlers.RegisterUser)
+	http.HandleFunc("/user/verify-email", handlers.VerifyEmail)
+	http.HandleFunc("/user/login", handlers.LoginUser)
 
-	port := config.AppContext["PORT"].(string)
+	port := config.Application.PORT
 
 	log.Println("serving on http://localhost:"+port, "(press ctrl + c to stop the process)")
 	if err := http.ListenAndServe(fmt.Sprintf(":%s", port), nil); err != nil {

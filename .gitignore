@@ -1,3 +1,5 @@
+# ----- FRONTEND -----
+
 # Logs
 logs
 *.log
@@ -22,3 +24,15 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# -------------------
+
+# ----- BACKEND -----
+
+# environmental variables
+*.env
+
+# credentials
+credentials.txt
+
+# -------------------

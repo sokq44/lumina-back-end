@@ -82,7 +82,7 @@ func GenerateAccess(user models.User, now time.Time) (string, error) {
 }
 
 func GenerateRefresh(userId string, now time.Time) (models.RefreshToken, error) {
-	expires := time.Duration(config.Application.JWT_ACCESS_EXP_TIME)
+	expires := time.Duration(config.Application.JWT_REFRESH_EXP_TIME)
 	id := uuid.New().String()
 	claims := Claims{
 		"user": userId,

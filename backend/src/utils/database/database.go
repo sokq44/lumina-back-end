@@ -233,6 +233,16 @@ func (db *Database) StartHandlingUnverifiedUsers() {
 	}
 }
 
+func (db *Database) CreateRefreshToken(token models.RefreshToken) error {
+	_, err := db.Connection.Exec("INSERT INTO refresh_tokens (id, token, expires, user_id) values(?, ?, ?, ?)", token.Id, token.Token, token.Expires, token.UserId)
+
+	if err != nil {
+		return fmt.Errorf("error while trying to store a refresh token in the db: %v", err)
+	}
+
+	return nil
+}
+
 func sqlDatetimeToTime(t string) (time.Time, error) {
 
 	parsed, err := time.Parse("2006-01-02 15:04:05", t)

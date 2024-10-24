@@ -16,3 +16,10 @@ type EmailVerification struct {
 	UserId  string
 	Expires time.Time
 }
+
+type RefreshToken struct {
+	Id      string
+	Token   string
+	UserId  string
+	Expires time.Time
+}

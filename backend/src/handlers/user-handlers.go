@@ -21,11 +21,22 @@ func RegisterUser(responseWriter http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	var u models.User
+	type RequestBody struct {
+		Username string `json:"username"`
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
 
-	if err := json.NewDecoder(request.Body).Decode(&u); err != nil {
+	var r RequestBody
+	if err := json.NewDecoder(request.Body).Decode(&r); err != nil {
 		responseWriter.WriteHeader(http.StatusBadRequest)
 		return
+	}
+
+	u := models.User{
+		Username: r.Username,
+		Email:    r.Email,
+		Password: cryptography.Sha256(r.Password),
 	}
 
 	exists, err := db.UserExists(u)
@@ -34,13 +45,11 @@ func RegisterUser(responseWriter http.ResponseWriter, request *http.Request) {
 		responseWriter.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-
 	if exists {
 		responseWriter.WriteHeader(http.StatusConflict)
 		return
 	}
 
-	u.Password = cryptography.Sha256(u.Password)
 	userId, err := db.CreateUser(u)
 
 	if err != nil {
@@ -138,38 +147,62 @@ func LoginUser(responseWriter http.ResponseWriter, request *http.Request) {
 		Password string `json:"password"`
 	}
 
-	var body RequestBody
-	if err := json.NewDecoder(request.Body).Decode(&body); err != nil {
+	var r RequestBody
+	if err := json.NewDecoder(request.Body).Decode(&r); err != nil {
 		responseWriter.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	user, err := db.GetUserByEmail(body.Email)
+	user, err := db.GetUserByEmail(r.Email)
 	if err != nil {
 		log.Println(err)
 		responseWriter.WriteHeader(http.StatusNotFound)
 		return
 	}
 
-	hashedPasswd := cryptography.Sha256(body.Password)
+	hashedPasswd := cryptography.Sha256(r.Password)
 	if !user.Verified || hashedPasswd != user.Password {
 		responseWriter.WriteHeader(http.StatusForbidden)
 		return
 	}
 
-	expires := time.Duration(config.Application.JWT_EXP_TIME)
-	claims := jwt.Claims{
-		"user": user.Id,
-		"exp":  time.Now().Add(expires).Unix(),
-	}
+	now := time.Now()
 
-	token, err := jwt.Generate(claims)
+	access, err := jwt.GenerateAccess(user, now)
 	if err != nil {
-		log.Println(err)
+		log.Println(err.Error())
 		responseWriter.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	responseWriter.Header().Set("Authorization", "Bearer "+token)
+	refresh, err := jwt.GenerateRefresh(user.Id, now)
+	if err != nil {
+		log.Println(err.Error())
+		responseWriter.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if err := db.CreateRefreshToken(refresh); err != nil {
+		log.Println(err.Error())
+		responseWriter.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	http.SetCookie(responseWriter, &http.Cookie{
+		Name:     "access_token",
+		Value:    access,
+		HttpOnly: true,
+		Path:     "/",
+		Expires:  now.Add(time.Duration(config.Application.JWT_ACCESS_EXP_TIME)),
+	})
+
+	http.SetCookie(responseWriter, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    refresh.Token,
+		HttpOnly: true,
+		Path:     "/",
+		Expires:  now.Add(time.Duration(config.Application.JWT_REFRESH_EXP_TIME)),
+	})
+
 	responseWriter.WriteHeader(http.StatusOK)
 }

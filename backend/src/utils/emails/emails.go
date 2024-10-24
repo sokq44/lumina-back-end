@@ -61,9 +61,7 @@ func GetEmails() *SmtpClient {
 
 func (client *SmtpClient) SendEmail(receiver string, subject string, body string) error {
 	auth := smtp.PlainAuth("", client.User, client.Passwd, client.Host)
-
 	addr := fmt.Sprintf("%s:%s", client.Host, client.Port)
-
 	msg := []byte(fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: %s\r\n\r\n%s", client.From, receiver, subject, body))
 
 	if err := smtp.SendMail(addr, auth, client.From, []string{receiver}, msg); err != nil {

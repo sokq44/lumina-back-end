@@ -14,11 +14,12 @@ import (
 // or something.
 
 type Context struct {
-	PORT           string
-	FRONT_ADDR     string
-	EMAIL_VER_TIME int
-	JWT_SECRET     string
-	JWT_EXP_TIME   int
+	PORT                 string
+	FRONT_ADDR           string
+	EMAIL_VER_TIME       int
+	JWT_SECRET           string
+	JWT_ACCESS_EXP_TIME  int
+	JWT_REFRESH_EXP_TIME int
 
 	DB_USER             string
 	DB_PASSWD           string
@@ -44,23 +45,24 @@ func InitConfig() {
 	}
 
 	Application = Context{
-		PORT:                getEnvString("APP_PORT"),
-		FRONT_ADDR:          getEnvString("APP_FRONT_ADDR"),
-		EMAIL_VER_TIME:      getEnvInt("APP_EMAIL_VER_TIME"),
-		JWT_SECRET:          getEnvString("APP_JWT_SECRET"),
-		JWT_EXP_TIME:        getEnvInt("APP_JWT_EXP_TIME"),
-		DB_USER:             getEnvString("DB_USER"),
-		DB_PASSWD:           getEnvString("DB_PASSWD"),
-		DB_NET:              getEnvString("DB_NET"),
-		DB_HOST:             getEnvString("DB_HOST"),
-		DB_PORT:             getEnvString("DB_PORT"),
-		DB_DBNAME:           getEnvString("DB_DBNAME"),
-		DB_CLEANUP_INTERVAL: getEnvInt("DB_CLEANUP_INTERVAL"),
-		SMTP_FROM:           getEnvString("SMTP_FROM"),
-		SMTP_USER:           getEnvString("SMTP_USER"),
-		SMTP_PASSWD:         getEnvString("SMTP_PASSWD"),
-		SMTP_HOST:           getEnvString("SMTP_HOST"),
-		SMTP_PORT:           getEnvString("SMTP_PORT"),
+		PORT:                 getEnvString("APP_PORT"),
+		FRONT_ADDR:           getEnvString("APP_FRONT_ADDR"),
+		EMAIL_VER_TIME:       getEnvInt("APP_EMAIL_VER_TIME"),
+		JWT_SECRET:           getEnvString("APP_JWT_SECRET"),
+		JWT_ACCESS_EXP_TIME:  getEnvInt("APP_JWT_ACCESS_EXP_TIME"),
+		JWT_REFRESH_EXP_TIME: getEnvInt("APP_JWT_REFRESH_EXP_TIME"),
+		DB_USER:              getEnvString("DB_USER"),
+		DB_PASSWD:            getEnvString("DB_PASSWD"),
+		DB_NET:               getEnvString("DB_NET"),
+		DB_HOST:              getEnvString("DB_HOST"),
+		DB_PORT:              getEnvString("DB_PORT"),
+		DB_DBNAME:            getEnvString("DB_DBNAME"),
+		DB_CLEANUP_INTERVAL:  getEnvInt("DB_CLEANUP_INTERVAL"),
+		SMTP_FROM:            getEnvString("SMTP_FROM"),
+		SMTP_USER:            getEnvString("SMTP_USER"),
+		SMTP_PASSWD:          getEnvString("SMTP_PASSWD"),
+		SMTP_HOST:            getEnvString("SMTP_HOST"),
+		SMTP_PORT:            getEnvString("SMTP_PORT"),
 	}
 }
 

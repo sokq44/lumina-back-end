@@ -19,3 +19,12 @@ CREATE TABLE
         user_id VARCHAR(36) NOT NULL,
         CONSTRAINT fk_users_email_validation FOREIGN KEY (user_id) REFERENCES users (id)
     );
+
+CREATE TABLE
+    IF NOT EXISTS refresh_tokens (
+        id VARCHAR(36) PRIMARY KEY NOT NULL DEFAULT (uuid ()),
+        token VARCHAR(255) NOT NULL,
+        expires DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        user_id VARCHAR(36) NOT NULL,
+        CONSTRAINT fk_users_refresh_tokens FOREIGN KEY (user_id) REFERENCES users (id)
+    );

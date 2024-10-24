@@ -2,11 +2,15 @@ package jwt
 
 import (
 	"backend/config"
+	"backend/models"
 	"backend/utils/cryptography"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"time"
+
+	"github.com/google/uuid"
 )
 
 type Claims map[string]interface{}
@@ -59,4 +63,42 @@ func Generate(claims Claims) (string, error) {
 	newJWT := fmt.Sprintf("%s.%s.%s", header, payload, signature)
 
 	return newJWT, nil
+}
+
+func GenerateAccess(user models.User, now time.Time) (string, error) {
+	expires := time.Duration(config.Application.JWT_ACCESS_EXP_TIME)
+	claims := Claims{
+		"user": user.Id,
+		"exp":  now.Add(expires).Unix(),
+		"iat":  now.Unix(),
+	}
+
+	token, err := Generate(claims)
+	if err != nil {
+		return "", err
+	}
+
+	return token, nil
+}
+
+func GenerateRefresh(userId string, now time.Time) (models.RefreshToken, error) {
+	expires := time.Duration(config.Application.JWT_ACCESS_EXP_TIME)
+	id := uuid.New().String()
+	claims := Claims{
+		"user": userId,
+		"exp":  now.Add(expires).Unix(),
+		"jti":  id,
+	}
+
+	tk, err := Generate(claims)
+	if err != nil {
+		return models.RefreshToken{}, err
+	}
+
+	return models.RefreshToken{
+		Id:      id,
+		Token:   tk,
+		Expires: now.Add(expires),
+		UserId:  userId,
+	}, nil
 }

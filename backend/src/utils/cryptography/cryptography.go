@@ -138,3 +138,12 @@ func RandomString(length int) (string, error) {
 func Base64UrlEncode(input []byte) string {
 	return base64.RawURLEncoding.EncodeToString(input)
 }
+
+func Base64UrlDecode(input string) ([]byte, error) {
+	bytes, err := base64.RawURLEncoding.DecodeString(input)
+	if err != nil {
+		return nil, fmt.Errorf("error while decoding: %v", err)
+	}
+
+	return bytes, nil
+}

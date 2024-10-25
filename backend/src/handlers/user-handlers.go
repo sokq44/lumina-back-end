@@ -15,7 +15,7 @@ import (
 
 var db *database.Database = database.GetDb()
 
-func RegisterUser(responseWriter http.ResponseWriter, request *http.Request) {
+var RegisterUser http.HandlerFunc = func(responseWriter http.ResponseWriter, request *http.Request) {
 	if request.Method != http.MethodPost {
 		responseWriter.WriteHeader(http.StatusMethodNotAllowed)
 		return
@@ -91,7 +91,7 @@ func RegisterUser(responseWriter http.ResponseWriter, request *http.Request) {
 	responseWriter.WriteHeader(http.StatusCreated)
 }
 
-func VerifyEmail(responseWriter http.ResponseWriter, request *http.Request) {
+var VerifyEmail http.HandlerFunc = func(responseWriter http.ResponseWriter, request *http.Request) {
 	if request.Method != http.MethodPatch {
 		responseWriter.WriteHeader(http.StatusMethodNotAllowed)
 		return
@@ -136,11 +136,13 @@ func VerifyEmail(responseWriter http.ResponseWriter, request *http.Request) {
 	responseWriter.WriteHeader(http.StatusNoContent)
 }
 
-func LoginUser(responseWriter http.ResponseWriter, request *http.Request) {
+var LoginUser http.HandlerFunc = func(responseWriter http.ResponseWriter, request *http.Request) {
 	if request.Method != http.MethodPost {
 		responseWriter.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
+
+	log.Println("hello from login handler")
 
 	type RequestBody struct {
 		Email    string `json:"email"`

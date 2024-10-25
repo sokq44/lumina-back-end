@@ -108,6 +108,19 @@ func (db *Database) UserExists(u models.User) (bool, error) {
 	return true, nil
 }
 
+func (db *Database) GetUserById(id string) (models.User, error) {
+	var user models.User = models.User{
+		Id: id,
+	}
+
+	err := db.Connection.QueryRow("SELECT username, email, verified FROM users WHERE id=?;", id).Scan(&user.Username, &user.Email, &user.Verified)
+	if err != nil {
+		return models.User{}, fmt.Errorf("error while trying to get user by id: %v", err)
+	}
+
+	return user, nil
+}
+
 func (db *Database) GetUserByEmail(email string) (models.User, error) {
 	var id string
 	var username string
@@ -223,7 +236,7 @@ func (db *Database) CreateRefreshToken(token models.RefreshToken) error {
 }
 
 func (db *Database) DeleteRefreshToken(token models.RefreshToken) error {
-	_, err := db.Connection.Exec("DELETE FROM refresh_tokens WHERE id=?;", token.Id)
+	_, err := db.Connection.Exec("DELETE FROM refresh_tokens WHERE id=? OR token=?;", token.Id, token.Token)
 
 	if err != nil {
 		return fmt.Errorf("error whilte trying to delete a refresh token from the db: %v", err)

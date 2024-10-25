@@ -4,10 +4,14 @@ import (
 	"backend/config"
 	"backend/models"
 	"backend/utils/cryptography"
+	"backend/utils/database"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"log"
+	"net/http"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -101,4 +105,117 @@ func GenerateRefresh(userId string, now time.Time) (models.RefreshToken, error) 
 		Expires: now.Add(expires),
 		UserId:  userId,
 	}, nil
+}
+
+func DecodePayload(token string) (Claims, error) {
+	parts := strings.Split(token, ".")
+	if len(parts) != 3 {
+		return nil, fmt.Errorf("invalid jwt token")
+	}
+
+	payloadPart := parts[1]
+	payloadBytes, err := cryptography.Base64UrlDecode(payloadPart)
+
+	if err != nil {
+		return nil, err
+	}
+
+	var claims Claims
+	if err := json.Unmarshal(payloadBytes, &claims); err != nil {
+		return nil, fmt.Errorf("error while unmarshaling: %v", err)
+	}
+
+	return claims, nil
+}
+
+func Middleware(next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		db := database.GetDb()
+
+		log.Println("Hello from middleware")
+
+		refreshToken, err := r.Cookie("refresh_token")
+		if err == http.ErrNoCookie {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		} else if err != nil {
+			log.Printf("error while trying to retrieve the refresh token: %v", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		if refreshToken.Expires.Before(time.Now()) {
+			w.WriteHeader(http.StatusForbidden)
+
+			db.DeleteRefreshToken(models.RefreshToken{Token: refreshToken.Value})
+
+			http.SetCookie(w, &http.Cookie{
+				Name:     "refresh_token",
+				Value:    "",
+				HttpOnly: true,
+				Path:     "/",
+				Expires:  time.Unix(0, 0),
+			})
+
+			http.SetCookie(w, &http.Cookie{
+				Name:     "access_token",
+				Value:    "",
+				HttpOnly: true,
+				Path:     "/",
+				Expires:  time.Unix(0, 0),
+			})
+
+			return
+		}
+
+		accessToken, err := r.Cookie("access_token")
+		if err == http.ErrNoCookie {
+			w.WriteHeader(http.StatusForbidden)
+			return
+		} else if err != nil {
+			log.Printf("error while trying to retrieve the access token: %v", err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		now := time.Now()
+		if accessToken.Expires.Before(now) {
+			claims, err := DecodePayload(accessToken.Value)
+
+			if err != nil {
+				log.Println(err.Error())
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+
+			expires := time.Duration(config.Application.JWT_ACCESS_EXP_TIME)
+			claims["exp"] = now.Add(expires)
+			user, err := database.GetDb().GetUserById(claims["user"].(string))
+			if err != nil {
+				log.Println(err.Error())
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+
+			access, err := GenerateAccess(user, now)
+			if err != nil {
+				log.Println(err.Error())
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
+
+			http.SetCookie(w, &http.Cookie{
+				Name:     "access_token",
+				Value:    access,
+				HttpOnly: true,
+				Path:     "/",
+				Expires:  now.Add(time.Duration(config.Application.JWT_ACCESS_EXP_TIME)),
+			})
+
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	}
 }

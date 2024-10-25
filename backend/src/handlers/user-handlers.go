@@ -142,8 +142,6 @@ var LoginUser http.HandlerFunc = func(responseWriter http.ResponseWriter, reques
 		return
 	}
 
-	log.Println("hello from login handler")
-
 	type RequestBody struct {
 		Email    string `json:"email"`
 		Password string `json:"password"`
@@ -169,7 +167,6 @@ var LoginUser http.HandlerFunc = func(responseWriter http.ResponseWriter, reques
 	}
 
 	now := time.Now()
-
 	access, err := jwt.GenerateAccess(user, now)
 	if err != nil {
 		log.Println(err.Error())
@@ -207,4 +204,11 @@ var LoginUser http.HandlerFunc = func(responseWriter http.ResponseWriter, reques
 	})
 
 	responseWriter.WriteHeader(http.StatusOK)
+}
+
+var UserIsLoggedIn http.HandlerFunc = func(responseWriter http.ResponseWriter, request *http.Request) {
+	if request.Method != http.MethodGet {
+		responseWriter.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
 }

@@ -36,7 +36,7 @@ func CreateHeader() (string, error) {
 func CreatePayload(claims Claims) (string, error) {
 	payloadJson, err := json.Marshal(claims)
 	if err != nil {
-		return "", fmt.Errorf("error while trying to create a payload for a JWT: %v", err.Error())
+		return "", fmt.Errorf("error while trying to create a payload for a JWT: %v", err)
 	}
 
 	return cryptography.Base64UrlEncode(payloadJson), nil
@@ -128,15 +128,35 @@ func DecodePayload(token string) (Claims, error) {
 	return claims, nil
 }
 
+func RefreshAndAccessFromRequest(r *http.Request) (string, string, error) {
+	access, err := r.Cookie("access_token")
+	if err == http.ErrNoCookie {
+		return "", "", err
+	} else if err != nil {
+		return "", "", fmt.Errorf("error while trying to get the access_token cookie: %v", err)
+	}
+
+	refresh, err := r.Cookie("refresh_token")
+	if err == http.ErrNoCookie {
+		return "", "", err
+	} else if err != nil {
+		return "", "", fmt.Errorf("error while trying to get the refresh_token cookie: %v", err)
+	}
+
+	return access.Value, refresh.Value, nil
+}
+
 func Middleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		db := database.GetDb()
 
 		log.Println("Hello from middleware")
 
+		/* Check whether refresh token was passed in the request. */
 		refreshToken, err := r.Cookie("refresh_token")
 		if err == http.ErrNoCookie {
-			w.WriteHeader(http.StatusForbidden)
+			log.Println("Doesn't exist...")
+			w.WriteHeader(http.StatusUnauthorized)
 			return
 		} else if err != nil {
 			log.Printf("error while trying to retrieve the refresh token: %v", err)
@@ -144,10 +164,24 @@ func Middleware(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		if refreshToken.Expires.Before(time.Now()) {
-			w.WriteHeader(http.StatusForbidden)
+		/* Check whether the refresh token has expired. If it has, delete the cookies and reply with 401.*/
+		claims, err := DecodePayload((refreshToken.Value))
+		if err != nil {
+			log.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
 
-			db.DeleteRefreshToken(models.RefreshToken{Token: refreshToken.Value})
+		now := time.Now()
+		expires := int64(claims["exp"].(float64))
+		if expires < now.Unix() {
+			w.WriteHeader(http.StatusUnauthorized)
+
+			if err := db.DeleteRefreshTokenByToken(refreshToken.Value); err != nil {
+				log.Println(err)
+				w.WriteHeader(http.StatusInternalServerError)
+				return
+			}
 
 			http.SetCookie(w, &http.Cookie{
 				Name:     "refresh_token",
@@ -168,9 +202,25 @@ func Middleware(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
+		/* Check whether refresh token is assigned to the right person (db). */
+		userId := claims["user"].(string)
+		tk, err := db.GetRefreshTokenByUserId(userId)
+		if err != nil {
+			log.Println(err)
+			w.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+
+		if tk.UserId != userId {
+			log.Println("Id's don't match...")
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+
+		/* Check whether access token was passed in the request. */
 		accessToken, err := r.Cookie("access_token")
 		if err == http.ErrNoCookie {
-			w.WriteHeader(http.StatusForbidden)
+			w.WriteHeader(http.StatusUnauthorized)
 			return
 		} else if err != nil {
 			log.Printf("error while trying to retrieve the access token: %v", err)
@@ -178,12 +228,11 @@ func Middleware(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		now := time.Now()
+		/* Check whether the access token has expired, if it did issue another one. */
 		if accessToken.Expires.Before(now) {
 			claims, err := DecodePayload(accessToken.Value)
-
 			if err != nil {
-				log.Println(err.Error())
+				log.Println(err)
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
@@ -192,14 +241,14 @@ func Middleware(next http.HandlerFunc) http.HandlerFunc {
 			claims["exp"] = now.Add(expires)
 			user, err := database.GetDb().GetUserById(claims["user"].(string))
 			if err != nil {
-				log.Println(err.Error())
+				log.Println(err)
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}
 
 			access, err := GenerateAccess(user, now)
 			if err != nil {
-				log.Println(err.Error())
+				log.Println(err)
 				w.WriteHeader(http.StatusInternalServerError)
 				return
 			}

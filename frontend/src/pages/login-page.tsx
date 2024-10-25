@@ -11,8 +11,10 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-// import { useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
+import { LoaderCircle } from "lucide-react";
 
 const registerFormSchema = z.object({
   email: z
@@ -23,8 +25,27 @@ const registerFormSchema = z.object({
 });
 
 const LoginPage = () => {
-  //   const navigate = useNavigate();
+  const navigate = useNavigate();
   const { toast } = useToast();
+
+  const { isLoading } = useQuery({
+    queryKey: ["logged-in-query"],
+    queryFn: async () => {
+      try {
+        const response = await axios.get("/api/user/logged-in");
+
+        if (response.status === 200) {
+          navigate("/user-page");
+        }
+      } catch (err) {
+        toast({
+          variant: "destructive",
+          title: "Problem with registering",
+          description: (err as AxiosError).message,
+        });
+      }
+    },
+  });
 
   const loginForm = useForm<z.infer<typeof registerFormSchema>>({
     resolver: zodResolver(registerFormSchema),
@@ -44,11 +65,7 @@ const LoginPage = () => {
       });
 
       if (response.status === 200) {
-        toast({
-          variant: "default",
-          title: "Success",
-          description: "You have been successfully logged in.",
-        });
+        navigate("/user-page");
       }
     } catch (err) {
       toast({
@@ -58,6 +75,19 @@ const LoginPage = () => {
       });
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="flex">
+        <div className="flex items-center justify-center w-1/3 bg-slate-900">
+          <p className="text-5xl font-bold text-white">Login Page</p>
+        </div>
+        <div className="flex items-center justify-center h-screen w-2/3 bg-slate-950">
+          <LoaderCircle size={38} className="animate-spin" />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex">

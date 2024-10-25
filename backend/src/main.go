@@ -20,7 +20,8 @@ func main() {
 
 	http.HandleFunc("/user/register", handlers.RegisterUser)
 	http.HandleFunc("/user/verify-email", handlers.VerifyEmail)
-	http.HandleFunc("/user/login", jwt.Middleware(handlers.LoginUser))
+	http.HandleFunc("/user/login", handlers.LoginUser)
+	http.HandleFunc("/user/logged-in", jwt.Middleware(handlers.UserIsLoggedIn))
 
 	port := config.Application.PORT
 

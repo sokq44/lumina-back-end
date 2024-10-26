@@ -7,6 +7,7 @@ import (
 	"backend/utils/database"
 	"backend/utils/emails"
 	"backend/utils/jwt"
+	"database/sql"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -136,6 +137,13 @@ var VerifyEmail http.HandlerFunc = func(responseWriter http.ResponseWriter, requ
 	responseWriter.WriteHeader(http.StatusNoContent)
 }
 
+var UserLoggedIn http.HandlerFunc = func(responseWriter http.ResponseWriter, request *http.Request) {
+	if request.Method != http.MethodGet {
+		responseWriter.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+}
+
 var LoginUser http.HandlerFunc = func(responseWriter http.ResponseWriter, request *http.Request) {
 	if request.Method != http.MethodPost {
 		responseWriter.WriteHeader(http.StatusMethodNotAllowed)
@@ -157,6 +165,16 @@ var LoginUser http.HandlerFunc = func(responseWriter http.ResponseWriter, reques
 	if err != nil {
 		log.Println(err)
 		responseWriter.WriteHeader(http.StatusNotFound)
+		return
+	}
+
+	refreshToken, err := db.GetRefreshTokenByUserId(user.Id)
+	if refreshToken != nil {
+		responseWriter.WriteHeader(http.StatusOK)
+		return
+	} else if err != nil && err != sql.ErrNoRows {
+		log.Println(err)
+		responseWriter.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
@@ -206,9 +224,40 @@ var LoginUser http.HandlerFunc = func(responseWriter http.ResponseWriter, reques
 	responseWriter.WriteHeader(http.StatusOK)
 }
 
-var UserIsLoggedIn http.HandlerFunc = func(responseWriter http.ResponseWriter, request *http.Request) {
-	if request.Method != http.MethodGet {
+var LogoutUser http.HandlerFunc = func(responseWriter http.ResponseWriter, request *http.Request) {
+	if request.Method != http.MethodDelete {
 		responseWriter.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
+
+	refreshCookie, err := request.Cookie("refresh_token")
+	if err != nil {
+		log.Println(err)
+		responseWriter.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	if err := db.DeleteRefreshTokenByToken(refreshCookie.Value); err != nil {
+		log.Println(err)
+		responseWriter.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	http.SetCookie(responseWriter, &http.Cookie{
+		Name:     "access_token",
+		Value:    "",
+		HttpOnly: true,
+		Path:     "/",
+		Expires:  time.Unix(0, 0),
+	})
+
+	http.SetCookie(responseWriter, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    "",
+		HttpOnly: true,
+		Path:     "/",
+		Expires:  time.Unix(0, 0),
+	})
+
+	responseWriter.WriteHeader(http.StatusOK)
 }

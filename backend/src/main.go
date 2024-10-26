@@ -12,16 +12,15 @@ import (
 )
 
 func main() {
-	// serverMux := http.NewServeMux()
-
 	config.InitConfig()
 	database.InitDb()
 	emails.InitEmails()
 
+	http.HandleFunc("/user/login", handlers.LoginUser)
 	http.HandleFunc("/user/register", handlers.RegisterUser)
 	http.HandleFunc("/user/verify-email", handlers.VerifyEmail)
-	http.HandleFunc("/user/login", handlers.LoginUser)
-	http.HandleFunc("/user/logged-in", jwt.Middleware(handlers.UserIsLoggedIn))
+	http.HandleFunc("/user/logout", jwt.Middleware(handlers.LogoutUser))
+	http.HandleFunc("/user/logged-in", jwt.Middleware(handlers.UserLoggedIn))
 
 	port := config.Application.PORT
 

@@ -7,6 +7,7 @@ import (
 	"backend/utils/database"
 	"crypto/hmac"
 	"crypto/sha256"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -150,12 +151,9 @@ func Middleware(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		db := database.GetDb()
 
-		log.Println("Hello from middleware")
-
 		/* Check whether refresh token was passed in the request. */
 		refreshToken, err := r.Cookie("refresh_token")
 		if err == http.ErrNoCookie {
-			log.Println("Doesn't exist...")
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		} else if err != nil {
@@ -205,14 +203,16 @@ func Middleware(next http.HandlerFunc) http.HandlerFunc {
 		/* Check whether refresh token is assigned to the right person (db). */
 		userId := claims["user"].(string)
 		tk, err := db.GetRefreshTokenByUserId(userId)
-		if err != nil {
+		if err == sql.ErrNoRows {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		} else if err != nil {
 			log.Println(err)
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
 
 		if tk.UserId != userId {
-			log.Println("Id's don't match...")
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
@@ -228,7 +228,7 @@ func Middleware(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		/* Check whether the access token has expired, if it did issue another one. */
+		/* Check whether the access token has expired, if it has, issue another one. */
 		if accessToken.Expires.Before(now) {
 			claims, err := DecodePayload(accessToken.Value)
 			if err != nil {
@@ -260,9 +260,6 @@ func Middleware(next http.HandlerFunc) http.HandlerFunc {
 				Path:     "/",
 				Expires:  now.Add(time.Duration(config.Application.JWT_ACCESS_EXP_TIME)),
 			})
-
-			next.ServeHTTP(w, r)
-			return
 		}
 
 		next.ServeHTTP(w, r)

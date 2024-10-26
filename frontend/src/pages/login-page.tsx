@@ -37,6 +37,8 @@ const LoginPage = () => {
         if (response.status === 200) {
           navigate("/user-page");
         }
+
+        return true
       } catch (err) {
         toast({
           variant: "destructive",

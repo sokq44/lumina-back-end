@@ -235,23 +235,23 @@ func (db *Database) CreateRefreshToken(token models.RefreshToken) error {
 	return nil
 }
 
-func (db *Database) GetRefreshTokenByUserId(userId string) (models.RefreshToken, error) {
+func (db *Database) GetRefreshTokenByUserId(userId string) (*models.RefreshToken, error) {
 	var token models.RefreshToken
 	var rawTime string
 
 	err := db.Connection.QueryRow("SELECT * FROM refresh_tokens where user_id=?;", userId).Scan(&token.Id, &token.Token, &rawTime, &token.UserId)
 	if err != nil {
-		return models.RefreshToken{}, fmt.Errorf("error while trying to retrieve a refresh token from the db: %v", err)
+		return nil, err
 	}
 
 	t, err := sqlDatetimeToTime(rawTime)
 	if err != nil {
-		return models.RefreshToken{}, err
+		return nil, err
 	}
 
 	token.Expires = t
 
-	return token, nil
+	return &token, nil
 }
 
 func (db *Database) DeleteRefreshTokenById(id string) error {

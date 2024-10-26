@@ -13,36 +13,47 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
+import { LoaderCircle } from "lucide-react";
 
-const registerFormSchema = z
-  .object({
-    username: z
-      .string()
-      .min(5, { message: "Must be at least 5 characters long." })
-      .max(50, { message: "Can't be longer than 50 characters." }),
-    email: z
-      .string()
-      .email({ message: "Ivalid email." })
-      .min(1, { message: "This field is required." }),
-    password: z.string().min(1, { message: "This field is required." }),
-    repeatPass: z.string(),
-  })
-  .refine((data) => data.password === data.repeatPass, {
-    message: "Passwords don't match",
-    path: ["repeatPass"],
-  });
+const registerFormSchema = z.object({
+  email: z
+    .string()
+    .email({ message: "Ivalid email." })
+    .min(1, { message: "This field is required." }),
+  password: z.string().min(1, { message: "This field is required." }),
+});
 
-const RegisterPage = () => {
+const LoginPage = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const registerForm = useForm<z.infer<typeof registerFormSchema>>({
+  const { isLoading } = useQuery({
+    queryKey: ["logged-in-query"],
+    queryFn: async () => {
+      try {
+        const response = await axios.get("/api/user/logged-in");
+
+        if (response.status === 200) {
+          navigate("/user-page");
+        }
+
+        return true
+      } catch (err) {
+        toast({
+          variant: "destructive",
+          title: "Problem with registering",
+          description: (err as AxiosError).message,
+        });
+      }
+    },
+  });
+
+  const loginForm = useForm<z.infer<typeof registerFormSchema>>({
     resolver: zodResolver(registerFormSchema),
     defaultValues: {
-      username: "",
       email: "",
       password: "",
-      repeatPass: "",
     },
   });
 
@@ -50,16 +61,13 @@ const RegisterPage = () => {
     values: z.infer<typeof registerFormSchema>
   ) => {
     try {
-      const response = await axios.post("/api/user/register", {
-        username: values.username,
+      const response = await axios.post("/api/user/login", {
         email: values.email,
         password: values.password,
       });
 
-      if (response.status == 201) {
-        navigate("/verify-email-info", {
-          state: { email: values.email },
-        });
+      if (response.status === 200) {
+        navigate("/user-page");
       }
     } catch (err) {
       toast({
@@ -70,37 +78,32 @@ const RegisterPage = () => {
     }
   };
 
+  if (isLoading) {
+    return (
+      <div className="flex">
+        <div className="flex items-center justify-center w-1/3 bg-slate-900">
+          <p className="text-5xl font-bold text-white">Login Page</p>
+        </div>
+        <div className="flex items-center justify-center h-screen w-2/3 bg-slate-950">
+          <LoaderCircle size={38} className="animate-spin" />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex">
       <div className="flex items-center justify-center w-1/3 bg-slate-900">
-        <p className="text-5xl font-bold text-white">Register Page</p>
+        <p className="text-5xl font-bold text-white">Login Page</p>
       </div>
       <div className="flex items-center justify-center h-screen w-2/3 bg-slate-950">
-        <Form {...registerForm}>
+        <Form {...loginForm}>
           <form
-            onSubmit={registerForm.handleSubmit(registerFormOnSubmit)}
+            onSubmit={loginForm.handleSubmit(registerFormOnSubmit)}
             className="flex flex-col items-center gap-y-4"
           >
             <FormField
-              control={registerForm.control}
-              name="username"
-              render={({ field }) => (
-                <FormItem className="transition-all duration-300">
-                  <FormControl>
-                    <Input
-                      type="text"
-                      placeholder="Username"
-                      autoComplete="off"
-                      className="font-semibold transition-all duration-300"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage className="transition-all duration-300" />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={registerForm.control}
+              control={loginForm.control}
               name="email"
               render={({ field }) => (
                 <FormItem className="transition-all duration-300">
@@ -118,7 +121,7 @@ const RegisterPage = () => {
               )}
             />
             <FormField
-              control={registerForm.control}
+              control={loginForm.control}
               name="password"
               render={({ field }) => (
                 <FormItem className="transition-all duration-300">
@@ -135,30 +138,12 @@ const RegisterPage = () => {
                 </FormItem>
               )}
             />
-            <FormField
-              control={registerForm.control}
-              name="repeatPass"
-              render={({ field }) => (
-                <FormItem className="transition-all duration-300">
-                  <FormControl>
-                    <Input
-                      type="password"
-                      placeholder="Repeat password"
-                      autoComplete="off"
-                      className="font-semibold transition-all duration-300"
-                      {...field}
-                    />
-                  </FormControl>
-                  <FormMessage className="transition-all duration-300" />
-                </FormItem>
-              )}
-            />
             <Button
               variant="secondary"
               type="submit"
               className="w-1/2 font-semibold"
             >
-              Submit
+              Login
             </Button>
           </form>
         </Form>
@@ -167,4 +152,4 @@ const RegisterPage = () => {
   );
 };
 
-export default RegisterPage;
+export default LoginPage;

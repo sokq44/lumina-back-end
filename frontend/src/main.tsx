@@ -7,6 +7,8 @@ import VerifyEmailPage from "@/pages/verify-email-page";
 import RegisterPage from "@/pages/register-page";
 import { Toaster } from "@/components/ui/toaster";
 import "./index.css";
+import LoginPage from "./pages/login-page";
+import UserPage from "./pages/user-page";
 
 const router = createBrowserRouter([
   {
@@ -20,6 +22,14 @@ const router = createBrowserRouter([
   {
     path: "/verify-email-info",
     element: <VerifyEmailPage />,
+  },
+  {
+    path: "/login",
+    element: <LoginPage />,
+  },
+  {
+    path: "/user-page",
+    element: <UserPage />,
   },
 ]);
 

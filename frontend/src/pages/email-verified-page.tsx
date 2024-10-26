@@ -1,12 +1,14 @@
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 import { LoaderCircle, MailCheck, MailWarning } from "lucide-react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 const EmailVerifiedPage = () => {
   const { token } = useParams();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const { data, isLoading } = useQuery({
     queryKey: ["email-verification"],
@@ -36,19 +38,22 @@ const EmailVerifiedPage = () => {
 
   if (data) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-slate-900">
+      <div className="flex flex-col items-center justify-center gap-y-2 h-screen bg-slate-900">
         <span className="flex items-center text-4xl font-bold text-white">
           Your email has been Verified &nbsp; <MailCheck size={32} />
         </span>
         <p className="text-lg text-slate-600">
           Enjoy your journey to knowledge and may the force be with you.
         </p>
+        <Button variant="secondary" onClick={() => navigate("/login")}>
+          Log in
+        </Button>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen bg-slate-900">
+    <div className="flex flex-col items-center justify-center gap-y-2 h-screen bg-slate-900">
       <span className="flex items-center text-4xl font-bold text-white">
         Problem with email verification &nbsp; <MailWarning size={32} />
       </span>

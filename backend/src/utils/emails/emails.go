@@ -1,4 +1,4 @@
-package utils
+package emails
 
 import (
 	"backend/config"
@@ -8,10 +8,6 @@ import (
 	"net/smtp"
 )
 
-// TODO:
-// Better looking email verification template.
-// Write our own smtp server rather than using the SES Service from Amazon Web Services.
-
 type SmtpClient struct {
 	From   string
 	User   string
@@ -20,14 +16,14 @@ type SmtpClient struct {
 	Port   string
 }
 
-var Smtp SmtpClient
+var emails SmtpClient
 
-func init() {
-	from := config.AppContext["SMTP_FROM"]
-	user := config.AppContext["SMTP_USER"]
-	passwd := config.AppContext["SMTP_PASSWD"]
-	host := config.AppContext["SMTP_HOST"]
-	port := config.AppContext["SMTP_PORT"]
+func InitEmails() {
+	from := config.Application.SMTP_FROM
+	user := config.Application.SMTP_USER
+	passwd := config.Application.SMTP_PASSWD
+	host := config.Application.SMTP_HOST
+	port := config.Application.SMTP_PORT
 
 	auth := smtp.PlainAuth("", user, passwd, host)
 
@@ -50,20 +46,22 @@ func init() {
 		log.Fatalf("failed to authenticate with the SMTP server: %v", err)
 	}
 
-	Smtp.From = from
-	Smtp.User = user
-	Smtp.Passwd = passwd
-	Smtp.Host = host
-	Smtp.Port = port
+	emails.From = from
+	emails.User = user
+	emails.Passwd = passwd
+	emails.Host = host
+	emails.Port = port
 
-	log.Printf("connected to smtp server: %v:%v", host, port)
+	log.Printf("initialized the smtp service (%v:%v)", host, port)
+}
+
+func GetEmails() *SmtpClient {
+	return &emails
 }
 
 func (client *SmtpClient) SendEmail(receiver string, subject string, body string) error {
 	auth := smtp.PlainAuth("", client.User, client.Passwd, client.Host)
-
 	addr := fmt.Sprintf("%s:%s", client.Host, client.Port)
-
 	msg := []byte(fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: %s\r\n\r\n%s", client.From, receiver, subject, body))
 
 	if err := smtp.SendMail(addr, auth, client.From, []string{receiver}, msg); err != nil {
@@ -74,7 +72,8 @@ func (client *SmtpClient) SendEmail(receiver string, subject string, body string
 }
 
 func (client *SmtpClient) SendVerificationEmail(receiver string, token string) error {
-	emailBody := fmt.Sprintf("Verification Link: %s/verify-email/%s", config.AppContext["FRONT_ADDR"], token)
+	front := config.Application.FRONT_ADDR
+	emailBody := fmt.Sprintf("Verification Link: %s/verify-email/%s", front, token)
 
 	err := client.SendEmail(receiver, "Subject: Email Verification\r\n", emailBody)
 	if err != nil {

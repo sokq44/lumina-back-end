@@ -19,11 +19,11 @@ type SmtpClient struct {
 var emails SmtpClient
 
 func InitEmails() {
-	from := config.Application.SMTP_FROM
-	user := config.Application.SMTP_USER
-	passwd := config.Application.SMTP_PASSWD
-	host := config.Application.SMTP_HOST
-	port := config.Application.SMTP_PORT
+	from := config.SmtpFrom
+	user := config.SmtpUser
+	passwd := config.SmtpPass
+	host := config.SmtpHost
+	port := config.SmtpPort
 
 	auth := smtp.PlainAuth("", user, passwd, host)
 
@@ -72,7 +72,7 @@ func (client *SmtpClient) SendEmail(receiver string, subject string, body string
 }
 
 func (client *SmtpClient) SendVerificationEmail(receiver string, token string) error {
-	front := config.Application.FRONT_ADDR
+	front := config.FrontAddr
 	emailBody := fmt.Sprintf("Verification Link: %s/verify-email/%s", front, token)
 
 	err := client.SendEmail(receiver, "Subject: Email Verification\r\n", emailBody)

@@ -22,7 +22,7 @@ func main() {
 	http.HandleFunc("/user/logout", jwt.Middleware(handlers.LogoutUser))
 	http.HandleFunc("/user/logged-in", jwt.Middleware(handlers.UserLoggedIn))
 
-	port := config.Application.PORT
+	port := config.Port
 
 	log.Println("serving on http://localhost:"+port, "(press ctrl + c to stop the process)")
 	if err := http.ListenAndServe(fmt.Sprintf(":%s", port), nil); err != nil {

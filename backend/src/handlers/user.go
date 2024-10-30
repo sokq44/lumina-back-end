@@ -67,7 +67,7 @@ var RegisterUser http.HandlerFunc = func(responseWriter http.ResponseWriter, req
 		return
 	}
 
-	duration := time.Duration(config.Application.EMAIL_VER_TIME)
+	duration := time.Duration(config.EmailVerTime)
 	verification := models.EmailVerification{
 		Token:   token,
 		UserId:  userId,
@@ -109,7 +109,7 @@ var VerifyEmail http.HandlerFunc = func(responseWriter http.ResponseWriter, requ
 		return
 	}
 
-	emailValidation, err := db.GetEmailVerificationFromToken(body.Token)
+	emailValidation, err := db.GetEmailVerificationByToken(body.Token)
 	if err != nil {
 		log.Println(err.Error())
 		responseWriter.WriteHeader(http.StatusInternalServerError)
@@ -122,7 +122,7 @@ var VerifyEmail http.HandlerFunc = func(responseWriter http.ResponseWriter, requ
 		return
 	}
 
-	if err = db.DeleteEmailVerification(emailValidation.Id); err != nil {
+	if err = db.DeleteEmailVerificationById(emailValidation.Id); err != nil {
 		log.Println(err.Error())
 		responseWriter.WriteHeader(http.StatusInternalServerError)
 		return
@@ -185,14 +185,14 @@ var LoginUser http.HandlerFunc = func(responseWriter http.ResponseWriter, reques
 	}
 
 	now := time.Now()
-	access, err := jwt.GenerateAccess(user, now)
+	access, err := jwt.GenerateAccessToken(user, now)
 	if err != nil {
 		log.Println(err.Error())
 		responseWriter.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	refresh, err := jwt.GenerateRefresh(user.Id, now)
+	refresh, err := jwt.GenerateRefreshToken(user.Id, now)
 	if err != nil {
 		log.Println(err.Error())
 		responseWriter.WriteHeader(http.StatusInternalServerError)
@@ -210,7 +210,7 @@ var LoginUser http.HandlerFunc = func(responseWriter http.ResponseWriter, reques
 		Value:    access,
 		HttpOnly: true,
 		Path:     "/",
-		Expires:  now.Add(time.Duration(config.Application.JWT_ACCESS_EXP_TIME)),
+		Expires:  now.Add(time.Duration(config.JwtAccExpTime)),
 	})
 
 	http.SetCookie(responseWriter, &http.Cookie{
@@ -218,7 +218,7 @@ var LoginUser http.HandlerFunc = func(responseWriter http.ResponseWriter, reques
 		Value:    refresh.Token,
 		HttpOnly: true,
 		Path:     "/",
-		Expires:  now.Add(time.Duration(config.Application.JWT_REFRESH_EXP_TIME)),
+		Expires:  now.Add(time.Duration(config.JwtRefExpTime)),
 	})
 
 	responseWriter.WriteHeader(http.StatusOK)

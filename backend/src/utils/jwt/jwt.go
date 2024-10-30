@@ -50,7 +50,7 @@ func CreateSignature(headerPayload, secret string) string {
 	return cryptography.Base64UrlEncode(h.Sum(nil))
 }
 
-func Generate(claims Claims) (string, error) {
+func GenerateToken(claims Claims) (string, error) {
 	header, err := CreateHeader()
 	if err != nil {
 		return "", err
@@ -61,7 +61,7 @@ func Generate(claims Claims) (string, error) {
 		return "", err
 	}
 
-	secret := config.Application.JWT_SECRET
+	secret := config.JwtSecret
 
 	headerPayload := fmt.Sprintf("%s.%s", header, payload)
 	signature := CreateSignature(headerPayload, secret)
@@ -70,15 +70,15 @@ func Generate(claims Claims) (string, error) {
 	return newJWT, nil
 }
 
-func GenerateAccess(user models.User, now time.Time) (string, error) {
-	expires := time.Duration(config.Application.JWT_ACCESS_EXP_TIME)
+func GenerateAccessToken(user models.User, now time.Time) (string, error) {
+	expires := time.Duration(config.JwtAccExpTime)
 	claims := Claims{
 		"user": user.Id,
 		"exp":  now.Add(expires).Unix(),
 		"iat":  now.Unix(),
 	}
 
-	token, err := Generate(claims)
+	token, err := GenerateToken(claims)
 	if err != nil {
 		return "", err
 	}
@@ -86,8 +86,8 @@ func GenerateAccess(user models.User, now time.Time) (string, error) {
 	return token, nil
 }
 
-func GenerateRefresh(userId string, now time.Time) (models.RefreshToken, error) {
-	expires := time.Duration(config.Application.JWT_REFRESH_EXP_TIME)
+func GenerateRefreshToken(userId string, now time.Time) (models.RefreshToken, error) {
+	expires := time.Duration(config.JwtRefExpTime)
 	id := uuid.New().String()
 	claims := Claims{
 		"user": userId,
@@ -95,7 +95,7 @@ func GenerateRefresh(userId string, now time.Time) (models.RefreshToken, error) 
 		"jti":  id,
 	}
 
-	tk, err := Generate(claims)
+	tk, err := GenerateToken(claims)
 	if err != nil {
 		return models.RefreshToken{}, err
 	}
@@ -129,7 +129,7 @@ func DecodePayload(token string) (Claims, error) {
 	return claims, nil
 }
 
-func RefreshAndAccessFromRequest(r *http.Request) (string, string, error) {
+func GetRefAccFromRequest(r *http.Request) (string, string, error) {
 	access, err := r.Cookie("access_token")
 	if err == http.ErrNoCookie {
 		return "", "", err
@@ -237,7 +237,7 @@ func Middleware(next http.HandlerFunc) http.HandlerFunc {
 				return
 			}
 
-			expires := time.Duration(config.Application.JWT_ACCESS_EXP_TIME)
+			expires := time.Duration(config.JwtAccExpTime)
 			claims["exp"] = now.Add(expires)
 			user, err := database.GetDb().GetUserById(claims["user"].(string))
 			if err != nil {
@@ -246,7 +246,7 @@ func Middleware(next http.HandlerFunc) http.HandlerFunc {
 				return
 			}
 
-			access, err := GenerateAccess(user, now)
+			access, err := GenerateAccessToken(user, now)
 			if err != nil {
 				log.Println(err)
 				w.WriteHeader(http.StatusInternalServerError)
@@ -258,7 +258,7 @@ func Middleware(next http.HandlerFunc) http.HandlerFunc {
 				Value:    access,
 				HttpOnly: true,
 				Path:     "/",
-				Expires:  now.Add(time.Duration(config.Application.JWT_ACCESS_EXP_TIME)),
+				Expires:  now.Add(time.Duration(config.JwtAccExpTime)),
 			})
 		}
 

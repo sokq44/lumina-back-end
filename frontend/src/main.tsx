@@ -9,6 +9,7 @@ import { Toaster } from "@/components/ui/toaster";
 import "./index.css";
 import LoginPage from "./pages/login-page";
 import UserPage from "./pages/user-page";
+import ModifyUserPage from "./pages/modify-user-page";
 
 const router = createBrowserRouter([
   {
@@ -31,6 +32,10 @@ const router = createBrowserRouter([
     path: "/user-page",
     element: <UserPage />,
   },
+  {
+    path: "/modify-user",
+    element: <ModifyUserPage />
+  }
 ]);
 
 const queryClient = new QueryClient({

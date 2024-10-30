@@ -10,7 +10,7 @@ import (
 	"time"
 )
 
-func Authorization(next http.HandlerFunc) http.HandlerFunc {
+func Authenticate(next http.HandlerFunc) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		db := database.GetDb()
 

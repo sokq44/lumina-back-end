@@ -30,6 +30,28 @@ const UserPage = () => {
     retryDelay: 10000,
   });
 
+  const modify = async () => {
+    navigate("/modify-user", {
+      state: { username: data?.username, email: data?.email },
+    });
+  };
+
+  const logout = async () => {
+    try {
+      const response = await axios.delete("/api/user/logout");
+
+      if (response.status == 200) {
+        navigate("/login");
+      }
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: "Problem with registering",
+        description: (err as AxiosError).message,
+      });
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen bg-slate-950">
@@ -43,26 +65,14 @@ const UserPage = () => {
       <div className="flex items-center justify-center text-white">
         {JSON.stringify(data)}
       </div>
-      <Button
-        variant="secondary"
-        onClick={async () => {
-          try {
-            const response = await axios.delete("/api/user/logout");
-
-            if (response.status == 200) {
-              navigate("/login");
-            }
-          } catch (err) {
-            toast({
-              variant: "destructive",
-              title: "Problem with registering",
-              description: (err as AxiosError).message,
-            });
-          }
-        }}
-      >
-        Logout
-      </Button>
+      <div className="flex items-center gap-4">
+        <Button variant="secondary" onClick={modify}>
+          Modify The Data
+        </Button>
+        <Button variant="secondary" onClick={logout}>
+          Logout
+        </Button>
+      </div>
     </div>
   );
 };

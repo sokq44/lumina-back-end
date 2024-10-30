@@ -16,6 +16,7 @@ import (
 
 var db *database.Database = database.GetDb()
 
+// TODO: Implement some kind of verification whether the sent data is valid
 var RegisterUser http.HandlerFunc = func(responseWriter http.ResponseWriter, request *http.Request) {
 	if request.Method != http.MethodPost {
 		responseWriter.WriteHeader(http.StatusMethodNotAllowed)
@@ -295,6 +296,46 @@ var GetUser http.HandlerFunc = func(responseWriter http.ResponseWriter, request 
 		"email":    user.Email,
 	}
 	if err := json.NewEncoder(responseWriter).Encode(userData); err != nil {
+		log.Println(err)
+		responseWriter.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+}
+
+// TODO: Implement some kind of verification whether the sent data is valid
+var ModifyUser http.HandlerFunc = func(responseWriter http.ResponseWriter, request *http.Request) {
+	if request.Method != http.MethodPatch {
+		responseWriter.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+	type RequestBody struct {
+		Username string `json:"username"`
+		Email    string `json:"email"`
+	}
+
+	var body RequestBody
+	if err := json.NewDecoder(request.Body).Decode(&body); err != nil {
+		log.Println(err)
+		responseWriter.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	user, err := db.GetUserByEmail(body.Email)
+	if err != nil {
+		log.Println(err)
+		responseWriter.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	var newUser models.User = models.User{
+		Id:       user.Id,
+		Username: body.Username,
+		Email:    body.Email,
+		Password: user.Password,
+		Verified: user.Verified,
+	}
+	if err := db.UpdateUser(newUser); err != nil {
 		log.Println(err)
 		responseWriter.WriteHeader(http.StatusInternalServerError)
 		return

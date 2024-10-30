@@ -82,6 +82,18 @@ func (db *Database) CreateUser(u models.User) (string, error) {
 	return id, nil
 }
 
+func (db *Database) UpdateUser(u models.User) error {
+	_, err := db.Connection.Exec(
+		"UPDATE users SET username=?, email=?, password=?, verified=? WHERE id=?",
+		u.Username, u.Email, u.Password, u.Verified, u.Id,
+	)
+	if err != nil {
+		return fmt.Errorf("error while trying to update user: %v", err)
+	}
+
+	return nil
+}
+
 func (db *Database) DeleteUserById(id string) error {
 	_, err := db.Connection.Exec("DELETE FROM users WHERE id=?;", id)
 

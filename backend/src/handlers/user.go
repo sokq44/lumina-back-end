@@ -261,3 +261,42 @@ var LogoutUser http.HandlerFunc = func(responseWriter http.ResponseWriter, reque
 
 	responseWriter.WriteHeader(http.StatusOK)
 }
+
+var GetUser http.HandlerFunc = func(responseWriter http.ResponseWriter, request *http.Request) {
+	if request.Method != http.MethodGet {
+		responseWriter.WriteHeader(http.StatusMethodNotAllowed)
+		return
+	}
+
+	access, err := request.Cookie("access_token")
+	if err != nil {
+		log.Println(err)
+		responseWriter.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	claims, err := jwt.DecodePayload(access.Value)
+	if err != nil {
+		log.Println(err)
+		responseWriter.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	userId := claims["user"].(string)
+	user, err := db.GetUserById(userId)
+	if err != nil {
+		log.Println(err)
+		responseWriter.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	userData := map[string]string{
+		"username": user.Username,
+		"email":    user.Email,
+	}
+	if err := json.NewEncoder(responseWriter).Encode(userData); err != nil {
+		log.Println(err)
+		responseWriter.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+}

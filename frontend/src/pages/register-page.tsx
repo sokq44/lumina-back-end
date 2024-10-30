@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 
 const registerFormSchema = z
@@ -75,7 +75,7 @@ const RegisterPage = () => {
       <div className="flex items-center justify-center w-1/3 bg-slate-900">
         <p className="text-5xl font-bold text-white">Register Page</p>
       </div>
-      <div className="flex items-center justify-center h-screen w-2/3 bg-slate-950">
+      <div className="flex flex-col gap-4 items-center justify-center h-screen w-2/3 bg-slate-950">
         <Form {...registerForm}>
           <form
             onSubmit={registerForm.handleSubmit(registerFormOnSubmit)}
@@ -162,6 +162,7 @@ const RegisterPage = () => {
             </Button>
           </form>
         </Form>
+        <Link to="/login" className="text-white font-semibold underline">Already have an account?</Link>
       </div>
     </div>
   );

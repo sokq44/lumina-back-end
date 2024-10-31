@@ -42,9 +42,10 @@ const LoginPage = () => {
       } catch (err) {
         toast({
           variant: "destructive",
-          title: "Problem with registering",
+          title: "Checking whether user is already logged in...",
           description: (err as AxiosError).message,
         });
+        return false
       }
     },
   });

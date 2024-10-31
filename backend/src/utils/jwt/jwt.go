@@ -58,10 +58,8 @@ func GenerateToken(claims Claims) (string, error) {
 		return "", err
 	}
 
-	secret := config.JwtSecret
-
 	headerPayload := fmt.Sprintf("%s.%s", header, payload)
-	signature := CreateSignature(headerPayload, secret)
+	signature := CreateSignature(headerPayload, config.JwtSecret)
 	newJWT := fmt.Sprintf("%s.%s.%s", header, payload, signature)
 
 	return newJWT, nil
@@ -142,4 +140,13 @@ func GetRefAccFromRequest(r *http.Request) (string, string, error) {
 	}
 
 	return access.Value, refresh.Value, nil
+}
+
+func TokenWasGeneratedHere(token string) bool {
+	parts := strings.Split(token, ".")
+	headerPayload := fmt.Sprintf("%s.%s", parts[0], parts[1])
+
+	var signature string = CreateSignature(headerPayload, config.JwtSecret)
+
+	return strings.Compare(signature, parts[2]) == 0
 }

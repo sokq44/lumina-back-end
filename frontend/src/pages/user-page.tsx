@@ -20,11 +20,8 @@ const UserPage = () => {
           email: response.data.email,
         };
       } catch (err) {
-        toast({
-          variant: "destructive",
-          title: "Problem with registering",
-          description: (err as AxiosError).message,
-        });
+        const error = err as AxiosError;
+        if (error.status === 401) navigate("/login");
       }
     },
     retryDelay: 10000,

@@ -3,11 +3,10 @@ package handlers
 import (
 	"backend/config"
 	"backend/models"
-	"backend/utils/cryptography"
+	"backend/utils/crypt"
 	"backend/utils/database"
 	"backend/utils/emails"
 	"backend/utils/jwt"
-	"database/sql"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -15,14 +14,10 @@ import (
 )
 
 var db *database.Database = database.GetDb()
+var em *emails.SmtpClient = emails.GetEmails()
 
 // TODO: Implement some kind of verification whether the sent data is valid
 var RegisterUser http.HandlerFunc = func(responseWriter http.ResponseWriter, request *http.Request) {
-	if request.Method != http.MethodPost {
-		responseWriter.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-
 	type RequestBody struct {
 		Username string `json:"username"`
 		Email    string `json:"email"`
@@ -38,13 +33,11 @@ var RegisterUser http.HandlerFunc = func(responseWriter http.ResponseWriter, req
 	u := models.User{
 		Username: r.Username,
 		Email:    r.Email,
-		Password: cryptography.Sha256(r.Password),
+		Password: crypt.Sha256(r.Password),
 	}
 
-	exists, err := db.UserExists(u)
-	if err != nil {
-		log.Println(err)
-		responseWriter.WriteHeader(http.StatusInternalServerError)
+	exists, e := db.UserExists(u)
+	if e.Handle(responseWriter) {
 		return
 	}
 	if exists {
@@ -52,19 +45,13 @@ var RegisterUser http.HandlerFunc = func(responseWriter http.ResponseWriter, req
 		return
 	}
 
-	userId, err := db.CreateUser(u)
-
-	if err != nil {
-		log.Println(err)
-		responseWriter.WriteHeader(http.StatusInternalServerError)
+	userId, e := db.CreateUser(u)
+	if e.Handle(responseWriter) {
 		return
 	}
 
-	token, err := cryptography.RandomString(128)
-
-	if err != nil {
-		log.Println(err)
-		responseWriter.WriteHeader(http.StatusBadRequest)
+	token, e := crypt.RandomString(128)
+	if e.Handle(responseWriter) {
 		return
 	}
 
@@ -74,19 +61,13 @@ var RegisterUser http.HandlerFunc = func(responseWriter http.ResponseWriter, req
 		UserId:  userId,
 		Expires: time.Now().Add(duration),
 	}
-	err = db.CreateEmailVerification(verification)
-	if err != nil {
-		log.Println(err)
-		responseWriter.WriteHeader(http.StatusBadRequest)
+	e = db.CreateEmailVerification(verification)
+	if e.Handle(responseWriter) {
 		return
 	}
 
-	em := emails.GetEmails()
-
-	err = em.SendVerificationEmail(u.Email, token)
-	if err != nil {
-		log.Println(err)
-		responseWriter.WriteHeader(http.StatusInternalServerError)
+	e = em.SendVerificationEmail(u.Email, token)
+	if e.Handle(responseWriter) {
 		return
 	}
 
@@ -94,11 +75,6 @@ var RegisterUser http.HandlerFunc = func(responseWriter http.ResponseWriter, req
 }
 
 var VerifyEmail http.HandlerFunc = func(responseWriter http.ResponseWriter, request *http.Request) {
-	if request.Method != http.MethodPatch {
-		responseWriter.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-
 	type RequestBody struct {
 		Token string `json:"token"`
 	}
@@ -110,10 +86,8 @@ var VerifyEmail http.HandlerFunc = func(responseWriter http.ResponseWriter, requ
 		return
 	}
 
-	emailValidation, err := db.GetEmailVerificationByToken(body.Token)
-	if err != nil {
-		log.Println(err.Error())
-		responseWriter.WriteHeader(http.StatusInternalServerError)
+	emailValidation, e := db.GetEmailVerificationByToken(body.Token)
+	if e.Handle(responseWriter) {
 		return
 	}
 
@@ -123,34 +97,20 @@ var VerifyEmail http.HandlerFunc = func(responseWriter http.ResponseWriter, requ
 		return
 	}
 
-	if err = db.DeleteEmailVerificationById(emailValidation.Id); err != nil {
-		log.Println(err.Error())
-		responseWriter.WriteHeader(http.StatusInternalServerError)
+	e = db.DeleteEmailVerificationById(emailValidation.Id)
+	if e.Handle(responseWriter) {
 		return
 	}
 
-	if err = db.VerifyUser(emailValidation.UserId); err != nil {
-		log.Println(err.Error())
-		responseWriter.WriteHeader(http.StatusInternalServerError)
+	e = db.VerifyUser(emailValidation.UserId)
+	if e.Handle(responseWriter) {
 		return
 	}
 
 	responseWriter.WriteHeader(http.StatusNoContent)
 }
 
-var UserLoggedIn http.HandlerFunc = func(responseWriter http.ResponseWriter, request *http.Request) {
-	if request.Method != http.MethodGet {
-		responseWriter.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-}
-
 var LoginUser http.HandlerFunc = func(responseWriter http.ResponseWriter, request *http.Request) {
-	if request.Method != http.MethodPost {
-		responseWriter.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-
 	type RequestBody struct {
 		Email    string `json:"email"`
 		Password string `json:"password"`
@@ -162,47 +122,38 @@ var LoginUser http.HandlerFunc = func(responseWriter http.ResponseWriter, reques
 		return
 	}
 
-	user, err := db.GetUserByEmail(r.Email)
-	if err != nil {
-		log.Println(err)
-		responseWriter.WriteHeader(http.StatusNotFound)
+	user, e := db.GetUserByEmail(r.Email)
+	if e.Handle(responseWriter) {
 		return
 	}
 
-	refreshToken, err := db.GetRefreshTokenByUserId(user.Id)
+	refreshToken, e := db.GetRefreshTokenByUserId(user.Id)
 	if refreshToken != nil {
 		responseWriter.WriteHeader(http.StatusOK)
 		return
-	} else if err != nil && err != sql.ErrNoRows {
-		log.Println(err)
-		responseWriter.WriteHeader(http.StatusInternalServerError)
+	} else if e.Handle(responseWriter) {
 		return
 	}
 
-	hashedPasswd := cryptography.Sha256(r.Password)
+	hashedPasswd := crypt.Sha256(r.Password)
 	if !user.Verified || hashedPasswd != user.Password {
 		responseWriter.WriteHeader(http.StatusForbidden)
 		return
 	}
 
 	now := time.Now()
-	access, err := jwt.GenerateAccessToken(user, now)
-	if err != nil {
-		log.Println(err.Error())
-		responseWriter.WriteHeader(http.StatusInternalServerError)
+	access, e := jwt.GenerateAccessToken(user, now)
+	if e.Handle(responseWriter) {
 		return
 	}
 
-	refresh, err := jwt.GenerateRefreshToken(user.Id, now)
-	if err != nil {
-		log.Println(err.Error())
-		responseWriter.WriteHeader(http.StatusInternalServerError)
+	refresh, e := jwt.GenerateRefreshToken(user.Id, now)
+	if e.Handle(responseWriter) {
 		return
 	}
 
-	if err := db.CreateRefreshToken(refresh); err != nil {
-		log.Println(err.Error())
-		responseWriter.WriteHeader(http.StatusInternalServerError)
+	e = db.CreateRefreshToken(refresh)
+	if e.Handle(responseWriter) {
 		return
 	}
 
@@ -226,11 +177,6 @@ var LoginUser http.HandlerFunc = func(responseWriter http.ResponseWriter, reques
 }
 
 var LogoutUser http.HandlerFunc = func(responseWriter http.ResponseWriter, request *http.Request) {
-	if request.Method != http.MethodDelete {
-		responseWriter.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-
 	refreshCookie, err := request.Cookie("refresh_token")
 	if err != nil {
 		log.Println(err)
@@ -238,9 +184,8 @@ var LogoutUser http.HandlerFunc = func(responseWriter http.ResponseWriter, reque
 		return
 	}
 
-	if err := db.DeleteRefreshTokenByToken(refreshCookie.Value); err != nil {
-		log.Println(err)
-		responseWriter.WriteHeader(http.StatusInternalServerError)
+	e := db.DeleteRefreshTokenByToken(refreshCookie.Value)
+	if e.Handle(responseWriter) {
 		return
 	}
 
@@ -264,11 +209,6 @@ var LogoutUser http.HandlerFunc = func(responseWriter http.ResponseWriter, reque
 }
 
 var GetUser http.HandlerFunc = func(responseWriter http.ResponseWriter, request *http.Request) {
-	if request.Method != http.MethodGet {
-		responseWriter.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-
 	access, err := request.Cookie("access_token")
 	if err != nil {
 		log.Println(err)
@@ -276,18 +216,14 @@ var GetUser http.HandlerFunc = func(responseWriter http.ResponseWriter, request 
 		return
 	}
 
-	claims, err := jwt.DecodePayload(access.Value)
-	if err != nil {
-		log.Println(err)
-		responseWriter.WriteHeader(http.StatusInternalServerError)
+	claims, e := jwt.DecodePayload(access.Value)
+	if e.Handle(responseWriter) {
 		return
 	}
 
 	userId := claims["user"].(string)
-	user, err := db.GetUserById(userId)
-	if err != nil {
-		log.Println(err)
-		responseWriter.WriteHeader(http.StatusInternalServerError)
+	user, e := db.GetUserById(userId)
+	if e.Handle(responseWriter) {
 		return
 	}
 
@@ -304,11 +240,6 @@ var GetUser http.HandlerFunc = func(responseWriter http.ResponseWriter, request 
 
 // TODO: Implement some kind of verification whether the sent data is valid
 var ModifyUser http.HandlerFunc = func(responseWriter http.ResponseWriter, request *http.Request) {
-	if request.Method != http.MethodPatch {
-		responseWriter.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-
 	type RequestBody struct {
 		Username string `json:"username"`
 		Email    string `json:"email"`
@@ -321,10 +252,8 @@ var ModifyUser http.HandlerFunc = func(responseWriter http.ResponseWriter, reque
 		return
 	}
 
-	user, err := db.GetUserByEmail(body.Email)
-	if err != nil {
-		log.Println(err)
-		responseWriter.WriteHeader(http.StatusInternalServerError)
+	user, e := db.GetUserByEmail(body.Email)
+	if e.Handle(responseWriter) {
 		return
 	}
 
@@ -335,9 +264,8 @@ var ModifyUser http.HandlerFunc = func(responseWriter http.ResponseWriter, reque
 		Password: user.Password,
 		Verified: user.Verified,
 	}
-	if err := db.UpdateUser(newUser); err != nil {
-		log.Println(err)
-		responseWriter.WriteHeader(http.StatusInternalServerError)
+	e = db.UpdateUser(newUser)
+	if e.Handle(responseWriter) {
 		return
 	}
 }

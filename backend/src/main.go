@@ -16,15 +16,71 @@ func main() {
 	database.InitDb()
 	emails.InitEmails()
 
-	http.HandleFunc("/user/login", handlers.LoginUser)
-	http.HandleFunc("/user/register", handlers.RegisterUser)
-	http.HandleFunc("/user/verify-email", handlers.VerifyEmail)
-	http.HandleFunc("/user/logout", middleware.Authenticate(handlers.LogoutUser))
-	http.HandleFunc("/user/logged-in", middleware.Authenticate(handlers.UserLoggedIn))
-	http.HandleFunc("/user/get-user", middleware.Authenticate(handlers.GetUser))
-	http.HandleFunc("/user/modify-user", middleware.Authenticate(handlers.ModifyUser))
-
 	port := config.Port
+
+	http.HandleFunc(
+		"/user/login",
+		middleware.Method(
+			"POST",
+			handlers.LoginUser,
+		),
+	)
+
+	http.HandleFunc(
+		"/user/register",
+		middleware.Method(
+			"POST",
+			handlers.RegisterUser,
+		),
+	)
+
+	http.HandleFunc(
+		"/user/verify-email",
+		middleware.Method(
+			"PATCH",
+			handlers.VerifyEmail,
+		),
+	)
+
+	http.HandleFunc(
+		"/user/logout",
+		middleware.Authenticate(
+			middleware.Method(
+				"DELETE",
+				handlers.LogoutUser,
+			),
+		),
+	)
+
+	http.HandleFunc(
+		"/user/logged-in",
+		middleware.Authenticate(
+			middleware.Method(
+				"GET",
+				func(w http.ResponseWriter, r *http.Request) {},
+			),
+		),
+	)
+
+	http.HandleFunc(
+		"/user/get-user",
+		middleware.Authenticate(
+			middleware.Method(
+				"GET",
+				handlers.GetUser,
+			),
+		),
+	)
+
+	http.HandleFunc(
+		"/user/modify-user",
+		middleware.Authenticate(
+			middleware.Method(
+				"PATCH",
+				handlers.ModifyUser,
+			),
+		),
+	)
 
 	log.Println("serving on http://localhost:"+port, "(press ctrl + c to stop the process)")
 	if err := http.ListenAndServe(fmt.Sprintf(":%s", port), nil); err != nil {

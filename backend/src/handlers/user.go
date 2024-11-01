@@ -11,12 +11,13 @@ import (
 	"log"
 	"net/http"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 var db *database.Database = database.GetDb()
 var em *emails.SmtpClient = emails.GetEmails()
 
-// TODO: Implement some kind of verification whether the sent data is valid
 var RegisterUser http.HandlerFunc = func(responseWriter http.ResponseWriter, request *http.Request) {
 	type RequestBody struct {
 		Username string `json:"username"`
@@ -31,9 +32,13 @@ var RegisterUser http.HandlerFunc = func(responseWriter http.ResponseWriter, req
 	}
 
 	u := models.User{
+		Id:       uuid.New().String(),
 		Username: r.Username,
 		Email:    r.Email,
-		Password: crypt.Sha256(r.Password),
+		Password: r.Password,
+	}
+	if u.Validate(false).Handle(responseWriter) {
+		return
 	}
 
 	exists, e := db.UserExists(u)
@@ -45,8 +50,8 @@ var RegisterUser http.HandlerFunc = func(responseWriter http.ResponseWriter, req
 		return
 	}
 
-	userId, e := db.CreateUser(u)
-	if e.Handle(responseWriter) {
+	u.Password = crypt.Sha256(r.Password)
+	if db.CreateUser(u).Handle(responseWriter) {
 		return
 	}
 
@@ -58,16 +63,14 @@ var RegisterUser http.HandlerFunc = func(responseWriter http.ResponseWriter, req
 	duration := time.Duration(config.EmailVerTime)
 	verification := models.EmailVerification{
 		Token:   token,
-		UserId:  userId,
+		UserId:  u.Id,
 		Expires: time.Now().Add(duration),
 	}
-	e = db.CreateEmailVerification(verification)
-	if e.Handle(responseWriter) {
+	if db.CreateEmailVerification(verification).Handle(responseWriter) {
 		return
 	}
 
-	e = em.SendVerificationEmail(u.Email, token)
-	if e.Handle(responseWriter) {
+	if em.SendVerificationEmail(u.Email, token).Handle(responseWriter) {
 		return
 	}
 
@@ -238,7 +241,6 @@ var GetUser http.HandlerFunc = func(responseWriter http.ResponseWriter, request 
 	}
 }
 
-// TODO: Implement some kind of verification whether the sent data is valid
 var ModifyUser http.HandlerFunc = func(responseWriter http.ResponseWriter, request *http.Request) {
 	type RequestBody struct {
 		Username string `json:"username"`
@@ -264,8 +266,10 @@ var ModifyUser http.HandlerFunc = func(responseWriter http.ResponseWriter, reque
 		Password: user.Password,
 		Verified: user.Verified,
 	}
-	e = db.UpdateUser(newUser)
-	if e.Handle(responseWriter) {
+	if newUser.Validate(true).Handle(responseWriter) {
+		return
+	}
+	if db.UpdateUser(newUser).Handle(responseWriter) {
 		return
 	}
 }

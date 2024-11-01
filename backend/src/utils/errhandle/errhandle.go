@@ -18,6 +18,7 @@ const (
 	EmailsError   ErrorType = 2
 	CryptError    ErrorType = 3
 	JwtError      ErrorType = 4
+	ModelError    ErrorType = 5
 )
 
 func (err *Error) Handle(w http.ResponseWriter) bool {
@@ -25,21 +26,21 @@ func (err *Error) Handle(w http.ResponseWriter) bool {
 		return false
 	}
 
-	if err.Type == DatabaseError {
-		w.WriteHeader(err.Status)
+	w.WriteHeader(err.Status)
+
+	switch err.Type {
+	case DatabaseError:
 		log.Printf("database error -> %v ", err.Message)
-	} else if err.Type == EmailsError {
-		w.WriteHeader(err.Status)
+	case EmailsError:
 		log.Printf("emails error -> %v ", err.Message)
-	} else if err.Type == CryptError {
-		w.WriteHeader(err.Status)
+	case CryptError:
 		log.Printf("crypt error -> %v ", err.Message)
-	} else if err.Type == JwtError {
-		w.WriteHeader(err.Status)
+	case JwtError:
 		log.Printf("jwt error -> %v ", err.Message)
-	} else {
-		log.Printf("can't handle an unknown type of error: %v", err.Type)
-		return false
+	case ModelError:
+		log.Printf("model error -> %v", err.Message)
+	default:
+		log.Printf("unknown error type -> %v", err.Message)
 	}
 
 	return true

@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/go-sql-driver/mysql"
-	"github.com/google/uuid"
 )
 
 type Database struct {
@@ -76,23 +75,21 @@ func parseTime(t string) (time.Time, *errhandle.Error) {
 	return parsed, nil
 }
 
-func (db *Database) CreateUser(u models.User) (string, *errhandle.Error) {
-	id := uuid.New().String()
-
+func (db *Database) CreateUser(u models.User) *errhandle.Error {
 	_, err := db.Connection.Exec(
 		"INSERT INTO users (id, username, email, password) values (?, ?, ?, ?);",
-		id, u.Username, u.Email, u.Password,
+		u.Id, u.Username, u.Email, u.Password,
 	)
 
 	if err != nil {
-		return "", &errhandle.Error{
+		return &errhandle.Error{
 			Type:    errhandle.DatabaseError,
 			Message: fmt.Sprintf("while creating a new user -> %v", err),
 			Status:  http.StatusInternalServerError,
 		}
 	}
 
-	return id, nil
+	return nil
 }
 
 func (db *Database) UpdateUser(u models.User) *errhandle.Error {

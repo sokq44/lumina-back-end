@@ -17,7 +17,7 @@ import { Button } from "@/components/ui/button";
 const modifyUserFormSchema = z.object({
   username: z
     .string()
-    .min(5, { message: "Must be at least 5 characters long." })
+    .min(1, { message: "Must be at least 5 characters long." })
     .max(50, { message: "Can't be longer than 50 characters." }),
   email: z
     .string()

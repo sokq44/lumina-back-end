@@ -16,7 +16,7 @@ func Authenticate(next http.HandlerFunc) http.HandlerFunc {
 		db := database.GetDb()
 		now := time.Now()
 
-		accessToken, refreshToken, e := GetRefAccFromRequest(r)
+		accessToken, refreshToken, e := getRefAccFromRequest(r)
 		if e.Handle(w) {
 			return
 		}
@@ -103,7 +103,18 @@ func Authenticate(next http.HandlerFunc) http.HandlerFunc {
 	}
 }
 
-func GetRefAccFromRequest(r *http.Request) (string, string, *errhandle.Error) {
+func Method(method string, next http.HandlerFunc) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != method {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+
+		next(w, r)
+	}
+}
+
+func getRefAccFromRequest(r *http.Request) (string, string, *errhandle.Error) {
 	access, err := r.Cookie("access_token")
 	if err == http.ErrNoCookie {
 		return "", "", &errhandle.Error{

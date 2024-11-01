@@ -18,11 +18,6 @@ var em *emails.SmtpClient = emails.GetEmails()
 
 // TODO: Implement some kind of verification whether the sent data is valid
 var RegisterUser http.HandlerFunc = func(responseWriter http.ResponseWriter, request *http.Request) {
-	if request.Method != http.MethodPost {
-		responseWriter.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-
 	type RequestBody struct {
 		Username string `json:"username"`
 		Email    string `json:"email"`
@@ -80,11 +75,6 @@ var RegisterUser http.HandlerFunc = func(responseWriter http.ResponseWriter, req
 }
 
 var VerifyEmail http.HandlerFunc = func(responseWriter http.ResponseWriter, request *http.Request) {
-	if request.Method != http.MethodPatch {
-		responseWriter.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-
 	type RequestBody struct {
 		Token string `json:"token"`
 	}
@@ -120,19 +110,7 @@ var VerifyEmail http.HandlerFunc = func(responseWriter http.ResponseWriter, requ
 	responseWriter.WriteHeader(http.StatusNoContent)
 }
 
-var UserLoggedIn http.HandlerFunc = func(responseWriter http.ResponseWriter, request *http.Request) {
-	if request.Method != http.MethodGet {
-		responseWriter.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-}
-
 var LoginUser http.HandlerFunc = func(responseWriter http.ResponseWriter, request *http.Request) {
-	if request.Method != http.MethodPost {
-		responseWriter.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-
 	type RequestBody struct {
 		Email    string `json:"email"`
 		Password string `json:"password"`
@@ -199,11 +177,6 @@ var LoginUser http.HandlerFunc = func(responseWriter http.ResponseWriter, reques
 }
 
 var LogoutUser http.HandlerFunc = func(responseWriter http.ResponseWriter, request *http.Request) {
-	if request.Method != http.MethodDelete {
-		responseWriter.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-
 	refreshCookie, err := request.Cookie("refresh_token")
 	if err != nil {
 		log.Println(err)
@@ -236,11 +209,6 @@ var LogoutUser http.HandlerFunc = func(responseWriter http.ResponseWriter, reque
 }
 
 var GetUser http.HandlerFunc = func(responseWriter http.ResponseWriter, request *http.Request) {
-	if request.Method != http.MethodGet {
-		responseWriter.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-
 	access, err := request.Cookie("access_token")
 	if err != nil {
 		log.Println(err)
@@ -272,11 +240,6 @@ var GetUser http.HandlerFunc = func(responseWriter http.ResponseWriter, request 
 
 // TODO: Implement some kind of verification whether the sent data is valid
 var ModifyUser http.HandlerFunc = func(responseWriter http.ResponseWriter, request *http.Request) {
-	if request.Method != http.MethodPatch {
-		responseWriter.WriteHeader(http.StatusMethodNotAllowed)
-		return
-	}
-
 	type RequestBody struct {
 		Username string `json:"username"`
 		Email    string `json:"email"`

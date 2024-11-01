@@ -27,18 +27,18 @@ func (err *Error) Handle(w http.ResponseWriter) bool {
 
 	if err.Type == DatabaseError {
 		w.WriteHeader(err.Status)
-		log.Printf("database error: %v", err.Message)
+		log.Printf("database error -> %v ", err.Message)
 	} else if err.Type == EmailsError {
 		w.WriteHeader(err.Status)
-		log.Printf("emails error: %v", err.Message)
+		log.Printf("emails error -> %v ", err.Message)
 	} else if err.Type == CryptError {
 		w.WriteHeader(err.Status)
-		log.Printf("crypt error: %v", err.Message)
+		log.Printf("crypt error -> %v ", err.Message)
 	} else if err.Type == JwtError {
 		w.WriteHeader(err.Status)
-		log.Printf("jwt error: %v", err.Message)
+		log.Printf("jwt error -> %v ", err.Message)
 	} else {
-		log.Printf("can't handle unknown type of error: %v", err.Type)
+		log.Printf("can't handle an unknown type of error: %v", err.Type)
 		return false
 	}
 

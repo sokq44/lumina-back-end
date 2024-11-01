@@ -2,9 +2,11 @@ package emails
 
 import (
 	"backend/config"
+	"backend/utils/errhandle"
 	"crypto/tls"
 	"fmt"
 	"log"
+	"net/http"
 	"net/smtp"
 )
 
@@ -59,27 +61,29 @@ func GetEmails() *SmtpClient {
 	return &emails
 }
 
-// TODO: add error handling
-func (client *SmtpClient) SendEmail(receiver string, subject string, body string) error {
+func (client *SmtpClient) SendEmail(receiver string, subject string, body string) *errhandle.Error {
 	auth := smtp.PlainAuth("", client.User, client.Passwd, client.Host)
 	addr := fmt.Sprintf("%s:%s", client.Host, client.Port)
 	msg := []byte(fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: %s\r\n\r\n%s", client.From, receiver, subject, body))
 
 	if err := smtp.SendMail(addr, auth, client.From, []string{receiver}, msg); err != nil {
-		return err
+		return &errhandle.Error{
+			Type:    errhandle.EmailsError,
+			Message: fmt.Sprintf("while trying to send an email -> %v", err),
+			Status:  http.StatusInternalServerError,
+		}
 	}
 
 	return nil
 }
 
-// TODO: add error handling
-func (client *SmtpClient) SendVerificationEmail(receiver string, token string) error {
+func (client *SmtpClient) SendVerificationEmail(receiver string, token string) *errhandle.Error {
 	front := config.FrontAddr
 	emailBody := fmt.Sprintf("Verification Link: %s/verify-email/%s", front, token)
 
 	err := client.SendEmail(receiver, "Subject: Email Verification\r\n", emailBody)
 	if err != nil {
-		return fmt.Errorf("error while trying to send a verification email: %v", err.Error())
+		return err
 	}
 
 	return nil

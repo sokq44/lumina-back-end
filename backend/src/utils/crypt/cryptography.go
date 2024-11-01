@@ -1,7 +1,7 @@
 package crypt
 
 import (
-	errhandle "backend/utils/error-handling"
+	"backend/utils/errhandle"
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/binary"
@@ -149,7 +149,7 @@ func Base64UrlDecode(input string) ([]byte, *errhandle.Error) {
 	if err != nil {
 		return nil, &errhandle.Error{
 			Type:    errhandle.CryptError,
-			Message: fmt.Sprintf("error while decoding a base 64 URL string: %v", err),
+			Message: fmt.Sprintf("while decoding a base 64 URL string: %v", err),
 			Status:  http.StatusInternalServerError,
 		}
 	}

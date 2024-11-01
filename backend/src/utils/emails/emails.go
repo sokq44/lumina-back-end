@@ -59,6 +59,7 @@ func GetEmails() *SmtpClient {
 	return &emails
 }
 
+// TODO: add error handling
 func (client *SmtpClient) SendEmail(receiver string, subject string, body string) error {
 	auth := smtp.PlainAuth("", client.User, client.Passwd, client.Host)
 	addr := fmt.Sprintf("%s:%s", client.Host, client.Port)
@@ -71,6 +72,7 @@ func (client *SmtpClient) SendEmail(receiver string, subject string, body string
 	return nil
 }
 
+// TODO: add error handling
 func (client *SmtpClient) SendVerificationEmail(receiver string, token string) error {
 	front := config.FrontAddr
 	emailBody := fmt.Sprintf("Verification Link: %s/verify-email/%s", front, token)

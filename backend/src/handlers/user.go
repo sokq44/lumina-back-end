@@ -3,7 +3,7 @@ package handlers
 import (
 	"backend/config"
 	"backend/models"
-	"backend/utils/cryptography"
+	"backend/utils/crypt"
 	"backend/utils/database"
 	"backend/utils/emails"
 	"backend/utils/jwt"
@@ -38,7 +38,7 @@ var RegisterUser http.HandlerFunc = func(responseWriter http.ResponseWriter, req
 	u := models.User{
 		Username: r.Username,
 		Email:    r.Email,
-		Password: cryptography.Sha256(r.Password),
+		Password: crypt.Sha256(r.Password),
 	}
 
 	exists, err := db.UserExists(u)
@@ -60,7 +60,7 @@ var RegisterUser http.HandlerFunc = func(responseWriter http.ResponseWriter, req
 		return
 	}
 
-	token, err := cryptography.RandomString(128)
+	token, err := crypt.RandomString(128)
 
 	if err != nil {
 		log.Println(err)
@@ -179,7 +179,7 @@ var LoginUser http.HandlerFunc = func(responseWriter http.ResponseWriter, reques
 		return
 	}
 
-	hashedPasswd := cryptography.Sha256(r.Password)
+	hashedPasswd := crypt.Sha256(r.Password)
 	if !user.Verified || hashedPasswd != user.Password {
 		responseWriter.WriteHeader(http.StatusForbidden)
 		return

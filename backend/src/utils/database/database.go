@@ -21,6 +21,7 @@ type Database struct {
 
 var db Database
 
+// TODO: add error handling
 func InitDb() {
 	user := config.DbUser
 	passwd := config.DbPass
@@ -61,19 +62,25 @@ func GetDb() *Database {
 	return &db
 }
 
+// TODO: add error handling
 func parseTime(t string) (time.Time, error) {
 	parsed, err := time.Parse("2006-01-02 15:04:05", t)
+
 	if err != nil {
-		return time.Time{}, fmt.Errorf("error while parsing datetime from the database: %v", err.Error())
+		return time.Time{}, fmt.Errorf("error while parsing datetime from the database: %v", err)
 	}
 
 	return parsed, nil
 }
 
+// TODO: add error handling
 func (db *Database) CreateUser(u models.User) (string, error) {
 	id := uuid.New().String()
 
-	_, err := db.Connection.Exec("INSERT INTO users (id, username, email, password) values (?, ?, ?, ?);", id, u.Username, u.Email, u.Password)
+	_, err := db.Connection.Exec(
+		"INSERT INTO users (id, username, email, password) values (?, ?, ?, ?);",
+		id, u.Username, u.Email, u.Password,
+	)
 
 	if err != nil {
 		return "", fmt.Errorf("error while creating a user: %v", err.Error())
@@ -82,11 +89,13 @@ func (db *Database) CreateUser(u models.User) (string, error) {
 	return id, nil
 }
 
+// TODO: add error handling
 func (db *Database) UpdateUser(u models.User) error {
 	_, err := db.Connection.Exec(
 		"UPDATE users SET username=?, email=?, password=?, verified=? WHERE id=?",
 		u.Username, u.Email, u.Password, u.Verified, u.Id,
 	)
+
 	if err != nil {
 		return fmt.Errorf("error while trying to update user: %v", err)
 	}
@@ -94,6 +103,7 @@ func (db *Database) UpdateUser(u models.User) error {
 	return nil
 }
 
+// TODO: add error handling
 func (db *Database) DeleteUserById(id string) error {
 	_, err := db.Connection.Exec("DELETE FROM users WHERE id=?;", id)
 
@@ -104,12 +114,17 @@ func (db *Database) DeleteUserById(id string) error {
 	return nil
 }
 
+// TODO: add error handling
 func (db *Database) GetUserById(id string) (models.User, error) {
-	var user models.User = models.User{
+	user := models.User{
 		Id: id,
 	}
 
-	err := db.Connection.QueryRow("SELECT username, email, verified FROM users WHERE id=?;", id).Scan(&user.Username, &user.Email, &user.Verified)
+	err := db.Connection.QueryRow(
+		"SELECT username, email, verified FROM users WHERE id=?;",
+		id,
+	).Scan(&user.Username, &user.Email, &user.Verified)
+
 	if err != nil {
 		return models.User{}, fmt.Errorf("error while trying to get user by id: %v", err)
 	}
@@ -117,13 +132,18 @@ func (db *Database) GetUserById(id string) (models.User, error) {
 	return user, nil
 }
 
+// TODO: add error handling
 func (db *Database) GetUserByEmail(email string) (models.User, error) {
 	var id string
 	var username string
 	var password string
 	var verified bool
 
-	err := db.Connection.QueryRow("SELECT id, username, password, verified FROM users WHERE email=?;", email).Scan(&id, &username, &password, &verified)
+	err := db.Connection.QueryRow(
+		"SELECT id, username, password, verified FROM users WHERE email=?;",
+		email,
+	).Scan(&id, &username, &password, &verified)
+
 	if err != nil {
 		return models.User{}, fmt.Errorf("error while trying to get a user by email: %v", err)
 	}
@@ -138,10 +158,14 @@ func (db *Database) GetUserByEmail(email string) (models.User, error) {
 	return user, nil
 }
 
+// TODO: add error handling
 func (db *Database) UserExists(u models.User) (bool, error) {
 	var id string
 
-	err := db.Connection.QueryRow("SELECT id FROM users WHERE username=? or email=?;", u.Username, u.Email).Scan(&id)
+	err := db.Connection.QueryRow(
+		"SELECT id FROM users WHERE username=? or email=?;",
+		u.Username, u.Email,
+	).Scan(&id)
 
 	if err == sql.ErrNoRows {
 		return false, nil
@@ -153,8 +177,12 @@ func (db *Database) UserExists(u models.User) (bool, error) {
 	return true, nil
 }
 
+// TODO: add error handling
 func (db *Database) VerifyUser(userId string) error {
-	_, err := db.Connection.Exec("UPDATE users SET verified=TRUE WHERE id=?;", userId)
+	_, err := db.Connection.Exec(
+		"UPDATE users SET verified=TRUE WHERE id=?;",
+		userId,
+	)
 
 	if err != nil {
 		return fmt.Errorf("error while trying to verify a user: %v", err.Error())
@@ -163,8 +191,12 @@ func (db *Database) VerifyUser(userId string) error {
 	return nil
 }
 
+// TODO: add error handling
 func (db *Database) CreateEmailVerification(e models.EmailVerification) error {
-	_, err := db.Connection.Exec("INSERT INTO email_verification (token, expires, user_id) values (?, ?, ?);", e.Token, e.Expires, e.UserId)
+	_, err := db.Connection.Exec(
+		"INSERT INTO email_verification (token, expires, user_id) values (?, ?, ?);",
+		e.Token, e.Expires, e.UserId,
+	)
 
 	if err != nil {
 		return fmt.Errorf("error while creating an email_verification row: %v", err.Error())
@@ -173,15 +205,19 @@ func (db *Database) CreateEmailVerification(e models.EmailVerification) error {
 	return nil
 }
 
+// TODO: add error handling
 func (db *Database) GetEmailVerificationByToken(token string) (models.EmailVerification, error) {
 	var id string
 	var tk string
 	var userId string
 	var expires string
 
-	err := db.Connection.QueryRow("SELECT id, token, expires, user_id FROM email_verification WHERE token=?;", token).Scan(&id, &tk, &expires, &userId)
+	err := db.Connection.QueryRow("SELECT id, token, expires, user_id FROM email_verification WHERE token=?;",
+		token,
+	).Scan(&id, &tk, &expires, &userId)
+
 	if err != nil {
-		return models.EmailVerification{}, fmt.Errorf("error while retrieving email verification data: %v", err.Error())
+		return models.EmailVerification{}, fmt.Errorf("error while retrieving email verification data: %v", err)
 	}
 
 	expiresTime, err := parseTime(expires)
@@ -199,8 +235,12 @@ func (db *Database) GetEmailVerificationByToken(token string) (models.EmailVerif
 	return emailVerification, nil
 }
 
+// TODO: add error handling
 func (db *Database) DeleteEmailVerificationById(id string) error {
-	_, err := db.Connection.Exec("DELETE FROM email_verification WHERE id=?;", id)
+	_, err := db.Connection.Exec(
+		"DELETE FROM email_verification WHERE id=?;",
+		id,
+	)
 
 	if err != nil {
 		return fmt.Errorf("error while trying to remove an email verification row: %v", err.Error())
@@ -209,6 +249,7 @@ func (db *Database) DeleteEmailVerificationById(id string) error {
 	return nil
 }
 
+// TODO: add error handling
 func (db *Database) GetExpiredEmailVerifications() ([]models.EmailVerification, error) {
 	rows, err := db.Connection.Query("SELECT * FROM email_verification WHERE expires <= NOW();")
 
@@ -236,8 +277,12 @@ func (db *Database) GetExpiredEmailVerifications() ([]models.EmailVerification, 
 	return unverified, nil
 }
 
+// TODO: add error handling
 func (db *Database) CreateRefreshToken(token models.RefreshToken) error {
-	_, err := db.Connection.Exec("INSERT INTO refresh_tokens (id, token, expires, user_id) values(?, ?, ?, ?)", token.Id, token.Token, token.Expires, token.UserId)
+	_, err := db.Connection.Exec(
+		"INSERT INTO refresh_tokens (id, token, expires, user_id) values(?, ?, ?, ?)",
+		token.Id, token.Token, token.Expires, token.UserId,
+	)
 
 	if err != nil {
 		return fmt.Errorf("error while trying to store a refresh token in the db: %v", err)
@@ -246,11 +291,16 @@ func (db *Database) CreateRefreshToken(token models.RefreshToken) error {
 	return nil
 }
 
+// TODO: add error handling
 func (db *Database) GetRefreshTokenByUserId(userId string) (*models.RefreshToken, error) {
 	var token models.RefreshToken
 	var rawTime string
 
-	err := db.Connection.QueryRow("SELECT * FROM refresh_tokens where user_id=?;", userId).Scan(&token.Id, &token.Token, &rawTime, &token.UserId)
+	err := db.Connection.QueryRow(
+		"SELECT * FROM refresh_tokens where user_id=?;",
+		userId,
+	).Scan(&token.Id, &token.Token, &rawTime, &token.UserId)
+
 	if err != nil {
 		return nil, err
 	}
@@ -265,8 +315,12 @@ func (db *Database) GetRefreshTokenByUserId(userId string) (*models.RefreshToken
 	return &token, nil
 }
 
+// TODO: add error handling
 func (db *Database) DeleteRefreshTokenById(id string) error {
-	_, err := db.Connection.Exec("DELETE FROM refresh_tokens WHERE id=? OR token=?;", id)
+	_, err := db.Connection.Exec(
+		"DELETE FROM refresh_tokens WHERE id=?;",
+		id,
+	)
 
 	if err != nil {
 		return fmt.Errorf("error whilte trying to delete a refresh token from the db: %v", err)
@@ -275,8 +329,12 @@ func (db *Database) DeleteRefreshTokenById(id string) error {
 	return nil
 }
 
+// TODO: add error handling
 func (db *Database) DeleteRefreshTokenByToken(token string) error {
-	_, err := db.Connection.Exec("DELETE FROM refresh_tokens WHERE token=?;", token)
+	_, err := db.Connection.Exec(
+		"DELETE FROM refresh_tokens WHERE token=?;",
+		token,
+	)
 
 	if err != nil {
 		return fmt.Errorf("error whilte trying to delete a refresh token from the db: %v", err)
@@ -285,6 +343,7 @@ func (db *Database) DeleteRefreshTokenByToken(token string) error {
 	return nil
 }
 
+// TODO: add error handling
 func (db *Database) GetExpiredRefreshTokens() ([]models.RefreshToken, error) {
 	rows, err := db.Connection.Query("SELECT * FROM refresh_tokens WHERE expires <= NOW();")
 
@@ -312,6 +371,7 @@ func (db *Database) GetExpiredRefreshTokens() ([]models.RefreshToken, error) {
 	return expired, nil
 }
 
+// TODO: add error handling
 func (db *Database) CleanDb() error {
 	verifications, err := db.GetExpiredEmailVerifications()
 	if err != nil {
@@ -347,7 +407,7 @@ func (db *Database) StartCleaningDb() {
 
 	for range ticker.C {
 		if err := db.CleanDb(); err != nil {
-			log.Println(err.Error())
+			log.Println(err)
 			break
 		}
 		log.Println("deleted all unverified users and hunging email verification from the database")

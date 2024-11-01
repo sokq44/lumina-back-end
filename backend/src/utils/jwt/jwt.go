@@ -3,7 +3,7 @@ package jwt
 import (
 	"backend/config"
 	"backend/models"
-	"backend/utils/cryptography"
+	"backend/utils/crypt"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/json"
@@ -17,6 +17,7 @@ import (
 
 type Claims map[string]interface{}
 
+// TODO: add error handling
 func CreateHeader() (string, error) {
 	header := map[string]string{
 		"typ": "JWT",
@@ -28,25 +29,27 @@ func CreateHeader() (string, error) {
 		return "", fmt.Errorf("error while trying to create a header for a JWT: %v", err)
 	}
 
-	return cryptography.Base64UrlEncode(headerJson), nil
+	return crypt.Base64UrlEncode(headerJson), nil
 }
 
+// TODO: add error handling
 func CreatePayload(claims Claims) (string, error) {
 	payloadJson, err := json.Marshal(claims)
 	if err != nil {
 		return "", fmt.Errorf("error while trying to create a payload for a JWT: %v", err)
 	}
 
-	return cryptography.Base64UrlEncode(payloadJson), nil
+	return crypt.Base64UrlEncode(payloadJson), nil
 }
 
 func CreateSignature(headerPayload, secret string) string {
 	h := hmac.New(sha256.New, []byte(secret))
 	h.Write([]byte(headerPayload))
 
-	return cryptography.Base64UrlEncode(h.Sum(nil))
+	return crypt.Base64UrlEncode(h.Sum(nil))
 }
 
+// TODO: add error handling
 func GenerateToken(claims Claims) (string, error) {
 	header, err := CreateHeader()
 	if err != nil {
@@ -65,6 +68,7 @@ func GenerateToken(claims Claims) (string, error) {
 	return newJWT, nil
 }
 
+// TODO: add error handling
 func GenerateAccessToken(user models.User, now time.Time) (string, error) {
 	expires := time.Duration(config.JwtAccExpTime)
 	claims := Claims{
@@ -81,6 +85,7 @@ func GenerateAccessToken(user models.User, now time.Time) (string, error) {
 	return token, nil
 }
 
+// TODO: add error handling
 func GenerateRefreshToken(userId string, now time.Time) (models.RefreshToken, error) {
 	expires := time.Duration(config.JwtRefExpTime)
 	id := uuid.New().String()
@@ -103,6 +108,7 @@ func GenerateRefreshToken(userId string, now time.Time) (models.RefreshToken, er
 	}, nil
 }
 
+// TODO: add error handling
 func DecodePayload(token string) (Claims, error) {
 	parts := strings.Split(token, ".")
 	if len(parts) != 3 {
@@ -110,7 +116,7 @@ func DecodePayload(token string) (Claims, error) {
 	}
 
 	payloadPart := parts[1]
-	payloadBytes, err := cryptography.Base64UrlDecode(payloadPart)
+	payloadBytes, err := crypt.Base64UrlDecode(payloadPart)
 
 	if err != nil {
 		return nil, err
@@ -124,6 +130,7 @@ func DecodePayload(token string) (Claims, error) {
 	return claims, nil
 }
 
+// TODO: add error handling
 func GetRefAccFromRequest(r *http.Request) (string, string, error) {
 	access, err := r.Cookie("access_token")
 	if err == http.ErrNoCookie {
@@ -142,11 +149,12 @@ func GetRefAccFromRequest(r *http.Request) (string, string, error) {
 	return access.Value, refresh.Value, nil
 }
 
-func TokenWasGeneratedHere(token string) bool {
+// TODO: add error handling
+func WasGeneratedWithSecret(token string, secret string) bool {
 	parts := strings.Split(token, ".")
 	headerPayload := fmt.Sprintf("%s.%s", parts[0], parts[1])
 
-	var signature string = CreateSignature(headerPayload, config.JwtSecret)
+	var signature string = CreateSignature(headerPayload, secret)
 
 	return strings.Compare(signature, parts[2]) == 0
 }

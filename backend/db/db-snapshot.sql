@@ -28,3 +28,12 @@ CREATE TABLE
         user_id VARCHAR(36) NOT NULL,
         CONSTRAINT fk_users_refresh_tokens FOREIGN KEY (user_id) REFERENCES users (id)
     );
+    
+CREATE TABLE
+    IF NOT EXISTS password_change (
+        id VARCHAR(36) PRIMARY KEY NOT NULL DEFAULT (uuid ()),
+        token VARCHAR(128) NOT NULL,
+        expires DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        user_id VARCHAR(36) NOT NULL,
+        CONSTRAINT fk_users_password_change FOREIGN KEY (user_id) REFERENCES users (id)
+    );

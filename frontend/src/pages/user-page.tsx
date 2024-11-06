@@ -33,6 +33,19 @@ const UserPage = () => {
     });
   };
 
+  const changePass = async () => {
+    try {
+      const response = await axios.get("/api/user/change-password");
+      console.log(response.data);
+    } catch (err) {
+      toast({
+        variant: "destructive",
+        title: "Checking whether user is already logged in...",
+        description: (err as AxiosError).message,
+      });
+    }
+  };
+
   const logout = async () => {
     try {
       const response = await axios.delete("/api/user/logout");
@@ -65,6 +78,9 @@ const UserPage = () => {
       <div className="flex items-center gap-4">
         <Button variant="secondary" onClick={modify}>
           Modify The Data
+        </Button>
+        <Button variant="secondary" onClick={changePass}>
+          Change Your Password
         </Button>
         <Button variant="secondary" onClick={logout}>
           Logout

@@ -82,6 +82,14 @@ func main() {
 		),
 	)
 
+	http.HandleFunc(
+		"/user/change-password",
+		middleware.Method(
+			"PATCH",
+			handlers.ChangePassword,
+		),
+	)
+
 	log.Println("serving on http://localhost:"+port, "(press ctrl + c to stop the process)")
 	if err := http.ListenAndServe(fmt.Sprintf(":%s", port), nil); err != nil {
 		log.Fatal("Error while trying to start the server.")

@@ -8,6 +8,7 @@ import (
 	"backend/utils/emails"
 	"backend/utils/jwt"
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -18,45 +19,45 @@ import (
 var db *database.Database = database.GetDb()
 var em *emails.SmtpClient = emails.GetEmails()
 
-var RegisterUser http.HandlerFunc = func(responseWriter http.ResponseWriter, request *http.Request) {
+var RegisterUser http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
 	type RequestBody struct {
 		Username string `json:"username"`
 		Email    string `json:"email"`
 		Password string `json:"password"`
 	}
 
-	var r RequestBody
-	if err := json.NewDecoder(request.Body).Decode(&r); err != nil {
-		responseWriter.WriteHeader(http.StatusBadRequest)
+	var body RequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	u := models.User{
 		Id:       uuid.New().String(),
-		Username: r.Username,
-		Email:    r.Email,
-		Password: r.Password,
+		Username: body.Username,
+		Email:    body.Email,
+		Password: body.Password,
 	}
-	if u.Validate(false).Handle(responseWriter) {
+	if u.Validate(false).Handle(w) {
 		return
 	}
 
 	exists, e := db.UserExists(u)
-	if e.Handle(responseWriter) {
+	if e.Handle(w) {
 		return
 	}
 	if exists {
-		responseWriter.WriteHeader(http.StatusConflict)
+		w.WriteHeader(http.StatusConflict)
 		return
 	}
 
-	u.Password = crypt.Sha256(r.Password)
-	if db.CreateUser(u).Handle(responseWriter) {
+	u.Password = crypt.Sha256(body.Password)
+	if db.CreateUser(u).Handle(w) {
 		return
 	}
 
 	token, e := crypt.RandomString(128)
-	if e.Handle(responseWriter) {
+	if e.Handle(w) {
 		return
 	}
 
@@ -66,101 +67,101 @@ var RegisterUser http.HandlerFunc = func(responseWriter http.ResponseWriter, req
 		UserId:  u.Id,
 		Expires: time.Now().Add(duration),
 	}
-	if db.CreateEmailVerification(verification).Handle(responseWriter) {
+	if db.CreateEmailVerification(verification).Handle(w) {
 		return
 	}
 
-	if em.SendVerificationEmail(u.Email, token).Handle(responseWriter) {
+	if em.SendVerificationEmail(u.Email, token).Handle(w) {
 		return
 	}
 
-	responseWriter.WriteHeader(http.StatusCreated)
+	w.WriteHeader(http.StatusCreated)
 }
 
-var VerifyEmail http.HandlerFunc = func(responseWriter http.ResponseWriter, request *http.Request) {
+var VerifyEmail http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
 	type RequestBody struct {
 		Token string `json:"token"`
 	}
 
 	var body RequestBody
-	if err := json.NewDecoder(request.Body).Decode(&body); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		log.Println("Problem while decoding!")
-		responseWriter.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
 	emailValidation, e := db.GetEmailVerificationByToken(body.Token)
-	if e.Handle(responseWriter) {
+	if e.Handle(w) {
 		return
 	}
 
 	if emailValidation.Expires.Before(time.Now()) {
 		log.Println("token expired")
-		responseWriter.WriteHeader(http.StatusGone)
+		w.WriteHeader(http.StatusGone)
 		return
 	}
 
 	e = db.DeleteEmailVerificationById(emailValidation.Id)
-	if e.Handle(responseWriter) {
+	if e.Handle(w) {
 		return
 	}
 
 	e = db.VerifyUser(emailValidation.UserId)
-	if e.Handle(responseWriter) {
+	if e.Handle(w) {
 		return
 	}
 
-	responseWriter.WriteHeader(http.StatusNoContent)
+	w.WriteHeader(http.StatusNoContent)
 }
 
-var LoginUser http.HandlerFunc = func(responseWriter http.ResponseWriter, request *http.Request) {
+var LoginUser http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
 	type RequestBody struct {
 		Email    string `json:"email"`
 		Password string `json:"password"`
 	}
 
-	var r RequestBody
-	if err := json.NewDecoder(request.Body).Decode(&r); err != nil {
-		responseWriter.WriteHeader(http.StatusInternalServerError)
+	var body RequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	user, e := db.GetUserByEmail(r.Email)
-	if e.Handle(responseWriter) {
+	user, e := db.GetUserByEmail(body.Email)
+	if e.Handle(w) {
 		return
 	}
 
 	refreshToken, e := db.GetRefreshTokenByUserId(user.Id)
 	if refreshToken != nil {
-		responseWriter.WriteHeader(http.StatusOK)
+		w.WriteHeader(http.StatusOK)
 		return
-	} else if e.Handle(responseWriter) {
+	} else if e.Handle(w) {
 		return
 	}
 
-	hashedPasswd := crypt.Sha256(r.Password)
+	hashedPasswd := crypt.Sha256(body.Password)
 	if !user.Verified || hashedPasswd != user.Password {
-		responseWriter.WriteHeader(http.StatusForbidden)
+		w.WriteHeader(http.StatusForbidden)
 		return
 	}
 
 	now := time.Now()
 	access, e := jwt.GenerateAccessToken(user, now)
-	if e.Handle(responseWriter) {
+	if e.Handle(w) {
 		return
 	}
 
 	refresh, e := jwt.GenerateRefreshToken(user.Id, now)
-	if e.Handle(responseWriter) {
+	if e.Handle(w) {
 		return
 	}
 
 	e = db.CreateRefreshToken(refresh)
-	if e.Handle(responseWriter) {
+	if e.Handle(w) {
 		return
 	}
 
-	http.SetCookie(responseWriter, &http.Cookie{
+	http.SetCookie(w, &http.Cookie{
 		Name:     "access_token",
 		Value:    access,
 		HttpOnly: true,
@@ -168,7 +169,7 @@ var LoginUser http.HandlerFunc = func(responseWriter http.ResponseWriter, reques
 		Expires:  now.Add(time.Duration(config.JwtAccExpTime)),
 	})
 
-	http.SetCookie(responseWriter, &http.Cookie{
+	http.SetCookie(w, &http.Cookie{
 		Name:     "refresh_token",
 		Value:    refresh.Token,
 		HttpOnly: true,
@@ -176,23 +177,23 @@ var LoginUser http.HandlerFunc = func(responseWriter http.ResponseWriter, reques
 		Expires:  now.Add(time.Duration(config.JwtRefExpTime)),
 	})
 
-	responseWriter.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusOK)
 }
 
-var LogoutUser http.HandlerFunc = func(responseWriter http.ResponseWriter, request *http.Request) {
-	refreshCookie, err := request.Cookie("refresh_token")
+var LogoutUser http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
+	refreshCookie, err := r.Cookie("refresh_token")
 	if err != nil {
 		log.Println(err)
-		responseWriter.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	e := db.DeleteRefreshTokenByToken(refreshCookie.Value)
-	if e.Handle(responseWriter) {
+	if e.Handle(w) {
 		return
 	}
 
-	http.SetCookie(responseWriter, &http.Cookie{
+	http.SetCookie(w, &http.Cookie{
 		Name:     "access_token",
 		Value:    "",
 		HttpOnly: true,
@@ -200,7 +201,7 @@ var LogoutUser http.HandlerFunc = func(responseWriter http.ResponseWriter, reque
 		Expires:  time.Unix(0, 0),
 	})
 
-	http.SetCookie(responseWriter, &http.Cookie{
+	http.SetCookie(w, &http.Cookie{
 		Name:     "refresh_token",
 		Value:    "",
 		HttpOnly: true,
@@ -208,25 +209,25 @@ var LogoutUser http.HandlerFunc = func(responseWriter http.ResponseWriter, reque
 		Expires:  time.Unix(0, 0),
 	})
 
-	responseWriter.WriteHeader(http.StatusOK)
+	w.WriteHeader(http.StatusOK)
 }
 
-var GetUser http.HandlerFunc = func(responseWriter http.ResponseWriter, request *http.Request) {
-	access, err := request.Cookie("access_token")
+var GetUser http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
+	access, err := r.Cookie("access_token")
 	if err != nil {
 		log.Println(err)
-		responseWriter.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	claims, e := jwt.DecodePayload(access.Value)
-	if e.Handle(responseWriter) {
+	if e.Handle(w) {
 		return
 	}
 
 	userId := claims["user"].(string)
 	user, e := db.GetUserById(userId)
-	if e.Handle(responseWriter) {
+	if e.Handle(w) {
 		return
 	}
 
@@ -234,28 +235,28 @@ var GetUser http.HandlerFunc = func(responseWriter http.ResponseWriter, request 
 		"username": user.Username,
 		"email":    user.Email,
 	}
-	if err := json.NewEncoder(responseWriter).Encode(userData); err != nil {
+	if err := json.NewEncoder(w).Encode(userData); err != nil {
 		log.Println(err)
-		responseWriter.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 }
 
-var ModifyUser http.HandlerFunc = func(responseWriter http.ResponseWriter, request *http.Request) {
+var ModifyUser http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
 	type RequestBody struct {
 		Username string `json:"username"`
 		Email    string `json:"email"`
 	}
 
 	var body RequestBody
-	if err := json.NewDecoder(request.Body).Decode(&body); err != nil {
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		log.Println(err)
-		responseWriter.WriteHeader(http.StatusInternalServerError)
+		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
 	user, e := db.GetUserByEmail(body.Email)
-	if e.Handle(responseWriter) {
+	if e.Handle(w) {
 		return
 	}
 
@@ -266,10 +267,33 @@ var ModifyUser http.HandlerFunc = func(responseWriter http.ResponseWriter, reque
 		Password: user.Password,
 		Verified: user.Verified,
 	}
-	if newUser.Validate(true).Handle(responseWriter) {
+	if newUser.Validate(true).Handle(w) {
 		return
 	}
-	if db.UpdateUser(newUser).Handle(responseWriter) {
+	if db.UpdateUser(newUser).Handle(w) {
 		return
 	}
+}
+
+// TODO: Create a new password changing token in the database.
+// TODO: Send an email with a generated link to the user.
+var InitializePasswordChange http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("test")
+}
+
+// TODO: Check whether the token sent from the client is valid
+// TODO: Get the user from the token, change his password and validate. Respond approprietly.
+var ChangePassword http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
+	type RequestBody struct {
+		Password string `json:"password"`
+		Token    string `json:"token"`
+	}
+
+	var body RequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	log.Println(body.Password)
 }

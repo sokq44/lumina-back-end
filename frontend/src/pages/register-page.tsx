@@ -158,11 +158,13 @@ const RegisterPage = () => {
               type="submit"
               className="w-1/2 font-semibold"
             >
-              Submit
+              Sign up
             </Button>
           </form>
         </Form>
-        <Link to="/login" className="text-white font-semibold underline">Already have an account?</Link>
+        <Link to="/login" className="text-white font-semibold underline">
+          Already have an account?
+        </Link>
       </div>
     </div>
   );

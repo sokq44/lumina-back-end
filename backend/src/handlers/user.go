@@ -319,8 +319,6 @@ var PasswordChangeInit http.HandlerFunc = func(w http.ResponseWriter, r *http.Re
 	w.WriteHeader(http.StatusCreated)
 }
 
-// TODO: Check whether the token sent from the client is valid
-// TODO: Get the user from the token, change his password and validate. Respond approprietly.
 var ChangePassword http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
 	type RequestBody struct {
 		Password string `json:"password"`

@@ -88,3 +88,15 @@ func (client *SmtpClient) SendVerificationEmail(receiver string, token string) *
 
 	return nil
 }
+
+func (client *SmtpClient) SendPasswordChangeEmail(receiver string, token string) *errhandle.Error {
+	front := config.FrontAddr
+	emailBody := fmt.Sprintf("Change your password here: %s/change-password/%s", front, token)
+
+	err := client.SendEmail(receiver, "Subject: Change Your Password\r\n", emailBody)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}

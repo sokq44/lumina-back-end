@@ -6,6 +6,7 @@ import (
 	"backend/utils/crypt"
 	"backend/utils/database"
 	"backend/utils/emails"
+	"backend/utils/errhandle"
 	"backend/utils/jwt"
 	"encoding/json"
 	"log"
@@ -95,8 +96,12 @@ var VerifyEmail http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) 
 	}
 
 	if emailValidation.Expires.Before(time.Now()) {
-		log.Println("token expired")
-		w.WriteHeader(http.StatusGone)
+		e := errhandle.Error{
+			Type:    errhandle.DatabaseError,
+			Message: "email validation token has expired",
+			Status:  http.StatusGone,
+		}
+		e.Handle(w)
 		return
 	}
 
@@ -275,7 +280,6 @@ var ModifyUser http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// TODO: Send an email with a generated link to the user.
 var PasswordChangeInit http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
 	type RequestBody struct {
 		Email string `json:"email"`
@@ -286,8 +290,6 @@ var PasswordChangeInit http.HandlerFunc = func(w http.ResponseWriter, r *http.Re
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
-
-	log.Println(body)
 
 	u, e := db.GetUserByEmail(body.Email)
 	if e.Handle(w) {
@@ -307,6 +309,10 @@ var PasswordChangeInit http.HandlerFunc = func(w http.ResponseWriter, r *http.Re
 	}
 	if db.CreatePasswordChange(passwdChange).Handle(w) {
 		log.Println("Error while creating a password change row")
+		return
+	}
+
+	if em.SendPasswordChangeEmail(body.Email, token).Handle(w) {
 		return
 	}
 

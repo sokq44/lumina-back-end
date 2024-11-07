@@ -333,5 +333,29 @@ var ChangePassword http.HandlerFunc = func(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	log.Println(body.Password)
+	passwordChange, e := db.GetPasswordChangeByToken(body.Token)
+	if e.Handle(w) {
+		return
+	}
+
+	user, e := db.GetUserById(passwordChange.UserId)
+	if e.Handle(w) {
+		return
+	}
+
+	user.Password = body.Password
+	if user.Validate(false).Handle(w) {
+		return
+	}
+
+	user.Password = crypt.Sha256(body.Password)
+	if db.UpdateUser(user).Handle(w) {
+		return
+	}
+
+	if db.DeletePasswordChangeById(passwordChange.Id).Handle(w) {
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
 }

@@ -11,20 +11,23 @@ import { useToast } from "@/hooks/use-toast";
 import { zodResolver } from "@hookform/resolvers/zod";
 import axios, { AxiosError } from "axios";
 import { useForm } from "react-hook-form";
+import { useNavigate, useParams } from "react-router-dom";
 import { z } from "zod";
 
 const changePasswordFormSchema = z
   .object({
     password: z.string().min(1, { message: "This field is required." }),
-    repeat: z.string(),
+    repeat: z.string().min(1, { message: "This field is required." }),
   })
   .refine((data) => data.password === data.repeat, {
     message: "Passwords don't match",
-    path: ["repeatPass"],
+    path: ["repeat"],
   });
 
 const ChangePasswordPage = () => {
   const { toast } = useToast();
+  const { token } = useParams();
+  const navigate = useNavigate();
 
   const changePasswordForm = useForm<z.infer<typeof changePasswordFormSchema>>({
     resolver: zodResolver(changePasswordFormSchema),
@@ -40,12 +43,16 @@ const ChangePasswordPage = () => {
     try {
       const response = await axios.patch("/api/user/change-password", {
         password: values.password,
+        token: token,
       });
-      console.log(response);
+
+      if (response.status === 200) {
+        navigate("/login");
+      }
     } catch (err) {
       toast({
         variant: "destructive",
-        title: "Problem with modifyUsering",
+        title: "Problem with changing password",
         description: (err as AxiosError).message,
       });
     }

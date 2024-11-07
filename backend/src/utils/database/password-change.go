@@ -25,3 +25,54 @@ func (db *Database) CreatePasswordChange(p models.PasswordChange) *errhandle.Err
 
 	return nil
 }
+
+func (db *Database) GetPasswordChangeByToken(token string) (models.PasswordChange, *errhandle.Error) {
+	var id string
+	var tk string
+	var userId string
+	var expires string
+
+	err := db.Connection.QueryRow(
+		"SELECT id, token, expires, user_id FROM password_change WHERE token=?;",
+		token,
+	).Scan(&id, &tk, &expires, &userId)
+
+	if err != nil {
+		return models.PasswordChange{}, &errhandle.Error{
+			Type:    errhandle.DatabaseError,
+			Message: fmt.Sprintf("error while getting an email verification by token: %v", err),
+			Status:  http.StatusInternalServerError,
+		}
+	}
+
+	expiresTime, e := parseTime(expires)
+	if e != nil {
+		return models.PasswordChange{}, e
+	}
+
+	passwordChange := models.PasswordChange{
+		Id:      id,
+		Token:   tk,
+		UserId:  userId,
+		Expires: expiresTime,
+	}
+
+	return passwordChange, nil
+}
+
+func (db *Database) DeletePasswordChangeById(id string) *errhandle.Error {
+	_, err := db.Connection.Exec(
+		"DELETE FROM password_change WHERE id=?;",
+		id,
+	)
+
+	if err != nil {
+		return &errhandle.Error{
+			Type:    errhandle.DatabaseError,
+			Message: fmt.Sprintf("error while deleting a password change by id: %v", err),
+			Status:  http.StatusInternalServerError,
+		}
+	}
+
+	return nil
+}

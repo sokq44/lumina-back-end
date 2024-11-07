@@ -2,9 +2,11 @@ package emails
 
 import (
 	"backend/config"
+	"backend/utils/errhandle"
 	"crypto/tls"
 	"fmt"
 	"log"
+	"net/http"
 	"net/smtp"
 )
 
@@ -19,11 +21,11 @@ type SmtpClient struct {
 var emails SmtpClient
 
 func InitEmails() {
-	from := config.Application.SMTP_FROM
-	user := config.Application.SMTP_USER
-	passwd := config.Application.SMTP_PASSWD
-	host := config.Application.SMTP_HOST
-	port := config.Application.SMTP_PORT
+	from := config.SmtpFrom
+	user := config.SmtpUser
+	passwd := config.SmtpPass
+	host := config.SmtpHost
+	port := config.SmtpPort
 
 	auth := smtp.PlainAuth("", user, passwd, host)
 
@@ -59,25 +61,41 @@ func GetEmails() *SmtpClient {
 	return &emails
 }
 
-func (client *SmtpClient) SendEmail(receiver string, subject string, body string) error {
+func (client *SmtpClient) SendEmail(receiver string, subject string, body string) *errhandle.Error {
 	auth := smtp.PlainAuth("", client.User, client.Passwd, client.Host)
 	addr := fmt.Sprintf("%s:%s", client.Host, client.Port)
 	msg := []byte(fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: %s\r\n\r\n%s", client.From, receiver, subject, body))
 
 	if err := smtp.SendMail(addr, auth, client.From, []string{receiver}, msg); err != nil {
+		return &errhandle.Error{
+			Type:    errhandle.EmailsError,
+			Message: fmt.Sprintf("while trying to send an email -> %v", err),
+			Status:  http.StatusInternalServerError,
+		}
+	}
+
+	return nil
+}
+
+func (client *SmtpClient) SendVerificationEmail(receiver string, token string) *errhandle.Error {
+	front := config.FrontAddr
+	emailBody := fmt.Sprintf("Verification Link: %s/verify-email/%s", front, token)
+
+	err := client.SendEmail(receiver, "Subject: Email Verification\r\n", emailBody)
+	if err != nil {
 		return err
 	}
 
 	return nil
 }
 
-func (client *SmtpClient) SendVerificationEmail(receiver string, token string) error {
-	front := config.Application.FRONT_ADDR
-	emailBody := fmt.Sprintf("Verification Link: %s/verify-email/%s", front, token)
+func (client *SmtpClient) SendPasswordChangeEmail(receiver string, token string) *errhandle.Error {
+	front := config.FrontAddr
+	emailBody := fmt.Sprintf("Change your password here: %s/change-password/%s", front, token)
 
-	err := client.SendEmail(receiver, "Subject: Email Verification\r\n", emailBody)
+	err := client.SendEmail(receiver, "Subject: Change Your Password\r\n", emailBody)
 	if err != nil {
-		return fmt.Errorf("error while trying to send a verification email: %v", err.Error())
+		return err
 	}
 
 	return nil

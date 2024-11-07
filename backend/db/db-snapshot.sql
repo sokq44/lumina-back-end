@@ -12,12 +12,13 @@ CREATE TABLE
     );
 
 CREATE TABLE
-    IF NOT EXISTS email_validation (
+    IF NOT EXISTS email_verification (
         id VARCHAR(36) PRIMARY KEY NOT NULL DEFAULT (uuid ()),
         token VARCHAR(128) NOT NULL,
         expires DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
         user_id VARCHAR(36) NOT NULL,
-        CONSTRAINT fk_users_email_validation FOREIGN KEY (user_id) REFERENCES users (id)
+        CONSTRAINT fk_users_email_verification FOREIGN KEY (user_id) REFERENCES users (id),
+        CONSTRAINT email_verification_unique_user_id UNIQUE (user_id)
     );
 
 CREATE TABLE
@@ -26,5 +27,16 @@ CREATE TABLE
         token VARCHAR(255) NOT NULL,
         expires DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
         user_id VARCHAR(36) NOT NULL,
-        CONSTRAINT fk_users_refresh_tokens FOREIGN KEY (user_id) REFERENCES users (id)
+        CONSTRAINT fk_users_refresh_tokens FOREIGN KEY (user_id) REFERENCES users (id),
+        CONSTRAINT refresh_tokens_unique_user_id UNIQUE (user_id)
+    );
+    
+CREATE TABLE
+    IF NOT EXISTS password_change (
+        id VARCHAR(36) PRIMARY KEY NOT NULL DEFAULT (uuid ()),
+        token VARCHAR(128) NOT NULL,
+        expires DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        user_id VARCHAR(36) NOT NULL,
+        CONSTRAINT fk_users_password_change FOREIGN KEY (user_id) REFERENCES users (id),
+        CONSTRAINT password_change_unique_user_id UNIQUE (user_id)
     );

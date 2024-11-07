@@ -3,14 +3,12 @@ package jwt
 import (
 	"backend/config"
 	"backend/models"
-	"backend/utils/cryptography"
-	"backend/utils/database"
+	"backend/utils/crypt"
+	"backend/utils/errhandle"
 	"crypto/hmac"
 	"crypto/sha256"
-	"database/sql"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"strings"
 	"time"
@@ -20,7 +18,7 @@ import (
 
 type Claims map[string]interface{}
 
-func CreateHeader() (string, error) {
+func CreateHeader() (string, *errhandle.Error) {
 	header := map[string]string{
 		"typ": "JWT",
 		"alg": "HS256",
@@ -28,29 +26,37 @@ func CreateHeader() (string, error) {
 
 	headerJson, err := json.Marshal(header)
 	if err != nil {
-		return "", fmt.Errorf("error while trying to create a header for a JWT: %v", err)
+		return "", &errhandle.Error{
+			Type:    errhandle.JwtError,
+			Message: fmt.Sprintf("while creating header -> %v", err),
+			Status:  http.StatusInternalServerError,
+		}
 	}
 
-	return cryptography.Base64UrlEncode(headerJson), nil
+	return crypt.Base64UrlEncode(headerJson), nil
 }
 
-func CreatePayload(claims Claims) (string, error) {
+func CreatePayload(claims Claims) (string, *errhandle.Error) {
 	payloadJson, err := json.Marshal(claims)
 	if err != nil {
-		return "", fmt.Errorf("error while trying to create a payload for a JWT: %v", err)
+		return "", &errhandle.Error{
+			Type:    errhandle.JwtError,
+			Message: fmt.Sprintf("while creating payload -> %v", err),
+			Status:  http.StatusInternalServerError,
+		}
 	}
 
-	return cryptography.Base64UrlEncode(payloadJson), nil
+	return crypt.Base64UrlEncode(payloadJson), nil
 }
 
 func CreateSignature(headerPayload, secret string) string {
 	h := hmac.New(sha256.New, []byte(secret))
 	h.Write([]byte(headerPayload))
 
-	return cryptography.Base64UrlEncode(h.Sum(nil))
+	return crypt.Base64UrlEncode(h.Sum(nil))
 }
 
-func Generate(claims Claims) (string, error) {
+func GenerateToken(claims Claims) (string, *errhandle.Error) {
 	header, err := CreateHeader()
 	if err != nil {
 		return "", err
@@ -61,24 +67,22 @@ func Generate(claims Claims) (string, error) {
 		return "", err
 	}
 
-	secret := config.Application.JWT_SECRET
-
 	headerPayload := fmt.Sprintf("%s.%s", header, payload)
-	signature := CreateSignature(headerPayload, secret)
+	signature := CreateSignature(headerPayload, config.JwtSecret)
 	newJWT := fmt.Sprintf("%s.%s.%s", header, payload, signature)
 
 	return newJWT, nil
 }
 
-func GenerateAccess(user models.User, now time.Time) (string, error) {
-	expires := time.Duration(config.Application.JWT_ACCESS_EXP_TIME)
+func GenerateAccessToken(userId string, now time.Time) (string, *errhandle.Error) {
+	expires := time.Duration(config.JwtAccExpTime)
 	claims := Claims{
-		"user": user.Id,
+		"user": userId,
 		"exp":  now.Add(expires).Unix(),
 		"iat":  now.Unix(),
 	}
 
-	token, err := Generate(claims)
+	token, err := GenerateToken(claims)
 	if err != nil {
 		return "", err
 	}
@@ -86,8 +90,8 @@ func GenerateAccess(user models.User, now time.Time) (string, error) {
 	return token, nil
 }
 
-func GenerateRefresh(userId string, now time.Time) (models.RefreshToken, error) {
-	expires := time.Duration(config.Application.JWT_REFRESH_EXP_TIME)
+func GenerateRefreshToken(userId string, now time.Time) (models.RefreshToken, *errhandle.Error) {
+	expires := time.Duration(config.JwtRefExpTime)
 	id := uuid.New().String()
 	claims := Claims{
 		"user": userId,
@@ -95,7 +99,7 @@ func GenerateRefresh(userId string, now time.Time) (models.RefreshToken, error) 
 		"jti":  id,
 	}
 
-	tk, err := Generate(claims)
+	tk, err := GenerateToken(claims)
 	if err != nil {
 		return models.RefreshToken{}, err
 	}
@@ -108,14 +112,18 @@ func GenerateRefresh(userId string, now time.Time) (models.RefreshToken, error) 
 	}, nil
 }
 
-func DecodePayload(token string) (Claims, error) {
+func DecodePayload(token string) (Claims, *errhandle.Error) {
 	parts := strings.Split(token, ".")
 	if len(parts) != 3 {
-		return nil, fmt.Errorf("invalid jwt token")
+		return nil, &errhandle.Error{
+			Type:    errhandle.JwtError,
+			Message: "token doesn't contain 3 parts",
+			Status:  http.StatusInternalServerError,
+		}
 	}
 
 	payloadPart := parts[1]
-	payloadBytes, err := cryptography.Base64UrlDecode(payloadPart)
+	payloadBytes, err := crypt.Base64UrlDecode(payloadPart)
 
 	if err != nil {
 		return nil, err
@@ -123,145 +131,21 @@ func DecodePayload(token string) (Claims, error) {
 
 	var claims Claims
 	if err := json.Unmarshal(payloadBytes, &claims); err != nil {
-		return nil, fmt.Errorf("error while unmarshaling: %v", err)
+		return nil, &errhandle.Error{
+			Type:    errhandle.JwtError,
+			Message: fmt.Sprintf("while decoding payload-> %v", err),
+			Status:  http.StatusInternalServerError,
+		}
 	}
 
 	return claims, nil
 }
 
-func RefreshAndAccessFromRequest(r *http.Request) (string, string, error) {
-	access, err := r.Cookie("access_token")
-	if err == http.ErrNoCookie {
-		return "", "", err
-	} else if err != nil {
-		return "", "", fmt.Errorf("error while trying to get the access_token cookie: %v", err)
-	}
+func WasGeneratedWithSecret(token string, secret string) bool {
+	parts := strings.Split(token, ".")
+	headerPayload := fmt.Sprintf("%s.%s", parts[0], parts[1])
 
-	refresh, err := r.Cookie("refresh_token")
-	if err == http.ErrNoCookie {
-		return "", "", err
-	} else if err != nil {
-		return "", "", fmt.Errorf("error while trying to get the refresh_token cookie: %v", err)
-	}
+	var signature string = CreateSignature(headerPayload, secret)
 
-	return access.Value, refresh.Value, nil
-}
-
-func Middleware(next http.HandlerFunc) http.HandlerFunc {
-	return func(w http.ResponseWriter, r *http.Request) {
-		db := database.GetDb()
-
-		/* Check whether refresh token was passed in the request. */
-		refreshToken, err := r.Cookie("refresh_token")
-		if err == http.ErrNoCookie {
-			w.WriteHeader(http.StatusUnauthorized)
-			return
-		} else if err != nil {
-			log.Printf("error while trying to retrieve the refresh token: %v", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
-		/* Check whether the refresh token has expired. If it has, delete the cookies and reply with 401.*/
-		claims, err := DecodePayload((refreshToken.Value))
-		if err != nil {
-			log.Println(err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
-		now := time.Now()
-		expires := int64(claims["exp"].(float64))
-		if expires < now.Unix() {
-			w.WriteHeader(http.StatusUnauthorized)
-
-			if err := db.DeleteRefreshTokenByToken(refreshToken.Value); err != nil {
-				log.Println(err)
-				w.WriteHeader(http.StatusInternalServerError)
-				return
-			}
-
-			http.SetCookie(w, &http.Cookie{
-				Name:     "refresh_token",
-				Value:    "",
-				HttpOnly: true,
-				Path:     "/",
-				Expires:  time.Unix(0, 0),
-			})
-
-			http.SetCookie(w, &http.Cookie{
-				Name:     "access_token",
-				Value:    "",
-				HttpOnly: true,
-				Path:     "/",
-				Expires:  time.Unix(0, 0),
-			})
-
-			return
-		}
-
-		/* Check whether refresh token is assigned to the right person (db). */
-		userId := claims["user"].(string)
-		tk, err := db.GetRefreshTokenByUserId(userId)
-		if err == sql.ErrNoRows {
-			w.WriteHeader(http.StatusNotFound)
-			return
-		} else if err != nil {
-			log.Println(err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
-		if tk.UserId != userId {
-			w.WriteHeader(http.StatusUnauthorized)
-			return
-		}
-
-		/* Check whether access token was passed in the request. */
-		accessToken, err := r.Cookie("access_token")
-		if err == http.ErrNoCookie {
-			w.WriteHeader(http.StatusUnauthorized)
-			return
-		} else if err != nil {
-			log.Printf("error while trying to retrieve the access token: %v", err)
-			w.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-
-		/* Check whether the access token has expired, if it has, issue another one. */
-		if accessToken.Expires.Before(now) {
-			claims, err := DecodePayload(accessToken.Value)
-			if err != nil {
-				log.Println(err)
-				w.WriteHeader(http.StatusInternalServerError)
-				return
-			}
-
-			expires := time.Duration(config.Application.JWT_ACCESS_EXP_TIME)
-			claims["exp"] = now.Add(expires)
-			user, err := database.GetDb().GetUserById(claims["user"].(string))
-			if err != nil {
-				log.Println(err)
-				w.WriteHeader(http.StatusInternalServerError)
-				return
-			}
-
-			access, err := GenerateAccess(user, now)
-			if err != nil {
-				log.Println(err)
-				w.WriteHeader(http.StatusInternalServerError)
-				return
-			}
-
-			http.SetCookie(w, &http.Cookie{
-				Name:     "access_token",
-				Value:    access,
-				HttpOnly: true,
-				Path:     "/",
-				Expires:  now.Add(time.Duration(config.Application.JWT_ACCESS_EXP_TIME)),
-			})
-		}
-
-		next.ServeHTTP(w, r)
-	}
+	return strings.Compare(signature, parts[2]) == 0
 }

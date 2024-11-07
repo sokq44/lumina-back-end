@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { useQuery } from "@tanstack/react-query";
 import { LoaderCircle } from "lucide-react";
@@ -38,13 +38,14 @@ const LoginPage = () => {
           navigate("/user-page");
         }
 
-        return true
+        return true;
       } catch (err) {
         toast({
           variant: "destructive",
-          title: "Problem with registering",
+          title: "Checking whether user is already logged in...",
           description: (err as AxiosError).message,
         });
+        return false;
       }
     },
   });
@@ -96,7 +97,7 @@ const LoginPage = () => {
       <div className="flex items-center justify-center w-1/3 bg-slate-900">
         <p className="text-5xl font-bold text-white">Login Page</p>
       </div>
-      <div className="flex items-center justify-center h-screen w-2/3 bg-slate-950">
+      <div className="flex flex-col gap-4 items-center justify-center h-screen w-2/3 bg-slate-950">
         <Form {...loginForm}>
           <form
             onSubmit={loginForm.handleSubmit(registerFormOnSubmit)}
@@ -147,6 +148,9 @@ const LoginPage = () => {
             </Button>
           </form>
         </Form>
+        <Link to={"/"} className="text-white font-semibold underline">
+          I don't have an account
+        </Link>
       </div>
     </div>
   );

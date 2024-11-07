@@ -6,7 +6,6 @@ import (
 	"backend/utils/errhandle"
 	"backend/utils/jwt"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 )
@@ -22,8 +21,12 @@ func Authenticate(next http.HandlerFunc) http.HandlerFunc {
 		}
 
 		if !jwt.WasGeneratedWithSecret(refreshToken, config.JwtSecret) || !jwt.WasGeneratedWithSecret(accessToken, config.JwtSecret) {
-			log.Println("Token wasn't generated here")
-			w.WriteHeader(http.StatusUnauthorized)
+			e := errhandle.Error{
+				Type:    errhandle.JwtError,
+				Message: "one of the tokens or both weren't created with the server secret",
+				Status:  http.StatusUnauthorized,
+			}
+			e.Handle(w)
 			return
 		}
 
@@ -85,7 +88,7 @@ func Authenticate(next http.HandlerFunc) http.HandlerFunc {
 				return
 			}
 
-			access, e := jwt.GenerateAccessToken(user, now)
+			access, e := jwt.GenerateAccessToken(user.Id, now)
 			if e.Handle(w) {
 				return
 			}

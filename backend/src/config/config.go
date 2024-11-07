@@ -16,6 +16,7 @@ import (
 var Port string
 var FrontAddr string
 var EmailVerTime int
+var PasswdChangeTime int
 var JwtSecret string
 var JwtAccExpTime int
 var JwtRefExpTime int
@@ -43,6 +44,7 @@ func InitConfig() {
 	Port = getEnv("APP_PORT")
 	FrontAddr = getEnv("APP_FRONT_ADDR")
 	EmailVerTime = getEnvInt("APP_EMAIL_VER_TIME")
+	PasswdChangeTime = getEnvInt("APP_PASSWD_VER_TIME")
 	JwtSecret = getEnv("APP_JWT_SECRET")
 	JwtAccExpTime = getEnvInt("APP_JWT_ACCESS_EXP_TIME")
 	JwtRefExpTime = getEnvInt("APP_JWT_REFRESH_EXP_TIME")

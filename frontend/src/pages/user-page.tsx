@@ -34,16 +34,7 @@ const UserPage = () => {
   };
 
   const changePass = async () => {
-    try {
-      const response = await axios.get("/api/user/change-password");
-      console.log(response.data);
-    } catch (err) {
-      toast({
-        variant: "destructive",
-        title: "Checking whether user is already logged in...",
-        description: (err as AxiosError).message,
-      });
-    }
+    navigate("/password-change-init");
   };
 
   const logout = async () => {

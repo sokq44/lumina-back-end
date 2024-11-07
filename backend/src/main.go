@@ -89,6 +89,13 @@ func main() {
 			handlers.ChangePassword,
 		),
 	)
+	http.HandleFunc(
+		"/user/password-change-init",
+		middleware.Method(
+			"POST",
+			handlers.PasswordChangeInit,
+		),
+	)
 
 	log.Println("serving on http://localhost:"+port, "(press ctrl + c to stop the process)")
 	if err := http.ListenAndServe(fmt.Sprintf(":%s", port), nil); err != nil {

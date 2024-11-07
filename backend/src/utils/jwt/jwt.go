@@ -74,10 +74,10 @@ func GenerateToken(claims Claims) (string, *errhandle.Error) {
 	return newJWT, nil
 }
 
-func GenerateAccessToken(user models.User, now time.Time) (string, *errhandle.Error) {
+func GenerateAccessToken(userId string, now time.Time) (string, *errhandle.Error) {
 	expires := time.Duration(config.JwtAccExpTime)
 	claims := Claims{
-		"user": user.Id,
+		"user": userId,
 		"exp":  now.Add(expires).Unix(),
 		"iat":  now.Unix(),
 	}

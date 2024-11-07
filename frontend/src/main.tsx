@@ -2,6 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import { Toaster } from "@/components/ui/toaster";
 import UserPage from "@/pages/user-page";
 import LoginPage from "@/pages/login-page";
 import RegisterPage from "@/pages/register-page";
@@ -9,7 +10,7 @@ import ModifyUserPage from "@/pages/modify-user-page";
 import VerifyEmailPage from "@/pages/verify-email-page";
 import EmailVerifiedPage from "@/pages/email-verified-page";
 import ChangePasswordPage from "@/pages/change-password-page";
-import { Toaster } from "@/components/ui/toaster";
+import PasswordChangeInitPage from "@/pages/password-change-init-page";
 import "./index.css";
 
 const router = createBrowserRouter([
@@ -40,6 +41,10 @@ const router = createBrowserRouter([
   {
     path: "/change-password/:token",
     element: <ChangePasswordPage />,
+  },
+  {
+    path: "/password-change-init",
+    element: <PasswordChangeInitPage />,
   },
 ]);
 

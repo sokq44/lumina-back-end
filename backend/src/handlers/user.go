@@ -8,7 +8,6 @@ import (
 	"backend/utils/emails"
 	"backend/utils/jwt"
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -122,6 +121,7 @@ var LoginUser http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
 
 	var body RequestBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		log.Println("a")
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
@@ -146,7 +146,7 @@ var LoginUser http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
 	}
 
 	now := time.Now()
-	access, e := jwt.GenerateAccessToken(user, now)
+	access, e := jwt.GenerateAccessToken(user.Id, now)
 	if e.Handle(w) {
 		return
 	}
@@ -275,10 +275,42 @@ var ModifyUser http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// TODO: Create a new password changing token in the database.
 // TODO: Send an email with a generated link to the user.
-var InitializePasswordChange http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("test")
+var PasswordChangeInit http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
+	type RequestBody struct {
+		Email string `json:"email"`
+	}
+
+	var body RequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	log.Println(body)
+
+	u, e := db.GetUserByEmail(body.Email)
+	if e.Handle(w) {
+		return
+	}
+
+	token, e := crypt.RandomString(128)
+	if e.Handle(w) {
+		return
+	}
+
+	duration := time.Duration(config.PasswdChangeTime)
+	passwdChange := models.PasswordChange{
+		Token:   token,
+		UserId:  u.Id,
+		Expires: time.Now().Add(duration),
+	}
+	if db.CreatePasswordChange(passwdChange).Handle(w) {
+		log.Println("Error while creating a password change row")
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
 }
 
 // TODO: Check whether the token sent from the client is valid

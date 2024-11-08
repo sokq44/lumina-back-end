@@ -8,8 +8,6 @@ import (
 	"net/http"
 )
 
-// TODO: clean out the expired tokens
-
 func (db *Database) CreatePasswordChange(p models.PasswordChange) *errhandle.Error {
 	_, err := db.Connection.Exec(
 		"INSERT INTO password_change (token, expires, user_id) values (?, ?, ?);",
@@ -85,4 +83,39 @@ func (db *Database) DeletePasswordChangeById(id string) *errhandle.Error {
 	}
 
 	return nil
+}
+
+func (db *Database) GetExpiredPasswordChanges() ([]models.PasswordChange, *errhandle.Error) {
+	rows, err := db.Connection.Query("SELECT * FROM password_change WHERE expires <= NOW();")
+
+	if err != nil {
+		return nil, &errhandle.Error{
+			Type:          errhandle.DatabaseError,
+			ServerMessage: fmt.Sprintf("error while trying to retrieve expired password changes: %v", err),
+			Status:        http.StatusInternalServerError,
+		}
+	}
+
+	var expired []models.PasswordChange
+	for rows.Next() {
+		var passwordChange models.PasswordChange
+		var rawTime string
+		if err := rows.Scan(&passwordChange.Id, &passwordChange.Token, &rawTime, &passwordChange.UserId); err != nil {
+			return nil, &errhandle.Error{
+				Type:          errhandle.DatabaseError,
+				ServerMessage: fmt.Sprintf("error while scanning expired password changes: %v", err),
+				Status:        http.StatusInternalServerError,
+			}
+		}
+
+		parsed, err := parseTime(rawTime)
+		if err != nil {
+			return nil, err
+		}
+
+		passwordChange.Expires = parsed
+		expired = append(expired, passwordChange)
+	}
+
+	return expired, nil
 }

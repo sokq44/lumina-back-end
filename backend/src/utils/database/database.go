@@ -86,17 +86,28 @@ func (db *Database) CleanDb() *errhandle.Error {
 		return err
 	}
 
+	passwordChanges, err := db.GetExpiredPasswordChanges()
+	if err != nil {
+		return err
+	}
+
 	for _, v := range verifications {
-		if err = db.DeleteEmailVerificationById(v.Id); err != nil {
+		if err := db.DeleteEmailVerificationById(v.Id); err != nil {
 			return err
 		}
-		if err = db.DeleteUserById(v.UserId); err != nil {
+		if err := db.DeleteUserById(v.UserId); err != nil {
 			return err
 		}
 	}
 
 	for _, t := range tokens {
-		if err = db.DeleteRefreshTokenById(t.Id); err != nil {
+		if err := db.DeleteRefreshTokenById(t.Id); err != nil {
+			return err
+		}
+	}
+
+	for _, p := range passwordChanges {
+		if err := db.DeletePasswordChangeById(p.Id); err != nil {
 			return err
 		}
 	}
@@ -109,10 +120,10 @@ func (db *Database) StartCleaningDb() {
 	defer ticker.Stop()
 
 	for range ticker.C {
-		if err := db.CleanDb(); err != nil {
-			log.Println(err)
+		if db.CleanDb().Handle(nil) {
 			break
 		}
+
 		log.Println("deleted all unverified users and hunging email verification from the database")
 	}
 }

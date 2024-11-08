@@ -8,9 +8,10 @@ import (
 type ErrorType byte
 
 type Error struct {
-	Type    ErrorType
-	Message string
-	Status  int
+	Type          ErrorType
+	ServerMessage string
+	ClientMessage string
+	Status        int
 }
 
 const (
@@ -27,20 +28,21 @@ func (err *Error) Handle(w http.ResponseWriter) bool {
 	}
 
 	w.WriteHeader(err.Status)
+	w.Write([]byte(err.ClientMessage))
 
 	switch err.Type {
 	case DatabaseError:
-		log.Printf("database error -> %v ", err.Message)
+		log.Printf("database error -> %v ", err.ServerMessage)
 	case EmailsError:
-		log.Printf("emails error -> %v ", err.Message)
+		log.Printf("emails error -> %v ", err.ServerMessage)
 	case CryptError:
-		log.Printf("crypt error -> %v ", err.Message)
+		log.Printf("crypt error -> %v ", err.ServerMessage)
 	case JwtError:
-		log.Printf("jwt error -> %v ", err.Message)
+		log.Printf("jwt error -> %v ", err.ServerMessage)
 	case ModelError:
-		log.Printf("model error -> %v", err.Message)
+		log.Printf("model error -> %v", err.ServerMessage)
 	default:
-		log.Printf("unknown error type -> %v", err.Message)
+		log.Printf("unknown error type -> %v", err.ServerMessage)
 	}
 
 	return true

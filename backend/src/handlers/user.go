@@ -12,8 +12,6 @@ import (
 	"log"
 	"net/http"
 	"time"
-
-	"github.com/google/uuid"
 )
 
 var db *database.Database = database.GetDb()
@@ -33,7 +31,6 @@ var RegisterUser http.HandlerFunc = func(w http.ResponseWriter, r *http.Request)
 	}
 
 	u := models.User{
-		Id:       uuid.New().String(),
 		Username: body.Username,
 		Email:    body.Email,
 		Password: body.Password,
@@ -97,9 +94,10 @@ var VerifyEmail http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) 
 
 	if emailValidation.Expires.Before(time.Now()) {
 		e := errhandle.Error{
-			Type:    errhandle.DatabaseError,
-			Message: "email validation token has expired",
-			Status:  http.StatusGone,
+			Type:          errhandle.DatabaseError,
+			ServerMessage: "email validation token has expired",
+			ClientMessage: "The verification link is invalid or has expired.",
+			Status:        http.StatusGone,
 		}
 		e.Handle(w)
 		return
@@ -336,6 +334,10 @@ var ChangePassword http.HandlerFunc = func(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
+	if db.DeletePasswordChangeById(passwordChange.Id).Handle(w) {
+		return
+	}
+
 	user, e := db.GetUserById(passwordChange.UserId)
 	if e.Handle(w) {
 		return
@@ -347,11 +349,7 @@ var ChangePassword http.HandlerFunc = func(w http.ResponseWriter, r *http.Reques
 	}
 
 	user.Password = crypt.Sha256(body.Password)
-	if db.UpdateUser(user).Handle(w) {
-		return
-	}
-
-	if db.DeletePasswordChangeById(passwordChange.Id).Handle(w) {
+	if db.UpdateUser(*user).Handle(w) {
 		return
 	}
 

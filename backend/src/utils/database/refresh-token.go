@@ -16,9 +16,10 @@ func (db *Database) CreateRefreshToken(token models.RefreshToken) *errhandle.Err
 
 	if err != nil {
 		return &errhandle.Error{
-			Type:    errhandle.DatabaseError,
-			Message: fmt.Sprintf("error while creating a refresh token: %v", err),
-			Status:  http.StatusInternalServerError,
+			Type:          errhandle.DatabaseError,
+			ServerMessage: fmt.Sprintf("error while creating a refresh token: %v", err),
+			ClientMessage: "An error occurred while trying to store your session.",
+			Status:        http.StatusInternalServerError,
 		}
 	}
 
@@ -35,12 +36,18 @@ func (db *Database) GetRefreshTokenByUserId(userId string) (*models.RefreshToken
 	).Scan(&token.Id, &token.Token, &rawTime, &token.UserId)
 
 	if err == sql.ErrNoRows {
-		return nil, nil
+		return nil, &errhandle.Error{
+			Type:          errhandle.DatabaseError,
+			ServerMessage: fmt.Sprintf("while getting a refresh token by user id: %v", err),
+			ClientMessage: "There's no session associated with the provided user.",
+			Status:        http.StatusNotFound,
+		}
 	} else if err != nil {
 		return nil, &errhandle.Error{
-			Type:    errhandle.DatabaseError,
-			Message: fmt.Sprintf("while getting a refresh token by user id: %v", err),
-			Status:  http.StatusInternalServerError,
+			Type:          errhandle.DatabaseError,
+			ServerMessage: fmt.Sprintf("while getting a refresh token by user id: %v", err),
+			ClientMessage: "An error occured while processing your request.",
+			Status:        http.StatusInternalServerError,
 		}
 	}
 
@@ -62,9 +69,10 @@ func (db *Database) DeleteRefreshTokenById(id string) *errhandle.Error {
 
 	if err != nil {
 		return &errhandle.Error{
-			Type:    errhandle.DatabaseError,
-			Message: fmt.Sprintf("error while deleting a refresh token by id: %v", err),
-			Status:  http.StatusInternalServerError,
+			Type:          errhandle.DatabaseError,
+			ServerMessage: fmt.Sprintf("error while deleting a refresh token by id: %v", err),
+			ClientMessage: "An error occurred while processing your request.",
+			Status:        http.StatusInternalServerError,
 		}
 	}
 
@@ -79,9 +87,10 @@ func (db *Database) DeleteRefreshTokenByToken(token string) *errhandle.Error {
 
 	if err != nil {
 		return &errhandle.Error{
-			Type:    errhandle.DatabaseError,
-			Message: fmt.Sprintf("error while deleting a refresh token by token: %v", err),
-			Status:  http.StatusInternalServerError,
+			Type:          errhandle.DatabaseError,
+			ServerMessage: fmt.Sprintf("error while deleting a refresh token by token: %v", err),
+			ClientMessage: "An error occurred while processing your request.",
+			Status:        http.StatusInternalServerError,
 		}
 	}
 
@@ -93,9 +102,9 @@ func (db *Database) GetExpiredRefreshTokens() ([]models.RefreshToken, *errhandle
 
 	if err != nil {
 		return nil, &errhandle.Error{
-			Type:    errhandle.DatabaseError,
-			Message: fmt.Sprintf("error while trying to retrieve expired refresh tokens: %v", err),
-			Status:  http.StatusInternalServerError,
+			Type:          errhandle.DatabaseError,
+			ServerMessage: fmt.Sprintf("error while trying to retrieve expired refresh tokens: %v", err),
+			Status:        http.StatusInternalServerError,
 		}
 	}
 
@@ -105,9 +114,9 @@ func (db *Database) GetExpiredRefreshTokens() ([]models.RefreshToken, *errhandle
 		var rawTime string
 		if err := rows.Scan(&token.Id, &token.Token, &rawTime, &token.UserId); err != nil {
 			return nil, &errhandle.Error{
-				Type:    errhandle.DatabaseError,
-				Message: fmt.Sprintf("error while scanning expired refresh tokens: %v", err),
-				Status:  http.StatusInternalServerError,
+				Type:          errhandle.DatabaseError,
+				ServerMessage: fmt.Sprintf("error while scanning expired refresh tokens: %v", err),
+				Status:        http.StatusInternalServerError,
 			}
 		}
 

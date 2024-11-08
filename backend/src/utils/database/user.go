@@ -16,9 +16,10 @@ func (db *Database) CreateUser(u models.User) *errhandle.Error {
 
 	if err != nil {
 		return &errhandle.Error{
-			Type:    errhandle.DatabaseError,
-			Message: fmt.Sprintf("while creating a new user -> %v", err),
-			Status:  http.StatusInternalServerError,
+			Type:          errhandle.DatabaseError,
+			ServerMessage: fmt.Sprintf("while creating a new user -> %v", err),
+			ClientMessage: "An error accurred while creating a new user.",
+			Status:        http.StatusInternalServerError,
 		}
 	}
 
@@ -31,11 +32,19 @@ func (db *Database) UpdateUser(u models.User) *errhandle.Error {
 		u.Username, u.Email, u.Password, u.Verified, u.Id,
 	)
 
-	if err != nil {
+	if err == sql.ErrNoRows {
 		return &errhandle.Error{
-			Type:    errhandle.DatabaseError,
-			Message: fmt.Sprintf("while updating a user -> %v", err),
-			Status:  http.StatusInternalServerError,
+			Type:          errhandle.DatabaseError,
+			ServerMessage: fmt.Sprintf("while updating a user -> %v", err),
+			ClientMessage: "Error while trying to get user's data.",
+			Status:        http.StatusNotFound,
+		}
+	} else if err != nil {
+		return &errhandle.Error{
+			Type:          errhandle.DatabaseError,
+			ServerMessage: fmt.Sprintf("while updating a user -> %v", err),
+			ClientMessage: "An error occurred while modifying a user.",
+			Status:        http.StatusInternalServerError,
 		}
 	}
 
@@ -47,35 +56,44 @@ func (db *Database) DeleteUserById(id string) *errhandle.Error {
 
 	if err != nil {
 		return &errhandle.Error{
-			Type:    errhandle.DatabaseError,
-			Message: fmt.Sprintf("while deleting a user by id -> %v", err),
-			Status:  http.StatusInternalServerError,
+			Type:          errhandle.DatabaseError,
+			ServerMessage: fmt.Sprintf("while deleting a user by id -> %v", err),
+			ClientMessage: "An error occurred while processing your request.",
+			Status:        http.StatusInternalServerError,
 		}
 	}
 
 	return nil
 }
 
-func (db *Database) GetUserById(id string) (models.User, *errhandle.Error) {
-	user := models.User{Id: id}
+func (db *Database) GetUserById(id string) (*models.User, *errhandle.Error) {
+	user := &models.User{Id: id}
 
 	err := db.Connection.QueryRow(
 		"SELECT username, email, verified FROM users WHERE id=?;",
 		id,
 	).Scan(&user.Username, &user.Email, &user.Verified)
 
-	if err != nil {
-		return models.User{}, &errhandle.Error{
-			Type:    errhandle.DatabaseError,
-			Message: fmt.Sprintf("error while getting a user by id: %v", err),
-			Status:  http.StatusInternalServerError,
+	if err == sql.ErrNoRows {
+		return nil, &errhandle.Error{
+			Type:          errhandle.DatabaseError,
+			ServerMessage: fmt.Sprintf("error while getting a user by id: %v", err),
+			ClientMessage: "Error while trying to get user's data.",
+			Status:        http.StatusNotFound,
+		}
+	} else if err != nil {
+		return nil, &errhandle.Error{
+			Type:          errhandle.DatabaseError,
+			ServerMessage: fmt.Sprintf("error while getting a user by id: %v", err),
+			ClientMessage: "An error occurred while processing your request.",
+			Status:        http.StatusInternalServerError,
 		}
 	}
 
 	return user, nil
 }
 
-func (db *Database) GetUserByEmail(email string) (models.User, *errhandle.Error) {
+func (db *Database) GetUserByEmail(email string) (*models.User, *errhandle.Error) {
 	var id string
 	var username string
 	var password string
@@ -86,15 +104,23 @@ func (db *Database) GetUserByEmail(email string) (models.User, *errhandle.Error)
 		email,
 	).Scan(&id, &username, &password, &verified)
 
-	if err != nil {
-		return models.User{}, &errhandle.Error{
-			Type:    errhandle.DatabaseError,
-			Message: fmt.Sprintf("error while getting a user by email: %v", err),
-			Status:  http.StatusInternalServerError,
+	if err == sql.ErrNoRows {
+		return nil, &errhandle.Error{
+			Type:          errhandle.DatabaseError,
+			ServerMessage: fmt.Sprintf("error while getting a user by id: %v", err),
+			ClientMessage: "Error while trying to get user's data.",
+			Status:        http.StatusNotFound,
+		}
+	} else if err != nil {
+		return nil, &errhandle.Error{
+			Type:          errhandle.DatabaseError,
+			ServerMessage: fmt.Sprintf("error while getting a user by email: %v", err),
+			ClientMessage: "An error occurred while processing your request.",
+			Status:        http.StatusInternalServerError,
 		}
 	}
 
-	user := models.User{
+	user := &models.User{
 		Id:       id,
 		Username: username,
 		Password: password,
@@ -116,9 +142,10 @@ func (db *Database) UserExists(u models.User) (bool, *errhandle.Error) {
 		return false, nil
 	} else if err != nil {
 		return false, &errhandle.Error{
-			Type:    errhandle.DatabaseError,
-			Message: fmt.Sprintf("error while checking whether a user exists: %v", err),
-			Status:  http.StatusInternalServerError,
+			Type:          errhandle.DatabaseError,
+			ServerMessage: fmt.Sprintf("error while checking whether a user exists: %v", err),
+			ClientMessage: "An error occurred while processing your request.",
+			Status:        http.StatusInternalServerError,
 		}
 	}
 
@@ -131,11 +158,19 @@ func (db *Database) VerifyUser(id string) *errhandle.Error {
 		id,
 	)
 
-	if err != nil {
+	if err == sql.ErrNoRows {
 		return &errhandle.Error{
-			Type:    errhandle.DatabaseError,
-			Message: fmt.Sprintf("error while verifying a user: %v", err),
-			Status:  http.StatusInternalServerError,
+			Type:          errhandle.DatabaseError,
+			ServerMessage: fmt.Sprintf("error while verifying a user: %v", err),
+			ClientMessage: "Error while trying to get user's data.",
+			Status:        http.StatusNotFound,
+		}
+	} else if err != nil {
+		return &errhandle.Error{
+			Type:          errhandle.DatabaseError,
+			ServerMessage: fmt.Sprintf("error while verifying a user: %v", err),
+			ClientMessage: "An error has occurred while processing your request.",
+			Status:        http.StatusInternalServerError,
 		}
 	}
 

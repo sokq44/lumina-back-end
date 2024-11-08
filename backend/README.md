@@ -36,7 +36,7 @@ sudo mysql -u root -p # No password for root is set by default (should be change
 By default, MySQL is set to run as a Windows Service, which means it will start automatically when your system boots up.
 
 ```bash
-mysql -u root -p # no password for root is set by default (should be changed whatever you want)
+mysql -u root -p # no password for root is set by default (should be changed to whatever you want)
 ```
 
 #### DATABASE
@@ -65,7 +65,7 @@ mysql -u [new_user] -p # From now on you should log in as the user created in th
 
 ### .env File
 
-In order for the backend to work you need to create a .env file in the /backend directory
+In order for the backend to work you need to create a .env file in the /backend/src directory
 
 ```
 # APPLICATION INFORMATION

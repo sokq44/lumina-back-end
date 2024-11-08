@@ -65,9 +65,10 @@ func parseTime(t string) (time.Time, *errhandle.Error) {
 
 	if err != nil {
 		return time.Time{}, &errhandle.Error{
-			Type:    errhandle.DatabaseError,
-			Message: fmt.Sprintf("while parsing datetime -> %v", err),
-			Status:  http.StatusInternalServerError,
+			Type:          errhandle.DatabaseError,
+			ServerMessage: fmt.Sprintf("while parsing datetime -> %v", err),
+			ClientMessage: "An error occurred while processing your request.",
+			Status:        http.StatusInternalServerError,
 		}
 	}
 

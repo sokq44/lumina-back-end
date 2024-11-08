@@ -40,14 +40,14 @@ func (db *Database) GetPasswordChangeByToken(token string) (*models.PasswordChan
 	if err == sql.ErrNoRows {
 		return nil, &errhandle.Error{
 			Type:          errhandle.DatabaseError,
-			ServerMessage: fmt.Sprintf("error while getting an email verification by token: %v", err),
+			ServerMessage: fmt.Sprintf("error while getting a password change by token: %v", err),
 			ClientMessage: "This URL is invalid or has expired.",
 			Status:        http.StatusNotFound,
 		}
 	} else if err != nil {
 		return nil, &errhandle.Error{
 			Type:          errhandle.DatabaseError,
-			ServerMessage: fmt.Sprintf("error while getting an email verification by token: %v", err),
+			ServerMessage: fmt.Sprintf("error while getting a password change by token: %v", err),
 			Status:        http.StatusInternalServerError,
 		}
 	}

@@ -16,16 +16,7 @@ type User struct {
 	Verified bool
 }
 
-func (user *User) Validate(isFromDb bool) *errhandle.Error {
-	if !isFromDb && len(user.Id) != 36 {
-		return &errhandle.Error{
-			Type:          errhandle.ModelError,
-			ServerMessage: "user's id has to be 36 characters long",
-			ClientMessage: "There was an error while vaidating user's structure.",
-			Status:        http.StatusBadRequest,
-		}
-	}
-
+func (user *User) Validate(passhashed bool) *errhandle.Error {
 	if len(user.Username) < 5 || len(user.Username) > 20 {
 		return &errhandle.Error{
 			Type:          errhandle.ModelError,
@@ -45,7 +36,7 @@ func (user *User) Validate(isFromDb bool) *errhandle.Error {
 		}
 	}
 
-	if !isFromDb && (len(user.Password) < 9 || !hasUppercase(user.Password) || !hasDigit(user.Password) || !hasSpecialChar(user.Password)) {
+	if !passhashed && (len(user.Password) < 9 || !hasUppercase(user.Password) || !hasDigit(user.Password) || !hasSpecialChar(user.Password)) {
 		return &errhandle.Error{
 			Type:          errhandle.ModelError,
 			ServerMessage: "password must contain a capital letter, a special character, a digit and be at least 9 characters long",

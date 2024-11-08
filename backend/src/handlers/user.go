@@ -9,7 +9,7 @@ import (
 	"backend/utils/errhandle"
 	"backend/utils/jwt"
 	"encoding/json"
-	"log"
+	"fmt"
 	"net/http"
 	"time"
 )
@@ -82,9 +82,15 @@ var VerifyEmail http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) 
 
 	var body RequestBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		log.Println("Problem while decoding!")
-		w.WriteHeader(http.StatusBadRequest)
-		return
+		e := errhandle.Error{
+			Type:          errhandle.HandlerError,
+			ServerMessage: fmt.Sprintf("error while retrieving the access_token cookie: %v", err),
+			ClientMessage: "An error has occurred while processing your request.",
+			Status:        http.StatusBadRequest,
+		}
+		if e.Handle(w) {
+			return
+		}
 	}
 
 	emailValidation, e := db.GetEmailVerificationByToken(body.Token)
@@ -124,9 +130,15 @@ var LoginUser http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
 
 	var body RequestBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		log.Println("a")
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		e := errhandle.Error{
+			Type:          errhandle.HandlerError,
+			ServerMessage: fmt.Sprintf("error while retrieving the access_token cookie: %v", err),
+			ClientMessage: "An error has occurred while processing your request.",
+			Status:        http.StatusBadRequest,
+		}
+		if e.Handle(w) {
+			return
+		}
 	}
 
 	user, e := db.GetUserByEmail(body.Email)
@@ -134,11 +146,9 @@ var LoginUser http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	refreshToken, e := db.GetRefreshTokenByUserId(user.Id)
+	refreshToken, _ := db.GetRefreshTokenByUserId(user.Id)
 	if refreshToken != nil {
 		w.WriteHeader(http.StatusOK)
-		return
-	} else if e.Handle(w) {
 		return
 	}
 
@@ -186,9 +196,15 @@ var LoginUser http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
 var LogoutUser http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
 	refreshCookie, err := r.Cookie("refresh_token")
 	if err != nil {
-		log.Println(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		e := errhandle.Error{
+			Type:          errhandle.HandlerError,
+			ServerMessage: fmt.Sprintf("error while retrieving the refresh_token cookie: %v", err),
+			ClientMessage: "An error has occurred while processing your request.",
+			Status:        http.StatusInternalServerError,
+		}
+		if e.Handle(w) {
+			return
+		}
 	}
 
 	e := db.DeleteRefreshTokenByToken(refreshCookie.Value)
@@ -218,9 +234,15 @@ var LogoutUser http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
 var GetUser http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
 	access, err := r.Cookie("access_token")
 	if err != nil {
-		log.Println(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		e := errhandle.Error{
+			Type:          errhandle.HandlerError,
+			ServerMessage: fmt.Sprintf("error while retrieving the access_token cookie: %v", err),
+			ClientMessage: "An error has occurred while processing your request.",
+			Status:        http.StatusInternalServerError,
+		}
+		if e.Handle(w) {
+			return
+		}
 	}
 
 	claims, e := jwt.DecodePayload(access.Value)
@@ -239,9 +261,15 @@ var GetUser http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
 		"email":    user.Email,
 	}
 	if err := json.NewEncoder(w).Encode(userData); err != nil {
-		log.Println(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		e := errhandle.Error{
+			Type:          errhandle.HandlerError,
+			ServerMessage: fmt.Sprintf("error while encoding json data to the response: %v", err),
+			ClientMessage: "An error has occurred while processing your request.",
+			Status:        http.StatusInternalServerError,
+		}
+		if e.Handle(w) {
+			return
+		}
 	}
 }
 
@@ -253,9 +281,15 @@ var ModifyUser http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
 
 	var body RequestBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		log.Println(err)
-		w.WriteHeader(http.StatusInternalServerError)
-		return
+		e := errhandle.Error{
+			Type:          errhandle.HandlerError,
+			ServerMessage: fmt.Sprintf("error while retrieving the access_token cookie: %v", err),
+			ClientMessage: "An error has occurred while processing your request.",
+			Status:        http.StatusBadRequest,
+		}
+		if e.Handle(w) {
+			return
+		}
 	}
 
 	user, e := db.GetUserByEmail(body.Email)
@@ -306,7 +340,6 @@ var PasswordChangeInit http.HandlerFunc = func(w http.ResponseWriter, r *http.Re
 		Expires: time.Now().Add(duration),
 	}
 	if db.CreatePasswordChange(passwdChange).Handle(w) {
-		log.Println("Error while creating a password change row")
 		return
 	}
 
@@ -334,10 +367,6 @@ var ChangePassword http.HandlerFunc = func(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	if db.DeletePasswordChangeById(passwordChange.Id).Handle(w) {
-		return
-	}
-
 	user, e := db.GetUserById(passwordChange.UserId)
 	if e.Handle(w) {
 		return
@@ -345,6 +374,10 @@ var ChangePassword http.HandlerFunc = func(w http.ResponseWriter, r *http.Reques
 
 	user.Password = body.Password
 	if user.Validate(false).Handle(w) {
+		return
+	}
+
+	if db.DeletePasswordChangeById(passwordChange.Id).Handle(w) {
 		return
 	}
 

@@ -20,6 +20,7 @@ const (
 	CryptError    ErrorType = 3
 	JwtError      ErrorType = 4
 	ModelError    ErrorType = 5
+	HandlerError  ErrorType = 6
 )
 
 func (err *Error) Handle(w http.ResponseWriter) bool {

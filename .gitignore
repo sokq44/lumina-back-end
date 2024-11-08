@@ -38,4 +38,7 @@ credentials.txt
 # binaries
 bin/
 
+# logs
+log/ 
+
 # -------------------

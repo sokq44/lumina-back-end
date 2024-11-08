@@ -6,6 +6,7 @@ import (
 	"backend/middleware"
 	"backend/utils/database"
 	"backend/utils/emails"
+	"backend/utils/errhandle"
 	"fmt"
 	"log"
 	"net/http"
@@ -15,6 +16,7 @@ func main() {
 	config.InitConfig()
 	database.InitDb()
 	emails.InitEmails()
+	errhandle.Init("/home/sokq/Projects/article-app/backend/logs", true)
 
 	port := config.Port
 

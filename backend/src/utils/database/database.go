@@ -120,7 +120,7 @@ func (db *Database) StartCleaningDb() {
 	defer ticker.Stop()
 
 	for range ticker.C {
-		if db.CleanDb().Handle(nil) {
+		if db.CleanDb().Handle(nil, nil) {
 			break
 		}
 

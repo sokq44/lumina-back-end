@@ -1,8 +1,12 @@
 package errhandle
 
 import (
+	"fmt"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
+	"time"
 )
 
 type ErrorType byte
@@ -23,28 +27,64 @@ const (
 	HandlerError  ErrorType = 6
 )
 
-func (err *Error) Handle(w http.ResponseWriter) bool {
-	if err == nil {
+var location string
+var shouldVerbose bool
+
+func Init(l string, v bool) {
+	location = l
+	shouldVerbose = v
+}
+
+func (e *Error) Handle(w http.ResponseWriter, r *http.Request) bool {
+	if e == nil {
 		return false
 	}
 
-	w.WriteHeader(err.Status)
-	w.Write([]byte(err.ClientMessage))
+	w.WriteHeader(e.Status)
+	w.Write([]byte(e.ClientMessage))
 
-	switch err.Type {
+	var logMessage string
+	var typeString string
+
+	switch e.Type {
 	case DatabaseError:
-		log.Printf("database error -> %v ", err.ServerMessage)
+		typeString = "database error"
 	case EmailsError:
-		log.Printf("emails error -> %v ", err.ServerMessage)
+		typeString = "emails error"
 	case CryptError:
-		log.Printf("crypt error -> %v ", err.ServerMessage)
+		typeString = "crypt error"
 	case JwtError:
-		log.Printf("jwt error -> %v ", err.ServerMessage)
+		typeString = "jwt error"
 	case ModelError:
-		log.Printf("model error -> %v", err.ServerMessage)
+		typeString = "model error"
 	default:
-		log.Printf("unknown error type -> %v", err.ServerMessage)
+		typeString = "unknown error"
 	}
+
+	logMessage = fmt.Sprintf(
+		"\n{\n\t%s -> %s,\n\tresponded with HTTP status -> %d\n\tresponded with message -> \"%s\"\n}\n",
+		typeString, e.ServerMessage, e.Status, e.ClientMessage,
+	)
+
+	host := r.Host
+	now := time.Now()
+	logMessage = fmt.Sprintf("[%v] [%s] -> %s", now, host, logMessage)
+
+	if shouldVerbose {
+		log.Println(logMessage)
+	}
+
+	fullPath := filepath.Join(location, now.Format("02-01-2006")+".log")
+	file, err := os.OpenFile(fullPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != os.ErrExist && err != nil {
+		log.Println("error while creating the log file", err)
+	} else {
+		_, err = file.WriteString(fmt.Sprintf("%s\n", logMessage))
+		if err != nil {
+			log.Println("error while writing a log")
+		}
+	}
+	file.Close()
 
 	return true
 }

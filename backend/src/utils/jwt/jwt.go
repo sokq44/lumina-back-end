@@ -27,9 +27,10 @@ func CreateHeader() (string, *errhandle.Error) {
 	headerJson, err := json.Marshal(header)
 	if err != nil {
 		return "", &errhandle.Error{
-			Type:    errhandle.JwtError,
-			Message: fmt.Sprintf("while creating header -> %v", err),
-			Status:  http.StatusInternalServerError,
+			Type:          errhandle.JwtError,
+			ServerMessage: fmt.Sprintf("while creating header -> %v", err),
+			ClientMessage: "An error occurred while processing your request.",
+			Status:        http.StatusInternalServerError,
 		}
 	}
 
@@ -40,9 +41,10 @@ func CreatePayload(claims Claims) (string, *errhandle.Error) {
 	payloadJson, err := json.Marshal(claims)
 	if err != nil {
 		return "", &errhandle.Error{
-			Type:    errhandle.JwtError,
-			Message: fmt.Sprintf("while creating payload -> %v", err),
-			Status:  http.StatusInternalServerError,
+			Type:          errhandle.JwtError,
+			ServerMessage: fmt.Sprintf("while creating payload -> %v", err),
+			ClientMessage: "An error occurred while processing your request.",
+			Status:        http.StatusInternalServerError,
 		}
 	}
 
@@ -116,9 +118,10 @@ func DecodePayload(token string) (Claims, *errhandle.Error) {
 	parts := strings.Split(token, ".")
 	if len(parts) != 3 {
 		return nil, &errhandle.Error{
-			Type:    errhandle.JwtError,
-			Message: "token doesn't contain 3 parts",
-			Status:  http.StatusInternalServerError,
+			Type:          errhandle.JwtError,
+			ServerMessage: "token doesn't contain 3 parts",
+			ClientMessage: "An error occurred while processing your request.",
+			Status:        http.StatusInternalServerError,
 		}
 	}
 
@@ -132,9 +135,10 @@ func DecodePayload(token string) (Claims, *errhandle.Error) {
 	var claims Claims
 	if err := json.Unmarshal(payloadBytes, &claims); err != nil {
 		return nil, &errhandle.Error{
-			Type:    errhandle.JwtError,
-			Message: fmt.Sprintf("while decoding payload-> %v", err),
-			Status:  http.StatusInternalServerError,
+			Type:          errhandle.JwtError,
+			ServerMessage: fmt.Sprintf("while decoding payload-> %v", err),
+			ClientMessage: "An error occurred while processing your request.",
+			Status:        http.StatusInternalServerError,
 		}
 	}
 

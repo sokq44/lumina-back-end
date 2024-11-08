@@ -16,39 +16,41 @@ type User struct {
 	Verified bool
 }
 
-func (user *User) Validate(passwordHashed bool) *errhandle.Error {
-	if len(user.Id) != 36 {
+func (user *User) Validate(isFromDb bool) *errhandle.Error {
+	if !isFromDb && len(user.Id) != 36 {
 		return &errhandle.Error{
-			Type:    errhandle.ModelError,
-			Message: "user's id has to be 36 characters long",
-			Status:  http.StatusBadRequest,
+			Type:          errhandle.ModelError,
+			ServerMessage: "user's id has to be 36 characters long",
+			ClientMessage: "There was an error while vaidating user's structure.",
+			Status:        http.StatusBadRequest,
 		}
 	}
 
 	if len(user.Username) < 5 || len(user.Username) > 20 {
 		return &errhandle.Error{
-			Type:    errhandle.ModelError,
-			Message: "username has to be between 5 and 20 characters long",
-			Status:  http.StatusBadRequest,
+			Type:          errhandle.ModelError,
+			ServerMessage: "username has to be between 5 and 20 characters long",
+			ClientMessage: "Username has to be between 5 and 20 characters long.",
+			Status:        http.StatusBadRequest,
 		}
 	}
 
 	emailRegex := regexp.MustCompile(`^[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,4}$`)
 	if !emailRegex.MatchString(user.Email) {
 		return &errhandle.Error{
-			Type:    errhandle.ModelError,
-			Message: "invalid email address",
-			Status:  http.StatusBadRequest,
+			Type:          errhandle.ModelError,
+			ServerMessage: "invalid email address",
+			ClientMessage: "Invalid email address was provided.",
+			Status:        http.StatusBadRequest,
 		}
 	}
 
-	if !passwordHashed {
-		if len(user.Password) < 9 || !hasUppercase(user.Password) || !hasDigit(user.Password) || !hasSpecialChar(user.Password) {
-			return &errhandle.Error{
-				Type:    errhandle.ModelError,
-				Message: "password must contain a capital letter, a special character, a digit and be at least 9 characters long",
-				Status:  http.StatusBadRequest,
-			}
+	if !isFromDb && (len(user.Password) < 9 || !hasUppercase(user.Password) || !hasDigit(user.Password) || !hasSpecialChar(user.Password)) {
+		return &errhandle.Error{
+			Type:          errhandle.ModelError,
+			ServerMessage: "password must contain a capital letter, a special character, a digit and be at least 9 characters long",
+			ClientMessage: "Password must contain a capital letter, a special character, a digit and be at least 9 characters long.",
+			Status:        http.StatusBadRequest,
 		}
 	}
 

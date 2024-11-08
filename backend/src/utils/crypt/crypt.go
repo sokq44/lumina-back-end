@@ -126,8 +126,10 @@ func RandomString(length int) (string, *errhandle.Error) {
 	bytes := make([]byte, length)
 	if _, err := rand.Read(bytes); err != nil {
 		return "", &errhandle.Error{
-			Type:    errhandle.CryptError,
-			Message: fmt.Sprintf("error while generating a random string: %v", err),
+			Type:          errhandle.CryptError,
+			ServerMessage: fmt.Sprintf("error while generating a random string: %v", err),
+			ClientMessage: "There was an error while processing your request.",
+			Status:        http.StatusInternalServerError,
 		}
 	}
 
@@ -148,9 +150,10 @@ func Base64UrlDecode(input string) ([]byte, *errhandle.Error) {
 	bytes, err := base64.RawURLEncoding.DecodeString(input)
 	if err != nil {
 		return nil, &errhandle.Error{
-			Type:    errhandle.CryptError,
-			Message: fmt.Sprintf("while decoding a base 64 URL string: %v", err),
-			Status:  http.StatusInternalServerError,
+			Type:          errhandle.CryptError,
+			ServerMessage: fmt.Sprintf("while decoding a base 64 URL string: %v", err),
+			ClientMessage: "There was an error while processing your request.",
+			Status:        http.StatusInternalServerError,
 		}
 	}
 

@@ -68,9 +68,10 @@ func (client *SmtpClient) SendEmail(receiver string, subject string, body string
 
 	if err := smtp.SendMail(addr, auth, client.From, []string{receiver}, msg); err != nil {
 		return &errhandle.Error{
-			Type:    errhandle.EmailsError,
-			Message: fmt.Sprintf("while trying to send an email -> %v", err),
-			Status:  http.StatusInternalServerError,
+			Type:          errhandle.EmailsError,
+			ServerMessage: fmt.Sprintf("while trying to send an email -> %v", err),
+			ClientMessage: "An error occurred while processing your request.",
+			Status:        http.StatusInternalServerError,
 		}
 	}
 

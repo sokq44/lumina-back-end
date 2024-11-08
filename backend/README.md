@@ -36,7 +36,7 @@ sudo mysql -u root -p # No password for root is set by default (should be change
 By default, MySQL is set to run as a Windows Service, which means it will start automatically when your system boots up.
 
 ```bash
-mysql -u root -p # no password for root is set by default (should be changed whatever you want)
+mysql -u root -p # no password for root is set by default (should be changed to whatever you want)
 ```
 
 #### DATABASE
@@ -65,12 +65,17 @@ mysql -u [new_user] -p # From now on you should log in as the user created in th
 
 ### .env File
 
-In order for the backend to work you need to create a .env file in the /backend directory
+In order for the backend to work you need to create a .env file in the /backend/src directory
 
 ```
 # APPLICATION INFORMATION
 APP_PORT="[backend app port, must be different than frontend if running both on one machine]"
 APP_FRONT_ADDR="[frontend address, for vite it defaults to http://localhost:5173]"
+APP_EMAIL_VER_TIME="[time after which the email verification during registration process will expire]"
+APP_PASSWD_VER_TIME="[time after which the password change token will expire]"
+APP_JWT_SECRET="[JWT secret used for the JWT tokens generation]"
+APP_JWT_ACCESS_EXP_TIME="[time after which the access token will expire]"
+APP_JWT_REFRESH_EXP_TIME="[time after which the refresh token will expire]"
 
 # DATABASE CREDENTIALS
 DB_USER="[mysql user]"
@@ -89,3 +94,12 @@ SMTP_PORT="[smtp server's port]"
 ```
 
 Reach out to [sokq44](https://github.com/sokq44) for the SMTP credentials.
+
+### Build
+
+```bash
+cd ./src/
+go build -o ../bin/backend
+```
+
+After running the above two commands you should see a bin folder in the /backend directory.

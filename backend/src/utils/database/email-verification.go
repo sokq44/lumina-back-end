@@ -3,6 +3,7 @@ package database
 import (
 	"backend/models"
 	"backend/utils/errhandle"
+	"database/sql"
 	"fmt"
 	"net/http"
 )
@@ -15,16 +16,17 @@ func (db *Database) CreateEmailVerification(e models.EmailVerification) *errhand
 
 	if err != nil {
 		return &errhandle.Error{
-			Type:    errhandle.DatabaseError,
-			Message: fmt.Sprintf("error while creating an email verification: %v", err),
-			Status:  http.StatusInternalServerError,
+			Type:          errhandle.DatabaseError,
+			ServerMessage: fmt.Sprintf("error while creating an email verification: %v", err),
+			ClientMessage: "An error occurred while processing your request.",
+			Status:        http.StatusInternalServerError,
 		}
 	}
 
 	return nil
 }
 
-func (db *Database) GetEmailVerificationByToken(token string) (models.EmailVerification, *errhandle.Error) {
+func (db *Database) GetEmailVerificationByToken(token string) (*models.EmailVerification, *errhandle.Error) {
 	var id string
 	var tk string
 	var userId string
@@ -35,20 +37,28 @@ func (db *Database) GetEmailVerificationByToken(token string) (models.EmailVerif
 		token,
 	).Scan(&id, &tk, &expires, &userId)
 
-	if err != nil {
-		return models.EmailVerification{}, &errhandle.Error{
-			Type:    errhandle.DatabaseError,
-			Message: fmt.Sprintf("error while getting an email verification by token: %v", err),
-			Status:  http.StatusInternalServerError,
+	if err == sql.ErrNoRows {
+		return nil, &errhandle.Error{
+			Type:          errhandle.DatabaseError,
+			ServerMessage: fmt.Sprintf("error while getting an email verification by token: %v", err),
+			ClientMessage: "The verification link is invalid or has expired.",
+			Status:        http.StatusNotFound,
+		}
+	} else if err != nil {
+		return nil, &errhandle.Error{
+			Type:          errhandle.DatabaseError,
+			ServerMessage: fmt.Sprintf("error while getting an email verification by token: %v", err),
+			ClientMessage: "An error occurred while processing your request.",
+			Status:        http.StatusInternalServerError,
 		}
 	}
 
 	expiresTime, e := parseTime(expires)
 	if e != nil {
-		return models.EmailVerification{}, e
+		return nil, e
 	}
 
-	emailVerification := models.EmailVerification{
+	emailVerification := &models.EmailVerification{
 		Id:      id,
 		Token:   tk,
 		UserId:  userId,
@@ -66,9 +76,10 @@ func (db *Database) DeleteEmailVerificationById(id string) *errhandle.Error {
 
 	if err != nil {
 		return &errhandle.Error{
-			Type:    errhandle.DatabaseError,
-			Message: fmt.Sprintf("error while deleting an email verification by id: %v", err),
-			Status:  http.StatusInternalServerError,
+			Type:          errhandle.DatabaseError,
+			ServerMessage: fmt.Sprintf("error while deleting an email verification by id: %v", err),
+			ClientMessage: "An error occurred while processing your request.",
+			Status:        http.StatusInternalServerError,
 		}
 	}
 
@@ -80,9 +91,9 @@ func (db *Database) GetExpiredEmailVerifications() ([]models.EmailVerification, 
 
 	if err != nil {
 		return nil, &errhandle.Error{
-			Type:    errhandle.DatabaseError,
-			Message: fmt.Sprintf("error while trying to retrieve expired email verifications: %v", err),
-			Status:  http.StatusInternalServerError,
+			Type:          errhandle.DatabaseError,
+			ServerMessage: fmt.Sprintf("error while trying to retrieve expired email verifications: %v", err),
+			Status:        http.StatusInternalServerError,
 		}
 	}
 
@@ -92,9 +103,9 @@ func (db *Database) GetExpiredEmailVerifications() ([]models.EmailVerification, 
 		var rawTime string
 		if err := rows.Scan(&verification.Id, &verification.Token, &rawTime, &verification.UserId); err != nil {
 			return nil, &errhandle.Error{
-				Type:    errhandle.DatabaseError,
-				Message: fmt.Sprintf("error while scanning expired email verifications: %v", err),
-				Status:  http.StatusInternalServerError,
+				Type:          errhandle.DatabaseError,
+				ServerMessage: fmt.Sprintf("error while scanning expired email verifications: %v", err),
+				Status:        http.StatusInternalServerError,
 			}
 		}
 

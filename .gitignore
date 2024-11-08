@@ -35,4 +35,7 @@ dist-ssr
 # credentials
 credentials.txt
 
+# binaries
+bin/
+
 # -------------------

@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>fs - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package fs
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "io/fs"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+				<dd><a href="index.html#pkg-examples" class="examplesLink">Examples</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>Package fs defines basic interfaces to a file system.
+A file system can be provided by the host operating system
+but also by other packages.
+<p>See the <a href="http://localhost:8080/testing/fstest">testing/fstest</a> package for support with testing
+implementations of file systems.
+
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+			
+				<dd><a href="index.html#pkg-variables">Variables</a></dd>
+			
+			
+				
+				<dd><a href="index.html#FormatDirEntry">func FormatDirEntry(dir DirEntry) string</a></dd>
+			
+				
+				<dd><a href="index.html#FormatFileInfo">func FormatFileInfo(info FileInfo) string</a></dd>
+			
+				
+				<dd><a href="index.html#Glob">func Glob(fsys FS, pattern string) (matches []string, err error)</a></dd>
+			
+				
+				<dd><a href="index.html#ReadFile">func ReadFile(fsys FS, name string) ([]byte, error)</a></dd>
+			
+				
+				<dd><a href="index.html#ValidPath">func ValidPath(name string) bool</a></dd>
+			
+				
+				<dd><a href="index.html#WalkDir">func WalkDir(fsys FS, root string, fn WalkDirFunc) error</a></dd>
+			
+			
+				
+				<dd><a href="index.html#DirEntry">type DirEntry</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#FileInfoToDirEntry">func FileInfoToDirEntry(info FileInfo) DirEntry</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ReadDir">func ReadDir(fsys FS, name string) ([]DirEntry, error)</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#FS">type FS</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Sub">func Sub(fsys FS, dir string) (FS, error)</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#File">type File</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#FileInfo">type FileInfo</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Stat">func Stat(fsys FS, name string) (FileInfo, error)</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#FileMode">type FileMode</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#FileMode.IsDir">func (m FileMode) IsDir() bool</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#FileMode.IsRegular">func (m FileMode) IsRegular() bool</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#FileMode.Perm">func (m FileMode) Perm() FileMode</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#FileMode.String">func (m FileMode) String() string</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#FileMode.Type">func (m FileMode) Type() FileMode</a></dd>
+				
+			
+				
+				<dd><a href="index.html#GlobFS">type GlobFS</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#PathError">type PathError</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#PathError.Error">func (e *PathError) Error() string</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#PathError.Timeout">func (e *PathError) Timeout() bool</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#PathError.Unwrap">func (e *PathError) Unwrap() error</a></dd>
+				
+			
+				
+				<dd><a href="index.html#ReadDirFS">type ReadDirFS</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#ReadDirFile">type ReadDirFile</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#ReadFileFS">type ReadFileFS</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#StatFS">type StatFS</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#SubFS">type SubFS</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#WalkDirFunc">type WalkDirFunc</a></dd>
+				
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+		<div id="pkg-examples">
+			<h3>Examples</h3>
+			<div class="js-expandAll expandAll collapsed">(Expand All)</div>
+			<dl>
+			
+			<dd><a class="exampleLink" href="index.html#example_WalkDir">WalkDir</a></dd>
+			
+			</dl>
+		</div>
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../../src/io/fs/format.go">format.go</a>
+			
+				<a href="../../../src/io/fs/fs.go">fs.go</a>
+			
+				<a href="../../../src/io/fs/glob.go">glob.go</a>
+			
+				<a href="../../../src/io/fs/readdir.go">readdir.go</a>
+			
+				<a href="../../../src/io/fs/readfile.go">readfile.go</a>
+			
+				<a href="../../../src/io/fs/stat.go">stat.go</a>
+			
+				<a href="../../../src/io/fs/sub.go">sub.go</a>
+			
+				<a href="../../../src/io/fs/walk.go">walk.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+		
+			<h2 id="pkg-variables">Variables</h2>
+			
+				<p>Generic file system errors.
+Errors returned by file systems can be tested against these errors
+using <a href="http://localhost:8080/errors#Is">errors.Is</a>.
+
+				<pre>var (
+    <span id="ErrInvalid">ErrInvalid</span>    = errInvalid()    <span class="comment">// &#34;invalid argument&#34;</span>
+    <span id="ErrPermission">ErrPermission</span> = errPermission() <span class="comment">// &#34;permission denied&#34;</span>
+    <span id="ErrExist">ErrExist</span>      = errExist()      <span class="comment">// &#34;file already exists&#34;</span>
+    <span id="ErrNotExist">ErrNotExist</span>   = errNotExist()   <span class="comment">// &#34;file does not exist&#34;</span>
+    <span id="ErrClosed">ErrClosed</span>     = errClosed()     <span class="comment">// &#34;file already closed&#34;</span>
+)</pre>
+			
+				<p>SkipAll is used as a return value from <a href="index.html#WalkDirFunc">WalkDirFunc</a> to indicate that
+all remaining files and directories are to be skipped. It is not returned
+as an error by any function.
+
+				<pre>var <span id="SkipAll">SkipAll</span> = <a href="../../errors/index.html">errors</a>.<a href="../../errors/index.html#New">New</a>(&#34;skip everything and stop the walk&#34;)</pre>
+			
+				<p>SkipDir is used as a return value from <a href="index.html#WalkDirFunc">WalkDirFunc</a> to indicate that
+the directory named in the call is to be skipped. It is not returned
+as an error by any function.
+
+				<pre>var <span id="SkipDir">SkipDir</span> = <a href="../../errors/index.html">errors</a>.<a href="../../errors/index.html#New">New</a>(&#34;skip this directory&#34;)</pre>
+			
+		
+		
+			
+			
+			<h2 id="FormatDirEntry">func <a href="../../../src/io/fs/format.go?s=1413:1453#L50">FormatDirEntry</a>
+				<a class="permalink" href="index.html#FormatDirEntry">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func FormatDirEntry(dir <a href="index.html#DirEntry">DirEntry</a>) <a href="../../builtin/index.html#string">string</a></pre>
+			<p>FormatDirEntry returns a formatted version of dir for human readability.
+Implementations of <a href="index.html#DirEntry">DirEntry</a> can call this from a String method.
+The outputs for a directory named subdir and a file named hello.go are:
+<pre>d subdir/
+- hello.go
+</pre>
+
+			
+			
+
+		
+			
+			
+			<h2 id="FormatFileInfo">func <a href="../../../src/io/fs/format.go?s=492:533#L7">FormatFileInfo</a>
+				<a class="permalink" href="index.html#FormatFileInfo">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func FormatFileInfo(info <a href="index.html#FileInfo">FileInfo</a>) <a href="../../builtin/index.html#string">string</a></pre>
+			<p>FormatFileInfo returns a formatted version of info for human readability.
+Implementations of <a href="index.html#FileInfo">FileInfo</a> can call this from a String method.
+The output for a file named &quot;hello.go&quot;, 100 bytes, mode 0o644, created
+January 1, 1970 at noon is
+<pre>-rw-r--r-- 100 1970-01-01 12:00:00 hello.go
+</pre>
+
+			
+			
+
+		
+			
+			
+			<h2 id="Glob">func <a href="../../../src/io/fs/glob.go?s=1004:1068#L23">Glob</a>
+				<a class="permalink" href="index.html#Glob">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Glob(fsys <a href="index.html#FS">FS</a>, pattern <a href="../../builtin/index.html#string">string</a>) (matches []<a href="../../builtin/index.html#string">string</a>, err <a href="../../builtin/index.html#error">error</a>)</pre>
+			<p>Glob returns the names of all files matching pattern or nil
+if there is no matching file. The syntax of patterns is the same
+as in <a href="http://localhost:8080/path#Match">path.Match</a>. The pattern may describe hierarchical names such as
+usr/*/bin/ed.
+<p>Glob ignores file system errors such as I/O errors reading directories.
+The only possible returned error is <a href="http://localhost:8080/path#ErrBadPattern">path.ErrBadPattern</a>, reporting that
+the pattern is malformed.
+<p>If fs implements <a href="index.html#GlobFS">GlobFS</a>, Glob calls fs.Glob.
+Otherwise, Glob uses <a href="index.html#ReadDir">ReadDir</a> to traverse the directory tree
+and look for matches for the pattern.
+
+			
+			
+
+		
+			
+			
+			<h2 id="ReadFile">func <a href="../../../src/io/fs/readfile.go?s=1170:1221#L22">ReadFile</a>
+				<a class="permalink" href="index.html#ReadFile">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func ReadFile(fsys <a href="index.html#FS">FS</a>, name <a href="../../builtin/index.html#string">string</a>) ([]<a href="../../builtin/index.html#byte">byte</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+			<p>ReadFile reads the named file from the file system fs and returns its contents.
+A successful call returns a nil error, not <a href="http://localhost:8080/io#EOF">io.EOF</a>.
+(Because ReadFile reads the whole file, the expected EOF
+from the final Read is not treated as an error to be reported.)
+<p>If fs implements <a href="index.html#ReadFileFS">ReadFileFS</a>, ReadFile calls fs.ReadFile.
+Otherwise ReadFile calls fs.Open and uses Read and Close
+on the returned <a href="index.html#File">File</a>.
+
+			
+			
+
+		
+			
+			
+			<h2 id="ValidPath">func <a href="../../../src/io/fs/fs.go?s=1992:2024#L43">ValidPath</a>
+				<a class="permalink" href="index.html#ValidPath">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func ValidPath(name <a href="../../builtin/index.html#string">string</a>) <a href="../../builtin/index.html#bool">bool</a></pre>
+			<p>ValidPath reports whether the given path name
+is valid for use in a call to Open.
+<p>Path names passed to open are UTF-8-encoded,
+unrooted, slash-separated sequences of path elements, like “x/y/z”.
+Path names must not contain an element that is “.” or “..” or the empty string,
+except for the special case that the root directory is named “.”.
+Paths must not start or end with a slash: “/x” and “x/” are invalid.
+<p>Note that paths are slash-separated on all systems, even Windows.
+Paths containing other characters such as backslash and colon
+are accepted as valid, but those characters must never be
+interpreted by an <a href="index.html#FS">FS</a> implementation as path element separators.
+
+			
+			
+
+		
+			
+			
+			<h2 id="WalkDir">func <a href="../../../src/io/fs/walk.go?s=4526:4582#L107">WalkDir</a>
+				<a class="permalink" href="index.html#WalkDir">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func WalkDir(fsys <a href="index.html#FS">FS</a>, root <a href="../../builtin/index.html#string">string</a>, fn <a href="index.html#WalkDirFunc">WalkDirFunc</a>) <a href="../../builtin/index.html#error">error</a></pre>
+			<p>WalkDir walks the file tree rooted at root, calling fn for each file or
+directory in the tree, including root.
+<p>All errors that arise visiting files and directories are filtered by fn:
+see the <a href="index.html#WalkDirFunc">fs.WalkDirFunc</a> documentation for details.
+<p>The files are walked in lexical order, which makes the output deterministic
+but requires WalkDir to read an entire directory into memory before proceeding
+to walk that directory.
+<p>WalkDir does not follow symbolic links found in directories,
+but if root itself is a symbolic link, its target will be walked.
+
+			<div id="example_WalkDir" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">
+root := &#34;/usr/local/go/bin&#34;
+fileSystem := os.DirFS(root)
+
+fs.WalkDir(fileSystem, &#34;.&#34;, func(path string, d fs.DirEntry, err error) error {
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Println(path)
+    return nil
+})
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+		
+			
+			
+			<h2 id="DirEntry">type <a href="../../../src/io/fs/fs.go?s=2883:3896#L82">DirEntry</a>
+				<a class="permalink" href="index.html#DirEntry">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A DirEntry is an entry read from a directory
+(using the <a href="index.html#ReadDir">ReadDir</a> function or a <a href="index.html#ReadDirFile">ReadDirFile</a>&apos;s ReadDir method).
+
+			<pre>type DirEntry interface {
+    <span class="comment">// Name returns the name of the file (or subdirectory) described by the entry.</span>
+    <span class="comment">// This name is only the final element of the path (the base name), not the entire path.</span>
+    <span class="comment">// For example, Name would return &#34;hello.go&#34; not &#34;home/gopher/hello.go&#34;.</span>
+    Name() <a href="../../builtin/index.html#string">string</a>
+
+    <span class="comment">// IsDir reports whether the entry describes a directory.</span>
+    IsDir() <a href="../../builtin/index.html#bool">bool</a>
+
+    <span class="comment">// Type returns the type bits for the entry.</span>
+    <span class="comment">// The type bits are a subset of the usual FileMode bits, those returned by the FileMode.Type method.</span>
+    Type() <a href="index.html#FileMode">FileMode</a>
+
+    <span class="comment">// Info returns the FileInfo for the file or subdirectory described by the entry.</span>
+    <span class="comment">// The returned FileInfo may be from the time of the original directory read</span>
+    <span class="comment">// or from the time of the call to Info. If the file has been removed or renamed</span>
+    <span class="comment">// since the directory read, Info may return an error satisfying errors.Is(err, ErrNotExist).</span>
+    <span class="comment">// If the entry denotes a symbolic link, Info reports the information about the link itself,</span>
+    <span class="comment">// not the link&#39;s target.</span>
+    Info() (<a href="index.html#FileInfo">FileInfo</a>, <a href="../../builtin/index.html#error">error</a>)
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="FileInfoToDirEntry">func <a href="../../../src/io/fs/readdir.go?s=1791:1838#L66">FileInfoToDirEntry</a>
+					<a class="permalink" href="index.html#FileInfoToDirEntry">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func FileInfoToDirEntry(info <a href="index.html#FileInfo">FileInfo</a>) <a href="index.html#DirEntry">DirEntry</a></pre>
+				<p>FileInfoToDirEntry returns a <a href="index.html#DirEntry">DirEntry</a> that returns information from info.
+If info is nil, FileInfoToDirEntry returns nil.
+
+				
+				
+			
+				
+				<h3 id="ReadDir">func <a href="../../../src/io/fs/readdir.go?s=748:802#L18">ReadDir</a>
+					<a class="permalink" href="index.html#ReadDir">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func ReadDir(fsys <a href="index.html#FS">FS</a>, name <a href="../../builtin/index.html#string">string</a>) ([]<a href="index.html#DirEntry">DirEntry</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+				<p>ReadDir reads the named directory
+and returns a list of directory entries sorted by filename.
+<p>If fs implements <a href="index.html#ReadDirFS">ReadDirFS</a>, ReadDir calls fs.ReadDir.
+Otherwise ReadDir calls fs.Open and uses ReadDir and Close
+on the returned file.
+
+				
+				
+			
+
+			
+		
+			
+			
+			<h2 id="FS">type <a href="../../../src/io/fs/fs.go?s=840:1265#L17">FS</a>
+				<a class="permalink" href="index.html#FS">&#xb6;</a>
+				
+				
+			</h2>
+			<p>An FS provides access to a hierarchical file system.
+<p>The FS interface is the minimum implementation required of the file system.
+A file system may implement additional interfaces,
+such as <a href="index.html#ReadFileFS">ReadFileFS</a>, to provide additional or optimized functionality.
+<p><a href="http://localhost:8080/testing/fstest#TestFS">testing/fstest.TestFS</a> may be used to test implementations of an FS for
+correctness.
+
+			<pre>type FS interface {
+    <span class="comment">// Open opens the named file.</span>
+    <span class="comment">//</span>
+    <span class="comment">// When Open returns an error, it should be of type *PathError</span>
+    <span class="comment">// with the Op field set to &#34;open&#34;, the Path field set to name,</span>
+    <span class="comment">// and the Err field describing the problem.</span>
+    <span class="comment">//</span>
+    <span class="comment">// Open should reject attempts to open names that do not satisfy</span>
+    <span class="comment">// ValidPath(name), returning a *PathError with Err set to</span>
+    <span class="comment">// ErrInvalid or ErrNotExist.</span>
+    Open(name <a href="../../builtin/index.html#string">string</a>) (<a href="index.html#File">File</a>, <a href="../../builtin/index.html#error">error</a>)
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="Sub">func <a href="../../../src/io/fs/sub.go?s=1227:1268#L24">Sub</a>
+					<a class="permalink" href="index.html#Sub">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func Sub(fsys <a href="index.html#FS">FS</a>, dir <a href="../../builtin/index.html#string">string</a>) (<a href="index.html#FS">FS</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+				<p>Sub returns an <a href="index.html#FS">FS</a> corresponding to the subtree rooted at fsys&apos;s dir.
+<p>If dir is &quot;.&quot;, Sub returns fsys unchanged.
+Otherwise, if fs implements <a href="index.html#SubFS">SubFS</a>, Sub returns fsys.Sub(dir).
+Otherwise, Sub returns a new <a href="index.html#FS">FS</a> implementation sub that,
+in effect, implements sub.Open(name) as fsys.Open(path.Join(dir, name)).
+The implementation also translates calls to ReadDir, ReadFile, and Glob appropriately.
+<p>Note that Sub(os.DirFS(&quot;/&quot;), &quot;prefix&quot;) is equivalent to os.DirFS(&quot;/prefix&quot;)
+and that neither of them guarantees to avoid operating system
+accesses outside &quot;/prefix&quot;, because the implementation of <a href="http://localhost:8080/os#DirFS">os.DirFS</a>
+does not check for symbolic links inside &quot;/prefix&quot; that point to
+other directories. That is, <a href="http://localhost:8080/os#DirFS">os.DirFS</a> is not a general substitute for a
+chroot-style security mechanism, and Sub does not change that fact.
+
+				
+				
+			
+
+			
+		
+			
+			
+			<h2 id="File">type <a href="../../../src/io/fs/fs.go?s=2671:2762#L74">File</a>
+				<a class="permalink" href="index.html#File">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A File provides access to a single file.
+The File interface is the minimum implementation required of the file.
+Directory files should also implement <a href="index.html#ReadDirFile">ReadDirFile</a>.
+A file may implement <a href="http://localhost:8080/io#ReaderAt">io.ReaderAt</a> or <a href="http://localhost:8080/io#Seeker">io.Seeker</a> as optimizations.
+
+			<pre>type File interface {
+    Stat() (<a href="index.html#FileInfo">FileInfo</a>, <a href="../../builtin/index.html#error">error</a>)
+    Read([]<a href="../../builtin/index.html#byte">byte</a>) (<a href="../../builtin/index.html#int">int</a>, <a href="../../builtin/index.html#error">error</a>)
+    Close() <a href="../../builtin/index.html#error">error</a>
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="FileInfo">type <a href="../../../src/io/fs/fs.go?s=5865:6226#L147">FileInfo</a>
+				<a class="permalink" href="index.html#FileInfo">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A FileInfo describes a file and is returned by <a href="index.html#Stat">Stat</a>.
+
+			<pre>type FileInfo interface {
+    Name() <a href="../../builtin/index.html#string">string</a>       <span class="comment">// base name of the file</span>
+    Size() <a href="../../builtin/index.html#int64">int64</a>        <span class="comment">// length in bytes for regular files; system-dependent for others</span>
+    Mode() <a href="index.html#FileMode">FileMode</a>     <span class="comment">// file mode bits</span>
+    ModTime() <a href="../../time/index.html">time</a>.<a href="../../time/index.html#Time">Time</a> <span class="comment">// modification time</span>
+    IsDir() <a href="../../builtin/index.html#bool">bool</a>        <span class="comment">// abbreviation for Mode().IsDir()</span>
+    Sys() <a href="../../builtin/index.html#any">any</a>           <span class="comment">// underlying data source (can return nil)</span>
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="Stat">func <a href="../../../src/io/fs/stat.go?s=576:625#L10">Stat</a>
+					<a class="permalink" href="index.html#Stat">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func Stat(fsys <a href="index.html#FS">FS</a>, name <a href="../../builtin/index.html#string">string</a>) (<a href="index.html#FileInfo">FileInfo</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+				<p>Stat returns a <a href="index.html#FileInfo">FileInfo</a> describing the named file from the file system.
+<p>If fs implements <a href="index.html#StatFS">StatFS</a>, Stat calls fs.Stat.
+Otherwise, Stat opens the <a href="index.html#File">File</a> to stat it.
+
+				
+				
+			
+
+			
+		
+			
+			
+			<h2 id="FileMode">type <a href="../../../src/io/fs/fs.go?s=6519:6539#L161">FileMode</a>
+				<a class="permalink" href="index.html#FileMode">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A FileMode represents a file&apos;s mode and permission bits.
+The bits have the same definition on all systems, so that
+information about files can be moved from one system
+to another portably. Not all bits apply to all systems.
+The only required bit is <a href="index.html#ModeDir">ModeDir</a> for directories.
+
+			<pre>type FileMode <a href="../../builtin/index.html#uint32">uint32</a></pre>
+
+			
+				<p>The defined file mode bits are the most significant bits of the <a href="index.html#FileMode">FileMode</a>.
+The nine least-significant bits are the standard Unix rwxrwxrwx permissions.
+The values of these bits should be considered part of the public API and
+may be used in wire protocols or disk representations: they must not be
+changed, although new bits might be added.
+
+				<pre>const (
+    <span class="comment">// The single letters are the abbreviations</span>
+    <span class="comment">// used by the String method&#39;s formatting.</span>
+    <span id="ModeDir">ModeDir</span>        <a href="index.html#FileMode">FileMode</a> = 1 &lt;&lt; (32 - 1 - <a href="../../builtin/index.html#iota">iota</a>) <span class="comment">// d: is a directory</span>
+    <span id="ModeAppend">ModeAppend</span>                                     <span class="comment">// a: append-only</span>
+    <span id="ModeExclusive">ModeExclusive</span>                                  <span class="comment">// l: exclusive use</span>
+    <span id="ModeTemporary">ModeTemporary</span>                                  <span class="comment">// T: temporary file; Plan 9 only</span>
+    <span id="ModeSymlink">ModeSymlink</span>                                    <span class="comment">// L: symbolic link</span>
+    <span id="ModeDevice">ModeDevice</span>                                     <span class="comment">// D: device file</span>
+    <span id="ModeNamedPipe">ModeNamedPipe</span>                                  <span class="comment">// p: named pipe (FIFO)</span>
+    <span id="ModeSocket">ModeSocket</span>                                     <span class="comment">// S: Unix domain socket</span>
+    <span id="ModeSetuid">ModeSetuid</span>                                     <span class="comment">// u: setuid</span>
+    <span id="ModeSetgid">ModeSetgid</span>                                     <span class="comment">// g: setgid</span>
+    <span id="ModeCharDevice">ModeCharDevice</span>                                 <span class="comment">// c: Unix character device, when ModeDevice is set</span>
+    <span id="ModeSticky">ModeSticky</span>                                     <span class="comment">// t: sticky</span>
+    <span id="ModeIrregular">ModeIrregular</span>                                  <span class="comment">// ?: non-regular file; nothing else is known about this file</span>
+
+    <span class="comment">// Mask for the type bits. For regular files, none will be set.</span>
+    <span id="ModeType">ModeType</span> = <a href="index.html#ModeDir">ModeDir</a> | <a href="index.html#ModeSymlink">ModeSymlink</a> | <a href="index.html#ModeNamedPipe">ModeNamedPipe</a> | <a href="index.html#ModeSocket">ModeSocket</a> | <a href="index.html#ModeDevice">ModeDevice</a> | <a href="index.html#ModeCharDevice">ModeCharDevice</a> | <a href="index.html#ModeIrregular">ModeIrregular</a>
+
+    <span id="ModePerm">ModePerm</span> <a href="index.html#FileMode">FileMode</a> = 0777 <span class="comment">// Unix permission bits</span>
+)</pre>
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="FileMode.IsDir">func (FileMode) <a href="../../../src/io/fs/fs.go?s=8695:8725#L219">IsDir</a>
+					<a class="permalink" href="index.html#FileMode.IsDir">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (m <a href="index.html#FileMode">FileMode</a>) IsDir() <a href="../../builtin/index.html#bool">bool</a></pre>
+				<p>IsDir reports whether m describes a directory.
+That is, it tests for the <a href="index.html#ModeDir">ModeDir</a> bit being set in m.
+
+				
+				
+				
+			
+				
+				<h3 id="FileMode.IsRegular">func (FileMode) <a href="../../../src/io/fs/fs.go?s=8864:8898#L225">IsRegular</a>
+					<a class="permalink" href="index.html#FileMode.IsRegular">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (m <a href="index.html#FileMode">FileMode</a>) IsRegular() <a href="../../builtin/index.html#bool">bool</a></pre>
+				<p>IsRegular reports whether m describes a regular file.
+That is, it tests that no mode type bits are set.
+
+				
+				
+				
+			
+				
+				<h3 id="FileMode.Perm">func (FileMode) <a href="../../../src/io/fs/fs.go?s=8992:9025#L230">Perm</a>
+					<a class="permalink" href="index.html#FileMode.Perm">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (m <a href="index.html#FileMode">FileMode</a>) Perm() <a href="index.html#FileMode">FileMode</a></pre>
+				<p>Perm returns the Unix permission bits in m (m &amp; <a href="index.html#ModePerm">ModePerm</a>).
+
+				
+				
+				
+			
+				
+				<h3 id="FileMode.String">func (FileMode) <a href="../../../src/io/fs/fs.go?s=8180:8213#L191">String</a>
+					<a class="permalink" href="index.html#FileMode.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (m <a href="index.html#FileMode">FileMode</a>) String() <a href="../../builtin/index.html#string">string</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="FileMode.Type">func (FileMode) <a href="../../../src/io/fs/fs.go?s=9101:9134#L235">Type</a>
+					<a class="permalink" href="index.html#FileMode.Type">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (m <a href="index.html#FileMode">FileMode</a>) Type() <a href="index.html#FileMode">FileMode</a></pre>
+				<p>Type returns type bits in m (m &amp; <a href="index.html#ModeType">ModeType</a>).
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="GlobFS">type <a href="../../../src/io/fs/glob.go?s=241:437#L2">GlobFS</a>
+				<a class="permalink" href="index.html#GlobFS">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A GlobFS is a file system with a Glob method.
+
+			<pre>type GlobFS interface {
+    <a href="index.html#FS">FS</a>
+
+    <span class="comment">// Glob returns the names of all files matching pattern,</span>
+    <span class="comment">// providing an implementation of the top-level</span>
+    <span class="comment">// Glob function.</span>
+    Glob(pattern <a href="../../builtin/index.html#string">string</a>) ([]<a href="../../builtin/index.html#string">string</a>, <a href="../../builtin/index.html#error">error</a>)
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="PathError">type <a href="../../../src/io/fs/fs.go?s=9239:9302#L240">PathError</a>
+				<a class="permalink" href="index.html#PathError">&#xb6;</a>
+				
+				
+			</h2>
+			<p>PathError records an error and the operation and file path that caused it.
+
+			<pre>type PathError struct {
+<span id="PathError.Op"></span>    Op   <a href="../../builtin/index.html#string">string</a>
+<span id="PathError.Path"></span>    Path <a href="../../builtin/index.html#string">string</a>
+<span id="PathError.Err"></span>    Err  <a href="../../builtin/index.html#error">error</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="PathError.Error">func (*PathError) <a href="../../../src/io/fs/fs.go?s=9304:9338#L246">Error</a>
+					<a class="permalink" href="index.html#PathError.Error">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (e *<a href="index.html#PathError">PathError</a>) Error() <a href="../../builtin/index.html#string">string</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="PathError.Timeout">func (*PathError) <a href="../../../src/io/fs/fs.go?s=9507:9541#L251">Timeout</a>
+					<a class="permalink" href="index.html#PathError.Timeout">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (e *<a href="index.html#PathError">PathError</a>) Timeout() <a href="../../builtin/index.html#bool">bool</a></pre>
+				<p>Timeout reports whether this error represents a timeout.
+
+				
+				
+				
+			
+				
+				<h3 id="PathError.Unwrap">func (*PathError) <a href="../../../src/io/fs/fs.go?s=9394:9428#L248">Unwrap</a>
+					<a class="permalink" href="index.html#PathError.Unwrap">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (e *<a href="index.html#PathError">PathError</a>) Unwrap() <a href="../../builtin/index.html#error">error</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="ReadDirFS">type <a href="../../../src/io/fs/readdir.go?s=320:497#L4">ReadDirFS</a>
+				<a class="permalink" href="index.html#ReadDirFS">&#xb6;</a>
+				
+				
+			</h2>
+			<p>ReadDirFS is the interface implemented by a file system
+that provides an optimized implementation of <a href="index.html#ReadDir">ReadDir</a>.
+
+			<pre>type ReadDirFS interface {
+    <a href="index.html#FS">FS</a>
+
+    <span class="comment">// ReadDir reads the named directory</span>
+    <span class="comment">// and returns a list of directory entries sorted by filename.</span>
+    ReadDir(name <a href="../../builtin/index.html#string">string</a>) ([]<a href="index.html#DirEntry">DirEntry</a>, <a href="../../builtin/index.html#error">error</a>)
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="ReadDirFile">type <a href="../../../src/io/fs/fs.go?s=4173:5101#L108">ReadDirFile</a>
+				<a class="permalink" href="index.html#ReadDirFile">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A ReadDirFile is a directory file whose entries can be read with the ReadDir method.
+Every directory file should implement this interface.
+(It is permissible for any file to implement this interface,
+but if so ReadDir should return an error for non-directories.)
+
+			<pre>type ReadDirFile interface {
+    <a href="index.html#File">File</a>
+
+    <span class="comment">// ReadDir reads the contents of the directory and returns</span>
+    <span class="comment">// a slice of up to n DirEntry values in directory order.</span>
+    <span class="comment">// Subsequent calls on the same file will yield further DirEntry values.</span>
+    <span class="comment">//</span>
+    <span class="comment">// If n &gt; 0, ReadDir returns at most n DirEntry structures.</span>
+    <span class="comment">// In this case, if ReadDir returns an empty slice, it will return</span>
+    <span class="comment">// a non-nil error explaining why.</span>
+    <span class="comment">// At the end of a directory, the error is io.EOF.</span>
+    <span class="comment">// (ReadDir must return io.EOF itself, not an error wrapping io.EOF.)</span>
+    <span class="comment">//</span>
+    <span class="comment">// If n &lt;= 0, ReadDir returns all the DirEntry values from the directory</span>
+    <span class="comment">// in a single slice. In this case, if ReadDir succeeds (reads all the way</span>
+    <span class="comment">// to the end of the directory), it returns the slice and a nil error.</span>
+    <span class="comment">// If it encounters an error before the end of the directory,</span>
+    <span class="comment">// ReadDir returns the DirEntry list read until that point and a non-nil error.</span>
+    ReadDir(n <a href="../../builtin/index.html#int">int</a>) ([]<a href="index.html#DirEntry">DirEntry</a>, <a href="../../builtin/index.html#error">error</a>)
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="ReadFileFS">type <a href="../../../src/io/fs/readfile.go?s=305:750#L1">ReadFileFS</a>
+				<a class="permalink" href="index.html#ReadFileFS">&#xb6;</a>
+				
+				
+			</h2>
+			<p>ReadFileFS is the interface implemented by a file system
+that provides an optimized implementation of <a href="index.html#ReadFile">ReadFile</a>.
+
+			<pre>type ReadFileFS interface {
+    <a href="index.html#FS">FS</a>
+
+    <span class="comment">// ReadFile reads the named file and returns its contents.</span>
+    <span class="comment">// A successful call returns a nil error, not io.EOF.</span>
+    <span class="comment">// (Because ReadFile reads the whole file, the expected EOF</span>
+    <span class="comment">// from the final Read is not treated as an error to be reported.)</span>
+    <span class="comment">//</span>
+    <span class="comment">// The caller is permitted to modify the returned byte slice.</span>
+    <span class="comment">// This method should return a copy of the underlying data.</span>
+    ReadFile(name <a href="../../builtin/index.html#string">string</a>) ([]<a href="../../builtin/index.html#byte">byte</a>, <a href="../../builtin/index.html#error">error</a>)
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="StatFS">type <a href="../../../src/io/fs/stat.go?s=221:396#L1">StatFS</a>
+				<a class="permalink" href="index.html#StatFS">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A StatFS is a file system with a Stat method.
+
+			<pre>type StatFS interface {
+    <a href="index.html#FS">FS</a>
+
+    <span class="comment">// Stat returns a FileInfo describing the file.</span>
+    <span class="comment">// If there is an error, it should be of type *PathError.</span>
+    Stat(name <a href="../../builtin/index.html#string">string</a>) (<a href="index.html#FileInfo">FileInfo</a>, <a href="../../builtin/index.html#error">error</a>)
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="SubFS">type <a href="../../../src/io/fs/sub.go?s=249:373#L3">SubFS</a>
+				<a class="permalink" href="index.html#SubFS">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A SubFS is a file system with a Sub method.
+
+			<pre>type SubFS interface {
+    <a href="index.html#FS">FS</a>
+
+    <span class="comment">// Sub returns an FS corresponding to the subtree rooted at dir.</span>
+    Sub(dir <a href="../../builtin/index.html#string">string</a>) (<a href="index.html#FS">FS</a>, <a href="../../builtin/index.html#error">error</a>)
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="WalkDirFunc">type <a href="../../../src/io/fs/walk.go?s=3156:3219#L59">WalkDirFunc</a>
+				<a class="permalink" href="index.html#WalkDirFunc">&#xb6;</a>
+				
+				
+			</h2>
+			<p>WalkDirFunc is the type of the function called by <a href="index.html#WalkDir">WalkDir</a> to visit
+each file or directory.
+<p>The path argument contains the argument to <a href="index.html#WalkDir">WalkDir</a> as a prefix.
+That is, if WalkDir is called with root argument &quot;dir&quot; and finds a file
+named &quot;a&quot; in that directory, the walk function will be called with
+argument &quot;dir/a&quot;.
+<p>The d argument is the <a href="index.html#DirEntry">DirEntry</a> for the named path.
+<p>The error result returned by the function controls how <a href="index.html#WalkDir">WalkDir</a>
+continues. If the function returns the special value <a href="index.html#SkipDir">SkipDir</a>, WalkDir
+skips the current directory (path if d.IsDir() is true, otherwise
+path&apos;s parent directory). If the function returns the special value
+<a href="index.html#SkipAll">SkipAll</a>, WalkDir skips all remaining files and directories. Otherwise,
+if the function returns a non-nil error, WalkDir stops entirely and
+returns that error.
+<p>The err argument reports an error related to path, signaling that
+<a href="index.html#WalkDir">WalkDir</a> will not walk into that directory. The function can decide how
+to handle that error; as described earlier, returning the error will
+cause WalkDir to stop walking the entire tree.
+<p><a href="index.html#WalkDir">WalkDir</a> calls the function with a non-nil err argument in two cases.
+<p>First, if the initial <a href="index.html#Stat">Stat</a> on the root directory fails, WalkDir
+calls the function with path set to root, d set to nil, and err set to
+the error from <a href="index.html#Stat">fs.Stat</a>.
+<p>Second, if a directory&apos;s ReadDir method (see <a href="index.html#ReadDirFile">ReadDirFile</a>) fails, WalkDir calls the
+function with path set to the directory&apos;s path, d set to an
+<a href="index.html#DirEntry">DirEntry</a> describing the directory, and err set to the error from
+ReadDir. In this second case, the function is called twice with the
+path of the directory: the first call is before the directory read is
+attempted and has err set to nil, giving the function a chance to
+return <a href="index.html#SkipDir">SkipDir</a> or <a href="index.html#SkipAll">SkipAll</a> and avoid the ReadDir entirely. The second call
+is after a failed ReadDir and reports the error from ReadDir.
+(If ReadDir succeeds, there is no second call.)
+<p>The differences between WalkDirFunc compared to <a href="http://localhost:8080/path/filepath#WalkFunc">path/filepath.WalkFunc</a> are:
+<ul>
+<li>The second argument has type <a href="index.html#DirEntry">DirEntry</a> instead of <a href="index.html#FileInfo">FileInfo</a>.
+<li>The function is called before reading a directory, to allow <a href="index.html#SkipDir">SkipDir</a>
+or <a href="index.html#SkipAll">SkipAll</a> to bypass the directory read entirely or skip all remaining
+files and directories respectively.
+<li>If a directory read fails, the function is called a second time
+for that directory to report the error.
+</ul>
+
+			<pre>type WalkDirFunc func(path <a href="../../builtin/index.html#string">string</a>, d <a href="index.html#DirEntry">DirEntry</a>, err <a href="../../builtin/index.html#error">error</a>) <a href="../../builtin/index.html#error">error</a></pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+	
+
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

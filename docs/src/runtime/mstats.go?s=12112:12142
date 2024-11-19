@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>src/runtime/mstats.go - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../index.html">GoDoc</a></div>
+<a href="./mstats.go?s=12112:12142#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Source file
+    <a href="http://localhost:8080/src">src</a>/<a href="http://localhost:8080/src/runtime">runtime</a>/<span class="text-muted">mstats.go</span>
+  </h1>
+
+
+
+
+
+  <h2>
+    Documentation: <a href="http://localhost:8080/pkg/runtime">runtime</a>
+  </h2>
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1&nbsp;&nbsp;</span><span class="comment">// Copyright 2009 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2&nbsp;&nbsp;</span><span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3&nbsp;&nbsp;</span><span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4&nbsp;&nbsp;</span>
+<span id="L5" class="ln">     5&nbsp;&nbsp;</span><span class="comment">// Memory statistics</span>
+<span id="L6" class="ln">     6&nbsp;&nbsp;</span>
+<span id="L7" class="ln">     7&nbsp;&nbsp;</span>package runtime
+<span id="L8" class="ln">     8&nbsp;&nbsp;</span>
+<span id="L9" class="ln">     9&nbsp;&nbsp;</span>import (
+<span id="L10" class="ln">    10&nbsp;&nbsp;</span>	&#34;runtime/internal/atomic&#34;
+<span id="L11" class="ln">    11&nbsp;&nbsp;</span>	&#34;unsafe&#34;
+<span id="L12" class="ln">    12&nbsp;&nbsp;</span>)
+<span id="L13" class="ln">    13&nbsp;&nbsp;</span>
+<span id="L14" class="ln">    14&nbsp;&nbsp;</span>type mstats struct {
+<span id="L15" class="ln">    15&nbsp;&nbsp;</span>	<span class="comment">// Statistics about malloc heap.</span>
+<span id="L16" class="ln">    16&nbsp;&nbsp;</span>	heapStats consistentHeapStats
+<span id="L17" class="ln">    17&nbsp;&nbsp;</span>
+<span id="L18" class="ln">    18&nbsp;&nbsp;</span>	<span class="comment">// Statistics about stacks.</span>
+<span id="L19" class="ln">    19&nbsp;&nbsp;</span>	stacks_sys sysMemStat <span class="comment">// only counts newosproc0 stack in mstats; differs from MemStats.StackSys</span>
+<span id="L20" class="ln">    20&nbsp;&nbsp;</span>
+<span id="L21" class="ln">    21&nbsp;&nbsp;</span>	<span class="comment">// Statistics about allocation of low-level fixed-size structures.</span>
+<span id="L22" class="ln">    22&nbsp;&nbsp;</span>	mspan_sys    sysMemStat
+<span id="L23" class="ln">    23&nbsp;&nbsp;</span>	mcache_sys   sysMemStat
+<span id="L24" class="ln">    24&nbsp;&nbsp;</span>	buckhash_sys sysMemStat <span class="comment">// profiling bucket hash table</span>
+<span id="L25" class="ln">    25&nbsp;&nbsp;</span>
+<span id="L26" class="ln">    26&nbsp;&nbsp;</span>	<span class="comment">// Statistics about GC overhead.</span>
+<span id="L27" class="ln">    27&nbsp;&nbsp;</span>	gcMiscSys sysMemStat <span class="comment">// updated atomically or during STW</span>
+<span id="L28" class="ln">    28&nbsp;&nbsp;</span>
+<span id="L29" class="ln">    29&nbsp;&nbsp;</span>	<span class="comment">// Miscellaneous statistics.</span>
+<span id="L30" class="ln">    30&nbsp;&nbsp;</span>	other_sys sysMemStat <span class="comment">// updated atomically or during STW</span>
+<span id="L31" class="ln">    31&nbsp;&nbsp;</span>
+<span id="L32" class="ln">    32&nbsp;&nbsp;</span>	<span class="comment">// Statistics about the garbage collector.</span>
+<span id="L33" class="ln">    33&nbsp;&nbsp;</span>
+<span id="L34" class="ln">    34&nbsp;&nbsp;</span>	<span class="comment">// Protected by mheap or worldsema during GC.</span>
+<span id="L35" class="ln">    35&nbsp;&nbsp;</span>	last_gc_unix    uint64 <span class="comment">// last gc (in unix time)</span>
+<span id="L36" class="ln">    36&nbsp;&nbsp;</span>	pause_total_ns  uint64
+<span id="L37" class="ln">    37&nbsp;&nbsp;</span>	pause_ns        [256]uint64 <span class="comment">// circular buffer of recent gc pause lengths</span>
+<span id="L38" class="ln">    38&nbsp;&nbsp;</span>	pause_end       [256]uint64 <span class="comment">// circular buffer of recent gc end times (nanoseconds since 1970)</span>
+<span id="L39" class="ln">    39&nbsp;&nbsp;</span>	numgc           uint32
+<span id="L40" class="ln">    40&nbsp;&nbsp;</span>	numforcedgc     uint32  <span class="comment">// number of user-forced GCs</span>
+<span id="L41" class="ln">    41&nbsp;&nbsp;</span>	gc_cpu_fraction float64 <span class="comment">// fraction of CPU time used by GC</span>
+<span id="L42" class="ln">    42&nbsp;&nbsp;</span>
+<span id="L43" class="ln">    43&nbsp;&nbsp;</span>	last_gc_nanotime uint64 <span class="comment">// last gc (monotonic time)</span>
+<span id="L44" class="ln">    44&nbsp;&nbsp;</span>	lastHeapInUse    uint64 <span class="comment">// heapInUse at mark termination of the previous GC</span>
+<span id="L45" class="ln">    45&nbsp;&nbsp;</span>
+<span id="L46" class="ln">    46&nbsp;&nbsp;</span>	enablegc bool
+<span id="L47" class="ln">    47&nbsp;&nbsp;</span>}
+<span id="L48" class="ln">    48&nbsp;&nbsp;</span>
+<span id="L49" class="ln">    49&nbsp;&nbsp;</span>var memstats mstats
+<span id="L50" class="ln">    50&nbsp;&nbsp;</span>
+<span id="L51" class="ln">    51&nbsp;&nbsp;</span><span class="comment">// A MemStats records statistics about the memory allocator.</span>
+<span id="L52" class="ln">    52&nbsp;&nbsp;</span>type MemStats struct {
+<span id="L53" class="ln">    53&nbsp;&nbsp;</span>	<span class="comment">// General statistics.</span>
+<span id="L54" class="ln">    54&nbsp;&nbsp;</span>
+<span id="L55" class="ln">    55&nbsp;&nbsp;</span>	<span class="comment">// Alloc is bytes of allocated heap objects.</span>
+<span id="L56" class="ln">    56&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L57" class="ln">    57&nbsp;&nbsp;</span>	<span class="comment">// This is the same as HeapAlloc (see below).</span>
+<span id="L58" class="ln">    58&nbsp;&nbsp;</span>	Alloc uint64
+<span id="L59" class="ln">    59&nbsp;&nbsp;</span>
+<span id="L60" class="ln">    60&nbsp;&nbsp;</span>	<span class="comment">// TotalAlloc is cumulative bytes allocated for heap objects.</span>
+<span id="L61" class="ln">    61&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L62" class="ln">    62&nbsp;&nbsp;</span>	<span class="comment">// TotalAlloc increases as heap objects are allocated, but</span>
+<span id="L63" class="ln">    63&nbsp;&nbsp;</span>	<span class="comment">// unlike Alloc and HeapAlloc, it does not decrease when</span>
+<span id="L64" class="ln">    64&nbsp;&nbsp;</span>	<span class="comment">// objects are freed.</span>
+<span id="L65" class="ln">    65&nbsp;&nbsp;</span>	TotalAlloc uint64
+<span id="L66" class="ln">    66&nbsp;&nbsp;</span>
+<span id="L67" class="ln">    67&nbsp;&nbsp;</span>	<span class="comment">// Sys is the total bytes of memory obtained from the OS.</span>
+<span id="L68" class="ln">    68&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L69" class="ln">    69&nbsp;&nbsp;</span>	<span class="comment">// Sys is the sum of the XSys fields below. Sys measures the</span>
+<span id="L70" class="ln">    70&nbsp;&nbsp;</span>	<span class="comment">// virtual address space reserved by the Go runtime for the</span>
+<span id="L71" class="ln">    71&nbsp;&nbsp;</span>	<span class="comment">// heap, stacks, and other internal data structures. It&#39;s</span>
+<span id="L72" class="ln">    72&nbsp;&nbsp;</span>	<span class="comment">// likely that not all of the virtual address space is backed</span>
+<span id="L73" class="ln">    73&nbsp;&nbsp;</span>	<span class="comment">// by physical memory at any given moment, though in general</span>
+<span id="L74" class="ln">    74&nbsp;&nbsp;</span>	<span class="comment">// it all was at some point.</span>
+<span id="L75" class="ln">    75&nbsp;&nbsp;</span>	Sys uint64
+<span id="L76" class="ln">    76&nbsp;&nbsp;</span>
+<span id="L77" class="ln">    77&nbsp;&nbsp;</span>	<span class="comment">// Lookups is the number of pointer lookups performed by the</span>
+<span id="L78" class="ln">    78&nbsp;&nbsp;</span>	<span class="comment">// runtime.</span>
+<span id="L79" class="ln">    79&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L80" class="ln">    80&nbsp;&nbsp;</span>	<span class="comment">// This is primarily useful for debugging runtime internals.</span>
+<span id="L81" class="ln">    81&nbsp;&nbsp;</span>	Lookups uint64
+<span id="L82" class="ln">    82&nbsp;&nbsp;</span>
+<span id="L83" class="ln">    83&nbsp;&nbsp;</span>	<span class="comment">// Mallocs is the cumulative count of heap objects allocated.</span>
+<span id="L84" class="ln">    84&nbsp;&nbsp;</span>	<span class="comment">// The number of live objects is Mallocs - Frees.</span>
+<span id="L85" class="ln">    85&nbsp;&nbsp;</span>	Mallocs uint64
+<span id="L86" class="ln">    86&nbsp;&nbsp;</span>
+<span id="L87" class="ln">    87&nbsp;&nbsp;</span>	<span class="comment">// Frees is the cumulative count of heap objects freed.</span>
+<span id="L88" class="ln">    88&nbsp;&nbsp;</span>	Frees uint64
+<span id="L89" class="ln">    89&nbsp;&nbsp;</span>
+<span id="L90" class="ln">    90&nbsp;&nbsp;</span>	<span class="comment">// Heap memory statistics.</span>
+<span id="L91" class="ln">    91&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L92" class="ln">    92&nbsp;&nbsp;</span>	<span class="comment">// Interpreting the heap statistics requires some knowledge of</span>
+<span id="L93" class="ln">    93&nbsp;&nbsp;</span>	<span class="comment">// how Go organizes memory. Go divides the virtual address</span>
+<span id="L94" class="ln">    94&nbsp;&nbsp;</span>	<span class="comment">// space of the heap into &#34;spans&#34;, which are contiguous</span>
+<span id="L95" class="ln">    95&nbsp;&nbsp;</span>	<span class="comment">// regions of memory 8K or larger. A span may be in one of</span>
+<span id="L96" class="ln">    96&nbsp;&nbsp;</span>	<span class="comment">// three states:</span>
+<span id="L97" class="ln">    97&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L98" class="ln">    98&nbsp;&nbsp;</span>	<span class="comment">// An &#34;idle&#34; span contains no objects or other data. The</span>
+<span id="L99" class="ln">    99&nbsp;&nbsp;</span>	<span class="comment">// physical memory backing an idle span can be released back</span>
+<span id="L100" class="ln">   100&nbsp;&nbsp;</span>	<span class="comment">// to the OS (but the virtual address space never is), or it</span>
+<span id="L101" class="ln">   101&nbsp;&nbsp;</span>	<span class="comment">// can be converted into an &#34;in use&#34; or &#34;stack&#34; span.</span>
+<span id="L102" class="ln">   102&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L103" class="ln">   103&nbsp;&nbsp;</span>	<span class="comment">// An &#34;in use&#34; span contains at least one heap object and may</span>
+<span id="L104" class="ln">   104&nbsp;&nbsp;</span>	<span class="comment">// have free space available to allocate more heap objects.</span>
+<span id="L105" class="ln">   105&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L106" class="ln">   106&nbsp;&nbsp;</span>	<span class="comment">// A &#34;stack&#34; span is used for goroutine stacks. Stack spans</span>
+<span id="L107" class="ln">   107&nbsp;&nbsp;</span>	<span class="comment">// are not considered part of the heap. A span can change</span>
+<span id="L108" class="ln">   108&nbsp;&nbsp;</span>	<span class="comment">// between heap and stack memory; it is never used for both</span>
+<span id="L109" class="ln">   109&nbsp;&nbsp;</span>	<span class="comment">// simultaneously.</span>
+<span id="L110" class="ln">   110&nbsp;&nbsp;</span>
+<span id="L111" class="ln">   111&nbsp;&nbsp;</span>	<span class="comment">// HeapAlloc is bytes of allocated heap objects.</span>
+<span id="L112" class="ln">   112&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L113" class="ln">   113&nbsp;&nbsp;</span>	<span class="comment">// &#34;Allocated&#34; heap objects include all reachable objects, as</span>
+<span id="L114" class="ln">   114&nbsp;&nbsp;</span>	<span class="comment">// well as unreachable objects that the garbage collector has</span>
+<span id="L115" class="ln">   115&nbsp;&nbsp;</span>	<span class="comment">// not yet freed. Specifically, HeapAlloc increases as heap</span>
+<span id="L116" class="ln">   116&nbsp;&nbsp;</span>	<span class="comment">// objects are allocated and decreases as the heap is swept</span>
+<span id="L117" class="ln">   117&nbsp;&nbsp;</span>	<span class="comment">// and unreachable objects are freed. Sweeping occurs</span>
+<span id="L118" class="ln">   118&nbsp;&nbsp;</span>	<span class="comment">// incrementally between GC cycles, so these two processes</span>
+<span id="L119" class="ln">   119&nbsp;&nbsp;</span>	<span class="comment">// occur simultaneously, and as a result HeapAlloc tends to</span>
+<span id="L120" class="ln">   120&nbsp;&nbsp;</span>	<span class="comment">// change smoothly (in contrast with the sawtooth that is</span>
+<span id="L121" class="ln">   121&nbsp;&nbsp;</span>	<span class="comment">// typical of stop-the-world garbage collectors).</span>
+<span id="L122" class="ln">   122&nbsp;&nbsp;</span>	HeapAlloc uint64
+<span id="L123" class="ln">   123&nbsp;&nbsp;</span>
+<span id="L124" class="ln">   124&nbsp;&nbsp;</span>	<span class="comment">// HeapSys is bytes of heap memory obtained from the OS.</span>
+<span id="L125" class="ln">   125&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L126" class="ln">   126&nbsp;&nbsp;</span>	<span class="comment">// HeapSys measures the amount of virtual address space</span>
+<span id="L127" class="ln">   127&nbsp;&nbsp;</span>	<span class="comment">// reserved for the heap. This includes virtual address space</span>
+<span id="L128" class="ln">   128&nbsp;&nbsp;</span>	<span class="comment">// that has been reserved but not yet used, which consumes no</span>
+<span id="L129" class="ln">   129&nbsp;&nbsp;</span>	<span class="comment">// physical memory, but tends to be small, as well as virtual</span>
+<span id="L130" class="ln">   130&nbsp;&nbsp;</span>	<span class="comment">// address space for which the physical memory has been</span>
+<span id="L131" class="ln">   131&nbsp;&nbsp;</span>	<span class="comment">// returned to the OS after it became unused (see HeapReleased</span>
+<span id="L132" class="ln">   132&nbsp;&nbsp;</span>	<span class="comment">// for a measure of the latter).</span>
+<span id="L133" class="ln">   133&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L134" class="ln">   134&nbsp;&nbsp;</span>	<span class="comment">// HeapSys estimates the largest size the heap has had.</span>
+<span id="L135" class="ln">   135&nbsp;&nbsp;</span>	HeapSys uint64
+<span id="L136" class="ln">   136&nbsp;&nbsp;</span>
+<span id="L137" class="ln">   137&nbsp;&nbsp;</span>	<span class="comment">// HeapIdle is bytes in idle (unused) spans.</span>
+<span id="L138" class="ln">   138&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L139" class="ln">   139&nbsp;&nbsp;</span>	<span class="comment">// Idle spans have no objects in them. These spans could be</span>
+<span id="L140" class="ln">   140&nbsp;&nbsp;</span>	<span class="comment">// (and may already have been) returned to the OS, or they can</span>
+<span id="L141" class="ln">   141&nbsp;&nbsp;</span>	<span class="comment">// be reused for heap allocations, or they can be reused as</span>
+<span id="L142" class="ln">   142&nbsp;&nbsp;</span>	<span class="comment">// stack memory.</span>
+<span id="L143" class="ln">   143&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L144" class="ln">   144&nbsp;&nbsp;</span>	<span class="comment">// HeapIdle minus HeapReleased estimates the amount of memory</span>
+<span id="L145" class="ln">   145&nbsp;&nbsp;</span>	<span class="comment">// that could be returned to the OS, but is being retained by</span>
+<span id="L146" class="ln">   146&nbsp;&nbsp;</span>	<span class="comment">// the runtime so it can grow the heap without requesting more</span>
+<span id="L147" class="ln">   147&nbsp;&nbsp;</span>	<span class="comment">// memory from the OS. If this difference is significantly</span>
+<span id="L148" class="ln">   148&nbsp;&nbsp;</span>	<span class="comment">// larger than the heap size, it indicates there was a recent</span>
+<span id="L149" class="ln">   149&nbsp;&nbsp;</span>	<span class="comment">// transient spike in live heap size.</span>
+<span id="L150" class="ln">   150&nbsp;&nbsp;</span>	HeapIdle uint64
+<span id="L151" class="ln">   151&nbsp;&nbsp;</span>
+<span id="L152" class="ln">   152&nbsp;&nbsp;</span>	<span class="comment">// HeapInuse is bytes in in-use spans.</span>
+<span id="L153" class="ln">   153&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L154" class="ln">   154&nbsp;&nbsp;</span>	<span class="comment">// In-use spans have at least one object in them. These spans</span>
+<span id="L155" class="ln">   155&nbsp;&nbsp;</span>	<span class="comment">// can only be used for other objects of roughly the same</span>
+<span id="L156" class="ln">   156&nbsp;&nbsp;</span>	<span class="comment">// size.</span>
+<span id="L157" class="ln">   157&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L158" class="ln">   158&nbsp;&nbsp;</span>	<span class="comment">// HeapInuse minus HeapAlloc estimates the amount of memory</span>
+<span id="L159" class="ln">   159&nbsp;&nbsp;</span>	<span class="comment">// that has been dedicated to particular size classes, but is</span>
+<span id="L160" class="ln">   160&nbsp;&nbsp;</span>	<span class="comment">// not currently being used. This is an upper bound on</span>
+<span id="L161" class="ln">   161&nbsp;&nbsp;</span>	<span class="comment">// fragmentation, but in general this memory can be reused</span>
+<span id="L162" class="ln">   162&nbsp;&nbsp;</span>	<span class="comment">// efficiently.</span>
+<span id="L163" class="ln">   163&nbsp;&nbsp;</span>	HeapInuse uint64
+<span id="L164" class="ln">   164&nbsp;&nbsp;</span>
+<span id="L165" class="ln">   165&nbsp;&nbsp;</span>	<span class="comment">// HeapReleased is bytes of physical memory returned to the OS.</span>
+<span id="L166" class="ln">   166&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L167" class="ln">   167&nbsp;&nbsp;</span>	<span class="comment">// This counts heap memory from idle spans that was returned</span>
+<span id="L168" class="ln">   168&nbsp;&nbsp;</span>	<span class="comment">// to the OS and has not yet been reacquired for the heap.</span>
+<span id="L169" class="ln">   169&nbsp;&nbsp;</span>	HeapReleased uint64
+<span id="L170" class="ln">   170&nbsp;&nbsp;</span>
+<span id="L171" class="ln">   171&nbsp;&nbsp;</span>	<span class="comment">// HeapObjects is the number of allocated heap objects.</span>
+<span id="L172" class="ln">   172&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L173" class="ln">   173&nbsp;&nbsp;</span>	<span class="comment">// Like HeapAlloc, this increases as objects are allocated and</span>
+<span id="L174" class="ln">   174&nbsp;&nbsp;</span>	<span class="comment">// decreases as the heap is swept and unreachable objects are</span>
+<span id="L175" class="ln">   175&nbsp;&nbsp;</span>	<span class="comment">// freed.</span>
+<span id="L176" class="ln">   176&nbsp;&nbsp;</span>	HeapObjects uint64
+<span id="L177" class="ln">   177&nbsp;&nbsp;</span>
+<span id="L178" class="ln">   178&nbsp;&nbsp;</span>	<span class="comment">// Stack memory statistics.</span>
+<span id="L179" class="ln">   179&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L180" class="ln">   180&nbsp;&nbsp;</span>	<span class="comment">// Stacks are not considered part of the heap, but the runtime</span>
+<span id="L181" class="ln">   181&nbsp;&nbsp;</span>	<span class="comment">// can reuse a span of heap memory for stack memory, and</span>
+<span id="L182" class="ln">   182&nbsp;&nbsp;</span>	<span class="comment">// vice-versa.</span>
+<span id="L183" class="ln">   183&nbsp;&nbsp;</span>
+<span id="L184" class="ln">   184&nbsp;&nbsp;</span>	<span class="comment">// StackInuse is bytes in stack spans.</span>
+<span id="L185" class="ln">   185&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L186" class="ln">   186&nbsp;&nbsp;</span>	<span class="comment">// In-use stack spans have at least one stack in them. These</span>
+<span id="L187" class="ln">   187&nbsp;&nbsp;</span>	<span class="comment">// spans can only be used for other stacks of the same size.</span>
+<span id="L188" class="ln">   188&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L189" class="ln">   189&nbsp;&nbsp;</span>	<span class="comment">// There is no StackIdle because unused stack spans are</span>
+<span id="L190" class="ln">   190&nbsp;&nbsp;</span>	<span class="comment">// returned to the heap (and hence counted toward HeapIdle).</span>
+<span id="L191" class="ln">   191&nbsp;&nbsp;</span>	StackInuse uint64
+<span id="L192" class="ln">   192&nbsp;&nbsp;</span>
+<span id="L193" class="ln">   193&nbsp;&nbsp;</span>	<span class="comment">// StackSys is bytes of stack memory obtained from the OS.</span>
+<span id="L194" class="ln">   194&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L195" class="ln">   195&nbsp;&nbsp;</span>	<span class="comment">// StackSys is StackInuse, plus any memory obtained directly</span>
+<span id="L196" class="ln">   196&nbsp;&nbsp;</span>	<span class="comment">// from the OS for OS thread stacks.</span>
+<span id="L197" class="ln">   197&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L198" class="ln">   198&nbsp;&nbsp;</span>	<span class="comment">// In non-cgo programs this metric is currently equal to StackInuse</span>
+<span id="L199" class="ln">   199&nbsp;&nbsp;</span>	<span class="comment">// (but this should not be relied upon, and the value may change in</span>
+<span id="L200" class="ln">   200&nbsp;&nbsp;</span>	<span class="comment">// the future).</span>
+<span id="L201" class="ln">   201&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L202" class="ln">   202&nbsp;&nbsp;</span>	<span class="comment">// In cgo programs this metric includes OS thread stacks allocated</span>
+<span id="L203" class="ln">   203&nbsp;&nbsp;</span>	<span class="comment">// directly from the OS. Currently, this only accounts for one stack in</span>
+<span id="L204" class="ln">   204&nbsp;&nbsp;</span>	<span class="comment">// c-shared and c-archive build modes and other sources of stacks from</span>
+<span id="L205" class="ln">   205&nbsp;&nbsp;</span>	<span class="comment">// the OS (notably, any allocated by C code) are not currently measured.</span>
+<span id="L206" class="ln">   206&nbsp;&nbsp;</span>	<span class="comment">// Note this too may change in the future.</span>
+<span id="L207" class="ln">   207&nbsp;&nbsp;</span>	StackSys uint64
+<span id="L208" class="ln">   208&nbsp;&nbsp;</span>
+<span id="L209" class="ln">   209&nbsp;&nbsp;</span>	<span class="comment">// Off-heap memory statistics.</span>
+<span id="L210" class="ln">   210&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L211" class="ln">   211&nbsp;&nbsp;</span>	<span class="comment">// The following statistics measure runtime-internal</span>
+<span id="L212" class="ln">   212&nbsp;&nbsp;</span>	<span class="comment">// structures that are not allocated from heap memory (usually</span>
+<span id="L213" class="ln">   213&nbsp;&nbsp;</span>	<span class="comment">// because they are part of implementing the heap). Unlike</span>
+<span id="L214" class="ln">   214&nbsp;&nbsp;</span>	<span class="comment">// heap or stack memory, any memory allocated to these</span>
+<span id="L215" class="ln">   215&nbsp;&nbsp;</span>	<span class="comment">// structures is dedicated to these structures.</span>
+<span id="L216" class="ln">   216&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L217" class="ln">   217&nbsp;&nbsp;</span>	<span class="comment">// These are primarily useful for debugging runtime memory</span>
+<span id="L218" class="ln">   218&nbsp;&nbsp;</span>	<span class="comment">// overheads.</span>
+<span id="L219" class="ln">   219&nbsp;&nbsp;</span>
+<span id="L220" class="ln">   220&nbsp;&nbsp;</span>	<span class="comment">// MSpanInuse is bytes of allocated mspan structures.</span>
+<span id="L221" class="ln">   221&nbsp;&nbsp;</span>	MSpanInuse uint64
+<span id="L222" class="ln">   222&nbsp;&nbsp;</span>
+<span id="L223" class="ln">   223&nbsp;&nbsp;</span>	<span class="comment">// MSpanSys is bytes of memory obtained from the OS for mspan</span>
+<span id="L224" class="ln">   224&nbsp;&nbsp;</span>	<span class="comment">// structures.</span>
+<span id="L225" class="ln">   225&nbsp;&nbsp;</span>	MSpanSys uint64
+<span id="L226" class="ln">   226&nbsp;&nbsp;</span>
+<span id="L227" class="ln">   227&nbsp;&nbsp;</span>	<span class="comment">// MCacheInuse is bytes of allocated mcache structures.</span>
+<span id="L228" class="ln">   228&nbsp;&nbsp;</span>	MCacheInuse uint64
+<span id="L229" class="ln">   229&nbsp;&nbsp;</span>
+<span id="L230" class="ln">   230&nbsp;&nbsp;</span>	<span class="comment">// MCacheSys is bytes of memory obtained from the OS for</span>
+<span id="L231" class="ln">   231&nbsp;&nbsp;</span>	<span class="comment">// mcache structures.</span>
+<span id="L232" class="ln">   232&nbsp;&nbsp;</span>	MCacheSys uint64
+<span id="L233" class="ln">   233&nbsp;&nbsp;</span>
+<span id="L234" class="ln">   234&nbsp;&nbsp;</span>	<span class="comment">// BuckHashSys is bytes of memory in profiling bucket hash tables.</span>
+<span id="L235" class="ln">   235&nbsp;&nbsp;</span>	BuckHashSys uint64
+<span id="L236" class="ln">   236&nbsp;&nbsp;</span>
+<span id="L237" class="ln">   237&nbsp;&nbsp;</span>	<span class="comment">// GCSys is bytes of memory in garbage collection metadata.</span>
+<span id="L238" class="ln">   238&nbsp;&nbsp;</span>	GCSys uint64
+<span id="L239" class="ln">   239&nbsp;&nbsp;</span>
+<span id="L240" class="ln">   240&nbsp;&nbsp;</span>	<span class="comment">// OtherSys is bytes of memory in miscellaneous off-heap</span>
+<span id="L241" class="ln">   241&nbsp;&nbsp;</span>	<span class="comment">// runtime allocations.</span>
+<span id="L242" class="ln">   242&nbsp;&nbsp;</span>	OtherSys uint64
+<span id="L243" class="ln">   243&nbsp;&nbsp;</span>
+<span id="L244" class="ln">   244&nbsp;&nbsp;</span>	<span class="comment">// Garbage collector statistics.</span>
+<span id="L245" class="ln">   245&nbsp;&nbsp;</span>
+<span id="L246" class="ln">   246&nbsp;&nbsp;</span>	<span class="comment">// NextGC is the target heap size of the next GC cycle.</span>
+<span id="L247" class="ln">   247&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L248" class="ln">   248&nbsp;&nbsp;</span>	<span class="comment">// The garbage collector&#39;s goal is to keep HeapAlloc ≤ NextGC.</span>
+<span id="L249" class="ln">   249&nbsp;&nbsp;</span>	<span class="comment">// At the end of each GC cycle, the target for the next cycle</span>
+<span id="L250" class="ln">   250&nbsp;&nbsp;</span>	<span class="comment">// is computed based on the amount of reachable data and the</span>
+<span id="L251" class="ln">   251&nbsp;&nbsp;</span>	<span class="comment">// value of GOGC.</span>
+<span id="L252" class="ln">   252&nbsp;&nbsp;</span>	NextGC uint64
+<span id="L253" class="ln">   253&nbsp;&nbsp;</span>
+<span id="L254" class="ln">   254&nbsp;&nbsp;</span>	<span class="comment">// LastGC is the time the last garbage collection finished, as</span>
+<span id="L255" class="ln">   255&nbsp;&nbsp;</span>	<span class="comment">// nanoseconds since 1970 (the UNIX epoch).</span>
+<span id="L256" class="ln">   256&nbsp;&nbsp;</span>	LastGC uint64
+<span id="L257" class="ln">   257&nbsp;&nbsp;</span>
+<span id="L258" class="ln">   258&nbsp;&nbsp;</span>	<span class="comment">// PauseTotalNs is the cumulative nanoseconds in GC</span>
+<span id="L259" class="ln">   259&nbsp;&nbsp;</span>	<span class="comment">// stop-the-world pauses since the program started.</span>
+<span id="L260" class="ln">   260&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L261" class="ln">   261&nbsp;&nbsp;</span>	<span class="comment">// During a stop-the-world pause, all goroutines are paused</span>
+<span id="L262" class="ln">   262&nbsp;&nbsp;</span>	<span class="comment">// and only the garbage collector can run.</span>
+<span id="L263" class="ln">   263&nbsp;&nbsp;</span>	PauseTotalNs uint64
+<span id="L264" class="ln">   264&nbsp;&nbsp;</span>
+<span id="L265" class="ln">   265&nbsp;&nbsp;</span>	<span class="comment">// PauseNs is a circular buffer of recent GC stop-the-world</span>
+<span id="L266" class="ln">   266&nbsp;&nbsp;</span>	<span class="comment">// pause times in nanoseconds.</span>
+<span id="L267" class="ln">   267&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L268" class="ln">   268&nbsp;&nbsp;</span>	<span class="comment">// The most recent pause is at PauseNs[(NumGC+255)%256]. In</span>
+<span id="L269" class="ln">   269&nbsp;&nbsp;</span>	<span class="comment">// general, PauseNs[N%256] records the time paused in the most</span>
+<span id="L270" class="ln">   270&nbsp;&nbsp;</span>	<span class="comment">// recent N%256th GC cycle. There may be multiple pauses per</span>
+<span id="L271" class="ln">   271&nbsp;&nbsp;</span>	<span class="comment">// GC cycle; this is the sum of all pauses during a cycle.</span>
+<span id="L272" class="ln">   272&nbsp;&nbsp;</span>	PauseNs [256]uint64
+<span id="L273" class="ln">   273&nbsp;&nbsp;</span>
+<span id="L274" class="ln">   274&nbsp;&nbsp;</span>	<span class="comment">// PauseEnd is a circular buffer of recent GC pause end times,</span>
+<span id="L275" class="ln">   275&nbsp;&nbsp;</span>	<span class="comment">// as nanoseconds since 1970 (the UNIX epoch).</span>
+<span id="L276" class="ln">   276&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L277" class="ln">   277&nbsp;&nbsp;</span>	<span class="comment">// This buffer is filled the same way as PauseNs. There may be</span>
+<span id="L278" class="ln">   278&nbsp;&nbsp;</span>	<span class="comment">// multiple pauses per GC cycle; this records the end of the</span>
+<span id="L279" class="ln">   279&nbsp;&nbsp;</span>	<span class="comment">// last pause in a cycle.</span>
+<span id="L280" class="ln">   280&nbsp;&nbsp;</span>	PauseEnd [256]uint64
+<span id="L281" class="ln">   281&nbsp;&nbsp;</span>
+<span id="L282" class="ln">   282&nbsp;&nbsp;</span>	<span class="comment">// NumGC is the number of completed GC cycles.</span>
+<span id="L283" class="ln">   283&nbsp;&nbsp;</span>	NumGC uint32
+<span id="L284" class="ln">   284&nbsp;&nbsp;</span>
+<span id="L285" class="ln">   285&nbsp;&nbsp;</span>	<span class="comment">// NumForcedGC is the number of GC cycles that were forced by</span>
+<span id="L286" class="ln">   286&nbsp;&nbsp;</span>	<span class="comment">// the application calling the GC function.</span>
+<span id="L287" class="ln">   287&nbsp;&nbsp;</span>	NumForcedGC uint32
+<span id="L288" class="ln">   288&nbsp;&nbsp;</span>
+<span id="L289" class="ln">   289&nbsp;&nbsp;</span>	<span class="comment">// GCCPUFraction is the fraction of this program&#39;s available</span>
+<span id="L290" class="ln">   290&nbsp;&nbsp;</span>	<span class="comment">// CPU time used by the GC since the program started.</span>
+<span id="L291" class="ln">   291&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L292" class="ln">   292&nbsp;&nbsp;</span>	<span class="comment">// GCCPUFraction is expressed as a number between 0 and 1,</span>
+<span id="L293" class="ln">   293&nbsp;&nbsp;</span>	<span class="comment">// where 0 means GC has consumed none of this program&#39;s CPU. A</span>
+<span id="L294" class="ln">   294&nbsp;&nbsp;</span>	<span class="comment">// program&#39;s available CPU time is defined as the integral of</span>
+<span id="L295" class="ln">   295&nbsp;&nbsp;</span>	<span class="comment">// GOMAXPROCS since the program started. That is, if</span>
+<span id="L296" class="ln">   296&nbsp;&nbsp;</span>	<span class="comment">// GOMAXPROCS is 2 and a program has been running for 10</span>
+<span id="L297" class="ln">   297&nbsp;&nbsp;</span>	<span class="comment">// seconds, its &#34;available CPU&#34; is 20 seconds. GCCPUFraction</span>
+<span id="L298" class="ln">   298&nbsp;&nbsp;</span>	<span class="comment">// does not include CPU time used for write barrier activity.</span>
+<span id="L299" class="ln">   299&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L300" class="ln">   300&nbsp;&nbsp;</span>	<span class="comment">// This is the same as the fraction of CPU reported by</span>
+<span id="L301" class="ln">   301&nbsp;&nbsp;</span>	<span class="comment">// GODEBUG=gctrace=1.</span>
+<span id="L302" class="ln">   302&nbsp;&nbsp;</span>	GCCPUFraction float64
+<span id="L303" class="ln">   303&nbsp;&nbsp;</span>
+<span id="L304" class="ln">   304&nbsp;&nbsp;</span>	<span class="comment">// EnableGC indicates that GC is enabled. It is always true,</span>
+<span id="L305" class="ln">   305&nbsp;&nbsp;</span>	<span class="comment">// even if GOGC=off.</span>
+<span id="L306" class="ln">   306&nbsp;&nbsp;</span>	EnableGC bool
+<span id="L307" class="ln">   307&nbsp;&nbsp;</span>
+<span id="L308" class="ln">   308&nbsp;&nbsp;</span>	<span class="comment">// DebugGC is currently unused.</span>
+<span id="L309" class="ln">   309&nbsp;&nbsp;</span>	DebugGC bool
+<span id="L310" class="ln">   310&nbsp;&nbsp;</span>
+<span id="L311" class="ln">   311&nbsp;&nbsp;</span>	<span class="comment">// BySize reports per-size class allocation statistics.</span>
+<span id="L312" class="ln">   312&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L313" class="ln">   313&nbsp;&nbsp;</span>	<span class="comment">// BySize[N] gives statistics for allocations of size S where</span>
+<span id="L314" class="ln">   314&nbsp;&nbsp;</span>	<span class="comment">// BySize[N-1].Size &lt; S ≤ BySize[N].Size.</span>
+<span id="L315" class="ln">   315&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L316" class="ln">   316&nbsp;&nbsp;</span>	<span class="comment">// This does not report allocations larger than BySize[60].Size.</span>
+<span id="L317" class="ln">   317&nbsp;&nbsp;</span>	BySize [61]struct {
+<span id="L318" class="ln">   318&nbsp;&nbsp;</span>		<span class="comment">// Size is the maximum byte size of an object in this</span>
+<span id="L319" class="ln">   319&nbsp;&nbsp;</span>		<span class="comment">// size class.</span>
+<span id="L320" class="ln">   320&nbsp;&nbsp;</span>		Size uint32
+<span id="L321" class="ln">   321&nbsp;&nbsp;</span>
+<span id="L322" class="ln">   322&nbsp;&nbsp;</span>		<span class="comment">// Mallocs is the cumulative count of heap objects</span>
+<span id="L323" class="ln">   323&nbsp;&nbsp;</span>		<span class="comment">// allocated in this size class. The cumulative bytes</span>
+<span id="L324" class="ln">   324&nbsp;&nbsp;</span>		<span class="comment">// of allocation is Size*Mallocs. The number of live</span>
+<span id="L325" class="ln">   325&nbsp;&nbsp;</span>		<span class="comment">// objects in this size class is Mallocs - Frees.</span>
+<span id="L326" class="ln">   326&nbsp;&nbsp;</span>		Mallocs uint64
+<span id="L327" class="ln">   327&nbsp;&nbsp;</span>
+<span id="L328" class="ln">   328&nbsp;&nbsp;</span>		<span class="comment">// Frees is the cumulative count of heap objects freed</span>
+<span id="L329" class="ln">   329&nbsp;&nbsp;</span>		<span class="comment">// in this size class.</span>
+<span id="L330" class="ln">   330&nbsp;&nbsp;</span>		Frees uint64
+<span id="L331" class="ln">   331&nbsp;&nbsp;</span>	}
+<span id="L332" class="ln">   332&nbsp;&nbsp;</span>}
+<span id="L333" class="ln">   333&nbsp;&nbsp;</span>
+<span id="L334" class="ln">   334&nbsp;&nbsp;</span>func init() {
+<span id="L335" class="ln">   335&nbsp;&nbsp;</span>	if offset := unsafe.Offsetof(memstats.heapStats); offset%8 != 0 {
+<span id="L336" class="ln">   336&nbsp;&nbsp;</span>		println(offset)
+<span id="L337" class="ln">   337&nbsp;&nbsp;</span>		throw(&#34;memstats.heapStats not aligned to 8 bytes&#34;)
+<span id="L338" class="ln">   338&nbsp;&nbsp;</span>	}
+<span id="L339" class="ln">   339&nbsp;&nbsp;</span>	<span class="comment">// Ensure the size of heapStatsDelta causes adjacent fields/slots (e.g.</span>
+<span id="L340" class="ln">   340&nbsp;&nbsp;</span>	<span class="comment">// [3]heapStatsDelta) to be 8-byte aligned.</span>
+<span id="L341" class="ln">   341&nbsp;&nbsp;</span>	if size := unsafe.Sizeof(heapStatsDelta{}); size%8 != 0 {
+<span id="L342" class="ln">   342&nbsp;&nbsp;</span>		println(size)
+<span id="L343" class="ln">   343&nbsp;&nbsp;</span>		throw(&#34;heapStatsDelta not a multiple of 8 bytes in size&#34;)
+<span id="L344" class="ln">   344&nbsp;&nbsp;</span>	}
+<span id="L345" class="ln">   345&nbsp;&nbsp;</span>}
+<span id="L346" class="ln">   346&nbsp;&nbsp;</span>
+<span id="L347" class="ln">   347&nbsp;&nbsp;</span><span class="comment">// ReadMemStats populates m with memory allocator statistics.</span>
+<span id="L348" class="ln">   348&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L349" class="ln">   349&nbsp;&nbsp;</span><span class="comment">// The returned memory allocator statistics are up to date as of the</span>
+<span id="L350" class="ln">   350&nbsp;&nbsp;</span><span class="comment">// call to ReadMemStats. This is in contrast with a heap profile,</span>
+<span id="L351" class="ln">   351&nbsp;&nbsp;</span><span class="comment">// which is a snapshot as of the most recently completed garbage</span>
+<span id="L352" class="ln">   352&nbsp;&nbsp;</span><span class="comment">// collection cycle.</span>
+<span id="L353" class="ln">   353&nbsp;&nbsp;</span><span class="selection">func ReadMemStats(m *MemStats)</span> {
+<span id="L354" class="ln">   354&nbsp;&nbsp;</span>	_ = m.Alloc <span class="comment">// nil check test before we switch stacks, see issue 61158</span>
+<span id="L355" class="ln">   355&nbsp;&nbsp;</span>	stw := stopTheWorld(stwReadMemStats)
+<span id="L356" class="ln">   356&nbsp;&nbsp;</span>
+<span id="L357" class="ln">   357&nbsp;&nbsp;</span>	systemstack(func() {
+<span id="L358" class="ln">   358&nbsp;&nbsp;</span>		readmemstats_m(m)
+<span id="L359" class="ln">   359&nbsp;&nbsp;</span>	})
+<span id="L360" class="ln">   360&nbsp;&nbsp;</span>
+<span id="L361" class="ln">   361&nbsp;&nbsp;</span>	startTheWorld(stw)
+<span id="L362" class="ln">   362&nbsp;&nbsp;</span>}
+<span id="L363" class="ln">   363&nbsp;&nbsp;</span>
+<span id="L364" class="ln">   364&nbsp;&nbsp;</span><span class="comment">// doubleCheckReadMemStats controls a double-check mode for ReadMemStats that</span>
+<span id="L365" class="ln">   365&nbsp;&nbsp;</span><span class="comment">// ensures consistency between the values that ReadMemStats is using and the</span>
+<span id="L366" class="ln">   366&nbsp;&nbsp;</span><span class="comment">// runtime-internal stats.</span>
+<span id="L367" class="ln">   367&nbsp;&nbsp;</span>var doubleCheckReadMemStats = false
+<span id="L368" class="ln">   368&nbsp;&nbsp;</span>
+<span id="L369" class="ln">   369&nbsp;&nbsp;</span><span class="comment">// readmemstats_m populates stats for internal runtime values.</span>
+<span id="L370" class="ln">   370&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L371" class="ln">   371&nbsp;&nbsp;</span><span class="comment">// The world must be stopped.</span>
+<span id="L372" class="ln">   372&nbsp;&nbsp;</span>func readmemstats_m(stats *MemStats) {
+<span id="L373" class="ln">   373&nbsp;&nbsp;</span>	assertWorldStopped()
+<span id="L374" class="ln">   374&nbsp;&nbsp;</span>
+<span id="L375" class="ln">   375&nbsp;&nbsp;</span>	<span class="comment">// Flush mcaches to mcentral before doing anything else.</span>
+<span id="L376" class="ln">   376&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L377" class="ln">   377&nbsp;&nbsp;</span>	<span class="comment">// Flushing to the mcentral may in general cause stats to</span>
+<span id="L378" class="ln">   378&nbsp;&nbsp;</span>	<span class="comment">// change as mcentral data structures are manipulated.</span>
+<span id="L379" class="ln">   379&nbsp;&nbsp;</span>	systemstack(flushallmcaches)
+<span id="L380" class="ln">   380&nbsp;&nbsp;</span>
+<span id="L381" class="ln">   381&nbsp;&nbsp;</span>	<span class="comment">// Calculate memory allocator stats.</span>
+<span id="L382" class="ln">   382&nbsp;&nbsp;</span>	<span class="comment">// During program execution we only count number of frees and amount of freed memory.</span>
+<span id="L383" class="ln">   383&nbsp;&nbsp;</span>	<span class="comment">// Current number of alive objects in the heap and amount of alive heap memory</span>
+<span id="L384" class="ln">   384&nbsp;&nbsp;</span>	<span class="comment">// are calculated by scanning all spans.</span>
+<span id="L385" class="ln">   385&nbsp;&nbsp;</span>	<span class="comment">// Total number of mallocs is calculated as number of frees plus number of alive objects.</span>
+<span id="L386" class="ln">   386&nbsp;&nbsp;</span>	<span class="comment">// Similarly, total amount of allocated memory is calculated as amount of freed memory</span>
+<span id="L387" class="ln">   387&nbsp;&nbsp;</span>	<span class="comment">// plus amount of alive heap memory.</span>
+<span id="L388" class="ln">   388&nbsp;&nbsp;</span>
+<span id="L389" class="ln">   389&nbsp;&nbsp;</span>	<span class="comment">// Collect consistent stats, which are the source-of-truth in some cases.</span>
+<span id="L390" class="ln">   390&nbsp;&nbsp;</span>	var consStats heapStatsDelta
+<span id="L391" class="ln">   391&nbsp;&nbsp;</span>	memstats.heapStats.unsafeRead(&amp;consStats)
+<span id="L392" class="ln">   392&nbsp;&nbsp;</span>
+<span id="L393" class="ln">   393&nbsp;&nbsp;</span>	<span class="comment">// Collect large allocation stats.</span>
+<span id="L394" class="ln">   394&nbsp;&nbsp;</span>	totalAlloc := consStats.largeAlloc
+<span id="L395" class="ln">   395&nbsp;&nbsp;</span>	nMalloc := consStats.largeAllocCount
+<span id="L396" class="ln">   396&nbsp;&nbsp;</span>	totalFree := consStats.largeFree
+<span id="L397" class="ln">   397&nbsp;&nbsp;</span>	nFree := consStats.largeFreeCount
+<span id="L398" class="ln">   398&nbsp;&nbsp;</span>
+<span id="L399" class="ln">   399&nbsp;&nbsp;</span>	<span class="comment">// Collect per-sizeclass stats.</span>
+<span id="L400" class="ln">   400&nbsp;&nbsp;</span>	var bySize [_NumSizeClasses]struct {
+<span id="L401" class="ln">   401&nbsp;&nbsp;</span>		Size    uint32
+<span id="L402" class="ln">   402&nbsp;&nbsp;</span>		Mallocs uint64
+<span id="L403" class="ln">   403&nbsp;&nbsp;</span>		Frees   uint64
+<span id="L404" class="ln">   404&nbsp;&nbsp;</span>	}
+<span id="L405" class="ln">   405&nbsp;&nbsp;</span>	for i := range bySize {
+<span id="L406" class="ln">   406&nbsp;&nbsp;</span>		bySize[i].Size = uint32(class_to_size[i])
+<span id="L407" class="ln">   407&nbsp;&nbsp;</span>
+<span id="L408" class="ln">   408&nbsp;&nbsp;</span>		<span class="comment">// Malloc stats.</span>
+<span id="L409" class="ln">   409&nbsp;&nbsp;</span>		a := consStats.smallAllocCount[i]
+<span id="L410" class="ln">   410&nbsp;&nbsp;</span>		totalAlloc += a * uint64(class_to_size[i])
+<span id="L411" class="ln">   411&nbsp;&nbsp;</span>		nMalloc += a
+<span id="L412" class="ln">   412&nbsp;&nbsp;</span>		bySize[i].Mallocs = a
+<span id="L413" class="ln">   413&nbsp;&nbsp;</span>
+<span id="L414" class="ln">   414&nbsp;&nbsp;</span>		<span class="comment">// Free stats.</span>
+<span id="L415" class="ln">   415&nbsp;&nbsp;</span>		f := consStats.smallFreeCount[i]
+<span id="L416" class="ln">   416&nbsp;&nbsp;</span>		totalFree += f * uint64(class_to_size[i])
+<span id="L417" class="ln">   417&nbsp;&nbsp;</span>		nFree += f
+<span id="L418" class="ln">   418&nbsp;&nbsp;</span>		bySize[i].Frees = f
+<span id="L419" class="ln">   419&nbsp;&nbsp;</span>	}
+<span id="L420" class="ln">   420&nbsp;&nbsp;</span>
+<span id="L421" class="ln">   421&nbsp;&nbsp;</span>	<span class="comment">// Account for tiny allocations.</span>
+<span id="L422" class="ln">   422&nbsp;&nbsp;</span>	<span class="comment">// For historical reasons, MemStats includes tiny allocations</span>
+<span id="L423" class="ln">   423&nbsp;&nbsp;</span>	<span class="comment">// in both the total free and total alloc count. This double-counts</span>
+<span id="L424" class="ln">   424&nbsp;&nbsp;</span>	<span class="comment">// memory in some sense because their tiny allocation block is also</span>
+<span id="L425" class="ln">   425&nbsp;&nbsp;</span>	<span class="comment">// counted. Tracking the lifetime of individual tiny allocations is</span>
+<span id="L426" class="ln">   426&nbsp;&nbsp;</span>	<span class="comment">// currently not done because it would be too expensive.</span>
+<span id="L427" class="ln">   427&nbsp;&nbsp;</span>	nFree += consStats.tinyAllocCount
+<span id="L428" class="ln">   428&nbsp;&nbsp;</span>	nMalloc += consStats.tinyAllocCount
+<span id="L429" class="ln">   429&nbsp;&nbsp;</span>
+<span id="L430" class="ln">   430&nbsp;&nbsp;</span>	<span class="comment">// Calculate derived stats.</span>
+<span id="L431" class="ln">   431&nbsp;&nbsp;</span>
+<span id="L432" class="ln">   432&nbsp;&nbsp;</span>	stackInUse := uint64(consStats.inStacks)
+<span id="L433" class="ln">   433&nbsp;&nbsp;</span>	gcWorkBufInUse := uint64(consStats.inWorkBufs)
+<span id="L434" class="ln">   434&nbsp;&nbsp;</span>	gcProgPtrScalarBitsInUse := uint64(consStats.inPtrScalarBits)
+<span id="L435" class="ln">   435&nbsp;&nbsp;</span>
+<span id="L436" class="ln">   436&nbsp;&nbsp;</span>	totalMapped := gcController.heapInUse.load() + gcController.heapFree.load() + gcController.heapReleased.load() +
+<span id="L437" class="ln">   437&nbsp;&nbsp;</span>		memstats.stacks_sys.load() + memstats.mspan_sys.load() + memstats.mcache_sys.load() +
+<span id="L438" class="ln">   438&nbsp;&nbsp;</span>		memstats.buckhash_sys.load() + memstats.gcMiscSys.load() + memstats.other_sys.load() +
+<span id="L439" class="ln">   439&nbsp;&nbsp;</span>		stackInUse + gcWorkBufInUse + gcProgPtrScalarBitsInUse
+<span id="L440" class="ln">   440&nbsp;&nbsp;</span>
+<span id="L441" class="ln">   441&nbsp;&nbsp;</span>	heapGoal := gcController.heapGoal()
+<span id="L442" class="ln">   442&nbsp;&nbsp;</span>
+<span id="L443" class="ln">   443&nbsp;&nbsp;</span>	if doubleCheckReadMemStats {
+<span id="L444" class="ln">   444&nbsp;&nbsp;</span>		<span class="comment">// Only check this if we&#39;re debugging. It would be bad to crash an application</span>
+<span id="L445" class="ln">   445&nbsp;&nbsp;</span>		<span class="comment">// just because the debugging stats are wrong. We mostly rely on tests to catch</span>
+<span id="L446" class="ln">   446&nbsp;&nbsp;</span>		<span class="comment">// these issues, and we enable the double check mode for tests.</span>
+<span id="L447" class="ln">   447&nbsp;&nbsp;</span>		<span class="comment">//</span>
+<span id="L448" class="ln">   448&nbsp;&nbsp;</span>		<span class="comment">// The world is stopped, so the consistent stats (after aggregation)</span>
+<span id="L449" class="ln">   449&nbsp;&nbsp;</span>		<span class="comment">// should be identical to some combination of memstats. In particular:</span>
+<span id="L450" class="ln">   450&nbsp;&nbsp;</span>		<span class="comment">//</span>
+<span id="L451" class="ln">   451&nbsp;&nbsp;</span>		<span class="comment">// * memstats.heapInUse == inHeap</span>
+<span id="L452" class="ln">   452&nbsp;&nbsp;</span>		<span class="comment">// * memstats.heapReleased == released</span>
+<span id="L453" class="ln">   453&nbsp;&nbsp;</span>		<span class="comment">// * memstats.heapInUse + memstats.heapFree == committed - inStacks - inWorkBufs - inPtrScalarBits</span>
+<span id="L454" class="ln">   454&nbsp;&nbsp;</span>		<span class="comment">// * memstats.totalAlloc == totalAlloc</span>
+<span id="L455" class="ln">   455&nbsp;&nbsp;</span>		<span class="comment">// * memstats.totalFree == totalFree</span>
+<span id="L456" class="ln">   456&nbsp;&nbsp;</span>		<span class="comment">//</span>
+<span id="L457" class="ln">   457&nbsp;&nbsp;</span>		<span class="comment">// Check if that&#39;s actually true.</span>
+<span id="L458" class="ln">   458&nbsp;&nbsp;</span>		<span class="comment">//</span>
+<span id="L459" class="ln">   459&nbsp;&nbsp;</span>		<span class="comment">// Prevent sysmon and the tracer from skewing the stats since they can</span>
+<span id="L460" class="ln">   460&nbsp;&nbsp;</span>		<span class="comment">// act without synchronizing with a STW. See #64401.</span>
+<span id="L461" class="ln">   461&nbsp;&nbsp;</span>		lock(&amp;sched.sysmonlock)
+<span id="L462" class="ln">   462&nbsp;&nbsp;</span>		lock(&amp;trace.lock)
+<span id="L463" class="ln">   463&nbsp;&nbsp;</span>		if gcController.heapInUse.load() != uint64(consStats.inHeap) {
+<span id="L464" class="ln">   464&nbsp;&nbsp;</span>			print(&#34;runtime: heapInUse=&#34;, gcController.heapInUse.load(), &#34;\n&#34;)
+<span id="L465" class="ln">   465&nbsp;&nbsp;</span>			print(&#34;runtime: consistent value=&#34;, consStats.inHeap, &#34;\n&#34;)
+<span id="L466" class="ln">   466&nbsp;&nbsp;</span>			throw(&#34;heapInUse and consistent stats are not equal&#34;)
+<span id="L467" class="ln">   467&nbsp;&nbsp;</span>		}
+<span id="L468" class="ln">   468&nbsp;&nbsp;</span>		if gcController.heapReleased.load() != uint64(consStats.released) {
+<span id="L469" class="ln">   469&nbsp;&nbsp;</span>			print(&#34;runtime: heapReleased=&#34;, gcController.heapReleased.load(), &#34;\n&#34;)
+<span id="L470" class="ln">   470&nbsp;&nbsp;</span>			print(&#34;runtime: consistent value=&#34;, consStats.released, &#34;\n&#34;)
+<span id="L471" class="ln">   471&nbsp;&nbsp;</span>			throw(&#34;heapReleased and consistent stats are not equal&#34;)
+<span id="L472" class="ln">   472&nbsp;&nbsp;</span>		}
+<span id="L473" class="ln">   473&nbsp;&nbsp;</span>		heapRetained := gcController.heapInUse.load() + gcController.heapFree.load()
+<span id="L474" class="ln">   474&nbsp;&nbsp;</span>		consRetained := uint64(consStats.committed - consStats.inStacks - consStats.inWorkBufs - consStats.inPtrScalarBits)
+<span id="L475" class="ln">   475&nbsp;&nbsp;</span>		if heapRetained != consRetained {
+<span id="L476" class="ln">   476&nbsp;&nbsp;</span>			print(&#34;runtime: global value=&#34;, heapRetained, &#34;\n&#34;)
+<span id="L477" class="ln">   477&nbsp;&nbsp;</span>			print(&#34;runtime: consistent value=&#34;, consRetained, &#34;\n&#34;)
+<span id="L478" class="ln">   478&nbsp;&nbsp;</span>			throw(&#34;measures of the retained heap are not equal&#34;)
+<span id="L479" class="ln">   479&nbsp;&nbsp;</span>		}
+<span id="L480" class="ln">   480&nbsp;&nbsp;</span>		if gcController.totalAlloc.Load() != totalAlloc {
+<span id="L481" class="ln">   481&nbsp;&nbsp;</span>			print(&#34;runtime: totalAlloc=&#34;, gcController.totalAlloc.Load(), &#34;\n&#34;)
+<span id="L482" class="ln">   482&nbsp;&nbsp;</span>			print(&#34;runtime: consistent value=&#34;, totalAlloc, &#34;\n&#34;)
+<span id="L483" class="ln">   483&nbsp;&nbsp;</span>			throw(&#34;totalAlloc and consistent stats are not equal&#34;)
+<span id="L484" class="ln">   484&nbsp;&nbsp;</span>		}
+<span id="L485" class="ln">   485&nbsp;&nbsp;</span>		if gcController.totalFree.Load() != totalFree {
+<span id="L486" class="ln">   486&nbsp;&nbsp;</span>			print(&#34;runtime: totalFree=&#34;, gcController.totalFree.Load(), &#34;\n&#34;)
+<span id="L487" class="ln">   487&nbsp;&nbsp;</span>			print(&#34;runtime: consistent value=&#34;, totalFree, &#34;\n&#34;)
+<span id="L488" class="ln">   488&nbsp;&nbsp;</span>			throw(&#34;totalFree and consistent stats are not equal&#34;)
+<span id="L489" class="ln">   489&nbsp;&nbsp;</span>		}
+<span id="L490" class="ln">   490&nbsp;&nbsp;</span>		<span class="comment">// Also check that mappedReady lines up with totalMapped - released.</span>
+<span id="L491" class="ln">   491&nbsp;&nbsp;</span>		<span class="comment">// This isn&#39;t really the same type of &#34;make sure consistent stats line up&#34; situation,</span>
+<span id="L492" class="ln">   492&nbsp;&nbsp;</span>		<span class="comment">// but this is an opportune time to check.</span>
+<span id="L493" class="ln">   493&nbsp;&nbsp;</span>		if gcController.mappedReady.Load() != totalMapped-uint64(consStats.released) {
+<span id="L494" class="ln">   494&nbsp;&nbsp;</span>			print(&#34;runtime: mappedReady=&#34;, gcController.mappedReady.Load(), &#34;\n&#34;)
+<span id="L495" class="ln">   495&nbsp;&nbsp;</span>			print(&#34;runtime: totalMapped=&#34;, totalMapped, &#34;\n&#34;)
+<span id="L496" class="ln">   496&nbsp;&nbsp;</span>			print(&#34;runtime: released=&#34;, uint64(consStats.released), &#34;\n&#34;)
+<span id="L497" class="ln">   497&nbsp;&nbsp;</span>			print(&#34;runtime: totalMapped-released=&#34;, totalMapped-uint64(consStats.released), &#34;\n&#34;)
+<span id="L498" class="ln">   498&nbsp;&nbsp;</span>			throw(&#34;mappedReady and other memstats are not equal&#34;)
+<span id="L499" class="ln">   499&nbsp;&nbsp;</span>		}
+<span id="L500" class="ln">   500&nbsp;&nbsp;</span>		unlock(&amp;trace.lock)
+<span id="L501" class="ln">   501&nbsp;&nbsp;</span>		unlock(&amp;sched.sysmonlock)
+<span id="L502" class="ln">   502&nbsp;&nbsp;</span>	}
+<span id="L503" class="ln">   503&nbsp;&nbsp;</span>
+<span id="L504" class="ln">   504&nbsp;&nbsp;</span>	<span class="comment">// We&#39;ve calculated all the values we need. Now, populate stats.</span>
+<span id="L505" class="ln">   505&nbsp;&nbsp;</span>
+<span id="L506" class="ln">   506&nbsp;&nbsp;</span>	stats.Alloc = totalAlloc - totalFree
+<span id="L507" class="ln">   507&nbsp;&nbsp;</span>	stats.TotalAlloc = totalAlloc
+<span id="L508" class="ln">   508&nbsp;&nbsp;</span>	stats.Sys = totalMapped
+<span id="L509" class="ln">   509&nbsp;&nbsp;</span>	stats.Mallocs = nMalloc
+<span id="L510" class="ln">   510&nbsp;&nbsp;</span>	stats.Frees = nFree
+<span id="L511" class="ln">   511&nbsp;&nbsp;</span>	stats.HeapAlloc = totalAlloc - totalFree
+<span id="L512" class="ln">   512&nbsp;&nbsp;</span>	stats.HeapSys = gcController.heapInUse.load() + gcController.heapFree.load() + gcController.heapReleased.load()
+<span id="L513" class="ln">   513&nbsp;&nbsp;</span>	<span class="comment">// By definition, HeapIdle is memory that was mapped</span>
+<span id="L514" class="ln">   514&nbsp;&nbsp;</span>	<span class="comment">// for the heap but is not currently used to hold heap</span>
+<span id="L515" class="ln">   515&nbsp;&nbsp;</span>	<span class="comment">// objects. It also specifically is memory that can be</span>
+<span id="L516" class="ln">   516&nbsp;&nbsp;</span>	<span class="comment">// used for other purposes, like stacks, but this memory</span>
+<span id="L517" class="ln">   517&nbsp;&nbsp;</span>	<span class="comment">// is subtracted out of HeapSys before it makes that</span>
+<span id="L518" class="ln">   518&nbsp;&nbsp;</span>	<span class="comment">// transition. Put another way:</span>
+<span id="L519" class="ln">   519&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L520" class="ln">   520&nbsp;&nbsp;</span>	<span class="comment">// HeapSys = bytes allocated from the OS for the heap - bytes ultimately used for non-heap purposes</span>
+<span id="L521" class="ln">   521&nbsp;&nbsp;</span>	<span class="comment">// HeapIdle = bytes allocated from the OS for the heap - bytes ultimately used for any purpose</span>
+<span id="L522" class="ln">   522&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L523" class="ln">   523&nbsp;&nbsp;</span>	<span class="comment">// or</span>
+<span id="L524" class="ln">   524&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L525" class="ln">   525&nbsp;&nbsp;</span>	<span class="comment">// HeapSys = sys - stacks_inuse - gcWorkBufInUse - gcProgPtrScalarBitsInUse</span>
+<span id="L526" class="ln">   526&nbsp;&nbsp;</span>	<span class="comment">// HeapIdle = sys - stacks_inuse - gcWorkBufInUse - gcProgPtrScalarBitsInUse - heapInUse</span>
+<span id="L527" class="ln">   527&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L528" class="ln">   528&nbsp;&nbsp;</span>	<span class="comment">// =&gt; HeapIdle = HeapSys - heapInUse = heapFree + heapReleased</span>
+<span id="L529" class="ln">   529&nbsp;&nbsp;</span>	stats.HeapIdle = gcController.heapFree.load() + gcController.heapReleased.load()
+<span id="L530" class="ln">   530&nbsp;&nbsp;</span>	stats.HeapInuse = gcController.heapInUse.load()
+<span id="L531" class="ln">   531&nbsp;&nbsp;</span>	stats.HeapReleased = gcController.heapReleased.load()
+<span id="L532" class="ln">   532&nbsp;&nbsp;</span>	stats.HeapObjects = nMalloc - nFree
+<span id="L533" class="ln">   533&nbsp;&nbsp;</span>	stats.StackInuse = stackInUse
+<span id="L534" class="ln">   534&nbsp;&nbsp;</span>	<span class="comment">// memstats.stacks_sys is only memory mapped directly for OS stacks.</span>
+<span id="L535" class="ln">   535&nbsp;&nbsp;</span>	<span class="comment">// Add in heap-allocated stack memory for user consumption.</span>
+<span id="L536" class="ln">   536&nbsp;&nbsp;</span>	stats.StackSys = stackInUse + memstats.stacks_sys.load()
+<span id="L537" class="ln">   537&nbsp;&nbsp;</span>	stats.MSpanInuse = uint64(mheap_.spanalloc.inuse)
+<span id="L538" class="ln">   538&nbsp;&nbsp;</span>	stats.MSpanSys = memstats.mspan_sys.load()
+<span id="L539" class="ln">   539&nbsp;&nbsp;</span>	stats.MCacheInuse = uint64(mheap_.cachealloc.inuse)
+<span id="L540" class="ln">   540&nbsp;&nbsp;</span>	stats.MCacheSys = memstats.mcache_sys.load()
+<span id="L541" class="ln">   541&nbsp;&nbsp;</span>	stats.BuckHashSys = memstats.buckhash_sys.load()
+<span id="L542" class="ln">   542&nbsp;&nbsp;</span>	<span class="comment">// MemStats defines GCSys as an aggregate of all memory related</span>
+<span id="L543" class="ln">   543&nbsp;&nbsp;</span>	<span class="comment">// to the memory management system, but we track this memory</span>
+<span id="L544" class="ln">   544&nbsp;&nbsp;</span>	<span class="comment">// at a more granular level in the runtime.</span>
+<span id="L545" class="ln">   545&nbsp;&nbsp;</span>	stats.GCSys = memstats.gcMiscSys.load() + gcWorkBufInUse + gcProgPtrScalarBitsInUse
+<span id="L546" class="ln">   546&nbsp;&nbsp;</span>	stats.OtherSys = memstats.other_sys.load()
+<span id="L547" class="ln">   547&nbsp;&nbsp;</span>	stats.NextGC = heapGoal
+<span id="L548" class="ln">   548&nbsp;&nbsp;</span>	stats.LastGC = memstats.last_gc_unix
+<span id="L549" class="ln">   549&nbsp;&nbsp;</span>	stats.PauseTotalNs = memstats.pause_total_ns
+<span id="L550" class="ln">   550&nbsp;&nbsp;</span>	stats.PauseNs = memstats.pause_ns
+<span id="L551" class="ln">   551&nbsp;&nbsp;</span>	stats.PauseEnd = memstats.pause_end
+<span id="L552" class="ln">   552&nbsp;&nbsp;</span>	stats.NumGC = memstats.numgc
+<span id="L553" class="ln">   553&nbsp;&nbsp;</span>	stats.NumForcedGC = memstats.numforcedgc
+<span id="L554" class="ln">   554&nbsp;&nbsp;</span>	stats.GCCPUFraction = memstats.gc_cpu_fraction
+<span id="L555" class="ln">   555&nbsp;&nbsp;</span>	stats.EnableGC = true
+<span id="L556" class="ln">   556&nbsp;&nbsp;</span>
+<span id="L557" class="ln">   557&nbsp;&nbsp;</span>	<span class="comment">// stats.BySize and bySize might not match in length.</span>
+<span id="L558" class="ln">   558&nbsp;&nbsp;</span>	<span class="comment">// That&#39;s OK, stats.BySize cannot change due to backwards</span>
+<span id="L559" class="ln">   559&nbsp;&nbsp;</span>	<span class="comment">// compatibility issues. copy will copy the minimum amount</span>
+<span id="L560" class="ln">   560&nbsp;&nbsp;</span>	<span class="comment">// of values between the two of them.</span>
+<span id="L561" class="ln">   561&nbsp;&nbsp;</span>	copy(stats.BySize[:], bySize[:])
+<span id="L562" class="ln">   562&nbsp;&nbsp;</span>}
+<span id="L563" class="ln">   563&nbsp;&nbsp;</span>
+<span id="L564" class="ln">   564&nbsp;&nbsp;</span><span class="comment">//go:linkname readGCStats runtime/debug.readGCStats</span>
+<span id="L565" class="ln">   565&nbsp;&nbsp;</span>func readGCStats(pauses *[]uint64) {
+<span id="L566" class="ln">   566&nbsp;&nbsp;</span>	systemstack(func() {
+<span id="L567" class="ln">   567&nbsp;&nbsp;</span>		readGCStats_m(pauses)
+<span id="L568" class="ln">   568&nbsp;&nbsp;</span>	})
+<span id="L569" class="ln">   569&nbsp;&nbsp;</span>}
+<span id="L570" class="ln">   570&nbsp;&nbsp;</span>
+<span id="L571" class="ln">   571&nbsp;&nbsp;</span><span class="comment">// readGCStats_m must be called on the system stack because it acquires the heap</span>
+<span id="L572" class="ln">   572&nbsp;&nbsp;</span><span class="comment">// lock. See mheap for details.</span>
+<span id="L573" class="ln">   573&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L574" class="ln">   574&nbsp;&nbsp;</span><span class="comment">//go:systemstack</span>
+<span id="L575" class="ln">   575&nbsp;&nbsp;</span>func readGCStats_m(pauses *[]uint64) {
+<span id="L576" class="ln">   576&nbsp;&nbsp;</span>	p := *pauses
+<span id="L577" class="ln">   577&nbsp;&nbsp;</span>	<span class="comment">// Calling code in runtime/debug should make the slice large enough.</span>
+<span id="L578" class="ln">   578&nbsp;&nbsp;</span>	if cap(p) &lt; len(memstats.pause_ns)+3 {
+<span id="L579" class="ln">   579&nbsp;&nbsp;</span>		throw(&#34;short slice passed to readGCStats&#34;)
+<span id="L580" class="ln">   580&nbsp;&nbsp;</span>	}
+<span id="L581" class="ln">   581&nbsp;&nbsp;</span>
+<span id="L582" class="ln">   582&nbsp;&nbsp;</span>	<span class="comment">// Pass back: pauses, pause ends, last gc (absolute time), number of gc, total pause ns.</span>
+<span id="L583" class="ln">   583&nbsp;&nbsp;</span>	lock(&amp;mheap_.lock)
+<span id="L584" class="ln">   584&nbsp;&nbsp;</span>
+<span id="L585" class="ln">   585&nbsp;&nbsp;</span>	n := memstats.numgc
+<span id="L586" class="ln">   586&nbsp;&nbsp;</span>	if n &gt; uint32(len(memstats.pause_ns)) {
+<span id="L587" class="ln">   587&nbsp;&nbsp;</span>		n = uint32(len(memstats.pause_ns))
+<span id="L588" class="ln">   588&nbsp;&nbsp;</span>	}
+<span id="L589" class="ln">   589&nbsp;&nbsp;</span>
+<span id="L590" class="ln">   590&nbsp;&nbsp;</span>	<span class="comment">// The pause buffer is circular. The most recent pause is at</span>
+<span id="L591" class="ln">   591&nbsp;&nbsp;</span>	<span class="comment">// pause_ns[(numgc-1)%len(pause_ns)], and then backward</span>
+<span id="L592" class="ln">   592&nbsp;&nbsp;</span>	<span class="comment">// from there to go back farther in time. We deliver the times</span>
+<span id="L593" class="ln">   593&nbsp;&nbsp;</span>	<span class="comment">// most recent first (in p[0]).</span>
+<span id="L594" class="ln">   594&nbsp;&nbsp;</span>	p = p[:cap(p)]
+<span id="L595" class="ln">   595&nbsp;&nbsp;</span>	for i := uint32(0); i &lt; n; i++ {
+<span id="L596" class="ln">   596&nbsp;&nbsp;</span>		j := (memstats.numgc - 1 - i) % uint32(len(memstats.pause_ns))
+<span id="L597" class="ln">   597&nbsp;&nbsp;</span>		p[i] = memstats.pause_ns[j]
+<span id="L598" class="ln">   598&nbsp;&nbsp;</span>		p[n+i] = memstats.pause_end[j]
+<span id="L599" class="ln">   599&nbsp;&nbsp;</span>	}
+<span id="L600" class="ln">   600&nbsp;&nbsp;</span>
+<span id="L601" class="ln">   601&nbsp;&nbsp;</span>	p[n+n] = memstats.last_gc_unix
+<span id="L602" class="ln">   602&nbsp;&nbsp;</span>	p[n+n+1] = uint64(memstats.numgc)
+<span id="L603" class="ln">   603&nbsp;&nbsp;</span>	p[n+n+2] = memstats.pause_total_ns
+<span id="L604" class="ln">   604&nbsp;&nbsp;</span>	unlock(&amp;mheap_.lock)
+<span id="L605" class="ln">   605&nbsp;&nbsp;</span>	*pauses = p[:n+n+3]
+<span id="L606" class="ln">   606&nbsp;&nbsp;</span>}
+<span id="L607" class="ln">   607&nbsp;&nbsp;</span>
+<span id="L608" class="ln">   608&nbsp;&nbsp;</span><span class="comment">// flushmcache flushes the mcache of allp[i].</span>
+<span id="L609" class="ln">   609&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L610" class="ln">   610&nbsp;&nbsp;</span><span class="comment">// The world must be stopped.</span>
+<span id="L611" class="ln">   611&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L612" class="ln">   612&nbsp;&nbsp;</span><span class="comment">//go:nowritebarrier</span>
+<span id="L613" class="ln">   613&nbsp;&nbsp;</span>func flushmcache(i int) {
+<span id="L614" class="ln">   614&nbsp;&nbsp;</span>	assertWorldStopped()
+<span id="L615" class="ln">   615&nbsp;&nbsp;</span>
+<span id="L616" class="ln">   616&nbsp;&nbsp;</span>	p := allp[i]
+<span id="L617" class="ln">   617&nbsp;&nbsp;</span>	c := p.mcache
+<span id="L618" class="ln">   618&nbsp;&nbsp;</span>	if c == nil {
+<span id="L619" class="ln">   619&nbsp;&nbsp;</span>		return
+<span id="L620" class="ln">   620&nbsp;&nbsp;</span>	}
+<span id="L621" class="ln">   621&nbsp;&nbsp;</span>	c.releaseAll()
+<span id="L622" class="ln">   622&nbsp;&nbsp;</span>	stackcache_clear(c)
+<span id="L623" class="ln">   623&nbsp;&nbsp;</span>}
+<span id="L624" class="ln">   624&nbsp;&nbsp;</span>
+<span id="L625" class="ln">   625&nbsp;&nbsp;</span><span class="comment">// flushallmcaches flushes the mcaches of all Ps.</span>
+<span id="L626" class="ln">   626&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L627" class="ln">   627&nbsp;&nbsp;</span><span class="comment">// The world must be stopped.</span>
+<span id="L628" class="ln">   628&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L629" class="ln">   629&nbsp;&nbsp;</span><span class="comment">//go:nowritebarrier</span>
+<span id="L630" class="ln">   630&nbsp;&nbsp;</span>func flushallmcaches() {
+<span id="L631" class="ln">   631&nbsp;&nbsp;</span>	assertWorldStopped()
+<span id="L632" class="ln">   632&nbsp;&nbsp;</span>
+<span id="L633" class="ln">   633&nbsp;&nbsp;</span>	for i := 0; i &lt; int(gomaxprocs); i++ {
+<span id="L634" class="ln">   634&nbsp;&nbsp;</span>		flushmcache(i)
+<span id="L635" class="ln">   635&nbsp;&nbsp;</span>	}
+<span id="L636" class="ln">   636&nbsp;&nbsp;</span>}
+<span id="L637" class="ln">   637&nbsp;&nbsp;</span>
+<span id="L638" class="ln">   638&nbsp;&nbsp;</span><span class="comment">// sysMemStat represents a global system statistic that is managed atomically.</span>
+<span id="L639" class="ln">   639&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L640" class="ln">   640&nbsp;&nbsp;</span><span class="comment">// This type must structurally be a uint64 so that mstats aligns with MemStats.</span>
+<span id="L641" class="ln">   641&nbsp;&nbsp;</span>type sysMemStat uint64
+<span id="L642" class="ln">   642&nbsp;&nbsp;</span>
+<span id="L643" class="ln">   643&nbsp;&nbsp;</span><span class="comment">// load atomically reads the value of the stat.</span>
+<span id="L644" class="ln">   644&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L645" class="ln">   645&nbsp;&nbsp;</span><span class="comment">// Must be nosplit as it is called in runtime initialization, e.g. newosproc0.</span>
+<span id="L646" class="ln">   646&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L647" class="ln">   647&nbsp;&nbsp;</span><span class="comment">//go:nosplit</span>
+<span id="L648" class="ln">   648&nbsp;&nbsp;</span>func (s *sysMemStat) load() uint64 {
+<span id="L649" class="ln">   649&nbsp;&nbsp;</span>	return atomic.Load64((*uint64)(s))
+<span id="L650" class="ln">   650&nbsp;&nbsp;</span>}
+<span id="L651" class="ln">   651&nbsp;&nbsp;</span>
+<span id="L652" class="ln">   652&nbsp;&nbsp;</span><span class="comment">// add atomically adds the sysMemStat by n.</span>
+<span id="L653" class="ln">   653&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L654" class="ln">   654&nbsp;&nbsp;</span><span class="comment">// Must be nosplit as it is called in runtime initialization, e.g. newosproc0.</span>
+<span id="L655" class="ln">   655&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L656" class="ln">   656&nbsp;&nbsp;</span><span class="comment">//go:nosplit</span>
+<span id="L657" class="ln">   657&nbsp;&nbsp;</span>func (s *sysMemStat) add(n int64) {
+<span id="L658" class="ln">   658&nbsp;&nbsp;</span>	val := atomic.Xadd64((*uint64)(s), n)
+<span id="L659" class="ln">   659&nbsp;&nbsp;</span>	if (n &gt; 0 &amp;&amp; int64(val) &lt; n) || (n &lt; 0 &amp;&amp; int64(val)+n &lt; n) {
+<span id="L660" class="ln">   660&nbsp;&nbsp;</span>		print(&#34;runtime: val=&#34;, val, &#34; n=&#34;, n, &#34;\n&#34;)
+<span id="L661" class="ln">   661&nbsp;&nbsp;</span>		throw(&#34;sysMemStat overflow&#34;)
+<span id="L662" class="ln">   662&nbsp;&nbsp;</span>	}
+<span id="L663" class="ln">   663&nbsp;&nbsp;</span>}
+<span id="L664" class="ln">   664&nbsp;&nbsp;</span>
+<span id="L665" class="ln">   665&nbsp;&nbsp;</span><span class="comment">// heapStatsDelta contains deltas of various runtime memory statistics</span>
+<span id="L666" class="ln">   666&nbsp;&nbsp;</span><span class="comment">// that need to be updated together in order for them to be kept</span>
+<span id="L667" class="ln">   667&nbsp;&nbsp;</span><span class="comment">// consistent with one another.</span>
+<span id="L668" class="ln">   668&nbsp;&nbsp;</span>type heapStatsDelta struct {
+<span id="L669" class="ln">   669&nbsp;&nbsp;</span>	<span class="comment">// Memory stats.</span>
+<span id="L670" class="ln">   670&nbsp;&nbsp;</span>	committed       int64 <span class="comment">// byte delta of memory committed</span>
+<span id="L671" class="ln">   671&nbsp;&nbsp;</span>	released        int64 <span class="comment">// byte delta of released memory generated</span>
+<span id="L672" class="ln">   672&nbsp;&nbsp;</span>	inHeap          int64 <span class="comment">// byte delta of memory placed in the heap</span>
+<span id="L673" class="ln">   673&nbsp;&nbsp;</span>	inStacks        int64 <span class="comment">// byte delta of memory reserved for stacks</span>
+<span id="L674" class="ln">   674&nbsp;&nbsp;</span>	inWorkBufs      int64 <span class="comment">// byte delta of memory reserved for work bufs</span>
+<span id="L675" class="ln">   675&nbsp;&nbsp;</span>	inPtrScalarBits int64 <span class="comment">// byte delta of memory reserved for unrolled GC prog bits</span>
+<span id="L676" class="ln">   676&nbsp;&nbsp;</span>
+<span id="L677" class="ln">   677&nbsp;&nbsp;</span>	<span class="comment">// Allocator stats.</span>
+<span id="L678" class="ln">   678&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L679" class="ln">   679&nbsp;&nbsp;</span>	<span class="comment">// These are all uint64 because they&#39;re cumulative, and could quickly wrap</span>
+<span id="L680" class="ln">   680&nbsp;&nbsp;</span>	<span class="comment">// around otherwise.</span>
+<span id="L681" class="ln">   681&nbsp;&nbsp;</span>	tinyAllocCount  uint64                  <span class="comment">// number of tiny allocations</span>
+<span id="L682" class="ln">   682&nbsp;&nbsp;</span>	largeAlloc      uint64                  <span class="comment">// bytes allocated for large objects</span>
+<span id="L683" class="ln">   683&nbsp;&nbsp;</span>	largeAllocCount uint64                  <span class="comment">// number of large object allocations</span>
+<span id="L684" class="ln">   684&nbsp;&nbsp;</span>	smallAllocCount [_NumSizeClasses]uint64 <span class="comment">// number of allocs for small objects</span>
+<span id="L685" class="ln">   685&nbsp;&nbsp;</span>	largeFree       uint64                  <span class="comment">// bytes freed for large objects (&gt;maxSmallSize)</span>
+<span id="L686" class="ln">   686&nbsp;&nbsp;</span>	largeFreeCount  uint64                  <span class="comment">// number of frees for large objects (&gt;maxSmallSize)</span>
+<span id="L687" class="ln">   687&nbsp;&nbsp;</span>	smallFreeCount  [_NumSizeClasses]uint64 <span class="comment">// number of frees for small objects (&lt;=maxSmallSize)</span>
+<span id="L688" class="ln">   688&nbsp;&nbsp;</span>
+<span id="L689" class="ln">   689&nbsp;&nbsp;</span>	<span class="comment">// NOTE: This struct must be a multiple of 8 bytes in size because it</span>
+<span id="L690" class="ln">   690&nbsp;&nbsp;</span>	<span class="comment">// is stored in an array. If it&#39;s not, atomic accesses to the above</span>
+<span id="L691" class="ln">   691&nbsp;&nbsp;</span>	<span class="comment">// fields may be unaligned and fail on 32-bit platforms.</span>
+<span id="L692" class="ln">   692&nbsp;&nbsp;</span>}
+<span id="L693" class="ln">   693&nbsp;&nbsp;</span>
+<span id="L694" class="ln">   694&nbsp;&nbsp;</span><span class="comment">// merge adds in the deltas from b into a.</span>
+<span id="L695" class="ln">   695&nbsp;&nbsp;</span>func (a *heapStatsDelta) merge(b *heapStatsDelta) {
+<span id="L696" class="ln">   696&nbsp;&nbsp;</span>	a.committed += b.committed
+<span id="L697" class="ln">   697&nbsp;&nbsp;</span>	a.released += b.released
+<span id="L698" class="ln">   698&nbsp;&nbsp;</span>	a.inHeap += b.inHeap
+<span id="L699" class="ln">   699&nbsp;&nbsp;</span>	a.inStacks += b.inStacks
+<span id="L700" class="ln">   700&nbsp;&nbsp;</span>	a.inWorkBufs += b.inWorkBufs
+<span id="L701" class="ln">   701&nbsp;&nbsp;</span>	a.inPtrScalarBits += b.inPtrScalarBits
+<span id="L702" class="ln">   702&nbsp;&nbsp;</span>
+<span id="L703" class="ln">   703&nbsp;&nbsp;</span>	a.tinyAllocCount += b.tinyAllocCount
+<span id="L704" class="ln">   704&nbsp;&nbsp;</span>	a.largeAlloc += b.largeAlloc
+<span id="L705" class="ln">   705&nbsp;&nbsp;</span>	a.largeAllocCount += b.largeAllocCount
+<span id="L706" class="ln">   706&nbsp;&nbsp;</span>	for i := range b.smallAllocCount {
+<span id="L707" class="ln">   707&nbsp;&nbsp;</span>		a.smallAllocCount[i] += b.smallAllocCount[i]
+<span id="L708" class="ln">   708&nbsp;&nbsp;</span>	}
+<span id="L709" class="ln">   709&nbsp;&nbsp;</span>	a.largeFree += b.largeFree
+<span id="L710" class="ln">   710&nbsp;&nbsp;</span>	a.largeFreeCount += b.largeFreeCount
+<span id="L711" class="ln">   711&nbsp;&nbsp;</span>	for i := range b.smallFreeCount {
+<span id="L712" class="ln">   712&nbsp;&nbsp;</span>		a.smallFreeCount[i] += b.smallFreeCount[i]
+<span id="L713" class="ln">   713&nbsp;&nbsp;</span>	}
+<span id="L714" class="ln">   714&nbsp;&nbsp;</span>}
+<span id="L715" class="ln">   715&nbsp;&nbsp;</span>
+<span id="L716" class="ln">   716&nbsp;&nbsp;</span><span class="comment">// consistentHeapStats represents a set of various memory statistics</span>
+<span id="L717" class="ln">   717&nbsp;&nbsp;</span><span class="comment">// whose updates must be viewed completely to get a consistent</span>
+<span id="L718" class="ln">   718&nbsp;&nbsp;</span><span class="comment">// state of the world.</span>
+<span id="L719" class="ln">   719&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L720" class="ln">   720&nbsp;&nbsp;</span><span class="comment">// To write updates to memory stats use the acquire and release</span>
+<span id="L721" class="ln">   721&nbsp;&nbsp;</span><span class="comment">// methods. To obtain a consistent global snapshot of these statistics,</span>
+<span id="L722" class="ln">   722&nbsp;&nbsp;</span><span class="comment">// use read.</span>
+<span id="L723" class="ln">   723&nbsp;&nbsp;</span>type consistentHeapStats struct {
+<span id="L724" class="ln">   724&nbsp;&nbsp;</span>	<span class="comment">// stats is a ring buffer of heapStatsDelta values.</span>
+<span id="L725" class="ln">   725&nbsp;&nbsp;</span>	<span class="comment">// Writers always atomically update the delta at index gen.</span>
+<span id="L726" class="ln">   726&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L727" class="ln">   727&nbsp;&nbsp;</span>	<span class="comment">// Readers operate by rotating gen (0 -&gt; 1 -&gt; 2 -&gt; 0 -&gt; ...)</span>
+<span id="L728" class="ln">   728&nbsp;&nbsp;</span>	<span class="comment">// and synchronizing with writers by observing each P&#39;s</span>
+<span id="L729" class="ln">   729&nbsp;&nbsp;</span>	<span class="comment">// statsSeq field. If the reader observes a P not writing,</span>
+<span id="L730" class="ln">   730&nbsp;&nbsp;</span>	<span class="comment">// it can be sure that it will pick up the new gen value the</span>
+<span id="L731" class="ln">   731&nbsp;&nbsp;</span>	<span class="comment">// next time it writes.</span>
+<span id="L732" class="ln">   732&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L733" class="ln">   733&nbsp;&nbsp;</span>	<span class="comment">// The reader then takes responsibility by clearing space</span>
+<span id="L734" class="ln">   734&nbsp;&nbsp;</span>	<span class="comment">// in the ring buffer for the next reader to rotate gen to</span>
+<span id="L735" class="ln">   735&nbsp;&nbsp;</span>	<span class="comment">// that space (i.e. it merges in values from index (gen-2) mod 3</span>
+<span id="L736" class="ln">   736&nbsp;&nbsp;</span>	<span class="comment">// to index (gen-1) mod 3, then clears the former).</span>
+<span id="L737" class="ln">   737&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L738" class="ln">   738&nbsp;&nbsp;</span>	<span class="comment">// Note that this means only one reader can be reading at a time.</span>
+<span id="L739" class="ln">   739&nbsp;&nbsp;</span>	<span class="comment">// There is no way for readers to synchronize.</span>
+<span id="L740" class="ln">   740&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L741" class="ln">   741&nbsp;&nbsp;</span>	<span class="comment">// This process is why we need a ring buffer of size 3 instead</span>
+<span id="L742" class="ln">   742&nbsp;&nbsp;</span>	<span class="comment">// of 2: one is for the writers, one contains the most recent</span>
+<span id="L743" class="ln">   743&nbsp;&nbsp;</span>	<span class="comment">// data, and the last one is clear so writers can begin writing</span>
+<span id="L744" class="ln">   744&nbsp;&nbsp;</span>	<span class="comment">// to it the moment gen is updated.</span>
+<span id="L745" class="ln">   745&nbsp;&nbsp;</span>	stats [3]heapStatsDelta
+<span id="L746" class="ln">   746&nbsp;&nbsp;</span>
+<span id="L747" class="ln">   747&nbsp;&nbsp;</span>	<span class="comment">// gen represents the current index into which writers</span>
+<span id="L748" class="ln">   748&nbsp;&nbsp;</span>	<span class="comment">// are writing, and can take on the value of 0, 1, or 2.</span>
+<span id="L749" class="ln">   749&nbsp;&nbsp;</span>	gen atomic.Uint32
+<span id="L750" class="ln">   750&nbsp;&nbsp;</span>
+<span id="L751" class="ln">   751&nbsp;&nbsp;</span>	<span class="comment">// noPLock is intended to provide mutual exclusion for updating</span>
+<span id="L752" class="ln">   752&nbsp;&nbsp;</span>	<span class="comment">// stats when no P is available. It does not block other writers</span>
+<span id="L753" class="ln">   753&nbsp;&nbsp;</span>	<span class="comment">// with a P, only other writers without a P and the reader. Because</span>
+<span id="L754" class="ln">   754&nbsp;&nbsp;</span>	<span class="comment">// stats are usually updated when a P is available, contention on</span>
+<span id="L755" class="ln">   755&nbsp;&nbsp;</span>	<span class="comment">// this lock should be minimal.</span>
+<span id="L756" class="ln">   756&nbsp;&nbsp;</span>	noPLock mutex
+<span id="L757" class="ln">   757&nbsp;&nbsp;</span>}
+<span id="L758" class="ln">   758&nbsp;&nbsp;</span>
+<span id="L759" class="ln">   759&nbsp;&nbsp;</span><span class="comment">// acquire returns a heapStatsDelta to be updated. In effect,</span>
+<span id="L760" class="ln">   760&nbsp;&nbsp;</span><span class="comment">// it acquires the shard for writing. release must be called</span>
+<span id="L761" class="ln">   761&nbsp;&nbsp;</span><span class="comment">// as soon as the relevant deltas are updated.</span>
+<span id="L762" class="ln">   762&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L763" class="ln">   763&nbsp;&nbsp;</span><span class="comment">// The returned heapStatsDelta must be updated atomically.</span>
+<span id="L764" class="ln">   764&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L765" class="ln">   765&nbsp;&nbsp;</span><span class="comment">// The caller&#39;s P must not change between acquire and</span>
+<span id="L766" class="ln">   766&nbsp;&nbsp;</span><span class="comment">// release. This also means that the caller should not</span>
+<span id="L767" class="ln">   767&nbsp;&nbsp;</span><span class="comment">// acquire a P or release its P in between. A P also must</span>
+<span id="L768" class="ln">   768&nbsp;&nbsp;</span><span class="comment">// not acquire a given consistentHeapStats if it hasn&#39;t</span>
+<span id="L769" class="ln">   769&nbsp;&nbsp;</span><span class="comment">// yet released it.</span>
+<span id="L770" class="ln">   770&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L771" class="ln">   771&nbsp;&nbsp;</span><span class="comment">// nosplit because a stack growth in this function could</span>
+<span id="L772" class="ln">   772&nbsp;&nbsp;</span><span class="comment">// lead to a stack allocation that could reenter the</span>
+<span id="L773" class="ln">   773&nbsp;&nbsp;</span><span class="comment">// function.</span>
+<span id="L774" class="ln">   774&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L775" class="ln">   775&nbsp;&nbsp;</span><span class="comment">//go:nosplit</span>
+<span id="L776" class="ln">   776&nbsp;&nbsp;</span>func (m *consistentHeapStats) acquire() *heapStatsDelta {
+<span id="L777" class="ln">   777&nbsp;&nbsp;</span>	if pp := getg().m.p.ptr(); pp != nil {
+<span id="L778" class="ln">   778&nbsp;&nbsp;</span>		seq := pp.statsSeq.Add(1)
+<span id="L779" class="ln">   779&nbsp;&nbsp;</span>		if seq%2 == 0 {
+<span id="L780" class="ln">   780&nbsp;&nbsp;</span>			<span class="comment">// Should have been incremented to odd.</span>
+<span id="L781" class="ln">   781&nbsp;&nbsp;</span>			print(&#34;runtime: seq=&#34;, seq, &#34;\n&#34;)
+<span id="L782" class="ln">   782&nbsp;&nbsp;</span>			throw(&#34;bad sequence number&#34;)
+<span id="L783" class="ln">   783&nbsp;&nbsp;</span>		}
+<span id="L784" class="ln">   784&nbsp;&nbsp;</span>	} else {
+<span id="L785" class="ln">   785&nbsp;&nbsp;</span>		lock(&amp;m.noPLock)
+<span id="L786" class="ln">   786&nbsp;&nbsp;</span>	}
+<span id="L787" class="ln">   787&nbsp;&nbsp;</span>	gen := m.gen.Load() % 3
+<span id="L788" class="ln">   788&nbsp;&nbsp;</span>	return &amp;m.stats[gen]
+<span id="L789" class="ln">   789&nbsp;&nbsp;</span>}
+<span id="L790" class="ln">   790&nbsp;&nbsp;</span>
+<span id="L791" class="ln">   791&nbsp;&nbsp;</span><span class="comment">// release indicates that the writer is done modifying</span>
+<span id="L792" class="ln">   792&nbsp;&nbsp;</span><span class="comment">// the delta. The value returned by the corresponding</span>
+<span id="L793" class="ln">   793&nbsp;&nbsp;</span><span class="comment">// acquire must no longer be accessed or modified after</span>
+<span id="L794" class="ln">   794&nbsp;&nbsp;</span><span class="comment">// release is called.</span>
+<span id="L795" class="ln">   795&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L796" class="ln">   796&nbsp;&nbsp;</span><span class="comment">// The caller&#39;s P must not change between acquire and</span>
+<span id="L797" class="ln">   797&nbsp;&nbsp;</span><span class="comment">// release. This also means that the caller should not</span>
+<span id="L798" class="ln">   798&nbsp;&nbsp;</span><span class="comment">// acquire a P or release its P in between.</span>
+<span id="L799" class="ln">   799&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L800" class="ln">   800&nbsp;&nbsp;</span><span class="comment">// nosplit because a stack growth in this function could</span>
+<span id="L801" class="ln">   801&nbsp;&nbsp;</span><span class="comment">// lead to a stack allocation that causes another acquire</span>
+<span id="L802" class="ln">   802&nbsp;&nbsp;</span><span class="comment">// before this operation has completed.</span>
+<span id="L803" class="ln">   803&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L804" class="ln">   804&nbsp;&nbsp;</span><span class="comment">//go:nosplit</span>
+<span id="L805" class="ln">   805&nbsp;&nbsp;</span>func (m *consistentHeapStats) release() {
+<span id="L806" class="ln">   806&nbsp;&nbsp;</span>	if pp := getg().m.p.ptr(); pp != nil {
+<span id="L807" class="ln">   807&nbsp;&nbsp;</span>		seq := pp.statsSeq.Add(1)
+<span id="L808" class="ln">   808&nbsp;&nbsp;</span>		if seq%2 != 0 {
+<span id="L809" class="ln">   809&nbsp;&nbsp;</span>			<span class="comment">// Should have been incremented to even.</span>
+<span id="L810" class="ln">   810&nbsp;&nbsp;</span>			print(&#34;runtime: seq=&#34;, seq, &#34;\n&#34;)
+<span id="L811" class="ln">   811&nbsp;&nbsp;</span>			throw(&#34;bad sequence number&#34;)
+<span id="L812" class="ln">   812&nbsp;&nbsp;</span>		}
+<span id="L813" class="ln">   813&nbsp;&nbsp;</span>	} else {
+<span id="L814" class="ln">   814&nbsp;&nbsp;</span>		unlock(&amp;m.noPLock)
+<span id="L815" class="ln">   815&nbsp;&nbsp;</span>	}
+<span id="L816" class="ln">   816&nbsp;&nbsp;</span>}
+<span id="L817" class="ln">   817&nbsp;&nbsp;</span>
+<span id="L818" class="ln">   818&nbsp;&nbsp;</span><span class="comment">// unsafeRead aggregates the delta for this shard into out.</span>
+<span id="L819" class="ln">   819&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L820" class="ln">   820&nbsp;&nbsp;</span><span class="comment">// Unsafe because it does so without any synchronization. The</span>
+<span id="L821" class="ln">   821&nbsp;&nbsp;</span><span class="comment">// world must be stopped.</span>
+<span id="L822" class="ln">   822&nbsp;&nbsp;</span>func (m *consistentHeapStats) unsafeRead(out *heapStatsDelta) {
+<span id="L823" class="ln">   823&nbsp;&nbsp;</span>	assertWorldStopped()
+<span id="L824" class="ln">   824&nbsp;&nbsp;</span>
+<span id="L825" class="ln">   825&nbsp;&nbsp;</span>	for i := range m.stats {
+<span id="L826" class="ln">   826&nbsp;&nbsp;</span>		out.merge(&amp;m.stats[i])
+<span id="L827" class="ln">   827&nbsp;&nbsp;</span>	}
+<span id="L828" class="ln">   828&nbsp;&nbsp;</span>}
+<span id="L829" class="ln">   829&nbsp;&nbsp;</span>
+<span id="L830" class="ln">   830&nbsp;&nbsp;</span><span class="comment">// unsafeClear clears the shard.</span>
+<span id="L831" class="ln">   831&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L832" class="ln">   832&nbsp;&nbsp;</span><span class="comment">// Unsafe because the world must be stopped and values should</span>
+<span id="L833" class="ln">   833&nbsp;&nbsp;</span><span class="comment">// be donated elsewhere before clearing.</span>
+<span id="L834" class="ln">   834&nbsp;&nbsp;</span>func (m *consistentHeapStats) unsafeClear() {
+<span id="L835" class="ln">   835&nbsp;&nbsp;</span>	assertWorldStopped()
+<span id="L836" class="ln">   836&nbsp;&nbsp;</span>
+<span id="L837" class="ln">   837&nbsp;&nbsp;</span>	for i := range m.stats {
+<span id="L838" class="ln">   838&nbsp;&nbsp;</span>		m.stats[i] = heapStatsDelta{}
+<span id="L839" class="ln">   839&nbsp;&nbsp;</span>	}
+<span id="L840" class="ln">   840&nbsp;&nbsp;</span>}
+<span id="L841" class="ln">   841&nbsp;&nbsp;</span>
+<span id="L842" class="ln">   842&nbsp;&nbsp;</span><span class="comment">// read takes a globally consistent snapshot of m</span>
+<span id="L843" class="ln">   843&nbsp;&nbsp;</span><span class="comment">// and puts the aggregated value in out. Even though out is a</span>
+<span id="L844" class="ln">   844&nbsp;&nbsp;</span><span class="comment">// heapStatsDelta, the resulting values should be complete and</span>
+<span id="L845" class="ln">   845&nbsp;&nbsp;</span><span class="comment">// valid statistic values.</span>
+<span id="L846" class="ln">   846&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L847" class="ln">   847&nbsp;&nbsp;</span><span class="comment">// Not safe to call concurrently. The world must be stopped</span>
+<span id="L848" class="ln">   848&nbsp;&nbsp;</span><span class="comment">// or metricsSema must be held.</span>
+<span id="L849" class="ln">   849&nbsp;&nbsp;</span>func (m *consistentHeapStats) read(out *heapStatsDelta) {
+<span id="L850" class="ln">   850&nbsp;&nbsp;</span>	<span class="comment">// Getting preempted after this point is not safe because</span>
+<span id="L851" class="ln">   851&nbsp;&nbsp;</span>	<span class="comment">// we read allp. We need to make sure a STW can&#39;t happen</span>
+<span id="L852" class="ln">   852&nbsp;&nbsp;</span>	<span class="comment">// so it doesn&#39;t change out from under us.</span>
+<span id="L853" class="ln">   853&nbsp;&nbsp;</span>	mp := acquirem()
+<span id="L854" class="ln">   854&nbsp;&nbsp;</span>
+<span id="L855" class="ln">   855&nbsp;&nbsp;</span>	<span class="comment">// Get the current generation. We can be confident that this</span>
+<span id="L856" class="ln">   856&nbsp;&nbsp;</span>	<span class="comment">// will not change since read is serialized and is the only</span>
+<span id="L857" class="ln">   857&nbsp;&nbsp;</span>	<span class="comment">// one that modifies currGen.</span>
+<span id="L858" class="ln">   858&nbsp;&nbsp;</span>	currGen := m.gen.Load()
+<span id="L859" class="ln">   859&nbsp;&nbsp;</span>	prevGen := currGen - 1
+<span id="L860" class="ln">   860&nbsp;&nbsp;</span>	if currGen == 0 {
+<span id="L861" class="ln">   861&nbsp;&nbsp;</span>		prevGen = 2
+<span id="L862" class="ln">   862&nbsp;&nbsp;</span>	}
+<span id="L863" class="ln">   863&nbsp;&nbsp;</span>
+<span id="L864" class="ln">   864&nbsp;&nbsp;</span>	<span class="comment">// Prevent writers without a P from writing while we update gen.</span>
+<span id="L865" class="ln">   865&nbsp;&nbsp;</span>	lock(&amp;m.noPLock)
+<span id="L866" class="ln">   866&nbsp;&nbsp;</span>
+<span id="L867" class="ln">   867&nbsp;&nbsp;</span>	<span class="comment">// Rotate gen, effectively taking a snapshot of the state of</span>
+<span id="L868" class="ln">   868&nbsp;&nbsp;</span>	<span class="comment">// these statistics at the point of the exchange by moving</span>
+<span id="L869" class="ln">   869&nbsp;&nbsp;</span>	<span class="comment">// writers to the next set of deltas.</span>
+<span id="L870" class="ln">   870&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L871" class="ln">   871&nbsp;&nbsp;</span>	<span class="comment">// This exchange is safe to do because we won&#39;t race</span>
+<span id="L872" class="ln">   872&nbsp;&nbsp;</span>	<span class="comment">// with anyone else trying to update this value.</span>
+<span id="L873" class="ln">   873&nbsp;&nbsp;</span>	m.gen.Swap((currGen + 1) % 3)
+<span id="L874" class="ln">   874&nbsp;&nbsp;</span>
+<span id="L875" class="ln">   875&nbsp;&nbsp;</span>	<span class="comment">// Allow P-less writers to continue. They&#39;ll be writing to the</span>
+<span id="L876" class="ln">   876&nbsp;&nbsp;</span>	<span class="comment">// next generation now.</span>
+<span id="L877" class="ln">   877&nbsp;&nbsp;</span>	unlock(&amp;m.noPLock)
+<span id="L878" class="ln">   878&nbsp;&nbsp;</span>
+<span id="L879" class="ln">   879&nbsp;&nbsp;</span>	for _, p := range allp {
+<span id="L880" class="ln">   880&nbsp;&nbsp;</span>		<span class="comment">// Spin until there are no more writers.</span>
+<span id="L881" class="ln">   881&nbsp;&nbsp;</span>		for p.statsSeq.Load()%2 != 0 {
+<span id="L882" class="ln">   882&nbsp;&nbsp;</span>		}
+<span id="L883" class="ln">   883&nbsp;&nbsp;</span>	}
+<span id="L884" class="ln">   884&nbsp;&nbsp;</span>
+<span id="L885" class="ln">   885&nbsp;&nbsp;</span>	<span class="comment">// At this point we&#39;ve observed that each sequence</span>
+<span id="L886" class="ln">   886&nbsp;&nbsp;</span>	<span class="comment">// number is even, so any future writers will observe</span>
+<span id="L887" class="ln">   887&nbsp;&nbsp;</span>	<span class="comment">// the new gen value. That means it&#39;s safe to read from</span>
+<span id="L888" class="ln">   888&nbsp;&nbsp;</span>	<span class="comment">// the other deltas in the stats buffer.</span>
+<span id="L889" class="ln">   889&nbsp;&nbsp;</span>
+<span id="L890" class="ln">   890&nbsp;&nbsp;</span>	<span class="comment">// Perform our responsibilities and free up</span>
+<span id="L891" class="ln">   891&nbsp;&nbsp;</span>	<span class="comment">// stats[prevGen] for the next time we want to take</span>
+<span id="L892" class="ln">   892&nbsp;&nbsp;</span>	<span class="comment">// a snapshot.</span>
+<span id="L893" class="ln">   893&nbsp;&nbsp;</span>	m.stats[currGen].merge(&amp;m.stats[prevGen])
+<span id="L894" class="ln">   894&nbsp;&nbsp;</span>	m.stats[prevGen] = heapStatsDelta{}
+<span id="L895" class="ln">   895&nbsp;&nbsp;</span>
+<span id="L896" class="ln">   896&nbsp;&nbsp;</span>	<span class="comment">// Finally, copy out the complete delta.</span>
+<span id="L897" class="ln">   897&nbsp;&nbsp;</span>	*out = m.stats[currGen]
+<span id="L898" class="ln">   898&nbsp;&nbsp;</span>
+<span id="L899" class="ln">   899&nbsp;&nbsp;</span>	releasem(mp)
+<span id="L900" class="ln">   900&nbsp;&nbsp;</span>}
+<span id="L901" class="ln">   901&nbsp;&nbsp;</span>
+<span id="L902" class="ln">   902&nbsp;&nbsp;</span>type cpuStats struct {
+<span id="L903" class="ln">   903&nbsp;&nbsp;</span>	<span class="comment">// All fields are CPU time in nanoseconds computed by comparing</span>
+<span id="L904" class="ln">   904&nbsp;&nbsp;</span>	<span class="comment">// calls of nanotime. This means they&#39;re all overestimates, because</span>
+<span id="L905" class="ln">   905&nbsp;&nbsp;</span>	<span class="comment">// they don&#39;t accurately compute on-CPU time (so some of the time</span>
+<span id="L906" class="ln">   906&nbsp;&nbsp;</span>	<span class="comment">// could be spent scheduled away by the OS).</span>
+<span id="L907" class="ln">   907&nbsp;&nbsp;</span>
+<span id="L908" class="ln">   908&nbsp;&nbsp;</span>	gcAssistTime    int64 <span class="comment">// GC assists</span>
+<span id="L909" class="ln">   909&nbsp;&nbsp;</span>	gcDedicatedTime int64 <span class="comment">// GC dedicated mark workers + pauses</span>
+<span id="L910" class="ln">   910&nbsp;&nbsp;</span>	gcIdleTime      int64 <span class="comment">// GC idle mark workers</span>
+<span id="L911" class="ln">   911&nbsp;&nbsp;</span>	gcPauseTime     int64 <span class="comment">// GC pauses (all GOMAXPROCS, even if just 1 is running)</span>
+<span id="L912" class="ln">   912&nbsp;&nbsp;</span>	gcTotalTime     int64
+<span id="L913" class="ln">   913&nbsp;&nbsp;</span>
+<span id="L914" class="ln">   914&nbsp;&nbsp;</span>	scavengeAssistTime int64 <span class="comment">// background scavenger</span>
+<span id="L915" class="ln">   915&nbsp;&nbsp;</span>	scavengeBgTime     int64 <span class="comment">// scavenge assists</span>
+<span id="L916" class="ln">   916&nbsp;&nbsp;</span>	scavengeTotalTime  int64
+<span id="L917" class="ln">   917&nbsp;&nbsp;</span>
+<span id="L918" class="ln">   918&nbsp;&nbsp;</span>	idleTime int64 <span class="comment">// Time Ps spent in _Pidle.</span>
+<span id="L919" class="ln">   919&nbsp;&nbsp;</span>	userTime int64 <span class="comment">// Time Ps spent in _Prunning or _Psyscall that&#39;s not any of the above.</span>
+<span id="L920" class="ln">   920&nbsp;&nbsp;</span>
+<span id="L921" class="ln">   921&nbsp;&nbsp;</span>	totalTime int64 <span class="comment">// GOMAXPROCS * (monotonic wall clock time elapsed)</span>
+<span id="L922" class="ln">   922&nbsp;&nbsp;</span>}
+<span id="L923" class="ln">   923&nbsp;&nbsp;</span>
+<span id="L924" class="ln">   924&nbsp;&nbsp;</span><span class="comment">// accumulate takes a cpuStats and adds in the current state of all GC CPU</span>
+<span id="L925" class="ln">   925&nbsp;&nbsp;</span><span class="comment">// counters.</span>
+<span id="L926" class="ln">   926&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L927" class="ln">   927&nbsp;&nbsp;</span><span class="comment">// gcMarkPhase indicates that we&#39;re in the mark phase and that certain counter</span>
+<span id="L928" class="ln">   928&nbsp;&nbsp;</span><span class="comment">// values should be used.</span>
+<span id="L929" class="ln">   929&nbsp;&nbsp;</span>func (s *cpuStats) accumulate(now int64, gcMarkPhase bool) {
+<span id="L930" class="ln">   930&nbsp;&nbsp;</span>	<span class="comment">// N.B. Mark termination and sweep termination pauses are</span>
+<span id="L931" class="ln">   931&nbsp;&nbsp;</span>	<span class="comment">// accumulated in work.cpuStats at the end of their respective pauses.</span>
+<span id="L932" class="ln">   932&nbsp;&nbsp;</span>	var (
+<span id="L933" class="ln">   933&nbsp;&nbsp;</span>		markAssistCpu     int64
+<span id="L934" class="ln">   934&nbsp;&nbsp;</span>		markDedicatedCpu  int64
+<span id="L935" class="ln">   935&nbsp;&nbsp;</span>		markFractionalCpu int64
+<span id="L936" class="ln">   936&nbsp;&nbsp;</span>		markIdleCpu       int64
+<span id="L937" class="ln">   937&nbsp;&nbsp;</span>	)
+<span id="L938" class="ln">   938&nbsp;&nbsp;</span>	if gcMarkPhase {
+<span id="L939" class="ln">   939&nbsp;&nbsp;</span>		<span class="comment">// N.B. These stats may have stale values if the GC is not</span>
+<span id="L940" class="ln">   940&nbsp;&nbsp;</span>		<span class="comment">// currently in the mark phase.</span>
+<span id="L941" class="ln">   941&nbsp;&nbsp;</span>		markAssistCpu = gcController.assistTime.Load()
+<span id="L942" class="ln">   942&nbsp;&nbsp;</span>		markDedicatedCpu = gcController.dedicatedMarkTime.Load()
+<span id="L943" class="ln">   943&nbsp;&nbsp;</span>		markFractionalCpu = gcController.fractionalMarkTime.Load()
+<span id="L944" class="ln">   944&nbsp;&nbsp;</span>		markIdleCpu = gcController.idleMarkTime.Load()
+<span id="L945" class="ln">   945&nbsp;&nbsp;</span>	}
+<span id="L946" class="ln">   946&nbsp;&nbsp;</span>
+<span id="L947" class="ln">   947&nbsp;&nbsp;</span>	<span class="comment">// The rest of the stats below are either derived from the above or</span>
+<span id="L948" class="ln">   948&nbsp;&nbsp;</span>	<span class="comment">// are reset on each mark termination.</span>
+<span id="L949" class="ln">   949&nbsp;&nbsp;</span>
+<span id="L950" class="ln">   950&nbsp;&nbsp;</span>	scavAssistCpu := scavenge.assistTime.Load()
+<span id="L951" class="ln">   951&nbsp;&nbsp;</span>	scavBgCpu := scavenge.backgroundTime.Load()
+<span id="L952" class="ln">   952&nbsp;&nbsp;</span>
+<span id="L953" class="ln">   953&nbsp;&nbsp;</span>	<span class="comment">// Update cumulative GC CPU stats.</span>
+<span id="L954" class="ln">   954&nbsp;&nbsp;</span>	s.gcAssistTime += markAssistCpu
+<span id="L955" class="ln">   955&nbsp;&nbsp;</span>	s.gcDedicatedTime += markDedicatedCpu + markFractionalCpu
+<span id="L956" class="ln">   956&nbsp;&nbsp;</span>	s.gcIdleTime += markIdleCpu
+<span id="L957" class="ln">   957&nbsp;&nbsp;</span>	s.gcTotalTime += markAssistCpu + markDedicatedCpu + markFractionalCpu + markIdleCpu
+<span id="L958" class="ln">   958&nbsp;&nbsp;</span>
+<span id="L959" class="ln">   959&nbsp;&nbsp;</span>	<span class="comment">// Update cumulative scavenge CPU stats.</span>
+<span id="L960" class="ln">   960&nbsp;&nbsp;</span>	s.scavengeAssistTime += scavAssistCpu
+<span id="L961" class="ln">   961&nbsp;&nbsp;</span>	s.scavengeBgTime += scavBgCpu
+<span id="L962" class="ln">   962&nbsp;&nbsp;</span>	s.scavengeTotalTime += scavAssistCpu + scavBgCpu
+<span id="L963" class="ln">   963&nbsp;&nbsp;</span>
+<span id="L964" class="ln">   964&nbsp;&nbsp;</span>	<span class="comment">// Update total CPU.</span>
+<span id="L965" class="ln">   965&nbsp;&nbsp;</span>	s.totalTime = sched.totaltime + (now-sched.procresizetime)*int64(gomaxprocs)
+<span id="L966" class="ln">   966&nbsp;&nbsp;</span>	s.idleTime += sched.idleTime.Load()
+<span id="L967" class="ln">   967&nbsp;&nbsp;</span>
+<span id="L968" class="ln">   968&nbsp;&nbsp;</span>	<span class="comment">// Compute userTime. We compute this indirectly as everything that&#39;s not the above.</span>
+<span id="L969" class="ln">   969&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L970" class="ln">   970&nbsp;&nbsp;</span>	<span class="comment">// Since time spent in _Pgcstop is covered by gcPauseTime, and time spent in _Pidle</span>
+<span id="L971" class="ln">   971&nbsp;&nbsp;</span>	<span class="comment">// is covered by idleTime, what we&#39;re left with is time spent in _Prunning and _Psyscall,</span>
+<span id="L972" class="ln">   972&nbsp;&nbsp;</span>	<span class="comment">// the latter of which is fine because the P will either go idle or get used for something</span>
+<span id="L973" class="ln">   973&nbsp;&nbsp;</span>	<span class="comment">// else via sysmon. Meanwhile if we subtract GC time from whatever&#39;s left, we get non-GC</span>
+<span id="L974" class="ln">   974&nbsp;&nbsp;</span>	<span class="comment">// _Prunning time. Note that this still leaves time spent in sweeping and in the scheduler,</span>
+<span id="L975" class="ln">   975&nbsp;&nbsp;</span>	<span class="comment">// but that&#39;s fine. The overwhelming majority of this time will be actual user time.</span>
+<span id="L976" class="ln">   976&nbsp;&nbsp;</span>	s.userTime = s.totalTime - (s.gcTotalTime + s.scavengeTotalTime + s.idleTime)
+<span id="L977" class="ln">   977&nbsp;&nbsp;</span>}
+<span id="L978" class="ln">   978&nbsp;&nbsp;</span>
+</pre><p><a href="mstats.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

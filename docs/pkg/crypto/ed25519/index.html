@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>ed25519 - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package ed25519
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "crypto/ed25519"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+				<dd><a href="index.html#pkg-examples" class="examplesLink">Examples</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>Package ed25519 implements the Ed25519 signature algorithm. See
+<a href="https://ed25519.cr.yp.to/">https://ed25519.cr.yp.to/</a>.
+<p>These functions are also compatible with the “Ed25519” function defined in
+RFC 8032. However, unlike RFC 8032&apos;s formulation, this package&apos;s private key
+representation includes a public key suffix to make multiple signing
+operations with the same key more efficient. This package refers to the RFC
+8032 private key as the “seed”.
+
+				<div id="example__ed25519ctx" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example (Ed25519ctx)</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example (Ed25519ctx)</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">
+pub, priv, err := GenerateKey(nil)
+if err != nil {
+    log.Fatal(err)
+}
+
+msg := []byte(&#34;The quick brown fox jumps over the lazy dog&#34;)
+
+sig, err := priv.Sign(nil, msg, &amp;Options{
+    Context: &#34;Example_ed25519ctx&#34;,
+})
+if err != nil {
+    log.Fatal(err)
+}
+
+if err := VerifyWithOptions(pub, msg, sig, &amp;Options{
+    Context: &#34;Example_ed25519ctx&#34;,
+}); err != nil {
+    log.Fatal(&#34;invalid signature&#34;)
+}
+</pre>
+			
+		
+	</div>
+</div>
+
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+				<dd><a href="index.html#pkg-constants">Constants</a></dd>
+			
+			
+			
+				
+				<dd><a href="index.html#GenerateKey">func GenerateKey(rand io.Reader) (PublicKey, PrivateKey, error)</a></dd>
+			
+				
+				<dd><a href="index.html#Sign">func Sign(privateKey PrivateKey, message []byte) []byte</a></dd>
+			
+				
+				<dd><a href="index.html#Verify">func Verify(publicKey PublicKey, message, sig []byte) bool</a></dd>
+			
+				
+				<dd><a href="index.html#VerifyWithOptions">func VerifyWithOptions(publicKey PublicKey, message, sig []byte, opts *Options) error</a></dd>
+			
+			
+				
+				<dd><a href="index.html#Options">type Options</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Options.HashFunc">func (o *Options) HashFunc() crypto.Hash</a></dd>
+				
+			
+				
+				<dd><a href="index.html#PrivateKey">type PrivateKey</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewKeyFromSeed">func NewKeyFromSeed(seed []byte) PrivateKey</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#PrivateKey.Equal">func (priv PrivateKey) Equal(x crypto.PrivateKey) bool</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#PrivateKey.Public">func (priv PrivateKey) Public() crypto.PublicKey</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#PrivateKey.Seed">func (priv PrivateKey) Seed() []byte</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#PrivateKey.Sign">func (priv PrivateKey) Sign(rand io.Reader, message []byte, opts crypto.SignerOpts) (signature []byte, err error)</a></dd>
+				
+			
+				
+				<dd><a href="index.html#PublicKey">type PublicKey</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#PublicKey.Equal">func (pub PublicKey) Equal(x crypto.PublicKey) bool</a></dd>
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+		<div id="pkg-examples">
+			<h3>Examples</h3>
+			<div class="js-expandAll expandAll collapsed">(Expand All)</div>
+			<dl>
+			
+			<dd><a class="exampleLink" href="index.html#example__ed25519ctx">Package (Ed25519ctx)</a></dd>
+			
+			</dl>
+		</div>
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../../src/crypto/ed25519/ed25519.go">ed25519.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+			<h2 id="pkg-constants">Constants</h2>
+			
+				
+				<pre>const (
+    <span class="comment">// PublicKeySize is the size, in bytes, of public keys as used in this package.</span>
+    <span id="PublicKeySize">PublicKeySize</span> = 32
+    <span class="comment">// PrivateKeySize is the size, in bytes, of private keys as used in this package.</span>
+    <span id="PrivateKeySize">PrivateKeySize</span> = 64
+    <span class="comment">// SignatureSize is the size, in bytes, of signatures generated and verified by this package.</span>
+    <span id="SignatureSize">SignatureSize</span> = 64
+    <span class="comment">// SeedSize is the size, in bytes, of private key seeds. These are the private key representations used by RFC 8032.</span>
+    <span id="SeedSize">SeedSize</span> = 32
+)</pre>
+			
+		
+		
+		
+			
+			
+			<h2 id="GenerateKey">func <a href="../../../src/crypto/ed25519/ed25519.go?s=4922:4985#L128">GenerateKey</a>
+				<a class="permalink" href="index.html#GenerateKey">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func GenerateKey(rand <a href="../../io/index.html">io</a>.<a href="../../io/index.html#Reader">Reader</a>) (<a href="index.html#PublicKey">PublicKey</a>, <a href="index.html#PrivateKey">PrivateKey</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+			<p>GenerateKey generates a public/private key pair using entropy from rand.
+If rand is nil, <a href="http://localhost:8080/crypto/rand#Reader">crypto/rand.Reader</a> will be used.
+<p>The output of this function is deterministic, and equivalent to reading
+<a href="index.html#SeedSize">SeedSize</a> bytes from rand, and passing them to <a href="index.html#NewKeyFromSeed">NewKeyFromSeed</a>.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Sign">func <a href="../../../src/crypto/ed25519/ed25519.go?s=6333:6388#L176">Sign</a>
+				<a class="permalink" href="index.html#Sign">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Sign(privateKey <a href="index.html#PrivateKey">PrivateKey</a>, message []<a href="../../builtin/index.html#byte">byte</a>) []<a href="../../builtin/index.html#byte">byte</a></pre>
+			<p>Sign signs the message with privateKey and returns a signature. It will
+panic if len(privateKey) is not <a href="index.html#PrivateKeySize">PrivateKeySize</a>.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Verify">func <a href="../../../src/crypto/ed25519/ed25519.go?s=8742:8800#L251">Verify</a>
+				<a class="permalink" href="index.html#Verify">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Verify(publicKey <a href="index.html#PublicKey">PublicKey</a>, message, sig []<a href="../../builtin/index.html#byte">byte</a>) <a href="../../builtin/index.html#bool">bool</a></pre>
+			<p>Verify reports whether sig is a valid signature of message by publicKey. It
+will panic if len(publicKey) is not <a href="index.html#PublicKeySize">PublicKeySize</a>.
+
+			
+			
+
+		
+			
+			
+			<h2 id="VerifyWithOptions">func <a href="../../../src/crypto/ed25519/ed25519.go?s=9346:9431#L263">VerifyWithOptions</a>
+				<a class="permalink" href="index.html#VerifyWithOptions">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func VerifyWithOptions(publicKey <a href="index.html#PublicKey">PublicKey</a>, message, sig []<a href="../../builtin/index.html#byte">byte</a>, opts *<a href="index.html#Options">Options</a>) <a href="../../builtin/index.html#error">error</a></pre>
+			<p>VerifyWithOptions reports whether sig is a valid signature of message by
+publicKey. A valid signature is indicated by returning a nil error. It will
+panic if len(publicKey) is not <a href="index.html#PublicKeySize">PublicKeySize</a>.
+<p>If opts.Hash is <a href="http://localhost:8080/crypto#SHA512">crypto.SHA512</a>, the pre-hashed variant Ed25519ph is used and
+message is expected to be a SHA-512 hash, otherwise opts.Hash must be
+<a href="http://localhost:8080/crypto#Hash">crypto.Hash</a>(0) and the message must not be hashed, as Ed25519 performs two
+passes over messages to be signed.
+
+			
+			
+
+		
+		
+			
+			
+			<h2 id="Options">type <a href="../../../src/crypto/ed25519/ed25519.go?s=4288:4555#L111">Options</a>
+				<a class="permalink" href="index.html#Options">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Options can be used with <a href="index.html#PrivateKey.Sign">PrivateKey.Sign</a> or <a href="index.html#VerifyWithOptions">VerifyWithOptions</a>
+to select Ed25519 variants.
+
+			<pre>type Options struct {
+<span id="Options.Hash"></span>    <span class="comment">// Hash can be zero for regular Ed25519, or crypto.SHA512 for Ed25519ph.</span>
+    Hash <a href="../index.html">crypto</a>.<a href="../index.html#Hash">Hash</a>
+
+<span id="Options.Context"></span>    <span class="comment">// Context, if not empty, selects Ed25519ctx or provides the context string</span>
+    <span class="comment">// for Ed25519ph. It can be at most 255 bytes in length.</span>
+    Context <a href="../../builtin/index.html#string">string</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="Options.HashFunc">func (*Options) <a href="../../../src/crypto/ed25519/ed25519.go?s=4585:4625#L121">HashFunc</a>
+					<a class="permalink" href="index.html#Options.HashFunc">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (o *<a href="index.html#Options">Options</a>) HashFunc() <a href="../index.html">crypto</a>.<a href="../index.html#Hash">Hash</a></pre>
+				<p>HashFunc returns o.Hash.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="PrivateKey">type <a href="../../../src/crypto/ed25519/ed25519.go?s=1766:1788#L44">PrivateKey</a>
+				<a class="permalink" href="index.html#PrivateKey">&#xb6;</a>
+				
+				
+			</h2>
+			<p>PrivateKey is the type of Ed25519 private keys. It implements <a href="http://localhost:8080/crypto#Signer">crypto.Signer</a>.
+
+			<pre>type PrivateKey []<a href="../../builtin/index.html#byte">byte</a></pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="NewKeyFromSeed">func <a href="../../../src/crypto/ed25519/ed25519.go?s=5533:5576#L149">NewKeyFromSeed</a>
+					<a class="permalink" href="index.html#NewKeyFromSeed">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func NewKeyFromSeed(seed []<a href="../../builtin/index.html#byte">byte</a>) <a href="index.html#PrivateKey">PrivateKey</a></pre>
+				<p>NewKeyFromSeed calculates a private key from a seed. It will panic if
+len(seed) is not <a href="index.html#SeedSize">SeedSize</a>. This function is provided for interoperability
+with RFC 8032. RFC 8032&apos;s private keys correspond to seeds in this
+package.
+
+				
+				
+			
+
+			
+				
+				<h3 id="PrivateKey.Equal">func (PrivateKey) <a href="../../../src/crypto/ed25519/ed25519.go?s=2057:2111#L54">Equal</a>
+					<a class="permalink" href="index.html#PrivateKey.Equal">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (priv <a href="index.html#PrivateKey">PrivateKey</a>) Equal(x <a href="../index.html">crypto</a>.<a href="../index.html#PrivateKey">PrivateKey</a>) <a href="../../builtin/index.html#bool">bool</a></pre>
+				<p>Equal reports whether priv and x have the same value.
+
+				
+				
+				
+			
+				
+				<h3 id="PrivateKey.Public">func (PrivateKey) <a href="../../../src/crypto/ed25519/ed25519.go?s=1847:1895#L47">Public</a>
+					<a class="permalink" href="index.html#PrivateKey.Public">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (priv <a href="index.html#PrivateKey">PrivateKey</a>) Public() <a href="../index.html">crypto</a>.<a href="../index.html#PublicKey">PublicKey</a></pre>
+				<p>Public returns the <a href="index.html#PublicKey">PublicKey</a> corresponding to priv.
+
+				
+				
+				
+			
+				
+				<h3 id="PrivateKey.Seed">func (PrivateKey) <a href="../../../src/crypto/ed25519/ed25519.go?s=2399:2435#L65">Seed</a>
+					<a class="permalink" href="index.html#PrivateKey.Seed">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (priv <a href="index.html#PrivateKey">PrivateKey</a>) Seed() []<a href="../../builtin/index.html#byte">byte</a></pre>
+				<p>Seed returns the private key seed corresponding to priv. It is provided for
+interoperability with RFC 8032. RFC 8032&apos;s private keys correspond to seeds
+in this package.
+
+				
+				
+				
+			
+				
+				<h3 id="PrivateKey.Sign">func (PrivateKey) <a href="../../../src/crypto/ed25519/ed25519.go?s=2992:3105#L78">Sign</a>
+					<a class="permalink" href="index.html#PrivateKey.Sign">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (priv <a href="index.html#PrivateKey">PrivateKey</a>) Sign(rand <a href="../../io/index.html">io</a>.<a href="../../io/index.html#Reader">Reader</a>, message []<a href="../../builtin/index.html#byte">byte</a>, opts <a href="../index.html">crypto</a>.<a href="../index.html#SignerOpts">SignerOpts</a>) (signature []<a href="../../builtin/index.html#byte">byte</a>, err <a href="../../builtin/index.html#error">error</a>)</pre>
+				<p>Sign signs the given message with priv. rand is ignored and can be nil.
+<p>If opts.HashFunc() is <a href="http://localhost:8080/crypto#SHA512">crypto.SHA512</a>, the pre-hashed variant Ed25519ph is used
+and message is expected to be a SHA-512 hash, otherwise opts.HashFunc() must
+be <a href="http://localhost:8080/crypto#Hash">crypto.Hash</a>(0) and the message must not be hashed, as Ed25519 performs two
+passes over messages to be signed.
+<p>A value of type <a href="index.html#Options">Options</a> can be used as opts, or crypto.Hash(0) or
+crypto.SHA512 directly to select plain Ed25519 or Ed25519ph, respectively.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="PublicKey">type <a href="../../../src/crypto/ed25519/ed25519.go?s=1292:1313#L29">PublicKey</a>
+				<a class="permalink" href="index.html#PublicKey">&#xb6;</a>
+				
+				
+			</h2>
+			<p>PublicKey is the type of Ed25519 public keys.
+
+			<pre>type PublicKey []<a href="../../builtin/index.html#byte">byte</a></pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="PublicKey.Equal">func (PublicKey) <a href="../../../src/crypto/ed25519/ed25519.go?s=1525:1576#L35">Equal</a>
+					<a class="permalink" href="index.html#PublicKey.Equal">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (pub <a href="index.html#PublicKey">PublicKey</a>) Equal(x <a href="../index.html">crypto</a>.<a href="../index.html#PublicKey">PublicKey</a>) <a href="../../builtin/index.html#bool">bool</a></pre>
+				<p>Equal reports whether pub and x have the same value.
+
+				
+				
+				
+			
+		
+	
+
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

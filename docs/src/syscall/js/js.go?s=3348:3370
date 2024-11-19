@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>src/syscall/js/js.go - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="./js.go?s=3348:3370#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Source file
+    <a href="http://localhost:8080/src">src</a>/<a href="http://localhost:8080/src/syscall">syscall</a>/<a href="http://localhost:8080/src/syscall/js">js</a>/<span class="text-muted">js.go</span>
+  </h1>
+
+
+
+
+
+  <h2>
+    Documentation: <a href="http://localhost:8080/pkg/syscall/js">syscall/js</a>
+  </h2>
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1&nbsp;&nbsp;</span><span class="comment">// Copyright 2018 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2&nbsp;&nbsp;</span><span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3&nbsp;&nbsp;</span><span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4&nbsp;&nbsp;</span>
+<span id="L5" class="ln">     5&nbsp;&nbsp;</span><span class="comment">//go:build js &amp;&amp; wasm</span>
+<span id="L6" class="ln">     6&nbsp;&nbsp;</span>
+<span id="L7" class="ln">     7&nbsp;&nbsp;</span><span class="comment">// Package js gives access to the WebAssembly host environment when using the js/wasm architecture.</span>
+<span id="L8" class="ln">     8&nbsp;&nbsp;</span><span class="comment">// Its API is based on JavaScript semantics.</span>
+<span id="L9" class="ln">     9&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L10" class="ln">    10&nbsp;&nbsp;</span><span class="comment">// This package is EXPERIMENTAL. Its current scope is only to allow tests to run, but not yet to provide a</span>
+<span id="L11" class="ln">    11&nbsp;&nbsp;</span><span class="comment">// comprehensive API for users. It is exempt from the Go compatibility promise.</span>
+<span id="L12" class="ln">    12&nbsp;&nbsp;</span>package js
+<span id="L13" class="ln">    13&nbsp;&nbsp;</span>
+<span id="L14" class="ln">    14&nbsp;&nbsp;</span>import (
+<span id="L15" class="ln">    15&nbsp;&nbsp;</span>	&#34;runtime&#34;
+<span id="L16" class="ln">    16&nbsp;&nbsp;</span>	&#34;unsafe&#34;
+<span id="L17" class="ln">    17&nbsp;&nbsp;</span>)
+<span id="L18" class="ln">    18&nbsp;&nbsp;</span>
+<span id="L19" class="ln">    19&nbsp;&nbsp;</span><span class="comment">// ref is used to identify a JavaScript value, since the value itself can not be passed to WebAssembly.</span>
+<span id="L20" class="ln">    20&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L21" class="ln">    21&nbsp;&nbsp;</span><span class="comment">// The JavaScript value &#34;undefined&#34; is represented by the value 0.</span>
+<span id="L22" class="ln">    22&nbsp;&nbsp;</span><span class="comment">// A JavaScript number (64-bit float, except 0 and NaN) is represented by its IEEE 754 binary representation.</span>
+<span id="L23" class="ln">    23&nbsp;&nbsp;</span><span class="comment">// All other values are represented as an IEEE 754 binary representation of NaN with bits 0-31 used as</span>
+<span id="L24" class="ln">    24&nbsp;&nbsp;</span><span class="comment">// an ID and bits 32-34 used to differentiate between string, symbol, function and object.</span>
+<span id="L25" class="ln">    25&nbsp;&nbsp;</span>type ref uint64
+<span id="L26" class="ln">    26&nbsp;&nbsp;</span>
+<span id="L27" class="ln">    27&nbsp;&nbsp;</span><span class="comment">// nanHead are the upper 32 bits of a ref which are set if the value is not encoded as an IEEE 754 number (see above).</span>
+<span id="L28" class="ln">    28&nbsp;&nbsp;</span>const nanHead = 0x7FF80000
+<span id="L29" class="ln">    29&nbsp;&nbsp;</span>
+<span id="L30" class="ln">    30&nbsp;&nbsp;</span><span class="comment">// Value represents a JavaScript value. The zero value is the JavaScript value &#34;undefined&#34;.</span>
+<span id="L31" class="ln">    31&nbsp;&nbsp;</span><span class="comment">// Values can be checked for equality with the Equal method.</span>
+<span id="L32" class="ln">    32&nbsp;&nbsp;</span>type Value struct {
+<span id="L33" class="ln">    33&nbsp;&nbsp;</span>	_     [0]func() <span class="comment">// uncomparable; to make == not compile</span>
+<span id="L34" class="ln">    34&nbsp;&nbsp;</span>	ref   ref       <span class="comment">// identifies a JavaScript value, see ref type</span>
+<span id="L35" class="ln">    35&nbsp;&nbsp;</span>	gcPtr *ref      <span class="comment">// used to trigger the finalizer when the Value is not referenced any more</span>
+<span id="L36" class="ln">    36&nbsp;&nbsp;</span>}
+<span id="L37" class="ln">    37&nbsp;&nbsp;</span>
+<span id="L38" class="ln">    38&nbsp;&nbsp;</span>const (
+<span id="L39" class="ln">    39&nbsp;&nbsp;</span>	<span class="comment">// the type flags need to be in sync with wasm_exec.js</span>
+<span id="L40" class="ln">    40&nbsp;&nbsp;</span>	typeFlagNone = iota
+<span id="L41" class="ln">    41&nbsp;&nbsp;</span>	typeFlagObject
+<span id="L42" class="ln">    42&nbsp;&nbsp;</span>	typeFlagString
+<span id="L43" class="ln">    43&nbsp;&nbsp;</span>	typeFlagSymbol
+<span id="L44" class="ln">    44&nbsp;&nbsp;</span>	typeFlagFunction
+<span id="L45" class="ln">    45&nbsp;&nbsp;</span>)
+<span id="L46" class="ln">    46&nbsp;&nbsp;</span>
+<span id="L47" class="ln">    47&nbsp;&nbsp;</span>func makeValue(r ref) Value {
+<span id="L48" class="ln">    48&nbsp;&nbsp;</span>	var gcPtr *ref
+<span id="L49" class="ln">    49&nbsp;&nbsp;</span>	typeFlag := (r &gt;&gt; 32) &amp; 7
+<span id="L50" class="ln">    50&nbsp;&nbsp;</span>	if (r&gt;&gt;32)&amp;nanHead == nanHead &amp;&amp; typeFlag != typeFlagNone {
+<span id="L51" class="ln">    51&nbsp;&nbsp;</span>		gcPtr = new(ref)
+<span id="L52" class="ln">    52&nbsp;&nbsp;</span>		*gcPtr = r
+<span id="L53" class="ln">    53&nbsp;&nbsp;</span>		runtime.SetFinalizer(gcPtr, func(p *ref) {
+<span id="L54" class="ln">    54&nbsp;&nbsp;</span>			finalizeRef(*p)
+<span id="L55" class="ln">    55&nbsp;&nbsp;</span>		})
+<span id="L56" class="ln">    56&nbsp;&nbsp;</span>	}
+<span id="L57" class="ln">    57&nbsp;&nbsp;</span>
+<span id="L58" class="ln">    58&nbsp;&nbsp;</span>	return Value{ref: r, gcPtr: gcPtr}
+<span id="L59" class="ln">    59&nbsp;&nbsp;</span>}
+<span id="L60" class="ln">    60&nbsp;&nbsp;</span>
+<span id="L61" class="ln">    61&nbsp;&nbsp;</span><span class="comment">//go:wasmimport gojs syscall/js.finalizeRef</span>
+<span id="L62" class="ln">    62&nbsp;&nbsp;</span>func finalizeRef(r ref)
+<span id="L63" class="ln">    63&nbsp;&nbsp;</span>
+<span id="L64" class="ln">    64&nbsp;&nbsp;</span>func predefValue(id uint32, typeFlag byte) Value {
+<span id="L65" class="ln">    65&nbsp;&nbsp;</span>	return Value{ref: (nanHead|ref(typeFlag))&lt;&lt;32 | ref(id)}
+<span id="L66" class="ln">    66&nbsp;&nbsp;</span>}
+<span id="L67" class="ln">    67&nbsp;&nbsp;</span>
+<span id="L68" class="ln">    68&nbsp;&nbsp;</span>func floatValue(f float64) Value {
+<span id="L69" class="ln">    69&nbsp;&nbsp;</span>	if f == 0 {
+<span id="L70" class="ln">    70&nbsp;&nbsp;</span>		return valueZero
+<span id="L71" class="ln">    71&nbsp;&nbsp;</span>	}
+<span id="L72" class="ln">    72&nbsp;&nbsp;</span>	if f != f {
+<span id="L73" class="ln">    73&nbsp;&nbsp;</span>		return valueNaN
+<span id="L74" class="ln">    74&nbsp;&nbsp;</span>	}
+<span id="L75" class="ln">    75&nbsp;&nbsp;</span>	return Value{ref: *(*ref)(unsafe.Pointer(&amp;f))}
+<span id="L76" class="ln">    76&nbsp;&nbsp;</span>}
+<span id="L77" class="ln">    77&nbsp;&nbsp;</span>
+<span id="L78" class="ln">    78&nbsp;&nbsp;</span><span class="comment">// Error wraps a JavaScript error.</span>
+<span id="L79" class="ln">    79&nbsp;&nbsp;</span>type Error struct {
+<span id="L80" class="ln">    80&nbsp;&nbsp;</span>	<span class="comment">// Value is the underlying JavaScript error value.</span>
+<span id="L81" class="ln">    81&nbsp;&nbsp;</span>	Value
+<span id="L82" class="ln">    82&nbsp;&nbsp;</span>}
+<span id="L83" class="ln">    83&nbsp;&nbsp;</span>
+<span id="L84" class="ln">    84&nbsp;&nbsp;</span><span class="comment">// Error implements the error interface.</span>
+<span id="L85" class="ln">    85&nbsp;&nbsp;</span>func (e Error) Error() string {
+<span id="L86" class="ln">    86&nbsp;&nbsp;</span>	return &#34;JavaScript error: &#34; + e.Get(&#34;message&#34;).String()
+<span id="L87" class="ln">    87&nbsp;&nbsp;</span>}
+<span id="L88" class="ln">    88&nbsp;&nbsp;</span>
+<span id="L89" class="ln">    89&nbsp;&nbsp;</span>var (
+<span id="L90" class="ln">    90&nbsp;&nbsp;</span>	valueUndefined = Value{ref: 0}
+<span id="L91" class="ln">    91&nbsp;&nbsp;</span>	valueNaN       = predefValue(0, typeFlagNone)
+<span id="L92" class="ln">    92&nbsp;&nbsp;</span>	valueZero      = predefValue(1, typeFlagNone)
+<span id="L93" class="ln">    93&nbsp;&nbsp;</span>	valueNull      = predefValue(2, typeFlagNone)
+<span id="L94" class="ln">    94&nbsp;&nbsp;</span>	valueTrue      = predefValue(3, typeFlagNone)
+<span id="L95" class="ln">    95&nbsp;&nbsp;</span>	valueFalse     = predefValue(4, typeFlagNone)
+<span id="L96" class="ln">    96&nbsp;&nbsp;</span>	valueGlobal    = predefValue(5, typeFlagObject)
+<span id="L97" class="ln">    97&nbsp;&nbsp;</span>	jsGo           = predefValue(6, typeFlagObject) <span class="comment">// instance of the Go class in JavaScript</span>
+<span id="L98" class="ln">    98&nbsp;&nbsp;</span>
+<span id="L99" class="ln">    99&nbsp;&nbsp;</span>	objectConstructor = valueGlobal.Get(&#34;Object&#34;)
+<span id="L100" class="ln">   100&nbsp;&nbsp;</span>	arrayConstructor  = valueGlobal.Get(&#34;Array&#34;)
+<span id="L101" class="ln">   101&nbsp;&nbsp;</span>)
+<span id="L102" class="ln">   102&nbsp;&nbsp;</span>
+<span id="L103" class="ln">   103&nbsp;&nbsp;</span><span class="comment">// Equal reports whether v and w are equal according to JavaScript&#39;s === operator.</span>
+<span id="L104" class="ln">   104&nbsp;&nbsp;</span>func (v Value) Equal(w Value) bool {
+<span id="L105" class="ln">   105&nbsp;&nbsp;</span>	return v.ref == w.ref &amp;&amp; v.ref != valueNaN.ref
+<span id="L106" class="ln">   106&nbsp;&nbsp;</span>}
+<span id="L107" class="ln">   107&nbsp;&nbsp;</span>
+<span id="L108" class="ln">   108&nbsp;&nbsp;</span><span class="comment">// Undefined returns the JavaScript value &#34;undefined&#34;.</span>
+<span id="L109" class="ln">   109&nbsp;&nbsp;</span><span class="selection">func Undefined() Value</span> {
+<span id="L110" class="ln">   110&nbsp;&nbsp;</span>	return valueUndefined
+<span id="L111" class="ln">   111&nbsp;&nbsp;</span>}
+<span id="L112" class="ln">   112&nbsp;&nbsp;</span>
+<span id="L113" class="ln">   113&nbsp;&nbsp;</span><span class="comment">// IsUndefined reports whether v is the JavaScript value &#34;undefined&#34;.</span>
+<span id="L114" class="ln">   114&nbsp;&nbsp;</span>func (v Value) IsUndefined() bool {
+<span id="L115" class="ln">   115&nbsp;&nbsp;</span>	return v.ref == valueUndefined.ref
+<span id="L116" class="ln">   116&nbsp;&nbsp;</span>}
+<span id="L117" class="ln">   117&nbsp;&nbsp;</span>
+<span id="L118" class="ln">   118&nbsp;&nbsp;</span><span class="comment">// Null returns the JavaScript value &#34;null&#34;.</span>
+<span id="L119" class="ln">   119&nbsp;&nbsp;</span>func Null() Value {
+<span id="L120" class="ln">   120&nbsp;&nbsp;</span>	return valueNull
+<span id="L121" class="ln">   121&nbsp;&nbsp;</span>}
+<span id="L122" class="ln">   122&nbsp;&nbsp;</span>
+<span id="L123" class="ln">   123&nbsp;&nbsp;</span><span class="comment">// IsNull reports whether v is the JavaScript value &#34;null&#34;.</span>
+<span id="L124" class="ln">   124&nbsp;&nbsp;</span>func (v Value) IsNull() bool {
+<span id="L125" class="ln">   125&nbsp;&nbsp;</span>	return v.ref == valueNull.ref
+<span id="L126" class="ln">   126&nbsp;&nbsp;</span>}
+<span id="L127" class="ln">   127&nbsp;&nbsp;</span>
+<span id="L128" class="ln">   128&nbsp;&nbsp;</span><span class="comment">// IsNaN reports whether v is the JavaScript value &#34;NaN&#34;.</span>
+<span id="L129" class="ln">   129&nbsp;&nbsp;</span>func (v Value) IsNaN() bool {
+<span id="L130" class="ln">   130&nbsp;&nbsp;</span>	return v.ref == valueNaN.ref
+<span id="L131" class="ln">   131&nbsp;&nbsp;</span>}
+<span id="L132" class="ln">   132&nbsp;&nbsp;</span>
+<span id="L133" class="ln">   133&nbsp;&nbsp;</span><span class="comment">// Global returns the JavaScript global object, usually &#34;window&#34; or &#34;global&#34;.</span>
+<span id="L134" class="ln">   134&nbsp;&nbsp;</span>func Global() Value {
+<span id="L135" class="ln">   135&nbsp;&nbsp;</span>	return valueGlobal
+<span id="L136" class="ln">   136&nbsp;&nbsp;</span>}
+<span id="L137" class="ln">   137&nbsp;&nbsp;</span>
+<span id="L138" class="ln">   138&nbsp;&nbsp;</span><span class="comment">// ValueOf returns x as a JavaScript value:</span>
+<span id="L139" class="ln">   139&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L140" class="ln">   140&nbsp;&nbsp;</span><span class="comment">//	| Go                     | JavaScript             |</span>
+<span id="L141" class="ln">   141&nbsp;&nbsp;</span><span class="comment">//	| ---------------------- | ---------------------- |</span>
+<span id="L142" class="ln">   142&nbsp;&nbsp;</span><span class="comment">//	| js.Value               | [its value]            |</span>
+<span id="L143" class="ln">   143&nbsp;&nbsp;</span><span class="comment">//	| js.Func                | function               |</span>
+<span id="L144" class="ln">   144&nbsp;&nbsp;</span><span class="comment">//	| nil                    | null                   |</span>
+<span id="L145" class="ln">   145&nbsp;&nbsp;</span><span class="comment">//	| bool                   | boolean                |</span>
+<span id="L146" class="ln">   146&nbsp;&nbsp;</span><span class="comment">//	| integers and floats    | number                 |</span>
+<span id="L147" class="ln">   147&nbsp;&nbsp;</span><span class="comment">//	| string                 | string                 |</span>
+<span id="L148" class="ln">   148&nbsp;&nbsp;</span><span class="comment">//	| []interface{}          | new array              |</span>
+<span id="L149" class="ln">   149&nbsp;&nbsp;</span><span class="comment">//	| map[string]interface{} | new object             |</span>
+<span id="L150" class="ln">   150&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L151" class="ln">   151&nbsp;&nbsp;</span><span class="comment">// Panics if x is not one of the expected types.</span>
+<span id="L152" class="ln">   152&nbsp;&nbsp;</span>func ValueOf(x any) Value {
+<span id="L153" class="ln">   153&nbsp;&nbsp;</span>	switch x := x.(type) {
+<span id="L154" class="ln">   154&nbsp;&nbsp;</span>	case Value:
+<span id="L155" class="ln">   155&nbsp;&nbsp;</span>		return x
+<span id="L156" class="ln">   156&nbsp;&nbsp;</span>	case Func:
+<span id="L157" class="ln">   157&nbsp;&nbsp;</span>		return x.Value
+<span id="L158" class="ln">   158&nbsp;&nbsp;</span>	case nil:
+<span id="L159" class="ln">   159&nbsp;&nbsp;</span>		return valueNull
+<span id="L160" class="ln">   160&nbsp;&nbsp;</span>	case bool:
+<span id="L161" class="ln">   161&nbsp;&nbsp;</span>		if x {
+<span id="L162" class="ln">   162&nbsp;&nbsp;</span>			return valueTrue
+<span id="L163" class="ln">   163&nbsp;&nbsp;</span>		} else {
+<span id="L164" class="ln">   164&nbsp;&nbsp;</span>			return valueFalse
+<span id="L165" class="ln">   165&nbsp;&nbsp;</span>		}
+<span id="L166" class="ln">   166&nbsp;&nbsp;</span>	case int:
+<span id="L167" class="ln">   167&nbsp;&nbsp;</span>		return floatValue(float64(x))
+<span id="L168" class="ln">   168&nbsp;&nbsp;</span>	case int8:
+<span id="L169" class="ln">   169&nbsp;&nbsp;</span>		return floatValue(float64(x))
+<span id="L170" class="ln">   170&nbsp;&nbsp;</span>	case int16:
+<span id="L171" class="ln">   171&nbsp;&nbsp;</span>		return floatValue(float64(x))
+<span id="L172" class="ln">   172&nbsp;&nbsp;</span>	case int32:
+<span id="L173" class="ln">   173&nbsp;&nbsp;</span>		return floatValue(float64(x))
+<span id="L174" class="ln">   174&nbsp;&nbsp;</span>	case int64:
+<span id="L175" class="ln">   175&nbsp;&nbsp;</span>		return floatValue(float64(x))
+<span id="L176" class="ln">   176&nbsp;&nbsp;</span>	case uint:
+<span id="L177" class="ln">   177&nbsp;&nbsp;</span>		return floatValue(float64(x))
+<span id="L178" class="ln">   178&nbsp;&nbsp;</span>	case uint8:
+<span id="L179" class="ln">   179&nbsp;&nbsp;</span>		return floatValue(float64(x))
+<span id="L180" class="ln">   180&nbsp;&nbsp;</span>	case uint16:
+<span id="L181" class="ln">   181&nbsp;&nbsp;</span>		return floatValue(float64(x))
+<span id="L182" class="ln">   182&nbsp;&nbsp;</span>	case uint32:
+<span id="L183" class="ln">   183&nbsp;&nbsp;</span>		return floatValue(float64(x))
+<span id="L184" class="ln">   184&nbsp;&nbsp;</span>	case uint64:
+<span id="L185" class="ln">   185&nbsp;&nbsp;</span>		return floatValue(float64(x))
+<span id="L186" class="ln">   186&nbsp;&nbsp;</span>	case uintptr:
+<span id="L187" class="ln">   187&nbsp;&nbsp;</span>		return floatValue(float64(x))
+<span id="L188" class="ln">   188&nbsp;&nbsp;</span>	case unsafe.Pointer:
+<span id="L189" class="ln">   189&nbsp;&nbsp;</span>		return floatValue(float64(uintptr(x)))
+<span id="L190" class="ln">   190&nbsp;&nbsp;</span>	case float32:
+<span id="L191" class="ln">   191&nbsp;&nbsp;</span>		return floatValue(float64(x))
+<span id="L192" class="ln">   192&nbsp;&nbsp;</span>	case float64:
+<span id="L193" class="ln">   193&nbsp;&nbsp;</span>		return floatValue(x)
+<span id="L194" class="ln">   194&nbsp;&nbsp;</span>	case string:
+<span id="L195" class="ln">   195&nbsp;&nbsp;</span>		return makeValue(stringVal(x))
+<span id="L196" class="ln">   196&nbsp;&nbsp;</span>	case []any:
+<span id="L197" class="ln">   197&nbsp;&nbsp;</span>		a := arrayConstructor.New(len(x))
+<span id="L198" class="ln">   198&nbsp;&nbsp;</span>		for i, s := range x {
+<span id="L199" class="ln">   199&nbsp;&nbsp;</span>			a.SetIndex(i, s)
+<span id="L200" class="ln">   200&nbsp;&nbsp;</span>		}
+<span id="L201" class="ln">   201&nbsp;&nbsp;</span>		return a
+<span id="L202" class="ln">   202&nbsp;&nbsp;</span>	case map[string]any:
+<span id="L203" class="ln">   203&nbsp;&nbsp;</span>		o := objectConstructor.New()
+<span id="L204" class="ln">   204&nbsp;&nbsp;</span>		for k, v := range x {
+<span id="L205" class="ln">   205&nbsp;&nbsp;</span>			o.Set(k, v)
+<span id="L206" class="ln">   206&nbsp;&nbsp;</span>		}
+<span id="L207" class="ln">   207&nbsp;&nbsp;</span>		return o
+<span id="L208" class="ln">   208&nbsp;&nbsp;</span>	default:
+<span id="L209" class="ln">   209&nbsp;&nbsp;</span>		panic(&#34;ValueOf: invalid value&#34;)
+<span id="L210" class="ln">   210&nbsp;&nbsp;</span>	}
+<span id="L211" class="ln">   211&nbsp;&nbsp;</span>}
+<span id="L212" class="ln">   212&nbsp;&nbsp;</span>
+<span id="L213" class="ln">   213&nbsp;&nbsp;</span><span class="comment">//go:wasmimport gojs syscall/js.stringVal</span>
+<span id="L214" class="ln">   214&nbsp;&nbsp;</span>func stringVal(x string) ref
+<span id="L215" class="ln">   215&nbsp;&nbsp;</span>
+<span id="L216" class="ln">   216&nbsp;&nbsp;</span><span class="comment">// Type represents the JavaScript type of a Value.</span>
+<span id="L217" class="ln">   217&nbsp;&nbsp;</span>type Type int
+<span id="L218" class="ln">   218&nbsp;&nbsp;</span>
+<span id="L219" class="ln">   219&nbsp;&nbsp;</span>const (
+<span id="L220" class="ln">   220&nbsp;&nbsp;</span>	TypeUndefined Type = iota
+<span id="L221" class="ln">   221&nbsp;&nbsp;</span>	TypeNull
+<span id="L222" class="ln">   222&nbsp;&nbsp;</span>	TypeBoolean
+<span id="L223" class="ln">   223&nbsp;&nbsp;</span>	TypeNumber
+<span id="L224" class="ln">   224&nbsp;&nbsp;</span>	TypeString
+<span id="L225" class="ln">   225&nbsp;&nbsp;</span>	TypeSymbol
+<span id="L226" class="ln">   226&nbsp;&nbsp;</span>	TypeObject
+<span id="L227" class="ln">   227&nbsp;&nbsp;</span>	TypeFunction
+<span id="L228" class="ln">   228&nbsp;&nbsp;</span>)
+<span id="L229" class="ln">   229&nbsp;&nbsp;</span>
+<span id="L230" class="ln">   230&nbsp;&nbsp;</span>func (t Type) String() string {
+<span id="L231" class="ln">   231&nbsp;&nbsp;</span>	switch t {
+<span id="L232" class="ln">   232&nbsp;&nbsp;</span>	case TypeUndefined:
+<span id="L233" class="ln">   233&nbsp;&nbsp;</span>		return &#34;undefined&#34;
+<span id="L234" class="ln">   234&nbsp;&nbsp;</span>	case TypeNull:
+<span id="L235" class="ln">   235&nbsp;&nbsp;</span>		return &#34;null&#34;
+<span id="L236" class="ln">   236&nbsp;&nbsp;</span>	case TypeBoolean:
+<span id="L237" class="ln">   237&nbsp;&nbsp;</span>		return &#34;boolean&#34;
+<span id="L238" class="ln">   238&nbsp;&nbsp;</span>	case TypeNumber:
+<span id="L239" class="ln">   239&nbsp;&nbsp;</span>		return &#34;number&#34;
+<span id="L240" class="ln">   240&nbsp;&nbsp;</span>	case TypeString:
+<span id="L241" class="ln">   241&nbsp;&nbsp;</span>		return &#34;string&#34;
+<span id="L242" class="ln">   242&nbsp;&nbsp;</span>	case TypeSymbol:
+<span id="L243" class="ln">   243&nbsp;&nbsp;</span>		return &#34;symbol&#34;
+<span id="L244" class="ln">   244&nbsp;&nbsp;</span>	case TypeObject:
+<span id="L245" class="ln">   245&nbsp;&nbsp;</span>		return &#34;object&#34;
+<span id="L246" class="ln">   246&nbsp;&nbsp;</span>	case TypeFunction:
+<span id="L247" class="ln">   247&nbsp;&nbsp;</span>		return &#34;function&#34;
+<span id="L248" class="ln">   248&nbsp;&nbsp;</span>	default:
+<span id="L249" class="ln">   249&nbsp;&nbsp;</span>		panic(&#34;bad type&#34;)
+<span id="L250" class="ln">   250&nbsp;&nbsp;</span>	}
+<span id="L251" class="ln">   251&nbsp;&nbsp;</span>}
+<span id="L252" class="ln">   252&nbsp;&nbsp;</span>
+<span id="L253" class="ln">   253&nbsp;&nbsp;</span>func (t Type) isObject() bool {
+<span id="L254" class="ln">   254&nbsp;&nbsp;</span>	return t == TypeObject || t == TypeFunction
+<span id="L255" class="ln">   255&nbsp;&nbsp;</span>}
+<span id="L256" class="ln">   256&nbsp;&nbsp;</span>
+<span id="L257" class="ln">   257&nbsp;&nbsp;</span><span class="comment">// Type returns the JavaScript type of the value v. It is similar to JavaScript&#39;s typeof operator,</span>
+<span id="L258" class="ln">   258&nbsp;&nbsp;</span><span class="comment">// except that it returns TypeNull instead of TypeObject for null.</span>
+<span id="L259" class="ln">   259&nbsp;&nbsp;</span>func (v Value) Type() Type {
+<span id="L260" class="ln">   260&nbsp;&nbsp;</span>	switch v.ref {
+<span id="L261" class="ln">   261&nbsp;&nbsp;</span>	case valueUndefined.ref:
+<span id="L262" class="ln">   262&nbsp;&nbsp;</span>		return TypeUndefined
+<span id="L263" class="ln">   263&nbsp;&nbsp;</span>	case valueNull.ref:
+<span id="L264" class="ln">   264&nbsp;&nbsp;</span>		return TypeNull
+<span id="L265" class="ln">   265&nbsp;&nbsp;</span>	case valueTrue.ref, valueFalse.ref:
+<span id="L266" class="ln">   266&nbsp;&nbsp;</span>		return TypeBoolean
+<span id="L267" class="ln">   267&nbsp;&nbsp;</span>	}
+<span id="L268" class="ln">   268&nbsp;&nbsp;</span>	if v.isNumber() {
+<span id="L269" class="ln">   269&nbsp;&nbsp;</span>		return TypeNumber
+<span id="L270" class="ln">   270&nbsp;&nbsp;</span>	}
+<span id="L271" class="ln">   271&nbsp;&nbsp;</span>	typeFlag := (v.ref &gt;&gt; 32) &amp; 7
+<span id="L272" class="ln">   272&nbsp;&nbsp;</span>	switch typeFlag {
+<span id="L273" class="ln">   273&nbsp;&nbsp;</span>	case typeFlagObject:
+<span id="L274" class="ln">   274&nbsp;&nbsp;</span>		return TypeObject
+<span id="L275" class="ln">   275&nbsp;&nbsp;</span>	case typeFlagString:
+<span id="L276" class="ln">   276&nbsp;&nbsp;</span>		return TypeString
+<span id="L277" class="ln">   277&nbsp;&nbsp;</span>	case typeFlagSymbol:
+<span id="L278" class="ln">   278&nbsp;&nbsp;</span>		return TypeSymbol
+<span id="L279" class="ln">   279&nbsp;&nbsp;</span>	case typeFlagFunction:
+<span id="L280" class="ln">   280&nbsp;&nbsp;</span>		return TypeFunction
+<span id="L281" class="ln">   281&nbsp;&nbsp;</span>	default:
+<span id="L282" class="ln">   282&nbsp;&nbsp;</span>		panic(&#34;bad type flag&#34;)
+<span id="L283" class="ln">   283&nbsp;&nbsp;</span>	}
+<span id="L284" class="ln">   284&nbsp;&nbsp;</span>}
+<span id="L285" class="ln">   285&nbsp;&nbsp;</span>
+<span id="L286" class="ln">   286&nbsp;&nbsp;</span><span class="comment">// Get returns the JavaScript property p of value v.</span>
+<span id="L287" class="ln">   287&nbsp;&nbsp;</span><span class="comment">// It panics if v is not a JavaScript object.</span>
+<span id="L288" class="ln">   288&nbsp;&nbsp;</span>func (v Value) Get(p string) Value {
+<span id="L289" class="ln">   289&nbsp;&nbsp;</span>	if vType := v.Type(); !vType.isObject() {
+<span id="L290" class="ln">   290&nbsp;&nbsp;</span>		panic(&amp;ValueError{&#34;Value.Get&#34;, vType})
+<span id="L291" class="ln">   291&nbsp;&nbsp;</span>	}
+<span id="L292" class="ln">   292&nbsp;&nbsp;</span>	r := makeValue(valueGet(v.ref, p))
+<span id="L293" class="ln">   293&nbsp;&nbsp;</span>	runtime.KeepAlive(v)
+<span id="L294" class="ln">   294&nbsp;&nbsp;</span>	return r
+<span id="L295" class="ln">   295&nbsp;&nbsp;</span>}
+<span id="L296" class="ln">   296&nbsp;&nbsp;</span>
+<span id="L297" class="ln">   297&nbsp;&nbsp;</span><span class="comment">//go:wasmimport gojs syscall/js.valueGet</span>
+<span id="L298" class="ln">   298&nbsp;&nbsp;</span>func valueGet(v ref, p string) ref
+<span id="L299" class="ln">   299&nbsp;&nbsp;</span>
+<span id="L300" class="ln">   300&nbsp;&nbsp;</span><span class="comment">// Set sets the JavaScript property p of value v to ValueOf(x).</span>
+<span id="L301" class="ln">   301&nbsp;&nbsp;</span><span class="comment">// It panics if v is not a JavaScript object.</span>
+<span id="L302" class="ln">   302&nbsp;&nbsp;</span>func (v Value) Set(p string, x any) {
+<span id="L303" class="ln">   303&nbsp;&nbsp;</span>	if vType := v.Type(); !vType.isObject() {
+<span id="L304" class="ln">   304&nbsp;&nbsp;</span>		panic(&amp;ValueError{&#34;Value.Set&#34;, vType})
+<span id="L305" class="ln">   305&nbsp;&nbsp;</span>	}
+<span id="L306" class="ln">   306&nbsp;&nbsp;</span>	xv := ValueOf(x)
+<span id="L307" class="ln">   307&nbsp;&nbsp;</span>	valueSet(v.ref, p, xv.ref)
+<span id="L308" class="ln">   308&nbsp;&nbsp;</span>	runtime.KeepAlive(v)
+<span id="L309" class="ln">   309&nbsp;&nbsp;</span>	runtime.KeepAlive(xv)
+<span id="L310" class="ln">   310&nbsp;&nbsp;</span>}
+<span id="L311" class="ln">   311&nbsp;&nbsp;</span>
+<span id="L312" class="ln">   312&nbsp;&nbsp;</span><span class="comment">//go:wasmimport gojs syscall/js.valueSet</span>
+<span id="L313" class="ln">   313&nbsp;&nbsp;</span>func valueSet(v ref, p string, x ref)
+<span id="L314" class="ln">   314&nbsp;&nbsp;</span>
+<span id="L315" class="ln">   315&nbsp;&nbsp;</span><span class="comment">// Delete deletes the JavaScript property p of value v.</span>
+<span id="L316" class="ln">   316&nbsp;&nbsp;</span><span class="comment">// It panics if v is not a JavaScript object.</span>
+<span id="L317" class="ln">   317&nbsp;&nbsp;</span>func (v Value) Delete(p string) {
+<span id="L318" class="ln">   318&nbsp;&nbsp;</span>	if vType := v.Type(); !vType.isObject() {
+<span id="L319" class="ln">   319&nbsp;&nbsp;</span>		panic(&amp;ValueError{&#34;Value.Delete&#34;, vType})
+<span id="L320" class="ln">   320&nbsp;&nbsp;</span>	}
+<span id="L321" class="ln">   321&nbsp;&nbsp;</span>	valueDelete(v.ref, p)
+<span id="L322" class="ln">   322&nbsp;&nbsp;</span>	runtime.KeepAlive(v)
+<span id="L323" class="ln">   323&nbsp;&nbsp;</span>}
+<span id="L324" class="ln">   324&nbsp;&nbsp;</span>
+<span id="L325" class="ln">   325&nbsp;&nbsp;</span><span class="comment">//go:wasmimport gojs syscall/js.valueDelete</span>
+<span id="L326" class="ln">   326&nbsp;&nbsp;</span>func valueDelete(v ref, p string)
+<span id="L327" class="ln">   327&nbsp;&nbsp;</span>
+<span id="L328" class="ln">   328&nbsp;&nbsp;</span><span class="comment">// Index returns JavaScript index i of value v.</span>
+<span id="L329" class="ln">   329&nbsp;&nbsp;</span><span class="comment">// It panics if v is not a JavaScript object.</span>
+<span id="L330" class="ln">   330&nbsp;&nbsp;</span>func (v Value) Index(i int) Value {
+<span id="L331" class="ln">   331&nbsp;&nbsp;</span>	if vType := v.Type(); !vType.isObject() {
+<span id="L332" class="ln">   332&nbsp;&nbsp;</span>		panic(&amp;ValueError{&#34;Value.Index&#34;, vType})
+<span id="L333" class="ln">   333&nbsp;&nbsp;</span>	}
+<span id="L334" class="ln">   334&nbsp;&nbsp;</span>	r := makeValue(valueIndex(v.ref, i))
+<span id="L335" class="ln">   335&nbsp;&nbsp;</span>	runtime.KeepAlive(v)
+<span id="L336" class="ln">   336&nbsp;&nbsp;</span>	return r
+<span id="L337" class="ln">   337&nbsp;&nbsp;</span>}
+<span id="L338" class="ln">   338&nbsp;&nbsp;</span>
+<span id="L339" class="ln">   339&nbsp;&nbsp;</span><span class="comment">//go:wasmimport gojs syscall/js.valueIndex</span>
+<span id="L340" class="ln">   340&nbsp;&nbsp;</span>func valueIndex(v ref, i int) ref
+<span id="L341" class="ln">   341&nbsp;&nbsp;</span>
+<span id="L342" class="ln">   342&nbsp;&nbsp;</span><span class="comment">// SetIndex sets the JavaScript index i of value v to ValueOf(x).</span>
+<span id="L343" class="ln">   343&nbsp;&nbsp;</span><span class="comment">// It panics if v is not a JavaScript object.</span>
+<span id="L344" class="ln">   344&nbsp;&nbsp;</span>func (v Value) SetIndex(i int, x any) {
+<span id="L345" class="ln">   345&nbsp;&nbsp;</span>	if vType := v.Type(); !vType.isObject() {
+<span id="L346" class="ln">   346&nbsp;&nbsp;</span>		panic(&amp;ValueError{&#34;Value.SetIndex&#34;, vType})
+<span id="L347" class="ln">   347&nbsp;&nbsp;</span>	}
+<span id="L348" class="ln">   348&nbsp;&nbsp;</span>	xv := ValueOf(x)
+<span id="L349" class="ln">   349&nbsp;&nbsp;</span>	valueSetIndex(v.ref, i, xv.ref)
+<span id="L350" class="ln">   350&nbsp;&nbsp;</span>	runtime.KeepAlive(v)
+<span id="L351" class="ln">   351&nbsp;&nbsp;</span>	runtime.KeepAlive(xv)
+<span id="L352" class="ln">   352&nbsp;&nbsp;</span>}
+<span id="L353" class="ln">   353&nbsp;&nbsp;</span>
+<span id="L354" class="ln">   354&nbsp;&nbsp;</span><span class="comment">//go:wasmimport gojs syscall/js.valueSetIndex</span>
+<span id="L355" class="ln">   355&nbsp;&nbsp;</span>func valueSetIndex(v ref, i int, x ref)
+<span id="L356" class="ln">   356&nbsp;&nbsp;</span>
+<span id="L357" class="ln">   357&nbsp;&nbsp;</span>func makeArgs(args []any) ([]Value, []ref) {
+<span id="L358" class="ln">   358&nbsp;&nbsp;</span>	argVals := make([]Value, len(args))
+<span id="L359" class="ln">   359&nbsp;&nbsp;</span>	argRefs := make([]ref, len(args))
+<span id="L360" class="ln">   360&nbsp;&nbsp;</span>	for i, arg := range args {
+<span id="L361" class="ln">   361&nbsp;&nbsp;</span>		v := ValueOf(arg)
+<span id="L362" class="ln">   362&nbsp;&nbsp;</span>		argVals[i] = v
+<span id="L363" class="ln">   363&nbsp;&nbsp;</span>		argRefs[i] = v.ref
+<span id="L364" class="ln">   364&nbsp;&nbsp;</span>	}
+<span id="L365" class="ln">   365&nbsp;&nbsp;</span>	return argVals, argRefs
+<span id="L366" class="ln">   366&nbsp;&nbsp;</span>}
+<span id="L367" class="ln">   367&nbsp;&nbsp;</span>
+<span id="L368" class="ln">   368&nbsp;&nbsp;</span><span class="comment">// Length returns the JavaScript property &#34;length&#34; of v.</span>
+<span id="L369" class="ln">   369&nbsp;&nbsp;</span><span class="comment">// It panics if v is not a JavaScript object.</span>
+<span id="L370" class="ln">   370&nbsp;&nbsp;</span>func (v Value) Length() int {
+<span id="L371" class="ln">   371&nbsp;&nbsp;</span>	if vType := v.Type(); !vType.isObject() {
+<span id="L372" class="ln">   372&nbsp;&nbsp;</span>		panic(&amp;ValueError{&#34;Value.SetIndex&#34;, vType})
+<span id="L373" class="ln">   373&nbsp;&nbsp;</span>	}
+<span id="L374" class="ln">   374&nbsp;&nbsp;</span>	r := valueLength(v.ref)
+<span id="L375" class="ln">   375&nbsp;&nbsp;</span>	runtime.KeepAlive(v)
+<span id="L376" class="ln">   376&nbsp;&nbsp;</span>	return r
+<span id="L377" class="ln">   377&nbsp;&nbsp;</span>}
+<span id="L378" class="ln">   378&nbsp;&nbsp;</span>
+<span id="L379" class="ln">   379&nbsp;&nbsp;</span><span class="comment">//go:wasmimport gojs syscall/js.valueLength</span>
+<span id="L380" class="ln">   380&nbsp;&nbsp;</span>func valueLength(v ref) int
+<span id="L381" class="ln">   381&nbsp;&nbsp;</span>
+<span id="L382" class="ln">   382&nbsp;&nbsp;</span><span class="comment">// Call does a JavaScript call to the method m of value v with the given arguments.</span>
+<span id="L383" class="ln">   383&nbsp;&nbsp;</span><span class="comment">// It panics if v has no method m.</span>
+<span id="L384" class="ln">   384&nbsp;&nbsp;</span><span class="comment">// The arguments get mapped to JavaScript values according to the ValueOf function.</span>
+<span id="L385" class="ln">   385&nbsp;&nbsp;</span>func (v Value) Call(m string, args ...any) Value {
+<span id="L386" class="ln">   386&nbsp;&nbsp;</span>	argVals, argRefs := makeArgs(args)
+<span id="L387" class="ln">   387&nbsp;&nbsp;</span>	res, ok := valueCall(v.ref, m, argRefs)
+<span id="L388" class="ln">   388&nbsp;&nbsp;</span>	runtime.KeepAlive(v)
+<span id="L389" class="ln">   389&nbsp;&nbsp;</span>	runtime.KeepAlive(argVals)
+<span id="L390" class="ln">   390&nbsp;&nbsp;</span>	if !ok {
+<span id="L391" class="ln">   391&nbsp;&nbsp;</span>		if vType := v.Type(); !vType.isObject() { <span class="comment">// check here to avoid overhead in success case</span>
+<span id="L392" class="ln">   392&nbsp;&nbsp;</span>			panic(&amp;ValueError{&#34;Value.Call&#34;, vType})
+<span id="L393" class="ln">   393&nbsp;&nbsp;</span>		}
+<span id="L394" class="ln">   394&nbsp;&nbsp;</span>		if propType := v.Get(m).Type(); propType != TypeFunction {
+<span id="L395" class="ln">   395&nbsp;&nbsp;</span>			panic(&#34;syscall/js: Value.Call: property &#34; + m + &#34; is not a function, got &#34; + propType.String())
+<span id="L396" class="ln">   396&nbsp;&nbsp;</span>		}
+<span id="L397" class="ln">   397&nbsp;&nbsp;</span>		panic(Error{makeValue(res)})
+<span id="L398" class="ln">   398&nbsp;&nbsp;</span>	}
+<span id="L399" class="ln">   399&nbsp;&nbsp;</span>	return makeValue(res)
+<span id="L400" class="ln">   400&nbsp;&nbsp;</span>}
+<span id="L401" class="ln">   401&nbsp;&nbsp;</span>
+<span id="L402" class="ln">   402&nbsp;&nbsp;</span><span class="comment">//go:wasmimport gojs syscall/js.valueCall</span>
+<span id="L403" class="ln">   403&nbsp;&nbsp;</span><span class="comment">//go:nosplit</span>
+<span id="L404" class="ln">   404&nbsp;&nbsp;</span>func valueCall(v ref, m string, args []ref) (ref, bool)
+<span id="L405" class="ln">   405&nbsp;&nbsp;</span>
+<span id="L406" class="ln">   406&nbsp;&nbsp;</span><span class="comment">// Invoke does a JavaScript call of the value v with the given arguments.</span>
+<span id="L407" class="ln">   407&nbsp;&nbsp;</span><span class="comment">// It panics if v is not a JavaScript function.</span>
+<span id="L408" class="ln">   408&nbsp;&nbsp;</span><span class="comment">// The arguments get mapped to JavaScript values according to the ValueOf function.</span>
+<span id="L409" class="ln">   409&nbsp;&nbsp;</span>func (v Value) Invoke(args ...any) Value {
+<span id="L410" class="ln">   410&nbsp;&nbsp;</span>	argVals, argRefs := makeArgs(args)
+<span id="L411" class="ln">   411&nbsp;&nbsp;</span>	res, ok := valueInvoke(v.ref, argRefs)
+<span id="L412" class="ln">   412&nbsp;&nbsp;</span>	runtime.KeepAlive(v)
+<span id="L413" class="ln">   413&nbsp;&nbsp;</span>	runtime.KeepAlive(argVals)
+<span id="L414" class="ln">   414&nbsp;&nbsp;</span>	if !ok {
+<span id="L415" class="ln">   415&nbsp;&nbsp;</span>		if vType := v.Type(); vType != TypeFunction { <span class="comment">// check here to avoid overhead in success case</span>
+<span id="L416" class="ln">   416&nbsp;&nbsp;</span>			panic(&amp;ValueError{&#34;Value.Invoke&#34;, vType})
+<span id="L417" class="ln">   417&nbsp;&nbsp;</span>		}
+<span id="L418" class="ln">   418&nbsp;&nbsp;</span>		panic(Error{makeValue(res)})
+<span id="L419" class="ln">   419&nbsp;&nbsp;</span>	}
+<span id="L420" class="ln">   420&nbsp;&nbsp;</span>	return makeValue(res)
+<span id="L421" class="ln">   421&nbsp;&nbsp;</span>}
+<span id="L422" class="ln">   422&nbsp;&nbsp;</span>
+<span id="L423" class="ln">   423&nbsp;&nbsp;</span><span class="comment">//go:wasmimport gojs syscall/js.valueInvoke</span>
+<span id="L424" class="ln">   424&nbsp;&nbsp;</span>func valueInvoke(v ref, args []ref) (ref, bool)
+<span id="L425" class="ln">   425&nbsp;&nbsp;</span>
+<span id="L426" class="ln">   426&nbsp;&nbsp;</span><span class="comment">// New uses JavaScript&#39;s &#34;new&#34; operator with value v as constructor and the given arguments.</span>
+<span id="L427" class="ln">   427&nbsp;&nbsp;</span><span class="comment">// It panics if v is not a JavaScript function.</span>
+<span id="L428" class="ln">   428&nbsp;&nbsp;</span><span class="comment">// The arguments get mapped to JavaScript values according to the ValueOf function.</span>
+<span id="L429" class="ln">   429&nbsp;&nbsp;</span>func (v Value) New(args ...any) Value {
+<span id="L430" class="ln">   430&nbsp;&nbsp;</span>	argVals, argRefs := makeArgs(args)
+<span id="L431" class="ln">   431&nbsp;&nbsp;</span>	res, ok := valueNew(v.ref, argRefs)
+<span id="L432" class="ln">   432&nbsp;&nbsp;</span>	runtime.KeepAlive(v)
+<span id="L433" class="ln">   433&nbsp;&nbsp;</span>	runtime.KeepAlive(argVals)
+<span id="L434" class="ln">   434&nbsp;&nbsp;</span>	if !ok {
+<span id="L435" class="ln">   435&nbsp;&nbsp;</span>		if vType := v.Type(); vType != TypeFunction { <span class="comment">// check here to avoid overhead in success case</span>
+<span id="L436" class="ln">   436&nbsp;&nbsp;</span>			panic(&amp;ValueError{&#34;Value.Invoke&#34;, vType})
+<span id="L437" class="ln">   437&nbsp;&nbsp;</span>		}
+<span id="L438" class="ln">   438&nbsp;&nbsp;</span>		panic(Error{makeValue(res)})
+<span id="L439" class="ln">   439&nbsp;&nbsp;</span>	}
+<span id="L440" class="ln">   440&nbsp;&nbsp;</span>	return makeValue(res)
+<span id="L441" class="ln">   441&nbsp;&nbsp;</span>}
+<span id="L442" class="ln">   442&nbsp;&nbsp;</span>
+<span id="L443" class="ln">   443&nbsp;&nbsp;</span><span class="comment">//go:wasmimport gojs syscall/js.valueNew</span>
+<span id="L444" class="ln">   444&nbsp;&nbsp;</span>func valueNew(v ref, args []ref) (ref, bool)
+<span id="L445" class="ln">   445&nbsp;&nbsp;</span>
+<span id="L446" class="ln">   446&nbsp;&nbsp;</span>func (v Value) isNumber() bool {
+<span id="L447" class="ln">   447&nbsp;&nbsp;</span>	return v.ref == valueZero.ref ||
+<span id="L448" class="ln">   448&nbsp;&nbsp;</span>		v.ref == valueNaN.ref ||
+<span id="L449" class="ln">   449&nbsp;&nbsp;</span>		(v.ref != valueUndefined.ref &amp;&amp; (v.ref&gt;&gt;32)&amp;nanHead != nanHead)
+<span id="L450" class="ln">   450&nbsp;&nbsp;</span>}
+<span id="L451" class="ln">   451&nbsp;&nbsp;</span>
+<span id="L452" class="ln">   452&nbsp;&nbsp;</span>func (v Value) float(method string) float64 {
+<span id="L453" class="ln">   453&nbsp;&nbsp;</span>	if !v.isNumber() {
+<span id="L454" class="ln">   454&nbsp;&nbsp;</span>		panic(&amp;ValueError{method, v.Type()})
+<span id="L455" class="ln">   455&nbsp;&nbsp;</span>	}
+<span id="L456" class="ln">   456&nbsp;&nbsp;</span>	if v.ref == valueZero.ref {
+<span id="L457" class="ln">   457&nbsp;&nbsp;</span>		return 0
+<span id="L458" class="ln">   458&nbsp;&nbsp;</span>	}
+<span id="L459" class="ln">   459&nbsp;&nbsp;</span>	return *(*float64)(unsafe.Pointer(&amp;v.ref))
+<span id="L460" class="ln">   460&nbsp;&nbsp;</span>}
+<span id="L461" class="ln">   461&nbsp;&nbsp;</span>
+<span id="L462" class="ln">   462&nbsp;&nbsp;</span><span class="comment">// Float returns the value v as a float64.</span>
+<span id="L463" class="ln">   463&nbsp;&nbsp;</span><span class="comment">// It panics if v is not a JavaScript number.</span>
+<span id="L464" class="ln">   464&nbsp;&nbsp;</span>func (v Value) Float() float64 {
+<span id="L465" class="ln">   465&nbsp;&nbsp;</span>	return v.float(&#34;Value.Float&#34;)
+<span id="L466" class="ln">   466&nbsp;&nbsp;</span>}
+<span id="L467" class="ln">   467&nbsp;&nbsp;</span>
+<span id="L468" class="ln">   468&nbsp;&nbsp;</span><span class="comment">// Int returns the value v truncated to an int.</span>
+<span id="L469" class="ln">   469&nbsp;&nbsp;</span><span class="comment">// It panics if v is not a JavaScript number.</span>
+<span id="L470" class="ln">   470&nbsp;&nbsp;</span>func (v Value) Int() int {
+<span id="L471" class="ln">   471&nbsp;&nbsp;</span>	return int(v.float(&#34;Value.Int&#34;))
+<span id="L472" class="ln">   472&nbsp;&nbsp;</span>}
+<span id="L473" class="ln">   473&nbsp;&nbsp;</span>
+<span id="L474" class="ln">   474&nbsp;&nbsp;</span><span class="comment">// Bool returns the value v as a bool.</span>
+<span id="L475" class="ln">   475&nbsp;&nbsp;</span><span class="comment">// It panics if v is not a JavaScript boolean.</span>
+<span id="L476" class="ln">   476&nbsp;&nbsp;</span>func (v Value) Bool() bool {
+<span id="L477" class="ln">   477&nbsp;&nbsp;</span>	switch v.ref {
+<span id="L478" class="ln">   478&nbsp;&nbsp;</span>	case valueTrue.ref:
+<span id="L479" class="ln">   479&nbsp;&nbsp;</span>		return true
+<span id="L480" class="ln">   480&nbsp;&nbsp;</span>	case valueFalse.ref:
+<span id="L481" class="ln">   481&nbsp;&nbsp;</span>		return false
+<span id="L482" class="ln">   482&nbsp;&nbsp;</span>	default:
+<span id="L483" class="ln">   483&nbsp;&nbsp;</span>		panic(&amp;ValueError{&#34;Value.Bool&#34;, v.Type()})
+<span id="L484" class="ln">   484&nbsp;&nbsp;</span>	}
+<span id="L485" class="ln">   485&nbsp;&nbsp;</span>}
+<span id="L486" class="ln">   486&nbsp;&nbsp;</span>
+<span id="L487" class="ln">   487&nbsp;&nbsp;</span><span class="comment">// Truthy returns the JavaScript &#34;truthiness&#34; of the value v. In JavaScript,</span>
+<span id="L488" class="ln">   488&nbsp;&nbsp;</span><span class="comment">// false, 0, &#34;&#34;, null, undefined, and NaN are &#34;falsy&#34;, and everything else is</span>
+<span id="L489" class="ln">   489&nbsp;&nbsp;</span><span class="comment">// &#34;truthy&#34;. See https://developer.mozilla.org/en-US/docs/Glossary/Truthy.</span>
+<span id="L490" class="ln">   490&nbsp;&nbsp;</span>func (v Value) Truthy() bool {
+<span id="L491" class="ln">   491&nbsp;&nbsp;</span>	switch v.Type() {
+<span id="L492" class="ln">   492&nbsp;&nbsp;</span>	case TypeUndefined, TypeNull:
+<span id="L493" class="ln">   493&nbsp;&nbsp;</span>		return false
+<span id="L494" class="ln">   494&nbsp;&nbsp;</span>	case TypeBoolean:
+<span id="L495" class="ln">   495&nbsp;&nbsp;</span>		return v.Bool()
+<span id="L496" class="ln">   496&nbsp;&nbsp;</span>	case TypeNumber:
+<span id="L497" class="ln">   497&nbsp;&nbsp;</span>		return v.ref != valueNaN.ref &amp;&amp; v.ref != valueZero.ref
+<span id="L498" class="ln">   498&nbsp;&nbsp;</span>	case TypeString:
+<span id="L499" class="ln">   499&nbsp;&nbsp;</span>		return v.String() != &#34;&#34;
+<span id="L500" class="ln">   500&nbsp;&nbsp;</span>	case TypeSymbol, TypeFunction, TypeObject:
+<span id="L501" class="ln">   501&nbsp;&nbsp;</span>		return true
+<span id="L502" class="ln">   502&nbsp;&nbsp;</span>	default:
+<span id="L503" class="ln">   503&nbsp;&nbsp;</span>		panic(&#34;bad type&#34;)
+<span id="L504" class="ln">   504&nbsp;&nbsp;</span>	}
+<span id="L505" class="ln">   505&nbsp;&nbsp;</span>}
+<span id="L506" class="ln">   506&nbsp;&nbsp;</span>
+<span id="L507" class="ln">   507&nbsp;&nbsp;</span><span class="comment">// String returns the value v as a string.</span>
+<span id="L508" class="ln">   508&nbsp;&nbsp;</span><span class="comment">// String is a special case because of Go&#39;s String method convention. Unlike the other getters,</span>
+<span id="L509" class="ln">   509&nbsp;&nbsp;</span><span class="comment">// it does not panic if v&#39;s Type is not TypeString. Instead, it returns a string of the form &#34;&lt;T&gt;&#34;</span>
+<span id="L510" class="ln">   510&nbsp;&nbsp;</span><span class="comment">// or &#34;&lt;T: V&gt;&#34; where T is v&#39;s type and V is a string representation of v&#39;s value.</span>
+<span id="L511" class="ln">   511&nbsp;&nbsp;</span>func (v Value) String() string {
+<span id="L512" class="ln">   512&nbsp;&nbsp;</span>	switch v.Type() {
+<span id="L513" class="ln">   513&nbsp;&nbsp;</span>	case TypeString:
+<span id="L514" class="ln">   514&nbsp;&nbsp;</span>		return jsString(v)
+<span id="L515" class="ln">   515&nbsp;&nbsp;</span>	case TypeUndefined:
+<span id="L516" class="ln">   516&nbsp;&nbsp;</span>		return &#34;&lt;undefined&gt;&#34;
+<span id="L517" class="ln">   517&nbsp;&nbsp;</span>	case TypeNull:
+<span id="L518" class="ln">   518&nbsp;&nbsp;</span>		return &#34;&lt;null&gt;&#34;
+<span id="L519" class="ln">   519&nbsp;&nbsp;</span>	case TypeBoolean:
+<span id="L520" class="ln">   520&nbsp;&nbsp;</span>		return &#34;&lt;boolean: &#34; + jsString(v) + &#34;&gt;&#34;
+<span id="L521" class="ln">   521&nbsp;&nbsp;</span>	case TypeNumber:
+<span id="L522" class="ln">   522&nbsp;&nbsp;</span>		return &#34;&lt;number: &#34; + jsString(v) + &#34;&gt;&#34;
+<span id="L523" class="ln">   523&nbsp;&nbsp;</span>	case TypeSymbol:
+<span id="L524" class="ln">   524&nbsp;&nbsp;</span>		return &#34;&lt;symbol&gt;&#34;
+<span id="L525" class="ln">   525&nbsp;&nbsp;</span>	case TypeObject:
+<span id="L526" class="ln">   526&nbsp;&nbsp;</span>		return &#34;&lt;object&gt;&#34;
+<span id="L527" class="ln">   527&nbsp;&nbsp;</span>	case TypeFunction:
+<span id="L528" class="ln">   528&nbsp;&nbsp;</span>		return &#34;&lt;function&gt;&#34;
+<span id="L529" class="ln">   529&nbsp;&nbsp;</span>	default:
+<span id="L530" class="ln">   530&nbsp;&nbsp;</span>		panic(&#34;bad type&#34;)
+<span id="L531" class="ln">   531&nbsp;&nbsp;</span>	}
+<span id="L532" class="ln">   532&nbsp;&nbsp;</span>}
+<span id="L533" class="ln">   533&nbsp;&nbsp;</span>
+<span id="L534" class="ln">   534&nbsp;&nbsp;</span>func jsString(v Value) string {
+<span id="L535" class="ln">   535&nbsp;&nbsp;</span>	str, length := valuePrepareString(v.ref)
+<span id="L536" class="ln">   536&nbsp;&nbsp;</span>	runtime.KeepAlive(v)
+<span id="L537" class="ln">   537&nbsp;&nbsp;</span>	b := make([]byte, length)
+<span id="L538" class="ln">   538&nbsp;&nbsp;</span>	valueLoadString(str, b)
+<span id="L539" class="ln">   539&nbsp;&nbsp;</span>	finalizeRef(str)
+<span id="L540" class="ln">   540&nbsp;&nbsp;</span>	return string(b)
+<span id="L541" class="ln">   541&nbsp;&nbsp;</span>}
+<span id="L542" class="ln">   542&nbsp;&nbsp;</span>
+<span id="L543" class="ln">   543&nbsp;&nbsp;</span><span class="comment">//go:wasmimport gojs syscall/js.valuePrepareString</span>
+<span id="L544" class="ln">   544&nbsp;&nbsp;</span>func valuePrepareString(v ref) (ref, int)
+<span id="L545" class="ln">   545&nbsp;&nbsp;</span>
+<span id="L546" class="ln">   546&nbsp;&nbsp;</span><span class="comment">//go:wasmimport gojs syscall/js.valueLoadString</span>
+<span id="L547" class="ln">   547&nbsp;&nbsp;</span>func valueLoadString(v ref, b []byte)
+<span id="L548" class="ln">   548&nbsp;&nbsp;</span>
+<span id="L549" class="ln">   549&nbsp;&nbsp;</span><span class="comment">// InstanceOf reports whether v is an instance of type t according to JavaScript&#39;s instanceof operator.</span>
+<span id="L550" class="ln">   550&nbsp;&nbsp;</span>func (v Value) InstanceOf(t Value) bool {
+<span id="L551" class="ln">   551&nbsp;&nbsp;</span>	r := valueInstanceOf(v.ref, t.ref)
+<span id="L552" class="ln">   552&nbsp;&nbsp;</span>	runtime.KeepAlive(v)
+<span id="L553" class="ln">   553&nbsp;&nbsp;</span>	runtime.KeepAlive(t)
+<span id="L554" class="ln">   554&nbsp;&nbsp;</span>	return r
+<span id="L555" class="ln">   555&nbsp;&nbsp;</span>}
+<span id="L556" class="ln">   556&nbsp;&nbsp;</span>
+<span id="L557" class="ln">   557&nbsp;&nbsp;</span><span class="comment">//go:wasmimport gojs syscall/js.valueInstanceOf</span>
+<span id="L558" class="ln">   558&nbsp;&nbsp;</span>func valueInstanceOf(v ref, t ref) bool
+<span id="L559" class="ln">   559&nbsp;&nbsp;</span>
+<span id="L560" class="ln">   560&nbsp;&nbsp;</span><span class="comment">// A ValueError occurs when a Value method is invoked on</span>
+<span id="L561" class="ln">   561&nbsp;&nbsp;</span><span class="comment">// a Value that does not support it. Such cases are documented</span>
+<span id="L562" class="ln">   562&nbsp;&nbsp;</span><span class="comment">// in the description of each method.</span>
+<span id="L563" class="ln">   563&nbsp;&nbsp;</span>type ValueError struct {
+<span id="L564" class="ln">   564&nbsp;&nbsp;</span>	Method string
+<span id="L565" class="ln">   565&nbsp;&nbsp;</span>	Type   Type
+<span id="L566" class="ln">   566&nbsp;&nbsp;</span>}
+<span id="L567" class="ln">   567&nbsp;&nbsp;</span>
+<span id="L568" class="ln">   568&nbsp;&nbsp;</span>func (e *ValueError) Error() string {
+<span id="L569" class="ln">   569&nbsp;&nbsp;</span>	return &#34;syscall/js: call of &#34; + e.Method + &#34; on &#34; + e.Type.String()
+<span id="L570" class="ln">   570&nbsp;&nbsp;</span>}
+<span id="L571" class="ln">   571&nbsp;&nbsp;</span>
+<span id="L572" class="ln">   572&nbsp;&nbsp;</span><span class="comment">// CopyBytesToGo copies bytes from src to dst.</span>
+<span id="L573" class="ln">   573&nbsp;&nbsp;</span><span class="comment">// It panics if src is not a Uint8Array or Uint8ClampedArray.</span>
+<span id="L574" class="ln">   574&nbsp;&nbsp;</span><span class="comment">// It returns the number of bytes copied, which will be the minimum of the lengths of src and dst.</span>
+<span id="L575" class="ln">   575&nbsp;&nbsp;</span>func CopyBytesToGo(dst []byte, src Value) int {
+<span id="L576" class="ln">   576&nbsp;&nbsp;</span>	n, ok := copyBytesToGo(dst, src.ref)
+<span id="L577" class="ln">   577&nbsp;&nbsp;</span>	runtime.KeepAlive(src)
+<span id="L578" class="ln">   578&nbsp;&nbsp;</span>	if !ok {
+<span id="L579" class="ln">   579&nbsp;&nbsp;</span>		panic(&#34;syscall/js: CopyBytesToGo: expected src to be a Uint8Array or Uint8ClampedArray&#34;)
+<span id="L580" class="ln">   580&nbsp;&nbsp;</span>	}
+<span id="L581" class="ln">   581&nbsp;&nbsp;</span>	return n
+<span id="L582" class="ln">   582&nbsp;&nbsp;</span>}
+<span id="L583" class="ln">   583&nbsp;&nbsp;</span>
+<span id="L584" class="ln">   584&nbsp;&nbsp;</span><span class="comment">//go:wasmimport gojs syscall/js.copyBytesToGo</span>
+<span id="L585" class="ln">   585&nbsp;&nbsp;</span>func copyBytesToGo(dst []byte, src ref) (int, bool)
+<span id="L586" class="ln">   586&nbsp;&nbsp;</span>
+<span id="L587" class="ln">   587&nbsp;&nbsp;</span><span class="comment">// CopyBytesToJS copies bytes from src to dst.</span>
+<span id="L588" class="ln">   588&nbsp;&nbsp;</span><span class="comment">// It panics if dst is not a Uint8Array or Uint8ClampedArray.</span>
+<span id="L589" class="ln">   589&nbsp;&nbsp;</span><span class="comment">// It returns the number of bytes copied, which will be the minimum of the lengths of src and dst.</span>
+<span id="L590" class="ln">   590&nbsp;&nbsp;</span>func CopyBytesToJS(dst Value, src []byte) int {
+<span id="L591" class="ln">   591&nbsp;&nbsp;</span>	n, ok := copyBytesToJS(dst.ref, src)
+<span id="L592" class="ln">   592&nbsp;&nbsp;</span>	runtime.KeepAlive(dst)
+<span id="L593" class="ln">   593&nbsp;&nbsp;</span>	if !ok {
+<span id="L594" class="ln">   594&nbsp;&nbsp;</span>		panic(&#34;syscall/js: CopyBytesToJS: expected dst to be a Uint8Array or Uint8ClampedArray&#34;)
+<span id="L595" class="ln">   595&nbsp;&nbsp;</span>	}
+<span id="L596" class="ln">   596&nbsp;&nbsp;</span>	return n
+<span id="L597" class="ln">   597&nbsp;&nbsp;</span>}
+<span id="L598" class="ln">   598&nbsp;&nbsp;</span>
+<span id="L599" class="ln">   599&nbsp;&nbsp;</span><span class="comment">//go:wasmimport gojs syscall/js.copyBytesToJS</span>
+<span id="L600" class="ln">   600&nbsp;&nbsp;</span>func copyBytesToJS(dst ref, src []byte) (int, bool)
+<span id="L601" class="ln">   601&nbsp;&nbsp;</span>
+</pre><p><a href="js.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

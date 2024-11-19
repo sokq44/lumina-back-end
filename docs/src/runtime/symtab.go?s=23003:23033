@@ -1,0 +1,1240 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>src/runtime/symtab.go - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../index.html">GoDoc</a></div>
+<a href="./symtab.go?s=23003:23033#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Source file
+    <a href="http://localhost:8080/src">src</a>/<a href="http://localhost:8080/src/runtime">runtime</a>/<span class="text-muted">symtab.go</span>
+  </h1>
+
+
+
+
+
+  <h2>
+    Documentation: <a href="http://localhost:8080/pkg/runtime">runtime</a>
+  </h2>
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1&nbsp;&nbsp;</span><span class="comment">// Copyright 2014 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2&nbsp;&nbsp;</span><span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3&nbsp;&nbsp;</span><span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4&nbsp;&nbsp;</span>
+<span id="L5" class="ln">     5&nbsp;&nbsp;</span>package runtime
+<span id="L6" class="ln">     6&nbsp;&nbsp;</span>
+<span id="L7" class="ln">     7&nbsp;&nbsp;</span>import (
+<span id="L8" class="ln">     8&nbsp;&nbsp;</span>	&#34;internal/abi&#34;
+<span id="L9" class="ln">     9&nbsp;&nbsp;</span>	&#34;internal/goarch&#34;
+<span id="L10" class="ln">    10&nbsp;&nbsp;</span>	&#34;runtime/internal/atomic&#34;
+<span id="L11" class="ln">    11&nbsp;&nbsp;</span>	&#34;runtime/internal/sys&#34;
+<span id="L12" class="ln">    12&nbsp;&nbsp;</span>	&#34;unsafe&#34;
+<span id="L13" class="ln">    13&nbsp;&nbsp;</span>)
+<span id="L14" class="ln">    14&nbsp;&nbsp;</span>
+<span id="L15" class="ln">    15&nbsp;&nbsp;</span><span class="comment">// Frames may be used to get function/file/line information for a</span>
+<span id="L16" class="ln">    16&nbsp;&nbsp;</span><span class="comment">// slice of PC values returned by [Callers].</span>
+<span id="L17" class="ln">    17&nbsp;&nbsp;</span>type Frames struct {
+<span id="L18" class="ln">    18&nbsp;&nbsp;</span>	<span class="comment">// callers is a slice of PCs that have not yet been expanded to frames.</span>
+<span id="L19" class="ln">    19&nbsp;&nbsp;</span>	callers []uintptr
+<span id="L20" class="ln">    20&nbsp;&nbsp;</span>
+<span id="L21" class="ln">    21&nbsp;&nbsp;</span>	<span class="comment">// frames is a slice of Frames that have yet to be returned.</span>
+<span id="L22" class="ln">    22&nbsp;&nbsp;</span>	frames     []Frame
+<span id="L23" class="ln">    23&nbsp;&nbsp;</span>	frameStore [2]Frame
+<span id="L24" class="ln">    24&nbsp;&nbsp;</span>}
+<span id="L25" class="ln">    25&nbsp;&nbsp;</span>
+<span id="L26" class="ln">    26&nbsp;&nbsp;</span><span class="comment">// Frame is the information returned by [Frames] for each call frame.</span>
+<span id="L27" class="ln">    27&nbsp;&nbsp;</span>type Frame struct {
+<span id="L28" class="ln">    28&nbsp;&nbsp;</span>	<span class="comment">// PC is the program counter for the location in this frame.</span>
+<span id="L29" class="ln">    29&nbsp;&nbsp;</span>	<span class="comment">// For a frame that calls another frame, this will be the</span>
+<span id="L30" class="ln">    30&nbsp;&nbsp;</span>	<span class="comment">// program counter of a call instruction. Because of inlining,</span>
+<span id="L31" class="ln">    31&nbsp;&nbsp;</span>	<span class="comment">// multiple frames may have the same PC value, but different</span>
+<span id="L32" class="ln">    32&nbsp;&nbsp;</span>	<span class="comment">// symbolic information.</span>
+<span id="L33" class="ln">    33&nbsp;&nbsp;</span>	PC uintptr
+<span id="L34" class="ln">    34&nbsp;&nbsp;</span>
+<span id="L35" class="ln">    35&nbsp;&nbsp;</span>	<span class="comment">// Func is the Func value of this call frame. This may be nil</span>
+<span id="L36" class="ln">    36&nbsp;&nbsp;</span>	<span class="comment">// for non-Go code or fully inlined functions.</span>
+<span id="L37" class="ln">    37&nbsp;&nbsp;</span>	Func *Func
+<span id="L38" class="ln">    38&nbsp;&nbsp;</span>
+<span id="L39" class="ln">    39&nbsp;&nbsp;</span>	<span class="comment">// Function is the package path-qualified function name of</span>
+<span id="L40" class="ln">    40&nbsp;&nbsp;</span>	<span class="comment">// this call frame. If non-empty, this string uniquely</span>
+<span id="L41" class="ln">    41&nbsp;&nbsp;</span>	<span class="comment">// identifies a single function in the program.</span>
+<span id="L42" class="ln">    42&nbsp;&nbsp;</span>	<span class="comment">// This may be the empty string if not known.</span>
+<span id="L43" class="ln">    43&nbsp;&nbsp;</span>	<span class="comment">// If Func is not nil then Function == Func.Name().</span>
+<span id="L44" class="ln">    44&nbsp;&nbsp;</span>	Function string
+<span id="L45" class="ln">    45&nbsp;&nbsp;</span>
+<span id="L46" class="ln">    46&nbsp;&nbsp;</span>	<span class="comment">// File and Line are the file name and line number of the</span>
+<span id="L47" class="ln">    47&nbsp;&nbsp;</span>	<span class="comment">// location in this frame. For non-leaf frames, this will be</span>
+<span id="L48" class="ln">    48&nbsp;&nbsp;</span>	<span class="comment">// the location of a call. These may be the empty string and</span>
+<span id="L49" class="ln">    49&nbsp;&nbsp;</span>	<span class="comment">// zero, respectively, if not known.</span>
+<span id="L50" class="ln">    50&nbsp;&nbsp;</span>	File string
+<span id="L51" class="ln">    51&nbsp;&nbsp;</span>	Line int
+<span id="L52" class="ln">    52&nbsp;&nbsp;</span>
+<span id="L53" class="ln">    53&nbsp;&nbsp;</span>	<span class="comment">// startLine is the line number of the beginning of the function in</span>
+<span id="L54" class="ln">    54&nbsp;&nbsp;</span>	<span class="comment">// this frame. Specifically, it is the line number of the func keyword</span>
+<span id="L55" class="ln">    55&nbsp;&nbsp;</span>	<span class="comment">// for Go functions. Note that //line directives can change the</span>
+<span id="L56" class="ln">    56&nbsp;&nbsp;</span>	<span class="comment">// filename and/or line number arbitrarily within a function, meaning</span>
+<span id="L57" class="ln">    57&nbsp;&nbsp;</span>	<span class="comment">// that the Line - startLine offset is not always meaningful.</span>
+<span id="L58" class="ln">    58&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L59" class="ln">    59&nbsp;&nbsp;</span>	<span class="comment">// This may be zero if not known.</span>
+<span id="L60" class="ln">    60&nbsp;&nbsp;</span>	startLine int
+<span id="L61" class="ln">    61&nbsp;&nbsp;</span>
+<span id="L62" class="ln">    62&nbsp;&nbsp;</span>	<span class="comment">// Entry point program counter for the function; may be zero</span>
+<span id="L63" class="ln">    63&nbsp;&nbsp;</span>	<span class="comment">// if not known. If Func is not nil then Entry ==</span>
+<span id="L64" class="ln">    64&nbsp;&nbsp;</span>	<span class="comment">// Func.Entry().</span>
+<span id="L65" class="ln">    65&nbsp;&nbsp;</span>	Entry uintptr
+<span id="L66" class="ln">    66&nbsp;&nbsp;</span>
+<span id="L67" class="ln">    67&nbsp;&nbsp;</span>	<span class="comment">// The runtime&#39;s internal view of the function. This field</span>
+<span id="L68" class="ln">    68&nbsp;&nbsp;</span>	<span class="comment">// is set (funcInfo.valid() returns true) only for Go functions,</span>
+<span id="L69" class="ln">    69&nbsp;&nbsp;</span>	<span class="comment">// not for C functions.</span>
+<span id="L70" class="ln">    70&nbsp;&nbsp;</span>	funcInfo funcInfo
+<span id="L71" class="ln">    71&nbsp;&nbsp;</span>}
+<span id="L72" class="ln">    72&nbsp;&nbsp;</span>
+<span id="L73" class="ln">    73&nbsp;&nbsp;</span><span class="comment">// CallersFrames takes a slice of PC values returned by [Callers] and</span>
+<span id="L74" class="ln">    74&nbsp;&nbsp;</span><span class="comment">// prepares to return function/file/line information.</span>
+<span id="L75" class="ln">    75&nbsp;&nbsp;</span><span class="comment">// Do not change the slice until you are done with the [Frames].</span>
+<span id="L76" class="ln">    76&nbsp;&nbsp;</span>func CallersFrames(callers []uintptr) *Frames {
+<span id="L77" class="ln">    77&nbsp;&nbsp;</span>	f := &amp;Frames{callers: callers}
+<span id="L78" class="ln">    78&nbsp;&nbsp;</span>	f.frames = f.frameStore[:0]
+<span id="L79" class="ln">    79&nbsp;&nbsp;</span>	return f
+<span id="L80" class="ln">    80&nbsp;&nbsp;</span>}
+<span id="L81" class="ln">    81&nbsp;&nbsp;</span>
+<span id="L82" class="ln">    82&nbsp;&nbsp;</span><span class="comment">// Next returns a [Frame] representing the next call frame in the slice</span>
+<span id="L83" class="ln">    83&nbsp;&nbsp;</span><span class="comment">// of PC values. If it has already returned all call frames, Next</span>
+<span id="L84" class="ln">    84&nbsp;&nbsp;</span><span class="comment">// returns a zero [Frame].</span>
+<span id="L85" class="ln">    85&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L86" class="ln">    86&nbsp;&nbsp;</span><span class="comment">// The more result indicates whether the next call to Next will return</span>
+<span id="L87" class="ln">    87&nbsp;&nbsp;</span><span class="comment">// a valid [Frame]. It does not necessarily indicate whether this call</span>
+<span id="L88" class="ln">    88&nbsp;&nbsp;</span><span class="comment">// returned one.</span>
+<span id="L89" class="ln">    89&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L90" class="ln">    90&nbsp;&nbsp;</span><span class="comment">// See the [Frames] example for idiomatic usage.</span>
+<span id="L91" class="ln">    91&nbsp;&nbsp;</span>func (ci *Frames) Next() (frame Frame, more bool) {
+<span id="L92" class="ln">    92&nbsp;&nbsp;</span>	for len(ci.frames) &lt; 2 {
+<span id="L93" class="ln">    93&nbsp;&nbsp;</span>		<span class="comment">// Find the next frame.</span>
+<span id="L94" class="ln">    94&nbsp;&nbsp;</span>		<span class="comment">// We need to look for 2 frames so we know what</span>
+<span id="L95" class="ln">    95&nbsp;&nbsp;</span>		<span class="comment">// to return for the &#34;more&#34; result.</span>
+<span id="L96" class="ln">    96&nbsp;&nbsp;</span>		if len(ci.callers) == 0 {
+<span id="L97" class="ln">    97&nbsp;&nbsp;</span>			break
+<span id="L98" class="ln">    98&nbsp;&nbsp;</span>		}
+<span id="L99" class="ln">    99&nbsp;&nbsp;</span>		pc := ci.callers[0]
+<span id="L100" class="ln">   100&nbsp;&nbsp;</span>		ci.callers = ci.callers[1:]
+<span id="L101" class="ln">   101&nbsp;&nbsp;</span>		funcInfo := findfunc(pc)
+<span id="L102" class="ln">   102&nbsp;&nbsp;</span>		if !funcInfo.valid() {
+<span id="L103" class="ln">   103&nbsp;&nbsp;</span>			if cgoSymbolizer != nil {
+<span id="L104" class="ln">   104&nbsp;&nbsp;</span>				<span class="comment">// Pre-expand cgo frames. We could do this</span>
+<span id="L105" class="ln">   105&nbsp;&nbsp;</span>				<span class="comment">// incrementally, too, but there&#39;s no way to</span>
+<span id="L106" class="ln">   106&nbsp;&nbsp;</span>				<span class="comment">// avoid allocation in this case anyway.</span>
+<span id="L107" class="ln">   107&nbsp;&nbsp;</span>				ci.frames = append(ci.frames, expandCgoFrames(pc)...)
+<span id="L108" class="ln">   108&nbsp;&nbsp;</span>			}
+<span id="L109" class="ln">   109&nbsp;&nbsp;</span>			continue
+<span id="L110" class="ln">   110&nbsp;&nbsp;</span>		}
+<span id="L111" class="ln">   111&nbsp;&nbsp;</span>		f := funcInfo._Func()
+<span id="L112" class="ln">   112&nbsp;&nbsp;</span>		entry := f.Entry()
+<span id="L113" class="ln">   113&nbsp;&nbsp;</span>		if pc &gt; entry {
+<span id="L114" class="ln">   114&nbsp;&nbsp;</span>			<span class="comment">// We store the pc of the start of the instruction following</span>
+<span id="L115" class="ln">   115&nbsp;&nbsp;</span>			<span class="comment">// the instruction in question (the call or the inline mark).</span>
+<span id="L116" class="ln">   116&nbsp;&nbsp;</span>			<span class="comment">// This is done for historical reasons, and to make FuncForPC</span>
+<span id="L117" class="ln">   117&nbsp;&nbsp;</span>			<span class="comment">// work correctly for entries in the result of runtime.Callers.</span>
+<span id="L118" class="ln">   118&nbsp;&nbsp;</span>			pc--
+<span id="L119" class="ln">   119&nbsp;&nbsp;</span>		}
+<span id="L120" class="ln">   120&nbsp;&nbsp;</span>		<span class="comment">// It&#39;s important that interpret pc non-strictly as cgoTraceback may</span>
+<span id="L121" class="ln">   121&nbsp;&nbsp;</span>		<span class="comment">// have added bogus PCs with a valid funcInfo but invalid PCDATA.</span>
+<span id="L122" class="ln">   122&nbsp;&nbsp;</span>		u, uf := newInlineUnwinder(funcInfo, pc)
+<span id="L123" class="ln">   123&nbsp;&nbsp;</span>		sf := u.srcFunc(uf)
+<span id="L124" class="ln">   124&nbsp;&nbsp;</span>		if u.isInlined(uf) {
+<span id="L125" class="ln">   125&nbsp;&nbsp;</span>			<span class="comment">// Note: entry is not modified. It always refers to a real frame, not an inlined one.</span>
+<span id="L126" class="ln">   126&nbsp;&nbsp;</span>			<span class="comment">// File/line from funcline1 below are already correct.</span>
+<span id="L127" class="ln">   127&nbsp;&nbsp;</span>			f = nil
+<span id="L128" class="ln">   128&nbsp;&nbsp;</span>		}
+<span id="L129" class="ln">   129&nbsp;&nbsp;</span>		ci.frames = append(ci.frames, Frame{
+<span id="L130" class="ln">   130&nbsp;&nbsp;</span>			PC:        pc,
+<span id="L131" class="ln">   131&nbsp;&nbsp;</span>			Func:      f,
+<span id="L132" class="ln">   132&nbsp;&nbsp;</span>			Function:  funcNameForPrint(sf.name()),
+<span id="L133" class="ln">   133&nbsp;&nbsp;</span>			Entry:     entry,
+<span id="L134" class="ln">   134&nbsp;&nbsp;</span>			startLine: int(sf.startLine),
+<span id="L135" class="ln">   135&nbsp;&nbsp;</span>			funcInfo:  funcInfo,
+<span id="L136" class="ln">   136&nbsp;&nbsp;</span>			<span class="comment">// Note: File,Line set below</span>
+<span id="L137" class="ln">   137&nbsp;&nbsp;</span>		})
+<span id="L138" class="ln">   138&nbsp;&nbsp;</span>	}
+<span id="L139" class="ln">   139&nbsp;&nbsp;</span>
+<span id="L140" class="ln">   140&nbsp;&nbsp;</span>	<span class="comment">// Pop one frame from the frame list. Keep the rest.</span>
+<span id="L141" class="ln">   141&nbsp;&nbsp;</span>	<span class="comment">// Avoid allocation in the common case, which is 1 or 2 frames.</span>
+<span id="L142" class="ln">   142&nbsp;&nbsp;</span>	switch len(ci.frames) {
+<span id="L143" class="ln">   143&nbsp;&nbsp;</span>	case 0: <span class="comment">// In the rare case when there are no frames at all, we return Frame{}.</span>
+<span id="L144" class="ln">   144&nbsp;&nbsp;</span>		return
+<span id="L145" class="ln">   145&nbsp;&nbsp;</span>	case 1:
+<span id="L146" class="ln">   146&nbsp;&nbsp;</span>		frame = ci.frames[0]
+<span id="L147" class="ln">   147&nbsp;&nbsp;</span>		ci.frames = ci.frameStore[:0]
+<span id="L148" class="ln">   148&nbsp;&nbsp;</span>	case 2:
+<span id="L149" class="ln">   149&nbsp;&nbsp;</span>		frame = ci.frames[0]
+<span id="L150" class="ln">   150&nbsp;&nbsp;</span>		ci.frameStore[0] = ci.frames[1]
+<span id="L151" class="ln">   151&nbsp;&nbsp;</span>		ci.frames = ci.frameStore[:1]
+<span id="L152" class="ln">   152&nbsp;&nbsp;</span>	default:
+<span id="L153" class="ln">   153&nbsp;&nbsp;</span>		frame = ci.frames[0]
+<span id="L154" class="ln">   154&nbsp;&nbsp;</span>		ci.frames = ci.frames[1:]
+<span id="L155" class="ln">   155&nbsp;&nbsp;</span>	}
+<span id="L156" class="ln">   156&nbsp;&nbsp;</span>	more = len(ci.frames) &gt; 0
+<span id="L157" class="ln">   157&nbsp;&nbsp;</span>	if frame.funcInfo.valid() {
+<span id="L158" class="ln">   158&nbsp;&nbsp;</span>		<span class="comment">// Compute file/line just before we need to return it,</span>
+<span id="L159" class="ln">   159&nbsp;&nbsp;</span>		<span class="comment">// as it can be expensive. This avoids computing file/line</span>
+<span id="L160" class="ln">   160&nbsp;&nbsp;</span>		<span class="comment">// for the Frame we find but don&#39;t return. See issue 32093.</span>
+<span id="L161" class="ln">   161&nbsp;&nbsp;</span>		file, line := funcline1(frame.funcInfo, frame.PC, false)
+<span id="L162" class="ln">   162&nbsp;&nbsp;</span>		frame.File, frame.Line = file, int(line)
+<span id="L163" class="ln">   163&nbsp;&nbsp;</span>	}
+<span id="L164" class="ln">   164&nbsp;&nbsp;</span>	return
+<span id="L165" class="ln">   165&nbsp;&nbsp;</span>}
+<span id="L166" class="ln">   166&nbsp;&nbsp;</span>
+<span id="L167" class="ln">   167&nbsp;&nbsp;</span><span class="comment">// runtime_FrameStartLine returns the start line of the function in a Frame.</span>
+<span id="L168" class="ln">   168&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L169" class="ln">   169&nbsp;&nbsp;</span><span class="comment">//go:linkname runtime_FrameStartLine runtime/pprof.runtime_FrameStartLine</span>
+<span id="L170" class="ln">   170&nbsp;&nbsp;</span>func runtime_FrameStartLine(f *Frame) int {
+<span id="L171" class="ln">   171&nbsp;&nbsp;</span>	return f.startLine
+<span id="L172" class="ln">   172&nbsp;&nbsp;</span>}
+<span id="L173" class="ln">   173&nbsp;&nbsp;</span>
+<span id="L174" class="ln">   174&nbsp;&nbsp;</span><span class="comment">// runtime_FrameSymbolName returns the full symbol name of the function in a Frame.</span>
+<span id="L175" class="ln">   175&nbsp;&nbsp;</span><span class="comment">// For generic functions this differs from f.Function in that this doesn&#39;t replace</span>
+<span id="L176" class="ln">   176&nbsp;&nbsp;</span><span class="comment">// the shape name to &#34;...&#34;.</span>
+<span id="L177" class="ln">   177&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L178" class="ln">   178&nbsp;&nbsp;</span><span class="comment">//go:linkname runtime_FrameSymbolName runtime/pprof.runtime_FrameSymbolName</span>
+<span id="L179" class="ln">   179&nbsp;&nbsp;</span>func runtime_FrameSymbolName(f *Frame) string {
+<span id="L180" class="ln">   180&nbsp;&nbsp;</span>	if !f.funcInfo.valid() {
+<span id="L181" class="ln">   181&nbsp;&nbsp;</span>		return f.Function
+<span id="L182" class="ln">   182&nbsp;&nbsp;</span>	}
+<span id="L183" class="ln">   183&nbsp;&nbsp;</span>	u, uf := newInlineUnwinder(f.funcInfo, f.PC)
+<span id="L184" class="ln">   184&nbsp;&nbsp;</span>	sf := u.srcFunc(uf)
+<span id="L185" class="ln">   185&nbsp;&nbsp;</span>	return sf.name()
+<span id="L186" class="ln">   186&nbsp;&nbsp;</span>}
+<span id="L187" class="ln">   187&nbsp;&nbsp;</span>
+<span id="L188" class="ln">   188&nbsp;&nbsp;</span><span class="comment">// runtime_expandFinalInlineFrame expands the final pc in stk to include all</span>
+<span id="L189" class="ln">   189&nbsp;&nbsp;</span><span class="comment">// &#34;callers&#34; if pc is inline.</span>
+<span id="L190" class="ln">   190&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L191" class="ln">   191&nbsp;&nbsp;</span><span class="comment">//go:linkname runtime_expandFinalInlineFrame runtime/pprof.runtime_expandFinalInlineFrame</span>
+<span id="L192" class="ln">   192&nbsp;&nbsp;</span>func runtime_expandFinalInlineFrame(stk []uintptr) []uintptr {
+<span id="L193" class="ln">   193&nbsp;&nbsp;</span>	<span class="comment">// TODO: It would be more efficient to report only physical PCs to pprof and</span>
+<span id="L194" class="ln">   194&nbsp;&nbsp;</span>	<span class="comment">// just expand the whole stack.</span>
+<span id="L195" class="ln">   195&nbsp;&nbsp;</span>	if len(stk) == 0 {
+<span id="L196" class="ln">   196&nbsp;&nbsp;</span>		return stk
+<span id="L197" class="ln">   197&nbsp;&nbsp;</span>	}
+<span id="L198" class="ln">   198&nbsp;&nbsp;</span>	pc := stk[len(stk)-1]
+<span id="L199" class="ln">   199&nbsp;&nbsp;</span>	tracepc := pc - 1
+<span id="L200" class="ln">   200&nbsp;&nbsp;</span>
+<span id="L201" class="ln">   201&nbsp;&nbsp;</span>	f := findfunc(tracepc)
+<span id="L202" class="ln">   202&nbsp;&nbsp;</span>	if !f.valid() {
+<span id="L203" class="ln">   203&nbsp;&nbsp;</span>		<span class="comment">// Not a Go function.</span>
+<span id="L204" class="ln">   204&nbsp;&nbsp;</span>		return stk
+<span id="L205" class="ln">   205&nbsp;&nbsp;</span>	}
+<span id="L206" class="ln">   206&nbsp;&nbsp;</span>
+<span id="L207" class="ln">   207&nbsp;&nbsp;</span>	u, uf := newInlineUnwinder(f, tracepc)
+<span id="L208" class="ln">   208&nbsp;&nbsp;</span>	if !u.isInlined(uf) {
+<span id="L209" class="ln">   209&nbsp;&nbsp;</span>		<span class="comment">// Nothing inline at tracepc.</span>
+<span id="L210" class="ln">   210&nbsp;&nbsp;</span>		return stk
+<span id="L211" class="ln">   211&nbsp;&nbsp;</span>	}
+<span id="L212" class="ln">   212&nbsp;&nbsp;</span>
+<span id="L213" class="ln">   213&nbsp;&nbsp;</span>	<span class="comment">// Treat the previous func as normal. We haven&#39;t actually checked, but</span>
+<span id="L214" class="ln">   214&nbsp;&nbsp;</span>	<span class="comment">// since this pc was included in the stack, we know it shouldn&#39;t be</span>
+<span id="L215" class="ln">   215&nbsp;&nbsp;</span>	<span class="comment">// elided.</span>
+<span id="L216" class="ln">   216&nbsp;&nbsp;</span>	calleeID := abi.FuncIDNormal
+<span id="L217" class="ln">   217&nbsp;&nbsp;</span>
+<span id="L218" class="ln">   218&nbsp;&nbsp;</span>	<span class="comment">// Remove pc from stk; we&#39;ll re-add it below.</span>
+<span id="L219" class="ln">   219&nbsp;&nbsp;</span>	stk = stk[:len(stk)-1]
+<span id="L220" class="ln">   220&nbsp;&nbsp;</span>
+<span id="L221" class="ln">   221&nbsp;&nbsp;</span>	for ; uf.valid(); uf = u.next(uf) {
+<span id="L222" class="ln">   222&nbsp;&nbsp;</span>		funcID := u.srcFunc(uf).funcID
+<span id="L223" class="ln">   223&nbsp;&nbsp;</span>		if funcID == abi.FuncIDWrapper &amp;&amp; elideWrapperCalling(calleeID) {
+<span id="L224" class="ln">   224&nbsp;&nbsp;</span>			<span class="comment">// ignore wrappers</span>
+<span id="L225" class="ln">   225&nbsp;&nbsp;</span>		} else {
+<span id="L226" class="ln">   226&nbsp;&nbsp;</span>			stk = append(stk, uf.pc+1)
+<span id="L227" class="ln">   227&nbsp;&nbsp;</span>		}
+<span id="L228" class="ln">   228&nbsp;&nbsp;</span>		calleeID = funcID
+<span id="L229" class="ln">   229&nbsp;&nbsp;</span>	}
+<span id="L230" class="ln">   230&nbsp;&nbsp;</span>
+<span id="L231" class="ln">   231&nbsp;&nbsp;</span>	return stk
+<span id="L232" class="ln">   232&nbsp;&nbsp;</span>}
+<span id="L233" class="ln">   233&nbsp;&nbsp;</span>
+<span id="L234" class="ln">   234&nbsp;&nbsp;</span><span class="comment">// expandCgoFrames expands frame information for pc, known to be</span>
+<span id="L235" class="ln">   235&nbsp;&nbsp;</span><span class="comment">// a non-Go function, using the cgoSymbolizer hook. expandCgoFrames</span>
+<span id="L236" class="ln">   236&nbsp;&nbsp;</span><span class="comment">// returns nil if pc could not be expanded.</span>
+<span id="L237" class="ln">   237&nbsp;&nbsp;</span>func expandCgoFrames(pc uintptr) []Frame {
+<span id="L238" class="ln">   238&nbsp;&nbsp;</span>	arg := cgoSymbolizerArg{pc: pc}
+<span id="L239" class="ln">   239&nbsp;&nbsp;</span>	callCgoSymbolizer(&amp;arg)
+<span id="L240" class="ln">   240&nbsp;&nbsp;</span>
+<span id="L241" class="ln">   241&nbsp;&nbsp;</span>	if arg.file == nil &amp;&amp; arg.funcName == nil {
+<span id="L242" class="ln">   242&nbsp;&nbsp;</span>		<span class="comment">// No useful information from symbolizer.</span>
+<span id="L243" class="ln">   243&nbsp;&nbsp;</span>		return nil
+<span id="L244" class="ln">   244&nbsp;&nbsp;</span>	}
+<span id="L245" class="ln">   245&nbsp;&nbsp;</span>
+<span id="L246" class="ln">   246&nbsp;&nbsp;</span>	var frames []Frame
+<span id="L247" class="ln">   247&nbsp;&nbsp;</span>	for {
+<span id="L248" class="ln">   248&nbsp;&nbsp;</span>		frames = append(frames, Frame{
+<span id="L249" class="ln">   249&nbsp;&nbsp;</span>			PC:       pc,
+<span id="L250" class="ln">   250&nbsp;&nbsp;</span>			Func:     nil,
+<span id="L251" class="ln">   251&nbsp;&nbsp;</span>			Function: gostring(arg.funcName),
+<span id="L252" class="ln">   252&nbsp;&nbsp;</span>			File:     gostring(arg.file),
+<span id="L253" class="ln">   253&nbsp;&nbsp;</span>			Line:     int(arg.lineno),
+<span id="L254" class="ln">   254&nbsp;&nbsp;</span>			Entry:    arg.entry,
+<span id="L255" class="ln">   255&nbsp;&nbsp;</span>			<span class="comment">// funcInfo is zero, which implies !funcInfo.valid().</span>
+<span id="L256" class="ln">   256&nbsp;&nbsp;</span>			<span class="comment">// That ensures that we use the File/Line info given here.</span>
+<span id="L257" class="ln">   257&nbsp;&nbsp;</span>		})
+<span id="L258" class="ln">   258&nbsp;&nbsp;</span>		if arg.more == 0 {
+<span id="L259" class="ln">   259&nbsp;&nbsp;</span>			break
+<span id="L260" class="ln">   260&nbsp;&nbsp;</span>		}
+<span id="L261" class="ln">   261&nbsp;&nbsp;</span>		callCgoSymbolizer(&amp;arg)
+<span id="L262" class="ln">   262&nbsp;&nbsp;</span>	}
+<span id="L263" class="ln">   263&nbsp;&nbsp;</span>
+<span id="L264" class="ln">   264&nbsp;&nbsp;</span>	<span class="comment">// No more frames for this PC. Tell the symbolizer we are done.</span>
+<span id="L265" class="ln">   265&nbsp;&nbsp;</span>	<span class="comment">// We don&#39;t try to maintain a single cgoSymbolizerArg for the</span>
+<span id="L266" class="ln">   266&nbsp;&nbsp;</span>	<span class="comment">// whole use of Frames, because there would be no good way to tell</span>
+<span id="L267" class="ln">   267&nbsp;&nbsp;</span>	<span class="comment">// the symbolizer when we are done.</span>
+<span id="L268" class="ln">   268&nbsp;&nbsp;</span>	arg.pc = 0
+<span id="L269" class="ln">   269&nbsp;&nbsp;</span>	callCgoSymbolizer(&amp;arg)
+<span id="L270" class="ln">   270&nbsp;&nbsp;</span>
+<span id="L271" class="ln">   271&nbsp;&nbsp;</span>	return frames
+<span id="L272" class="ln">   272&nbsp;&nbsp;</span>}
+<span id="L273" class="ln">   273&nbsp;&nbsp;</span>
+<span id="L274" class="ln">   274&nbsp;&nbsp;</span><span class="comment">// NOTE: Func does not expose the actual unexported fields, because we return *Func</span>
+<span id="L275" class="ln">   275&nbsp;&nbsp;</span><span class="comment">// values to users, and we want to keep them from being able to overwrite the data</span>
+<span id="L276" class="ln">   276&nbsp;&nbsp;</span><span class="comment">// with (say) *f = Func{}.</span>
+<span id="L277" class="ln">   277&nbsp;&nbsp;</span><span class="comment">// All code operating on a *Func must call raw() to get the *_func</span>
+<span id="L278" class="ln">   278&nbsp;&nbsp;</span><span class="comment">// or funcInfo() to get the funcInfo instead.</span>
+<span id="L279" class="ln">   279&nbsp;&nbsp;</span>
+<span id="L280" class="ln">   280&nbsp;&nbsp;</span><span class="comment">// A Func represents a Go function in the running binary.</span>
+<span id="L281" class="ln">   281&nbsp;&nbsp;</span>type Func struct {
+<span id="L282" class="ln">   282&nbsp;&nbsp;</span>	opaque struct{} <span class="comment">// unexported field to disallow conversions</span>
+<span id="L283" class="ln">   283&nbsp;&nbsp;</span>}
+<span id="L284" class="ln">   284&nbsp;&nbsp;</span>
+<span id="L285" class="ln">   285&nbsp;&nbsp;</span>func (f *Func) raw() *_func {
+<span id="L286" class="ln">   286&nbsp;&nbsp;</span>	return (*_func)(unsafe.Pointer(f))
+<span id="L287" class="ln">   287&nbsp;&nbsp;</span>}
+<span id="L288" class="ln">   288&nbsp;&nbsp;</span>
+<span id="L289" class="ln">   289&nbsp;&nbsp;</span>func (f *Func) funcInfo() funcInfo {
+<span id="L290" class="ln">   290&nbsp;&nbsp;</span>	return f.raw().funcInfo()
+<span id="L291" class="ln">   291&nbsp;&nbsp;</span>}
+<span id="L292" class="ln">   292&nbsp;&nbsp;</span>
+<span id="L293" class="ln">   293&nbsp;&nbsp;</span>func (f *_func) funcInfo() funcInfo {
+<span id="L294" class="ln">   294&nbsp;&nbsp;</span>	<span class="comment">// Find the module containing fn. fn is located in the pclntable.</span>
+<span id="L295" class="ln">   295&nbsp;&nbsp;</span>	<span class="comment">// The unsafe.Pointer to uintptr conversions and arithmetic</span>
+<span id="L296" class="ln">   296&nbsp;&nbsp;</span>	<span class="comment">// are safe because we are working with module addresses.</span>
+<span id="L297" class="ln">   297&nbsp;&nbsp;</span>	ptr := uintptr(unsafe.Pointer(f))
+<span id="L298" class="ln">   298&nbsp;&nbsp;</span>	var mod *moduledata
+<span id="L299" class="ln">   299&nbsp;&nbsp;</span>	for datap := &amp;firstmoduledata; datap != nil; datap = datap.next {
+<span id="L300" class="ln">   300&nbsp;&nbsp;</span>		if len(datap.pclntable) == 0 {
+<span id="L301" class="ln">   301&nbsp;&nbsp;</span>			continue
+<span id="L302" class="ln">   302&nbsp;&nbsp;</span>		}
+<span id="L303" class="ln">   303&nbsp;&nbsp;</span>		base := uintptr(unsafe.Pointer(&amp;datap.pclntable[0]))
+<span id="L304" class="ln">   304&nbsp;&nbsp;</span>		if base &lt;= ptr &amp;&amp; ptr &lt; base+uintptr(len(datap.pclntable)) {
+<span id="L305" class="ln">   305&nbsp;&nbsp;</span>			mod = datap
+<span id="L306" class="ln">   306&nbsp;&nbsp;</span>			break
+<span id="L307" class="ln">   307&nbsp;&nbsp;</span>		}
+<span id="L308" class="ln">   308&nbsp;&nbsp;</span>	}
+<span id="L309" class="ln">   309&nbsp;&nbsp;</span>	return funcInfo{f, mod}
+<span id="L310" class="ln">   310&nbsp;&nbsp;</span>}
+<span id="L311" class="ln">   311&nbsp;&nbsp;</span>
+<span id="L312" class="ln">   312&nbsp;&nbsp;</span><span class="comment">// pcHeader holds data used by the pclntab lookups.</span>
+<span id="L313" class="ln">   313&nbsp;&nbsp;</span>type pcHeader struct {
+<span id="L314" class="ln">   314&nbsp;&nbsp;</span>	magic          uint32  <span class="comment">// 0xFFFFFFF1</span>
+<span id="L315" class="ln">   315&nbsp;&nbsp;</span>	pad1, pad2     uint8   <span class="comment">// 0,0</span>
+<span id="L316" class="ln">   316&nbsp;&nbsp;</span>	minLC          uint8   <span class="comment">// min instruction size</span>
+<span id="L317" class="ln">   317&nbsp;&nbsp;</span>	ptrSize        uint8   <span class="comment">// size of a ptr in bytes</span>
+<span id="L318" class="ln">   318&nbsp;&nbsp;</span>	nfunc          int     <span class="comment">// number of functions in the module</span>
+<span id="L319" class="ln">   319&nbsp;&nbsp;</span>	nfiles         uint    <span class="comment">// number of entries in the file tab</span>
+<span id="L320" class="ln">   320&nbsp;&nbsp;</span>	textStart      uintptr <span class="comment">// base for function entry PC offsets in this module, equal to moduledata.text</span>
+<span id="L321" class="ln">   321&nbsp;&nbsp;</span>	funcnameOffset uintptr <span class="comment">// offset to the funcnametab variable from pcHeader</span>
+<span id="L322" class="ln">   322&nbsp;&nbsp;</span>	cuOffset       uintptr <span class="comment">// offset to the cutab variable from pcHeader</span>
+<span id="L323" class="ln">   323&nbsp;&nbsp;</span>	filetabOffset  uintptr <span class="comment">// offset to the filetab variable from pcHeader</span>
+<span id="L324" class="ln">   324&nbsp;&nbsp;</span>	pctabOffset    uintptr <span class="comment">// offset to the pctab variable from pcHeader</span>
+<span id="L325" class="ln">   325&nbsp;&nbsp;</span>	pclnOffset     uintptr <span class="comment">// offset to the pclntab variable from pcHeader</span>
+<span id="L326" class="ln">   326&nbsp;&nbsp;</span>}
+<span id="L327" class="ln">   327&nbsp;&nbsp;</span>
+<span id="L328" class="ln">   328&nbsp;&nbsp;</span><span class="comment">// moduledata records information about the layout of the executable</span>
+<span id="L329" class="ln">   329&nbsp;&nbsp;</span><span class="comment">// image. It is written by the linker. Any changes here must be</span>
+<span id="L330" class="ln">   330&nbsp;&nbsp;</span><span class="comment">// matched changes to the code in cmd/link/internal/ld/symtab.go:symtab.</span>
+<span id="L331" class="ln">   331&nbsp;&nbsp;</span><span class="comment">// moduledata is stored in statically allocated non-pointer memory;</span>
+<span id="L332" class="ln">   332&nbsp;&nbsp;</span><span class="comment">// none of the pointers here are visible to the garbage collector.</span>
+<span id="L333" class="ln">   333&nbsp;&nbsp;</span>type moduledata struct {
+<span id="L334" class="ln">   334&nbsp;&nbsp;</span>	sys.NotInHeap <span class="comment">// Only in static data</span>
+<span id="L335" class="ln">   335&nbsp;&nbsp;</span>
+<span id="L336" class="ln">   336&nbsp;&nbsp;</span>	pcHeader     *pcHeader
+<span id="L337" class="ln">   337&nbsp;&nbsp;</span>	funcnametab  []byte
+<span id="L338" class="ln">   338&nbsp;&nbsp;</span>	cutab        []uint32
+<span id="L339" class="ln">   339&nbsp;&nbsp;</span>	filetab      []byte
+<span id="L340" class="ln">   340&nbsp;&nbsp;</span>	pctab        []byte
+<span id="L341" class="ln">   341&nbsp;&nbsp;</span>	pclntable    []byte
+<span id="L342" class="ln">   342&nbsp;&nbsp;</span>	ftab         []functab
+<span id="L343" class="ln">   343&nbsp;&nbsp;</span>	findfunctab  uintptr
+<span id="L344" class="ln">   344&nbsp;&nbsp;</span>	minpc, maxpc uintptr
+<span id="L345" class="ln">   345&nbsp;&nbsp;</span>
+<span id="L346" class="ln">   346&nbsp;&nbsp;</span>	text, etext           uintptr
+<span id="L347" class="ln">   347&nbsp;&nbsp;</span>	noptrdata, enoptrdata uintptr
+<span id="L348" class="ln">   348&nbsp;&nbsp;</span>	data, edata           uintptr
+<span id="L349" class="ln">   349&nbsp;&nbsp;</span>	bss, ebss             uintptr
+<span id="L350" class="ln">   350&nbsp;&nbsp;</span>	noptrbss, enoptrbss   uintptr
+<span id="L351" class="ln">   351&nbsp;&nbsp;</span>	covctrs, ecovctrs     uintptr
+<span id="L352" class="ln">   352&nbsp;&nbsp;</span>	end, gcdata, gcbss    uintptr
+<span id="L353" class="ln">   353&nbsp;&nbsp;</span>	types, etypes         uintptr
+<span id="L354" class="ln">   354&nbsp;&nbsp;</span>	rodata                uintptr
+<span id="L355" class="ln">   355&nbsp;&nbsp;</span>	gofunc                uintptr <span class="comment">// go.func.*</span>
+<span id="L356" class="ln">   356&nbsp;&nbsp;</span>
+<span id="L357" class="ln">   357&nbsp;&nbsp;</span>	textsectmap []textsect
+<span id="L358" class="ln">   358&nbsp;&nbsp;</span>	typelinks   []int32 <span class="comment">// offsets from types</span>
+<span id="L359" class="ln">   359&nbsp;&nbsp;</span>	itablinks   []*itab
+<span id="L360" class="ln">   360&nbsp;&nbsp;</span>
+<span id="L361" class="ln">   361&nbsp;&nbsp;</span>	ptab []ptabEntry
+<span id="L362" class="ln">   362&nbsp;&nbsp;</span>
+<span id="L363" class="ln">   363&nbsp;&nbsp;</span>	pluginpath string
+<span id="L364" class="ln">   364&nbsp;&nbsp;</span>	pkghashes  []modulehash
+<span id="L365" class="ln">   365&nbsp;&nbsp;</span>
+<span id="L366" class="ln">   366&nbsp;&nbsp;</span>	<span class="comment">// This slice records the initializing tasks that need to be</span>
+<span id="L367" class="ln">   367&nbsp;&nbsp;</span>	<span class="comment">// done to start up the program. It is built by the linker.</span>
+<span id="L368" class="ln">   368&nbsp;&nbsp;</span>	inittasks []*initTask
+<span id="L369" class="ln">   369&nbsp;&nbsp;</span>
+<span id="L370" class="ln">   370&nbsp;&nbsp;</span>	modulename   string
+<span id="L371" class="ln">   371&nbsp;&nbsp;</span>	modulehashes []modulehash
+<span id="L372" class="ln">   372&nbsp;&nbsp;</span>
+<span id="L373" class="ln">   373&nbsp;&nbsp;</span>	hasmain uint8 <span class="comment">// 1 if module contains the main function, 0 otherwise</span>
+<span id="L374" class="ln">   374&nbsp;&nbsp;</span>
+<span id="L375" class="ln">   375&nbsp;&nbsp;</span>	gcdatamask, gcbssmask bitvector
+<span id="L376" class="ln">   376&nbsp;&nbsp;</span>
+<span id="L377" class="ln">   377&nbsp;&nbsp;</span>	typemap map[typeOff]*_type <span class="comment">// offset to *_rtype in previous module</span>
+<span id="L378" class="ln">   378&nbsp;&nbsp;</span>
+<span id="L379" class="ln">   379&nbsp;&nbsp;</span>	bad bool <span class="comment">// module failed to load and should be ignored</span>
+<span id="L380" class="ln">   380&nbsp;&nbsp;</span>
+<span id="L381" class="ln">   381&nbsp;&nbsp;</span>	next *moduledata
+<span id="L382" class="ln">   382&nbsp;&nbsp;</span>}
+<span id="L383" class="ln">   383&nbsp;&nbsp;</span>
+<span id="L384" class="ln">   384&nbsp;&nbsp;</span><span class="comment">// A modulehash is used to compare the ABI of a new module or a</span>
+<span id="L385" class="ln">   385&nbsp;&nbsp;</span><span class="comment">// package in a new module with the loaded program.</span>
+<span id="L386" class="ln">   386&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L387" class="ln">   387&nbsp;&nbsp;</span><span class="comment">// For each shared library a module links against, the linker creates an entry in the</span>
+<span id="L388" class="ln">   388&nbsp;&nbsp;</span><span class="comment">// moduledata.modulehashes slice containing the name of the module, the abi hash seen</span>
+<span id="L389" class="ln">   389&nbsp;&nbsp;</span><span class="comment">// at link time and a pointer to the runtime abi hash. These are checked in</span>
+<span id="L390" class="ln">   390&nbsp;&nbsp;</span><span class="comment">// moduledataverify1 below.</span>
+<span id="L391" class="ln">   391&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L392" class="ln">   392&nbsp;&nbsp;</span><span class="comment">// For each loaded plugin, the pkghashes slice has a modulehash of the</span>
+<span id="L393" class="ln">   393&nbsp;&nbsp;</span><span class="comment">// newly loaded package that can be used to check the plugin&#39;s version of</span>
+<span id="L394" class="ln">   394&nbsp;&nbsp;</span><span class="comment">// a package against any previously loaded version of the package.</span>
+<span id="L395" class="ln">   395&nbsp;&nbsp;</span><span class="comment">// This is done in plugin.lastmoduleinit.</span>
+<span id="L396" class="ln">   396&nbsp;&nbsp;</span>type modulehash struct {
+<span id="L397" class="ln">   397&nbsp;&nbsp;</span>	modulename   string
+<span id="L398" class="ln">   398&nbsp;&nbsp;</span>	linktimehash string
+<span id="L399" class="ln">   399&nbsp;&nbsp;</span>	runtimehash  *string
+<span id="L400" class="ln">   400&nbsp;&nbsp;</span>}
+<span id="L401" class="ln">   401&nbsp;&nbsp;</span>
+<span id="L402" class="ln">   402&nbsp;&nbsp;</span><span class="comment">// pinnedTypemaps are the map[typeOff]*_type from the moduledata objects.</span>
+<span id="L403" class="ln">   403&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L404" class="ln">   404&nbsp;&nbsp;</span><span class="comment">// These typemap objects are allocated at run time on the heap, but the</span>
+<span id="L405" class="ln">   405&nbsp;&nbsp;</span><span class="comment">// only direct reference to them is in the moduledata, created by the</span>
+<span id="L406" class="ln">   406&nbsp;&nbsp;</span><span class="comment">// linker and marked SNOPTRDATA so it is ignored by the GC.</span>
+<span id="L407" class="ln">   407&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L408" class="ln">   408&nbsp;&nbsp;</span><span class="comment">// To make sure the map isn&#39;t collected, we keep a second reference here.</span>
+<span id="L409" class="ln">   409&nbsp;&nbsp;</span>var pinnedTypemaps []map[typeOff]*_type
+<span id="L410" class="ln">   410&nbsp;&nbsp;</span>
+<span id="L411" class="ln">   411&nbsp;&nbsp;</span>var firstmoduledata moduledata  <span class="comment">// linker symbol</span>
+<span id="L412" class="ln">   412&nbsp;&nbsp;</span>var lastmoduledatap *moduledata <span class="comment">// linker symbol</span>
+<span id="L413" class="ln">   413&nbsp;&nbsp;</span>var modulesSlice *[]*moduledata <span class="comment">// see activeModules</span>
+<span id="L414" class="ln">   414&nbsp;&nbsp;</span>
+<span id="L415" class="ln">   415&nbsp;&nbsp;</span><span class="comment">// activeModules returns a slice of active modules.</span>
+<span id="L416" class="ln">   416&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L417" class="ln">   417&nbsp;&nbsp;</span><span class="comment">// A module is active once its gcdatamask and gcbssmask have been</span>
+<span id="L418" class="ln">   418&nbsp;&nbsp;</span><span class="comment">// assembled and it is usable by the GC.</span>
+<span id="L419" class="ln">   419&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L420" class="ln">   420&nbsp;&nbsp;</span><span class="comment">// This is nosplit/nowritebarrier because it is called by the</span>
+<span id="L421" class="ln">   421&nbsp;&nbsp;</span><span class="comment">// cgo pointer checking code.</span>
+<span id="L422" class="ln">   422&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L423" class="ln">   423&nbsp;&nbsp;</span><span class="comment">//go:nosplit</span>
+<span id="L424" class="ln">   424&nbsp;&nbsp;</span><span class="comment">//go:nowritebarrier</span>
+<span id="L425" class="ln">   425&nbsp;&nbsp;</span>func activeModules() []*moduledata {
+<span id="L426" class="ln">   426&nbsp;&nbsp;</span>	p := (*[]*moduledata)(atomic.Loadp(unsafe.Pointer(&amp;modulesSlice)))
+<span id="L427" class="ln">   427&nbsp;&nbsp;</span>	if p == nil {
+<span id="L428" class="ln">   428&nbsp;&nbsp;</span>		return nil
+<span id="L429" class="ln">   429&nbsp;&nbsp;</span>	}
+<span id="L430" class="ln">   430&nbsp;&nbsp;</span>	return *p
+<span id="L431" class="ln">   431&nbsp;&nbsp;</span>}
+<span id="L432" class="ln">   432&nbsp;&nbsp;</span>
+<span id="L433" class="ln">   433&nbsp;&nbsp;</span><span class="comment">// modulesinit creates the active modules slice out of all loaded modules.</span>
+<span id="L434" class="ln">   434&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L435" class="ln">   435&nbsp;&nbsp;</span><span class="comment">// When a module is first loaded by the dynamic linker, an .init_array</span>
+<span id="L436" class="ln">   436&nbsp;&nbsp;</span><span class="comment">// function (written by cmd/link) is invoked to call addmoduledata,</span>
+<span id="L437" class="ln">   437&nbsp;&nbsp;</span><span class="comment">// appending to the module to the linked list that starts with</span>
+<span id="L438" class="ln">   438&nbsp;&nbsp;</span><span class="comment">// firstmoduledata.</span>
+<span id="L439" class="ln">   439&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L440" class="ln">   440&nbsp;&nbsp;</span><span class="comment">// There are two times this can happen in the lifecycle of a Go</span>
+<span id="L441" class="ln">   441&nbsp;&nbsp;</span><span class="comment">// program. First, if compiled with -linkshared, a number of modules</span>
+<span id="L442" class="ln">   442&nbsp;&nbsp;</span><span class="comment">// built with -buildmode=shared can be loaded at program initialization.</span>
+<span id="L443" class="ln">   443&nbsp;&nbsp;</span><span class="comment">// Second, a Go program can load a module while running that was built</span>
+<span id="L444" class="ln">   444&nbsp;&nbsp;</span><span class="comment">// with -buildmode=plugin.</span>
+<span id="L445" class="ln">   445&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L446" class="ln">   446&nbsp;&nbsp;</span><span class="comment">// After loading, this function is called which initializes the</span>
+<span id="L447" class="ln">   447&nbsp;&nbsp;</span><span class="comment">// moduledata so it is usable by the GC and creates a new activeModules</span>
+<span id="L448" class="ln">   448&nbsp;&nbsp;</span><span class="comment">// list.</span>
+<span id="L449" class="ln">   449&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L450" class="ln">   450&nbsp;&nbsp;</span><span class="comment">// Only one goroutine may call modulesinit at a time.</span>
+<span id="L451" class="ln">   451&nbsp;&nbsp;</span>func modulesinit() {
+<span id="L452" class="ln">   452&nbsp;&nbsp;</span>	modules := new([]*moduledata)
+<span id="L453" class="ln">   453&nbsp;&nbsp;</span>	for md := &amp;firstmoduledata; md != nil; md = md.next {
+<span id="L454" class="ln">   454&nbsp;&nbsp;</span>		if md.bad {
+<span id="L455" class="ln">   455&nbsp;&nbsp;</span>			continue
+<span id="L456" class="ln">   456&nbsp;&nbsp;</span>		}
+<span id="L457" class="ln">   457&nbsp;&nbsp;</span>		*modules = append(*modules, md)
+<span id="L458" class="ln">   458&nbsp;&nbsp;</span>		if md.gcdatamask == (bitvector{}) {
+<span id="L459" class="ln">   459&nbsp;&nbsp;</span>			scanDataSize := md.edata - md.data
+<span id="L460" class="ln">   460&nbsp;&nbsp;</span>			md.gcdatamask = progToPointerMask((*byte)(unsafe.Pointer(md.gcdata)), scanDataSize)
+<span id="L461" class="ln">   461&nbsp;&nbsp;</span>			scanBSSSize := md.ebss - md.bss
+<span id="L462" class="ln">   462&nbsp;&nbsp;</span>			md.gcbssmask = progToPointerMask((*byte)(unsafe.Pointer(md.gcbss)), scanBSSSize)
+<span id="L463" class="ln">   463&nbsp;&nbsp;</span>			gcController.addGlobals(int64(scanDataSize + scanBSSSize))
+<span id="L464" class="ln">   464&nbsp;&nbsp;</span>		}
+<span id="L465" class="ln">   465&nbsp;&nbsp;</span>	}
+<span id="L466" class="ln">   466&nbsp;&nbsp;</span>
+<span id="L467" class="ln">   467&nbsp;&nbsp;</span>	<span class="comment">// Modules appear in the moduledata linked list in the order they are</span>
+<span id="L468" class="ln">   468&nbsp;&nbsp;</span>	<span class="comment">// loaded by the dynamic loader, with one exception: the</span>
+<span id="L469" class="ln">   469&nbsp;&nbsp;</span>	<span class="comment">// firstmoduledata itself the module that contains the runtime. This</span>
+<span id="L470" class="ln">   470&nbsp;&nbsp;</span>	<span class="comment">// is not always the first module (when using -buildmode=shared, it</span>
+<span id="L471" class="ln">   471&nbsp;&nbsp;</span>	<span class="comment">// is typically libstd.so, the second module). The order matters for</span>
+<span id="L472" class="ln">   472&nbsp;&nbsp;</span>	<span class="comment">// typelinksinit, so we swap the first module with whatever module</span>
+<span id="L473" class="ln">   473&nbsp;&nbsp;</span>	<span class="comment">// contains the main function.</span>
+<span id="L474" class="ln">   474&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L475" class="ln">   475&nbsp;&nbsp;</span>	<span class="comment">// See Issue #18729.</span>
+<span id="L476" class="ln">   476&nbsp;&nbsp;</span>	for i, md := range *modules {
+<span id="L477" class="ln">   477&nbsp;&nbsp;</span>		if md.hasmain != 0 {
+<span id="L478" class="ln">   478&nbsp;&nbsp;</span>			(*modules)[0] = md
+<span id="L479" class="ln">   479&nbsp;&nbsp;</span>			(*modules)[i] = &amp;firstmoduledata
+<span id="L480" class="ln">   480&nbsp;&nbsp;</span>			break
+<span id="L481" class="ln">   481&nbsp;&nbsp;</span>		}
+<span id="L482" class="ln">   482&nbsp;&nbsp;</span>	}
+<span id="L483" class="ln">   483&nbsp;&nbsp;</span>
+<span id="L484" class="ln">   484&nbsp;&nbsp;</span>	atomicstorep(unsafe.Pointer(&amp;modulesSlice), unsafe.Pointer(modules))
+<span id="L485" class="ln">   485&nbsp;&nbsp;</span>}
+<span id="L486" class="ln">   486&nbsp;&nbsp;</span>
+<span id="L487" class="ln">   487&nbsp;&nbsp;</span>type functab struct {
+<span id="L488" class="ln">   488&nbsp;&nbsp;</span>	entryoff uint32 <span class="comment">// relative to runtime.text</span>
+<span id="L489" class="ln">   489&nbsp;&nbsp;</span>	funcoff  uint32
+<span id="L490" class="ln">   490&nbsp;&nbsp;</span>}
+<span id="L491" class="ln">   491&nbsp;&nbsp;</span>
+<span id="L492" class="ln">   492&nbsp;&nbsp;</span><span class="comment">// Mapping information for secondary text sections</span>
+<span id="L493" class="ln">   493&nbsp;&nbsp;</span>
+<span id="L494" class="ln">   494&nbsp;&nbsp;</span>type textsect struct {
+<span id="L495" class="ln">   495&nbsp;&nbsp;</span>	vaddr    uintptr <span class="comment">// prelinked section vaddr</span>
+<span id="L496" class="ln">   496&nbsp;&nbsp;</span>	end      uintptr <span class="comment">// vaddr + section length</span>
+<span id="L497" class="ln">   497&nbsp;&nbsp;</span>	baseaddr uintptr <span class="comment">// relocated section address</span>
+<span id="L498" class="ln">   498&nbsp;&nbsp;</span>}
+<span id="L499" class="ln">   499&nbsp;&nbsp;</span>
+<span id="L500" class="ln">   500&nbsp;&nbsp;</span>const minfunc = 16                 <span class="comment">// minimum function size</span>
+<span id="L501" class="ln">   501&nbsp;&nbsp;</span>const pcbucketsize = 256 * minfunc <span class="comment">// size of bucket in the pc-&gt;func lookup table</span>
+<span id="L502" class="ln">   502&nbsp;&nbsp;</span>
+<span id="L503" class="ln">   503&nbsp;&nbsp;</span><span class="comment">// findfuncbucket is an array of these structures.</span>
+<span id="L504" class="ln">   504&nbsp;&nbsp;</span><span class="comment">// Each bucket represents 4096 bytes of the text segment.</span>
+<span id="L505" class="ln">   505&nbsp;&nbsp;</span><span class="comment">// Each subbucket represents 256 bytes of the text segment.</span>
+<span id="L506" class="ln">   506&nbsp;&nbsp;</span><span class="comment">// To find a function given a pc, locate the bucket and subbucket for</span>
+<span id="L507" class="ln">   507&nbsp;&nbsp;</span><span class="comment">// that pc. Add together the idx and subbucket value to obtain a</span>
+<span id="L508" class="ln">   508&nbsp;&nbsp;</span><span class="comment">// function index. Then scan the functab array starting at that</span>
+<span id="L509" class="ln">   509&nbsp;&nbsp;</span><span class="comment">// index to find the target function.</span>
+<span id="L510" class="ln">   510&nbsp;&nbsp;</span><span class="comment">// This table uses 20 bytes for every 4096 bytes of code, or ~0.5% overhead.</span>
+<span id="L511" class="ln">   511&nbsp;&nbsp;</span>type findfuncbucket struct {
+<span id="L512" class="ln">   512&nbsp;&nbsp;</span>	idx        uint32
+<span id="L513" class="ln">   513&nbsp;&nbsp;</span>	subbuckets [16]byte
+<span id="L514" class="ln">   514&nbsp;&nbsp;</span>}
+<span id="L515" class="ln">   515&nbsp;&nbsp;</span>
+<span id="L516" class="ln">   516&nbsp;&nbsp;</span>func moduledataverify() {
+<span id="L517" class="ln">   517&nbsp;&nbsp;</span>	for datap := &amp;firstmoduledata; datap != nil; datap = datap.next {
+<span id="L518" class="ln">   518&nbsp;&nbsp;</span>		moduledataverify1(datap)
+<span id="L519" class="ln">   519&nbsp;&nbsp;</span>	}
+<span id="L520" class="ln">   520&nbsp;&nbsp;</span>}
+<span id="L521" class="ln">   521&nbsp;&nbsp;</span>
+<span id="L522" class="ln">   522&nbsp;&nbsp;</span>const debugPcln = false
+<span id="L523" class="ln">   523&nbsp;&nbsp;</span>
+<span id="L524" class="ln">   524&nbsp;&nbsp;</span>func moduledataverify1(datap *moduledata) {
+<span id="L525" class="ln">   525&nbsp;&nbsp;</span>	<span class="comment">// Check that the pclntab&#39;s format is valid.</span>
+<span id="L526" class="ln">   526&nbsp;&nbsp;</span>	hdr := datap.pcHeader
+<span id="L527" class="ln">   527&nbsp;&nbsp;</span>	if hdr.magic != 0xfffffff1 || hdr.pad1 != 0 || hdr.pad2 != 0 ||
+<span id="L528" class="ln">   528&nbsp;&nbsp;</span>		hdr.minLC != sys.PCQuantum || hdr.ptrSize != goarch.PtrSize || hdr.textStart != datap.text {
+<span id="L529" class="ln">   529&nbsp;&nbsp;</span>		println(&#34;runtime: pcHeader: magic=&#34;, hex(hdr.magic), &#34;pad1=&#34;, hdr.pad1, &#34;pad2=&#34;, hdr.pad2,
+<span id="L530" class="ln">   530&nbsp;&nbsp;</span>			&#34;minLC=&#34;, hdr.minLC, &#34;ptrSize=&#34;, hdr.ptrSize, &#34;pcHeader.textStart=&#34;, hex(hdr.textStart),
+<span id="L531" class="ln">   531&nbsp;&nbsp;</span>			&#34;text=&#34;, hex(datap.text), &#34;pluginpath=&#34;, datap.pluginpath)
+<span id="L532" class="ln">   532&nbsp;&nbsp;</span>		throw(&#34;invalid function symbol table&#34;)
+<span id="L533" class="ln">   533&nbsp;&nbsp;</span>	}
+<span id="L534" class="ln">   534&nbsp;&nbsp;</span>
+<span id="L535" class="ln">   535&nbsp;&nbsp;</span>	<span class="comment">// ftab is lookup table for function by program counter.</span>
+<span id="L536" class="ln">   536&nbsp;&nbsp;</span>	nftab := len(datap.ftab) - 1
+<span id="L537" class="ln">   537&nbsp;&nbsp;</span>	for i := 0; i &lt; nftab; i++ {
+<span id="L538" class="ln">   538&nbsp;&nbsp;</span>		<span class="comment">// NOTE: ftab[nftab].entry is legal; it is the address beyond the final function.</span>
+<span id="L539" class="ln">   539&nbsp;&nbsp;</span>		if datap.ftab[i].entryoff &gt; datap.ftab[i+1].entryoff {
+<span id="L540" class="ln">   540&nbsp;&nbsp;</span>			f1 := funcInfo{(*_func)(unsafe.Pointer(&amp;datap.pclntable[datap.ftab[i].funcoff])), datap}
+<span id="L541" class="ln">   541&nbsp;&nbsp;</span>			f2 := funcInfo{(*_func)(unsafe.Pointer(&amp;datap.pclntable[datap.ftab[i+1].funcoff])), datap}
+<span id="L542" class="ln">   542&nbsp;&nbsp;</span>			f2name := &#34;end&#34;
+<span id="L543" class="ln">   543&nbsp;&nbsp;</span>			if i+1 &lt; nftab {
+<span id="L544" class="ln">   544&nbsp;&nbsp;</span>				f2name = funcname(f2)
+<span id="L545" class="ln">   545&nbsp;&nbsp;</span>			}
+<span id="L546" class="ln">   546&nbsp;&nbsp;</span>			println(&#34;function symbol table not sorted by PC offset:&#34;, hex(datap.ftab[i].entryoff), funcname(f1), &#34;&gt;&#34;, hex(datap.ftab[i+1].entryoff), f2name, &#34;, plugin:&#34;, datap.pluginpath)
+<span id="L547" class="ln">   547&nbsp;&nbsp;</span>			for j := 0; j &lt;= i; j++ {
+<span id="L548" class="ln">   548&nbsp;&nbsp;</span>				println(&#34;\t&#34;, hex(datap.ftab[j].entryoff), funcname(funcInfo{(*_func)(unsafe.Pointer(&amp;datap.pclntable[datap.ftab[j].funcoff])), datap}))
+<span id="L549" class="ln">   549&nbsp;&nbsp;</span>			}
+<span id="L550" class="ln">   550&nbsp;&nbsp;</span>			if GOOS == &#34;aix&#34; &amp;&amp; isarchive {
+<span id="L551" class="ln">   551&nbsp;&nbsp;</span>				println(&#34;-Wl,-bnoobjreorder is mandatory on aix/ppc64 with c-archive&#34;)
+<span id="L552" class="ln">   552&nbsp;&nbsp;</span>			}
+<span id="L553" class="ln">   553&nbsp;&nbsp;</span>			throw(&#34;invalid runtime symbol table&#34;)
+<span id="L554" class="ln">   554&nbsp;&nbsp;</span>		}
+<span id="L555" class="ln">   555&nbsp;&nbsp;</span>	}
+<span id="L556" class="ln">   556&nbsp;&nbsp;</span>
+<span id="L557" class="ln">   557&nbsp;&nbsp;</span>	min := datap.textAddr(datap.ftab[0].entryoff)
+<span id="L558" class="ln">   558&nbsp;&nbsp;</span>	max := datap.textAddr(datap.ftab[nftab].entryoff)
+<span id="L559" class="ln">   559&nbsp;&nbsp;</span>	if datap.minpc != min || datap.maxpc != max {
+<span id="L560" class="ln">   560&nbsp;&nbsp;</span>		println(&#34;minpc=&#34;, hex(datap.minpc), &#34;min=&#34;, hex(min), &#34;maxpc=&#34;, hex(datap.maxpc), &#34;max=&#34;, hex(max))
+<span id="L561" class="ln">   561&nbsp;&nbsp;</span>		throw(&#34;minpc or maxpc invalid&#34;)
+<span id="L562" class="ln">   562&nbsp;&nbsp;</span>	}
+<span id="L563" class="ln">   563&nbsp;&nbsp;</span>
+<span id="L564" class="ln">   564&nbsp;&nbsp;</span>	for _, modulehash := range datap.modulehashes {
+<span id="L565" class="ln">   565&nbsp;&nbsp;</span>		if modulehash.linktimehash != *modulehash.runtimehash {
+<span id="L566" class="ln">   566&nbsp;&nbsp;</span>			println(&#34;abi mismatch detected between&#34;, datap.modulename, &#34;and&#34;, modulehash.modulename)
+<span id="L567" class="ln">   567&nbsp;&nbsp;</span>			throw(&#34;abi mismatch&#34;)
+<span id="L568" class="ln">   568&nbsp;&nbsp;</span>		}
+<span id="L569" class="ln">   569&nbsp;&nbsp;</span>	}
+<span id="L570" class="ln">   570&nbsp;&nbsp;</span>}
+<span id="L571" class="ln">   571&nbsp;&nbsp;</span>
+<span id="L572" class="ln">   572&nbsp;&nbsp;</span><span class="comment">// textAddr returns md.text + off, with special handling for multiple text sections.</span>
+<span id="L573" class="ln">   573&nbsp;&nbsp;</span><span class="comment">// off is a (virtual) offset computed at internal linking time,</span>
+<span id="L574" class="ln">   574&nbsp;&nbsp;</span><span class="comment">// before the external linker adjusts the sections&#39; base addresses.</span>
+<span id="L575" class="ln">   575&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L576" class="ln">   576&nbsp;&nbsp;</span><span class="comment">// The text, or instruction stream is generated as one large buffer.</span>
+<span id="L577" class="ln">   577&nbsp;&nbsp;</span><span class="comment">// The off (offset) for a function is its offset within this buffer.</span>
+<span id="L578" class="ln">   578&nbsp;&nbsp;</span><span class="comment">// If the total text size gets too large, there can be issues on platforms like ppc64</span>
+<span id="L579" class="ln">   579&nbsp;&nbsp;</span><span class="comment">// if the target of calls are too far for the call instruction.</span>
+<span id="L580" class="ln">   580&nbsp;&nbsp;</span><span class="comment">// To resolve the large text issue, the text is split into multiple text sections</span>
+<span id="L581" class="ln">   581&nbsp;&nbsp;</span><span class="comment">// to allow the linker to generate long calls when necessary.</span>
+<span id="L582" class="ln">   582&nbsp;&nbsp;</span><span class="comment">// When this happens, the vaddr for each text section is set to its offset within the text.</span>
+<span id="L583" class="ln">   583&nbsp;&nbsp;</span><span class="comment">// Each function&#39;s offset is compared against the section vaddrs and ends to determine the containing section.</span>
+<span id="L584" class="ln">   584&nbsp;&nbsp;</span><span class="comment">// Then the section relative offset is added to the section&#39;s</span>
+<span id="L585" class="ln">   585&nbsp;&nbsp;</span><span class="comment">// relocated baseaddr to compute the function address.</span>
+<span id="L586" class="ln">   586&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L587" class="ln">   587&nbsp;&nbsp;</span><span class="comment">// It is nosplit because it is part of the findfunc implementation.</span>
+<span id="L588" class="ln">   588&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L589" class="ln">   589&nbsp;&nbsp;</span><span class="comment">//go:nosplit</span>
+<span id="L590" class="ln">   590&nbsp;&nbsp;</span>func (md *moduledata) textAddr(off32 uint32) uintptr {
+<span id="L591" class="ln">   591&nbsp;&nbsp;</span>	off := uintptr(off32)
+<span id="L592" class="ln">   592&nbsp;&nbsp;</span>	res := md.text + off
+<span id="L593" class="ln">   593&nbsp;&nbsp;</span>	if len(md.textsectmap) &gt; 1 {
+<span id="L594" class="ln">   594&nbsp;&nbsp;</span>		for i, sect := range md.textsectmap {
+<span id="L595" class="ln">   595&nbsp;&nbsp;</span>			<span class="comment">// For the last section, include the end address (etext), as it is included in the functab.</span>
+<span id="L596" class="ln">   596&nbsp;&nbsp;</span>			if off &gt;= sect.vaddr &amp;&amp; off &lt; sect.end || (i == len(md.textsectmap)-1 &amp;&amp; off == sect.end) {
+<span id="L597" class="ln">   597&nbsp;&nbsp;</span>				res = sect.baseaddr + off - sect.vaddr
+<span id="L598" class="ln">   598&nbsp;&nbsp;</span>				break
+<span id="L599" class="ln">   599&nbsp;&nbsp;</span>			}
+<span id="L600" class="ln">   600&nbsp;&nbsp;</span>		}
+<span id="L601" class="ln">   601&nbsp;&nbsp;</span>		if res &gt; md.etext &amp;&amp; GOARCH != &#34;wasm&#34; { <span class="comment">// on wasm, functions do not live in the same address space as the linear memory</span>
+<span id="L602" class="ln">   602&nbsp;&nbsp;</span>			println(&#34;runtime: textAddr&#34;, hex(res), &#34;out of range&#34;, hex(md.text), &#34;-&#34;, hex(md.etext))
+<span id="L603" class="ln">   603&nbsp;&nbsp;</span>			throw(&#34;runtime: text offset out of range&#34;)
+<span id="L604" class="ln">   604&nbsp;&nbsp;</span>		}
+<span id="L605" class="ln">   605&nbsp;&nbsp;</span>	}
+<span id="L606" class="ln">   606&nbsp;&nbsp;</span>	return res
+<span id="L607" class="ln">   607&nbsp;&nbsp;</span>}
+<span id="L608" class="ln">   608&nbsp;&nbsp;</span>
+<span id="L609" class="ln">   609&nbsp;&nbsp;</span><span class="comment">// textOff is the opposite of textAddr. It converts a PC to a (virtual) offset</span>
+<span id="L610" class="ln">   610&nbsp;&nbsp;</span><span class="comment">// to md.text, and returns if the PC is in any Go text section.</span>
+<span id="L611" class="ln">   611&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L612" class="ln">   612&nbsp;&nbsp;</span><span class="comment">// It is nosplit because it is part of the findfunc implementation.</span>
+<span id="L613" class="ln">   613&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L614" class="ln">   614&nbsp;&nbsp;</span><span class="comment">//go:nosplit</span>
+<span id="L615" class="ln">   615&nbsp;&nbsp;</span>func (md *moduledata) textOff(pc uintptr) (uint32, bool) {
+<span id="L616" class="ln">   616&nbsp;&nbsp;</span>	res := uint32(pc - md.text)
+<span id="L617" class="ln">   617&nbsp;&nbsp;</span>	if len(md.textsectmap) &gt; 1 {
+<span id="L618" class="ln">   618&nbsp;&nbsp;</span>		for i, sect := range md.textsectmap {
+<span id="L619" class="ln">   619&nbsp;&nbsp;</span>			if sect.baseaddr &gt; pc {
+<span id="L620" class="ln">   620&nbsp;&nbsp;</span>				<span class="comment">// pc is not in any section.</span>
+<span id="L621" class="ln">   621&nbsp;&nbsp;</span>				return 0, false
+<span id="L622" class="ln">   622&nbsp;&nbsp;</span>			}
+<span id="L623" class="ln">   623&nbsp;&nbsp;</span>			end := sect.baseaddr + (sect.end - sect.vaddr)
+<span id="L624" class="ln">   624&nbsp;&nbsp;</span>			<span class="comment">// For the last section, include the end address (etext), as it is included in the functab.</span>
+<span id="L625" class="ln">   625&nbsp;&nbsp;</span>			if i == len(md.textsectmap)-1 {
+<span id="L626" class="ln">   626&nbsp;&nbsp;</span>				end++
+<span id="L627" class="ln">   627&nbsp;&nbsp;</span>			}
+<span id="L628" class="ln">   628&nbsp;&nbsp;</span>			if pc &lt; end {
+<span id="L629" class="ln">   629&nbsp;&nbsp;</span>				res = uint32(pc - sect.baseaddr + sect.vaddr)
+<span id="L630" class="ln">   630&nbsp;&nbsp;</span>				break
+<span id="L631" class="ln">   631&nbsp;&nbsp;</span>			}
+<span id="L632" class="ln">   632&nbsp;&nbsp;</span>		}
+<span id="L633" class="ln">   633&nbsp;&nbsp;</span>	}
+<span id="L634" class="ln">   634&nbsp;&nbsp;</span>	return res, true
+<span id="L635" class="ln">   635&nbsp;&nbsp;</span>}
+<span id="L636" class="ln">   636&nbsp;&nbsp;</span>
+<span id="L637" class="ln">   637&nbsp;&nbsp;</span><span class="comment">// funcName returns the string at nameOff in the function name table.</span>
+<span id="L638" class="ln">   638&nbsp;&nbsp;</span>func (md *moduledata) funcName(nameOff int32) string {
+<span id="L639" class="ln">   639&nbsp;&nbsp;</span>	if nameOff == 0 {
+<span id="L640" class="ln">   640&nbsp;&nbsp;</span>		return &#34;&#34;
+<span id="L641" class="ln">   641&nbsp;&nbsp;</span>	}
+<span id="L642" class="ln">   642&nbsp;&nbsp;</span>	return gostringnocopy(&amp;md.funcnametab[nameOff])
+<span id="L643" class="ln">   643&nbsp;&nbsp;</span>}
+<span id="L644" class="ln">   644&nbsp;&nbsp;</span>
+<span id="L645" class="ln">   645&nbsp;&nbsp;</span><span class="comment">// FuncForPC returns a *[Func] describing the function that contains the</span>
+<span id="L646" class="ln">   646&nbsp;&nbsp;</span><span class="comment">// given program counter address, or else nil.</span>
+<span id="L647" class="ln">   647&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L648" class="ln">   648&nbsp;&nbsp;</span><span class="comment">// If pc represents multiple functions because of inlining, it returns</span>
+<span id="L649" class="ln">   649&nbsp;&nbsp;</span><span class="comment">// the *Func describing the innermost function, but with an entry of</span>
+<span id="L650" class="ln">   650&nbsp;&nbsp;</span><span class="comment">// the outermost function.</span>
+<span id="L651" class="ln">   651&nbsp;&nbsp;</span>func FuncForPC(pc uintptr) *Func {
+<span id="L652" class="ln">   652&nbsp;&nbsp;</span>	f := findfunc(pc)
+<span id="L653" class="ln">   653&nbsp;&nbsp;</span>	if !f.valid() {
+<span id="L654" class="ln">   654&nbsp;&nbsp;</span>		return nil
+<span id="L655" class="ln">   655&nbsp;&nbsp;</span>	}
+<span id="L656" class="ln">   656&nbsp;&nbsp;</span>	<span class="comment">// This must interpret PC non-strictly so bad PCs (those between functions) don&#39;t crash the runtime.</span>
+<span id="L657" class="ln">   657&nbsp;&nbsp;</span>	<span class="comment">// We just report the preceding function in that situation. See issue 29735.</span>
+<span id="L658" class="ln">   658&nbsp;&nbsp;</span>	<span class="comment">// TODO: Perhaps we should report no function at all in that case.</span>
+<span id="L659" class="ln">   659&nbsp;&nbsp;</span>	<span class="comment">// The runtime currently doesn&#39;t have function end info, alas.</span>
+<span id="L660" class="ln">   660&nbsp;&nbsp;</span>	u, uf := newInlineUnwinder(f, pc)
+<span id="L661" class="ln">   661&nbsp;&nbsp;</span>	if !u.isInlined(uf) {
+<span id="L662" class="ln">   662&nbsp;&nbsp;</span>		return f._Func()
+<span id="L663" class="ln">   663&nbsp;&nbsp;</span>	}
+<span id="L664" class="ln">   664&nbsp;&nbsp;</span>	sf := u.srcFunc(uf)
+<span id="L665" class="ln">   665&nbsp;&nbsp;</span>	file, line := u.fileLine(uf)
+<span id="L666" class="ln">   666&nbsp;&nbsp;</span>	fi := &amp;funcinl{
+<span id="L667" class="ln">   667&nbsp;&nbsp;</span>		ones:      ^uint32(0),
+<span id="L668" class="ln">   668&nbsp;&nbsp;</span>		entry:     f.entry(), <span class="comment">// entry of the real (the outermost) function.</span>
+<span id="L669" class="ln">   669&nbsp;&nbsp;</span>		name:      sf.name(),
+<span id="L670" class="ln">   670&nbsp;&nbsp;</span>		file:      file,
+<span id="L671" class="ln">   671&nbsp;&nbsp;</span>		line:      int32(line),
+<span id="L672" class="ln">   672&nbsp;&nbsp;</span>		startLine: sf.startLine,
+<span id="L673" class="ln">   673&nbsp;&nbsp;</span>	}
+<span id="L674" class="ln">   674&nbsp;&nbsp;</span>	return (*Func)(unsafe.Pointer(fi))
+<span id="L675" class="ln">   675&nbsp;&nbsp;</span>}
+<span id="L676" class="ln">   676&nbsp;&nbsp;</span>
+<span id="L677" class="ln">   677&nbsp;&nbsp;</span><span class="comment">// Name returns the name of the function.</span>
+<span id="L678" class="ln">   678&nbsp;&nbsp;</span>func (f *Func) Name() string {
+<span id="L679" class="ln">   679&nbsp;&nbsp;</span>	if f == nil {
+<span id="L680" class="ln">   680&nbsp;&nbsp;</span>		return &#34;&#34;
+<span id="L681" class="ln">   681&nbsp;&nbsp;</span>	}
+<span id="L682" class="ln">   682&nbsp;&nbsp;</span>	fn := f.raw()
+<span id="L683" class="ln">   683&nbsp;&nbsp;</span>	if fn.isInlined() { <span class="comment">// inlined version</span>
+<span id="L684" class="ln">   684&nbsp;&nbsp;</span>		fi := (*funcinl)(unsafe.Pointer(fn))
+<span id="L685" class="ln">   685&nbsp;&nbsp;</span>		return funcNameForPrint(fi.name)
+<span id="L686" class="ln">   686&nbsp;&nbsp;</span>	}
+<span id="L687" class="ln">   687&nbsp;&nbsp;</span>	return funcNameForPrint(funcname(f.funcInfo()))
+<span id="L688" class="ln">   688&nbsp;&nbsp;</span>}
+<span id="L689" class="ln">   689&nbsp;&nbsp;</span>
+<span id="L690" class="ln">   690&nbsp;&nbsp;</span><span class="comment">// Entry returns the entry address of the function.</span>
+<span id="L691" class="ln">   691&nbsp;&nbsp;</span><span class="selection">func (f *Func) Entry() uintptr</span> {
+<span id="L692" class="ln">   692&nbsp;&nbsp;</span>	fn := f.raw()
+<span id="L693" class="ln">   693&nbsp;&nbsp;</span>	if fn.isInlined() { <span class="comment">// inlined version</span>
+<span id="L694" class="ln">   694&nbsp;&nbsp;</span>		fi := (*funcinl)(unsafe.Pointer(fn))
+<span id="L695" class="ln">   695&nbsp;&nbsp;</span>		return fi.entry
+<span id="L696" class="ln">   696&nbsp;&nbsp;</span>	}
+<span id="L697" class="ln">   697&nbsp;&nbsp;</span>	return fn.funcInfo().entry()
+<span id="L698" class="ln">   698&nbsp;&nbsp;</span>}
+<span id="L699" class="ln">   699&nbsp;&nbsp;</span>
+<span id="L700" class="ln">   700&nbsp;&nbsp;</span><span class="comment">// FileLine returns the file name and line number of the</span>
+<span id="L701" class="ln">   701&nbsp;&nbsp;</span><span class="comment">// source code corresponding to the program counter pc.</span>
+<span id="L702" class="ln">   702&nbsp;&nbsp;</span><span class="comment">// The result will not be accurate if pc is not a program</span>
+<span id="L703" class="ln">   703&nbsp;&nbsp;</span><span class="comment">// counter within f.</span>
+<span id="L704" class="ln">   704&nbsp;&nbsp;</span>func (f *Func) FileLine(pc uintptr) (file string, line int) {
+<span id="L705" class="ln">   705&nbsp;&nbsp;</span>	fn := f.raw()
+<span id="L706" class="ln">   706&nbsp;&nbsp;</span>	if fn.isInlined() { <span class="comment">// inlined version</span>
+<span id="L707" class="ln">   707&nbsp;&nbsp;</span>		fi := (*funcinl)(unsafe.Pointer(fn))
+<span id="L708" class="ln">   708&nbsp;&nbsp;</span>		return fi.file, int(fi.line)
+<span id="L709" class="ln">   709&nbsp;&nbsp;</span>	}
+<span id="L710" class="ln">   710&nbsp;&nbsp;</span>	<span class="comment">// Pass strict=false here, because anyone can call this function,</span>
+<span id="L711" class="ln">   711&nbsp;&nbsp;</span>	<span class="comment">// and they might just be wrong about targetpc belonging to f.</span>
+<span id="L712" class="ln">   712&nbsp;&nbsp;</span>	file, line32 := funcline1(f.funcInfo(), pc, false)
+<span id="L713" class="ln">   713&nbsp;&nbsp;</span>	return file, int(line32)
+<span id="L714" class="ln">   714&nbsp;&nbsp;</span>}
+<span id="L715" class="ln">   715&nbsp;&nbsp;</span>
+<span id="L716" class="ln">   716&nbsp;&nbsp;</span><span class="comment">// startLine returns the starting line number of the function. i.e., the line</span>
+<span id="L717" class="ln">   717&nbsp;&nbsp;</span><span class="comment">// number of the func keyword.</span>
+<span id="L718" class="ln">   718&nbsp;&nbsp;</span>func (f *Func) startLine() int32 {
+<span id="L719" class="ln">   719&nbsp;&nbsp;</span>	fn := f.raw()
+<span id="L720" class="ln">   720&nbsp;&nbsp;</span>	if fn.isInlined() { <span class="comment">// inlined version</span>
+<span id="L721" class="ln">   721&nbsp;&nbsp;</span>		fi := (*funcinl)(unsafe.Pointer(fn))
+<span id="L722" class="ln">   722&nbsp;&nbsp;</span>		return fi.startLine
+<span id="L723" class="ln">   723&nbsp;&nbsp;</span>	}
+<span id="L724" class="ln">   724&nbsp;&nbsp;</span>	return fn.funcInfo().startLine
+<span id="L725" class="ln">   725&nbsp;&nbsp;</span>}
+<span id="L726" class="ln">   726&nbsp;&nbsp;</span>
+<span id="L727" class="ln">   727&nbsp;&nbsp;</span><span class="comment">// findmoduledatap looks up the moduledata for a PC.</span>
+<span id="L728" class="ln">   728&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L729" class="ln">   729&nbsp;&nbsp;</span><span class="comment">// It is nosplit because it&#39;s part of the isgoexception</span>
+<span id="L730" class="ln">   730&nbsp;&nbsp;</span><span class="comment">// implementation.</span>
+<span id="L731" class="ln">   731&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L732" class="ln">   732&nbsp;&nbsp;</span><span class="comment">//go:nosplit</span>
+<span id="L733" class="ln">   733&nbsp;&nbsp;</span>func findmoduledatap(pc uintptr) *moduledata {
+<span id="L734" class="ln">   734&nbsp;&nbsp;</span>	for datap := &amp;firstmoduledata; datap != nil; datap = datap.next {
+<span id="L735" class="ln">   735&nbsp;&nbsp;</span>		if datap.minpc &lt;= pc &amp;&amp; pc &lt; datap.maxpc {
+<span id="L736" class="ln">   736&nbsp;&nbsp;</span>			return datap
+<span id="L737" class="ln">   737&nbsp;&nbsp;</span>		}
+<span id="L738" class="ln">   738&nbsp;&nbsp;</span>	}
+<span id="L739" class="ln">   739&nbsp;&nbsp;</span>	return nil
+<span id="L740" class="ln">   740&nbsp;&nbsp;</span>}
+<span id="L741" class="ln">   741&nbsp;&nbsp;</span>
+<span id="L742" class="ln">   742&nbsp;&nbsp;</span>type funcInfo struct {
+<span id="L743" class="ln">   743&nbsp;&nbsp;</span>	*_func
+<span id="L744" class="ln">   744&nbsp;&nbsp;</span>	datap *moduledata
+<span id="L745" class="ln">   745&nbsp;&nbsp;</span>}
+<span id="L746" class="ln">   746&nbsp;&nbsp;</span>
+<span id="L747" class="ln">   747&nbsp;&nbsp;</span>func (f funcInfo) valid() bool {
+<span id="L748" class="ln">   748&nbsp;&nbsp;</span>	return f._func != nil
+<span id="L749" class="ln">   749&nbsp;&nbsp;</span>}
+<span id="L750" class="ln">   750&nbsp;&nbsp;</span>
+<span id="L751" class="ln">   751&nbsp;&nbsp;</span>func (f funcInfo) _Func() *Func {
+<span id="L752" class="ln">   752&nbsp;&nbsp;</span>	return (*Func)(unsafe.Pointer(f._func))
+<span id="L753" class="ln">   753&nbsp;&nbsp;</span>}
+<span id="L754" class="ln">   754&nbsp;&nbsp;</span>
+<span id="L755" class="ln">   755&nbsp;&nbsp;</span><span class="comment">// isInlined reports whether f should be re-interpreted as a *funcinl.</span>
+<span id="L756" class="ln">   756&nbsp;&nbsp;</span>func (f *_func) isInlined() bool {
+<span id="L757" class="ln">   757&nbsp;&nbsp;</span>	return f.entryOff == ^uint32(0) <span class="comment">// see comment for funcinl.ones</span>
+<span id="L758" class="ln">   758&nbsp;&nbsp;</span>}
+<span id="L759" class="ln">   759&nbsp;&nbsp;</span>
+<span id="L760" class="ln">   760&nbsp;&nbsp;</span><span class="comment">// entry returns the entry PC for f.</span>
+<span id="L761" class="ln">   761&nbsp;&nbsp;</span>func (f funcInfo) entry() uintptr {
+<span id="L762" class="ln">   762&nbsp;&nbsp;</span>	return f.datap.textAddr(f.entryOff)
+<span id="L763" class="ln">   763&nbsp;&nbsp;</span>}
+<span id="L764" class="ln">   764&nbsp;&nbsp;</span>
+<span id="L765" class="ln">   765&nbsp;&nbsp;</span><span class="comment">// findfunc looks up function metadata for a PC.</span>
+<span id="L766" class="ln">   766&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L767" class="ln">   767&nbsp;&nbsp;</span><span class="comment">// It is nosplit because it&#39;s part of the isgoexception</span>
+<span id="L768" class="ln">   768&nbsp;&nbsp;</span><span class="comment">// implementation.</span>
+<span id="L769" class="ln">   769&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L770" class="ln">   770&nbsp;&nbsp;</span><span class="comment">//go:nosplit</span>
+<span id="L771" class="ln">   771&nbsp;&nbsp;</span>func findfunc(pc uintptr) funcInfo {
+<span id="L772" class="ln">   772&nbsp;&nbsp;</span>	datap := findmoduledatap(pc)
+<span id="L773" class="ln">   773&nbsp;&nbsp;</span>	if datap == nil {
+<span id="L774" class="ln">   774&nbsp;&nbsp;</span>		return funcInfo{}
+<span id="L775" class="ln">   775&nbsp;&nbsp;</span>	}
+<span id="L776" class="ln">   776&nbsp;&nbsp;</span>	const nsub = uintptr(len(findfuncbucket{}.subbuckets))
+<span id="L777" class="ln">   777&nbsp;&nbsp;</span>
+<span id="L778" class="ln">   778&nbsp;&nbsp;</span>	pcOff, ok := datap.textOff(pc)
+<span id="L779" class="ln">   779&nbsp;&nbsp;</span>	if !ok {
+<span id="L780" class="ln">   780&nbsp;&nbsp;</span>		return funcInfo{}
+<span id="L781" class="ln">   781&nbsp;&nbsp;</span>	}
+<span id="L782" class="ln">   782&nbsp;&nbsp;</span>
+<span id="L783" class="ln">   783&nbsp;&nbsp;</span>	x := uintptr(pcOff) + datap.text - datap.minpc <span class="comment">// TODO: are datap.text and datap.minpc always equal?</span>
+<span id="L784" class="ln">   784&nbsp;&nbsp;</span>	b := x / pcbucketsize
+<span id="L785" class="ln">   785&nbsp;&nbsp;</span>	i := x % pcbucketsize / (pcbucketsize / nsub)
+<span id="L786" class="ln">   786&nbsp;&nbsp;</span>
+<span id="L787" class="ln">   787&nbsp;&nbsp;</span>	ffb := (*findfuncbucket)(add(unsafe.Pointer(datap.findfunctab), b*unsafe.Sizeof(findfuncbucket{})))
+<span id="L788" class="ln">   788&nbsp;&nbsp;</span>	idx := ffb.idx + uint32(ffb.subbuckets[i])
+<span id="L789" class="ln">   789&nbsp;&nbsp;</span>
+<span id="L790" class="ln">   790&nbsp;&nbsp;</span>	<span class="comment">// Find the ftab entry.</span>
+<span id="L791" class="ln">   791&nbsp;&nbsp;</span>	for datap.ftab[idx+1].entryoff &lt;= pcOff {
+<span id="L792" class="ln">   792&nbsp;&nbsp;</span>		idx++
+<span id="L793" class="ln">   793&nbsp;&nbsp;</span>	}
+<span id="L794" class="ln">   794&nbsp;&nbsp;</span>
+<span id="L795" class="ln">   795&nbsp;&nbsp;</span>	funcoff := datap.ftab[idx].funcoff
+<span id="L796" class="ln">   796&nbsp;&nbsp;</span>	return funcInfo{(*_func)(unsafe.Pointer(&amp;datap.pclntable[funcoff])), datap}
+<span id="L797" class="ln">   797&nbsp;&nbsp;</span>}
+<span id="L798" class="ln">   798&nbsp;&nbsp;</span>
+<span id="L799" class="ln">   799&nbsp;&nbsp;</span><span class="comment">// A srcFunc represents a logical function in the source code. This may</span>
+<span id="L800" class="ln">   800&nbsp;&nbsp;</span><span class="comment">// correspond to an actual symbol in the binary text, or it may correspond to a</span>
+<span id="L801" class="ln">   801&nbsp;&nbsp;</span><span class="comment">// source function that has been inlined.</span>
+<span id="L802" class="ln">   802&nbsp;&nbsp;</span>type srcFunc struct {
+<span id="L803" class="ln">   803&nbsp;&nbsp;</span>	datap     *moduledata
+<span id="L804" class="ln">   804&nbsp;&nbsp;</span>	nameOff   int32
+<span id="L805" class="ln">   805&nbsp;&nbsp;</span>	startLine int32
+<span id="L806" class="ln">   806&nbsp;&nbsp;</span>	funcID    abi.FuncID
+<span id="L807" class="ln">   807&nbsp;&nbsp;</span>}
+<span id="L808" class="ln">   808&nbsp;&nbsp;</span>
+<span id="L809" class="ln">   809&nbsp;&nbsp;</span>func (f funcInfo) srcFunc() srcFunc {
+<span id="L810" class="ln">   810&nbsp;&nbsp;</span>	if !f.valid() {
+<span id="L811" class="ln">   811&nbsp;&nbsp;</span>		return srcFunc{}
+<span id="L812" class="ln">   812&nbsp;&nbsp;</span>	}
+<span id="L813" class="ln">   813&nbsp;&nbsp;</span>	return srcFunc{f.datap, f.nameOff, f.startLine, f.funcID}
+<span id="L814" class="ln">   814&nbsp;&nbsp;</span>}
+<span id="L815" class="ln">   815&nbsp;&nbsp;</span>
+<span id="L816" class="ln">   816&nbsp;&nbsp;</span>func (s srcFunc) name() string {
+<span id="L817" class="ln">   817&nbsp;&nbsp;</span>	if s.datap == nil {
+<span id="L818" class="ln">   818&nbsp;&nbsp;</span>		return &#34;&#34;
+<span id="L819" class="ln">   819&nbsp;&nbsp;</span>	}
+<span id="L820" class="ln">   820&nbsp;&nbsp;</span>	return s.datap.funcName(s.nameOff)
+<span id="L821" class="ln">   821&nbsp;&nbsp;</span>}
+<span id="L822" class="ln">   822&nbsp;&nbsp;</span>
+<span id="L823" class="ln">   823&nbsp;&nbsp;</span>type pcvalueCache struct {
+<span id="L824" class="ln">   824&nbsp;&nbsp;</span>	entries [2][8]pcvalueCacheEnt
+<span id="L825" class="ln">   825&nbsp;&nbsp;</span>	inUse   int
+<span id="L826" class="ln">   826&nbsp;&nbsp;</span>}
+<span id="L827" class="ln">   827&nbsp;&nbsp;</span>
+<span id="L828" class="ln">   828&nbsp;&nbsp;</span>type pcvalueCacheEnt struct {
+<span id="L829" class="ln">   829&nbsp;&nbsp;</span>	<span class="comment">// targetpc and off together are the key of this cache entry.</span>
+<span id="L830" class="ln">   830&nbsp;&nbsp;</span>	targetpc uintptr
+<span id="L831" class="ln">   831&nbsp;&nbsp;</span>	off      uint32
+<span id="L832" class="ln">   832&nbsp;&nbsp;</span>
+<span id="L833" class="ln">   833&nbsp;&nbsp;</span>	val   int32   <span class="comment">// The value of this entry.</span>
+<span id="L834" class="ln">   834&nbsp;&nbsp;</span>	valPC uintptr <span class="comment">// The PC at which val starts</span>
+<span id="L835" class="ln">   835&nbsp;&nbsp;</span>}
+<span id="L836" class="ln">   836&nbsp;&nbsp;</span>
+<span id="L837" class="ln">   837&nbsp;&nbsp;</span><span class="comment">// pcvalueCacheKey returns the outermost index in a pcvalueCache to use for targetpc.</span>
+<span id="L838" class="ln">   838&nbsp;&nbsp;</span><span class="comment">// It must be very cheap to calculate.</span>
+<span id="L839" class="ln">   839&nbsp;&nbsp;</span><span class="comment">// For now, align to goarch.PtrSize and reduce mod the number of entries.</span>
+<span id="L840" class="ln">   840&nbsp;&nbsp;</span><span class="comment">// In practice, this appears to be fairly randomly and evenly distributed.</span>
+<span id="L841" class="ln">   841&nbsp;&nbsp;</span>func pcvalueCacheKey(targetpc uintptr) uintptr {
+<span id="L842" class="ln">   842&nbsp;&nbsp;</span>	return (targetpc / goarch.PtrSize) % uintptr(len(pcvalueCache{}.entries))
+<span id="L843" class="ln">   843&nbsp;&nbsp;</span>}
+<span id="L844" class="ln">   844&nbsp;&nbsp;</span>
+<span id="L845" class="ln">   845&nbsp;&nbsp;</span><span class="comment">// Returns the PCData value, and the PC where this value starts.</span>
+<span id="L846" class="ln">   846&nbsp;&nbsp;</span>func pcvalue(f funcInfo, off uint32, targetpc uintptr, strict bool) (int32, uintptr) {
+<span id="L847" class="ln">   847&nbsp;&nbsp;</span>	<span class="comment">// If true, when we get a cache hit, still look up the data and make sure it</span>
+<span id="L848" class="ln">   848&nbsp;&nbsp;</span>	<span class="comment">// matches the cached contents.</span>
+<span id="L849" class="ln">   849&nbsp;&nbsp;</span>	const debugCheckCache = false
+<span id="L850" class="ln">   850&nbsp;&nbsp;</span>
+<span id="L851" class="ln">   851&nbsp;&nbsp;</span>	if off == 0 {
+<span id="L852" class="ln">   852&nbsp;&nbsp;</span>		return -1, 0
+<span id="L853" class="ln">   853&nbsp;&nbsp;</span>	}
+<span id="L854" class="ln">   854&nbsp;&nbsp;</span>
+<span id="L855" class="ln">   855&nbsp;&nbsp;</span>	<span class="comment">// Check the cache. This speeds up walks of deep stacks, which</span>
+<span id="L856" class="ln">   856&nbsp;&nbsp;</span>	<span class="comment">// tend to have the same recursive functions over and over,</span>
+<span id="L857" class="ln">   857&nbsp;&nbsp;</span>	<span class="comment">// or repetitive stacks between goroutines.</span>
+<span id="L858" class="ln">   858&nbsp;&nbsp;</span>	var checkVal int32
+<span id="L859" class="ln">   859&nbsp;&nbsp;</span>	var checkPC uintptr
+<span id="L860" class="ln">   860&nbsp;&nbsp;</span>	ck := pcvalueCacheKey(targetpc)
+<span id="L861" class="ln">   861&nbsp;&nbsp;</span>	{
+<span id="L862" class="ln">   862&nbsp;&nbsp;</span>		mp := acquirem()
+<span id="L863" class="ln">   863&nbsp;&nbsp;</span>		cache := &amp;mp.pcvalueCache
+<span id="L864" class="ln">   864&nbsp;&nbsp;</span>		<span class="comment">// The cache can be used by the signal handler on this M. Avoid</span>
+<span id="L865" class="ln">   865&nbsp;&nbsp;</span>		<span class="comment">// re-entrant use of the cache. The signal handler can also write inUse,</span>
+<span id="L866" class="ln">   866&nbsp;&nbsp;</span>		<span class="comment">// but will always restore its value, so we can use a regular increment</span>
+<span id="L867" class="ln">   867&nbsp;&nbsp;</span>		<span class="comment">// even if we get signaled in the middle of it.</span>
+<span id="L868" class="ln">   868&nbsp;&nbsp;</span>		cache.inUse++
+<span id="L869" class="ln">   869&nbsp;&nbsp;</span>		if cache.inUse == 1 {
+<span id="L870" class="ln">   870&nbsp;&nbsp;</span>			for i := range cache.entries[ck] {
+<span id="L871" class="ln">   871&nbsp;&nbsp;</span>				<span class="comment">// We check off first because we&#39;re more</span>
+<span id="L872" class="ln">   872&nbsp;&nbsp;</span>				<span class="comment">// likely to have multiple entries with</span>
+<span id="L873" class="ln">   873&nbsp;&nbsp;</span>				<span class="comment">// different offsets for the same targetpc</span>
+<span id="L874" class="ln">   874&nbsp;&nbsp;</span>				<span class="comment">// than the other way around, so we&#39;ll usually</span>
+<span id="L875" class="ln">   875&nbsp;&nbsp;</span>				<span class="comment">// fail in the first clause.</span>
+<span id="L876" class="ln">   876&nbsp;&nbsp;</span>				ent := &amp;cache.entries[ck][i]
+<span id="L877" class="ln">   877&nbsp;&nbsp;</span>				if ent.off == off &amp;&amp; ent.targetpc == targetpc {
+<span id="L878" class="ln">   878&nbsp;&nbsp;</span>					val, pc := ent.val, ent.valPC
+<span id="L879" class="ln">   879&nbsp;&nbsp;</span>					if debugCheckCache {
+<span id="L880" class="ln">   880&nbsp;&nbsp;</span>						checkVal, checkPC = ent.val, ent.valPC
+<span id="L881" class="ln">   881&nbsp;&nbsp;</span>						break
+<span id="L882" class="ln">   882&nbsp;&nbsp;</span>					} else {
+<span id="L883" class="ln">   883&nbsp;&nbsp;</span>						cache.inUse--
+<span id="L884" class="ln">   884&nbsp;&nbsp;</span>						releasem(mp)
+<span id="L885" class="ln">   885&nbsp;&nbsp;</span>						return val, pc
+<span id="L886" class="ln">   886&nbsp;&nbsp;</span>					}
+<span id="L887" class="ln">   887&nbsp;&nbsp;</span>				}
+<span id="L888" class="ln">   888&nbsp;&nbsp;</span>			}
+<span id="L889" class="ln">   889&nbsp;&nbsp;</span>		} else if debugCheckCache &amp;&amp; (cache.inUse &lt; 1 || cache.inUse &gt; 2) {
+<span id="L890" class="ln">   890&nbsp;&nbsp;</span>			<span class="comment">// Catch accounting errors or deeply reentrant use. In principle</span>
+<span id="L891" class="ln">   891&nbsp;&nbsp;</span>			<span class="comment">// &#34;inUse&#34; should never exceed 2.</span>
+<span id="L892" class="ln">   892&nbsp;&nbsp;</span>			throw(&#34;cache.inUse out of range&#34;)
+<span id="L893" class="ln">   893&nbsp;&nbsp;</span>		}
+<span id="L894" class="ln">   894&nbsp;&nbsp;</span>		cache.inUse--
+<span id="L895" class="ln">   895&nbsp;&nbsp;</span>		releasem(mp)
+<span id="L896" class="ln">   896&nbsp;&nbsp;</span>	}
+<span id="L897" class="ln">   897&nbsp;&nbsp;</span>
+<span id="L898" class="ln">   898&nbsp;&nbsp;</span>	if !f.valid() {
+<span id="L899" class="ln">   899&nbsp;&nbsp;</span>		if strict &amp;&amp; panicking.Load() == 0 {
+<span id="L900" class="ln">   900&nbsp;&nbsp;</span>			println(&#34;runtime: no module data for&#34;, hex(f.entry()))
+<span id="L901" class="ln">   901&nbsp;&nbsp;</span>			throw(&#34;no module data&#34;)
+<span id="L902" class="ln">   902&nbsp;&nbsp;</span>		}
+<span id="L903" class="ln">   903&nbsp;&nbsp;</span>		return -1, 0
+<span id="L904" class="ln">   904&nbsp;&nbsp;</span>	}
+<span id="L905" class="ln">   905&nbsp;&nbsp;</span>	datap := f.datap
+<span id="L906" class="ln">   906&nbsp;&nbsp;</span>	p := datap.pctab[off:]
+<span id="L907" class="ln">   907&nbsp;&nbsp;</span>	pc := f.entry()
+<span id="L908" class="ln">   908&nbsp;&nbsp;</span>	prevpc := pc
+<span id="L909" class="ln">   909&nbsp;&nbsp;</span>	val := int32(-1)
+<span id="L910" class="ln">   910&nbsp;&nbsp;</span>	for {
+<span id="L911" class="ln">   911&nbsp;&nbsp;</span>		var ok bool
+<span id="L912" class="ln">   912&nbsp;&nbsp;</span>		p, ok = step(p, &amp;pc, &amp;val, pc == f.entry())
+<span id="L913" class="ln">   913&nbsp;&nbsp;</span>		if !ok {
+<span id="L914" class="ln">   914&nbsp;&nbsp;</span>			break
+<span id="L915" class="ln">   915&nbsp;&nbsp;</span>		}
+<span id="L916" class="ln">   916&nbsp;&nbsp;</span>		if targetpc &lt; pc {
+<span id="L917" class="ln">   917&nbsp;&nbsp;</span>			<span class="comment">// Replace a random entry in the cache. Random</span>
+<span id="L918" class="ln">   918&nbsp;&nbsp;</span>			<span class="comment">// replacement prevents a performance cliff if</span>
+<span id="L919" class="ln">   919&nbsp;&nbsp;</span>			<span class="comment">// a recursive stack&#39;s cycle is slightly</span>
+<span id="L920" class="ln">   920&nbsp;&nbsp;</span>			<span class="comment">// larger than the cache.</span>
+<span id="L921" class="ln">   921&nbsp;&nbsp;</span>			<span class="comment">// Put the new element at the beginning,</span>
+<span id="L922" class="ln">   922&nbsp;&nbsp;</span>			<span class="comment">// since it is the most likely to be newly used.</span>
+<span id="L923" class="ln">   923&nbsp;&nbsp;</span>			if debugCheckCache &amp;&amp; checkPC != 0 {
+<span id="L924" class="ln">   924&nbsp;&nbsp;</span>				if checkVal != val || checkPC != prevpc {
+<span id="L925" class="ln">   925&nbsp;&nbsp;</span>					print(&#34;runtime: table value &#34;, val, &#34;@&#34;, prevpc, &#34; != cache value &#34;, checkVal, &#34;@&#34;, checkPC, &#34; at PC &#34;, targetpc, &#34; off &#34;, off, &#34;\n&#34;)
+<span id="L926" class="ln">   926&nbsp;&nbsp;</span>					throw(&#34;bad pcvalue cache&#34;)
+<span id="L927" class="ln">   927&nbsp;&nbsp;</span>				}
+<span id="L928" class="ln">   928&nbsp;&nbsp;</span>			} else {
+<span id="L929" class="ln">   929&nbsp;&nbsp;</span>				mp := acquirem()
+<span id="L930" class="ln">   930&nbsp;&nbsp;</span>				cache := &amp;mp.pcvalueCache
+<span id="L931" class="ln">   931&nbsp;&nbsp;</span>				cache.inUse++
+<span id="L932" class="ln">   932&nbsp;&nbsp;</span>				if cache.inUse == 1 {
+<span id="L933" class="ln">   933&nbsp;&nbsp;</span>					e := &amp;cache.entries[ck]
+<span id="L934" class="ln">   934&nbsp;&nbsp;</span>					ci := cheaprandn(uint32(len(cache.entries[ck])))
+<span id="L935" class="ln">   935&nbsp;&nbsp;</span>					e[ci] = e[0]
+<span id="L936" class="ln">   936&nbsp;&nbsp;</span>					e[0] = pcvalueCacheEnt{
+<span id="L937" class="ln">   937&nbsp;&nbsp;</span>						targetpc: targetpc,
+<span id="L938" class="ln">   938&nbsp;&nbsp;</span>						off:      off,
+<span id="L939" class="ln">   939&nbsp;&nbsp;</span>						val:      val,
+<span id="L940" class="ln">   940&nbsp;&nbsp;</span>						valPC:    prevpc,
+<span id="L941" class="ln">   941&nbsp;&nbsp;</span>					}
+<span id="L942" class="ln">   942&nbsp;&nbsp;</span>				}
+<span id="L943" class="ln">   943&nbsp;&nbsp;</span>				cache.inUse--
+<span id="L944" class="ln">   944&nbsp;&nbsp;</span>				releasem(mp)
+<span id="L945" class="ln">   945&nbsp;&nbsp;</span>			}
+<span id="L946" class="ln">   946&nbsp;&nbsp;</span>
+<span id="L947" class="ln">   947&nbsp;&nbsp;</span>			return val, prevpc
+<span id="L948" class="ln">   948&nbsp;&nbsp;</span>		}
+<span id="L949" class="ln">   949&nbsp;&nbsp;</span>		prevpc = pc
+<span id="L950" class="ln">   950&nbsp;&nbsp;</span>	}
+<span id="L951" class="ln">   951&nbsp;&nbsp;</span>
+<span id="L952" class="ln">   952&nbsp;&nbsp;</span>	<span class="comment">// If there was a table, it should have covered all program counters.</span>
+<span id="L953" class="ln">   953&nbsp;&nbsp;</span>	<span class="comment">// If not, something is wrong.</span>
+<span id="L954" class="ln">   954&nbsp;&nbsp;</span>	if panicking.Load() != 0 || !strict {
+<span id="L955" class="ln">   955&nbsp;&nbsp;</span>		return -1, 0
+<span id="L956" class="ln">   956&nbsp;&nbsp;</span>	}
+<span id="L957" class="ln">   957&nbsp;&nbsp;</span>
+<span id="L958" class="ln">   958&nbsp;&nbsp;</span>	print(&#34;runtime: invalid pc-encoded table f=&#34;, funcname(f), &#34; pc=&#34;, hex(pc), &#34; targetpc=&#34;, hex(targetpc), &#34; tab=&#34;, p, &#34;\n&#34;)
+<span id="L959" class="ln">   959&nbsp;&nbsp;</span>
+<span id="L960" class="ln">   960&nbsp;&nbsp;</span>	p = datap.pctab[off:]
+<span id="L961" class="ln">   961&nbsp;&nbsp;</span>	pc = f.entry()
+<span id="L962" class="ln">   962&nbsp;&nbsp;</span>	val = -1
+<span id="L963" class="ln">   963&nbsp;&nbsp;</span>	for {
+<span id="L964" class="ln">   964&nbsp;&nbsp;</span>		var ok bool
+<span id="L965" class="ln">   965&nbsp;&nbsp;</span>		p, ok = step(p, &amp;pc, &amp;val, pc == f.entry())
+<span id="L966" class="ln">   966&nbsp;&nbsp;</span>		if !ok {
+<span id="L967" class="ln">   967&nbsp;&nbsp;</span>			break
+<span id="L968" class="ln">   968&nbsp;&nbsp;</span>		}
+<span id="L969" class="ln">   969&nbsp;&nbsp;</span>		print(&#34;\tvalue=&#34;, val, &#34; until pc=&#34;, hex(pc), &#34;\n&#34;)
+<span id="L970" class="ln">   970&nbsp;&nbsp;</span>	}
+<span id="L971" class="ln">   971&nbsp;&nbsp;</span>
+<span id="L972" class="ln">   972&nbsp;&nbsp;</span>	throw(&#34;invalid runtime symbol table&#34;)
+<span id="L973" class="ln">   973&nbsp;&nbsp;</span>	return -1, 0
+<span id="L974" class="ln">   974&nbsp;&nbsp;</span>}
+<span id="L975" class="ln">   975&nbsp;&nbsp;</span>
+<span id="L976" class="ln">   976&nbsp;&nbsp;</span>func funcname(f funcInfo) string {
+<span id="L977" class="ln">   977&nbsp;&nbsp;</span>	if !f.valid() {
+<span id="L978" class="ln">   978&nbsp;&nbsp;</span>		return &#34;&#34;
+<span id="L979" class="ln">   979&nbsp;&nbsp;</span>	}
+<span id="L980" class="ln">   980&nbsp;&nbsp;</span>	return f.datap.funcName(f.nameOff)
+<span id="L981" class="ln">   981&nbsp;&nbsp;</span>}
+<span id="L982" class="ln">   982&nbsp;&nbsp;</span>
+<span id="L983" class="ln">   983&nbsp;&nbsp;</span>func funcpkgpath(f funcInfo) string {
+<span id="L984" class="ln">   984&nbsp;&nbsp;</span>	name := funcNameForPrint(funcname(f))
+<span id="L985" class="ln">   985&nbsp;&nbsp;</span>	i := len(name) - 1
+<span id="L986" class="ln">   986&nbsp;&nbsp;</span>	for ; i &gt; 0; i-- {
+<span id="L987" class="ln">   987&nbsp;&nbsp;</span>		if name[i] == &#39;/&#39; {
+<span id="L988" class="ln">   988&nbsp;&nbsp;</span>			break
+<span id="L989" class="ln">   989&nbsp;&nbsp;</span>		}
+<span id="L990" class="ln">   990&nbsp;&nbsp;</span>	}
+<span id="L991" class="ln">   991&nbsp;&nbsp;</span>	for ; i &lt; len(name); i++ {
+<span id="L992" class="ln">   992&nbsp;&nbsp;</span>		if name[i] == &#39;.&#39; {
+<span id="L993" class="ln">   993&nbsp;&nbsp;</span>			break
+<span id="L994" class="ln">   994&nbsp;&nbsp;</span>		}
+<span id="L995" class="ln">   995&nbsp;&nbsp;</span>	}
+<span id="L996" class="ln">   996&nbsp;&nbsp;</span>	return name[:i]
+<span id="L997" class="ln">   997&nbsp;&nbsp;</span>}
+<span id="L998" class="ln">   998&nbsp;&nbsp;</span>
+<span id="L999" class="ln">   999&nbsp;&nbsp;</span>func funcfile(f funcInfo, fileno int32) string {
+<span id="L1000" class="ln">  1000&nbsp;&nbsp;</span>	datap := f.datap
+<span id="L1001" class="ln">  1001&nbsp;&nbsp;</span>	if !f.valid() {
+<span id="L1002" class="ln">  1002&nbsp;&nbsp;</span>		return &#34;?&#34;
+<span id="L1003" class="ln">  1003&nbsp;&nbsp;</span>	}
+<span id="L1004" class="ln">  1004&nbsp;&nbsp;</span>	<span class="comment">// Make sure the cu index and file offset are valid</span>
+<span id="L1005" class="ln">  1005&nbsp;&nbsp;</span>	if fileoff := datap.cutab[f.cuOffset+uint32(fileno)]; fileoff != ^uint32(0) {
+<span id="L1006" class="ln">  1006&nbsp;&nbsp;</span>		return gostringnocopy(&amp;datap.filetab[fileoff])
+<span id="L1007" class="ln">  1007&nbsp;&nbsp;</span>	}
+<span id="L1008" class="ln">  1008&nbsp;&nbsp;</span>	<span class="comment">// pcln section is corrupt.</span>
+<span id="L1009" class="ln">  1009&nbsp;&nbsp;</span>	return &#34;?&#34;
+<span id="L1010" class="ln">  1010&nbsp;&nbsp;</span>}
+<span id="L1011" class="ln">  1011&nbsp;&nbsp;</span>
+<span id="L1012" class="ln">  1012&nbsp;&nbsp;</span>func funcline1(f funcInfo, targetpc uintptr, strict bool) (file string, line int32) {
+<span id="L1013" class="ln">  1013&nbsp;&nbsp;</span>	datap := f.datap
+<span id="L1014" class="ln">  1014&nbsp;&nbsp;</span>	if !f.valid() {
+<span id="L1015" class="ln">  1015&nbsp;&nbsp;</span>		return &#34;?&#34;, 0
+<span id="L1016" class="ln">  1016&nbsp;&nbsp;</span>	}
+<span id="L1017" class="ln">  1017&nbsp;&nbsp;</span>	fileno, _ := pcvalue(f, f.pcfile, targetpc, strict)
+<span id="L1018" class="ln">  1018&nbsp;&nbsp;</span>	line, _ = pcvalue(f, f.pcln, targetpc, strict)
+<span id="L1019" class="ln">  1019&nbsp;&nbsp;</span>	if fileno == -1 || line == -1 || int(fileno) &gt;= len(datap.filetab) {
+<span id="L1020" class="ln">  1020&nbsp;&nbsp;</span>		<span class="comment">// print(&#34;looking for &#34;, hex(targetpc), &#34; in &#34;, funcname(f), &#34; got file=&#34;, fileno, &#34; line=&#34;, lineno, &#34;\n&#34;)</span>
+<span id="L1021" class="ln">  1021&nbsp;&nbsp;</span>		return &#34;?&#34;, 0
+<span id="L1022" class="ln">  1022&nbsp;&nbsp;</span>	}
+<span id="L1023" class="ln">  1023&nbsp;&nbsp;</span>	file = funcfile(f, fileno)
+<span id="L1024" class="ln">  1024&nbsp;&nbsp;</span>	return
+<span id="L1025" class="ln">  1025&nbsp;&nbsp;</span>}
+<span id="L1026" class="ln">  1026&nbsp;&nbsp;</span>
+<span id="L1027" class="ln">  1027&nbsp;&nbsp;</span>func funcline(f funcInfo, targetpc uintptr) (file string, line int32) {
+<span id="L1028" class="ln">  1028&nbsp;&nbsp;</span>	return funcline1(f, targetpc, true)
+<span id="L1029" class="ln">  1029&nbsp;&nbsp;</span>}
+<span id="L1030" class="ln">  1030&nbsp;&nbsp;</span>
+<span id="L1031" class="ln">  1031&nbsp;&nbsp;</span>func funcspdelta(f funcInfo, targetpc uintptr) int32 {
+<span id="L1032" class="ln">  1032&nbsp;&nbsp;</span>	x, _ := pcvalue(f, f.pcsp, targetpc, true)
+<span id="L1033" class="ln">  1033&nbsp;&nbsp;</span>	if debugPcln &amp;&amp; x&amp;(goarch.PtrSize-1) != 0 {
+<span id="L1034" class="ln">  1034&nbsp;&nbsp;</span>		print(&#34;invalid spdelta &#34;, funcname(f), &#34; &#34;, hex(f.entry()), &#34; &#34;, hex(targetpc), &#34; &#34;, hex(f.pcsp), &#34; &#34;, x, &#34;\n&#34;)
+<span id="L1035" class="ln">  1035&nbsp;&nbsp;</span>		throw(&#34;bad spdelta&#34;)
+<span id="L1036" class="ln">  1036&nbsp;&nbsp;</span>	}
+<span id="L1037" class="ln">  1037&nbsp;&nbsp;</span>	return x
+<span id="L1038" class="ln">  1038&nbsp;&nbsp;</span>}
+<span id="L1039" class="ln">  1039&nbsp;&nbsp;</span>
+<span id="L1040" class="ln">  1040&nbsp;&nbsp;</span><span class="comment">// funcMaxSPDelta returns the maximum spdelta at any point in f.</span>
+<span id="L1041" class="ln">  1041&nbsp;&nbsp;</span>func funcMaxSPDelta(f funcInfo) int32 {
+<span id="L1042" class="ln">  1042&nbsp;&nbsp;</span>	datap := f.datap
+<span id="L1043" class="ln">  1043&nbsp;&nbsp;</span>	p := datap.pctab[f.pcsp:]
+<span id="L1044" class="ln">  1044&nbsp;&nbsp;</span>	pc := f.entry()
+<span id="L1045" class="ln">  1045&nbsp;&nbsp;</span>	val := int32(-1)
+<span id="L1046" class="ln">  1046&nbsp;&nbsp;</span>	most := int32(0)
+<span id="L1047" class="ln">  1047&nbsp;&nbsp;</span>	for {
+<span id="L1048" class="ln">  1048&nbsp;&nbsp;</span>		var ok bool
+<span id="L1049" class="ln">  1049&nbsp;&nbsp;</span>		p, ok = step(p, &amp;pc, &amp;val, pc == f.entry())
+<span id="L1050" class="ln">  1050&nbsp;&nbsp;</span>		if !ok {
+<span id="L1051" class="ln">  1051&nbsp;&nbsp;</span>			return most
+<span id="L1052" class="ln">  1052&nbsp;&nbsp;</span>		}
+<span id="L1053" class="ln">  1053&nbsp;&nbsp;</span>		most = max(most, val)
+<span id="L1054" class="ln">  1054&nbsp;&nbsp;</span>	}
+<span id="L1055" class="ln">  1055&nbsp;&nbsp;</span>}
+<span id="L1056" class="ln">  1056&nbsp;&nbsp;</span>
+<span id="L1057" class="ln">  1057&nbsp;&nbsp;</span>func pcdatastart(f funcInfo, table uint32) uint32 {
+<span id="L1058" class="ln">  1058&nbsp;&nbsp;</span>	return *(*uint32)(add(unsafe.Pointer(&amp;f.nfuncdata), unsafe.Sizeof(f.nfuncdata)+uintptr(table)*4))
+<span id="L1059" class="ln">  1059&nbsp;&nbsp;</span>}
+<span id="L1060" class="ln">  1060&nbsp;&nbsp;</span>
+<span id="L1061" class="ln">  1061&nbsp;&nbsp;</span>func pcdatavalue(f funcInfo, table uint32, targetpc uintptr) int32 {
+<span id="L1062" class="ln">  1062&nbsp;&nbsp;</span>	if table &gt;= f.npcdata {
+<span id="L1063" class="ln">  1063&nbsp;&nbsp;</span>		return -1
+<span id="L1064" class="ln">  1064&nbsp;&nbsp;</span>	}
+<span id="L1065" class="ln">  1065&nbsp;&nbsp;</span>	r, _ := pcvalue(f, pcdatastart(f, table), targetpc, true)
+<span id="L1066" class="ln">  1066&nbsp;&nbsp;</span>	return r
+<span id="L1067" class="ln">  1067&nbsp;&nbsp;</span>}
+<span id="L1068" class="ln">  1068&nbsp;&nbsp;</span>
+<span id="L1069" class="ln">  1069&nbsp;&nbsp;</span>func pcdatavalue1(f funcInfo, table uint32, targetpc uintptr, strict bool) int32 {
+<span id="L1070" class="ln">  1070&nbsp;&nbsp;</span>	if table &gt;= f.npcdata {
+<span id="L1071" class="ln">  1071&nbsp;&nbsp;</span>		return -1
+<span id="L1072" class="ln">  1072&nbsp;&nbsp;</span>	}
+<span id="L1073" class="ln">  1073&nbsp;&nbsp;</span>	r, _ := pcvalue(f, pcdatastart(f, table), targetpc, strict)
+<span id="L1074" class="ln">  1074&nbsp;&nbsp;</span>	return r
+<span id="L1075" class="ln">  1075&nbsp;&nbsp;</span>}
+<span id="L1076" class="ln">  1076&nbsp;&nbsp;</span>
+<span id="L1077" class="ln">  1077&nbsp;&nbsp;</span><span class="comment">// Like pcdatavalue, but also return the start PC of this PCData value.</span>
+<span id="L1078" class="ln">  1078&nbsp;&nbsp;</span>func pcdatavalue2(f funcInfo, table uint32, targetpc uintptr) (int32, uintptr) {
+<span id="L1079" class="ln">  1079&nbsp;&nbsp;</span>	if table &gt;= f.npcdata {
+<span id="L1080" class="ln">  1080&nbsp;&nbsp;</span>		return -1, 0
+<span id="L1081" class="ln">  1081&nbsp;&nbsp;</span>	}
+<span id="L1082" class="ln">  1082&nbsp;&nbsp;</span>	return pcvalue(f, pcdatastart(f, table), targetpc, true)
+<span id="L1083" class="ln">  1083&nbsp;&nbsp;</span>}
+<span id="L1084" class="ln">  1084&nbsp;&nbsp;</span>
+<span id="L1085" class="ln">  1085&nbsp;&nbsp;</span><span class="comment">// funcdata returns a pointer to the ith funcdata for f.</span>
+<span id="L1086" class="ln">  1086&nbsp;&nbsp;</span><span class="comment">// funcdata should be kept in sync with cmd/link:writeFuncs.</span>
+<span id="L1087" class="ln">  1087&nbsp;&nbsp;</span>func funcdata(f funcInfo, i uint8) unsafe.Pointer {
+<span id="L1088" class="ln">  1088&nbsp;&nbsp;</span>	if i &lt; 0 || i &gt;= f.nfuncdata {
+<span id="L1089" class="ln">  1089&nbsp;&nbsp;</span>		return nil
+<span id="L1090" class="ln">  1090&nbsp;&nbsp;</span>	}
+<span id="L1091" class="ln">  1091&nbsp;&nbsp;</span>	base := f.datap.gofunc <span class="comment">// load gofunc address early so that we calculate during cache misses</span>
+<span id="L1092" class="ln">  1092&nbsp;&nbsp;</span>	p := uintptr(unsafe.Pointer(&amp;f.nfuncdata)) + unsafe.Sizeof(f.nfuncdata) + uintptr(f.npcdata)*4 + uintptr(i)*4
+<span id="L1093" class="ln">  1093&nbsp;&nbsp;</span>	off := *(*uint32)(unsafe.Pointer(p))
+<span id="L1094" class="ln">  1094&nbsp;&nbsp;</span>	<span class="comment">// Return off == ^uint32(0) ? 0 : f.datap.gofunc + uintptr(off), but without branches.</span>
+<span id="L1095" class="ln">  1095&nbsp;&nbsp;</span>	<span class="comment">// The compiler calculates mask on most architectures using conditional assignment.</span>
+<span id="L1096" class="ln">  1096&nbsp;&nbsp;</span>	var mask uintptr
+<span id="L1097" class="ln">  1097&nbsp;&nbsp;</span>	if off == ^uint32(0) {
+<span id="L1098" class="ln">  1098&nbsp;&nbsp;</span>		mask = 1
+<span id="L1099" class="ln">  1099&nbsp;&nbsp;</span>	}
+<span id="L1100" class="ln">  1100&nbsp;&nbsp;</span>	mask--
+<span id="L1101" class="ln">  1101&nbsp;&nbsp;</span>	raw := base + uintptr(off)
+<span id="L1102" class="ln">  1102&nbsp;&nbsp;</span>	return unsafe.Pointer(raw &amp; mask)
+<span id="L1103" class="ln">  1103&nbsp;&nbsp;</span>}
+<span id="L1104" class="ln">  1104&nbsp;&nbsp;</span>
+<span id="L1105" class="ln">  1105&nbsp;&nbsp;</span><span class="comment">// step advances to the next pc, value pair in the encoded table.</span>
+<span id="L1106" class="ln">  1106&nbsp;&nbsp;</span>func step(p []byte, pc *uintptr, val *int32, first bool) (newp []byte, ok bool) {
+<span id="L1107" class="ln">  1107&nbsp;&nbsp;</span>	<span class="comment">// For both uvdelta and pcdelta, the common case (~70%)</span>
+<span id="L1108" class="ln">  1108&nbsp;&nbsp;</span>	<span class="comment">// is that they are a single byte. If so, avoid calling readvarint.</span>
+<span id="L1109" class="ln">  1109&nbsp;&nbsp;</span>	uvdelta := uint32(p[0])
+<span id="L1110" class="ln">  1110&nbsp;&nbsp;</span>	if uvdelta == 0 &amp;&amp; !first {
+<span id="L1111" class="ln">  1111&nbsp;&nbsp;</span>		return nil, false
+<span id="L1112" class="ln">  1112&nbsp;&nbsp;</span>	}
+<span id="L1113" class="ln">  1113&nbsp;&nbsp;</span>	n := uint32(1)
+<span id="L1114" class="ln">  1114&nbsp;&nbsp;</span>	if uvdelta&amp;0x80 != 0 {
+<span id="L1115" class="ln">  1115&nbsp;&nbsp;</span>		n, uvdelta = readvarint(p)
+<span id="L1116" class="ln">  1116&nbsp;&nbsp;</span>	}
+<span id="L1117" class="ln">  1117&nbsp;&nbsp;</span>	*val += int32(-(uvdelta &amp; 1) ^ (uvdelta &gt;&gt; 1))
+<span id="L1118" class="ln">  1118&nbsp;&nbsp;</span>	p = p[n:]
+<span id="L1119" class="ln">  1119&nbsp;&nbsp;</span>
+<span id="L1120" class="ln">  1120&nbsp;&nbsp;</span>	pcdelta := uint32(p[0])
+<span id="L1121" class="ln">  1121&nbsp;&nbsp;</span>	n = 1
+<span id="L1122" class="ln">  1122&nbsp;&nbsp;</span>	if pcdelta&amp;0x80 != 0 {
+<span id="L1123" class="ln">  1123&nbsp;&nbsp;</span>		n, pcdelta = readvarint(p)
+<span id="L1124" class="ln">  1124&nbsp;&nbsp;</span>	}
+<span id="L1125" class="ln">  1125&nbsp;&nbsp;</span>	p = p[n:]
+<span id="L1126" class="ln">  1126&nbsp;&nbsp;</span>	*pc += uintptr(pcdelta * sys.PCQuantum)
+<span id="L1127" class="ln">  1127&nbsp;&nbsp;</span>	return p, true
+<span id="L1128" class="ln">  1128&nbsp;&nbsp;</span>}
+<span id="L1129" class="ln">  1129&nbsp;&nbsp;</span>
+<span id="L1130" class="ln">  1130&nbsp;&nbsp;</span><span class="comment">// readvarint reads a varint from p.</span>
+<span id="L1131" class="ln">  1131&nbsp;&nbsp;</span>func readvarint(p []byte) (read uint32, val uint32) {
+<span id="L1132" class="ln">  1132&nbsp;&nbsp;</span>	var v, shift, n uint32
+<span id="L1133" class="ln">  1133&nbsp;&nbsp;</span>	for {
+<span id="L1134" class="ln">  1134&nbsp;&nbsp;</span>		b := p[n]
+<span id="L1135" class="ln">  1135&nbsp;&nbsp;</span>		n++
+<span id="L1136" class="ln">  1136&nbsp;&nbsp;</span>		v |= uint32(b&amp;0x7F) &lt;&lt; (shift &amp; 31)
+<span id="L1137" class="ln">  1137&nbsp;&nbsp;</span>		if b&amp;0x80 == 0 {
+<span id="L1138" class="ln">  1138&nbsp;&nbsp;</span>			break
+<span id="L1139" class="ln">  1139&nbsp;&nbsp;</span>		}
+<span id="L1140" class="ln">  1140&nbsp;&nbsp;</span>		shift += 7
+<span id="L1141" class="ln">  1141&nbsp;&nbsp;</span>	}
+<span id="L1142" class="ln">  1142&nbsp;&nbsp;</span>	return n, v
+<span id="L1143" class="ln">  1143&nbsp;&nbsp;</span>}
+<span id="L1144" class="ln">  1144&nbsp;&nbsp;</span>
+<span id="L1145" class="ln">  1145&nbsp;&nbsp;</span>type stackmap struct {
+<span id="L1146" class="ln">  1146&nbsp;&nbsp;</span>	n        int32   <span class="comment">// number of bitmaps</span>
+<span id="L1147" class="ln">  1147&nbsp;&nbsp;</span>	nbit     int32   <span class="comment">// number of bits in each bitmap</span>
+<span id="L1148" class="ln">  1148&nbsp;&nbsp;</span>	bytedata [1]byte <span class="comment">// bitmaps, each starting on a byte boundary</span>
+<span id="L1149" class="ln">  1149&nbsp;&nbsp;</span>}
+<span id="L1150" class="ln">  1150&nbsp;&nbsp;</span>
+<span id="L1151" class="ln">  1151&nbsp;&nbsp;</span><span class="comment">//go:nowritebarrier</span>
+<span id="L1152" class="ln">  1152&nbsp;&nbsp;</span>func stackmapdata(stkmap *stackmap, n int32) bitvector {
+<span id="L1153" class="ln">  1153&nbsp;&nbsp;</span>	<span class="comment">// Check this invariant only when stackDebug is on at all.</span>
+<span id="L1154" class="ln">  1154&nbsp;&nbsp;</span>	<span class="comment">// The invariant is already checked by many of stackmapdata&#39;s callers,</span>
+<span id="L1155" class="ln">  1155&nbsp;&nbsp;</span>	<span class="comment">// and disabling it by default allows stackmapdata to be inlined.</span>
+<span id="L1156" class="ln">  1156&nbsp;&nbsp;</span>	if stackDebug &gt; 0 &amp;&amp; (n &lt; 0 || n &gt;= stkmap.n) {
+<span id="L1157" class="ln">  1157&nbsp;&nbsp;</span>		throw(&#34;stackmapdata: index out of range&#34;)
+<span id="L1158" class="ln">  1158&nbsp;&nbsp;</span>	}
+<span id="L1159" class="ln">  1159&nbsp;&nbsp;</span>	return bitvector{stkmap.nbit, addb(&amp;stkmap.bytedata[0], uintptr(n*((stkmap.nbit+7)&gt;&gt;3)))}
+<span id="L1160" class="ln">  1160&nbsp;&nbsp;</span>}
+<span id="L1161" class="ln">  1161&nbsp;&nbsp;</span>
+</pre><p><a href="symtab.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

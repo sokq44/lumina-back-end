@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>tar - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package tar
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "archive/tar"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+				<dd><a href="index.html#pkg-examples" class="examplesLink">Examples</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>Package tar implements access to tar archives.
+<p>Tape archives (tar) are a file format for storing a sequence of files that
+can be read and written in a streaming manner.
+This package aims to cover most variations of the format,
+including those produced by GNU and BSD tar tools.
+
+				<div id="example__minimal" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example (Minimal)</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example (Minimal)</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code"><span class="comment">// Create and add some files to the archive.</span>
+var buf bytes.Buffer
+tw := tar.NewWriter(&amp;buf)
+var files = []struct {
+    Name, Body string
+}{
+    {&#34;readme.txt&#34;, &#34;This archive contains some text files.&#34;},
+    {&#34;gopher.txt&#34;, &#34;Gopher names:\nGeorge\nGeoffrey\nGonzo&#34;},
+    {&#34;todo.txt&#34;, &#34;Get animal handling license.&#34;},
+}
+for _, file := range files {
+    hdr := &amp;tar.Header{
+        Name: file.Name,
+        Mode: 0600,
+        Size: int64(len(file.Body)),
+    }
+    if err := tw.WriteHeader(hdr); err != nil {
+        log.Fatal(err)
+    }
+    if _, err := tw.Write([]byte(file.Body)); err != nil {
+        log.Fatal(err)
+    }
+}
+if err := tw.Close(); err != nil {
+    log.Fatal(err)
+}
+
+<span class="comment">// Open and iterate through the files in the archive.</span>
+tr := tar.NewReader(&amp;buf)
+for {
+    hdr, err := tr.Next()
+    if err == io.EOF {
+        break <span class="comment">// End of archive</span>
+    }
+    if err != nil {
+        log.Fatal(err)
+    }
+    fmt.Printf(&#34;Contents of %s:\n&#34;, hdr.Name)
+    if _, err := io.Copy(os.Stdout, tr); err != nil {
+        log.Fatal(err)
+    }
+    fmt.Println()
+}
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">Contents of readme.txt:
+This archive contains some text files.
+Contents of gopher.txt:
+Gopher names:
+George
+Geoffrey
+Gonzo
+Contents of todo.txt:
+Get animal handling license.
+</pre>
+			
+		
+	</div>
+</div>
+
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+				<dd><a href="index.html#pkg-constants">Constants</a></dd>
+			
+			
+				<dd><a href="index.html#pkg-variables">Variables</a></dd>
+			
+			
+			
+				
+				<dd><a href="index.html#Format">type Format</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Format.String">func (f Format) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Header">type Header</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#FileInfoHeader">func FileInfoHeader(fi fs.FileInfo, link string) (*Header, error)</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Header.FileInfo">func (h *Header) FileInfo() fs.FileInfo</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Reader">type Reader</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewReader">func NewReader(r io.Reader) *Reader</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Reader.Next">func (tr *Reader) Next() (*Header, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Reader.Read">func (tr *Reader) Read(b []byte) (int, error)</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Writer">type Writer</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewWriter">func NewWriter(w io.Writer) *Writer</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Writer.AddFS">func (tw *Writer) AddFS(fsys fs.FS) error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Writer.Close">func (tw *Writer) Close() error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Writer.Flush">func (tw *Writer) Flush() error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Writer.Write">func (tw *Writer) Write(b []byte) (int, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Writer.WriteHeader">func (tw *Writer) WriteHeader(hdr *Header) error</a></dd>
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+		<div id="pkg-examples">
+			<h3>Examples</h3>
+			<div class="js-expandAll expandAll collapsed">(Expand All)</div>
+			<dl>
+			
+			<dd><a class="exampleLink" href="index.html#example__minimal">Package (Minimal)</a></dd>
+			
+			</dl>
+		</div>
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../../src/archive/tar/common.go">common.go</a>
+			
+				<a href="../../../src/archive/tar/format.go">format.go</a>
+			
+				<a href="../../../src/archive/tar/reader.go">reader.go</a>
+			
+				<a href="../../../src/archive/tar/stat_actime1.go">stat_actime1.go</a>
+			
+				<a href="../../../src/archive/tar/stat_unix.go">stat_unix.go</a>
+			
+				<a href="../../../src/archive/tar/strconv.go">strconv.go</a>
+			
+				<a href="../../../src/archive/tar/writer.go">writer.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+			<h2 id="pkg-constants">Constants</h2>
+			
+				<p>Type flags for Header.Typeflag.
+
+				<pre>const (
+    <span class="comment">// Type &#39;0&#39; indicates a regular file.</span>
+    <span id="TypeReg">TypeReg</span> = &#39;0&#39;
+
+    <span class="comment">// Deprecated: Use TypeReg instead.</span>
+    <span id="TypeRegA">TypeRegA</span> = &#39;\x00&#39;
+
+    <span class="comment">// Type &#39;1&#39; to &#39;6&#39; are header-only flags and may not have a data body.</span>
+    <span id="TypeLink">TypeLink</span>    = &#39;1&#39; <span class="comment">// Hard link</span>
+    <span id="TypeSymlink">TypeSymlink</span> = &#39;2&#39; <span class="comment">// Symbolic link</span>
+    <span id="TypeChar">TypeChar</span>    = &#39;3&#39; <span class="comment">// Character device node</span>
+    <span id="TypeBlock">TypeBlock</span>   = &#39;4&#39; <span class="comment">// Block device node</span>
+    <span id="TypeDir">TypeDir</span>     = &#39;5&#39; <span class="comment">// Directory</span>
+    <span id="TypeFifo">TypeFifo</span>    = &#39;6&#39; <span class="comment">// FIFO node</span>
+
+    <span class="comment">// Type &#39;7&#39; is reserved.</span>
+    <span id="TypeCont">TypeCont</span> = &#39;7&#39;
+
+    <span class="comment">// Type &#39;x&#39; is used by the PAX format to store key-value records that</span>
+    <span class="comment">// are only relevant to the next file.</span>
+    <span class="comment">// This package transparently handles these types.</span>
+    <span id="TypeXHeader">TypeXHeader</span> = &#39;x&#39;
+
+    <span class="comment">// Type &#39;g&#39; is used by the PAX format to store key-value records that</span>
+    <span class="comment">// are relevant to all subsequent files.</span>
+    <span class="comment">// This package only supports parsing and composing such headers,</span>
+    <span class="comment">// but does not currently support persisting the global state across files.</span>
+    <span id="TypeXGlobalHeader">TypeXGlobalHeader</span> = &#39;g&#39;
+
+    <span class="comment">// Type &#39;S&#39; indicates a sparse file in the GNU format.</span>
+    <span id="TypeGNUSparse">TypeGNUSparse</span> = &#39;S&#39;
+
+    <span class="comment">// Types &#39;L&#39; and &#39;K&#39; are used by the GNU format for a meta file</span>
+    <span class="comment">// used to store the path or link name for the next file.</span>
+    <span class="comment">// This package transparently handles these types.</span>
+    <span id="TypeGNULongName">TypeGNULongName</span> = &#39;L&#39;
+    <span id="TypeGNULongLink">TypeGNULongLink</span> = &#39;K&#39;
+)</pre>
+			
+		
+		
+			<h2 id="pkg-variables">Variables</h2>
+			
+				
+				<pre>var (
+    <span id="ErrHeader">ErrHeader</span>          = <a href="../../errors/index.html">errors</a>.<a href="../../errors/index.html#New">New</a>(&#34;archive/tar: invalid tar header&#34;)
+    <span id="ErrWriteTooLong">ErrWriteTooLong</span>    = <a href="../../errors/index.html">errors</a>.<a href="../../errors/index.html#New">New</a>(&#34;archive/tar: write too long&#34;)
+    <span id="ErrFieldTooLong">ErrFieldTooLong</span>    = <a href="../../errors/index.html">errors</a>.<a href="../../errors/index.html#New">New</a>(&#34;archive/tar: header field too long&#34;)
+    <span id="ErrWriteAfterClose">ErrWriteAfterClose</span> = <a href="../../errors/index.html">errors</a>.<a href="../../errors/index.html#New">New</a>(&#34;archive/tar: write after close&#34;)
+    <span id="ErrInsecurePath">ErrInsecurePath</span>    = <a href="../../errors/index.html">errors</a>.<a href="../../errors/index.html#New">New</a>(&#34;archive/tar: insecure file path&#34;)
+)</pre>
+			
+		
+		
+		
+			
+			
+			<h2 id="Format">type <a href="../../../src/archive/tar/format.go?s=2012:2027#L36">Format</a>
+				<a class="permalink" href="index.html#Format">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Format represents the tar archive format.
+<p>The original tar format was introduced in Unix V7.
+Since then, there have been multiple competing formats attempting to
+standardize or extend the V7 format to overcome its limitations.
+The most common formats are the USTAR, PAX, and GNU formats,
+each with their own advantages and limitations.
+<p>The following table captures the capabilities of each format:
+<pre>                  |  USTAR |       PAX |       GNU
+------------------+--------+-----------+----------
+Name              |   256B | unlimited | unlimited
+Linkname          |   100B | unlimited | unlimited
+Size              | uint33 | unlimited |    uint89
+Mode              | uint21 |    uint21 |    uint57
+Uid/Gid           | uint21 | unlimited |    uint57
+Uname/Gname       |    32B | unlimited |       32B
+ModTime           | uint33 | unlimited |     int89
+AccessTime        |    n/a | unlimited |     int89
+ChangeTime        |    n/a | unlimited |     int89
+Devmajor/Devminor | uint21 |    uint21 |    uint57
+------------------+--------+-----------+----------
+string encoding   |  ASCII |     UTF-8 |    binary
+sub-second times  |     no |       yes |        no
+sparse files      |     no |       yes |       yes
+</pre>
+<p>The table&apos;s upper portion shows the <a href="index.html#Header">Header</a> fields, where each format reports
+the maximum number of bytes allowed for each string field and
+the integer type used to store each numeric field
+(where timestamps are stored as the number of seconds since the Unix epoch).
+<p>The table&apos;s lower portion shows specialized features of each format,
+such as supported string encodings, support for sub-second timestamps,
+or support for sparse files.
+<p>The Writer currently provides no support for sparse files.
+
+			<pre>type Format <a href="../../builtin/index.html#int">int</a></pre>
+
+			
+				<p>Constants to identify various tar formats.
+
+				<pre>const (
+
+    <span class="comment">// FormatUnknown indicates that the format is unknown.</span>
+    <span id="FormatUnknown">FormatUnknown</span> <a href="index.html#Format">Format</a>
+
+    <span class="comment">// FormatUSTAR represents the USTAR header format defined in POSIX.1-1988.</span>
+    <span class="comment">//</span>
+    <span class="comment">// While this format is compatible with most tar readers,</span>
+    <span class="comment">// the format has several limitations making it unsuitable for some usages.</span>
+    <span class="comment">// Most notably, it cannot support sparse files, files larger than 8GiB,</span>
+    <span class="comment">// filenames larger than 256 characters, and non-ASCII filenames.</span>
+    <span class="comment">//</span>
+    <span class="comment">// Reference:</span>
+    <span class="comment">//	http://pubs.opengroup.org/onlinepubs/9699919799/utilities/pax.html#tag_20_92_13_06</span>
+    <span id="FormatUSTAR">FormatUSTAR</span>
+
+    <span class="comment">// FormatPAX represents the PAX header format defined in POSIX.1-2001.</span>
+    <span class="comment">//</span>
+    <span class="comment">// PAX extends USTAR by writing a special file with Typeflag TypeXHeader</span>
+    <span class="comment">// preceding the original header. This file contains a set of key-value</span>
+    <span class="comment">// records, which are used to overcome USTAR&#39;s shortcomings, in addition to</span>
+    <span class="comment">// providing the ability to have sub-second resolution for timestamps.</span>
+    <span class="comment">//</span>
+    <span class="comment">// Some newer formats add their own extensions to PAX by defining their</span>
+    <span class="comment">// own keys and assigning certain semantic meaning to the associated values.</span>
+    <span class="comment">// For example, sparse file support in PAX is implemented using keys</span>
+    <span class="comment">// defined by the GNU manual (e.g., &#34;GNU.sparse.map&#34;).</span>
+    <span class="comment">//</span>
+    <span class="comment">// Reference:</span>
+    <span class="comment">//	http://pubs.opengroup.org/onlinepubs/009695399/utilities/pax.html</span>
+    <span id="FormatPAX">FormatPAX</span>
+
+    <span class="comment">// FormatGNU represents the GNU header format.</span>
+    <span class="comment">//</span>
+    <span class="comment">// The GNU header format is older than the USTAR and PAX standards and</span>
+    <span class="comment">// is not compatible with them. The GNU format supports</span>
+    <span class="comment">// arbitrary file sizes, filenames of arbitrary encoding and length,</span>
+    <span class="comment">// sparse files, and other features.</span>
+    <span class="comment">//</span>
+    <span class="comment">// It is recommended that PAX be chosen over GNU unless the target</span>
+    <span class="comment">// application can only parse GNU formatted archives.</span>
+    <span class="comment">//</span>
+    <span class="comment">// Reference:</span>
+    <span class="comment">//	https://www.gnu.org/software/tar/manual/html_node/Standard.html</span>
+    <span id="FormatGNU">FormatGNU</span>
+)</pre>
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="Format.String">func (Format) <a href="../../../src/archive/tar/format.go?s=4650:4681#L107">String</a>
+					<a class="permalink" href="index.html#Format.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (f <a href="index.html#Format">Format</a>) String() <a href="../../builtin/index.html#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Header">type <a href="../../../src/archive/tar/common.go?s=4867:7394#L136">Header</a>
+				<a class="permalink" href="index.html#Header">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A Header represents a single header in a tar archive.
+Some fields may not be populated.
+<p>For forward compatibility, users that retrieve a Header from Reader.Next,
+mutate it in some ways, and then pass it back to Writer.WriteHeader
+should do so by creating a new Header and copying the fields
+that they are interested in preserving.
+
+			<pre>type Header struct {
+<span id="Header.Typeflag"></span>    <span class="comment">// Typeflag is the type of header entry.</span>
+    <span class="comment">// The zero value is automatically promoted to either TypeReg or TypeDir</span>
+    <span class="comment">// depending on the presence of a trailing slash in Name.</span>
+    Typeflag <a href="../../builtin/index.html#byte">byte</a>
+
+<span id="Header.Name"></span>    Name     <a href="../../builtin/index.html#string">string</a> <span class="comment">// Name of file entry</span>
+<span id="Header.Linkname"></span>    Linkname <a href="../../builtin/index.html#string">string</a> <span class="comment">// Target name of link (valid for TypeLink or TypeSymlink)</span>
+
+<span id="Header.Size"></span>    Size  <a href="../../builtin/index.html#int64">int64</a>  <span class="comment">// Logical file size in bytes</span>
+<span id="Header.Mode"></span>    Mode  <a href="../../builtin/index.html#int64">int64</a>  <span class="comment">// Permission and mode bits</span>
+<span id="Header.Uid"></span>    Uid   <a href="../../builtin/index.html#int">int</a>    <span class="comment">// User ID of owner</span>
+<span id="Header.Gid"></span>    Gid   <a href="../../builtin/index.html#int">int</a>    <span class="comment">// Group ID of owner</span>
+<span id="Header.Uname"></span>    Uname <a href="../../builtin/index.html#string">string</a> <span class="comment">// User name of owner</span>
+<span id="Header.Gname"></span>    Gname <a href="../../builtin/index.html#string">string</a> <span class="comment">// Group name of owner</span>
+
+    <span class="comment">// If the Format is unspecified, then Writer.WriteHeader rounds ModTime</span>
+    <span class="comment">// to the nearest second and ignores the AccessTime and ChangeTime fields.</span>
+    <span class="comment">//</span>
+    <span class="comment">// To use AccessTime or ChangeTime, specify the Format as PAX or GNU.</span>
+    <span class="comment">// To use sub-second resolution, specify the Format as PAX.</span>
+<span id="Header.ModTime"></span>    ModTime    <a href="../../time/index.html">time</a>.<a href="../../time/index.html#Time">Time</a> <span class="comment">// Modification time</span>
+<span id="Header.AccessTime"></span>    AccessTime <a href="../../time/index.html">time</a>.<a href="../../time/index.html#Time">Time</a> <span class="comment">// Access time (requires either PAX or GNU support)</span>
+<span id="Header.ChangeTime"></span>    ChangeTime <a href="../../time/index.html">time</a>.<a href="../../time/index.html#Time">Time</a> <span class="comment">// Change time (requires either PAX or GNU support)</span>
+
+<span id="Header.Devmajor"></span>    Devmajor <a href="../../builtin/index.html#int64">int64</a> <span class="comment">// Major device number (valid for TypeChar or TypeBlock)</span>
+<span id="Header.Devminor"></span>    Devminor <a href="../../builtin/index.html#int64">int64</a> <span class="comment">// Minor device number (valid for TypeChar or TypeBlock)</span>
+
+<span id="Header.Xattrs"></span>    <span class="comment">// Xattrs stores extended attributes as PAX records under the</span>
+    <span class="comment">// &#34;SCHILY.xattr.&#34; namespace.</span>
+    <span class="comment">//</span>
+    <span class="comment">// The following are semantically equivalent:</span>
+    <span class="comment">//  h.Xattrs[key] = value</span>
+    <span class="comment">//  h.PAXRecords[&#34;SCHILY.xattr.&#34;+key] = value</span>
+    <span class="comment">//</span>
+    <span class="comment">// When Writer.WriteHeader is called, the contents of Xattrs will take</span>
+    <span class="comment">// precedence over those in PAXRecords.</span>
+    <span class="comment">//</span>
+    <span class="comment">// Deprecated: Use PAXRecords instead.</span>
+    Xattrs map[<a href="../../builtin/index.html#string">string</a>]<a href="../../builtin/index.html#string">string</a>
+
+<span id="Header.PAXRecords"></span>    <span class="comment">// PAXRecords is a map of PAX extended header records.</span>
+    <span class="comment">//</span>
+    <span class="comment">// User-defined records should have keys of the following form:</span>
+    <span class="comment">//	VENDOR.keyword</span>
+    <span class="comment">// Where VENDOR is some namespace in all uppercase, and keyword may</span>
+    <span class="comment">// not contain the &#39;=&#39; character (e.g., &#34;GOLANG.pkg.version&#34;).</span>
+    <span class="comment">// The key and value should be non-empty UTF-8 strings.</span>
+    <span class="comment">//</span>
+    <span class="comment">// When Writer.WriteHeader is called, PAX records derived from the</span>
+    <span class="comment">// other fields in Header take precedence over PAXRecords.</span>
+    PAXRecords map[<a href="../../builtin/index.html#string">string</a>]<a href="../../builtin/index.html#string">string</a>
+
+<span id="Header.Format"></span>    <span class="comment">// Format specifies the format of the tar header.</span>
+    <span class="comment">//</span>
+    <span class="comment">// This is set by Reader.Next as a best-effort guess at the format.</span>
+    <span class="comment">// Since the Reader liberally reads some non-compliant files,</span>
+    <span class="comment">// it is possible for this to be FormatUnknown.</span>
+    <span class="comment">//</span>
+    <span class="comment">// If the format is unspecified when Writer.WriteHeader is called,</span>
+    <span class="comment">// then it uses the first format (in the order of USTAR, PAX, GNU)</span>
+    <span class="comment">// capable of encoding this Header (see Format).</span>
+    Format <a href="index.html#Format">Format</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="FileInfoHeader">func <a href="../../../src/archive/tar/common.go?s=22333:22398#L632">FileInfoHeader</a>
+					<a class="permalink" href="index.html#FileInfoHeader">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func FileInfoHeader(fi <a href="../../io/fs/index.html">fs</a>.<a href="../../io/fs/index.html#FileInfo">FileInfo</a>, link <a href="../../builtin/index.html#string">string</a>) (*<a href="index.html#Header">Header</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+				<p>FileInfoHeader creates a partially-populated <a href="index.html#Header">Header</a> from fi.
+If fi describes a symlink, FileInfoHeader records link as the link target.
+If fi describes a directory, a slash is appended to the name.
+<p>Since fs.FileInfo&apos;s Name method only returns the base name of
+the file it describes, it may be necessary to modify Header.Name
+to provide the full path name of the file.
+
+				
+				
+			
+
+			
+				
+				<h3 id="Header.FileInfo">func (*Header) <a href="../../../src/archive/tar/common.go?s=19414:19453#L528">FileInfo</a>
+					<a class="permalink" href="index.html#Header.FileInfo">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (h *<a href="index.html#Header">Header</a>) FileInfo() <a href="../../io/fs/index.html">fs</a>.<a href="../../io/fs/index.html#FileInfo">FileInfo</a></pre>
+				<p>FileInfo returns an fs.FileInfo for the Header.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Reader">type <a href="../../../src/archive/tar/reader.go?s=474:849#L9">Reader</a>
+				<a class="permalink" href="index.html#Reader">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Reader provides sequential access to the contents of a tar archive.
+Reader.Next advances to the next file in the archive (including the first),
+and then Reader can be treated as an io.Reader to access the file&apos;s data.
+
+			<pre>type Reader struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="NewReader">func <a href="../../../src/archive/tar/reader.go?s=992:1027#L29">NewReader</a>
+					<a class="permalink" href="index.html#NewReader">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func NewReader(r <a href="../../io/index.html">io</a>.<a href="../../io/index.html#Reader">Reader</a>) *<a href="index.html#Reader">Reader</a></pre>
+				<p>NewReader creates a new <a href="index.html#Reader">Reader</a> reading from r.
+
+				
+				
+			
+
+			
+				
+				<h3 id="Reader.Next">func (*Reader) <a href="../../../src/archive/tar/reader.go?s=1737:1778#L44">Next</a>
+					<a class="permalink" href="index.html#Reader.Next">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (tr *<a href="index.html#Reader">Reader</a>) Next() (*<a href="index.html#Header">Header</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+				<p>Next advances to the next entry in the tar archive.
+The Header.Size determines how many bytes can be read for the next file.
+Any remaining data in the current file is automatically discarded.
+At the end of the archive, Next returns the error io.EOF.
+<p>If Next encounters a non-local name (as defined by <a href="http://localhost:8080/path/filepath#IsLocal">filepath.IsLocal</a>)
+and the GODEBUG environment variable contains `tarinsecurepath=0`,
+Next returns the header with an <a href="index.html#ErrInsecurePath">ErrInsecurePath</a> error.
+A future version of Go may introduce this behavior by default.
+Programs that want to accept non-local names can ignore
+the <a href="index.html#ErrInsecurePath">ErrInsecurePath</a> error and use the returned header.
+
+				
+				
+				
+			
+				
+				<h3 id="Reader.Read">func (*Reader) <a href="../../../src/archive/tar/reader.go?s=20460:20505#L624">Read</a>
+					<a class="permalink" href="index.html#Reader.Read">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (tr *<a href="index.html#Reader">Reader</a>) Read(b []<a href="../../builtin/index.html#byte">byte</a>) (<a href="../../builtin/index.html#int">int</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+				<p>Read reads from the current file in the tar archive.
+It returns (0, io.EOF) when it reaches the end of that file,
+until [Next] is called to advance to the next file.
+<p>If the current file is sparse, then the regions marked as a hole
+are read back as NUL-bytes.
+<p>Calling Read on special types like <a href="index.html#TypeLink">TypeLink</a>, <a href="index.html#TypeSymlink">TypeSymlink</a>, <a href="index.html#TypeChar">TypeChar</a>,
+<a href="index.html#TypeBlock">TypeBlock</a>, <a href="index.html#TypeDir">TypeDir</a>, and <a href="index.html#TypeFifo">TypeFifo</a> returns (0, <a href="http://localhost:8080/io#EOF">io.EOF</a>) regardless of what
+the [Header.Size] claims.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Writer">type <a href="../../../src/archive/tar/writer.go?s=456:900#L11">Writer</a>
+				<a class="permalink" href="index.html#Writer">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Writer provides sequential writing of a tar archive.
+<a href="index.html#Writer.WriteHeader">Writer.WriteHeader</a> begins a new file with the provided <a href="index.html#Header">Header</a>,
+and then Writer can be treated as an io.Writer to supply that file&apos;s data.
+
+			<pre>type Writer struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="NewWriter">func <a href="../../../src/archive/tar/writer.go?s=950:985#L25">NewWriter</a>
+					<a class="permalink" href="index.html#NewWriter">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func NewWriter(w <a href="../../io/index.html">io</a>.<a href="../../io/index.html#Writer">Writer</a>) *<a href="index.html#Writer">Writer</a></pre>
+				<p>NewWriter creates a new Writer writing to w.
+
+				
+				
+			
+
+			
+				
+				<h3 id="Writer.AddFS">func (*Writer) <a href="../../../src/archive/tar/writer.go?s=12293:12334#L401">AddFS</a>
+					<a class="permalink" href="index.html#Writer.AddFS">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (tw *<a href="index.html#Writer">Writer</a>) AddFS(fsys <a href="../../io/fs/index.html">fs</a>.<a href="../../io/fs/index.html#FS">FS</a>) <a href="../../builtin/index.html#error">error</a></pre>
+				<p>AddFS adds the files from fs.FS to the archive.
+It walks the directory tree starting at the root of the filesystem
+adding each file to the tar archive while maintaining the directory structure.
+
+				
+				
+				
+			
+				
+				<h3 id="Writer.Close">func (*Writer) <a href="../../../src/archive/tar/writer.go?s=15183:15214#L498">Close</a>
+					<a class="permalink" href="index.html#Writer.Close">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (tw *<a href="index.html#Writer">Writer</a>) Close() <a href="../../builtin/index.html#error">error</a></pre>
+				<p>Close closes the tar archive by flushing the padding, and writing the footer.
+If the current file (from a prior call to <a href="index.html#Writer.WriteHeader">Writer.WriteHeader</a>) is not fully written,
+then this returns an error.
+
+				
+				
+				
+			
+				
+				<h3 id="Writer.Flush">func (*Writer) <a href="../../../src/archive/tar/writer.go?s=1395:1426#L41">Flush</a>
+					<a class="permalink" href="index.html#Writer.Flush">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (tw *<a href="index.html#Writer">Writer</a>) Flush() <a href="../../builtin/index.html#error">error</a></pre>
+				<p>Flush finishes writing the current file&apos;s block padding.
+The current file must be fully written before Flush can be called.
+<p>This is unnecessary as the next call to <a href="index.html#Writer.WriteHeader">Writer.WriteHeader</a> or <a href="index.html#Writer.Close">Writer.Close</a>
+will implicitly flush out the file&apos;s padding.
+
+				
+				
+				
+			
+				
+				<h3 id="Writer.Write">func (*Writer) <a href="../../../src/archive/tar/writer.go?s=14064:14110#L463">Write</a>
+					<a class="permalink" href="index.html#Writer.Write">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (tw *<a href="index.html#Writer">Writer</a>) Write(b []<a href="../../builtin/index.html#byte">byte</a>) (<a href="../../builtin/index.html#int">int</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+				<p>Write writes to the current file in the tar archive.
+Write returns the error <a href="index.html#ErrWriteTooLong">ErrWriteTooLong</a> if more than
+Header.Size bytes are written after <a href="index.html#Writer.WriteHeader">Writer.WriteHeader</a>.
+<p>Calling Write on special types like <a href="index.html#TypeLink">TypeLink</a>, <a href="index.html#TypeSymlink">TypeSymlink</a>, <a href="index.html#TypeChar">TypeChar</a>,
+<a href="index.html#TypeBlock">TypeBlock</a>, <a href="index.html#TypeDir">TypeDir</a>, and <a href="index.html#TypeFifo">TypeFifo</a> returns (0, <a href="index.html#ErrWriteTooLong">ErrWriteTooLong</a>) regardless
+of what the [Header.Size] claims.
+
+				
+				
+				
+			
+				
+				<h3 id="Writer.WriteHeader">func (*Writer) <a href="../../../src/archive/tar/writer.go?s=1990:2038#L59">WriteHeader</a>
+					<a class="permalink" href="index.html#Writer.WriteHeader">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (tw *<a href="index.html#Writer">Writer</a>) WriteHeader(hdr *<a href="index.html#Header">Header</a>) <a href="../../builtin/index.html#error">error</a></pre>
+				<p>WriteHeader writes hdr and prepares to accept the file&apos;s contents.
+The Header.Size determines how many bytes can be written for the next file.
+If the current file is not fully written, then this returns an error.
+This implicitly flushes any padding necessary before writing the header.
+
+				
+				
+				
+			
+		
+	
+
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

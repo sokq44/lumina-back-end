@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>src/runtime/pprof/pprof.go - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="./pprof.go?s=8933:8959#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Source file
+    <a href="http://localhost:8080/src">src</a>/<a href="http://localhost:8080/src/runtime">runtime</a>/<a href="http://localhost:8080/src/runtime/pprof">pprof</a>/<span class="text-muted">pprof.go</span>
+  </h1>
+
+
+
+
+
+  <h2>
+    Documentation: <a href="http://localhost:8080/pkg/runtime/pprof">runtime/pprof</a>
+  </h2>
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1&nbsp;&nbsp;</span><span class="comment">// Copyright 2010 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2&nbsp;&nbsp;</span><span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3&nbsp;&nbsp;</span><span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4&nbsp;&nbsp;</span>
+<span id="L5" class="ln">     5&nbsp;&nbsp;</span><span class="comment">// Package pprof writes runtime profiling data in the format expected</span>
+<span id="L6" class="ln">     6&nbsp;&nbsp;</span><span class="comment">// by the pprof visualization tool.</span>
+<span id="L7" class="ln">     7&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L8" class="ln">     8&nbsp;&nbsp;</span><span class="comment">// # Profiling a Go program</span>
+<span id="L9" class="ln">     9&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L10" class="ln">    10&nbsp;&nbsp;</span><span class="comment">// The first step to profiling a Go program is to enable profiling.</span>
+<span id="L11" class="ln">    11&nbsp;&nbsp;</span><span class="comment">// Support for profiling benchmarks built with the standard testing</span>
+<span id="L12" class="ln">    12&nbsp;&nbsp;</span><span class="comment">// package is built into go test. For example, the following command</span>
+<span id="L13" class="ln">    13&nbsp;&nbsp;</span><span class="comment">// runs benchmarks in the current directory and writes the CPU and</span>
+<span id="L14" class="ln">    14&nbsp;&nbsp;</span><span class="comment">// memory profiles to cpu.prof and mem.prof:</span>
+<span id="L15" class="ln">    15&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L16" class="ln">    16&nbsp;&nbsp;</span><span class="comment">//	go test -cpuprofile cpu.prof -memprofile mem.prof -bench .</span>
+<span id="L17" class="ln">    17&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L18" class="ln">    18&nbsp;&nbsp;</span><span class="comment">// To add equivalent profiling support to a standalone program, add</span>
+<span id="L19" class="ln">    19&nbsp;&nbsp;</span><span class="comment">// code like the following to your main function:</span>
+<span id="L20" class="ln">    20&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L21" class="ln">    21&nbsp;&nbsp;</span><span class="comment">//	var cpuprofile = flag.String(&#34;cpuprofile&#34;, &#34;&#34;, &#34;write cpu profile to `file`&#34;)</span>
+<span id="L22" class="ln">    22&nbsp;&nbsp;</span><span class="comment">//	var memprofile = flag.String(&#34;memprofile&#34;, &#34;&#34;, &#34;write memory profile to `file`&#34;)</span>
+<span id="L23" class="ln">    23&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L24" class="ln">    24&nbsp;&nbsp;</span><span class="comment">//	func main() {</span>
+<span id="L25" class="ln">    25&nbsp;&nbsp;</span><span class="comment">//	    flag.Parse()</span>
+<span id="L26" class="ln">    26&nbsp;&nbsp;</span><span class="comment">//	    if *cpuprofile != &#34;&#34; {</span>
+<span id="L27" class="ln">    27&nbsp;&nbsp;</span><span class="comment">//	        f, err := os.Create(*cpuprofile)</span>
+<span id="L28" class="ln">    28&nbsp;&nbsp;</span><span class="comment">//	        if err != nil {</span>
+<span id="L29" class="ln">    29&nbsp;&nbsp;</span><span class="comment">//	            log.Fatal(&#34;could not create CPU profile: &#34;, err)</span>
+<span id="L30" class="ln">    30&nbsp;&nbsp;</span><span class="comment">//	        }</span>
+<span id="L31" class="ln">    31&nbsp;&nbsp;</span><span class="comment">//	        defer f.Close() // error handling omitted for example</span>
+<span id="L32" class="ln">    32&nbsp;&nbsp;</span><span class="comment">//	        if err := pprof.StartCPUProfile(f); err != nil {</span>
+<span id="L33" class="ln">    33&nbsp;&nbsp;</span><span class="comment">//	            log.Fatal(&#34;could not start CPU profile: &#34;, err)</span>
+<span id="L34" class="ln">    34&nbsp;&nbsp;</span><span class="comment">//	        }</span>
+<span id="L35" class="ln">    35&nbsp;&nbsp;</span><span class="comment">//	        defer pprof.StopCPUProfile()</span>
+<span id="L36" class="ln">    36&nbsp;&nbsp;</span><span class="comment">//	    }</span>
+<span id="L37" class="ln">    37&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L38" class="ln">    38&nbsp;&nbsp;</span><span class="comment">//	    // ... rest of the program ...</span>
+<span id="L39" class="ln">    39&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L40" class="ln">    40&nbsp;&nbsp;</span><span class="comment">//	    if *memprofile != &#34;&#34; {</span>
+<span id="L41" class="ln">    41&nbsp;&nbsp;</span><span class="comment">//	        f, err := os.Create(*memprofile)</span>
+<span id="L42" class="ln">    42&nbsp;&nbsp;</span><span class="comment">//	        if err != nil {</span>
+<span id="L43" class="ln">    43&nbsp;&nbsp;</span><span class="comment">//	            log.Fatal(&#34;could not create memory profile: &#34;, err)</span>
+<span id="L44" class="ln">    44&nbsp;&nbsp;</span><span class="comment">//	        }</span>
+<span id="L45" class="ln">    45&nbsp;&nbsp;</span><span class="comment">//	        defer f.Close() // error handling omitted for example</span>
+<span id="L46" class="ln">    46&nbsp;&nbsp;</span><span class="comment">//	        runtime.GC() // get up-to-date statistics</span>
+<span id="L47" class="ln">    47&nbsp;&nbsp;</span><span class="comment">//	        if err := pprof.WriteHeapProfile(f); err != nil {</span>
+<span id="L48" class="ln">    48&nbsp;&nbsp;</span><span class="comment">//	            log.Fatal(&#34;could not write memory profile: &#34;, err)</span>
+<span id="L49" class="ln">    49&nbsp;&nbsp;</span><span class="comment">//	        }</span>
+<span id="L50" class="ln">    50&nbsp;&nbsp;</span><span class="comment">//	    }</span>
+<span id="L51" class="ln">    51&nbsp;&nbsp;</span><span class="comment">//	}</span>
+<span id="L52" class="ln">    52&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L53" class="ln">    53&nbsp;&nbsp;</span><span class="comment">// There is also a standard HTTP interface to profiling data. Adding</span>
+<span id="L54" class="ln">    54&nbsp;&nbsp;</span><span class="comment">// the following line will install handlers under the /debug/pprof/</span>
+<span id="L55" class="ln">    55&nbsp;&nbsp;</span><span class="comment">// URL to download live profiles:</span>
+<span id="L56" class="ln">    56&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L57" class="ln">    57&nbsp;&nbsp;</span><span class="comment">//	import _ &#34;net/http/pprof&#34;</span>
+<span id="L58" class="ln">    58&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L59" class="ln">    59&nbsp;&nbsp;</span><span class="comment">// See the net/http/pprof package for more details.</span>
+<span id="L60" class="ln">    60&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L61" class="ln">    61&nbsp;&nbsp;</span><span class="comment">// Profiles can then be visualized with the pprof tool:</span>
+<span id="L62" class="ln">    62&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L63" class="ln">    63&nbsp;&nbsp;</span><span class="comment">//	go tool pprof cpu.prof</span>
+<span id="L64" class="ln">    64&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L65" class="ln">    65&nbsp;&nbsp;</span><span class="comment">// There are many commands available from the pprof command line.</span>
+<span id="L66" class="ln">    66&nbsp;&nbsp;</span><span class="comment">// Commonly used commands include &#34;top&#34;, which prints a summary of the</span>
+<span id="L67" class="ln">    67&nbsp;&nbsp;</span><span class="comment">// top program hot-spots, and &#34;web&#34;, which opens an interactive graph</span>
+<span id="L68" class="ln">    68&nbsp;&nbsp;</span><span class="comment">// of hot-spots and their call graphs. Use &#34;help&#34; for information on</span>
+<span id="L69" class="ln">    69&nbsp;&nbsp;</span><span class="comment">// all pprof commands.</span>
+<span id="L70" class="ln">    70&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L71" class="ln">    71&nbsp;&nbsp;</span><span class="comment">// For more information about pprof, see</span>
+<span id="L72" class="ln">    72&nbsp;&nbsp;</span><span class="comment">// https://github.com/google/pprof/blob/main/doc/README.md.</span>
+<span id="L73" class="ln">    73&nbsp;&nbsp;</span>package pprof
+<span id="L74" class="ln">    74&nbsp;&nbsp;</span>
+<span id="L75" class="ln">    75&nbsp;&nbsp;</span>import (
+<span id="L76" class="ln">    76&nbsp;&nbsp;</span>	&#34;bufio&#34;
+<span id="L77" class="ln">    77&nbsp;&nbsp;</span>	&#34;fmt&#34;
+<span id="L78" class="ln">    78&nbsp;&nbsp;</span>	&#34;internal/abi&#34;
+<span id="L79" class="ln">    79&nbsp;&nbsp;</span>	&#34;io&#34;
+<span id="L80" class="ln">    80&nbsp;&nbsp;</span>	&#34;runtime&#34;
+<span id="L81" class="ln">    81&nbsp;&nbsp;</span>	&#34;sort&#34;
+<span id="L82" class="ln">    82&nbsp;&nbsp;</span>	&#34;strings&#34;
+<span id="L83" class="ln">    83&nbsp;&nbsp;</span>	&#34;sync&#34;
+<span id="L84" class="ln">    84&nbsp;&nbsp;</span>	&#34;text/tabwriter&#34;
+<span id="L85" class="ln">    85&nbsp;&nbsp;</span>	&#34;time&#34;
+<span id="L86" class="ln">    86&nbsp;&nbsp;</span>	&#34;unsafe&#34;
+<span id="L87" class="ln">    87&nbsp;&nbsp;</span>)
+<span id="L88" class="ln">    88&nbsp;&nbsp;</span>
+<span id="L89" class="ln">    89&nbsp;&nbsp;</span><span class="comment">// BUG(rsc): Profiles are only as good as the kernel support used to generate them.</span>
+<span id="L90" class="ln">    90&nbsp;&nbsp;</span><span class="comment">// See https://golang.org/issue/13841 for details about known problems.</span>
+<span id="L91" class="ln">    91&nbsp;&nbsp;</span>
+<span id="L92" class="ln">    92&nbsp;&nbsp;</span><span class="comment">// A Profile is a collection of stack traces showing the call sequences</span>
+<span id="L93" class="ln">    93&nbsp;&nbsp;</span><span class="comment">// that led to instances of a particular event, such as allocation.</span>
+<span id="L94" class="ln">    94&nbsp;&nbsp;</span><span class="comment">// Packages can create and maintain their own profiles; the most common</span>
+<span id="L95" class="ln">    95&nbsp;&nbsp;</span><span class="comment">// use is for tracking resources that must be explicitly closed, such as files</span>
+<span id="L96" class="ln">    96&nbsp;&nbsp;</span><span class="comment">// or network connections.</span>
+<span id="L97" class="ln">    97&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L98" class="ln">    98&nbsp;&nbsp;</span><span class="comment">// A Profile&#39;s methods can be called from multiple goroutines simultaneously.</span>
+<span id="L99" class="ln">    99&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L100" class="ln">   100&nbsp;&nbsp;</span><span class="comment">// Each Profile has a unique name. A few profiles are predefined:</span>
+<span id="L101" class="ln">   101&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L102" class="ln">   102&nbsp;&nbsp;</span><span class="comment">//	goroutine    - stack traces of all current goroutines</span>
+<span id="L103" class="ln">   103&nbsp;&nbsp;</span><span class="comment">//	heap         - a sampling of memory allocations of live objects</span>
+<span id="L104" class="ln">   104&nbsp;&nbsp;</span><span class="comment">//	allocs       - a sampling of all past memory allocations</span>
+<span id="L105" class="ln">   105&nbsp;&nbsp;</span><span class="comment">//	threadcreate - stack traces that led to the creation of new OS threads</span>
+<span id="L106" class="ln">   106&nbsp;&nbsp;</span><span class="comment">//	block        - stack traces that led to blocking on synchronization primitives</span>
+<span id="L107" class="ln">   107&nbsp;&nbsp;</span><span class="comment">//	mutex        - stack traces of holders of contended mutexes</span>
+<span id="L108" class="ln">   108&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L109" class="ln">   109&nbsp;&nbsp;</span><span class="comment">// These predefined profiles maintain themselves and panic on an explicit</span>
+<span id="L110" class="ln">   110&nbsp;&nbsp;</span><span class="comment">// [Profile.Add] or [Profile.Remove] method call.</span>
+<span id="L111" class="ln">   111&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L112" class="ln">   112&nbsp;&nbsp;</span><span class="comment">// The CPU profile is not available as a Profile. It has a special API,</span>
+<span id="L113" class="ln">   113&nbsp;&nbsp;</span><span class="comment">// the [StartCPUProfile] and [StopCPUProfile] functions, because it streams</span>
+<span id="L114" class="ln">   114&nbsp;&nbsp;</span><span class="comment">// output to a writer during profiling.</span>
+<span id="L115" class="ln">   115&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L116" class="ln">   116&nbsp;&nbsp;</span><span class="comment">// # Heap profile</span>
+<span id="L117" class="ln">   117&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L118" class="ln">   118&nbsp;&nbsp;</span><span class="comment">// The heap profile reports statistics as of the most recently completed</span>
+<span id="L119" class="ln">   119&nbsp;&nbsp;</span><span class="comment">// garbage collection; it elides more recent allocation to avoid skewing</span>
+<span id="L120" class="ln">   120&nbsp;&nbsp;</span><span class="comment">// the profile away from live data and toward garbage.</span>
+<span id="L121" class="ln">   121&nbsp;&nbsp;</span><span class="comment">// If there has been no garbage collection at all, the heap profile reports</span>
+<span id="L122" class="ln">   122&nbsp;&nbsp;</span><span class="comment">// all known allocations. This exception helps mainly in programs running</span>
+<span id="L123" class="ln">   123&nbsp;&nbsp;</span><span class="comment">// without garbage collection enabled, usually for debugging purposes.</span>
+<span id="L124" class="ln">   124&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L125" class="ln">   125&nbsp;&nbsp;</span><span class="comment">// The heap profile tracks both the allocation sites for all live objects in</span>
+<span id="L126" class="ln">   126&nbsp;&nbsp;</span><span class="comment">// the application memory and for all objects allocated since the program start.</span>
+<span id="L127" class="ln">   127&nbsp;&nbsp;</span><span class="comment">// Pprof&#39;s -inuse_space, -inuse_objects, -alloc_space, and -alloc_objects</span>
+<span id="L128" class="ln">   128&nbsp;&nbsp;</span><span class="comment">// flags select which to display, defaulting to -inuse_space (live objects,</span>
+<span id="L129" class="ln">   129&nbsp;&nbsp;</span><span class="comment">// scaled by size).</span>
+<span id="L130" class="ln">   130&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L131" class="ln">   131&nbsp;&nbsp;</span><span class="comment">// # Allocs profile</span>
+<span id="L132" class="ln">   132&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L133" class="ln">   133&nbsp;&nbsp;</span><span class="comment">// The allocs profile is the same as the heap profile but changes the default</span>
+<span id="L134" class="ln">   134&nbsp;&nbsp;</span><span class="comment">// pprof display to -alloc_space, the total number of bytes allocated since</span>
+<span id="L135" class="ln">   135&nbsp;&nbsp;</span><span class="comment">// the program began (including garbage-collected bytes).</span>
+<span id="L136" class="ln">   136&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L137" class="ln">   137&nbsp;&nbsp;</span><span class="comment">// # Block profile</span>
+<span id="L138" class="ln">   138&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L139" class="ln">   139&nbsp;&nbsp;</span><span class="comment">// The block profile tracks time spent blocked on synchronization primitives,</span>
+<span id="L140" class="ln">   140&nbsp;&nbsp;</span><span class="comment">// such as [sync.Mutex], [sync.RWMutex], [sync.WaitGroup], [sync.Cond], and</span>
+<span id="L141" class="ln">   141&nbsp;&nbsp;</span><span class="comment">// channel send/receive/select.</span>
+<span id="L142" class="ln">   142&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L143" class="ln">   143&nbsp;&nbsp;</span><span class="comment">// Stack traces correspond to the location that blocked (for example,</span>
+<span id="L144" class="ln">   144&nbsp;&nbsp;</span><span class="comment">// [sync.Mutex.Lock]).</span>
+<span id="L145" class="ln">   145&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L146" class="ln">   146&nbsp;&nbsp;</span><span class="comment">// Sample values correspond to cumulative time spent blocked at that stack</span>
+<span id="L147" class="ln">   147&nbsp;&nbsp;</span><span class="comment">// trace, subject to time-based sampling specified by</span>
+<span id="L148" class="ln">   148&nbsp;&nbsp;</span><span class="comment">// [runtime.SetBlockProfileRate].</span>
+<span id="L149" class="ln">   149&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L150" class="ln">   150&nbsp;&nbsp;</span><span class="comment">// # Mutex profile</span>
+<span id="L151" class="ln">   151&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L152" class="ln">   152&nbsp;&nbsp;</span><span class="comment">// The mutex profile tracks contention on mutexes, such as [sync.Mutex],</span>
+<span id="L153" class="ln">   153&nbsp;&nbsp;</span><span class="comment">// [sync.RWMutex], and runtime-internal locks.</span>
+<span id="L154" class="ln">   154&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L155" class="ln">   155&nbsp;&nbsp;</span><span class="comment">// Stack traces correspond to the end of the critical section causing</span>
+<span id="L156" class="ln">   156&nbsp;&nbsp;</span><span class="comment">// contention. For example, a lock held for a long time while other goroutines</span>
+<span id="L157" class="ln">   157&nbsp;&nbsp;</span><span class="comment">// are waiting to acquire the lock will report contention when the lock is</span>
+<span id="L158" class="ln">   158&nbsp;&nbsp;</span><span class="comment">// finally unlocked (that is, at [sync.Mutex.Unlock]).</span>
+<span id="L159" class="ln">   159&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L160" class="ln">   160&nbsp;&nbsp;</span><span class="comment">// Sample values correspond to the approximate cumulative time other goroutines</span>
+<span id="L161" class="ln">   161&nbsp;&nbsp;</span><span class="comment">// spent blocked waiting for the lock, subject to event-based sampling</span>
+<span id="L162" class="ln">   162&nbsp;&nbsp;</span><span class="comment">// specified by [runtime.SetMutexProfileFraction]. For example, if a caller</span>
+<span id="L163" class="ln">   163&nbsp;&nbsp;</span><span class="comment">// holds a lock for 1s while 5 other goroutines are waiting for the entire</span>
+<span id="L164" class="ln">   164&nbsp;&nbsp;</span><span class="comment">// second to acquire the lock, its unlock call stack will report 5s of</span>
+<span id="L165" class="ln">   165&nbsp;&nbsp;</span><span class="comment">// contention.</span>
+<span id="L166" class="ln">   166&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L167" class="ln">   167&nbsp;&nbsp;</span><span class="comment">// Runtime-internal locks are always reported at the location</span>
+<span id="L168" class="ln">   168&nbsp;&nbsp;</span><span class="comment">// &#34;runtime._LostContendedRuntimeLock&#34;. More detailed stack traces for</span>
+<span id="L169" class="ln">   169&nbsp;&nbsp;</span><span class="comment">// runtime-internal locks can be obtained by setting</span>
+<span id="L170" class="ln">   170&nbsp;&nbsp;</span><span class="comment">// `GODEBUG=runtimecontentionstacks=1` (see package [runtime] docs for</span>
+<span id="L171" class="ln">   171&nbsp;&nbsp;</span><span class="comment">// caveats).</span>
+<span id="L172" class="ln">   172&nbsp;&nbsp;</span>type Profile struct {
+<span id="L173" class="ln">   173&nbsp;&nbsp;</span>	name  string
+<span id="L174" class="ln">   174&nbsp;&nbsp;</span>	mu    sync.Mutex
+<span id="L175" class="ln">   175&nbsp;&nbsp;</span>	m     map[any][]uintptr
+<span id="L176" class="ln">   176&nbsp;&nbsp;</span>	count func() int
+<span id="L177" class="ln">   177&nbsp;&nbsp;</span>	write func(io.Writer, int) error
+<span id="L178" class="ln">   178&nbsp;&nbsp;</span>}
+<span id="L179" class="ln">   179&nbsp;&nbsp;</span>
+<span id="L180" class="ln">   180&nbsp;&nbsp;</span><span class="comment">// profiles records all registered profiles.</span>
+<span id="L181" class="ln">   181&nbsp;&nbsp;</span>var profiles struct {
+<span id="L182" class="ln">   182&nbsp;&nbsp;</span>	mu sync.Mutex
+<span id="L183" class="ln">   183&nbsp;&nbsp;</span>	m  map[string]*Profile
+<span id="L184" class="ln">   184&nbsp;&nbsp;</span>}
+<span id="L185" class="ln">   185&nbsp;&nbsp;</span>
+<span id="L186" class="ln">   186&nbsp;&nbsp;</span>var goroutineProfile = &amp;Profile{
+<span id="L187" class="ln">   187&nbsp;&nbsp;</span>	name:  &#34;goroutine&#34;,
+<span id="L188" class="ln">   188&nbsp;&nbsp;</span>	count: countGoroutine,
+<span id="L189" class="ln">   189&nbsp;&nbsp;</span>	write: writeGoroutine,
+<span id="L190" class="ln">   190&nbsp;&nbsp;</span>}
+<span id="L191" class="ln">   191&nbsp;&nbsp;</span>
+<span id="L192" class="ln">   192&nbsp;&nbsp;</span>var threadcreateProfile = &amp;Profile{
+<span id="L193" class="ln">   193&nbsp;&nbsp;</span>	name:  &#34;threadcreate&#34;,
+<span id="L194" class="ln">   194&nbsp;&nbsp;</span>	count: countThreadCreate,
+<span id="L195" class="ln">   195&nbsp;&nbsp;</span>	write: writeThreadCreate,
+<span id="L196" class="ln">   196&nbsp;&nbsp;</span>}
+<span id="L197" class="ln">   197&nbsp;&nbsp;</span>
+<span id="L198" class="ln">   198&nbsp;&nbsp;</span>var heapProfile = &amp;Profile{
+<span id="L199" class="ln">   199&nbsp;&nbsp;</span>	name:  &#34;heap&#34;,
+<span id="L200" class="ln">   200&nbsp;&nbsp;</span>	count: countHeap,
+<span id="L201" class="ln">   201&nbsp;&nbsp;</span>	write: writeHeap,
+<span id="L202" class="ln">   202&nbsp;&nbsp;</span>}
+<span id="L203" class="ln">   203&nbsp;&nbsp;</span>
+<span id="L204" class="ln">   204&nbsp;&nbsp;</span>var allocsProfile = &amp;Profile{
+<span id="L205" class="ln">   205&nbsp;&nbsp;</span>	name:  &#34;allocs&#34;,
+<span id="L206" class="ln">   206&nbsp;&nbsp;</span>	count: countHeap, <span class="comment">// identical to heap profile</span>
+<span id="L207" class="ln">   207&nbsp;&nbsp;</span>	write: writeAlloc,
+<span id="L208" class="ln">   208&nbsp;&nbsp;</span>}
+<span id="L209" class="ln">   209&nbsp;&nbsp;</span>
+<span id="L210" class="ln">   210&nbsp;&nbsp;</span>var blockProfile = &amp;Profile{
+<span id="L211" class="ln">   211&nbsp;&nbsp;</span>	name:  &#34;block&#34;,
+<span id="L212" class="ln">   212&nbsp;&nbsp;</span>	count: countBlock,
+<span id="L213" class="ln">   213&nbsp;&nbsp;</span>	write: writeBlock,
+<span id="L214" class="ln">   214&nbsp;&nbsp;</span>}
+<span id="L215" class="ln">   215&nbsp;&nbsp;</span>
+<span id="L216" class="ln">   216&nbsp;&nbsp;</span>var mutexProfile = &amp;Profile{
+<span id="L217" class="ln">   217&nbsp;&nbsp;</span>	name:  &#34;mutex&#34;,
+<span id="L218" class="ln">   218&nbsp;&nbsp;</span>	count: countMutex,
+<span id="L219" class="ln">   219&nbsp;&nbsp;</span>	write: writeMutex,
+<span id="L220" class="ln">   220&nbsp;&nbsp;</span>}
+<span id="L221" class="ln">   221&nbsp;&nbsp;</span>
+<span id="L222" class="ln">   222&nbsp;&nbsp;</span>func lockProfiles() {
+<span id="L223" class="ln">   223&nbsp;&nbsp;</span>	profiles.mu.Lock()
+<span id="L224" class="ln">   224&nbsp;&nbsp;</span>	if profiles.m == nil {
+<span id="L225" class="ln">   225&nbsp;&nbsp;</span>		<span class="comment">// Initial built-in profiles.</span>
+<span id="L226" class="ln">   226&nbsp;&nbsp;</span>		profiles.m = map[string]*Profile{
+<span id="L227" class="ln">   227&nbsp;&nbsp;</span>			&#34;goroutine&#34;:    goroutineProfile,
+<span id="L228" class="ln">   228&nbsp;&nbsp;</span>			&#34;threadcreate&#34;: threadcreateProfile,
+<span id="L229" class="ln">   229&nbsp;&nbsp;</span>			&#34;heap&#34;:         heapProfile,
+<span id="L230" class="ln">   230&nbsp;&nbsp;</span>			&#34;allocs&#34;:       allocsProfile,
+<span id="L231" class="ln">   231&nbsp;&nbsp;</span>			&#34;block&#34;:        blockProfile,
+<span id="L232" class="ln">   232&nbsp;&nbsp;</span>			&#34;mutex&#34;:        mutexProfile,
+<span id="L233" class="ln">   233&nbsp;&nbsp;</span>		}
+<span id="L234" class="ln">   234&nbsp;&nbsp;</span>	}
+<span id="L235" class="ln">   235&nbsp;&nbsp;</span>}
+<span id="L236" class="ln">   236&nbsp;&nbsp;</span>
+<span id="L237" class="ln">   237&nbsp;&nbsp;</span>func unlockProfiles() {
+<span id="L238" class="ln">   238&nbsp;&nbsp;</span>	profiles.mu.Unlock()
+<span id="L239" class="ln">   239&nbsp;&nbsp;</span>}
+<span id="L240" class="ln">   240&nbsp;&nbsp;</span>
+<span id="L241" class="ln">   241&nbsp;&nbsp;</span><span class="comment">// NewProfile creates a new profile with the given name.</span>
+<span id="L242" class="ln">   242&nbsp;&nbsp;</span><span class="comment">// If a profile with that name already exists, NewProfile panics.</span>
+<span id="L243" class="ln">   243&nbsp;&nbsp;</span><span class="comment">// The convention is to use a &#39;import/path.&#39; prefix to create</span>
+<span id="L244" class="ln">   244&nbsp;&nbsp;</span><span class="comment">// separate name spaces for each package.</span>
+<span id="L245" class="ln">   245&nbsp;&nbsp;</span><span class="comment">// For compatibility with various tools that read pprof data,</span>
+<span id="L246" class="ln">   246&nbsp;&nbsp;</span><span class="comment">// profile names should not contain spaces.</span>
+<span id="L247" class="ln">   247&nbsp;&nbsp;</span>func NewProfile(name string) *Profile {
+<span id="L248" class="ln">   248&nbsp;&nbsp;</span>	lockProfiles()
+<span id="L249" class="ln">   249&nbsp;&nbsp;</span>	defer unlockProfiles()
+<span id="L250" class="ln">   250&nbsp;&nbsp;</span>	if name == &#34;&#34; {
+<span id="L251" class="ln">   251&nbsp;&nbsp;</span>		panic(&#34;pprof: NewProfile with empty name&#34;)
+<span id="L252" class="ln">   252&nbsp;&nbsp;</span>	}
+<span id="L253" class="ln">   253&nbsp;&nbsp;</span>	if profiles.m[name] != nil {
+<span id="L254" class="ln">   254&nbsp;&nbsp;</span>		panic(&#34;pprof: NewProfile name already in use: &#34; + name)
+<span id="L255" class="ln">   255&nbsp;&nbsp;</span>	}
+<span id="L256" class="ln">   256&nbsp;&nbsp;</span>	p := &amp;Profile{
+<span id="L257" class="ln">   257&nbsp;&nbsp;</span>		name: name,
+<span id="L258" class="ln">   258&nbsp;&nbsp;</span>		m:    map[any][]uintptr{},
+<span id="L259" class="ln">   259&nbsp;&nbsp;</span>	}
+<span id="L260" class="ln">   260&nbsp;&nbsp;</span>	profiles.m[name] = p
+<span id="L261" class="ln">   261&nbsp;&nbsp;</span>	return p
+<span id="L262" class="ln">   262&nbsp;&nbsp;</span>}
+<span id="L263" class="ln">   263&nbsp;&nbsp;</span>
+<span id="L264" class="ln">   264&nbsp;&nbsp;</span><span class="comment">// Lookup returns the profile with the given name, or nil if no such profile exists.</span>
+<span id="L265" class="ln">   265&nbsp;&nbsp;</span>func Lookup(name string) *Profile {
+<span id="L266" class="ln">   266&nbsp;&nbsp;</span>	lockProfiles()
+<span id="L267" class="ln">   267&nbsp;&nbsp;</span>	defer unlockProfiles()
+<span id="L268" class="ln">   268&nbsp;&nbsp;</span>	return profiles.m[name]
+<span id="L269" class="ln">   269&nbsp;&nbsp;</span>}
+<span id="L270" class="ln">   270&nbsp;&nbsp;</span>
+<span id="L271" class="ln">   271&nbsp;&nbsp;</span><span class="comment">// Profiles returns a slice of all the known profiles, sorted by name.</span>
+<span id="L272" class="ln">   272&nbsp;&nbsp;</span><span class="selection">func Profiles() []*Profile</span> {
+<span id="L273" class="ln">   273&nbsp;&nbsp;</span>	lockProfiles()
+<span id="L274" class="ln">   274&nbsp;&nbsp;</span>	defer unlockProfiles()
+<span id="L275" class="ln">   275&nbsp;&nbsp;</span>
+<span id="L276" class="ln">   276&nbsp;&nbsp;</span>	all := make([]*Profile, 0, len(profiles.m))
+<span id="L277" class="ln">   277&nbsp;&nbsp;</span>	for _, p := range profiles.m {
+<span id="L278" class="ln">   278&nbsp;&nbsp;</span>		all = append(all, p)
+<span id="L279" class="ln">   279&nbsp;&nbsp;</span>	}
+<span id="L280" class="ln">   280&nbsp;&nbsp;</span>
+<span id="L281" class="ln">   281&nbsp;&nbsp;</span>	sort.Slice(all, func(i, j int) bool { return all[i].name &lt; all[j].name })
+<span id="L282" class="ln">   282&nbsp;&nbsp;</span>	return all
+<span id="L283" class="ln">   283&nbsp;&nbsp;</span>}
+<span id="L284" class="ln">   284&nbsp;&nbsp;</span>
+<span id="L285" class="ln">   285&nbsp;&nbsp;</span><span class="comment">// Name returns this profile&#39;s name, which can be passed to [Lookup] to reobtain the profile.</span>
+<span id="L286" class="ln">   286&nbsp;&nbsp;</span>func (p *Profile) Name() string {
+<span id="L287" class="ln">   287&nbsp;&nbsp;</span>	return p.name
+<span id="L288" class="ln">   288&nbsp;&nbsp;</span>}
+<span id="L289" class="ln">   289&nbsp;&nbsp;</span>
+<span id="L290" class="ln">   290&nbsp;&nbsp;</span><span class="comment">// Count returns the number of execution stacks currently in the profile.</span>
+<span id="L291" class="ln">   291&nbsp;&nbsp;</span>func (p *Profile) Count() int {
+<span id="L292" class="ln">   292&nbsp;&nbsp;</span>	p.mu.Lock()
+<span id="L293" class="ln">   293&nbsp;&nbsp;</span>	defer p.mu.Unlock()
+<span id="L294" class="ln">   294&nbsp;&nbsp;</span>	if p.count != nil {
+<span id="L295" class="ln">   295&nbsp;&nbsp;</span>		return p.count()
+<span id="L296" class="ln">   296&nbsp;&nbsp;</span>	}
+<span id="L297" class="ln">   297&nbsp;&nbsp;</span>	return len(p.m)
+<span id="L298" class="ln">   298&nbsp;&nbsp;</span>}
+<span id="L299" class="ln">   299&nbsp;&nbsp;</span>
+<span id="L300" class="ln">   300&nbsp;&nbsp;</span><span class="comment">// Add adds the current execution stack to the profile, associated with value.</span>
+<span id="L301" class="ln">   301&nbsp;&nbsp;</span><span class="comment">// Add stores value in an internal map, so value must be suitable for use as</span>
+<span id="L302" class="ln">   302&nbsp;&nbsp;</span><span class="comment">// a map key and will not be garbage collected until the corresponding</span>
+<span id="L303" class="ln">   303&nbsp;&nbsp;</span><span class="comment">// call to [Profile.Remove]. Add panics if the profile already contains a stack for value.</span>
+<span id="L304" class="ln">   304&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L305" class="ln">   305&nbsp;&nbsp;</span><span class="comment">// The skip parameter has the same meaning as [runtime.Caller]&#39;s skip</span>
+<span id="L306" class="ln">   306&nbsp;&nbsp;</span><span class="comment">// and controls where the stack trace begins. Passing skip=0 begins the</span>
+<span id="L307" class="ln">   307&nbsp;&nbsp;</span><span class="comment">// trace in the function calling Add. For example, given this</span>
+<span id="L308" class="ln">   308&nbsp;&nbsp;</span><span class="comment">// execution stack:</span>
+<span id="L309" class="ln">   309&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L310" class="ln">   310&nbsp;&nbsp;</span><span class="comment">//	Add</span>
+<span id="L311" class="ln">   311&nbsp;&nbsp;</span><span class="comment">//	called from rpc.NewClient</span>
+<span id="L312" class="ln">   312&nbsp;&nbsp;</span><span class="comment">//	called from mypkg.Run</span>
+<span id="L313" class="ln">   313&nbsp;&nbsp;</span><span class="comment">//	called from main.main</span>
+<span id="L314" class="ln">   314&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L315" class="ln">   315&nbsp;&nbsp;</span><span class="comment">// Passing skip=0 begins the stack trace at the call to Add inside rpc.NewClient.</span>
+<span id="L316" class="ln">   316&nbsp;&nbsp;</span><span class="comment">// Passing skip=1 begins the stack trace at the call to NewClient inside mypkg.Run.</span>
+<span id="L317" class="ln">   317&nbsp;&nbsp;</span>func (p *Profile) Add(value any, skip int) {
+<span id="L318" class="ln">   318&nbsp;&nbsp;</span>	if p.name == &#34;&#34; {
+<span id="L319" class="ln">   319&nbsp;&nbsp;</span>		panic(&#34;pprof: use of uninitialized Profile&#34;)
+<span id="L320" class="ln">   320&nbsp;&nbsp;</span>	}
+<span id="L321" class="ln">   321&nbsp;&nbsp;</span>	if p.write != nil {
+<span id="L322" class="ln">   322&nbsp;&nbsp;</span>		panic(&#34;pprof: Add called on built-in Profile &#34; + p.name)
+<span id="L323" class="ln">   323&nbsp;&nbsp;</span>	}
+<span id="L324" class="ln">   324&nbsp;&nbsp;</span>
+<span id="L325" class="ln">   325&nbsp;&nbsp;</span>	stk := make([]uintptr, 32)
+<span id="L326" class="ln">   326&nbsp;&nbsp;</span>	n := runtime.Callers(skip+1, stk[:])
+<span id="L327" class="ln">   327&nbsp;&nbsp;</span>	stk = stk[:n]
+<span id="L328" class="ln">   328&nbsp;&nbsp;</span>	if len(stk) == 0 {
+<span id="L329" class="ln">   329&nbsp;&nbsp;</span>		<span class="comment">// The value for skip is too large, and there&#39;s no stack trace to record.</span>
+<span id="L330" class="ln">   330&nbsp;&nbsp;</span>		stk = []uintptr{abi.FuncPCABIInternal(lostProfileEvent)}
+<span id="L331" class="ln">   331&nbsp;&nbsp;</span>	}
+<span id="L332" class="ln">   332&nbsp;&nbsp;</span>
+<span id="L333" class="ln">   333&nbsp;&nbsp;</span>	p.mu.Lock()
+<span id="L334" class="ln">   334&nbsp;&nbsp;</span>	defer p.mu.Unlock()
+<span id="L335" class="ln">   335&nbsp;&nbsp;</span>	if p.m[value] != nil {
+<span id="L336" class="ln">   336&nbsp;&nbsp;</span>		panic(&#34;pprof: Profile.Add of duplicate value&#34;)
+<span id="L337" class="ln">   337&nbsp;&nbsp;</span>	}
+<span id="L338" class="ln">   338&nbsp;&nbsp;</span>	p.m[value] = stk
+<span id="L339" class="ln">   339&nbsp;&nbsp;</span>}
+<span id="L340" class="ln">   340&nbsp;&nbsp;</span>
+<span id="L341" class="ln">   341&nbsp;&nbsp;</span><span class="comment">// Remove removes the execution stack associated with value from the profile.</span>
+<span id="L342" class="ln">   342&nbsp;&nbsp;</span><span class="comment">// It is a no-op if the value is not in the profile.</span>
+<span id="L343" class="ln">   343&nbsp;&nbsp;</span>func (p *Profile) Remove(value any) {
+<span id="L344" class="ln">   344&nbsp;&nbsp;</span>	p.mu.Lock()
+<span id="L345" class="ln">   345&nbsp;&nbsp;</span>	defer p.mu.Unlock()
+<span id="L346" class="ln">   346&nbsp;&nbsp;</span>	delete(p.m, value)
+<span id="L347" class="ln">   347&nbsp;&nbsp;</span>}
+<span id="L348" class="ln">   348&nbsp;&nbsp;</span>
+<span id="L349" class="ln">   349&nbsp;&nbsp;</span><span class="comment">// WriteTo writes a pprof-formatted snapshot of the profile to w.</span>
+<span id="L350" class="ln">   350&nbsp;&nbsp;</span><span class="comment">// If a write to w returns an error, WriteTo returns that error.</span>
+<span id="L351" class="ln">   351&nbsp;&nbsp;</span><span class="comment">// Otherwise, WriteTo returns nil.</span>
+<span id="L352" class="ln">   352&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L353" class="ln">   353&nbsp;&nbsp;</span><span class="comment">// The debug parameter enables additional output.</span>
+<span id="L354" class="ln">   354&nbsp;&nbsp;</span><span class="comment">// Passing debug=0 writes the gzip-compressed protocol buffer described</span>
+<span id="L355" class="ln">   355&nbsp;&nbsp;</span><span class="comment">// in https://github.com/google/pprof/tree/master/proto#overview.</span>
+<span id="L356" class="ln">   356&nbsp;&nbsp;</span><span class="comment">// Passing debug=1 writes the legacy text format with comments</span>
+<span id="L357" class="ln">   357&nbsp;&nbsp;</span><span class="comment">// translating addresses to function names and line numbers, so that a</span>
+<span id="L358" class="ln">   358&nbsp;&nbsp;</span><span class="comment">// programmer can read the profile without tools.</span>
+<span id="L359" class="ln">   359&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L360" class="ln">   360&nbsp;&nbsp;</span><span class="comment">// The predefined profiles may assign meaning to other debug values;</span>
+<span id="L361" class="ln">   361&nbsp;&nbsp;</span><span class="comment">// for example, when printing the &#34;goroutine&#34; profile, debug=2 means to</span>
+<span id="L362" class="ln">   362&nbsp;&nbsp;</span><span class="comment">// print the goroutine stacks in the same form that a Go program uses</span>
+<span id="L363" class="ln">   363&nbsp;&nbsp;</span><span class="comment">// when dying due to an unrecovered panic.</span>
+<span id="L364" class="ln">   364&nbsp;&nbsp;</span>func (p *Profile) WriteTo(w io.Writer, debug int) error {
+<span id="L365" class="ln">   365&nbsp;&nbsp;</span>	if p.name == &#34;&#34; {
+<span id="L366" class="ln">   366&nbsp;&nbsp;</span>		panic(&#34;pprof: use of zero Profile&#34;)
+<span id="L367" class="ln">   367&nbsp;&nbsp;</span>	}
+<span id="L368" class="ln">   368&nbsp;&nbsp;</span>	if p.write != nil {
+<span id="L369" class="ln">   369&nbsp;&nbsp;</span>		return p.write(w, debug)
+<span id="L370" class="ln">   370&nbsp;&nbsp;</span>	}
+<span id="L371" class="ln">   371&nbsp;&nbsp;</span>
+<span id="L372" class="ln">   372&nbsp;&nbsp;</span>	<span class="comment">// Obtain consistent snapshot under lock; then process without lock.</span>
+<span id="L373" class="ln">   373&nbsp;&nbsp;</span>	p.mu.Lock()
+<span id="L374" class="ln">   374&nbsp;&nbsp;</span>	all := make([][]uintptr, 0, len(p.m))
+<span id="L375" class="ln">   375&nbsp;&nbsp;</span>	for _, stk := range p.m {
+<span id="L376" class="ln">   376&nbsp;&nbsp;</span>		all = append(all, stk)
+<span id="L377" class="ln">   377&nbsp;&nbsp;</span>	}
+<span id="L378" class="ln">   378&nbsp;&nbsp;</span>	p.mu.Unlock()
+<span id="L379" class="ln">   379&nbsp;&nbsp;</span>
+<span id="L380" class="ln">   380&nbsp;&nbsp;</span>	<span class="comment">// Map order is non-deterministic; make output deterministic.</span>
+<span id="L381" class="ln">   381&nbsp;&nbsp;</span>	sort.Slice(all, func(i, j int) bool {
+<span id="L382" class="ln">   382&nbsp;&nbsp;</span>		t, u := all[i], all[j]
+<span id="L383" class="ln">   383&nbsp;&nbsp;</span>		for k := 0; k &lt; len(t) &amp;&amp; k &lt; len(u); k++ {
+<span id="L384" class="ln">   384&nbsp;&nbsp;</span>			if t[k] != u[k] {
+<span id="L385" class="ln">   385&nbsp;&nbsp;</span>				return t[k] &lt; u[k]
+<span id="L386" class="ln">   386&nbsp;&nbsp;</span>			}
+<span id="L387" class="ln">   387&nbsp;&nbsp;</span>		}
+<span id="L388" class="ln">   388&nbsp;&nbsp;</span>		return len(t) &lt; len(u)
+<span id="L389" class="ln">   389&nbsp;&nbsp;</span>	})
+<span id="L390" class="ln">   390&nbsp;&nbsp;</span>
+<span id="L391" class="ln">   391&nbsp;&nbsp;</span>	return printCountProfile(w, debug, p.name, stackProfile(all))
+<span id="L392" class="ln">   392&nbsp;&nbsp;</span>}
+<span id="L393" class="ln">   393&nbsp;&nbsp;</span>
+<span id="L394" class="ln">   394&nbsp;&nbsp;</span>type stackProfile [][]uintptr
+<span id="L395" class="ln">   395&nbsp;&nbsp;</span>
+<span id="L396" class="ln">   396&nbsp;&nbsp;</span>func (x stackProfile) Len() int              { return len(x) }
+<span id="L397" class="ln">   397&nbsp;&nbsp;</span>func (x stackProfile) Stack(i int) []uintptr { return x[i] }
+<span id="L398" class="ln">   398&nbsp;&nbsp;</span>func (x stackProfile) Label(i int) *labelMap { return nil }
+<span id="L399" class="ln">   399&nbsp;&nbsp;</span>
+<span id="L400" class="ln">   400&nbsp;&nbsp;</span><span class="comment">// A countProfile is a set of stack traces to be printed as counts</span>
+<span id="L401" class="ln">   401&nbsp;&nbsp;</span><span class="comment">// grouped by stack trace. There are multiple implementations:</span>
+<span id="L402" class="ln">   402&nbsp;&nbsp;</span><span class="comment">// all that matters is that we can find out how many traces there are</span>
+<span id="L403" class="ln">   403&nbsp;&nbsp;</span><span class="comment">// and obtain each trace in turn.</span>
+<span id="L404" class="ln">   404&nbsp;&nbsp;</span>type countProfile interface {
+<span id="L405" class="ln">   405&nbsp;&nbsp;</span>	Len() int
+<span id="L406" class="ln">   406&nbsp;&nbsp;</span>	Stack(i int) []uintptr
+<span id="L407" class="ln">   407&nbsp;&nbsp;</span>	Label(i int) *labelMap
+<span id="L408" class="ln">   408&nbsp;&nbsp;</span>}
+<span id="L409" class="ln">   409&nbsp;&nbsp;</span>
+<span id="L410" class="ln">   410&nbsp;&nbsp;</span><span class="comment">// printCountCycleProfile outputs block profile records (for block or mutex profiles)</span>
+<span id="L411" class="ln">   411&nbsp;&nbsp;</span><span class="comment">// as the pprof-proto format output. Translations from cycle count to time duration</span>
+<span id="L412" class="ln">   412&nbsp;&nbsp;</span><span class="comment">// are done because The proto expects count and time (nanoseconds) instead of count</span>
+<span id="L413" class="ln">   413&nbsp;&nbsp;</span><span class="comment">// and the number of cycles for block, contention profiles.</span>
+<span id="L414" class="ln">   414&nbsp;&nbsp;</span>func printCountCycleProfile(w io.Writer, countName, cycleName string, records []runtime.BlockProfileRecord) error {
+<span id="L415" class="ln">   415&nbsp;&nbsp;</span>	<span class="comment">// Output profile in protobuf form.</span>
+<span id="L416" class="ln">   416&nbsp;&nbsp;</span>	b := newProfileBuilder(w)
+<span id="L417" class="ln">   417&nbsp;&nbsp;</span>	b.pbValueType(tagProfile_PeriodType, countName, &#34;count&#34;)
+<span id="L418" class="ln">   418&nbsp;&nbsp;</span>	b.pb.int64Opt(tagProfile_Period, 1)
+<span id="L419" class="ln">   419&nbsp;&nbsp;</span>	b.pbValueType(tagProfile_SampleType, countName, &#34;count&#34;)
+<span id="L420" class="ln">   420&nbsp;&nbsp;</span>	b.pbValueType(tagProfile_SampleType, cycleName, &#34;nanoseconds&#34;)
+<span id="L421" class="ln">   421&nbsp;&nbsp;</span>
+<span id="L422" class="ln">   422&nbsp;&nbsp;</span>	cpuGHz := float64(runtime_cyclesPerSecond()) / 1e9
+<span id="L423" class="ln">   423&nbsp;&nbsp;</span>
+<span id="L424" class="ln">   424&nbsp;&nbsp;</span>	values := []int64{0, 0}
+<span id="L425" class="ln">   425&nbsp;&nbsp;</span>	var locs []uint64
+<span id="L426" class="ln">   426&nbsp;&nbsp;</span>	for _, r := range records {
+<span id="L427" class="ln">   427&nbsp;&nbsp;</span>		values[0] = r.Count
+<span id="L428" class="ln">   428&nbsp;&nbsp;</span>		values[1] = int64(float64(r.Cycles) / cpuGHz)
+<span id="L429" class="ln">   429&nbsp;&nbsp;</span>		<span class="comment">// For count profiles, all stack addresses are</span>
+<span id="L430" class="ln">   430&nbsp;&nbsp;</span>		<span class="comment">// return PCs, which is what appendLocsForStack expects.</span>
+<span id="L431" class="ln">   431&nbsp;&nbsp;</span>		locs = b.appendLocsForStack(locs[:0], r.Stack())
+<span id="L432" class="ln">   432&nbsp;&nbsp;</span>		b.pbSample(values, locs, nil)
+<span id="L433" class="ln">   433&nbsp;&nbsp;</span>	}
+<span id="L434" class="ln">   434&nbsp;&nbsp;</span>	b.build()
+<span id="L435" class="ln">   435&nbsp;&nbsp;</span>	return nil
+<span id="L436" class="ln">   436&nbsp;&nbsp;</span>}
+<span id="L437" class="ln">   437&nbsp;&nbsp;</span>
+<span id="L438" class="ln">   438&nbsp;&nbsp;</span><span class="comment">// printCountProfile prints a countProfile at the specified debug level.</span>
+<span id="L439" class="ln">   439&nbsp;&nbsp;</span><span class="comment">// The profile will be in compressed proto format unless debug is nonzero.</span>
+<span id="L440" class="ln">   440&nbsp;&nbsp;</span>func printCountProfile(w io.Writer, debug int, name string, p countProfile) error {
+<span id="L441" class="ln">   441&nbsp;&nbsp;</span>	<span class="comment">// Build count of each stack.</span>
+<span id="L442" class="ln">   442&nbsp;&nbsp;</span>	var buf strings.Builder
+<span id="L443" class="ln">   443&nbsp;&nbsp;</span>	key := func(stk []uintptr, lbls *labelMap) string {
+<span id="L444" class="ln">   444&nbsp;&nbsp;</span>		buf.Reset()
+<span id="L445" class="ln">   445&nbsp;&nbsp;</span>		fmt.Fprintf(&amp;buf, &#34;@&#34;)
+<span id="L446" class="ln">   446&nbsp;&nbsp;</span>		for _, pc := range stk {
+<span id="L447" class="ln">   447&nbsp;&nbsp;</span>			fmt.Fprintf(&amp;buf, &#34; %#x&#34;, pc)
+<span id="L448" class="ln">   448&nbsp;&nbsp;</span>		}
+<span id="L449" class="ln">   449&nbsp;&nbsp;</span>		if lbls != nil {
+<span id="L450" class="ln">   450&nbsp;&nbsp;</span>			buf.WriteString(&#34;\n# labels: &#34;)
+<span id="L451" class="ln">   451&nbsp;&nbsp;</span>			buf.WriteString(lbls.String())
+<span id="L452" class="ln">   452&nbsp;&nbsp;</span>		}
+<span id="L453" class="ln">   453&nbsp;&nbsp;</span>		return buf.String()
+<span id="L454" class="ln">   454&nbsp;&nbsp;</span>	}
+<span id="L455" class="ln">   455&nbsp;&nbsp;</span>	count := map[string]int{}
+<span id="L456" class="ln">   456&nbsp;&nbsp;</span>	index := map[string]int{}
+<span id="L457" class="ln">   457&nbsp;&nbsp;</span>	var keys []string
+<span id="L458" class="ln">   458&nbsp;&nbsp;</span>	n := p.Len()
+<span id="L459" class="ln">   459&nbsp;&nbsp;</span>	for i := 0; i &lt; n; i++ {
+<span id="L460" class="ln">   460&nbsp;&nbsp;</span>		k := key(p.Stack(i), p.Label(i))
+<span id="L461" class="ln">   461&nbsp;&nbsp;</span>		if count[k] == 0 {
+<span id="L462" class="ln">   462&nbsp;&nbsp;</span>			index[k] = i
+<span id="L463" class="ln">   463&nbsp;&nbsp;</span>			keys = append(keys, k)
+<span id="L464" class="ln">   464&nbsp;&nbsp;</span>		}
+<span id="L465" class="ln">   465&nbsp;&nbsp;</span>		count[k]++
+<span id="L466" class="ln">   466&nbsp;&nbsp;</span>	}
+<span id="L467" class="ln">   467&nbsp;&nbsp;</span>
+<span id="L468" class="ln">   468&nbsp;&nbsp;</span>	sort.Sort(&amp;keysByCount{keys, count})
+<span id="L469" class="ln">   469&nbsp;&nbsp;</span>
+<span id="L470" class="ln">   470&nbsp;&nbsp;</span>	if debug &gt; 0 {
+<span id="L471" class="ln">   471&nbsp;&nbsp;</span>		<span class="comment">// Print debug profile in legacy format</span>
+<span id="L472" class="ln">   472&nbsp;&nbsp;</span>		tw := tabwriter.NewWriter(w, 1, 8, 1, &#39;\t&#39;, 0)
+<span id="L473" class="ln">   473&nbsp;&nbsp;</span>		fmt.Fprintf(tw, &#34;%s profile: total %d\n&#34;, name, p.Len())
+<span id="L474" class="ln">   474&nbsp;&nbsp;</span>		for _, k := range keys {
+<span id="L475" class="ln">   475&nbsp;&nbsp;</span>			fmt.Fprintf(tw, &#34;%d %s\n&#34;, count[k], k)
+<span id="L476" class="ln">   476&nbsp;&nbsp;</span>			printStackRecord(tw, p.Stack(index[k]), false)
+<span id="L477" class="ln">   477&nbsp;&nbsp;</span>		}
+<span id="L478" class="ln">   478&nbsp;&nbsp;</span>		return tw.Flush()
+<span id="L479" class="ln">   479&nbsp;&nbsp;</span>	}
+<span id="L480" class="ln">   480&nbsp;&nbsp;</span>
+<span id="L481" class="ln">   481&nbsp;&nbsp;</span>	<span class="comment">// Output profile in protobuf form.</span>
+<span id="L482" class="ln">   482&nbsp;&nbsp;</span>	b := newProfileBuilder(w)
+<span id="L483" class="ln">   483&nbsp;&nbsp;</span>	b.pbValueType(tagProfile_PeriodType, name, &#34;count&#34;)
+<span id="L484" class="ln">   484&nbsp;&nbsp;</span>	b.pb.int64Opt(tagProfile_Period, 1)
+<span id="L485" class="ln">   485&nbsp;&nbsp;</span>	b.pbValueType(tagProfile_SampleType, name, &#34;count&#34;)
+<span id="L486" class="ln">   486&nbsp;&nbsp;</span>
+<span id="L487" class="ln">   487&nbsp;&nbsp;</span>	values := []int64{0}
+<span id="L488" class="ln">   488&nbsp;&nbsp;</span>	var locs []uint64
+<span id="L489" class="ln">   489&nbsp;&nbsp;</span>	for _, k := range keys {
+<span id="L490" class="ln">   490&nbsp;&nbsp;</span>		values[0] = int64(count[k])
+<span id="L491" class="ln">   491&nbsp;&nbsp;</span>		<span class="comment">// For count profiles, all stack addresses are</span>
+<span id="L492" class="ln">   492&nbsp;&nbsp;</span>		<span class="comment">// return PCs, which is what appendLocsForStack expects.</span>
+<span id="L493" class="ln">   493&nbsp;&nbsp;</span>		locs = b.appendLocsForStack(locs[:0], p.Stack(index[k]))
+<span id="L494" class="ln">   494&nbsp;&nbsp;</span>		idx := index[k]
+<span id="L495" class="ln">   495&nbsp;&nbsp;</span>		var labels func()
+<span id="L496" class="ln">   496&nbsp;&nbsp;</span>		if p.Label(idx) != nil {
+<span id="L497" class="ln">   497&nbsp;&nbsp;</span>			labels = func() {
+<span id="L498" class="ln">   498&nbsp;&nbsp;</span>				for k, v := range *p.Label(idx) {
+<span id="L499" class="ln">   499&nbsp;&nbsp;</span>					b.pbLabel(tagSample_Label, k, v, 0)
+<span id="L500" class="ln">   500&nbsp;&nbsp;</span>				}
+<span id="L501" class="ln">   501&nbsp;&nbsp;</span>			}
+<span id="L502" class="ln">   502&nbsp;&nbsp;</span>		}
+<span id="L503" class="ln">   503&nbsp;&nbsp;</span>		b.pbSample(values, locs, labels)
+<span id="L504" class="ln">   504&nbsp;&nbsp;</span>	}
+<span id="L505" class="ln">   505&nbsp;&nbsp;</span>	b.build()
+<span id="L506" class="ln">   506&nbsp;&nbsp;</span>	return nil
+<span id="L507" class="ln">   507&nbsp;&nbsp;</span>}
+<span id="L508" class="ln">   508&nbsp;&nbsp;</span>
+<span id="L509" class="ln">   509&nbsp;&nbsp;</span><span class="comment">// keysByCount sorts keys with higher counts first, breaking ties by key string order.</span>
+<span id="L510" class="ln">   510&nbsp;&nbsp;</span>type keysByCount struct {
+<span id="L511" class="ln">   511&nbsp;&nbsp;</span>	keys  []string
+<span id="L512" class="ln">   512&nbsp;&nbsp;</span>	count map[string]int
+<span id="L513" class="ln">   513&nbsp;&nbsp;</span>}
+<span id="L514" class="ln">   514&nbsp;&nbsp;</span>
+<span id="L515" class="ln">   515&nbsp;&nbsp;</span>func (x *keysByCount) Len() int      { return len(x.keys) }
+<span id="L516" class="ln">   516&nbsp;&nbsp;</span>func (x *keysByCount) Swap(i, j int) { x.keys[i], x.keys[j] = x.keys[j], x.keys[i] }
+<span id="L517" class="ln">   517&nbsp;&nbsp;</span>func (x *keysByCount) Less(i, j int) bool {
+<span id="L518" class="ln">   518&nbsp;&nbsp;</span>	ki, kj := x.keys[i], x.keys[j]
+<span id="L519" class="ln">   519&nbsp;&nbsp;</span>	ci, cj := x.count[ki], x.count[kj]
+<span id="L520" class="ln">   520&nbsp;&nbsp;</span>	if ci != cj {
+<span id="L521" class="ln">   521&nbsp;&nbsp;</span>		return ci &gt; cj
+<span id="L522" class="ln">   522&nbsp;&nbsp;</span>	}
+<span id="L523" class="ln">   523&nbsp;&nbsp;</span>	return ki &lt; kj
+<span id="L524" class="ln">   524&nbsp;&nbsp;</span>}
+<span id="L525" class="ln">   525&nbsp;&nbsp;</span>
+<span id="L526" class="ln">   526&nbsp;&nbsp;</span><span class="comment">// printStackRecord prints the function + source line information</span>
+<span id="L527" class="ln">   527&nbsp;&nbsp;</span><span class="comment">// for a single stack trace.</span>
+<span id="L528" class="ln">   528&nbsp;&nbsp;</span>func printStackRecord(w io.Writer, stk []uintptr, allFrames bool) {
+<span id="L529" class="ln">   529&nbsp;&nbsp;</span>	show := allFrames
+<span id="L530" class="ln">   530&nbsp;&nbsp;</span>	frames := runtime.CallersFrames(stk)
+<span id="L531" class="ln">   531&nbsp;&nbsp;</span>	for {
+<span id="L532" class="ln">   532&nbsp;&nbsp;</span>		frame, more := frames.Next()
+<span id="L533" class="ln">   533&nbsp;&nbsp;</span>		name := frame.Function
+<span id="L534" class="ln">   534&nbsp;&nbsp;</span>		if name == &#34;&#34; {
+<span id="L535" class="ln">   535&nbsp;&nbsp;</span>			show = true
+<span id="L536" class="ln">   536&nbsp;&nbsp;</span>			fmt.Fprintf(w, &#34;#\t%#x\n&#34;, frame.PC)
+<span id="L537" class="ln">   537&nbsp;&nbsp;</span>		} else if name != &#34;runtime.goexit&#34; &amp;&amp; (show || !strings.HasPrefix(name, &#34;runtime.&#34;)) {
+<span id="L538" class="ln">   538&nbsp;&nbsp;</span>			<span class="comment">// Hide runtime.goexit and any runtime functions at the beginning.</span>
+<span id="L539" class="ln">   539&nbsp;&nbsp;</span>			<span class="comment">// This is useful mainly for allocation traces.</span>
+<span id="L540" class="ln">   540&nbsp;&nbsp;</span>			show = true
+<span id="L541" class="ln">   541&nbsp;&nbsp;</span>			fmt.Fprintf(w, &#34;#\t%#x\t%s+%#x\t%s:%d\n&#34;, frame.PC, name, frame.PC-frame.Entry, frame.File, frame.Line)
+<span id="L542" class="ln">   542&nbsp;&nbsp;</span>		}
+<span id="L543" class="ln">   543&nbsp;&nbsp;</span>		if !more {
+<span id="L544" class="ln">   544&nbsp;&nbsp;</span>			break
+<span id="L545" class="ln">   545&nbsp;&nbsp;</span>		}
+<span id="L546" class="ln">   546&nbsp;&nbsp;</span>	}
+<span id="L547" class="ln">   547&nbsp;&nbsp;</span>	if !show {
+<span id="L548" class="ln">   548&nbsp;&nbsp;</span>		<span class="comment">// We didn&#39;t print anything; do it again,</span>
+<span id="L549" class="ln">   549&nbsp;&nbsp;</span>		<span class="comment">// and this time include runtime functions.</span>
+<span id="L550" class="ln">   550&nbsp;&nbsp;</span>		printStackRecord(w, stk, true)
+<span id="L551" class="ln">   551&nbsp;&nbsp;</span>		return
+<span id="L552" class="ln">   552&nbsp;&nbsp;</span>	}
+<span id="L553" class="ln">   553&nbsp;&nbsp;</span>	fmt.Fprintf(w, &#34;\n&#34;)
+<span id="L554" class="ln">   554&nbsp;&nbsp;</span>}
+<span id="L555" class="ln">   555&nbsp;&nbsp;</span>
+<span id="L556" class="ln">   556&nbsp;&nbsp;</span><span class="comment">// Interface to system profiles.</span>
+<span id="L557" class="ln">   557&nbsp;&nbsp;</span>
+<span id="L558" class="ln">   558&nbsp;&nbsp;</span><span class="comment">// WriteHeapProfile is shorthand for [Lookup](&#34;heap&#34;).WriteTo(w, 0).</span>
+<span id="L559" class="ln">   559&nbsp;&nbsp;</span><span class="comment">// It is preserved for backwards compatibility.</span>
+<span id="L560" class="ln">   560&nbsp;&nbsp;</span>func WriteHeapProfile(w io.Writer) error {
+<span id="L561" class="ln">   561&nbsp;&nbsp;</span>	return writeHeap(w, 0)
+<span id="L562" class="ln">   562&nbsp;&nbsp;</span>}
+<span id="L563" class="ln">   563&nbsp;&nbsp;</span>
+<span id="L564" class="ln">   564&nbsp;&nbsp;</span><span class="comment">// countHeap returns the number of records in the heap profile.</span>
+<span id="L565" class="ln">   565&nbsp;&nbsp;</span>func countHeap() int {
+<span id="L566" class="ln">   566&nbsp;&nbsp;</span>	n, _ := runtime.MemProfile(nil, true)
+<span id="L567" class="ln">   567&nbsp;&nbsp;</span>	return n
+<span id="L568" class="ln">   568&nbsp;&nbsp;</span>}
+<span id="L569" class="ln">   569&nbsp;&nbsp;</span>
+<span id="L570" class="ln">   570&nbsp;&nbsp;</span><span class="comment">// writeHeap writes the current runtime heap profile to w.</span>
+<span id="L571" class="ln">   571&nbsp;&nbsp;</span>func writeHeap(w io.Writer, debug int) error {
+<span id="L572" class="ln">   572&nbsp;&nbsp;</span>	return writeHeapInternal(w, debug, &#34;&#34;)
+<span id="L573" class="ln">   573&nbsp;&nbsp;</span>}
+<span id="L574" class="ln">   574&nbsp;&nbsp;</span>
+<span id="L575" class="ln">   575&nbsp;&nbsp;</span><span class="comment">// writeAlloc writes the current runtime heap profile to w</span>
+<span id="L576" class="ln">   576&nbsp;&nbsp;</span><span class="comment">// with the total allocation space as the default sample type.</span>
+<span id="L577" class="ln">   577&nbsp;&nbsp;</span>func writeAlloc(w io.Writer, debug int) error {
+<span id="L578" class="ln">   578&nbsp;&nbsp;</span>	return writeHeapInternal(w, debug, &#34;alloc_space&#34;)
+<span id="L579" class="ln">   579&nbsp;&nbsp;</span>}
+<span id="L580" class="ln">   580&nbsp;&nbsp;</span>
+<span id="L581" class="ln">   581&nbsp;&nbsp;</span>func writeHeapInternal(w io.Writer, debug int, defaultSampleType string) error {
+<span id="L582" class="ln">   582&nbsp;&nbsp;</span>	var memStats *runtime.MemStats
+<span id="L583" class="ln">   583&nbsp;&nbsp;</span>	if debug != 0 {
+<span id="L584" class="ln">   584&nbsp;&nbsp;</span>		<span class="comment">// Read mem stats first, so that our other allocations</span>
+<span id="L585" class="ln">   585&nbsp;&nbsp;</span>		<span class="comment">// do not appear in the statistics.</span>
+<span id="L586" class="ln">   586&nbsp;&nbsp;</span>		memStats = new(runtime.MemStats)
+<span id="L587" class="ln">   587&nbsp;&nbsp;</span>		runtime.ReadMemStats(memStats)
+<span id="L588" class="ln">   588&nbsp;&nbsp;</span>	}
+<span id="L589" class="ln">   589&nbsp;&nbsp;</span>
+<span id="L590" class="ln">   590&nbsp;&nbsp;</span>	<span class="comment">// Find out how many records there are (MemProfile(nil, true)),</span>
+<span id="L591" class="ln">   591&nbsp;&nbsp;</span>	<span class="comment">// allocate that many records, and get the data.</span>
+<span id="L592" class="ln">   592&nbsp;&nbsp;</span>	<span class="comment">// There&#39;s a race—more records might be added between</span>
+<span id="L593" class="ln">   593&nbsp;&nbsp;</span>	<span class="comment">// the two calls—so allocate a few extra records for safety</span>
+<span id="L594" class="ln">   594&nbsp;&nbsp;</span>	<span class="comment">// and also try again if we&#39;re very unlucky.</span>
+<span id="L595" class="ln">   595&nbsp;&nbsp;</span>	<span class="comment">// The loop should only execute one iteration in the common case.</span>
+<span id="L596" class="ln">   596&nbsp;&nbsp;</span>	var p []runtime.MemProfileRecord
+<span id="L597" class="ln">   597&nbsp;&nbsp;</span>	n, ok := runtime.MemProfile(nil, true)
+<span id="L598" class="ln">   598&nbsp;&nbsp;</span>	for {
+<span id="L599" class="ln">   599&nbsp;&nbsp;</span>		<span class="comment">// Allocate room for a slightly bigger profile,</span>
+<span id="L600" class="ln">   600&nbsp;&nbsp;</span>		<span class="comment">// in case a few more entries have been added</span>
+<span id="L601" class="ln">   601&nbsp;&nbsp;</span>		<span class="comment">// since the call to MemProfile.</span>
+<span id="L602" class="ln">   602&nbsp;&nbsp;</span>		p = make([]runtime.MemProfileRecord, n+50)
+<span id="L603" class="ln">   603&nbsp;&nbsp;</span>		n, ok = runtime.MemProfile(p, true)
+<span id="L604" class="ln">   604&nbsp;&nbsp;</span>		if ok {
+<span id="L605" class="ln">   605&nbsp;&nbsp;</span>			p = p[0:n]
+<span id="L606" class="ln">   606&nbsp;&nbsp;</span>			break
+<span id="L607" class="ln">   607&nbsp;&nbsp;</span>		}
+<span id="L608" class="ln">   608&nbsp;&nbsp;</span>		<span class="comment">// Profile grew; try again.</span>
+<span id="L609" class="ln">   609&nbsp;&nbsp;</span>	}
+<span id="L610" class="ln">   610&nbsp;&nbsp;</span>
+<span id="L611" class="ln">   611&nbsp;&nbsp;</span>	if debug == 0 {
+<span id="L612" class="ln">   612&nbsp;&nbsp;</span>		return writeHeapProto(w, p, int64(runtime.MemProfileRate), defaultSampleType)
+<span id="L613" class="ln">   613&nbsp;&nbsp;</span>	}
+<span id="L614" class="ln">   614&nbsp;&nbsp;</span>
+<span id="L615" class="ln">   615&nbsp;&nbsp;</span>	sort.Slice(p, func(i, j int) bool { return p[i].InUseBytes() &gt; p[j].InUseBytes() })
+<span id="L616" class="ln">   616&nbsp;&nbsp;</span>
+<span id="L617" class="ln">   617&nbsp;&nbsp;</span>	b := bufio.NewWriter(w)
+<span id="L618" class="ln">   618&nbsp;&nbsp;</span>	tw := tabwriter.NewWriter(b, 1, 8, 1, &#39;\t&#39;, 0)
+<span id="L619" class="ln">   619&nbsp;&nbsp;</span>	w = tw
+<span id="L620" class="ln">   620&nbsp;&nbsp;</span>
+<span id="L621" class="ln">   621&nbsp;&nbsp;</span>	var total runtime.MemProfileRecord
+<span id="L622" class="ln">   622&nbsp;&nbsp;</span>	for i := range p {
+<span id="L623" class="ln">   623&nbsp;&nbsp;</span>		r := &amp;p[i]
+<span id="L624" class="ln">   624&nbsp;&nbsp;</span>		total.AllocBytes += r.AllocBytes
+<span id="L625" class="ln">   625&nbsp;&nbsp;</span>		total.AllocObjects += r.AllocObjects
+<span id="L626" class="ln">   626&nbsp;&nbsp;</span>		total.FreeBytes += r.FreeBytes
+<span id="L627" class="ln">   627&nbsp;&nbsp;</span>		total.FreeObjects += r.FreeObjects
+<span id="L628" class="ln">   628&nbsp;&nbsp;</span>	}
+<span id="L629" class="ln">   629&nbsp;&nbsp;</span>
+<span id="L630" class="ln">   630&nbsp;&nbsp;</span>	<span class="comment">// Technically the rate is MemProfileRate not 2*MemProfileRate,</span>
+<span id="L631" class="ln">   631&nbsp;&nbsp;</span>	<span class="comment">// but early versions of the C++ heap profiler reported 2*MemProfileRate,</span>
+<span id="L632" class="ln">   632&nbsp;&nbsp;</span>	<span class="comment">// so that&#39;s what pprof has come to expect.</span>
+<span id="L633" class="ln">   633&nbsp;&nbsp;</span>	rate := 2 * runtime.MemProfileRate
+<span id="L634" class="ln">   634&nbsp;&nbsp;</span>
+<span id="L635" class="ln">   635&nbsp;&nbsp;</span>	<span class="comment">// pprof reads a profile with alloc == inuse as being a &#34;2-column&#34; profile</span>
+<span id="L636" class="ln">   636&nbsp;&nbsp;</span>	<span class="comment">// (objects and bytes, not distinguishing alloc from inuse),</span>
+<span id="L637" class="ln">   637&nbsp;&nbsp;</span>	<span class="comment">// but then such a profile can&#39;t be merged using pprof *.prof with</span>
+<span id="L638" class="ln">   638&nbsp;&nbsp;</span>	<span class="comment">// other 4-column profiles where alloc != inuse.</span>
+<span id="L639" class="ln">   639&nbsp;&nbsp;</span>	<span class="comment">// The easiest way to avoid this bug is to adjust allocBytes so it&#39;s never == inuseBytes.</span>
+<span id="L640" class="ln">   640&nbsp;&nbsp;</span>	<span class="comment">// pprof doesn&#39;t use these header values anymore except for checking equality.</span>
+<span id="L641" class="ln">   641&nbsp;&nbsp;</span>	inUseBytes := total.InUseBytes()
+<span id="L642" class="ln">   642&nbsp;&nbsp;</span>	allocBytes := total.AllocBytes
+<span id="L643" class="ln">   643&nbsp;&nbsp;</span>	if inUseBytes == allocBytes {
+<span id="L644" class="ln">   644&nbsp;&nbsp;</span>		allocBytes++
+<span id="L645" class="ln">   645&nbsp;&nbsp;</span>	}
+<span id="L646" class="ln">   646&nbsp;&nbsp;</span>
+<span id="L647" class="ln">   647&nbsp;&nbsp;</span>	fmt.Fprintf(w, &#34;heap profile: %d: %d [%d: %d] @ heap/%d\n&#34;,
+<span id="L648" class="ln">   648&nbsp;&nbsp;</span>		total.InUseObjects(), inUseBytes,
+<span id="L649" class="ln">   649&nbsp;&nbsp;</span>		total.AllocObjects, allocBytes,
+<span id="L650" class="ln">   650&nbsp;&nbsp;</span>		rate)
+<span id="L651" class="ln">   651&nbsp;&nbsp;</span>
+<span id="L652" class="ln">   652&nbsp;&nbsp;</span>	for i := range p {
+<span id="L653" class="ln">   653&nbsp;&nbsp;</span>		r := &amp;p[i]
+<span id="L654" class="ln">   654&nbsp;&nbsp;</span>		fmt.Fprintf(w, &#34;%d: %d [%d: %d] @&#34;,
+<span id="L655" class="ln">   655&nbsp;&nbsp;</span>			r.InUseObjects(), r.InUseBytes(),
+<span id="L656" class="ln">   656&nbsp;&nbsp;</span>			r.AllocObjects, r.AllocBytes)
+<span id="L657" class="ln">   657&nbsp;&nbsp;</span>		for _, pc := range r.Stack() {
+<span id="L658" class="ln">   658&nbsp;&nbsp;</span>			fmt.Fprintf(w, &#34; %#x&#34;, pc)
+<span id="L659" class="ln">   659&nbsp;&nbsp;</span>		}
+<span id="L660" class="ln">   660&nbsp;&nbsp;</span>		fmt.Fprintf(w, &#34;\n&#34;)
+<span id="L661" class="ln">   661&nbsp;&nbsp;</span>		printStackRecord(w, r.Stack(), false)
+<span id="L662" class="ln">   662&nbsp;&nbsp;</span>	}
+<span id="L663" class="ln">   663&nbsp;&nbsp;</span>
+<span id="L664" class="ln">   664&nbsp;&nbsp;</span>	<span class="comment">// Print memstats information too.</span>
+<span id="L665" class="ln">   665&nbsp;&nbsp;</span>	<span class="comment">// Pprof will ignore, but useful for people</span>
+<span id="L666" class="ln">   666&nbsp;&nbsp;</span>	s := memStats
+<span id="L667" class="ln">   667&nbsp;&nbsp;</span>	fmt.Fprintf(w, &#34;\n# runtime.MemStats\n&#34;)
+<span id="L668" class="ln">   668&nbsp;&nbsp;</span>	fmt.Fprintf(w, &#34;# Alloc = %d\n&#34;, s.Alloc)
+<span id="L669" class="ln">   669&nbsp;&nbsp;</span>	fmt.Fprintf(w, &#34;# TotalAlloc = %d\n&#34;, s.TotalAlloc)
+<span id="L670" class="ln">   670&nbsp;&nbsp;</span>	fmt.Fprintf(w, &#34;# Sys = %d\n&#34;, s.Sys)
+<span id="L671" class="ln">   671&nbsp;&nbsp;</span>	fmt.Fprintf(w, &#34;# Lookups = %d\n&#34;, s.Lookups)
+<span id="L672" class="ln">   672&nbsp;&nbsp;</span>	fmt.Fprintf(w, &#34;# Mallocs = %d\n&#34;, s.Mallocs)
+<span id="L673" class="ln">   673&nbsp;&nbsp;</span>	fmt.Fprintf(w, &#34;# Frees = %d\n&#34;, s.Frees)
+<span id="L674" class="ln">   674&nbsp;&nbsp;</span>
+<span id="L675" class="ln">   675&nbsp;&nbsp;</span>	fmt.Fprintf(w, &#34;# HeapAlloc = %d\n&#34;, s.HeapAlloc)
+<span id="L676" class="ln">   676&nbsp;&nbsp;</span>	fmt.Fprintf(w, &#34;# HeapSys = %d\n&#34;, s.HeapSys)
+<span id="L677" class="ln">   677&nbsp;&nbsp;</span>	fmt.Fprintf(w, &#34;# HeapIdle = %d\n&#34;, s.HeapIdle)
+<span id="L678" class="ln">   678&nbsp;&nbsp;</span>	fmt.Fprintf(w, &#34;# HeapInuse = %d\n&#34;, s.HeapInuse)
+<span id="L679" class="ln">   679&nbsp;&nbsp;</span>	fmt.Fprintf(w, &#34;# HeapReleased = %d\n&#34;, s.HeapReleased)
+<span id="L680" class="ln">   680&nbsp;&nbsp;</span>	fmt.Fprintf(w, &#34;# HeapObjects = %d\n&#34;, s.HeapObjects)
+<span id="L681" class="ln">   681&nbsp;&nbsp;</span>
+<span id="L682" class="ln">   682&nbsp;&nbsp;</span>	fmt.Fprintf(w, &#34;# Stack = %d / %d\n&#34;, s.StackInuse, s.StackSys)
+<span id="L683" class="ln">   683&nbsp;&nbsp;</span>	fmt.Fprintf(w, &#34;# MSpan = %d / %d\n&#34;, s.MSpanInuse, s.MSpanSys)
+<span id="L684" class="ln">   684&nbsp;&nbsp;</span>	fmt.Fprintf(w, &#34;# MCache = %d / %d\n&#34;, s.MCacheInuse, s.MCacheSys)
+<span id="L685" class="ln">   685&nbsp;&nbsp;</span>	fmt.Fprintf(w, &#34;# BuckHashSys = %d\n&#34;, s.BuckHashSys)
+<span id="L686" class="ln">   686&nbsp;&nbsp;</span>	fmt.Fprintf(w, &#34;# GCSys = %d\n&#34;, s.GCSys)
+<span id="L687" class="ln">   687&nbsp;&nbsp;</span>	fmt.Fprintf(w, &#34;# OtherSys = %d\n&#34;, s.OtherSys)
+<span id="L688" class="ln">   688&nbsp;&nbsp;</span>
+<span id="L689" class="ln">   689&nbsp;&nbsp;</span>	fmt.Fprintf(w, &#34;# NextGC = %d\n&#34;, s.NextGC)
+<span id="L690" class="ln">   690&nbsp;&nbsp;</span>	fmt.Fprintf(w, &#34;# LastGC = %d\n&#34;, s.LastGC)
+<span id="L691" class="ln">   691&nbsp;&nbsp;</span>	fmt.Fprintf(w, &#34;# PauseNs = %d\n&#34;, s.PauseNs)
+<span id="L692" class="ln">   692&nbsp;&nbsp;</span>	fmt.Fprintf(w, &#34;# PauseEnd = %d\n&#34;, s.PauseEnd)
+<span id="L693" class="ln">   693&nbsp;&nbsp;</span>	fmt.Fprintf(w, &#34;# NumGC = %d\n&#34;, s.NumGC)
+<span id="L694" class="ln">   694&nbsp;&nbsp;</span>	fmt.Fprintf(w, &#34;# NumForcedGC = %d\n&#34;, s.NumForcedGC)
+<span id="L695" class="ln">   695&nbsp;&nbsp;</span>	fmt.Fprintf(w, &#34;# GCCPUFraction = %v\n&#34;, s.GCCPUFraction)
+<span id="L696" class="ln">   696&nbsp;&nbsp;</span>	fmt.Fprintf(w, &#34;# DebugGC = %v\n&#34;, s.DebugGC)
+<span id="L697" class="ln">   697&nbsp;&nbsp;</span>
+<span id="L698" class="ln">   698&nbsp;&nbsp;</span>	<span class="comment">// Also flush out MaxRSS on supported platforms.</span>
+<span id="L699" class="ln">   699&nbsp;&nbsp;</span>	addMaxRSS(w)
+<span id="L700" class="ln">   700&nbsp;&nbsp;</span>
+<span id="L701" class="ln">   701&nbsp;&nbsp;</span>	tw.Flush()
+<span id="L702" class="ln">   702&nbsp;&nbsp;</span>	return b.Flush()
+<span id="L703" class="ln">   703&nbsp;&nbsp;</span>}
+<span id="L704" class="ln">   704&nbsp;&nbsp;</span>
+<span id="L705" class="ln">   705&nbsp;&nbsp;</span><span class="comment">// countThreadCreate returns the size of the current ThreadCreateProfile.</span>
+<span id="L706" class="ln">   706&nbsp;&nbsp;</span>func countThreadCreate() int {
+<span id="L707" class="ln">   707&nbsp;&nbsp;</span>	n, _ := runtime.ThreadCreateProfile(nil)
+<span id="L708" class="ln">   708&nbsp;&nbsp;</span>	return n
+<span id="L709" class="ln">   709&nbsp;&nbsp;</span>}
+<span id="L710" class="ln">   710&nbsp;&nbsp;</span>
+<span id="L711" class="ln">   711&nbsp;&nbsp;</span><span class="comment">// writeThreadCreate writes the current runtime ThreadCreateProfile to w.</span>
+<span id="L712" class="ln">   712&nbsp;&nbsp;</span>func writeThreadCreate(w io.Writer, debug int) error {
+<span id="L713" class="ln">   713&nbsp;&nbsp;</span>	<span class="comment">// Until https://golang.org/issues/6104 is addressed, wrap</span>
+<span id="L714" class="ln">   714&nbsp;&nbsp;</span>	<span class="comment">// ThreadCreateProfile because there&#39;s no point in tracking labels when we</span>
+<span id="L715" class="ln">   715&nbsp;&nbsp;</span>	<span class="comment">// don&#39;t get any stack-traces.</span>
+<span id="L716" class="ln">   716&nbsp;&nbsp;</span>	return writeRuntimeProfile(w, debug, &#34;threadcreate&#34;, func(p []runtime.StackRecord, _ []unsafe.Pointer) (n int, ok bool) {
+<span id="L717" class="ln">   717&nbsp;&nbsp;</span>		return runtime.ThreadCreateProfile(p)
+<span id="L718" class="ln">   718&nbsp;&nbsp;</span>	})
+<span id="L719" class="ln">   719&nbsp;&nbsp;</span>}
+<span id="L720" class="ln">   720&nbsp;&nbsp;</span>
+<span id="L721" class="ln">   721&nbsp;&nbsp;</span><span class="comment">// countGoroutine returns the number of goroutines.</span>
+<span id="L722" class="ln">   722&nbsp;&nbsp;</span>func countGoroutine() int {
+<span id="L723" class="ln">   723&nbsp;&nbsp;</span>	return runtime.NumGoroutine()
+<span id="L724" class="ln">   724&nbsp;&nbsp;</span>}
+<span id="L725" class="ln">   725&nbsp;&nbsp;</span>
+<span id="L726" class="ln">   726&nbsp;&nbsp;</span><span class="comment">// runtime_goroutineProfileWithLabels is defined in runtime/mprof.go</span>
+<span id="L727" class="ln">   727&nbsp;&nbsp;</span>func runtime_goroutineProfileWithLabels(p []runtime.StackRecord, labels []unsafe.Pointer) (n int, ok bool)
+<span id="L728" class="ln">   728&nbsp;&nbsp;</span>
+<span id="L729" class="ln">   729&nbsp;&nbsp;</span><span class="comment">// writeGoroutine writes the current runtime GoroutineProfile to w.</span>
+<span id="L730" class="ln">   730&nbsp;&nbsp;</span>func writeGoroutine(w io.Writer, debug int) error {
+<span id="L731" class="ln">   731&nbsp;&nbsp;</span>	if debug &gt;= 2 {
+<span id="L732" class="ln">   732&nbsp;&nbsp;</span>		return writeGoroutineStacks(w)
+<span id="L733" class="ln">   733&nbsp;&nbsp;</span>	}
+<span id="L734" class="ln">   734&nbsp;&nbsp;</span>	return writeRuntimeProfile(w, debug, &#34;goroutine&#34;, runtime_goroutineProfileWithLabels)
+<span id="L735" class="ln">   735&nbsp;&nbsp;</span>}
+<span id="L736" class="ln">   736&nbsp;&nbsp;</span>
+<span id="L737" class="ln">   737&nbsp;&nbsp;</span>func writeGoroutineStacks(w io.Writer) error {
+<span id="L738" class="ln">   738&nbsp;&nbsp;</span>	<span class="comment">// We don&#39;t know how big the buffer needs to be to collect</span>
+<span id="L739" class="ln">   739&nbsp;&nbsp;</span>	<span class="comment">// all the goroutines. Start with 1 MB and try a few times, doubling each time.</span>
+<span id="L740" class="ln">   740&nbsp;&nbsp;</span>	<span class="comment">// Give up and use a truncated trace if 64 MB is not enough.</span>
+<span id="L741" class="ln">   741&nbsp;&nbsp;</span>	buf := make([]byte, 1&lt;&lt;20)
+<span id="L742" class="ln">   742&nbsp;&nbsp;</span>	for i := 0; ; i++ {
+<span id="L743" class="ln">   743&nbsp;&nbsp;</span>		n := runtime.Stack(buf, true)
+<span id="L744" class="ln">   744&nbsp;&nbsp;</span>		if n &lt; len(buf) {
+<span id="L745" class="ln">   745&nbsp;&nbsp;</span>			buf = buf[:n]
+<span id="L746" class="ln">   746&nbsp;&nbsp;</span>			break
+<span id="L747" class="ln">   747&nbsp;&nbsp;</span>		}
+<span id="L748" class="ln">   748&nbsp;&nbsp;</span>		if len(buf) &gt;= 64&lt;&lt;20 {
+<span id="L749" class="ln">   749&nbsp;&nbsp;</span>			<span class="comment">// Filled 64 MB - stop there.</span>
+<span id="L750" class="ln">   750&nbsp;&nbsp;</span>			break
+<span id="L751" class="ln">   751&nbsp;&nbsp;</span>		}
+<span id="L752" class="ln">   752&nbsp;&nbsp;</span>		buf = make([]byte, 2*len(buf))
+<span id="L753" class="ln">   753&nbsp;&nbsp;</span>	}
+<span id="L754" class="ln">   754&nbsp;&nbsp;</span>	_, err := w.Write(buf)
+<span id="L755" class="ln">   755&nbsp;&nbsp;</span>	return err
+<span id="L756" class="ln">   756&nbsp;&nbsp;</span>}
+<span id="L757" class="ln">   757&nbsp;&nbsp;</span>
+<span id="L758" class="ln">   758&nbsp;&nbsp;</span>func writeRuntimeProfile(w io.Writer, debug int, name string, fetch func([]runtime.StackRecord, []unsafe.Pointer) (int, bool)) error {
+<span id="L759" class="ln">   759&nbsp;&nbsp;</span>	<span class="comment">// Find out how many records there are (fetch(nil)),</span>
+<span id="L760" class="ln">   760&nbsp;&nbsp;</span>	<span class="comment">// allocate that many records, and get the data.</span>
+<span id="L761" class="ln">   761&nbsp;&nbsp;</span>	<span class="comment">// There&#39;s a race—more records might be added between</span>
+<span id="L762" class="ln">   762&nbsp;&nbsp;</span>	<span class="comment">// the two calls—so allocate a few extra records for safety</span>
+<span id="L763" class="ln">   763&nbsp;&nbsp;</span>	<span class="comment">// and also try again if we&#39;re very unlucky.</span>
+<span id="L764" class="ln">   764&nbsp;&nbsp;</span>	<span class="comment">// The loop should only execute one iteration in the common case.</span>
+<span id="L765" class="ln">   765&nbsp;&nbsp;</span>	var p []runtime.StackRecord
+<span id="L766" class="ln">   766&nbsp;&nbsp;</span>	var labels []unsafe.Pointer
+<span id="L767" class="ln">   767&nbsp;&nbsp;</span>	n, ok := fetch(nil, nil)
+<span id="L768" class="ln">   768&nbsp;&nbsp;</span>	for {
+<span id="L769" class="ln">   769&nbsp;&nbsp;</span>		<span class="comment">// Allocate room for a slightly bigger profile,</span>
+<span id="L770" class="ln">   770&nbsp;&nbsp;</span>		<span class="comment">// in case a few more entries have been added</span>
+<span id="L771" class="ln">   771&nbsp;&nbsp;</span>		<span class="comment">// since the call to ThreadProfile.</span>
+<span id="L772" class="ln">   772&nbsp;&nbsp;</span>		p = make([]runtime.StackRecord, n+10)
+<span id="L773" class="ln">   773&nbsp;&nbsp;</span>		labels = make([]unsafe.Pointer, n+10)
+<span id="L774" class="ln">   774&nbsp;&nbsp;</span>		n, ok = fetch(p, labels)
+<span id="L775" class="ln">   775&nbsp;&nbsp;</span>		if ok {
+<span id="L776" class="ln">   776&nbsp;&nbsp;</span>			p = p[0:n]
+<span id="L777" class="ln">   777&nbsp;&nbsp;</span>			break
+<span id="L778" class="ln">   778&nbsp;&nbsp;</span>		}
+<span id="L779" class="ln">   779&nbsp;&nbsp;</span>		<span class="comment">// Profile grew; try again.</span>
+<span id="L780" class="ln">   780&nbsp;&nbsp;</span>	}
+<span id="L781" class="ln">   781&nbsp;&nbsp;</span>
+<span id="L782" class="ln">   782&nbsp;&nbsp;</span>	return printCountProfile(w, debug, name, &amp;runtimeProfile{p, labels})
+<span id="L783" class="ln">   783&nbsp;&nbsp;</span>}
+<span id="L784" class="ln">   784&nbsp;&nbsp;</span>
+<span id="L785" class="ln">   785&nbsp;&nbsp;</span>type runtimeProfile struct {
+<span id="L786" class="ln">   786&nbsp;&nbsp;</span>	stk    []runtime.StackRecord
+<span id="L787" class="ln">   787&nbsp;&nbsp;</span>	labels []unsafe.Pointer
+<span id="L788" class="ln">   788&nbsp;&nbsp;</span>}
+<span id="L789" class="ln">   789&nbsp;&nbsp;</span>
+<span id="L790" class="ln">   790&nbsp;&nbsp;</span>func (p *runtimeProfile) Len() int              { return len(p.stk) }
+<span id="L791" class="ln">   791&nbsp;&nbsp;</span>func (p *runtimeProfile) Stack(i int) []uintptr { return p.stk[i].Stack() }
+<span id="L792" class="ln">   792&nbsp;&nbsp;</span>func (p *runtimeProfile) Label(i int) *labelMap { return (*labelMap)(p.labels[i]) }
+<span id="L793" class="ln">   793&nbsp;&nbsp;</span>
+<span id="L794" class="ln">   794&nbsp;&nbsp;</span>var cpu struct {
+<span id="L795" class="ln">   795&nbsp;&nbsp;</span>	sync.Mutex
+<span id="L796" class="ln">   796&nbsp;&nbsp;</span>	profiling bool
+<span id="L797" class="ln">   797&nbsp;&nbsp;</span>	done      chan bool
+<span id="L798" class="ln">   798&nbsp;&nbsp;</span>}
+<span id="L799" class="ln">   799&nbsp;&nbsp;</span>
+<span id="L800" class="ln">   800&nbsp;&nbsp;</span><span class="comment">// StartCPUProfile enables CPU profiling for the current process.</span>
+<span id="L801" class="ln">   801&nbsp;&nbsp;</span><span class="comment">// While profiling, the profile will be buffered and written to w.</span>
+<span id="L802" class="ln">   802&nbsp;&nbsp;</span><span class="comment">// StartCPUProfile returns an error if profiling is already enabled.</span>
+<span id="L803" class="ln">   803&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L804" class="ln">   804&nbsp;&nbsp;</span><span class="comment">// On Unix-like systems, StartCPUProfile does not work by default for</span>
+<span id="L805" class="ln">   805&nbsp;&nbsp;</span><span class="comment">// Go code built with -buildmode=c-archive or -buildmode=c-shared.</span>
+<span id="L806" class="ln">   806&nbsp;&nbsp;</span><span class="comment">// StartCPUProfile relies on the SIGPROF signal, but that signal will</span>
+<span id="L807" class="ln">   807&nbsp;&nbsp;</span><span class="comment">// be delivered to the main program&#39;s SIGPROF signal handler (if any)</span>
+<span id="L808" class="ln">   808&nbsp;&nbsp;</span><span class="comment">// not to the one used by Go. To make it work, call [os/signal.Notify]</span>
+<span id="L809" class="ln">   809&nbsp;&nbsp;</span><span class="comment">// for [syscall.SIGPROF], but note that doing so may break any profiling</span>
+<span id="L810" class="ln">   810&nbsp;&nbsp;</span><span class="comment">// being done by the main program.</span>
+<span id="L811" class="ln">   811&nbsp;&nbsp;</span>func StartCPUProfile(w io.Writer) error {
+<span id="L812" class="ln">   812&nbsp;&nbsp;</span>	<span class="comment">// The runtime routines allow a variable profiling rate,</span>
+<span id="L813" class="ln">   813&nbsp;&nbsp;</span>	<span class="comment">// but in practice operating systems cannot trigger signals</span>
+<span id="L814" class="ln">   814&nbsp;&nbsp;</span>	<span class="comment">// at more than about 500 Hz, and our processing of the</span>
+<span id="L815" class="ln">   815&nbsp;&nbsp;</span>	<span class="comment">// signal is not cheap (mostly getting the stack trace).</span>
+<span id="L816" class="ln">   816&nbsp;&nbsp;</span>	<span class="comment">// 100 Hz is a reasonable choice: it is frequent enough to</span>
+<span id="L817" class="ln">   817&nbsp;&nbsp;</span>	<span class="comment">// produce useful data, rare enough not to bog down the</span>
+<span id="L818" class="ln">   818&nbsp;&nbsp;</span>	<span class="comment">// system, and a nice round number to make it easy to</span>
+<span id="L819" class="ln">   819&nbsp;&nbsp;</span>	<span class="comment">// convert sample counts to seconds. Instead of requiring</span>
+<span id="L820" class="ln">   820&nbsp;&nbsp;</span>	<span class="comment">// each client to specify the frequency, we hard code it.</span>
+<span id="L821" class="ln">   821&nbsp;&nbsp;</span>	const hz = 100
+<span id="L822" class="ln">   822&nbsp;&nbsp;</span>
+<span id="L823" class="ln">   823&nbsp;&nbsp;</span>	cpu.Lock()
+<span id="L824" class="ln">   824&nbsp;&nbsp;</span>	defer cpu.Unlock()
+<span id="L825" class="ln">   825&nbsp;&nbsp;</span>	if cpu.done == nil {
+<span id="L826" class="ln">   826&nbsp;&nbsp;</span>		cpu.done = make(chan bool)
+<span id="L827" class="ln">   827&nbsp;&nbsp;</span>	}
+<span id="L828" class="ln">   828&nbsp;&nbsp;</span>	<span class="comment">// Double-check.</span>
+<span id="L829" class="ln">   829&nbsp;&nbsp;</span>	if cpu.profiling {
+<span id="L830" class="ln">   830&nbsp;&nbsp;</span>		return fmt.Errorf(&#34;cpu profiling already in use&#34;)
+<span id="L831" class="ln">   831&nbsp;&nbsp;</span>	}
+<span id="L832" class="ln">   832&nbsp;&nbsp;</span>	cpu.profiling = true
+<span id="L833" class="ln">   833&nbsp;&nbsp;</span>	runtime.SetCPUProfileRate(hz)
+<span id="L834" class="ln">   834&nbsp;&nbsp;</span>	go profileWriter(w)
+<span id="L835" class="ln">   835&nbsp;&nbsp;</span>	return nil
+<span id="L836" class="ln">   836&nbsp;&nbsp;</span>}
+<span id="L837" class="ln">   837&nbsp;&nbsp;</span>
+<span id="L838" class="ln">   838&nbsp;&nbsp;</span><span class="comment">// readProfile, provided by the runtime, returns the next chunk of</span>
+<span id="L839" class="ln">   839&nbsp;&nbsp;</span><span class="comment">// binary CPU profiling stack trace data, blocking until data is available.</span>
+<span id="L840" class="ln">   840&nbsp;&nbsp;</span><span class="comment">// If profiling is turned off and all the profile data accumulated while it was</span>
+<span id="L841" class="ln">   841&nbsp;&nbsp;</span><span class="comment">// on has been returned, readProfile returns eof=true.</span>
+<span id="L842" class="ln">   842&nbsp;&nbsp;</span><span class="comment">// The caller must save the returned data and tags before calling readProfile again.</span>
+<span id="L843" class="ln">   843&nbsp;&nbsp;</span>func readProfile() (data []uint64, tags []unsafe.Pointer, eof bool)
+<span id="L844" class="ln">   844&nbsp;&nbsp;</span>
+<span id="L845" class="ln">   845&nbsp;&nbsp;</span>func profileWriter(w io.Writer) {
+<span id="L846" class="ln">   846&nbsp;&nbsp;</span>	b := newProfileBuilder(w)
+<span id="L847" class="ln">   847&nbsp;&nbsp;</span>	var err error
+<span id="L848" class="ln">   848&nbsp;&nbsp;</span>	for {
+<span id="L849" class="ln">   849&nbsp;&nbsp;</span>		time.Sleep(100 * time.Millisecond)
+<span id="L850" class="ln">   850&nbsp;&nbsp;</span>		data, tags, eof := readProfile()
+<span id="L851" class="ln">   851&nbsp;&nbsp;</span>		if e := b.addCPUData(data, tags); e != nil &amp;&amp; err == nil {
+<span id="L852" class="ln">   852&nbsp;&nbsp;</span>			err = e
+<span id="L853" class="ln">   853&nbsp;&nbsp;</span>		}
+<span id="L854" class="ln">   854&nbsp;&nbsp;</span>		if eof {
+<span id="L855" class="ln">   855&nbsp;&nbsp;</span>			break
+<span id="L856" class="ln">   856&nbsp;&nbsp;</span>		}
+<span id="L857" class="ln">   857&nbsp;&nbsp;</span>	}
+<span id="L858" class="ln">   858&nbsp;&nbsp;</span>	if err != nil {
+<span id="L859" class="ln">   859&nbsp;&nbsp;</span>		<span class="comment">// The runtime should never produce an invalid or truncated profile.</span>
+<span id="L860" class="ln">   860&nbsp;&nbsp;</span>		<span class="comment">// It drops records that can&#39;t fit into its log buffers.</span>
+<span id="L861" class="ln">   861&nbsp;&nbsp;</span>		panic(&#34;runtime/pprof: converting profile: &#34; + err.Error())
+<span id="L862" class="ln">   862&nbsp;&nbsp;</span>	}
+<span id="L863" class="ln">   863&nbsp;&nbsp;</span>	b.build()
+<span id="L864" class="ln">   864&nbsp;&nbsp;</span>	cpu.done &lt;- true
+<span id="L865" class="ln">   865&nbsp;&nbsp;</span>}
+<span id="L866" class="ln">   866&nbsp;&nbsp;</span>
+<span id="L867" class="ln">   867&nbsp;&nbsp;</span><span class="comment">// StopCPUProfile stops the current CPU profile, if any.</span>
+<span id="L868" class="ln">   868&nbsp;&nbsp;</span><span class="comment">// StopCPUProfile only returns after all the writes for the</span>
+<span id="L869" class="ln">   869&nbsp;&nbsp;</span><span class="comment">// profile have completed.</span>
+<span id="L870" class="ln">   870&nbsp;&nbsp;</span>func StopCPUProfile() {
+<span id="L871" class="ln">   871&nbsp;&nbsp;</span>	cpu.Lock()
+<span id="L872" class="ln">   872&nbsp;&nbsp;</span>	defer cpu.Unlock()
+<span id="L873" class="ln">   873&nbsp;&nbsp;</span>
+<span id="L874" class="ln">   874&nbsp;&nbsp;</span>	if !cpu.profiling {
+<span id="L875" class="ln">   875&nbsp;&nbsp;</span>		return
+<span id="L876" class="ln">   876&nbsp;&nbsp;</span>	}
+<span id="L877" class="ln">   877&nbsp;&nbsp;</span>	cpu.profiling = false
+<span id="L878" class="ln">   878&nbsp;&nbsp;</span>	runtime.SetCPUProfileRate(0)
+<span id="L879" class="ln">   879&nbsp;&nbsp;</span>	&lt;-cpu.done
+<span id="L880" class="ln">   880&nbsp;&nbsp;</span>}
+<span id="L881" class="ln">   881&nbsp;&nbsp;</span>
+<span id="L882" class="ln">   882&nbsp;&nbsp;</span><span class="comment">// countBlock returns the number of records in the blocking profile.</span>
+<span id="L883" class="ln">   883&nbsp;&nbsp;</span>func countBlock() int {
+<span id="L884" class="ln">   884&nbsp;&nbsp;</span>	n, _ := runtime.BlockProfile(nil)
+<span id="L885" class="ln">   885&nbsp;&nbsp;</span>	return n
+<span id="L886" class="ln">   886&nbsp;&nbsp;</span>}
+<span id="L887" class="ln">   887&nbsp;&nbsp;</span>
+<span id="L888" class="ln">   888&nbsp;&nbsp;</span><span class="comment">// countMutex returns the number of records in the mutex profile.</span>
+<span id="L889" class="ln">   889&nbsp;&nbsp;</span>func countMutex() int {
+<span id="L890" class="ln">   890&nbsp;&nbsp;</span>	n, _ := runtime.MutexProfile(nil)
+<span id="L891" class="ln">   891&nbsp;&nbsp;</span>	return n
+<span id="L892" class="ln">   892&nbsp;&nbsp;</span>}
+<span id="L893" class="ln">   893&nbsp;&nbsp;</span>
+<span id="L894" class="ln">   894&nbsp;&nbsp;</span><span class="comment">// writeBlock writes the current blocking profile to w.</span>
+<span id="L895" class="ln">   895&nbsp;&nbsp;</span>func writeBlock(w io.Writer, debug int) error {
+<span id="L896" class="ln">   896&nbsp;&nbsp;</span>	return writeProfileInternal(w, debug, &#34;contention&#34;, runtime.BlockProfile)
+<span id="L897" class="ln">   897&nbsp;&nbsp;</span>}
+<span id="L898" class="ln">   898&nbsp;&nbsp;</span>
+<span id="L899" class="ln">   899&nbsp;&nbsp;</span><span class="comment">// writeMutex writes the current mutex profile to w.</span>
+<span id="L900" class="ln">   900&nbsp;&nbsp;</span>func writeMutex(w io.Writer, debug int) error {
+<span id="L901" class="ln">   901&nbsp;&nbsp;</span>	return writeProfileInternal(w, debug, &#34;mutex&#34;, runtime.MutexProfile)
+<span id="L902" class="ln">   902&nbsp;&nbsp;</span>}
+<span id="L903" class="ln">   903&nbsp;&nbsp;</span>
+<span id="L904" class="ln">   904&nbsp;&nbsp;</span><span class="comment">// writeProfileInternal writes the current blocking or mutex profile depending on the passed parameters.</span>
+<span id="L905" class="ln">   905&nbsp;&nbsp;</span>func writeProfileInternal(w io.Writer, debug int, name string, runtimeProfile func([]runtime.BlockProfileRecord) (int, bool)) error {
+<span id="L906" class="ln">   906&nbsp;&nbsp;</span>	var p []runtime.BlockProfileRecord
+<span id="L907" class="ln">   907&nbsp;&nbsp;</span>	n, ok := runtimeProfile(nil)
+<span id="L908" class="ln">   908&nbsp;&nbsp;</span>	for {
+<span id="L909" class="ln">   909&nbsp;&nbsp;</span>		p = make([]runtime.BlockProfileRecord, n+50)
+<span id="L910" class="ln">   910&nbsp;&nbsp;</span>		n, ok = runtimeProfile(p)
+<span id="L911" class="ln">   911&nbsp;&nbsp;</span>		if ok {
+<span id="L912" class="ln">   912&nbsp;&nbsp;</span>			p = p[:n]
+<span id="L913" class="ln">   913&nbsp;&nbsp;</span>			break
+<span id="L914" class="ln">   914&nbsp;&nbsp;</span>		}
+<span id="L915" class="ln">   915&nbsp;&nbsp;</span>	}
+<span id="L916" class="ln">   916&nbsp;&nbsp;</span>
+<span id="L917" class="ln">   917&nbsp;&nbsp;</span>	sort.Slice(p, func(i, j int) bool { return p[i].Cycles &gt; p[j].Cycles })
+<span id="L918" class="ln">   918&nbsp;&nbsp;</span>
+<span id="L919" class="ln">   919&nbsp;&nbsp;</span>	if debug &lt;= 0 {
+<span id="L920" class="ln">   920&nbsp;&nbsp;</span>		return printCountCycleProfile(w, &#34;contentions&#34;, &#34;delay&#34;, p)
+<span id="L921" class="ln">   921&nbsp;&nbsp;</span>	}
+<span id="L922" class="ln">   922&nbsp;&nbsp;</span>
+<span id="L923" class="ln">   923&nbsp;&nbsp;</span>	b := bufio.NewWriter(w)
+<span id="L924" class="ln">   924&nbsp;&nbsp;</span>	tw := tabwriter.NewWriter(w, 1, 8, 1, &#39;\t&#39;, 0)
+<span id="L925" class="ln">   925&nbsp;&nbsp;</span>	w = tw
+<span id="L926" class="ln">   926&nbsp;&nbsp;</span>
+<span id="L927" class="ln">   927&nbsp;&nbsp;</span>	fmt.Fprintf(w, &#34;--- %v:\n&#34;, name)
+<span id="L928" class="ln">   928&nbsp;&nbsp;</span>	fmt.Fprintf(w, &#34;cycles/second=%v\n&#34;, runtime_cyclesPerSecond())
+<span id="L929" class="ln">   929&nbsp;&nbsp;</span>	if name == &#34;mutex&#34; {
+<span id="L930" class="ln">   930&nbsp;&nbsp;</span>		fmt.Fprintf(w, &#34;sampling period=%d\n&#34;, runtime.SetMutexProfileFraction(-1))
+<span id="L931" class="ln">   931&nbsp;&nbsp;</span>	}
+<span id="L932" class="ln">   932&nbsp;&nbsp;</span>	for i := range p {
+<span id="L933" class="ln">   933&nbsp;&nbsp;</span>		r := &amp;p[i]
+<span id="L934" class="ln">   934&nbsp;&nbsp;</span>		fmt.Fprintf(w, &#34;%v %v @&#34;, r.Cycles, r.Count)
+<span id="L935" class="ln">   935&nbsp;&nbsp;</span>		for _, pc := range r.Stack() {
+<span id="L936" class="ln">   936&nbsp;&nbsp;</span>			fmt.Fprintf(w, &#34; %#x&#34;, pc)
+<span id="L937" class="ln">   937&nbsp;&nbsp;</span>		}
+<span id="L938" class="ln">   938&nbsp;&nbsp;</span>		fmt.Fprint(w, &#34;\n&#34;)
+<span id="L939" class="ln">   939&nbsp;&nbsp;</span>		if debug &gt; 0 {
+<span id="L940" class="ln">   940&nbsp;&nbsp;</span>			printStackRecord(w, r.Stack(), true)
+<span id="L941" class="ln">   941&nbsp;&nbsp;</span>		}
+<span id="L942" class="ln">   942&nbsp;&nbsp;</span>	}
+<span id="L943" class="ln">   943&nbsp;&nbsp;</span>
+<span id="L944" class="ln">   944&nbsp;&nbsp;</span>	if tw != nil {
+<span id="L945" class="ln">   945&nbsp;&nbsp;</span>		tw.Flush()
+<span id="L946" class="ln">   946&nbsp;&nbsp;</span>	}
+<span id="L947" class="ln">   947&nbsp;&nbsp;</span>	return b.Flush()
+<span id="L948" class="ln">   948&nbsp;&nbsp;</span>}
+<span id="L949" class="ln">   949&nbsp;&nbsp;</span>
+<span id="L950" class="ln">   950&nbsp;&nbsp;</span>func runtime_cyclesPerSecond() int64
+<span id="L951" class="ln">   951&nbsp;&nbsp;</span>
+</pre><p><a href="pprof.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

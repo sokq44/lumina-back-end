@@ -1,0 +1,1384 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>src/regexp/regexp.go - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../index.html">GoDoc</a></div>
+<a href="./regexp.go?s=5169:5201#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Source file
+    <a href="http://localhost:8080/src">src</a>/<a href="http://localhost:8080/src/regexp">regexp</a>/<span class="text-muted">regexp.go</span>
+  </h1>
+
+
+
+
+
+  <h2>
+    Documentation: <a href="http://localhost:8080/pkg/regexp">regexp</a>
+  </h2>
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1&nbsp;&nbsp;</span><span class="comment">// Copyright 2009 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2&nbsp;&nbsp;</span><span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3&nbsp;&nbsp;</span><span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4&nbsp;&nbsp;</span>
+<span id="L5" class="ln">     5&nbsp;&nbsp;</span><span class="comment">// Package regexp implements regular expression search.</span>
+<span id="L6" class="ln">     6&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L7" class="ln">     7&nbsp;&nbsp;</span><span class="comment">// The syntax of the regular expressions accepted is the same</span>
+<span id="L8" class="ln">     8&nbsp;&nbsp;</span><span class="comment">// general syntax used by Perl, Python, and other languages.</span>
+<span id="L9" class="ln">     9&nbsp;&nbsp;</span><span class="comment">// More precisely, it is the syntax accepted by RE2 and described at</span>
+<span id="L10" class="ln">    10&nbsp;&nbsp;</span><span class="comment">// https://golang.org/s/re2syntax, except for \C.</span>
+<span id="L11" class="ln">    11&nbsp;&nbsp;</span><span class="comment">// For an overview of the syntax, see the [regexp/syntax] package.</span>
+<span id="L12" class="ln">    12&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L13" class="ln">    13&nbsp;&nbsp;</span><span class="comment">// The regexp implementation provided by this package is</span>
+<span id="L14" class="ln">    14&nbsp;&nbsp;</span><span class="comment">// guaranteed to run in time linear in the size of the input.</span>
+<span id="L15" class="ln">    15&nbsp;&nbsp;</span><span class="comment">// (This is a property not guaranteed by most open source</span>
+<span id="L16" class="ln">    16&nbsp;&nbsp;</span><span class="comment">// implementations of regular expressions.) For more information</span>
+<span id="L17" class="ln">    17&nbsp;&nbsp;</span><span class="comment">// about this property, see</span>
+<span id="L18" class="ln">    18&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L19" class="ln">    19&nbsp;&nbsp;</span><span class="comment">//	https://swtch.com/~rsc/regexp/regexp1.html</span>
+<span id="L20" class="ln">    20&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L21" class="ln">    21&nbsp;&nbsp;</span><span class="comment">// or any book about automata theory.</span>
+<span id="L22" class="ln">    22&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L23" class="ln">    23&nbsp;&nbsp;</span><span class="comment">// All characters are UTF-8-encoded code points.</span>
+<span id="L24" class="ln">    24&nbsp;&nbsp;</span><span class="comment">// Following [utf8.DecodeRune], each byte of an invalid UTF-8 sequence</span>
+<span id="L25" class="ln">    25&nbsp;&nbsp;</span><span class="comment">// is treated as if it encoded utf8.RuneError (U+FFFD).</span>
+<span id="L26" class="ln">    26&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L27" class="ln">    27&nbsp;&nbsp;</span><span class="comment">// There are 16 methods of [Regexp] that match a regular expression and identify</span>
+<span id="L28" class="ln">    28&nbsp;&nbsp;</span><span class="comment">// the matched text. Their names are matched by this regular expression:</span>
+<span id="L29" class="ln">    29&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L30" class="ln">    30&nbsp;&nbsp;</span><span class="comment">//	Find(All)?(String)?(Submatch)?(Index)?</span>
+<span id="L31" class="ln">    31&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L32" class="ln">    32&nbsp;&nbsp;</span><span class="comment">// If &#39;All&#39; is present, the routine matches successive non-overlapping</span>
+<span id="L33" class="ln">    33&nbsp;&nbsp;</span><span class="comment">// matches of the entire expression. Empty matches abutting a preceding</span>
+<span id="L34" class="ln">    34&nbsp;&nbsp;</span><span class="comment">// match are ignored. The return value is a slice containing the successive</span>
+<span id="L35" class="ln">    35&nbsp;&nbsp;</span><span class="comment">// return values of the corresponding non-&#39;All&#39; routine. These routines take</span>
+<span id="L36" class="ln">    36&nbsp;&nbsp;</span><span class="comment">// an extra integer argument, n. If n &gt;= 0, the function returns at most n</span>
+<span id="L37" class="ln">    37&nbsp;&nbsp;</span><span class="comment">// matches/submatches; otherwise, it returns all of them.</span>
+<span id="L38" class="ln">    38&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L39" class="ln">    39&nbsp;&nbsp;</span><span class="comment">// If &#39;String&#39; is present, the argument is a string; otherwise it is a slice</span>
+<span id="L40" class="ln">    40&nbsp;&nbsp;</span><span class="comment">// of bytes; return values are adjusted as appropriate.</span>
+<span id="L41" class="ln">    41&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L42" class="ln">    42&nbsp;&nbsp;</span><span class="comment">// If &#39;Submatch&#39; is present, the return value is a slice identifying the</span>
+<span id="L43" class="ln">    43&nbsp;&nbsp;</span><span class="comment">// successive submatches of the expression. Submatches are matches of</span>
+<span id="L44" class="ln">    44&nbsp;&nbsp;</span><span class="comment">// parenthesized subexpressions (also known as capturing groups) within the</span>
+<span id="L45" class="ln">    45&nbsp;&nbsp;</span><span class="comment">// regular expression, numbered from left to right in order of opening</span>
+<span id="L46" class="ln">    46&nbsp;&nbsp;</span><span class="comment">// parenthesis. Submatch 0 is the match of the entire expression, submatch 1 is</span>
+<span id="L47" class="ln">    47&nbsp;&nbsp;</span><span class="comment">// the match of the first parenthesized subexpression, and so on.</span>
+<span id="L48" class="ln">    48&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L49" class="ln">    49&nbsp;&nbsp;</span><span class="comment">// If &#39;Index&#39; is present, matches and submatches are identified by byte index</span>
+<span id="L50" class="ln">    50&nbsp;&nbsp;</span><span class="comment">// pairs within the input string: result[2*n:2*n+2] identifies the indexes of</span>
+<span id="L51" class="ln">    51&nbsp;&nbsp;</span><span class="comment">// the nth submatch. The pair for n==0 identifies the match of the entire</span>
+<span id="L52" class="ln">    52&nbsp;&nbsp;</span><span class="comment">// expression. If &#39;Index&#39; is not present, the match is identified by the text</span>
+<span id="L53" class="ln">    53&nbsp;&nbsp;</span><span class="comment">// of the match/submatch. If an index is negative or text is nil, it means that</span>
+<span id="L54" class="ln">    54&nbsp;&nbsp;</span><span class="comment">// subexpression did not match any string in the input. For &#39;String&#39; versions</span>
+<span id="L55" class="ln">    55&nbsp;&nbsp;</span><span class="comment">// an empty string means either no match or an empty match.</span>
+<span id="L56" class="ln">    56&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L57" class="ln">    57&nbsp;&nbsp;</span><span class="comment">// There is also a subset of the methods that can be applied to text read</span>
+<span id="L58" class="ln">    58&nbsp;&nbsp;</span><span class="comment">// from a RuneReader:</span>
+<span id="L59" class="ln">    59&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L60" class="ln">    60&nbsp;&nbsp;</span><span class="comment">//	MatchReader, FindReaderIndex, FindReaderSubmatchIndex</span>
+<span id="L61" class="ln">    61&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L62" class="ln">    62&nbsp;&nbsp;</span><span class="comment">// This set may grow. Note that regular expression matches may need to</span>
+<span id="L63" class="ln">    63&nbsp;&nbsp;</span><span class="comment">// examine text beyond the text returned by a match, so the methods that</span>
+<span id="L64" class="ln">    64&nbsp;&nbsp;</span><span class="comment">// match text from a RuneReader may read arbitrarily far into the input</span>
+<span id="L65" class="ln">    65&nbsp;&nbsp;</span><span class="comment">// before returning.</span>
+<span id="L66" class="ln">    66&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L67" class="ln">    67&nbsp;&nbsp;</span><span class="comment">// (There are a few other methods that do not match this pattern.)</span>
+<span id="L68" class="ln">    68&nbsp;&nbsp;</span>package regexp
+<span id="L69" class="ln">    69&nbsp;&nbsp;</span>
+<span id="L70" class="ln">    70&nbsp;&nbsp;</span>import (
+<span id="L71" class="ln">    71&nbsp;&nbsp;</span>	&#34;bytes&#34;
+<span id="L72" class="ln">    72&nbsp;&nbsp;</span>	&#34;io&#34;
+<span id="L73" class="ln">    73&nbsp;&nbsp;</span>	&#34;regexp/syntax&#34;
+<span id="L74" class="ln">    74&nbsp;&nbsp;</span>	&#34;strconv&#34;
+<span id="L75" class="ln">    75&nbsp;&nbsp;</span>	&#34;strings&#34;
+<span id="L76" class="ln">    76&nbsp;&nbsp;</span>	&#34;sync&#34;
+<span id="L77" class="ln">    77&nbsp;&nbsp;</span>	&#34;unicode&#34;
+<span id="L78" class="ln">    78&nbsp;&nbsp;</span>	&#34;unicode/utf8&#34;
+<span id="L79" class="ln">    79&nbsp;&nbsp;</span>)
+<span id="L80" class="ln">    80&nbsp;&nbsp;</span>
+<span id="L81" class="ln">    81&nbsp;&nbsp;</span><span class="comment">// Regexp is the representation of a compiled regular expression.</span>
+<span id="L82" class="ln">    82&nbsp;&nbsp;</span><span class="comment">// A Regexp is safe for concurrent use by multiple goroutines,</span>
+<span id="L83" class="ln">    83&nbsp;&nbsp;</span><span class="comment">// except for configuration methods, such as [Regexp.Longest].</span>
+<span id="L84" class="ln">    84&nbsp;&nbsp;</span>type Regexp struct {
+<span id="L85" class="ln">    85&nbsp;&nbsp;</span>	expr           string       <span class="comment">// as passed to Compile</span>
+<span id="L86" class="ln">    86&nbsp;&nbsp;</span>	prog           *syntax.Prog <span class="comment">// compiled program</span>
+<span id="L87" class="ln">    87&nbsp;&nbsp;</span>	onepass        *onePassProg <span class="comment">// onepass program or nil</span>
+<span id="L88" class="ln">    88&nbsp;&nbsp;</span>	numSubexp      int
+<span id="L89" class="ln">    89&nbsp;&nbsp;</span>	maxBitStateLen int
+<span id="L90" class="ln">    90&nbsp;&nbsp;</span>	subexpNames    []string
+<span id="L91" class="ln">    91&nbsp;&nbsp;</span>	prefix         string         <span class="comment">// required prefix in unanchored matches</span>
+<span id="L92" class="ln">    92&nbsp;&nbsp;</span>	prefixBytes    []byte         <span class="comment">// prefix, as a []byte</span>
+<span id="L93" class="ln">    93&nbsp;&nbsp;</span>	prefixRune     rune           <span class="comment">// first rune in prefix</span>
+<span id="L94" class="ln">    94&nbsp;&nbsp;</span>	prefixEnd      uint32         <span class="comment">// pc for last rune in prefix</span>
+<span id="L95" class="ln">    95&nbsp;&nbsp;</span>	mpool          int            <span class="comment">// pool for machines</span>
+<span id="L96" class="ln">    96&nbsp;&nbsp;</span>	matchcap       int            <span class="comment">// size of recorded match lengths</span>
+<span id="L97" class="ln">    97&nbsp;&nbsp;</span>	prefixComplete bool           <span class="comment">// prefix is the entire regexp</span>
+<span id="L98" class="ln">    98&nbsp;&nbsp;</span>	cond           syntax.EmptyOp <span class="comment">// empty-width conditions required at start of match</span>
+<span id="L99" class="ln">    99&nbsp;&nbsp;</span>	minInputLen    int            <span class="comment">// minimum length of the input in bytes</span>
+<span id="L100" class="ln">   100&nbsp;&nbsp;</span>
+<span id="L101" class="ln">   101&nbsp;&nbsp;</span>	<span class="comment">// This field can be modified by the Longest method,</span>
+<span id="L102" class="ln">   102&nbsp;&nbsp;</span>	<span class="comment">// but it is otherwise read-only.</span>
+<span id="L103" class="ln">   103&nbsp;&nbsp;</span>	longest bool <span class="comment">// whether regexp prefers leftmost-longest match</span>
+<span id="L104" class="ln">   104&nbsp;&nbsp;</span>}
+<span id="L105" class="ln">   105&nbsp;&nbsp;</span>
+<span id="L106" class="ln">   106&nbsp;&nbsp;</span><span class="comment">// String returns the source text used to compile the regular expression.</span>
+<span id="L107" class="ln">   107&nbsp;&nbsp;</span>func (re *Regexp) String() string {
+<span id="L108" class="ln">   108&nbsp;&nbsp;</span>	return re.expr
+<span id="L109" class="ln">   109&nbsp;&nbsp;</span>}
+<span id="L110" class="ln">   110&nbsp;&nbsp;</span>
+<span id="L111" class="ln">   111&nbsp;&nbsp;</span><span class="comment">// Copy returns a new [Regexp] object copied from re.</span>
+<span id="L112" class="ln">   112&nbsp;&nbsp;</span><span class="comment">// Calling [Regexp.Longest] on one copy does not affect another.</span>
+<span id="L113" class="ln">   113&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L114" class="ln">   114&nbsp;&nbsp;</span><span class="comment">// Deprecated: In earlier releases, when using a [Regexp] in multiple goroutines,</span>
+<span id="L115" class="ln">   115&nbsp;&nbsp;</span><span class="comment">// giving each goroutine its own copy helped to avoid lock contention.</span>
+<span id="L116" class="ln">   116&nbsp;&nbsp;</span><span class="comment">// As of Go 1.12, using Copy is no longer necessary to avoid lock contention.</span>
+<span id="L117" class="ln">   117&nbsp;&nbsp;</span><span class="comment">// Copy may still be appropriate if the reason for its use is to make</span>
+<span id="L118" class="ln">   118&nbsp;&nbsp;</span><span class="comment">// two copies with different [Regexp.Longest] settings.</span>
+<span id="L119" class="ln">   119&nbsp;&nbsp;</span><span class="selection">func (re *Regexp) Copy() *Regexp</span> {
+<span id="L120" class="ln">   120&nbsp;&nbsp;</span>	re2 := *re
+<span id="L121" class="ln">   121&nbsp;&nbsp;</span>	return &amp;re2
+<span id="L122" class="ln">   122&nbsp;&nbsp;</span>}
+<span id="L123" class="ln">   123&nbsp;&nbsp;</span>
+<span id="L124" class="ln">   124&nbsp;&nbsp;</span><span class="comment">// Compile parses a regular expression and returns, if successful,</span>
+<span id="L125" class="ln">   125&nbsp;&nbsp;</span><span class="comment">// a [Regexp] object that can be used to match against text.</span>
+<span id="L126" class="ln">   126&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L127" class="ln">   127&nbsp;&nbsp;</span><span class="comment">// When matching against text, the regexp returns a match that</span>
+<span id="L128" class="ln">   128&nbsp;&nbsp;</span><span class="comment">// begins as early as possible in the input (leftmost), and among those</span>
+<span id="L129" class="ln">   129&nbsp;&nbsp;</span><span class="comment">// it chooses the one that a backtracking search would have found first.</span>
+<span id="L130" class="ln">   130&nbsp;&nbsp;</span><span class="comment">// This so-called leftmost-first matching is the same semantics</span>
+<span id="L131" class="ln">   131&nbsp;&nbsp;</span><span class="comment">// that Perl, Python, and other implementations use, although this</span>
+<span id="L132" class="ln">   132&nbsp;&nbsp;</span><span class="comment">// package implements it without the expense of backtracking.</span>
+<span id="L133" class="ln">   133&nbsp;&nbsp;</span><span class="comment">// For POSIX leftmost-longest matching, see [CompilePOSIX].</span>
+<span id="L134" class="ln">   134&nbsp;&nbsp;</span>func Compile(expr string) (*Regexp, error) {
+<span id="L135" class="ln">   135&nbsp;&nbsp;</span>	return compile(expr, syntax.Perl, false)
+<span id="L136" class="ln">   136&nbsp;&nbsp;</span>}
+<span id="L137" class="ln">   137&nbsp;&nbsp;</span>
+<span id="L138" class="ln">   138&nbsp;&nbsp;</span><span class="comment">// CompilePOSIX is like [Compile] but restricts the regular expression</span>
+<span id="L139" class="ln">   139&nbsp;&nbsp;</span><span class="comment">// to POSIX ERE (egrep) syntax and changes the match semantics to</span>
+<span id="L140" class="ln">   140&nbsp;&nbsp;</span><span class="comment">// leftmost-longest.</span>
+<span id="L141" class="ln">   141&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L142" class="ln">   142&nbsp;&nbsp;</span><span class="comment">// That is, when matching against text, the regexp returns a match that</span>
+<span id="L143" class="ln">   143&nbsp;&nbsp;</span><span class="comment">// begins as early as possible in the input (leftmost), and among those</span>
+<span id="L144" class="ln">   144&nbsp;&nbsp;</span><span class="comment">// it chooses a match that is as long as possible.</span>
+<span id="L145" class="ln">   145&nbsp;&nbsp;</span><span class="comment">// This so-called leftmost-longest matching is the same semantics</span>
+<span id="L146" class="ln">   146&nbsp;&nbsp;</span><span class="comment">// that early regular expression implementations used and that POSIX</span>
+<span id="L147" class="ln">   147&nbsp;&nbsp;</span><span class="comment">// specifies.</span>
+<span id="L148" class="ln">   148&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L149" class="ln">   149&nbsp;&nbsp;</span><span class="comment">// However, there can be multiple leftmost-longest matches, with different</span>
+<span id="L150" class="ln">   150&nbsp;&nbsp;</span><span class="comment">// submatch choices, and here this package diverges from POSIX.</span>
+<span id="L151" class="ln">   151&nbsp;&nbsp;</span><span class="comment">// Among the possible leftmost-longest matches, this package chooses</span>
+<span id="L152" class="ln">   152&nbsp;&nbsp;</span><span class="comment">// the one that a backtracking search would have found first, while POSIX</span>
+<span id="L153" class="ln">   153&nbsp;&nbsp;</span><span class="comment">// specifies that the match be chosen to maximize the length of the first</span>
+<span id="L154" class="ln">   154&nbsp;&nbsp;</span><span class="comment">// subexpression, then the second, and so on from left to right.</span>
+<span id="L155" class="ln">   155&nbsp;&nbsp;</span><span class="comment">// The POSIX rule is computationally prohibitive and not even well-defined.</span>
+<span id="L156" class="ln">   156&nbsp;&nbsp;</span><span class="comment">// See https://swtch.com/~rsc/regexp/regexp2.html#posix for details.</span>
+<span id="L157" class="ln">   157&nbsp;&nbsp;</span>func CompilePOSIX(expr string) (*Regexp, error) {
+<span id="L158" class="ln">   158&nbsp;&nbsp;</span>	return compile(expr, syntax.POSIX, true)
+<span id="L159" class="ln">   159&nbsp;&nbsp;</span>}
+<span id="L160" class="ln">   160&nbsp;&nbsp;</span>
+<span id="L161" class="ln">   161&nbsp;&nbsp;</span><span class="comment">// Longest makes future searches prefer the leftmost-longest match.</span>
+<span id="L162" class="ln">   162&nbsp;&nbsp;</span><span class="comment">// That is, when matching against text, the regexp returns a match that</span>
+<span id="L163" class="ln">   163&nbsp;&nbsp;</span><span class="comment">// begins as early as possible in the input (leftmost), and among those</span>
+<span id="L164" class="ln">   164&nbsp;&nbsp;</span><span class="comment">// it chooses a match that is as long as possible.</span>
+<span id="L165" class="ln">   165&nbsp;&nbsp;</span><span class="comment">// This method modifies the [Regexp] and may not be called concurrently</span>
+<span id="L166" class="ln">   166&nbsp;&nbsp;</span><span class="comment">// with any other methods.</span>
+<span id="L167" class="ln">   167&nbsp;&nbsp;</span>func (re *Regexp) Longest() {
+<span id="L168" class="ln">   168&nbsp;&nbsp;</span>	re.longest = true
+<span id="L169" class="ln">   169&nbsp;&nbsp;</span>}
+<span id="L170" class="ln">   170&nbsp;&nbsp;</span>
+<span id="L171" class="ln">   171&nbsp;&nbsp;</span>func compile(expr string, mode syntax.Flags, longest bool) (*Regexp, error) {
+<span id="L172" class="ln">   172&nbsp;&nbsp;</span>	re, err := syntax.Parse(expr, mode)
+<span id="L173" class="ln">   173&nbsp;&nbsp;</span>	if err != nil {
+<span id="L174" class="ln">   174&nbsp;&nbsp;</span>		return nil, err
+<span id="L175" class="ln">   175&nbsp;&nbsp;</span>	}
+<span id="L176" class="ln">   176&nbsp;&nbsp;</span>	maxCap := re.MaxCap()
+<span id="L177" class="ln">   177&nbsp;&nbsp;</span>	capNames := re.CapNames()
+<span id="L178" class="ln">   178&nbsp;&nbsp;</span>
+<span id="L179" class="ln">   179&nbsp;&nbsp;</span>	re = re.Simplify()
+<span id="L180" class="ln">   180&nbsp;&nbsp;</span>	prog, err := syntax.Compile(re)
+<span id="L181" class="ln">   181&nbsp;&nbsp;</span>	if err != nil {
+<span id="L182" class="ln">   182&nbsp;&nbsp;</span>		return nil, err
+<span id="L183" class="ln">   183&nbsp;&nbsp;</span>	}
+<span id="L184" class="ln">   184&nbsp;&nbsp;</span>	matchcap := prog.NumCap
+<span id="L185" class="ln">   185&nbsp;&nbsp;</span>	if matchcap &lt; 2 {
+<span id="L186" class="ln">   186&nbsp;&nbsp;</span>		matchcap = 2
+<span id="L187" class="ln">   187&nbsp;&nbsp;</span>	}
+<span id="L188" class="ln">   188&nbsp;&nbsp;</span>	regexp := &amp;Regexp{
+<span id="L189" class="ln">   189&nbsp;&nbsp;</span>		expr:        expr,
+<span id="L190" class="ln">   190&nbsp;&nbsp;</span>		prog:        prog,
+<span id="L191" class="ln">   191&nbsp;&nbsp;</span>		onepass:     compileOnePass(prog),
+<span id="L192" class="ln">   192&nbsp;&nbsp;</span>		numSubexp:   maxCap,
+<span id="L193" class="ln">   193&nbsp;&nbsp;</span>		subexpNames: capNames,
+<span id="L194" class="ln">   194&nbsp;&nbsp;</span>		cond:        prog.StartCond(),
+<span id="L195" class="ln">   195&nbsp;&nbsp;</span>		longest:     longest,
+<span id="L196" class="ln">   196&nbsp;&nbsp;</span>		matchcap:    matchcap,
+<span id="L197" class="ln">   197&nbsp;&nbsp;</span>		minInputLen: minInputLen(re),
+<span id="L198" class="ln">   198&nbsp;&nbsp;</span>	}
+<span id="L199" class="ln">   199&nbsp;&nbsp;</span>	if regexp.onepass == nil {
+<span id="L200" class="ln">   200&nbsp;&nbsp;</span>		regexp.prefix, regexp.prefixComplete = prog.Prefix()
+<span id="L201" class="ln">   201&nbsp;&nbsp;</span>		regexp.maxBitStateLen = maxBitStateLen(prog)
+<span id="L202" class="ln">   202&nbsp;&nbsp;</span>	} else {
+<span id="L203" class="ln">   203&nbsp;&nbsp;</span>		regexp.prefix, regexp.prefixComplete, regexp.prefixEnd = onePassPrefix(prog)
+<span id="L204" class="ln">   204&nbsp;&nbsp;</span>	}
+<span id="L205" class="ln">   205&nbsp;&nbsp;</span>	if regexp.prefix != &#34;&#34; {
+<span id="L206" class="ln">   206&nbsp;&nbsp;</span>		<span class="comment">// TODO(rsc): Remove this allocation by adding</span>
+<span id="L207" class="ln">   207&nbsp;&nbsp;</span>		<span class="comment">// IndexString to package bytes.</span>
+<span id="L208" class="ln">   208&nbsp;&nbsp;</span>		regexp.prefixBytes = []byte(regexp.prefix)
+<span id="L209" class="ln">   209&nbsp;&nbsp;</span>		regexp.prefixRune, _ = utf8.DecodeRuneInString(regexp.prefix)
+<span id="L210" class="ln">   210&nbsp;&nbsp;</span>	}
+<span id="L211" class="ln">   211&nbsp;&nbsp;</span>
+<span id="L212" class="ln">   212&nbsp;&nbsp;</span>	n := len(prog.Inst)
+<span id="L213" class="ln">   213&nbsp;&nbsp;</span>	i := 0
+<span id="L214" class="ln">   214&nbsp;&nbsp;</span>	for matchSize[i] != 0 &amp;&amp; matchSize[i] &lt; n {
+<span id="L215" class="ln">   215&nbsp;&nbsp;</span>		i++
+<span id="L216" class="ln">   216&nbsp;&nbsp;</span>	}
+<span id="L217" class="ln">   217&nbsp;&nbsp;</span>	regexp.mpool = i
+<span id="L218" class="ln">   218&nbsp;&nbsp;</span>
+<span id="L219" class="ln">   219&nbsp;&nbsp;</span>	return regexp, nil
+<span id="L220" class="ln">   220&nbsp;&nbsp;</span>}
+<span id="L221" class="ln">   221&nbsp;&nbsp;</span>
+<span id="L222" class="ln">   222&nbsp;&nbsp;</span><span class="comment">// Pools of *machine for use during (*Regexp).doExecute,</span>
+<span id="L223" class="ln">   223&nbsp;&nbsp;</span><span class="comment">// split up by the size of the execution queues.</span>
+<span id="L224" class="ln">   224&nbsp;&nbsp;</span><span class="comment">// matchPool[i] machines have queue size matchSize[i].</span>
+<span id="L225" class="ln">   225&nbsp;&nbsp;</span><span class="comment">// On a 64-bit system each queue entry is 16 bytes,</span>
+<span id="L226" class="ln">   226&nbsp;&nbsp;</span><span class="comment">// so matchPool[0] has 16*2*128 = 4kB queues, etc.</span>
+<span id="L227" class="ln">   227&nbsp;&nbsp;</span><span class="comment">// The final matchPool is a catch-all for very large queues.</span>
+<span id="L228" class="ln">   228&nbsp;&nbsp;</span>var (
+<span id="L229" class="ln">   229&nbsp;&nbsp;</span>	matchSize = [...]int{128, 512, 2048, 16384, 0}
+<span id="L230" class="ln">   230&nbsp;&nbsp;</span>	matchPool [len(matchSize)]sync.Pool
+<span id="L231" class="ln">   231&nbsp;&nbsp;</span>)
+<span id="L232" class="ln">   232&nbsp;&nbsp;</span>
+<span id="L233" class="ln">   233&nbsp;&nbsp;</span><span class="comment">// get returns a machine to use for matching re.</span>
+<span id="L234" class="ln">   234&nbsp;&nbsp;</span><span class="comment">// It uses the re&#39;s machine cache if possible, to avoid</span>
+<span id="L235" class="ln">   235&nbsp;&nbsp;</span><span class="comment">// unnecessary allocation.</span>
+<span id="L236" class="ln">   236&nbsp;&nbsp;</span>func (re *Regexp) get() *machine {
+<span id="L237" class="ln">   237&nbsp;&nbsp;</span>	m, ok := matchPool[re.mpool].Get().(*machine)
+<span id="L238" class="ln">   238&nbsp;&nbsp;</span>	if !ok {
+<span id="L239" class="ln">   239&nbsp;&nbsp;</span>		m = new(machine)
+<span id="L240" class="ln">   240&nbsp;&nbsp;</span>	}
+<span id="L241" class="ln">   241&nbsp;&nbsp;</span>	m.re = re
+<span id="L242" class="ln">   242&nbsp;&nbsp;</span>	m.p = re.prog
+<span id="L243" class="ln">   243&nbsp;&nbsp;</span>	if cap(m.matchcap) &lt; re.matchcap {
+<span id="L244" class="ln">   244&nbsp;&nbsp;</span>		m.matchcap = make([]int, re.matchcap)
+<span id="L245" class="ln">   245&nbsp;&nbsp;</span>		for _, t := range m.pool {
+<span id="L246" class="ln">   246&nbsp;&nbsp;</span>			t.cap = make([]int, re.matchcap)
+<span id="L247" class="ln">   247&nbsp;&nbsp;</span>		}
+<span id="L248" class="ln">   248&nbsp;&nbsp;</span>	}
+<span id="L249" class="ln">   249&nbsp;&nbsp;</span>
+<span id="L250" class="ln">   250&nbsp;&nbsp;</span>	<span class="comment">// Allocate queues if needed.</span>
+<span id="L251" class="ln">   251&nbsp;&nbsp;</span>	<span class="comment">// Or reallocate, for &#34;large&#34; match pool.</span>
+<span id="L252" class="ln">   252&nbsp;&nbsp;</span>	n := matchSize[re.mpool]
+<span id="L253" class="ln">   253&nbsp;&nbsp;</span>	if n == 0 { <span class="comment">// large pool</span>
+<span id="L254" class="ln">   254&nbsp;&nbsp;</span>		n = len(re.prog.Inst)
+<span id="L255" class="ln">   255&nbsp;&nbsp;</span>	}
+<span id="L256" class="ln">   256&nbsp;&nbsp;</span>	if len(m.q0.sparse) &lt; n {
+<span id="L257" class="ln">   257&nbsp;&nbsp;</span>		m.q0 = queue{make([]uint32, n), make([]entry, 0, n)}
+<span id="L258" class="ln">   258&nbsp;&nbsp;</span>		m.q1 = queue{make([]uint32, n), make([]entry, 0, n)}
+<span id="L259" class="ln">   259&nbsp;&nbsp;</span>	}
+<span id="L260" class="ln">   260&nbsp;&nbsp;</span>	return m
+<span id="L261" class="ln">   261&nbsp;&nbsp;</span>}
+<span id="L262" class="ln">   262&nbsp;&nbsp;</span>
+<span id="L263" class="ln">   263&nbsp;&nbsp;</span><span class="comment">// put returns a machine to the correct machine pool.</span>
+<span id="L264" class="ln">   264&nbsp;&nbsp;</span>func (re *Regexp) put(m *machine) {
+<span id="L265" class="ln">   265&nbsp;&nbsp;</span>	m.re = nil
+<span id="L266" class="ln">   266&nbsp;&nbsp;</span>	m.p = nil
+<span id="L267" class="ln">   267&nbsp;&nbsp;</span>	m.inputs.clear()
+<span id="L268" class="ln">   268&nbsp;&nbsp;</span>	matchPool[re.mpool].Put(m)
+<span id="L269" class="ln">   269&nbsp;&nbsp;</span>}
+<span id="L270" class="ln">   270&nbsp;&nbsp;</span>
+<span id="L271" class="ln">   271&nbsp;&nbsp;</span><span class="comment">// minInputLen walks the regexp to find the minimum length of any matchable input.</span>
+<span id="L272" class="ln">   272&nbsp;&nbsp;</span>func minInputLen(re *syntax.Regexp) int {
+<span id="L273" class="ln">   273&nbsp;&nbsp;</span>	switch re.Op {
+<span id="L274" class="ln">   274&nbsp;&nbsp;</span>	default:
+<span id="L275" class="ln">   275&nbsp;&nbsp;</span>		return 0
+<span id="L276" class="ln">   276&nbsp;&nbsp;</span>	case syntax.OpAnyChar, syntax.OpAnyCharNotNL, syntax.OpCharClass:
+<span id="L277" class="ln">   277&nbsp;&nbsp;</span>		return 1
+<span id="L278" class="ln">   278&nbsp;&nbsp;</span>	case syntax.OpLiteral:
+<span id="L279" class="ln">   279&nbsp;&nbsp;</span>		l := 0
+<span id="L280" class="ln">   280&nbsp;&nbsp;</span>		for _, r := range re.Rune {
+<span id="L281" class="ln">   281&nbsp;&nbsp;</span>			if r == utf8.RuneError {
+<span id="L282" class="ln">   282&nbsp;&nbsp;</span>				l++
+<span id="L283" class="ln">   283&nbsp;&nbsp;</span>			} else {
+<span id="L284" class="ln">   284&nbsp;&nbsp;</span>				l += utf8.RuneLen(r)
+<span id="L285" class="ln">   285&nbsp;&nbsp;</span>			}
+<span id="L286" class="ln">   286&nbsp;&nbsp;</span>		}
+<span id="L287" class="ln">   287&nbsp;&nbsp;</span>		return l
+<span id="L288" class="ln">   288&nbsp;&nbsp;</span>	case syntax.OpCapture, syntax.OpPlus:
+<span id="L289" class="ln">   289&nbsp;&nbsp;</span>		return minInputLen(re.Sub[0])
+<span id="L290" class="ln">   290&nbsp;&nbsp;</span>	case syntax.OpRepeat:
+<span id="L291" class="ln">   291&nbsp;&nbsp;</span>		return re.Min * minInputLen(re.Sub[0])
+<span id="L292" class="ln">   292&nbsp;&nbsp;</span>	case syntax.OpConcat:
+<span id="L293" class="ln">   293&nbsp;&nbsp;</span>		l := 0
+<span id="L294" class="ln">   294&nbsp;&nbsp;</span>		for _, sub := range re.Sub {
+<span id="L295" class="ln">   295&nbsp;&nbsp;</span>			l += minInputLen(sub)
+<span id="L296" class="ln">   296&nbsp;&nbsp;</span>		}
+<span id="L297" class="ln">   297&nbsp;&nbsp;</span>		return l
+<span id="L298" class="ln">   298&nbsp;&nbsp;</span>	case syntax.OpAlternate:
+<span id="L299" class="ln">   299&nbsp;&nbsp;</span>		l := minInputLen(re.Sub[0])
+<span id="L300" class="ln">   300&nbsp;&nbsp;</span>		var lnext int
+<span id="L301" class="ln">   301&nbsp;&nbsp;</span>		for _, sub := range re.Sub[1:] {
+<span id="L302" class="ln">   302&nbsp;&nbsp;</span>			lnext = minInputLen(sub)
+<span id="L303" class="ln">   303&nbsp;&nbsp;</span>			if lnext &lt; l {
+<span id="L304" class="ln">   304&nbsp;&nbsp;</span>				l = lnext
+<span id="L305" class="ln">   305&nbsp;&nbsp;</span>			}
+<span id="L306" class="ln">   306&nbsp;&nbsp;</span>		}
+<span id="L307" class="ln">   307&nbsp;&nbsp;</span>		return l
+<span id="L308" class="ln">   308&nbsp;&nbsp;</span>	}
+<span id="L309" class="ln">   309&nbsp;&nbsp;</span>}
+<span id="L310" class="ln">   310&nbsp;&nbsp;</span>
+<span id="L311" class="ln">   311&nbsp;&nbsp;</span><span class="comment">// MustCompile is like [Compile] but panics if the expression cannot be parsed.</span>
+<span id="L312" class="ln">   312&nbsp;&nbsp;</span><span class="comment">// It simplifies safe initialization of global variables holding compiled regular</span>
+<span id="L313" class="ln">   313&nbsp;&nbsp;</span><span class="comment">// expressions.</span>
+<span id="L314" class="ln">   314&nbsp;&nbsp;</span>func MustCompile(str string) *Regexp {
+<span id="L315" class="ln">   315&nbsp;&nbsp;</span>	regexp, err := Compile(str)
+<span id="L316" class="ln">   316&nbsp;&nbsp;</span>	if err != nil {
+<span id="L317" class="ln">   317&nbsp;&nbsp;</span>		panic(`regexp: Compile(` + quote(str) + `): ` + err.Error())
+<span id="L318" class="ln">   318&nbsp;&nbsp;</span>	}
+<span id="L319" class="ln">   319&nbsp;&nbsp;</span>	return regexp
+<span id="L320" class="ln">   320&nbsp;&nbsp;</span>}
+<span id="L321" class="ln">   321&nbsp;&nbsp;</span>
+<span id="L322" class="ln">   322&nbsp;&nbsp;</span><span class="comment">// MustCompilePOSIX is like [CompilePOSIX] but panics if the expression cannot be parsed.</span>
+<span id="L323" class="ln">   323&nbsp;&nbsp;</span><span class="comment">// It simplifies safe initialization of global variables holding compiled regular</span>
+<span id="L324" class="ln">   324&nbsp;&nbsp;</span><span class="comment">// expressions.</span>
+<span id="L325" class="ln">   325&nbsp;&nbsp;</span>func MustCompilePOSIX(str string) *Regexp {
+<span id="L326" class="ln">   326&nbsp;&nbsp;</span>	regexp, err := CompilePOSIX(str)
+<span id="L327" class="ln">   327&nbsp;&nbsp;</span>	if err != nil {
+<span id="L328" class="ln">   328&nbsp;&nbsp;</span>		panic(`regexp: CompilePOSIX(` + quote(str) + `): ` + err.Error())
+<span id="L329" class="ln">   329&nbsp;&nbsp;</span>	}
+<span id="L330" class="ln">   330&nbsp;&nbsp;</span>	return regexp
+<span id="L331" class="ln">   331&nbsp;&nbsp;</span>}
+<span id="L332" class="ln">   332&nbsp;&nbsp;</span>
+<span id="L333" class="ln">   333&nbsp;&nbsp;</span>func quote(s string) string {
+<span id="L334" class="ln">   334&nbsp;&nbsp;</span>	if strconv.CanBackquote(s) {
+<span id="L335" class="ln">   335&nbsp;&nbsp;</span>		return &#34;`&#34; + s + &#34;`&#34;
+<span id="L336" class="ln">   336&nbsp;&nbsp;</span>	}
+<span id="L337" class="ln">   337&nbsp;&nbsp;</span>	return strconv.Quote(s)
+<span id="L338" class="ln">   338&nbsp;&nbsp;</span>}
+<span id="L339" class="ln">   339&nbsp;&nbsp;</span>
+<span id="L340" class="ln">   340&nbsp;&nbsp;</span><span class="comment">// NumSubexp returns the number of parenthesized subexpressions in this [Regexp].</span>
+<span id="L341" class="ln">   341&nbsp;&nbsp;</span>func (re *Regexp) NumSubexp() int {
+<span id="L342" class="ln">   342&nbsp;&nbsp;</span>	return re.numSubexp
+<span id="L343" class="ln">   343&nbsp;&nbsp;</span>}
+<span id="L344" class="ln">   344&nbsp;&nbsp;</span>
+<span id="L345" class="ln">   345&nbsp;&nbsp;</span><span class="comment">// SubexpNames returns the names of the parenthesized subexpressions</span>
+<span id="L346" class="ln">   346&nbsp;&nbsp;</span><span class="comment">// in this [Regexp]. The name for the first sub-expression is names[1],</span>
+<span id="L347" class="ln">   347&nbsp;&nbsp;</span><span class="comment">// so that if m is a match slice, the name for m[i] is SubexpNames()[i].</span>
+<span id="L348" class="ln">   348&nbsp;&nbsp;</span><span class="comment">// Since the Regexp as a whole cannot be named, names[0] is always</span>
+<span id="L349" class="ln">   349&nbsp;&nbsp;</span><span class="comment">// the empty string. The slice should not be modified.</span>
+<span id="L350" class="ln">   350&nbsp;&nbsp;</span>func (re *Regexp) SubexpNames() []string {
+<span id="L351" class="ln">   351&nbsp;&nbsp;</span>	return re.subexpNames
+<span id="L352" class="ln">   352&nbsp;&nbsp;</span>}
+<span id="L353" class="ln">   353&nbsp;&nbsp;</span>
+<span id="L354" class="ln">   354&nbsp;&nbsp;</span><span class="comment">// SubexpIndex returns the index of the first subexpression with the given name,</span>
+<span id="L355" class="ln">   355&nbsp;&nbsp;</span><span class="comment">// or -1 if there is no subexpression with that name.</span>
+<span id="L356" class="ln">   356&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L357" class="ln">   357&nbsp;&nbsp;</span><span class="comment">// Note that multiple subexpressions can be written using the same name, as in</span>
+<span id="L358" class="ln">   358&nbsp;&nbsp;</span><span class="comment">// (?P&lt;bob&gt;a+)(?P&lt;bob&gt;b+), which declares two subexpressions named &#34;bob&#34;.</span>
+<span id="L359" class="ln">   359&nbsp;&nbsp;</span><span class="comment">// In this case, SubexpIndex returns the index of the leftmost such subexpression</span>
+<span id="L360" class="ln">   360&nbsp;&nbsp;</span><span class="comment">// in the regular expression.</span>
+<span id="L361" class="ln">   361&nbsp;&nbsp;</span>func (re *Regexp) SubexpIndex(name string) int {
+<span id="L362" class="ln">   362&nbsp;&nbsp;</span>	if name != &#34;&#34; {
+<span id="L363" class="ln">   363&nbsp;&nbsp;</span>		for i, s := range re.subexpNames {
+<span id="L364" class="ln">   364&nbsp;&nbsp;</span>			if name == s {
+<span id="L365" class="ln">   365&nbsp;&nbsp;</span>				return i
+<span id="L366" class="ln">   366&nbsp;&nbsp;</span>			}
+<span id="L367" class="ln">   367&nbsp;&nbsp;</span>		}
+<span id="L368" class="ln">   368&nbsp;&nbsp;</span>	}
+<span id="L369" class="ln">   369&nbsp;&nbsp;</span>	return -1
+<span id="L370" class="ln">   370&nbsp;&nbsp;</span>}
+<span id="L371" class="ln">   371&nbsp;&nbsp;</span>
+<span id="L372" class="ln">   372&nbsp;&nbsp;</span>const endOfText rune = -1
+<span id="L373" class="ln">   373&nbsp;&nbsp;</span>
+<span id="L374" class="ln">   374&nbsp;&nbsp;</span><span class="comment">// input abstracts different representations of the input text. It provides</span>
+<span id="L375" class="ln">   375&nbsp;&nbsp;</span><span class="comment">// one-character lookahead.</span>
+<span id="L376" class="ln">   376&nbsp;&nbsp;</span>type input interface {
+<span id="L377" class="ln">   377&nbsp;&nbsp;</span>	step(pos int) (r rune, width int) <span class="comment">// advance one rune</span>
+<span id="L378" class="ln">   378&nbsp;&nbsp;</span>	canCheckPrefix() bool             <span class="comment">// can we look ahead without losing info?</span>
+<span id="L379" class="ln">   379&nbsp;&nbsp;</span>	hasPrefix(re *Regexp) bool
+<span id="L380" class="ln">   380&nbsp;&nbsp;</span>	index(re *Regexp, pos int) int
+<span id="L381" class="ln">   381&nbsp;&nbsp;</span>	context(pos int) lazyFlag
+<span id="L382" class="ln">   382&nbsp;&nbsp;</span>}
+<span id="L383" class="ln">   383&nbsp;&nbsp;</span>
+<span id="L384" class="ln">   384&nbsp;&nbsp;</span><span class="comment">// inputString scans a string.</span>
+<span id="L385" class="ln">   385&nbsp;&nbsp;</span>type inputString struct {
+<span id="L386" class="ln">   386&nbsp;&nbsp;</span>	str string
+<span id="L387" class="ln">   387&nbsp;&nbsp;</span>}
+<span id="L388" class="ln">   388&nbsp;&nbsp;</span>
+<span id="L389" class="ln">   389&nbsp;&nbsp;</span>func (i *inputString) step(pos int) (rune, int) {
+<span id="L390" class="ln">   390&nbsp;&nbsp;</span>	if pos &lt; len(i.str) {
+<span id="L391" class="ln">   391&nbsp;&nbsp;</span>		c := i.str[pos]
+<span id="L392" class="ln">   392&nbsp;&nbsp;</span>		if c &lt; utf8.RuneSelf {
+<span id="L393" class="ln">   393&nbsp;&nbsp;</span>			return rune(c), 1
+<span id="L394" class="ln">   394&nbsp;&nbsp;</span>		}
+<span id="L395" class="ln">   395&nbsp;&nbsp;</span>		return utf8.DecodeRuneInString(i.str[pos:])
+<span id="L396" class="ln">   396&nbsp;&nbsp;</span>	}
+<span id="L397" class="ln">   397&nbsp;&nbsp;</span>	return endOfText, 0
+<span id="L398" class="ln">   398&nbsp;&nbsp;</span>}
+<span id="L399" class="ln">   399&nbsp;&nbsp;</span>
+<span id="L400" class="ln">   400&nbsp;&nbsp;</span>func (i *inputString) canCheckPrefix() bool {
+<span id="L401" class="ln">   401&nbsp;&nbsp;</span>	return true
+<span id="L402" class="ln">   402&nbsp;&nbsp;</span>}
+<span id="L403" class="ln">   403&nbsp;&nbsp;</span>
+<span id="L404" class="ln">   404&nbsp;&nbsp;</span>func (i *inputString) hasPrefix(re *Regexp) bool {
+<span id="L405" class="ln">   405&nbsp;&nbsp;</span>	return strings.HasPrefix(i.str, re.prefix)
+<span id="L406" class="ln">   406&nbsp;&nbsp;</span>}
+<span id="L407" class="ln">   407&nbsp;&nbsp;</span>
+<span id="L408" class="ln">   408&nbsp;&nbsp;</span>func (i *inputString) index(re *Regexp, pos int) int {
+<span id="L409" class="ln">   409&nbsp;&nbsp;</span>	return strings.Index(i.str[pos:], re.prefix)
+<span id="L410" class="ln">   410&nbsp;&nbsp;</span>}
+<span id="L411" class="ln">   411&nbsp;&nbsp;</span>
+<span id="L412" class="ln">   412&nbsp;&nbsp;</span>func (i *inputString) context(pos int) lazyFlag {
+<span id="L413" class="ln">   413&nbsp;&nbsp;</span>	r1, r2 := endOfText, endOfText
+<span id="L414" class="ln">   414&nbsp;&nbsp;</span>	<span class="comment">// 0 &lt; pos &amp;&amp; pos &lt;= len(i.str)</span>
+<span id="L415" class="ln">   415&nbsp;&nbsp;</span>	if uint(pos-1) &lt; uint(len(i.str)) {
+<span id="L416" class="ln">   416&nbsp;&nbsp;</span>		r1 = rune(i.str[pos-1])
+<span id="L417" class="ln">   417&nbsp;&nbsp;</span>		if r1 &gt;= utf8.RuneSelf {
+<span id="L418" class="ln">   418&nbsp;&nbsp;</span>			r1, _ = utf8.DecodeLastRuneInString(i.str[:pos])
+<span id="L419" class="ln">   419&nbsp;&nbsp;</span>		}
+<span id="L420" class="ln">   420&nbsp;&nbsp;</span>	}
+<span id="L421" class="ln">   421&nbsp;&nbsp;</span>	<span class="comment">// 0 &lt;= pos &amp;&amp; pos &lt; len(i.str)</span>
+<span id="L422" class="ln">   422&nbsp;&nbsp;</span>	if uint(pos) &lt; uint(len(i.str)) {
+<span id="L423" class="ln">   423&nbsp;&nbsp;</span>		r2 = rune(i.str[pos])
+<span id="L424" class="ln">   424&nbsp;&nbsp;</span>		if r2 &gt;= utf8.RuneSelf {
+<span id="L425" class="ln">   425&nbsp;&nbsp;</span>			r2, _ = utf8.DecodeRuneInString(i.str[pos:])
+<span id="L426" class="ln">   426&nbsp;&nbsp;</span>		}
+<span id="L427" class="ln">   427&nbsp;&nbsp;</span>	}
+<span id="L428" class="ln">   428&nbsp;&nbsp;</span>	return newLazyFlag(r1, r2)
+<span id="L429" class="ln">   429&nbsp;&nbsp;</span>}
+<span id="L430" class="ln">   430&nbsp;&nbsp;</span>
+<span id="L431" class="ln">   431&nbsp;&nbsp;</span><span class="comment">// inputBytes scans a byte slice.</span>
+<span id="L432" class="ln">   432&nbsp;&nbsp;</span>type inputBytes struct {
+<span id="L433" class="ln">   433&nbsp;&nbsp;</span>	str []byte
+<span id="L434" class="ln">   434&nbsp;&nbsp;</span>}
+<span id="L435" class="ln">   435&nbsp;&nbsp;</span>
+<span id="L436" class="ln">   436&nbsp;&nbsp;</span>func (i *inputBytes) step(pos int) (rune, int) {
+<span id="L437" class="ln">   437&nbsp;&nbsp;</span>	if pos &lt; len(i.str) {
+<span id="L438" class="ln">   438&nbsp;&nbsp;</span>		c := i.str[pos]
+<span id="L439" class="ln">   439&nbsp;&nbsp;</span>		if c &lt; utf8.RuneSelf {
+<span id="L440" class="ln">   440&nbsp;&nbsp;</span>			return rune(c), 1
+<span id="L441" class="ln">   441&nbsp;&nbsp;</span>		}
+<span id="L442" class="ln">   442&nbsp;&nbsp;</span>		return utf8.DecodeRune(i.str[pos:])
+<span id="L443" class="ln">   443&nbsp;&nbsp;</span>	}
+<span id="L444" class="ln">   444&nbsp;&nbsp;</span>	return endOfText, 0
+<span id="L445" class="ln">   445&nbsp;&nbsp;</span>}
+<span id="L446" class="ln">   446&nbsp;&nbsp;</span>
+<span id="L447" class="ln">   447&nbsp;&nbsp;</span>func (i *inputBytes) canCheckPrefix() bool {
+<span id="L448" class="ln">   448&nbsp;&nbsp;</span>	return true
+<span id="L449" class="ln">   449&nbsp;&nbsp;</span>}
+<span id="L450" class="ln">   450&nbsp;&nbsp;</span>
+<span id="L451" class="ln">   451&nbsp;&nbsp;</span>func (i *inputBytes) hasPrefix(re *Regexp) bool {
+<span id="L452" class="ln">   452&nbsp;&nbsp;</span>	return bytes.HasPrefix(i.str, re.prefixBytes)
+<span id="L453" class="ln">   453&nbsp;&nbsp;</span>}
+<span id="L454" class="ln">   454&nbsp;&nbsp;</span>
+<span id="L455" class="ln">   455&nbsp;&nbsp;</span>func (i *inputBytes) index(re *Regexp, pos int) int {
+<span id="L456" class="ln">   456&nbsp;&nbsp;</span>	return bytes.Index(i.str[pos:], re.prefixBytes)
+<span id="L457" class="ln">   457&nbsp;&nbsp;</span>}
+<span id="L458" class="ln">   458&nbsp;&nbsp;</span>
+<span id="L459" class="ln">   459&nbsp;&nbsp;</span>func (i *inputBytes) context(pos int) lazyFlag {
+<span id="L460" class="ln">   460&nbsp;&nbsp;</span>	r1, r2 := endOfText, endOfText
+<span id="L461" class="ln">   461&nbsp;&nbsp;</span>	<span class="comment">// 0 &lt; pos &amp;&amp; pos &lt;= len(i.str)</span>
+<span id="L462" class="ln">   462&nbsp;&nbsp;</span>	if uint(pos-1) &lt; uint(len(i.str)) {
+<span id="L463" class="ln">   463&nbsp;&nbsp;</span>		r1 = rune(i.str[pos-1])
+<span id="L464" class="ln">   464&nbsp;&nbsp;</span>		if r1 &gt;= utf8.RuneSelf {
+<span id="L465" class="ln">   465&nbsp;&nbsp;</span>			r1, _ = utf8.DecodeLastRune(i.str[:pos])
+<span id="L466" class="ln">   466&nbsp;&nbsp;</span>		}
+<span id="L467" class="ln">   467&nbsp;&nbsp;</span>	}
+<span id="L468" class="ln">   468&nbsp;&nbsp;</span>	<span class="comment">// 0 &lt;= pos &amp;&amp; pos &lt; len(i.str)</span>
+<span id="L469" class="ln">   469&nbsp;&nbsp;</span>	if uint(pos) &lt; uint(len(i.str)) {
+<span id="L470" class="ln">   470&nbsp;&nbsp;</span>		r2 = rune(i.str[pos])
+<span id="L471" class="ln">   471&nbsp;&nbsp;</span>		if r2 &gt;= utf8.RuneSelf {
+<span id="L472" class="ln">   472&nbsp;&nbsp;</span>			r2, _ = utf8.DecodeRune(i.str[pos:])
+<span id="L473" class="ln">   473&nbsp;&nbsp;</span>		}
+<span id="L474" class="ln">   474&nbsp;&nbsp;</span>	}
+<span id="L475" class="ln">   475&nbsp;&nbsp;</span>	return newLazyFlag(r1, r2)
+<span id="L476" class="ln">   476&nbsp;&nbsp;</span>}
+<span id="L477" class="ln">   477&nbsp;&nbsp;</span>
+<span id="L478" class="ln">   478&nbsp;&nbsp;</span><span class="comment">// inputReader scans a RuneReader.</span>
+<span id="L479" class="ln">   479&nbsp;&nbsp;</span>type inputReader struct {
+<span id="L480" class="ln">   480&nbsp;&nbsp;</span>	r     io.RuneReader
+<span id="L481" class="ln">   481&nbsp;&nbsp;</span>	atEOT bool
+<span id="L482" class="ln">   482&nbsp;&nbsp;</span>	pos   int
+<span id="L483" class="ln">   483&nbsp;&nbsp;</span>}
+<span id="L484" class="ln">   484&nbsp;&nbsp;</span>
+<span id="L485" class="ln">   485&nbsp;&nbsp;</span>func (i *inputReader) step(pos int) (rune, int) {
+<span id="L486" class="ln">   486&nbsp;&nbsp;</span>	if !i.atEOT &amp;&amp; pos != i.pos {
+<span id="L487" class="ln">   487&nbsp;&nbsp;</span>		return endOfText, 0
+<span id="L488" class="ln">   488&nbsp;&nbsp;</span>
+<span id="L489" class="ln">   489&nbsp;&nbsp;</span>	}
+<span id="L490" class="ln">   490&nbsp;&nbsp;</span>	r, w, err := i.r.ReadRune()
+<span id="L491" class="ln">   491&nbsp;&nbsp;</span>	if err != nil {
+<span id="L492" class="ln">   492&nbsp;&nbsp;</span>		i.atEOT = true
+<span id="L493" class="ln">   493&nbsp;&nbsp;</span>		return endOfText, 0
+<span id="L494" class="ln">   494&nbsp;&nbsp;</span>	}
+<span id="L495" class="ln">   495&nbsp;&nbsp;</span>	i.pos += w
+<span id="L496" class="ln">   496&nbsp;&nbsp;</span>	return r, w
+<span id="L497" class="ln">   497&nbsp;&nbsp;</span>}
+<span id="L498" class="ln">   498&nbsp;&nbsp;</span>
+<span id="L499" class="ln">   499&nbsp;&nbsp;</span>func (i *inputReader) canCheckPrefix() bool {
+<span id="L500" class="ln">   500&nbsp;&nbsp;</span>	return false
+<span id="L501" class="ln">   501&nbsp;&nbsp;</span>}
+<span id="L502" class="ln">   502&nbsp;&nbsp;</span>
+<span id="L503" class="ln">   503&nbsp;&nbsp;</span>func (i *inputReader) hasPrefix(re *Regexp) bool {
+<span id="L504" class="ln">   504&nbsp;&nbsp;</span>	return false
+<span id="L505" class="ln">   505&nbsp;&nbsp;</span>}
+<span id="L506" class="ln">   506&nbsp;&nbsp;</span>
+<span id="L507" class="ln">   507&nbsp;&nbsp;</span>func (i *inputReader) index(re *Regexp, pos int) int {
+<span id="L508" class="ln">   508&nbsp;&nbsp;</span>	return -1
+<span id="L509" class="ln">   509&nbsp;&nbsp;</span>}
+<span id="L510" class="ln">   510&nbsp;&nbsp;</span>
+<span id="L511" class="ln">   511&nbsp;&nbsp;</span>func (i *inputReader) context(pos int) lazyFlag {
+<span id="L512" class="ln">   512&nbsp;&nbsp;</span>	return 0 <span class="comment">// not used</span>
+<span id="L513" class="ln">   513&nbsp;&nbsp;</span>}
+<span id="L514" class="ln">   514&nbsp;&nbsp;</span>
+<span id="L515" class="ln">   515&nbsp;&nbsp;</span><span class="comment">// LiteralPrefix returns a literal string that must begin any match</span>
+<span id="L516" class="ln">   516&nbsp;&nbsp;</span><span class="comment">// of the regular expression re. It returns the boolean true if the</span>
+<span id="L517" class="ln">   517&nbsp;&nbsp;</span><span class="comment">// literal string comprises the entire regular expression.</span>
+<span id="L518" class="ln">   518&nbsp;&nbsp;</span>func (re *Regexp) LiteralPrefix() (prefix string, complete bool) {
+<span id="L519" class="ln">   519&nbsp;&nbsp;</span>	return re.prefix, re.prefixComplete
+<span id="L520" class="ln">   520&nbsp;&nbsp;</span>}
+<span id="L521" class="ln">   521&nbsp;&nbsp;</span>
+<span id="L522" class="ln">   522&nbsp;&nbsp;</span><span class="comment">// MatchReader reports whether the text returned by the [io.RuneReader]</span>
+<span id="L523" class="ln">   523&nbsp;&nbsp;</span><span class="comment">// contains any match of the regular expression re.</span>
+<span id="L524" class="ln">   524&nbsp;&nbsp;</span>func (re *Regexp) MatchReader(r io.RuneReader) bool {
+<span id="L525" class="ln">   525&nbsp;&nbsp;</span>	return re.doMatch(r, nil, &#34;&#34;)
+<span id="L526" class="ln">   526&nbsp;&nbsp;</span>}
+<span id="L527" class="ln">   527&nbsp;&nbsp;</span>
+<span id="L528" class="ln">   528&nbsp;&nbsp;</span><span class="comment">// MatchString reports whether the string s</span>
+<span id="L529" class="ln">   529&nbsp;&nbsp;</span><span class="comment">// contains any match of the regular expression re.</span>
+<span id="L530" class="ln">   530&nbsp;&nbsp;</span>func (re *Regexp) MatchString(s string) bool {
+<span id="L531" class="ln">   531&nbsp;&nbsp;</span>	return re.doMatch(nil, nil, s)
+<span id="L532" class="ln">   532&nbsp;&nbsp;</span>}
+<span id="L533" class="ln">   533&nbsp;&nbsp;</span>
+<span id="L534" class="ln">   534&nbsp;&nbsp;</span><span class="comment">// Match reports whether the byte slice b</span>
+<span id="L535" class="ln">   535&nbsp;&nbsp;</span><span class="comment">// contains any match of the regular expression re.</span>
+<span id="L536" class="ln">   536&nbsp;&nbsp;</span>func (re *Regexp) Match(b []byte) bool {
+<span id="L537" class="ln">   537&nbsp;&nbsp;</span>	return re.doMatch(nil, b, &#34;&#34;)
+<span id="L538" class="ln">   538&nbsp;&nbsp;</span>}
+<span id="L539" class="ln">   539&nbsp;&nbsp;</span>
+<span id="L540" class="ln">   540&nbsp;&nbsp;</span><span class="comment">// MatchReader reports whether the text returned by the RuneReader</span>
+<span id="L541" class="ln">   541&nbsp;&nbsp;</span><span class="comment">// contains any match of the regular expression pattern.</span>
+<span id="L542" class="ln">   542&nbsp;&nbsp;</span><span class="comment">// More complicated queries need to use [Compile] and the full [Regexp] interface.</span>
+<span id="L543" class="ln">   543&nbsp;&nbsp;</span>func MatchReader(pattern string, r io.RuneReader) (matched bool, err error) {
+<span id="L544" class="ln">   544&nbsp;&nbsp;</span>	re, err := Compile(pattern)
+<span id="L545" class="ln">   545&nbsp;&nbsp;</span>	if err != nil {
+<span id="L546" class="ln">   546&nbsp;&nbsp;</span>		return false, err
+<span id="L547" class="ln">   547&nbsp;&nbsp;</span>	}
+<span id="L548" class="ln">   548&nbsp;&nbsp;</span>	return re.MatchReader(r), nil
+<span id="L549" class="ln">   549&nbsp;&nbsp;</span>}
+<span id="L550" class="ln">   550&nbsp;&nbsp;</span>
+<span id="L551" class="ln">   551&nbsp;&nbsp;</span><span class="comment">// MatchString reports whether the string s</span>
+<span id="L552" class="ln">   552&nbsp;&nbsp;</span><span class="comment">// contains any match of the regular expression pattern.</span>
+<span id="L553" class="ln">   553&nbsp;&nbsp;</span><span class="comment">// More complicated queries need to use [Compile] and the full [Regexp] interface.</span>
+<span id="L554" class="ln">   554&nbsp;&nbsp;</span>func MatchString(pattern string, s string) (matched bool, err error) {
+<span id="L555" class="ln">   555&nbsp;&nbsp;</span>	re, err := Compile(pattern)
+<span id="L556" class="ln">   556&nbsp;&nbsp;</span>	if err != nil {
+<span id="L557" class="ln">   557&nbsp;&nbsp;</span>		return false, err
+<span id="L558" class="ln">   558&nbsp;&nbsp;</span>	}
+<span id="L559" class="ln">   559&nbsp;&nbsp;</span>	return re.MatchString(s), nil
+<span id="L560" class="ln">   560&nbsp;&nbsp;</span>}
+<span id="L561" class="ln">   561&nbsp;&nbsp;</span>
+<span id="L562" class="ln">   562&nbsp;&nbsp;</span><span class="comment">// Match reports whether the byte slice b</span>
+<span id="L563" class="ln">   563&nbsp;&nbsp;</span><span class="comment">// contains any match of the regular expression pattern.</span>
+<span id="L564" class="ln">   564&nbsp;&nbsp;</span><span class="comment">// More complicated queries need to use [Compile] and the full [Regexp] interface.</span>
+<span id="L565" class="ln">   565&nbsp;&nbsp;</span>func Match(pattern string, b []byte) (matched bool, err error) {
+<span id="L566" class="ln">   566&nbsp;&nbsp;</span>	re, err := Compile(pattern)
+<span id="L567" class="ln">   567&nbsp;&nbsp;</span>	if err != nil {
+<span id="L568" class="ln">   568&nbsp;&nbsp;</span>		return false, err
+<span id="L569" class="ln">   569&nbsp;&nbsp;</span>	}
+<span id="L570" class="ln">   570&nbsp;&nbsp;</span>	return re.Match(b), nil
+<span id="L571" class="ln">   571&nbsp;&nbsp;</span>}
+<span id="L572" class="ln">   572&nbsp;&nbsp;</span>
+<span id="L573" class="ln">   573&nbsp;&nbsp;</span><span class="comment">// ReplaceAllString returns a copy of src, replacing matches of the [Regexp]</span>
+<span id="L574" class="ln">   574&nbsp;&nbsp;</span><span class="comment">// with the replacement string repl.</span>
+<span id="L575" class="ln">   575&nbsp;&nbsp;</span><span class="comment">// Inside repl, $ signs are interpreted as in [Regexp.Expand].</span>
+<span id="L576" class="ln">   576&nbsp;&nbsp;</span>func (re *Regexp) ReplaceAllString(src, repl string) string {
+<span id="L577" class="ln">   577&nbsp;&nbsp;</span>	n := 2
+<span id="L578" class="ln">   578&nbsp;&nbsp;</span>	if strings.Contains(repl, &#34;$&#34;) {
+<span id="L579" class="ln">   579&nbsp;&nbsp;</span>		n = 2 * (re.numSubexp + 1)
+<span id="L580" class="ln">   580&nbsp;&nbsp;</span>	}
+<span id="L581" class="ln">   581&nbsp;&nbsp;</span>	b := re.replaceAll(nil, src, n, func(dst []byte, match []int) []byte {
+<span id="L582" class="ln">   582&nbsp;&nbsp;</span>		return re.expand(dst, repl, nil, src, match)
+<span id="L583" class="ln">   583&nbsp;&nbsp;</span>	})
+<span id="L584" class="ln">   584&nbsp;&nbsp;</span>	return string(b)
+<span id="L585" class="ln">   585&nbsp;&nbsp;</span>}
+<span id="L586" class="ln">   586&nbsp;&nbsp;</span>
+<span id="L587" class="ln">   587&nbsp;&nbsp;</span><span class="comment">// ReplaceAllLiteralString returns a copy of src, replacing matches of the [Regexp]</span>
+<span id="L588" class="ln">   588&nbsp;&nbsp;</span><span class="comment">// with the replacement string repl. The replacement repl is substituted directly,</span>
+<span id="L589" class="ln">   589&nbsp;&nbsp;</span><span class="comment">// without using [Regexp.Expand].</span>
+<span id="L590" class="ln">   590&nbsp;&nbsp;</span>func (re *Regexp) ReplaceAllLiteralString(src, repl string) string {
+<span id="L591" class="ln">   591&nbsp;&nbsp;</span>	return string(re.replaceAll(nil, src, 2, func(dst []byte, match []int) []byte {
+<span id="L592" class="ln">   592&nbsp;&nbsp;</span>		return append(dst, repl...)
+<span id="L593" class="ln">   593&nbsp;&nbsp;</span>	}))
+<span id="L594" class="ln">   594&nbsp;&nbsp;</span>}
+<span id="L595" class="ln">   595&nbsp;&nbsp;</span>
+<span id="L596" class="ln">   596&nbsp;&nbsp;</span><span class="comment">// ReplaceAllStringFunc returns a copy of src in which all matches of the</span>
+<span id="L597" class="ln">   597&nbsp;&nbsp;</span><span class="comment">// [Regexp] have been replaced by the return value of function repl applied</span>
+<span id="L598" class="ln">   598&nbsp;&nbsp;</span><span class="comment">// to the matched substring. The replacement returned by repl is substituted</span>
+<span id="L599" class="ln">   599&nbsp;&nbsp;</span><span class="comment">// directly, without using [Regexp.Expand].</span>
+<span id="L600" class="ln">   600&nbsp;&nbsp;</span>func (re *Regexp) ReplaceAllStringFunc(src string, repl func(string) string) string {
+<span id="L601" class="ln">   601&nbsp;&nbsp;</span>	b := re.replaceAll(nil, src, 2, func(dst []byte, match []int) []byte {
+<span id="L602" class="ln">   602&nbsp;&nbsp;</span>		return append(dst, repl(src[match[0]:match[1]])...)
+<span id="L603" class="ln">   603&nbsp;&nbsp;</span>	})
+<span id="L604" class="ln">   604&nbsp;&nbsp;</span>	return string(b)
+<span id="L605" class="ln">   605&nbsp;&nbsp;</span>}
+<span id="L606" class="ln">   606&nbsp;&nbsp;</span>
+<span id="L607" class="ln">   607&nbsp;&nbsp;</span>func (re *Regexp) replaceAll(bsrc []byte, src string, nmatch int, repl func(dst []byte, m []int) []byte) []byte {
+<span id="L608" class="ln">   608&nbsp;&nbsp;</span>	lastMatchEnd := 0 <span class="comment">// end position of the most recent match</span>
+<span id="L609" class="ln">   609&nbsp;&nbsp;</span>	searchPos := 0    <span class="comment">// position where we next look for a match</span>
+<span id="L610" class="ln">   610&nbsp;&nbsp;</span>	var buf []byte
+<span id="L611" class="ln">   611&nbsp;&nbsp;</span>	var endPos int
+<span id="L612" class="ln">   612&nbsp;&nbsp;</span>	if bsrc != nil {
+<span id="L613" class="ln">   613&nbsp;&nbsp;</span>		endPos = len(bsrc)
+<span id="L614" class="ln">   614&nbsp;&nbsp;</span>	} else {
+<span id="L615" class="ln">   615&nbsp;&nbsp;</span>		endPos = len(src)
+<span id="L616" class="ln">   616&nbsp;&nbsp;</span>	}
+<span id="L617" class="ln">   617&nbsp;&nbsp;</span>	if nmatch &gt; re.prog.NumCap {
+<span id="L618" class="ln">   618&nbsp;&nbsp;</span>		nmatch = re.prog.NumCap
+<span id="L619" class="ln">   619&nbsp;&nbsp;</span>	}
+<span id="L620" class="ln">   620&nbsp;&nbsp;</span>
+<span id="L621" class="ln">   621&nbsp;&nbsp;</span>	var dstCap [2]int
+<span id="L622" class="ln">   622&nbsp;&nbsp;</span>	for searchPos &lt;= endPos {
+<span id="L623" class="ln">   623&nbsp;&nbsp;</span>		a := re.doExecute(nil, bsrc, src, searchPos, nmatch, dstCap[:0])
+<span id="L624" class="ln">   624&nbsp;&nbsp;</span>		if len(a) == 0 {
+<span id="L625" class="ln">   625&nbsp;&nbsp;</span>			break <span class="comment">// no more matches</span>
+<span id="L626" class="ln">   626&nbsp;&nbsp;</span>		}
+<span id="L627" class="ln">   627&nbsp;&nbsp;</span>
+<span id="L628" class="ln">   628&nbsp;&nbsp;</span>		<span class="comment">// Copy the unmatched characters before this match.</span>
+<span id="L629" class="ln">   629&nbsp;&nbsp;</span>		if bsrc != nil {
+<span id="L630" class="ln">   630&nbsp;&nbsp;</span>			buf = append(buf, bsrc[lastMatchEnd:a[0]]...)
+<span id="L631" class="ln">   631&nbsp;&nbsp;</span>		} else {
+<span id="L632" class="ln">   632&nbsp;&nbsp;</span>			buf = append(buf, src[lastMatchEnd:a[0]]...)
+<span id="L633" class="ln">   633&nbsp;&nbsp;</span>		}
+<span id="L634" class="ln">   634&nbsp;&nbsp;</span>
+<span id="L635" class="ln">   635&nbsp;&nbsp;</span>		<span class="comment">// Now insert a copy of the replacement string, but not for a</span>
+<span id="L636" class="ln">   636&nbsp;&nbsp;</span>		<span class="comment">// match of the empty string immediately after another match.</span>
+<span id="L637" class="ln">   637&nbsp;&nbsp;</span>		<span class="comment">// (Otherwise, we get double replacement for patterns that</span>
+<span id="L638" class="ln">   638&nbsp;&nbsp;</span>		<span class="comment">// match both empty and nonempty strings.)</span>
+<span id="L639" class="ln">   639&nbsp;&nbsp;</span>		if a[1] &gt; lastMatchEnd || a[0] == 0 {
+<span id="L640" class="ln">   640&nbsp;&nbsp;</span>			buf = repl(buf, a)
+<span id="L641" class="ln">   641&nbsp;&nbsp;</span>		}
+<span id="L642" class="ln">   642&nbsp;&nbsp;</span>		lastMatchEnd = a[1]
+<span id="L643" class="ln">   643&nbsp;&nbsp;</span>
+<span id="L644" class="ln">   644&nbsp;&nbsp;</span>		<span class="comment">// Advance past this match; always advance at least one character.</span>
+<span id="L645" class="ln">   645&nbsp;&nbsp;</span>		var width int
+<span id="L646" class="ln">   646&nbsp;&nbsp;</span>		if bsrc != nil {
+<span id="L647" class="ln">   647&nbsp;&nbsp;</span>			_, width = utf8.DecodeRune(bsrc[searchPos:])
+<span id="L648" class="ln">   648&nbsp;&nbsp;</span>		} else {
+<span id="L649" class="ln">   649&nbsp;&nbsp;</span>			_, width = utf8.DecodeRuneInString(src[searchPos:])
+<span id="L650" class="ln">   650&nbsp;&nbsp;</span>		}
+<span id="L651" class="ln">   651&nbsp;&nbsp;</span>		if searchPos+width &gt; a[1] {
+<span id="L652" class="ln">   652&nbsp;&nbsp;</span>			searchPos += width
+<span id="L653" class="ln">   653&nbsp;&nbsp;</span>		} else if searchPos+1 &gt; a[1] {
+<span id="L654" class="ln">   654&nbsp;&nbsp;</span>			<span class="comment">// This clause is only needed at the end of the input</span>
+<span id="L655" class="ln">   655&nbsp;&nbsp;</span>			<span class="comment">// string. In that case, DecodeRuneInString returns width=0.</span>
+<span id="L656" class="ln">   656&nbsp;&nbsp;</span>			searchPos++
+<span id="L657" class="ln">   657&nbsp;&nbsp;</span>		} else {
+<span id="L658" class="ln">   658&nbsp;&nbsp;</span>			searchPos = a[1]
+<span id="L659" class="ln">   659&nbsp;&nbsp;</span>		}
+<span id="L660" class="ln">   660&nbsp;&nbsp;</span>	}
+<span id="L661" class="ln">   661&nbsp;&nbsp;</span>
+<span id="L662" class="ln">   662&nbsp;&nbsp;</span>	<span class="comment">// Copy the unmatched characters after the last match.</span>
+<span id="L663" class="ln">   663&nbsp;&nbsp;</span>	if bsrc != nil {
+<span id="L664" class="ln">   664&nbsp;&nbsp;</span>		buf = append(buf, bsrc[lastMatchEnd:]...)
+<span id="L665" class="ln">   665&nbsp;&nbsp;</span>	} else {
+<span id="L666" class="ln">   666&nbsp;&nbsp;</span>		buf = append(buf, src[lastMatchEnd:]...)
+<span id="L667" class="ln">   667&nbsp;&nbsp;</span>	}
+<span id="L668" class="ln">   668&nbsp;&nbsp;</span>
+<span id="L669" class="ln">   669&nbsp;&nbsp;</span>	return buf
+<span id="L670" class="ln">   670&nbsp;&nbsp;</span>}
+<span id="L671" class="ln">   671&nbsp;&nbsp;</span>
+<span id="L672" class="ln">   672&nbsp;&nbsp;</span><span class="comment">// ReplaceAll returns a copy of src, replacing matches of the [Regexp]</span>
+<span id="L673" class="ln">   673&nbsp;&nbsp;</span><span class="comment">// with the replacement text repl.</span>
+<span id="L674" class="ln">   674&nbsp;&nbsp;</span><span class="comment">// Inside repl, $ signs are interpreted as in [Regexp.Expand].</span>
+<span id="L675" class="ln">   675&nbsp;&nbsp;</span>func (re *Regexp) ReplaceAll(src, repl []byte) []byte {
+<span id="L676" class="ln">   676&nbsp;&nbsp;</span>	n := 2
+<span id="L677" class="ln">   677&nbsp;&nbsp;</span>	if bytes.IndexByte(repl, &#39;$&#39;) &gt;= 0 {
+<span id="L678" class="ln">   678&nbsp;&nbsp;</span>		n = 2 * (re.numSubexp + 1)
+<span id="L679" class="ln">   679&nbsp;&nbsp;</span>	}
+<span id="L680" class="ln">   680&nbsp;&nbsp;</span>	srepl := &#34;&#34;
+<span id="L681" class="ln">   681&nbsp;&nbsp;</span>	b := re.replaceAll(src, &#34;&#34;, n, func(dst []byte, match []int) []byte {
+<span id="L682" class="ln">   682&nbsp;&nbsp;</span>		if len(srepl) != len(repl) {
+<span id="L683" class="ln">   683&nbsp;&nbsp;</span>			srepl = string(repl)
+<span id="L684" class="ln">   684&nbsp;&nbsp;</span>		}
+<span id="L685" class="ln">   685&nbsp;&nbsp;</span>		return re.expand(dst, srepl, src, &#34;&#34;, match)
+<span id="L686" class="ln">   686&nbsp;&nbsp;</span>	})
+<span id="L687" class="ln">   687&nbsp;&nbsp;</span>	return b
+<span id="L688" class="ln">   688&nbsp;&nbsp;</span>}
+<span id="L689" class="ln">   689&nbsp;&nbsp;</span>
+<span id="L690" class="ln">   690&nbsp;&nbsp;</span><span class="comment">// ReplaceAllLiteral returns a copy of src, replacing matches of the [Regexp]</span>
+<span id="L691" class="ln">   691&nbsp;&nbsp;</span><span class="comment">// with the replacement bytes repl. The replacement repl is substituted directly,</span>
+<span id="L692" class="ln">   692&nbsp;&nbsp;</span><span class="comment">// without using [Regexp.Expand].</span>
+<span id="L693" class="ln">   693&nbsp;&nbsp;</span>func (re *Regexp) ReplaceAllLiteral(src, repl []byte) []byte {
+<span id="L694" class="ln">   694&nbsp;&nbsp;</span>	return re.replaceAll(src, &#34;&#34;, 2, func(dst []byte, match []int) []byte {
+<span id="L695" class="ln">   695&nbsp;&nbsp;</span>		return append(dst, repl...)
+<span id="L696" class="ln">   696&nbsp;&nbsp;</span>	})
+<span id="L697" class="ln">   697&nbsp;&nbsp;</span>}
+<span id="L698" class="ln">   698&nbsp;&nbsp;</span>
+<span id="L699" class="ln">   699&nbsp;&nbsp;</span><span class="comment">// ReplaceAllFunc returns a copy of src in which all matches of the</span>
+<span id="L700" class="ln">   700&nbsp;&nbsp;</span><span class="comment">// [Regexp] have been replaced by the return value of function repl applied</span>
+<span id="L701" class="ln">   701&nbsp;&nbsp;</span><span class="comment">// to the matched byte slice. The replacement returned by repl is substituted</span>
+<span id="L702" class="ln">   702&nbsp;&nbsp;</span><span class="comment">// directly, without using [Regexp.Expand].</span>
+<span id="L703" class="ln">   703&nbsp;&nbsp;</span>func (re *Regexp) ReplaceAllFunc(src []byte, repl func([]byte) []byte) []byte {
+<span id="L704" class="ln">   704&nbsp;&nbsp;</span>	return re.replaceAll(src, &#34;&#34;, 2, func(dst []byte, match []int) []byte {
+<span id="L705" class="ln">   705&nbsp;&nbsp;</span>		return append(dst, repl(src[match[0]:match[1]])...)
+<span id="L706" class="ln">   706&nbsp;&nbsp;</span>	})
+<span id="L707" class="ln">   707&nbsp;&nbsp;</span>}
+<span id="L708" class="ln">   708&nbsp;&nbsp;</span>
+<span id="L709" class="ln">   709&nbsp;&nbsp;</span><span class="comment">// Bitmap used by func special to check whether a character needs to be escaped.</span>
+<span id="L710" class="ln">   710&nbsp;&nbsp;</span>var specialBytes [16]byte
+<span id="L711" class="ln">   711&nbsp;&nbsp;</span>
+<span id="L712" class="ln">   712&nbsp;&nbsp;</span><span class="comment">// special reports whether byte b needs to be escaped by QuoteMeta.</span>
+<span id="L713" class="ln">   713&nbsp;&nbsp;</span>func special(b byte) bool {
+<span id="L714" class="ln">   714&nbsp;&nbsp;</span>	return b &lt; utf8.RuneSelf &amp;&amp; specialBytes[b%16]&amp;(1&lt;&lt;(b/16)) != 0
+<span id="L715" class="ln">   715&nbsp;&nbsp;</span>}
+<span id="L716" class="ln">   716&nbsp;&nbsp;</span>
+<span id="L717" class="ln">   717&nbsp;&nbsp;</span>func init() {
+<span id="L718" class="ln">   718&nbsp;&nbsp;</span>	for _, b := range []byte(`\.+*?()|[]{}^$`) {
+<span id="L719" class="ln">   719&nbsp;&nbsp;</span>		specialBytes[b%16] |= 1 &lt;&lt; (b / 16)
+<span id="L720" class="ln">   720&nbsp;&nbsp;</span>	}
+<span id="L721" class="ln">   721&nbsp;&nbsp;</span>}
+<span id="L722" class="ln">   722&nbsp;&nbsp;</span>
+<span id="L723" class="ln">   723&nbsp;&nbsp;</span><span class="comment">// QuoteMeta returns a string that escapes all regular expression metacharacters</span>
+<span id="L724" class="ln">   724&nbsp;&nbsp;</span><span class="comment">// inside the argument text; the returned string is a regular expression matching</span>
+<span id="L725" class="ln">   725&nbsp;&nbsp;</span><span class="comment">// the literal text.</span>
+<span id="L726" class="ln">   726&nbsp;&nbsp;</span>func QuoteMeta(s string) string {
+<span id="L727" class="ln">   727&nbsp;&nbsp;</span>	<span class="comment">// A byte loop is correct because all metacharacters are ASCII.</span>
+<span id="L728" class="ln">   728&nbsp;&nbsp;</span>	var i int
+<span id="L729" class="ln">   729&nbsp;&nbsp;</span>	for i = 0; i &lt; len(s); i++ {
+<span id="L730" class="ln">   730&nbsp;&nbsp;</span>		if special(s[i]) {
+<span id="L731" class="ln">   731&nbsp;&nbsp;</span>			break
+<span id="L732" class="ln">   732&nbsp;&nbsp;</span>		}
+<span id="L733" class="ln">   733&nbsp;&nbsp;</span>	}
+<span id="L734" class="ln">   734&nbsp;&nbsp;</span>	<span class="comment">// No meta characters found, so return original string.</span>
+<span id="L735" class="ln">   735&nbsp;&nbsp;</span>	if i &gt;= len(s) {
+<span id="L736" class="ln">   736&nbsp;&nbsp;</span>		return s
+<span id="L737" class="ln">   737&nbsp;&nbsp;</span>	}
+<span id="L738" class="ln">   738&nbsp;&nbsp;</span>
+<span id="L739" class="ln">   739&nbsp;&nbsp;</span>	b := make([]byte, 2*len(s)-i)
+<span id="L740" class="ln">   740&nbsp;&nbsp;</span>	copy(b, s[:i])
+<span id="L741" class="ln">   741&nbsp;&nbsp;</span>	j := i
+<span id="L742" class="ln">   742&nbsp;&nbsp;</span>	for ; i &lt; len(s); i++ {
+<span id="L743" class="ln">   743&nbsp;&nbsp;</span>		if special(s[i]) {
+<span id="L744" class="ln">   744&nbsp;&nbsp;</span>			b[j] = &#39;\\&#39;
+<span id="L745" class="ln">   745&nbsp;&nbsp;</span>			j++
+<span id="L746" class="ln">   746&nbsp;&nbsp;</span>		}
+<span id="L747" class="ln">   747&nbsp;&nbsp;</span>		b[j] = s[i]
+<span id="L748" class="ln">   748&nbsp;&nbsp;</span>		j++
+<span id="L749" class="ln">   749&nbsp;&nbsp;</span>	}
+<span id="L750" class="ln">   750&nbsp;&nbsp;</span>	return string(b[:j])
+<span id="L751" class="ln">   751&nbsp;&nbsp;</span>}
+<span id="L752" class="ln">   752&nbsp;&nbsp;</span>
+<span id="L753" class="ln">   753&nbsp;&nbsp;</span><span class="comment">// The number of capture values in the program may correspond</span>
+<span id="L754" class="ln">   754&nbsp;&nbsp;</span><span class="comment">// to fewer capturing expressions than are in the regexp.</span>
+<span id="L755" class="ln">   755&nbsp;&nbsp;</span><span class="comment">// For example, &#34;(a){0}&#34; turns into an empty program, so the</span>
+<span id="L756" class="ln">   756&nbsp;&nbsp;</span><span class="comment">// maximum capture in the program is 0 but we need to return</span>
+<span id="L757" class="ln">   757&nbsp;&nbsp;</span><span class="comment">// an expression for \1.  Pad appends -1s to the slice a as needed.</span>
+<span id="L758" class="ln">   758&nbsp;&nbsp;</span>func (re *Regexp) pad(a []int) []int {
+<span id="L759" class="ln">   759&nbsp;&nbsp;</span>	if a == nil {
+<span id="L760" class="ln">   760&nbsp;&nbsp;</span>		<span class="comment">// No match.</span>
+<span id="L761" class="ln">   761&nbsp;&nbsp;</span>		return nil
+<span id="L762" class="ln">   762&nbsp;&nbsp;</span>	}
+<span id="L763" class="ln">   763&nbsp;&nbsp;</span>	n := (1 + re.numSubexp) * 2
+<span id="L764" class="ln">   764&nbsp;&nbsp;</span>	for len(a) &lt; n {
+<span id="L765" class="ln">   765&nbsp;&nbsp;</span>		a = append(a, -1)
+<span id="L766" class="ln">   766&nbsp;&nbsp;</span>	}
+<span id="L767" class="ln">   767&nbsp;&nbsp;</span>	return a
+<span id="L768" class="ln">   768&nbsp;&nbsp;</span>}
+<span id="L769" class="ln">   769&nbsp;&nbsp;</span>
+<span id="L770" class="ln">   770&nbsp;&nbsp;</span><span class="comment">// allMatches calls deliver at most n times</span>
+<span id="L771" class="ln">   771&nbsp;&nbsp;</span><span class="comment">// with the location of successive matches in the input text.</span>
+<span id="L772" class="ln">   772&nbsp;&nbsp;</span><span class="comment">// The input text is b if non-nil, otherwise s.</span>
+<span id="L773" class="ln">   773&nbsp;&nbsp;</span>func (re *Regexp) allMatches(s string, b []byte, n int, deliver func([]int)) {
+<span id="L774" class="ln">   774&nbsp;&nbsp;</span>	var end int
+<span id="L775" class="ln">   775&nbsp;&nbsp;</span>	if b == nil {
+<span id="L776" class="ln">   776&nbsp;&nbsp;</span>		end = len(s)
+<span id="L777" class="ln">   777&nbsp;&nbsp;</span>	} else {
+<span id="L778" class="ln">   778&nbsp;&nbsp;</span>		end = len(b)
+<span id="L779" class="ln">   779&nbsp;&nbsp;</span>	}
+<span id="L780" class="ln">   780&nbsp;&nbsp;</span>
+<span id="L781" class="ln">   781&nbsp;&nbsp;</span>	for pos, i, prevMatchEnd := 0, 0, -1; i &lt; n &amp;&amp; pos &lt;= end; {
+<span id="L782" class="ln">   782&nbsp;&nbsp;</span>		matches := re.doExecute(nil, b, s, pos, re.prog.NumCap, nil)
+<span id="L783" class="ln">   783&nbsp;&nbsp;</span>		if len(matches) == 0 {
+<span id="L784" class="ln">   784&nbsp;&nbsp;</span>			break
+<span id="L785" class="ln">   785&nbsp;&nbsp;</span>		}
+<span id="L786" class="ln">   786&nbsp;&nbsp;</span>
+<span id="L787" class="ln">   787&nbsp;&nbsp;</span>		accept := true
+<span id="L788" class="ln">   788&nbsp;&nbsp;</span>		if matches[1] == pos {
+<span id="L789" class="ln">   789&nbsp;&nbsp;</span>			<span class="comment">// We&#39;ve found an empty match.</span>
+<span id="L790" class="ln">   790&nbsp;&nbsp;</span>			if matches[0] == prevMatchEnd {
+<span id="L791" class="ln">   791&nbsp;&nbsp;</span>				<span class="comment">// We don&#39;t allow an empty match right</span>
+<span id="L792" class="ln">   792&nbsp;&nbsp;</span>				<span class="comment">// after a previous match, so ignore it.</span>
+<span id="L793" class="ln">   793&nbsp;&nbsp;</span>				accept = false
+<span id="L794" class="ln">   794&nbsp;&nbsp;</span>			}
+<span id="L795" class="ln">   795&nbsp;&nbsp;</span>			var width int
+<span id="L796" class="ln">   796&nbsp;&nbsp;</span>			if b == nil {
+<span id="L797" class="ln">   797&nbsp;&nbsp;</span>				is := inputString{str: s}
+<span id="L798" class="ln">   798&nbsp;&nbsp;</span>				_, width = is.step(pos)
+<span id="L799" class="ln">   799&nbsp;&nbsp;</span>			} else {
+<span id="L800" class="ln">   800&nbsp;&nbsp;</span>				ib := inputBytes{str: b}
+<span id="L801" class="ln">   801&nbsp;&nbsp;</span>				_, width = ib.step(pos)
+<span id="L802" class="ln">   802&nbsp;&nbsp;</span>			}
+<span id="L803" class="ln">   803&nbsp;&nbsp;</span>			if width &gt; 0 {
+<span id="L804" class="ln">   804&nbsp;&nbsp;</span>				pos += width
+<span id="L805" class="ln">   805&nbsp;&nbsp;</span>			} else {
+<span id="L806" class="ln">   806&nbsp;&nbsp;</span>				pos = end + 1
+<span id="L807" class="ln">   807&nbsp;&nbsp;</span>			}
+<span id="L808" class="ln">   808&nbsp;&nbsp;</span>		} else {
+<span id="L809" class="ln">   809&nbsp;&nbsp;</span>			pos = matches[1]
+<span id="L810" class="ln">   810&nbsp;&nbsp;</span>		}
+<span id="L811" class="ln">   811&nbsp;&nbsp;</span>		prevMatchEnd = matches[1]
+<span id="L812" class="ln">   812&nbsp;&nbsp;</span>
+<span id="L813" class="ln">   813&nbsp;&nbsp;</span>		if accept {
+<span id="L814" class="ln">   814&nbsp;&nbsp;</span>			deliver(re.pad(matches))
+<span id="L815" class="ln">   815&nbsp;&nbsp;</span>			i++
+<span id="L816" class="ln">   816&nbsp;&nbsp;</span>		}
+<span id="L817" class="ln">   817&nbsp;&nbsp;</span>	}
+<span id="L818" class="ln">   818&nbsp;&nbsp;</span>}
+<span id="L819" class="ln">   819&nbsp;&nbsp;</span>
+<span id="L820" class="ln">   820&nbsp;&nbsp;</span><span class="comment">// Find returns a slice holding the text of the leftmost match in b of the regular expression.</span>
+<span id="L821" class="ln">   821&nbsp;&nbsp;</span><span class="comment">// A return value of nil indicates no match.</span>
+<span id="L822" class="ln">   822&nbsp;&nbsp;</span>func (re *Regexp) Find(b []byte) []byte {
+<span id="L823" class="ln">   823&nbsp;&nbsp;</span>	var dstCap [2]int
+<span id="L824" class="ln">   824&nbsp;&nbsp;</span>	a := re.doExecute(nil, b, &#34;&#34;, 0, 2, dstCap[:0])
+<span id="L825" class="ln">   825&nbsp;&nbsp;</span>	if a == nil {
+<span id="L826" class="ln">   826&nbsp;&nbsp;</span>		return nil
+<span id="L827" class="ln">   827&nbsp;&nbsp;</span>	}
+<span id="L828" class="ln">   828&nbsp;&nbsp;</span>	return b[a[0]:a[1]:a[1]]
+<span id="L829" class="ln">   829&nbsp;&nbsp;</span>}
+<span id="L830" class="ln">   830&nbsp;&nbsp;</span>
+<span id="L831" class="ln">   831&nbsp;&nbsp;</span><span class="comment">// FindIndex returns a two-element slice of integers defining the location of</span>
+<span id="L832" class="ln">   832&nbsp;&nbsp;</span><span class="comment">// the leftmost match in b of the regular expression. The match itself is at</span>
+<span id="L833" class="ln">   833&nbsp;&nbsp;</span><span class="comment">// b[loc[0]:loc[1]].</span>
+<span id="L834" class="ln">   834&nbsp;&nbsp;</span><span class="comment">// A return value of nil indicates no match.</span>
+<span id="L835" class="ln">   835&nbsp;&nbsp;</span>func (re *Regexp) FindIndex(b []byte) (loc []int) {
+<span id="L836" class="ln">   836&nbsp;&nbsp;</span>	a := re.doExecute(nil, b, &#34;&#34;, 0, 2, nil)
+<span id="L837" class="ln">   837&nbsp;&nbsp;</span>	if a == nil {
+<span id="L838" class="ln">   838&nbsp;&nbsp;</span>		return nil
+<span id="L839" class="ln">   839&nbsp;&nbsp;</span>	}
+<span id="L840" class="ln">   840&nbsp;&nbsp;</span>	return a[0:2]
+<span id="L841" class="ln">   841&nbsp;&nbsp;</span>}
+<span id="L842" class="ln">   842&nbsp;&nbsp;</span>
+<span id="L843" class="ln">   843&nbsp;&nbsp;</span><span class="comment">// FindString returns a string holding the text of the leftmost match in s of the regular</span>
+<span id="L844" class="ln">   844&nbsp;&nbsp;</span><span class="comment">// expression. If there is no match, the return value is an empty string,</span>
+<span id="L845" class="ln">   845&nbsp;&nbsp;</span><span class="comment">// but it will also be empty if the regular expression successfully matches</span>
+<span id="L846" class="ln">   846&nbsp;&nbsp;</span><span class="comment">// an empty string. Use [Regexp.FindStringIndex] or [Regexp.FindStringSubmatch] if it is</span>
+<span id="L847" class="ln">   847&nbsp;&nbsp;</span><span class="comment">// necessary to distinguish these cases.</span>
+<span id="L848" class="ln">   848&nbsp;&nbsp;</span>func (re *Regexp) FindString(s string) string {
+<span id="L849" class="ln">   849&nbsp;&nbsp;</span>	var dstCap [2]int
+<span id="L850" class="ln">   850&nbsp;&nbsp;</span>	a := re.doExecute(nil, nil, s, 0, 2, dstCap[:0])
+<span id="L851" class="ln">   851&nbsp;&nbsp;</span>	if a == nil {
+<span id="L852" class="ln">   852&nbsp;&nbsp;</span>		return &#34;&#34;
+<span id="L853" class="ln">   853&nbsp;&nbsp;</span>	}
+<span id="L854" class="ln">   854&nbsp;&nbsp;</span>	return s[a[0]:a[1]]
+<span id="L855" class="ln">   855&nbsp;&nbsp;</span>}
+<span id="L856" class="ln">   856&nbsp;&nbsp;</span>
+<span id="L857" class="ln">   857&nbsp;&nbsp;</span><span class="comment">// FindStringIndex returns a two-element slice of integers defining the</span>
+<span id="L858" class="ln">   858&nbsp;&nbsp;</span><span class="comment">// location of the leftmost match in s of the regular expression. The match</span>
+<span id="L859" class="ln">   859&nbsp;&nbsp;</span><span class="comment">// itself is at s[loc[0]:loc[1]].</span>
+<span id="L860" class="ln">   860&nbsp;&nbsp;</span><span class="comment">// A return value of nil indicates no match.</span>
+<span id="L861" class="ln">   861&nbsp;&nbsp;</span>func (re *Regexp) FindStringIndex(s string) (loc []int) {
+<span id="L862" class="ln">   862&nbsp;&nbsp;</span>	a := re.doExecute(nil, nil, s, 0, 2, nil)
+<span id="L863" class="ln">   863&nbsp;&nbsp;</span>	if a == nil {
+<span id="L864" class="ln">   864&nbsp;&nbsp;</span>		return nil
+<span id="L865" class="ln">   865&nbsp;&nbsp;</span>	}
+<span id="L866" class="ln">   866&nbsp;&nbsp;</span>	return a[0:2]
+<span id="L867" class="ln">   867&nbsp;&nbsp;</span>}
+<span id="L868" class="ln">   868&nbsp;&nbsp;</span>
+<span id="L869" class="ln">   869&nbsp;&nbsp;</span><span class="comment">// FindReaderIndex returns a two-element slice of integers defining the</span>
+<span id="L870" class="ln">   870&nbsp;&nbsp;</span><span class="comment">// location of the leftmost match of the regular expression in text read from</span>
+<span id="L871" class="ln">   871&nbsp;&nbsp;</span><span class="comment">// the [io.RuneReader]. The match text was found in the input stream at</span>
+<span id="L872" class="ln">   872&nbsp;&nbsp;</span><span class="comment">// byte offset loc[0] through loc[1]-1.</span>
+<span id="L873" class="ln">   873&nbsp;&nbsp;</span><span class="comment">// A return value of nil indicates no match.</span>
+<span id="L874" class="ln">   874&nbsp;&nbsp;</span>func (re *Regexp) FindReaderIndex(r io.RuneReader) (loc []int) {
+<span id="L875" class="ln">   875&nbsp;&nbsp;</span>	a := re.doExecute(r, nil, &#34;&#34;, 0, 2, nil)
+<span id="L876" class="ln">   876&nbsp;&nbsp;</span>	if a == nil {
+<span id="L877" class="ln">   877&nbsp;&nbsp;</span>		return nil
+<span id="L878" class="ln">   878&nbsp;&nbsp;</span>	}
+<span id="L879" class="ln">   879&nbsp;&nbsp;</span>	return a[0:2]
+<span id="L880" class="ln">   880&nbsp;&nbsp;</span>}
+<span id="L881" class="ln">   881&nbsp;&nbsp;</span>
+<span id="L882" class="ln">   882&nbsp;&nbsp;</span><span class="comment">// FindSubmatch returns a slice of slices holding the text of the leftmost</span>
+<span id="L883" class="ln">   883&nbsp;&nbsp;</span><span class="comment">// match of the regular expression in b and the matches, if any, of its</span>
+<span id="L884" class="ln">   884&nbsp;&nbsp;</span><span class="comment">// subexpressions, as defined by the &#39;Submatch&#39; descriptions in the package</span>
+<span id="L885" class="ln">   885&nbsp;&nbsp;</span><span class="comment">// comment.</span>
+<span id="L886" class="ln">   886&nbsp;&nbsp;</span><span class="comment">// A return value of nil indicates no match.</span>
+<span id="L887" class="ln">   887&nbsp;&nbsp;</span>func (re *Regexp) FindSubmatch(b []byte) [][]byte {
+<span id="L888" class="ln">   888&nbsp;&nbsp;</span>	var dstCap [4]int
+<span id="L889" class="ln">   889&nbsp;&nbsp;</span>	a := re.doExecute(nil, b, &#34;&#34;, 0, re.prog.NumCap, dstCap[:0])
+<span id="L890" class="ln">   890&nbsp;&nbsp;</span>	if a == nil {
+<span id="L891" class="ln">   891&nbsp;&nbsp;</span>		return nil
+<span id="L892" class="ln">   892&nbsp;&nbsp;</span>	}
+<span id="L893" class="ln">   893&nbsp;&nbsp;</span>	ret := make([][]byte, 1+re.numSubexp)
+<span id="L894" class="ln">   894&nbsp;&nbsp;</span>	for i := range ret {
+<span id="L895" class="ln">   895&nbsp;&nbsp;</span>		if 2*i &lt; len(a) &amp;&amp; a[2*i] &gt;= 0 {
+<span id="L896" class="ln">   896&nbsp;&nbsp;</span>			ret[i] = b[a[2*i]:a[2*i+1]:a[2*i+1]]
+<span id="L897" class="ln">   897&nbsp;&nbsp;</span>		}
+<span id="L898" class="ln">   898&nbsp;&nbsp;</span>	}
+<span id="L899" class="ln">   899&nbsp;&nbsp;</span>	return ret
+<span id="L900" class="ln">   900&nbsp;&nbsp;</span>}
+<span id="L901" class="ln">   901&nbsp;&nbsp;</span>
+<span id="L902" class="ln">   902&nbsp;&nbsp;</span><span class="comment">// Expand appends template to dst and returns the result; during the</span>
+<span id="L903" class="ln">   903&nbsp;&nbsp;</span><span class="comment">// append, Expand replaces variables in the template with corresponding</span>
+<span id="L904" class="ln">   904&nbsp;&nbsp;</span><span class="comment">// matches drawn from src. The match slice should have been returned by</span>
+<span id="L905" class="ln">   905&nbsp;&nbsp;</span><span class="comment">// [Regexp.FindSubmatchIndex].</span>
+<span id="L906" class="ln">   906&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L907" class="ln">   907&nbsp;&nbsp;</span><span class="comment">// In the template, a variable is denoted by a substring of the form</span>
+<span id="L908" class="ln">   908&nbsp;&nbsp;</span><span class="comment">// $name or ${name}, where name is a non-empty sequence of letters,</span>
+<span id="L909" class="ln">   909&nbsp;&nbsp;</span><span class="comment">// digits, and underscores. A purely numeric name like $1 refers to</span>
+<span id="L910" class="ln">   910&nbsp;&nbsp;</span><span class="comment">// the submatch with the corresponding index; other names refer to</span>
+<span id="L911" class="ln">   911&nbsp;&nbsp;</span><span class="comment">// capturing parentheses named with the (?P&lt;name&gt;...) syntax. A</span>
+<span id="L912" class="ln">   912&nbsp;&nbsp;</span><span class="comment">// reference to an out of range or unmatched index or a name that is not</span>
+<span id="L913" class="ln">   913&nbsp;&nbsp;</span><span class="comment">// present in the regular expression is replaced with an empty slice.</span>
+<span id="L914" class="ln">   914&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L915" class="ln">   915&nbsp;&nbsp;</span><span class="comment">// In the $name form, name is taken to be as long as possible: $1x is</span>
+<span id="L916" class="ln">   916&nbsp;&nbsp;</span><span class="comment">// equivalent to ${1x}, not ${1}x, and, $10 is equivalent to ${10}, not ${1}0.</span>
+<span id="L917" class="ln">   917&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L918" class="ln">   918&nbsp;&nbsp;</span><span class="comment">// To insert a literal $ in the output, use $$ in the template.</span>
+<span id="L919" class="ln">   919&nbsp;&nbsp;</span>func (re *Regexp) Expand(dst []byte, template []byte, src []byte, match []int) []byte {
+<span id="L920" class="ln">   920&nbsp;&nbsp;</span>	return re.expand(dst, string(template), src, &#34;&#34;, match)
+<span id="L921" class="ln">   921&nbsp;&nbsp;</span>}
+<span id="L922" class="ln">   922&nbsp;&nbsp;</span>
+<span id="L923" class="ln">   923&nbsp;&nbsp;</span><span class="comment">// ExpandString is like [Regexp.Expand] but the template and source are strings.</span>
+<span id="L924" class="ln">   924&nbsp;&nbsp;</span><span class="comment">// It appends to and returns a byte slice in order to give the calling</span>
+<span id="L925" class="ln">   925&nbsp;&nbsp;</span><span class="comment">// code control over allocation.</span>
+<span id="L926" class="ln">   926&nbsp;&nbsp;</span>func (re *Regexp) ExpandString(dst []byte, template string, src string, match []int) []byte {
+<span id="L927" class="ln">   927&nbsp;&nbsp;</span>	return re.expand(dst, template, nil, src, match)
+<span id="L928" class="ln">   928&nbsp;&nbsp;</span>}
+<span id="L929" class="ln">   929&nbsp;&nbsp;</span>
+<span id="L930" class="ln">   930&nbsp;&nbsp;</span>func (re *Regexp) expand(dst []byte, template string, bsrc []byte, src string, match []int) []byte {
+<span id="L931" class="ln">   931&nbsp;&nbsp;</span>	for len(template) &gt; 0 {
+<span id="L932" class="ln">   932&nbsp;&nbsp;</span>		before, after, ok := strings.Cut(template, &#34;$&#34;)
+<span id="L933" class="ln">   933&nbsp;&nbsp;</span>		if !ok {
+<span id="L934" class="ln">   934&nbsp;&nbsp;</span>			break
+<span id="L935" class="ln">   935&nbsp;&nbsp;</span>		}
+<span id="L936" class="ln">   936&nbsp;&nbsp;</span>		dst = append(dst, before...)
+<span id="L937" class="ln">   937&nbsp;&nbsp;</span>		template = after
+<span id="L938" class="ln">   938&nbsp;&nbsp;</span>		if template != &#34;&#34; &amp;&amp; template[0] == &#39;$&#39; {
+<span id="L939" class="ln">   939&nbsp;&nbsp;</span>			<span class="comment">// Treat $$ as $.</span>
+<span id="L940" class="ln">   940&nbsp;&nbsp;</span>			dst = append(dst, &#39;$&#39;)
+<span id="L941" class="ln">   941&nbsp;&nbsp;</span>			template = template[1:]
+<span id="L942" class="ln">   942&nbsp;&nbsp;</span>			continue
+<span id="L943" class="ln">   943&nbsp;&nbsp;</span>		}
+<span id="L944" class="ln">   944&nbsp;&nbsp;</span>		name, num, rest, ok := extract(template)
+<span id="L945" class="ln">   945&nbsp;&nbsp;</span>		if !ok {
+<span id="L946" class="ln">   946&nbsp;&nbsp;</span>			<span class="comment">// Malformed; treat $ as raw text.</span>
+<span id="L947" class="ln">   947&nbsp;&nbsp;</span>			dst = append(dst, &#39;$&#39;)
+<span id="L948" class="ln">   948&nbsp;&nbsp;</span>			continue
+<span id="L949" class="ln">   949&nbsp;&nbsp;</span>		}
+<span id="L950" class="ln">   950&nbsp;&nbsp;</span>		template = rest
+<span id="L951" class="ln">   951&nbsp;&nbsp;</span>		if num &gt;= 0 {
+<span id="L952" class="ln">   952&nbsp;&nbsp;</span>			if 2*num+1 &lt; len(match) &amp;&amp; match[2*num] &gt;= 0 {
+<span id="L953" class="ln">   953&nbsp;&nbsp;</span>				if bsrc != nil {
+<span id="L954" class="ln">   954&nbsp;&nbsp;</span>					dst = append(dst, bsrc[match[2*num]:match[2*num+1]]...)
+<span id="L955" class="ln">   955&nbsp;&nbsp;</span>				} else {
+<span id="L956" class="ln">   956&nbsp;&nbsp;</span>					dst = append(dst, src[match[2*num]:match[2*num+1]]...)
+<span id="L957" class="ln">   957&nbsp;&nbsp;</span>				}
+<span id="L958" class="ln">   958&nbsp;&nbsp;</span>			}
+<span id="L959" class="ln">   959&nbsp;&nbsp;</span>		} else {
+<span id="L960" class="ln">   960&nbsp;&nbsp;</span>			for i, namei := range re.subexpNames {
+<span id="L961" class="ln">   961&nbsp;&nbsp;</span>				if name == namei &amp;&amp; 2*i+1 &lt; len(match) &amp;&amp; match[2*i] &gt;= 0 {
+<span id="L962" class="ln">   962&nbsp;&nbsp;</span>					if bsrc != nil {
+<span id="L963" class="ln">   963&nbsp;&nbsp;</span>						dst = append(dst, bsrc[match[2*i]:match[2*i+1]]...)
+<span id="L964" class="ln">   964&nbsp;&nbsp;</span>					} else {
+<span id="L965" class="ln">   965&nbsp;&nbsp;</span>						dst = append(dst, src[match[2*i]:match[2*i+1]]...)
+<span id="L966" class="ln">   966&nbsp;&nbsp;</span>					}
+<span id="L967" class="ln">   967&nbsp;&nbsp;</span>					break
+<span id="L968" class="ln">   968&nbsp;&nbsp;</span>				}
+<span id="L969" class="ln">   969&nbsp;&nbsp;</span>			}
+<span id="L970" class="ln">   970&nbsp;&nbsp;</span>		}
+<span id="L971" class="ln">   971&nbsp;&nbsp;</span>	}
+<span id="L972" class="ln">   972&nbsp;&nbsp;</span>	dst = append(dst, template...)
+<span id="L973" class="ln">   973&nbsp;&nbsp;</span>	return dst
+<span id="L974" class="ln">   974&nbsp;&nbsp;</span>}
+<span id="L975" class="ln">   975&nbsp;&nbsp;</span>
+<span id="L976" class="ln">   976&nbsp;&nbsp;</span><span class="comment">// extract returns the name from a leading &#34;name&#34; or &#34;{name}&#34; in str.</span>
+<span id="L977" class="ln">   977&nbsp;&nbsp;</span><span class="comment">// (The $ has already been removed by the caller.)</span>
+<span id="L978" class="ln">   978&nbsp;&nbsp;</span><span class="comment">// If it is a number, extract returns num set to that number; otherwise num = -1.</span>
+<span id="L979" class="ln">   979&nbsp;&nbsp;</span>func extract(str string) (name string, num int, rest string, ok bool) {
+<span id="L980" class="ln">   980&nbsp;&nbsp;</span>	if str == &#34;&#34; {
+<span id="L981" class="ln">   981&nbsp;&nbsp;</span>		return
+<span id="L982" class="ln">   982&nbsp;&nbsp;</span>	}
+<span id="L983" class="ln">   983&nbsp;&nbsp;</span>	brace := false
+<span id="L984" class="ln">   984&nbsp;&nbsp;</span>	if str[0] == &#39;{&#39; {
+<span id="L985" class="ln">   985&nbsp;&nbsp;</span>		brace = true
+<span id="L986" class="ln">   986&nbsp;&nbsp;</span>		str = str[1:]
+<span id="L987" class="ln">   987&nbsp;&nbsp;</span>	}
+<span id="L988" class="ln">   988&nbsp;&nbsp;</span>	i := 0
+<span id="L989" class="ln">   989&nbsp;&nbsp;</span>	for i &lt; len(str) {
+<span id="L990" class="ln">   990&nbsp;&nbsp;</span>		rune, size := utf8.DecodeRuneInString(str[i:])
+<span id="L991" class="ln">   991&nbsp;&nbsp;</span>		if !unicode.IsLetter(rune) &amp;&amp; !unicode.IsDigit(rune) &amp;&amp; rune != &#39;_&#39; {
+<span id="L992" class="ln">   992&nbsp;&nbsp;</span>			break
+<span id="L993" class="ln">   993&nbsp;&nbsp;</span>		}
+<span id="L994" class="ln">   994&nbsp;&nbsp;</span>		i += size
+<span id="L995" class="ln">   995&nbsp;&nbsp;</span>	}
+<span id="L996" class="ln">   996&nbsp;&nbsp;</span>	if i == 0 {
+<span id="L997" class="ln">   997&nbsp;&nbsp;</span>		<span class="comment">// empty name is not okay</span>
+<span id="L998" class="ln">   998&nbsp;&nbsp;</span>		return
+<span id="L999" class="ln">   999&nbsp;&nbsp;</span>	}
+<span id="L1000" class="ln">  1000&nbsp;&nbsp;</span>	name = str[:i]
+<span id="L1001" class="ln">  1001&nbsp;&nbsp;</span>	if brace {
+<span id="L1002" class="ln">  1002&nbsp;&nbsp;</span>		if i &gt;= len(str) || str[i] != &#39;}&#39; {
+<span id="L1003" class="ln">  1003&nbsp;&nbsp;</span>			<span class="comment">// missing closing brace</span>
+<span id="L1004" class="ln">  1004&nbsp;&nbsp;</span>			return
+<span id="L1005" class="ln">  1005&nbsp;&nbsp;</span>		}
+<span id="L1006" class="ln">  1006&nbsp;&nbsp;</span>		i++
+<span id="L1007" class="ln">  1007&nbsp;&nbsp;</span>	}
+<span id="L1008" class="ln">  1008&nbsp;&nbsp;</span>
+<span id="L1009" class="ln">  1009&nbsp;&nbsp;</span>	<span class="comment">// Parse number.</span>
+<span id="L1010" class="ln">  1010&nbsp;&nbsp;</span>	num = 0
+<span id="L1011" class="ln">  1011&nbsp;&nbsp;</span>	for i := 0; i &lt; len(name); i++ {
+<span id="L1012" class="ln">  1012&nbsp;&nbsp;</span>		if name[i] &lt; &#39;0&#39; || &#39;9&#39; &lt; name[i] || num &gt;= 1e8 {
+<span id="L1013" class="ln">  1013&nbsp;&nbsp;</span>			num = -1
+<span id="L1014" class="ln">  1014&nbsp;&nbsp;</span>			break
+<span id="L1015" class="ln">  1015&nbsp;&nbsp;</span>		}
+<span id="L1016" class="ln">  1016&nbsp;&nbsp;</span>		num = num*10 + int(name[i]) - &#39;0&#39;
+<span id="L1017" class="ln">  1017&nbsp;&nbsp;</span>	}
+<span id="L1018" class="ln">  1018&nbsp;&nbsp;</span>	<span class="comment">// Disallow leading zeros.</span>
+<span id="L1019" class="ln">  1019&nbsp;&nbsp;</span>	if name[0] == &#39;0&#39; &amp;&amp; len(name) &gt; 1 {
+<span id="L1020" class="ln">  1020&nbsp;&nbsp;</span>		num = -1
+<span id="L1021" class="ln">  1021&nbsp;&nbsp;</span>	}
+<span id="L1022" class="ln">  1022&nbsp;&nbsp;</span>
+<span id="L1023" class="ln">  1023&nbsp;&nbsp;</span>	rest = str[i:]
+<span id="L1024" class="ln">  1024&nbsp;&nbsp;</span>	ok = true
+<span id="L1025" class="ln">  1025&nbsp;&nbsp;</span>	return
+<span id="L1026" class="ln">  1026&nbsp;&nbsp;</span>}
+<span id="L1027" class="ln">  1027&nbsp;&nbsp;</span>
+<span id="L1028" class="ln">  1028&nbsp;&nbsp;</span><span class="comment">// FindSubmatchIndex returns a slice holding the index pairs identifying the</span>
+<span id="L1029" class="ln">  1029&nbsp;&nbsp;</span><span class="comment">// leftmost match of the regular expression in b and the matches, if any, of</span>
+<span id="L1030" class="ln">  1030&nbsp;&nbsp;</span><span class="comment">// its subexpressions, as defined by the &#39;Submatch&#39; and &#39;Index&#39; descriptions</span>
+<span id="L1031" class="ln">  1031&nbsp;&nbsp;</span><span class="comment">// in the package comment.</span>
+<span id="L1032" class="ln">  1032&nbsp;&nbsp;</span><span class="comment">// A return value of nil indicates no match.</span>
+<span id="L1033" class="ln">  1033&nbsp;&nbsp;</span>func (re *Regexp) FindSubmatchIndex(b []byte) []int {
+<span id="L1034" class="ln">  1034&nbsp;&nbsp;</span>	return re.pad(re.doExecute(nil, b, &#34;&#34;, 0, re.prog.NumCap, nil))
+<span id="L1035" class="ln">  1035&nbsp;&nbsp;</span>}
+<span id="L1036" class="ln">  1036&nbsp;&nbsp;</span>
+<span id="L1037" class="ln">  1037&nbsp;&nbsp;</span><span class="comment">// FindStringSubmatch returns a slice of strings holding the text of the</span>
+<span id="L1038" class="ln">  1038&nbsp;&nbsp;</span><span class="comment">// leftmost match of the regular expression in s and the matches, if any, of</span>
+<span id="L1039" class="ln">  1039&nbsp;&nbsp;</span><span class="comment">// its subexpressions, as defined by the &#39;Submatch&#39; description in the</span>
+<span id="L1040" class="ln">  1040&nbsp;&nbsp;</span><span class="comment">// package comment.</span>
+<span id="L1041" class="ln">  1041&nbsp;&nbsp;</span><span class="comment">// A return value of nil indicates no match.</span>
+<span id="L1042" class="ln">  1042&nbsp;&nbsp;</span>func (re *Regexp) FindStringSubmatch(s string) []string {
+<span id="L1043" class="ln">  1043&nbsp;&nbsp;</span>	var dstCap [4]int
+<span id="L1044" class="ln">  1044&nbsp;&nbsp;</span>	a := re.doExecute(nil, nil, s, 0, re.prog.NumCap, dstCap[:0])
+<span id="L1045" class="ln">  1045&nbsp;&nbsp;</span>	if a == nil {
+<span id="L1046" class="ln">  1046&nbsp;&nbsp;</span>		return nil
+<span id="L1047" class="ln">  1047&nbsp;&nbsp;</span>	}
+<span id="L1048" class="ln">  1048&nbsp;&nbsp;</span>	ret := make([]string, 1+re.numSubexp)
+<span id="L1049" class="ln">  1049&nbsp;&nbsp;</span>	for i := range ret {
+<span id="L1050" class="ln">  1050&nbsp;&nbsp;</span>		if 2*i &lt; len(a) &amp;&amp; a[2*i] &gt;= 0 {
+<span id="L1051" class="ln">  1051&nbsp;&nbsp;</span>			ret[i] = s[a[2*i]:a[2*i+1]]
+<span id="L1052" class="ln">  1052&nbsp;&nbsp;</span>		}
+<span id="L1053" class="ln">  1053&nbsp;&nbsp;</span>	}
+<span id="L1054" class="ln">  1054&nbsp;&nbsp;</span>	return ret
+<span id="L1055" class="ln">  1055&nbsp;&nbsp;</span>}
+<span id="L1056" class="ln">  1056&nbsp;&nbsp;</span>
+<span id="L1057" class="ln">  1057&nbsp;&nbsp;</span><span class="comment">// FindStringSubmatchIndex returns a slice holding the index pairs</span>
+<span id="L1058" class="ln">  1058&nbsp;&nbsp;</span><span class="comment">// identifying the leftmost match of the regular expression in s and the</span>
+<span id="L1059" class="ln">  1059&nbsp;&nbsp;</span><span class="comment">// matches, if any, of its subexpressions, as defined by the &#39;Submatch&#39; and</span>
+<span id="L1060" class="ln">  1060&nbsp;&nbsp;</span><span class="comment">// &#39;Index&#39; descriptions in the package comment.</span>
+<span id="L1061" class="ln">  1061&nbsp;&nbsp;</span><span class="comment">// A return value of nil indicates no match.</span>
+<span id="L1062" class="ln">  1062&nbsp;&nbsp;</span>func (re *Regexp) FindStringSubmatchIndex(s string) []int {
+<span id="L1063" class="ln">  1063&nbsp;&nbsp;</span>	return re.pad(re.doExecute(nil, nil, s, 0, re.prog.NumCap, nil))
+<span id="L1064" class="ln">  1064&nbsp;&nbsp;</span>}
+<span id="L1065" class="ln">  1065&nbsp;&nbsp;</span>
+<span id="L1066" class="ln">  1066&nbsp;&nbsp;</span><span class="comment">// FindReaderSubmatchIndex returns a slice holding the index pairs</span>
+<span id="L1067" class="ln">  1067&nbsp;&nbsp;</span><span class="comment">// identifying the leftmost match of the regular expression of text read by</span>
+<span id="L1068" class="ln">  1068&nbsp;&nbsp;</span><span class="comment">// the [io.RuneReader], and the matches, if any, of its subexpressions, as defined</span>
+<span id="L1069" class="ln">  1069&nbsp;&nbsp;</span><span class="comment">// by the &#39;Submatch&#39; and &#39;Index&#39; descriptions in the package comment. A</span>
+<span id="L1070" class="ln">  1070&nbsp;&nbsp;</span><span class="comment">// return value of nil indicates no match.</span>
+<span id="L1071" class="ln">  1071&nbsp;&nbsp;</span>func (re *Regexp) FindReaderSubmatchIndex(r io.RuneReader) []int {
+<span id="L1072" class="ln">  1072&nbsp;&nbsp;</span>	return re.pad(re.doExecute(r, nil, &#34;&#34;, 0, re.prog.NumCap, nil))
+<span id="L1073" class="ln">  1073&nbsp;&nbsp;</span>}
+<span id="L1074" class="ln">  1074&nbsp;&nbsp;</span>
+<span id="L1075" class="ln">  1075&nbsp;&nbsp;</span>const startSize = 10 <span class="comment">// The size at which to start a slice in the &#39;All&#39; routines.</span>
+<span id="L1076" class="ln">  1076&nbsp;&nbsp;</span>
+<span id="L1077" class="ln">  1077&nbsp;&nbsp;</span><span class="comment">// FindAll is the &#39;All&#39; version of Find; it returns a slice of all successive</span>
+<span id="L1078" class="ln">  1078&nbsp;&nbsp;</span><span class="comment">// matches of the expression, as defined by the &#39;All&#39; description in the</span>
+<span id="L1079" class="ln">  1079&nbsp;&nbsp;</span><span class="comment">// package comment.</span>
+<span id="L1080" class="ln">  1080&nbsp;&nbsp;</span><span class="comment">// A return value of nil indicates no match.</span>
+<span id="L1081" class="ln">  1081&nbsp;&nbsp;</span>func (re *Regexp) FindAll(b []byte, n int) [][]byte {
+<span id="L1082" class="ln">  1082&nbsp;&nbsp;</span>	if n &lt; 0 {
+<span id="L1083" class="ln">  1083&nbsp;&nbsp;</span>		n = len(b) + 1
+<span id="L1084" class="ln">  1084&nbsp;&nbsp;</span>	}
+<span id="L1085" class="ln">  1085&nbsp;&nbsp;</span>	var result [][]byte
+<span id="L1086" class="ln">  1086&nbsp;&nbsp;</span>	re.allMatches(&#34;&#34;, b, n, func(match []int) {
+<span id="L1087" class="ln">  1087&nbsp;&nbsp;</span>		if result == nil {
+<span id="L1088" class="ln">  1088&nbsp;&nbsp;</span>			result = make([][]byte, 0, startSize)
+<span id="L1089" class="ln">  1089&nbsp;&nbsp;</span>		}
+<span id="L1090" class="ln">  1090&nbsp;&nbsp;</span>		result = append(result, b[match[0]:match[1]:match[1]])
+<span id="L1091" class="ln">  1091&nbsp;&nbsp;</span>	})
+<span id="L1092" class="ln">  1092&nbsp;&nbsp;</span>	return result
+<span id="L1093" class="ln">  1093&nbsp;&nbsp;</span>}
+<span id="L1094" class="ln">  1094&nbsp;&nbsp;</span>
+<span id="L1095" class="ln">  1095&nbsp;&nbsp;</span><span class="comment">// FindAllIndex is the &#39;All&#39; version of [Regexp.FindIndex]; it returns a slice of all</span>
+<span id="L1096" class="ln">  1096&nbsp;&nbsp;</span><span class="comment">// successive matches of the expression, as defined by the &#39;All&#39; description</span>
+<span id="L1097" class="ln">  1097&nbsp;&nbsp;</span><span class="comment">// in the package comment.</span>
+<span id="L1098" class="ln">  1098&nbsp;&nbsp;</span><span class="comment">// A return value of nil indicates no match.</span>
+<span id="L1099" class="ln">  1099&nbsp;&nbsp;</span>func (re *Regexp) FindAllIndex(b []byte, n int) [][]int {
+<span id="L1100" class="ln">  1100&nbsp;&nbsp;</span>	if n &lt; 0 {
+<span id="L1101" class="ln">  1101&nbsp;&nbsp;</span>		n = len(b) + 1
+<span id="L1102" class="ln">  1102&nbsp;&nbsp;</span>	}
+<span id="L1103" class="ln">  1103&nbsp;&nbsp;</span>	var result [][]int
+<span id="L1104" class="ln">  1104&nbsp;&nbsp;</span>	re.allMatches(&#34;&#34;, b, n, func(match []int) {
+<span id="L1105" class="ln">  1105&nbsp;&nbsp;</span>		if result == nil {
+<span id="L1106" class="ln">  1106&nbsp;&nbsp;</span>			result = make([][]int, 0, startSize)
+<span id="L1107" class="ln">  1107&nbsp;&nbsp;</span>		}
+<span id="L1108" class="ln">  1108&nbsp;&nbsp;</span>		result = append(result, match[0:2])
+<span id="L1109" class="ln">  1109&nbsp;&nbsp;</span>	})
+<span id="L1110" class="ln">  1110&nbsp;&nbsp;</span>	return result
+<span id="L1111" class="ln">  1111&nbsp;&nbsp;</span>}
+<span id="L1112" class="ln">  1112&nbsp;&nbsp;</span>
+<span id="L1113" class="ln">  1113&nbsp;&nbsp;</span><span class="comment">// FindAllString is the &#39;All&#39; version of [Regexp.FindString]; it returns a slice of all</span>
+<span id="L1114" class="ln">  1114&nbsp;&nbsp;</span><span class="comment">// successive matches of the expression, as defined by the &#39;All&#39; description</span>
+<span id="L1115" class="ln">  1115&nbsp;&nbsp;</span><span class="comment">// in the package comment.</span>
+<span id="L1116" class="ln">  1116&nbsp;&nbsp;</span><span class="comment">// A return value of nil indicates no match.</span>
+<span id="L1117" class="ln">  1117&nbsp;&nbsp;</span>func (re *Regexp) FindAllString(s string, n int) []string {
+<span id="L1118" class="ln">  1118&nbsp;&nbsp;</span>	if n &lt; 0 {
+<span id="L1119" class="ln">  1119&nbsp;&nbsp;</span>		n = len(s) + 1
+<span id="L1120" class="ln">  1120&nbsp;&nbsp;</span>	}
+<span id="L1121" class="ln">  1121&nbsp;&nbsp;</span>	var result []string
+<span id="L1122" class="ln">  1122&nbsp;&nbsp;</span>	re.allMatches(s, nil, n, func(match []int) {
+<span id="L1123" class="ln">  1123&nbsp;&nbsp;</span>		if result == nil {
+<span id="L1124" class="ln">  1124&nbsp;&nbsp;</span>			result = make([]string, 0, startSize)
+<span id="L1125" class="ln">  1125&nbsp;&nbsp;</span>		}
+<span id="L1126" class="ln">  1126&nbsp;&nbsp;</span>		result = append(result, s[match[0]:match[1]])
+<span id="L1127" class="ln">  1127&nbsp;&nbsp;</span>	})
+<span id="L1128" class="ln">  1128&nbsp;&nbsp;</span>	return result
+<span id="L1129" class="ln">  1129&nbsp;&nbsp;</span>}
+<span id="L1130" class="ln">  1130&nbsp;&nbsp;</span>
+<span id="L1131" class="ln">  1131&nbsp;&nbsp;</span><span class="comment">// FindAllStringIndex is the &#39;All&#39; version of [Regexp.FindStringIndex]; it returns a</span>
+<span id="L1132" class="ln">  1132&nbsp;&nbsp;</span><span class="comment">// slice of all successive matches of the expression, as defined by the &#39;All&#39;</span>
+<span id="L1133" class="ln">  1133&nbsp;&nbsp;</span><span class="comment">// description in the package comment.</span>
+<span id="L1134" class="ln">  1134&nbsp;&nbsp;</span><span class="comment">// A return value of nil indicates no match.</span>
+<span id="L1135" class="ln">  1135&nbsp;&nbsp;</span>func (re *Regexp) FindAllStringIndex(s string, n int) [][]int {
+<span id="L1136" class="ln">  1136&nbsp;&nbsp;</span>	if n &lt; 0 {
+<span id="L1137" class="ln">  1137&nbsp;&nbsp;</span>		n = len(s) + 1
+<span id="L1138" class="ln">  1138&nbsp;&nbsp;</span>	}
+<span id="L1139" class="ln">  1139&nbsp;&nbsp;</span>	var result [][]int
+<span id="L1140" class="ln">  1140&nbsp;&nbsp;</span>	re.allMatches(s, nil, n, func(match []int) {
+<span id="L1141" class="ln">  1141&nbsp;&nbsp;</span>		if result == nil {
+<span id="L1142" class="ln">  1142&nbsp;&nbsp;</span>			result = make([][]int, 0, startSize)
+<span id="L1143" class="ln">  1143&nbsp;&nbsp;</span>		}
+<span id="L1144" class="ln">  1144&nbsp;&nbsp;</span>		result = append(result, match[0:2])
+<span id="L1145" class="ln">  1145&nbsp;&nbsp;</span>	})
+<span id="L1146" class="ln">  1146&nbsp;&nbsp;</span>	return result
+<span id="L1147" class="ln">  1147&nbsp;&nbsp;</span>}
+<span id="L1148" class="ln">  1148&nbsp;&nbsp;</span>
+<span id="L1149" class="ln">  1149&nbsp;&nbsp;</span><span class="comment">// FindAllSubmatch is the &#39;All&#39; version of [Regexp.FindSubmatch]; it returns a slice</span>
+<span id="L1150" class="ln">  1150&nbsp;&nbsp;</span><span class="comment">// of all successive matches of the expression, as defined by the &#39;All&#39;</span>
+<span id="L1151" class="ln">  1151&nbsp;&nbsp;</span><span class="comment">// description in the package comment.</span>
+<span id="L1152" class="ln">  1152&nbsp;&nbsp;</span><span class="comment">// A return value of nil indicates no match.</span>
+<span id="L1153" class="ln">  1153&nbsp;&nbsp;</span>func (re *Regexp) FindAllSubmatch(b []byte, n int) [][][]byte {
+<span id="L1154" class="ln">  1154&nbsp;&nbsp;</span>	if n &lt; 0 {
+<span id="L1155" class="ln">  1155&nbsp;&nbsp;</span>		n = len(b) + 1
+<span id="L1156" class="ln">  1156&nbsp;&nbsp;</span>	}
+<span id="L1157" class="ln">  1157&nbsp;&nbsp;</span>	var result [][][]byte
+<span id="L1158" class="ln">  1158&nbsp;&nbsp;</span>	re.allMatches(&#34;&#34;, b, n, func(match []int) {
+<span id="L1159" class="ln">  1159&nbsp;&nbsp;</span>		if result == nil {
+<span id="L1160" class="ln">  1160&nbsp;&nbsp;</span>			result = make([][][]byte, 0, startSize)
+<span id="L1161" class="ln">  1161&nbsp;&nbsp;</span>		}
+<span id="L1162" class="ln">  1162&nbsp;&nbsp;</span>		slice := make([][]byte, len(match)/2)
+<span id="L1163" class="ln">  1163&nbsp;&nbsp;</span>		for j := range slice {
+<span id="L1164" class="ln">  1164&nbsp;&nbsp;</span>			if match[2*j] &gt;= 0 {
+<span id="L1165" class="ln">  1165&nbsp;&nbsp;</span>				slice[j] = b[match[2*j]:match[2*j+1]:match[2*j+1]]
+<span id="L1166" class="ln">  1166&nbsp;&nbsp;</span>			}
+<span id="L1167" class="ln">  1167&nbsp;&nbsp;</span>		}
+<span id="L1168" class="ln">  1168&nbsp;&nbsp;</span>		result = append(result, slice)
+<span id="L1169" class="ln">  1169&nbsp;&nbsp;</span>	})
+<span id="L1170" class="ln">  1170&nbsp;&nbsp;</span>	return result
+<span id="L1171" class="ln">  1171&nbsp;&nbsp;</span>}
+<span id="L1172" class="ln">  1172&nbsp;&nbsp;</span>
+<span id="L1173" class="ln">  1173&nbsp;&nbsp;</span><span class="comment">// FindAllSubmatchIndex is the &#39;All&#39; version of [Regexp.FindSubmatchIndex]; it returns</span>
+<span id="L1174" class="ln">  1174&nbsp;&nbsp;</span><span class="comment">// a slice of all successive matches of the expression, as defined by the</span>
+<span id="L1175" class="ln">  1175&nbsp;&nbsp;</span><span class="comment">// &#39;All&#39; description in the package comment.</span>
+<span id="L1176" class="ln">  1176&nbsp;&nbsp;</span><span class="comment">// A return value of nil indicates no match.</span>
+<span id="L1177" class="ln">  1177&nbsp;&nbsp;</span>func (re *Regexp) FindAllSubmatchIndex(b []byte, n int) [][]int {
+<span id="L1178" class="ln">  1178&nbsp;&nbsp;</span>	if n &lt; 0 {
+<span id="L1179" class="ln">  1179&nbsp;&nbsp;</span>		n = len(b) + 1
+<span id="L1180" class="ln">  1180&nbsp;&nbsp;</span>	}
+<span id="L1181" class="ln">  1181&nbsp;&nbsp;</span>	var result [][]int
+<span id="L1182" class="ln">  1182&nbsp;&nbsp;</span>	re.allMatches(&#34;&#34;, b, n, func(match []int) {
+<span id="L1183" class="ln">  1183&nbsp;&nbsp;</span>		if result == nil {
+<span id="L1184" class="ln">  1184&nbsp;&nbsp;</span>			result = make([][]int, 0, startSize)
+<span id="L1185" class="ln">  1185&nbsp;&nbsp;</span>		}
+<span id="L1186" class="ln">  1186&nbsp;&nbsp;</span>		result = append(result, match)
+<span id="L1187" class="ln">  1187&nbsp;&nbsp;</span>	})
+<span id="L1188" class="ln">  1188&nbsp;&nbsp;</span>	return result
+<span id="L1189" class="ln">  1189&nbsp;&nbsp;</span>}
+<span id="L1190" class="ln">  1190&nbsp;&nbsp;</span>
+<span id="L1191" class="ln">  1191&nbsp;&nbsp;</span><span class="comment">// FindAllStringSubmatch is the &#39;All&#39; version of [Regexp.FindStringSubmatch]; it</span>
+<span id="L1192" class="ln">  1192&nbsp;&nbsp;</span><span class="comment">// returns a slice of all successive matches of the expression, as defined by</span>
+<span id="L1193" class="ln">  1193&nbsp;&nbsp;</span><span class="comment">// the &#39;All&#39; description in the package comment.</span>
+<span id="L1194" class="ln">  1194&nbsp;&nbsp;</span><span class="comment">// A return value of nil indicates no match.</span>
+<span id="L1195" class="ln">  1195&nbsp;&nbsp;</span>func (re *Regexp) FindAllStringSubmatch(s string, n int) [][]string {
+<span id="L1196" class="ln">  1196&nbsp;&nbsp;</span>	if n &lt; 0 {
+<span id="L1197" class="ln">  1197&nbsp;&nbsp;</span>		n = len(s) + 1
+<span id="L1198" class="ln">  1198&nbsp;&nbsp;</span>	}
+<span id="L1199" class="ln">  1199&nbsp;&nbsp;</span>	var result [][]string
+<span id="L1200" class="ln">  1200&nbsp;&nbsp;</span>	re.allMatches(s, nil, n, func(match []int) {
+<span id="L1201" class="ln">  1201&nbsp;&nbsp;</span>		if result == nil {
+<span id="L1202" class="ln">  1202&nbsp;&nbsp;</span>			result = make([][]string, 0, startSize)
+<span id="L1203" class="ln">  1203&nbsp;&nbsp;</span>		}
+<span id="L1204" class="ln">  1204&nbsp;&nbsp;</span>		slice := make([]string, len(match)/2)
+<span id="L1205" class="ln">  1205&nbsp;&nbsp;</span>		for j := range slice {
+<span id="L1206" class="ln">  1206&nbsp;&nbsp;</span>			if match[2*j] &gt;= 0 {
+<span id="L1207" class="ln">  1207&nbsp;&nbsp;</span>				slice[j] = s[match[2*j]:match[2*j+1]]
+<span id="L1208" class="ln">  1208&nbsp;&nbsp;</span>			}
+<span id="L1209" class="ln">  1209&nbsp;&nbsp;</span>		}
+<span id="L1210" class="ln">  1210&nbsp;&nbsp;</span>		result = append(result, slice)
+<span id="L1211" class="ln">  1211&nbsp;&nbsp;</span>	})
+<span id="L1212" class="ln">  1212&nbsp;&nbsp;</span>	return result
+<span id="L1213" class="ln">  1213&nbsp;&nbsp;</span>}
+<span id="L1214" class="ln">  1214&nbsp;&nbsp;</span>
+<span id="L1215" class="ln">  1215&nbsp;&nbsp;</span><span class="comment">// FindAllStringSubmatchIndex is the &#39;All&#39; version of</span>
+<span id="L1216" class="ln">  1216&nbsp;&nbsp;</span><span class="comment">// [Regexp.FindStringSubmatchIndex]; it returns a slice of all successive matches of</span>
+<span id="L1217" class="ln">  1217&nbsp;&nbsp;</span><span class="comment">// the expression, as defined by the &#39;All&#39; description in the package</span>
+<span id="L1218" class="ln">  1218&nbsp;&nbsp;</span><span class="comment">// comment.</span>
+<span id="L1219" class="ln">  1219&nbsp;&nbsp;</span><span class="comment">// A return value of nil indicates no match.</span>
+<span id="L1220" class="ln">  1220&nbsp;&nbsp;</span>func (re *Regexp) FindAllStringSubmatchIndex(s string, n int) [][]int {
+<span id="L1221" class="ln">  1221&nbsp;&nbsp;</span>	if n &lt; 0 {
+<span id="L1222" class="ln">  1222&nbsp;&nbsp;</span>		n = len(s) + 1
+<span id="L1223" class="ln">  1223&nbsp;&nbsp;</span>	}
+<span id="L1224" class="ln">  1224&nbsp;&nbsp;</span>	var result [][]int
+<span id="L1225" class="ln">  1225&nbsp;&nbsp;</span>	re.allMatches(s, nil, n, func(match []int) {
+<span id="L1226" class="ln">  1226&nbsp;&nbsp;</span>		if result == nil {
+<span id="L1227" class="ln">  1227&nbsp;&nbsp;</span>			result = make([][]int, 0, startSize)
+<span id="L1228" class="ln">  1228&nbsp;&nbsp;</span>		}
+<span id="L1229" class="ln">  1229&nbsp;&nbsp;</span>		result = append(result, match)
+<span id="L1230" class="ln">  1230&nbsp;&nbsp;</span>	})
+<span id="L1231" class="ln">  1231&nbsp;&nbsp;</span>	return result
+<span id="L1232" class="ln">  1232&nbsp;&nbsp;</span>}
+<span id="L1233" class="ln">  1233&nbsp;&nbsp;</span>
+<span id="L1234" class="ln">  1234&nbsp;&nbsp;</span><span class="comment">// Split slices s into substrings separated by the expression and returns a slice of</span>
+<span id="L1235" class="ln">  1235&nbsp;&nbsp;</span><span class="comment">// the substrings between those expression matches.</span>
+<span id="L1236" class="ln">  1236&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L1237" class="ln">  1237&nbsp;&nbsp;</span><span class="comment">// The slice returned by this method consists of all the substrings of s</span>
+<span id="L1238" class="ln">  1238&nbsp;&nbsp;</span><span class="comment">// not contained in the slice returned by [Regexp.FindAllString]. When called on an expression</span>
+<span id="L1239" class="ln">  1239&nbsp;&nbsp;</span><span class="comment">// that contains no metacharacters, it is equivalent to [strings.SplitN].</span>
+<span id="L1240" class="ln">  1240&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L1241" class="ln">  1241&nbsp;&nbsp;</span><span class="comment">// Example:</span>
+<span id="L1242" class="ln">  1242&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L1243" class="ln">  1243&nbsp;&nbsp;</span><span class="comment">//	s := regexp.MustCompile(&#34;a*&#34;).Split(&#34;abaabaccadaaae&#34;, 5)</span>
+<span id="L1244" class="ln">  1244&nbsp;&nbsp;</span><span class="comment">//	// s: [&#34;&#34;, &#34;b&#34;, &#34;b&#34;, &#34;c&#34;, &#34;cadaaae&#34;]</span>
+<span id="L1245" class="ln">  1245&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L1246" class="ln">  1246&nbsp;&nbsp;</span><span class="comment">// The count determines the number of substrings to return:</span>
+<span id="L1247" class="ln">  1247&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L1248" class="ln">  1248&nbsp;&nbsp;</span><span class="comment">//	n &gt; 0: at most n substrings; the last substring will be the unsplit remainder.</span>
+<span id="L1249" class="ln">  1249&nbsp;&nbsp;</span><span class="comment">//	n == 0: the result is nil (zero substrings)</span>
+<span id="L1250" class="ln">  1250&nbsp;&nbsp;</span><span class="comment">//	n &lt; 0: all substrings</span>
+<span id="L1251" class="ln">  1251&nbsp;&nbsp;</span>func (re *Regexp) Split(s string, n int) []string {
+<span id="L1252" class="ln">  1252&nbsp;&nbsp;</span>
+<span id="L1253" class="ln">  1253&nbsp;&nbsp;</span>	if n == 0 {
+<span id="L1254" class="ln">  1254&nbsp;&nbsp;</span>		return nil
+<span id="L1255" class="ln">  1255&nbsp;&nbsp;</span>	}
+<span id="L1256" class="ln">  1256&nbsp;&nbsp;</span>
+<span id="L1257" class="ln">  1257&nbsp;&nbsp;</span>	if len(re.expr) &gt; 0 &amp;&amp; len(s) == 0 {
+<span id="L1258" class="ln">  1258&nbsp;&nbsp;</span>		return []string{&#34;&#34;}
+<span id="L1259" class="ln">  1259&nbsp;&nbsp;</span>	}
+<span id="L1260" class="ln">  1260&nbsp;&nbsp;</span>
+<span id="L1261" class="ln">  1261&nbsp;&nbsp;</span>	matches := re.FindAllStringIndex(s, n)
+<span id="L1262" class="ln">  1262&nbsp;&nbsp;</span>	strings := make([]string, 0, len(matches))
+<span id="L1263" class="ln">  1263&nbsp;&nbsp;</span>
+<span id="L1264" class="ln">  1264&nbsp;&nbsp;</span>	beg := 0
+<span id="L1265" class="ln">  1265&nbsp;&nbsp;</span>	end := 0
+<span id="L1266" class="ln">  1266&nbsp;&nbsp;</span>	for _, match := range matches {
+<span id="L1267" class="ln">  1267&nbsp;&nbsp;</span>		if n &gt; 0 &amp;&amp; len(strings) &gt;= n-1 {
+<span id="L1268" class="ln">  1268&nbsp;&nbsp;</span>			break
+<span id="L1269" class="ln">  1269&nbsp;&nbsp;</span>		}
+<span id="L1270" class="ln">  1270&nbsp;&nbsp;</span>
+<span id="L1271" class="ln">  1271&nbsp;&nbsp;</span>		end = match[0]
+<span id="L1272" class="ln">  1272&nbsp;&nbsp;</span>		if match[1] != 0 {
+<span id="L1273" class="ln">  1273&nbsp;&nbsp;</span>			strings = append(strings, s[beg:end])
+<span id="L1274" class="ln">  1274&nbsp;&nbsp;</span>		}
+<span id="L1275" class="ln">  1275&nbsp;&nbsp;</span>		beg = match[1]
+<span id="L1276" class="ln">  1276&nbsp;&nbsp;</span>	}
+<span id="L1277" class="ln">  1277&nbsp;&nbsp;</span>
+<span id="L1278" class="ln">  1278&nbsp;&nbsp;</span>	if end != len(s) {
+<span id="L1279" class="ln">  1279&nbsp;&nbsp;</span>		strings = append(strings, s[beg:])
+<span id="L1280" class="ln">  1280&nbsp;&nbsp;</span>	}
+<span id="L1281" class="ln">  1281&nbsp;&nbsp;</span>
+<span id="L1282" class="ln">  1282&nbsp;&nbsp;</span>	return strings
+<span id="L1283" class="ln">  1283&nbsp;&nbsp;</span>}
+<span id="L1284" class="ln">  1284&nbsp;&nbsp;</span>
+<span id="L1285" class="ln">  1285&nbsp;&nbsp;</span><span class="comment">// MarshalText implements [encoding.TextMarshaler]. The output</span>
+<span id="L1286" class="ln">  1286&nbsp;&nbsp;</span><span class="comment">// matches that of calling the [Regexp.String] method.</span>
+<span id="L1287" class="ln">  1287&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L1288" class="ln">  1288&nbsp;&nbsp;</span><span class="comment">// Note that the output is lossy in some cases: This method does not indicate</span>
+<span id="L1289" class="ln">  1289&nbsp;&nbsp;</span><span class="comment">// POSIX regular expressions (i.e. those compiled by calling [CompilePOSIX]), or</span>
+<span id="L1290" class="ln">  1290&nbsp;&nbsp;</span><span class="comment">// those for which the [Regexp.Longest] method has been called.</span>
+<span id="L1291" class="ln">  1291&nbsp;&nbsp;</span>func (re *Regexp) MarshalText() ([]byte, error) {
+<span id="L1292" class="ln">  1292&nbsp;&nbsp;</span>	return []byte(re.String()), nil
+<span id="L1293" class="ln">  1293&nbsp;&nbsp;</span>}
+<span id="L1294" class="ln">  1294&nbsp;&nbsp;</span>
+<span id="L1295" class="ln">  1295&nbsp;&nbsp;</span><span class="comment">// UnmarshalText implements [encoding.TextUnmarshaler] by calling</span>
+<span id="L1296" class="ln">  1296&nbsp;&nbsp;</span><span class="comment">// [Compile] on the encoded value.</span>
+<span id="L1297" class="ln">  1297&nbsp;&nbsp;</span>func (re *Regexp) UnmarshalText(text []byte) error {
+<span id="L1298" class="ln">  1298&nbsp;&nbsp;</span>	newRE, err := Compile(string(text))
+<span id="L1299" class="ln">  1299&nbsp;&nbsp;</span>	if err != nil {
+<span id="L1300" class="ln">  1300&nbsp;&nbsp;</span>		return err
+<span id="L1301" class="ln">  1301&nbsp;&nbsp;</span>	}
+<span id="L1302" class="ln">  1302&nbsp;&nbsp;</span>	*re = *newRE
+<span id="L1303" class="ln">  1303&nbsp;&nbsp;</span>	return nil
+<span id="L1304" class="ln">  1304&nbsp;&nbsp;</span>}
+<span id="L1305" class="ln">  1305&nbsp;&nbsp;</span>
+</pre><p><a href="regexp.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

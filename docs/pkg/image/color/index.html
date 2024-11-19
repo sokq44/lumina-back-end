@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>color - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package color
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "image/color"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+			
+				<dd><a href="index.html#pkg-subdirectories">Subdirectories</a></dd>
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>Package color implements a basic color library.
+
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+			
+				<dd><a href="index.html#pkg-variables">Variables</a></dd>
+			
+			
+				
+				<dd><a href="index.html#CMYKToRGB">func CMYKToRGB(c, m, y, k uint8) (uint8, uint8, uint8)</a></dd>
+			
+				
+				<dd><a href="index.html#RGBToCMYK">func RGBToCMYK(r, g, b uint8) (uint8, uint8, uint8, uint8)</a></dd>
+			
+				
+				<dd><a href="index.html#RGBToYCbCr">func RGBToYCbCr(r, g, b uint8) (uint8, uint8, uint8)</a></dd>
+			
+				
+				<dd><a href="index.html#YCbCrToRGB">func YCbCrToRGB(y, cb, cr uint8) (uint8, uint8, uint8)</a></dd>
+			
+			
+				
+				<dd><a href="index.html#Alpha">type Alpha</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Alpha.RGBA">func (c Alpha) RGBA() (r, g, b, a uint32)</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Alpha16">type Alpha16</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Alpha16.RGBA">func (c Alpha16) RGBA() (r, g, b, a uint32)</a></dd>
+				
+			
+				
+				<dd><a href="index.html#CMYK">type CMYK</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#CMYK.RGBA">func (c CMYK) RGBA() (uint32, uint32, uint32, uint32)</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Color">type Color</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#Gray">type Gray</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Gray.RGBA">func (c Gray) RGBA() (r, g, b, a uint32)</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Gray16">type Gray16</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Gray16.RGBA">func (c Gray16) RGBA() (r, g, b, a uint32)</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Model">type Model</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ModelFunc">func ModelFunc(f func(Color) Color) Model</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#NRGBA">type NRGBA</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NRGBA.RGBA">func (c NRGBA) RGBA() (r, g, b, a uint32)</a></dd>
+				
+			
+				
+				<dd><a href="index.html#NRGBA64">type NRGBA64</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NRGBA64.RGBA">func (c NRGBA64) RGBA() (r, g, b, a uint32)</a></dd>
+				
+			
+				
+				<dd><a href="index.html#NYCbCrA">type NYCbCrA</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NYCbCrA.RGBA">func (c NYCbCrA) RGBA() (uint32, uint32, uint32, uint32)</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Palette">type Palette</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Palette.Convert">func (p Palette) Convert(c Color) Color</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Palette.Index">func (p Palette) Index(c Color) int</a></dd>
+				
+			
+				
+				<dd><a href="index.html#RGBA">type RGBA</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#RGBA.RGBA">func (c RGBA) RGBA() (r, g, b, a uint32)</a></dd>
+				
+			
+				
+				<dd><a href="index.html#RGBA64">type RGBA64</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#RGBA64.RGBA">func (c RGBA64) RGBA() (r, g, b, a uint32)</a></dd>
+				
+			
+				
+				<dd><a href="index.html#YCbCr">type YCbCr</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#YCbCr.RGBA">func (c YCbCr) RGBA() (uint32, uint32, uint32, uint32)</a></dd>
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../../src/image/color/color.go">color.go</a>
+			
+				<a href="../../../src/image/color/ycbcr.go">ycbcr.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+		
+			<h2 id="pkg-variables">Variables</h2>
+			
+				<p>Standard colors.
+
+				<pre>var (
+    <span id="Black">Black</span>       = <a href="index.html#Gray16">Gray16</a>{0}
+    <span id="White">White</span>       = <a href="index.html#Gray16">Gray16</a>{0xffff}
+    <span id="Transparent">Transparent</span> = <a href="index.html#Alpha16">Alpha16</a>{0}
+    <span id="Opaque">Opaque</span>      = <a href="index.html#Alpha16">Alpha16</a>{0xffff}
+)</pre>
+			
+		
+		
+			
+			
+			<h2 id="CMYKToRGB">func <a href="../../../src/image/color/ycbcr.go?s=9907:9961#L326">CMYKToRGB</a>
+				<a class="permalink" href="index.html#CMYKToRGB">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func CMYKToRGB(c, m, y, k <a href="../../builtin/index.html#uint8">uint8</a>) (<a href="../../builtin/index.html#uint8">uint8</a>, <a href="../../builtin/index.html#uint8">uint8</a>, <a href="../../builtin/index.html#uint8">uint8</a>)</pre>
+			<p>CMYKToRGB converts a <a href="index.html#CMYK">CMYK</a> quadruple to an RGB triple.
+
+			
+			
+
+		
+			
+			
+			<h2 id="RGBToCMYK">func <a href="../../../src/image/color/ycbcr.go?s=9503:9561#L305">RGBToCMYK</a>
+				<a class="permalink" href="index.html#RGBToCMYK">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func RGBToCMYK(r, g, b <a href="../../builtin/index.html#uint8">uint8</a>) (<a href="../../builtin/index.html#uint8">uint8</a>, <a href="../../builtin/index.html#uint8">uint8</a>, <a href="../../builtin/index.html#uint8">uint8</a>, <a href="../../builtin/index.html#uint8">uint8</a>)</pre>
+			<p>RGBToCMYK converts an RGB triple to a CMYK quadruple.
+
+			
+			
+
+		
+			
+			
+			<h2 id="RGBToYCbCr">func <a href="../../../src/image/color/ycbcr.go?s=232:284#L1">RGBToYCbCr</a>
+				<a class="permalink" href="index.html#RGBToYCbCr">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func RGBToYCbCr(r, g, b <a href="../../builtin/index.html#uint8">uint8</a>) (<a href="../../builtin/index.html#uint8">uint8</a>, <a href="../../builtin/index.html#uint8">uint8</a>, <a href="../../builtin/index.html#uint8">uint8</a>)</pre>
+			<p>RGBToYCbCr converts an RGB triple to a Y&apos;CbCr triple.
+
+			
+			
+
+		
+			
+			
+			<h2 id="YCbCrToRGB">func <a href="../../../src/image/color/ycbcr.go?s=1556:1610#L48">YCbCrToRGB</a>
+				<a class="permalink" href="index.html#YCbCrToRGB">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func YCbCrToRGB(y, cb, cr <a href="../../builtin/index.html#uint8">uint8</a>) (<a href="../../builtin/index.html#uint8">uint8</a>, <a href="../../builtin/index.html#uint8">uint8</a>, <a href="../../builtin/index.html#uint8">uint8</a>)</pre>
+			<p>YCbCrToRGB converts a Y&apos;CbCr triple to an RGB triple.
+
+			
+			
+
+		
+		
+			
+			
+			<h2 id="Alpha">type <a href="../../../src/image/color/color.go?s=2362:2392#L89">Alpha</a>
+				<a class="permalink" href="index.html#Alpha">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Alpha represents an 8-bit alpha color.
+
+			<pre>type Alpha struct {
+<span id="Alpha.A"></span>    A <a href="../../builtin/index.html#uint8">uint8</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="Alpha.RGBA">func (Alpha) <a href="../../../src/image/color/color.go?s=2394:2435#L93">RGBA</a>
+					<a class="permalink" href="index.html#Alpha.RGBA">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c <a href="index.html#Alpha">Alpha</a>) RGBA() (r, g, b, a <a href="../../builtin/index.html#uint32">uint32</a>)</pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Alpha16">type <a href="../../../src/image/color/color.go?s=2534:2567#L100">Alpha16</a>
+				<a class="permalink" href="index.html#Alpha16">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Alpha16 represents a 16-bit alpha color.
+
+			<pre>type Alpha16 struct {
+<span id="Alpha16.A"></span>    A <a href="../../builtin/index.html#uint16">uint16</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="Alpha16.RGBA">func (Alpha16) <a href="../../../src/image/color/color.go?s=2569:2612#L104">RGBA</a>
+					<a class="permalink" href="index.html#Alpha16.RGBA">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c <a href="index.html#Alpha16">Alpha16</a>) RGBA() (r, g, b, a <a href="../../builtin/index.html#uint32">uint32</a>)</pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="CMYK">type <a href="../../../src/image/color/ycbcr.go?s=10358:10396#L338">CMYK</a>
+				<a class="permalink" href="index.html#CMYK">&#xb6;</a>
+				
+				
+			</h2>
+			<p>CMYK represents a fully opaque CMYK color, having 8 bits for each of cyan,
+magenta, yellow and black.
+<p>It is not associated with any particular color profile.
+
+			<pre>type CMYK struct {
+<span id="CMYK.C"></span>    C, M, Y, K <a href="../../builtin/index.html#uint8">uint8</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="CMYK.RGBA">func (CMYK) <a href="../../../src/image/color/ycbcr.go?s=10398:10451#L342">RGBA</a>
+					<a class="permalink" href="index.html#CMYK.RGBA">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c <a href="index.html#CMYK">CMYK</a>) RGBA() (<a href="../../builtin/index.html#uint32">uint32</a>, <a href="../../builtin/index.html#uint32">uint32</a>, <a href="../../builtin/index.html#uint32">uint32</a>, <a href="../../builtin/index.html#uint32">uint32</a>)</pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Color">type <a href="../../../src/image/color/color.go?s=335:744#L1">Color</a>
+				<a class="permalink" href="index.html#Color">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Color can convert itself to alpha-premultiplied 16-bits per channel RGBA.
+The conversion may be lossy.
+
+			<pre>type Color interface {
+    <span class="comment">// RGBA returns the alpha-premultiplied red, green, blue and alpha values</span>
+    <span class="comment">// for the color. Each value ranges within [0, 0xffff], but is represented</span>
+    <span class="comment">// by a uint32 so that multiplying by a blend factor up to 0xffff will not</span>
+    <span class="comment">// overflow.</span>
+    <span class="comment">//</span>
+    <span class="comment">// An alpha-premultiplied color component c has been scaled by alpha (a),</span>
+    <span class="comment">// so has valid values 0 &lt;= c &lt;= a.</span>
+    RGBA() (r, g, b, a <a href="../../builtin/index.html#uint32">uint32</a>)
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="Gray">type <a href="../../../src/image/color/color.go?s=2699:2728#L110">Gray</a>
+				<a class="permalink" href="index.html#Gray">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Gray represents an 8-bit grayscale color.
+
+			<pre>type Gray struct {
+<span id="Gray.Y"></span>    Y <a href="../../builtin/index.html#uint8">uint8</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="Gray.RGBA">func (Gray) <a href="../../../src/image/color/color.go?s=2730:2770#L114">RGBA</a>
+					<a class="permalink" href="index.html#Gray.RGBA">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c <a href="index.html#Gray">Gray</a>) RGBA() (r, g, b, a <a href="../../builtin/index.html#uint32">uint32</a>)</pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Gray16">type <a href="../../../src/image/color/color.go?s=2878:2910#L121">Gray16</a>
+				<a class="permalink" href="index.html#Gray16">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Gray16 represents a 16-bit grayscale color.
+
+			<pre>type Gray16 struct {
+<span id="Gray16.Y"></span>    Y <a href="../../builtin/index.html#uint16">uint16</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="Gray16.RGBA">func (Gray16) <a href="../../../src/image/color/color.go?s=2912:2954#L125">RGBA</a>
+					<a class="permalink" href="index.html#Gray16.RGBA">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c <a href="index.html#Gray16">Gray16</a>) RGBA() (r, g, b, a <a href="../../builtin/index.html#uint32">uint32</a>)</pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Model">type <a href="../../../src/image/color/color.go?s=3100:3148#L132">Model</a>
+				<a class="permalink" href="index.html#Model">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Model can convert any <a href="index.html#Color">Color</a> to one from its own color model. The conversion
+may be lossy.
+
+			<pre>type Model interface {
+    Convert(c <a href="index.html#Color">Color</a>) <a href="index.html#Color">Color</a>
+}</pre>
+
+			
+
+			
+				<p>Models for the standard color types.
+
+				<pre>var (
+    <span id="RGBAModel">RGBAModel</span>    <a href="index.html#Model">Model</a> = <a href="index.html#ModelFunc">ModelFunc</a>(rgbaModel)
+    <span id="RGBA64Model">RGBA64Model</span>  <a href="index.html#Model">Model</a> = <a href="index.html#ModelFunc">ModelFunc</a>(rgba64Model)
+    <span id="NRGBAModel">NRGBAModel</span>   <a href="index.html#Model">Model</a> = <a href="index.html#ModelFunc">ModelFunc</a>(nrgbaModel)
+    <span id="NRGBA64Model">NRGBA64Model</span> <a href="index.html#Model">Model</a> = <a href="index.html#ModelFunc">ModelFunc</a>(nrgba64Model)
+    <span id="AlphaModel">AlphaModel</span>   <a href="index.html#Model">Model</a> = <a href="index.html#ModelFunc">ModelFunc</a>(alphaModel)
+    <span id="Alpha16Model">Alpha16Model</span> <a href="index.html#Model">Model</a> = <a href="index.html#ModelFunc">ModelFunc</a>(alpha16Model)
+    <span id="GrayModel">GrayModel</span>    <a href="index.html#Model">Model</a> = <a href="index.html#ModelFunc">ModelFunc</a>(grayModel)
+    <span id="Gray16Model">Gray16Model</span>  <a href="index.html#Model">Model</a> = <a href="index.html#ModelFunc">ModelFunc</a>(gray16Model)
+)</pre>
+			
+				<p>CMYKModel is the <a href="index.html#Model">Model</a> for CMYK colors.
+
+				<pre>var <span id="CMYKModel">CMYKModel</span> <a href="index.html#Model">Model</a> = <a href="index.html#ModelFunc">ModelFunc</a>(cmykModel)</pre>
+			
+				<p>NYCbCrAModel is the <a href="index.html#Model">Model</a> for non-alpha-premultiplied Y&apos;CbCr-with-alpha
+colors.
+
+				<pre>var <span id="NYCbCrAModel">NYCbCrAModel</span> <a href="index.html#Model">Model</a> = <a href="index.html#ModelFunc">ModelFunc</a>(nYCbCrAModel)</pre>
+			
+				<p>YCbCrModel is the <a href="index.html#Model">Model</a> for Y&apos;CbCr colors.
+
+				<pre>var <span id="YCbCrModel">YCbCrModel</span> <a href="index.html#Model">Model</a> = <a href="index.html#ModelFunc">ModelFunc</a>(yCbCrModel)</pre>
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="ModelFunc">func <a href="../../../src/image/color/color.go?s=3225:3266#L137">ModelFunc</a>
+					<a class="permalink" href="index.html#ModelFunc">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func ModelFunc(f func(<a href="index.html#Color">Color</a>) <a href="index.html#Color">Color</a>) <a href="index.html#Model">Model</a></pre>
+				<p>ModelFunc returns a <a href="index.html#Model">Model</a> that invokes f to implement the conversion.
+
+				
+				
+			
+
+			
+		
+			
+			
+			<h2 id="NRGBA">type <a href="../../../src/image/color/color.go?s=1635:1674#L46">NRGBA</a>
+				<a class="permalink" href="index.html#NRGBA">&#xb6;</a>
+				
+				
+			</h2>
+			<p>NRGBA represents a non-alpha-premultiplied 32-bit color.
+
+			<pre>type NRGBA struct {
+<span id="NRGBA.R"></span>    R, G, B, A <a href="../../builtin/index.html#uint8">uint8</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="NRGBA.RGBA">func (NRGBA) <a href="../../../src/image/color/color.go?s=1676:1717#L50">RGBA</a>
+					<a class="permalink" href="index.html#NRGBA.RGBA">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c <a href="index.html#NRGBA">NRGBA</a>) RGBA() (r, g, b, a <a href="../../builtin/index.html#uint32">uint32</a>)</pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="NRGBA64">type <a href="../../../src/image/color/color.go?s=2058:2100#L70">NRGBA64</a>
+				<a class="permalink" href="index.html#NRGBA64">&#xb6;</a>
+				
+				
+			</h2>
+			<p>NRGBA64 represents a non-alpha-premultiplied 64-bit color,
+having 16 bits for each of red, green, blue and alpha.
+
+			<pre>type NRGBA64 struct {
+<span id="NRGBA64.R"></span>    R, G, B, A <a href="../../builtin/index.html#uint16">uint16</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="NRGBA64.RGBA">func (NRGBA64) <a href="../../../src/image/color/color.go?s=2102:2145#L74">RGBA</a>
+					<a class="permalink" href="index.html#NRGBA64.RGBA">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c <a href="index.html#NRGBA64">NRGBA64</a>) RGBA() (r, g, b, a <a href="../../builtin/index.html#uint32">uint32</a>)</pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="NYCbCrA">type <a href="../../../src/image/color/ycbcr.go?s=7880:7919#L232">NYCbCrA</a>
+				<a class="permalink" href="index.html#NYCbCrA">&#xb6;</a>
+				
+				
+			</h2>
+			<p>NYCbCrA represents a non-alpha-premultiplied Y&apos;CbCr-with-alpha color, having
+8 bits each for one luma, two chroma and one alpha component.
+
+			<pre>type NYCbCrA struct {
+    <a href="index.html#YCbCr">YCbCr</a>
+<span id="NYCbCrA.A"></span>    A <a href="../../builtin/index.html#uint8">uint8</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="NYCbCrA.RGBA">func (NYCbCrA) <a href="../../../src/image/color/ycbcr.go?s=7921:7977#L237">RGBA</a>
+					<a class="permalink" href="index.html#NYCbCrA.RGBA">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c <a href="index.html#NYCbCrA">NYCbCrA</a>) RGBA() (<a href="../../builtin/index.html#uint32">uint32</a>, <a href="../../builtin/index.html#uint32">uint32</a>, <a href="../../builtin/index.html#uint32">uint32</a>, <a href="../../builtin/index.html#uint32">uint32</a>)</pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Palette">type <a href="../../../src/image/color/color.go?s=6543:6563#L270">Palette</a>
+				<a class="permalink" href="index.html#Palette">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Palette is a palette of colors.
+
+			<pre>type Palette []<a href="index.html#Color">Color</a></pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="Palette.Convert">func (Palette) <a href="../../../src/image/color/color.go?s=6641:6680#L273">Convert</a>
+					<a class="permalink" href="index.html#Palette.Convert">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p <a href="index.html#Palette">Palette</a>) Convert(c <a href="index.html#Color">Color</a>) <a href="index.html#Color">Color</a></pre>
+				<p>Convert returns the palette color closest to c in Euclidean R,G,B space.
+
+				
+				
+				
+			
+				
+				<h3 id="Palette.Index">func (Palette) <a href="../../../src/image/color/color.go?s=6834:6869#L282">Index</a>
+					<a class="permalink" href="index.html#Palette.Index">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p <a href="index.html#Palette">Palette</a>) Index(c <a href="index.html#Color">Color</a>) <a href="../../builtin/index.html#int">int</a></pre>
+				<p>Index returns the index of the palette color closest to c in Euclidean
+R,G,B,A space.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="RGBA">type <a href="../../../src/image/color/color.go?s=983:1021#L16">RGBA</a>
+				<a class="permalink" href="index.html#RGBA">&#xb6;</a>
+				
+				
+			</h2>
+			<p>RGBA represents a traditional 32-bit alpha-premultiplied color, having 8
+bits for each of red, green, blue and alpha.
+<p>An alpha-premultiplied color component C has been scaled by alpha (A), so
+has valid values 0 &lt;= C &lt;= A.
+
+			<pre>type RGBA struct {
+<span id="RGBA.R"></span>    R, G, B, A <a href="../../builtin/index.html#uint8">uint8</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="RGBA.RGBA">func (RGBA) <a href="../../../src/image/color/color.go?s=1023:1063#L20">RGBA</a>
+					<a class="permalink" href="index.html#RGBA.RGBA">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c <a href="index.html#RGBA">RGBA</a>) RGBA() (r, g, b, a <a href="../../builtin/index.html#uint32">uint32</a>)</pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="RGBA64">type <a href="../../../src/image/color/color.go?s=1425:1466#L37">RGBA64</a>
+				<a class="permalink" href="index.html#RGBA64">&#xb6;</a>
+				
+				
+			</h2>
+			<p>RGBA64 represents a 64-bit alpha-premultiplied color, having 16 bits for
+each of red, green, blue and alpha.
+<p>An alpha-premultiplied color component C has been scaled by alpha (A), so
+has valid values 0 &lt;= C &lt;= A.
+
+			<pre>type RGBA64 struct {
+<span id="RGBA64.R"></span>    R, G, B, A <a href="../../builtin/index.html#uint16">uint16</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="RGBA64.RGBA">func (RGBA64) <a href="../../../src/image/color/color.go?s=1468:1510#L41">RGBA</a>
+					<a class="permalink" href="index.html#RGBA64.RGBA">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c <a href="index.html#RGBA64">RGBA64</a>) RGBA() (r, g, b, a <a href="../../builtin/index.html#uint32">uint32</a>)</pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="YCbCr">type <a href="../../../src/image/color/ycbcr.go?s=5890:5928#L157">YCbCr</a>
+				<a class="permalink" href="index.html#YCbCr">&#xb6;</a>
+				
+				
+			</h2>
+			<p>YCbCr represents a fully opaque 24-bit Y&apos;CbCr color, having 8 bits each for
+one luma and two chroma components.
+<p>JPEG, VP8, the MPEG family and other codecs use this color model. Such
+codecs often use the terms YUV and Y&apos;CbCr interchangeably, but strictly
+speaking, the term YUV applies only to analog video signals, and Y&apos; (luma)
+is Y (luminance) after applying gamma correction.
+<p>Conversion between RGB and Y&apos;CbCr is lossy and there are multiple, slightly
+different formulae for converting between the two. This package follows
+the JFIF specification at <a href="https://www.w3.org/Graphics/JPEG/jfif3.pdf">https://www.w3.org/Graphics/JPEG/jfif3.pdf</a>.
+
+			<pre>type YCbCr struct {
+<span id="YCbCr.Y"></span>    Y, Cb, Cr <a href="../../builtin/index.html#uint8">uint8</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="YCbCr.RGBA">func (YCbCr) <a href="../../../src/image/color/ycbcr.go?s=5930:5984#L161">RGBA</a>
+					<a class="permalink" href="index.html#YCbCr.RGBA">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c <a href="index.html#YCbCr">YCbCr</a>) RGBA() (<a href="../../builtin/index.html#uint32">uint32</a>, <a href="../../builtin/index.html#uint32">uint32</a>, <a href="../../builtin/index.html#uint32">uint32</a>, <a href="../../builtin/index.html#uint32">uint32</a>)</pre>
+				
+				
+				
+				
+			
+		
+	
+
+	
+
+
+
+
+
+	
+	
+		<h2 id="pkg-subdirectories">Subdirectories</h2>
+	
+	<div class="pkg-dir">
+		<table>
+			<tr>
+				<th class="pkg-name">Name</th>
+				<th class="pkg-synopsis">Synopsis</th>
+			</tr>
+
+			
+			<tr>
+				<td colspan="2"><a href="../index.html">..</a></td>
+			</tr>
+			
+
+			
+				<tr>
+				
+					<td class="pkg-name" style="padding-left: 0px;">
+						<a href="palette/index.html">palette</a>
+					</td>
+				
+					<td class="pkg-synopsis">
+						Package palette provides standard color palettes.
+					</td>
+				</tr>
+			
+		</table>
+	</div>
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

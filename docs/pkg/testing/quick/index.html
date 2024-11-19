@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>quick - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package quick
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "testing/quick"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>Package quick implements utility functions to help with black box testing.
+<p>The testing/quick package is frozen and is not accepting new features.
+
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+			
+			
+				
+				<dd><a href="index.html#Check">func Check(f any, config *Config) error</a></dd>
+			
+				
+				<dd><a href="index.html#CheckEqual">func CheckEqual(f, g any, config *Config) error</a></dd>
+			
+				
+				<dd><a href="index.html#Value">func Value(t reflect.Type, rand *rand.Rand) (value reflect.Value, ok bool)</a></dd>
+			
+			
+				
+				<dd><a href="index.html#CheckEqualError">type CheckEqualError</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#CheckEqualError.Error">func (s *CheckEqualError) Error() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#CheckError">type CheckError</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#CheckError.Error">func (s *CheckError) Error() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Config">type Config</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#Generator">type Generator</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#SetupError">type SetupError</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#SetupError.Error">func (s SetupError) Error() string</a></dd>
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../../src/testing/quick/quick.go">quick.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+		
+		
+			
+			
+			<h2 id="Check">func <a href="../../../src/testing/quick/quick.go?s=7458:7497#L253">Check</a>
+				<a class="permalink" href="index.html#Check">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Check(f <a href="../../builtin/index.html#any">any</a>, config *<a href="index.html#Config">Config</a>) <a href="../../builtin/index.html#error">error</a></pre>
+			<p>Check looks for an input to f, any function that returns bool,
+such that f returns false. It calls f repeatedly, with arbitrary
+values for each argument. If f returns false on a given input,
+Check returns that input as a *<a href="index.html#CheckError">CheckError</a>.
+For example:
+<pre>func TestOddMultipleOfThree(t *testing.T) {
+	f := func(x int) bool {
+		y := OddMultipleOfThree(x)
+		return y%2 == 1 &amp;&amp; y%3 == 0
+	}
+	if err := quick.Check(f, nil); err != nil {
+		t.Error(err)
+	}
+}
+</pre>
+
+			
+			
+
+		
+			
+			
+			<h2 id="CheckEqual">func <a href="../../../src/testing/quick/quick.go?s=8465:8512#L292">CheckEqual</a>
+				<a class="permalink" href="index.html#CheckEqual">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func CheckEqual(f, g <a href="../../builtin/index.html#any">any</a>, config *<a href="index.html#Config">Config</a>) <a href="../../builtin/index.html#error">error</a></pre>
+			<p>CheckEqual looks for an input on which f and g return different results.
+It calls f and g repeatedly with arbitrary values for each argument.
+If f and g return different answers, CheckEqual returns a *<a href="index.html#CheckEqualError">CheckEqualError</a>
+describing the input and the outputs.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Value">func <a href="../../../src/testing/quick/quick.go?s=1620:1694#L49">Value</a>
+				<a class="permalink" href="index.html#Value">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Value(t <a href="../../reflect/index.html">reflect</a>.<a href="../../reflect/index.html#Type">Type</a>, rand *<a href="../../math/rand/index.html">rand</a>.<a href="../../math/rand/index.html#Rand">Rand</a>) (value <a href="../../reflect/index.html">reflect</a>.<a href="../../reflect/index.html#Value">Value</a>, ok <a href="../../builtin/index.html#bool">bool</a>)</pre>
+			<p>Value returns an arbitrary value of the given type.
+If the type implements the <a href="index.html#Generator">Generator</a> interface, that will be used.
+Note: To create arbitrary values for structs, all the fields must be exported.
+
+			
+			
+
+		
+		
+			
+			
+			<h2 id="CheckEqualError">type <a href="../../../src/testing/quick/quick.go?s=6717:6784#L228">CheckEqualError</a>
+				<a class="permalink" href="index.html#CheckEqualError">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A CheckEqualError is the result <a href="index.html#CheckEqual">CheckEqual</a> finding an error.
+
+			<pre>type CheckEqualError struct {
+    <a href="index.html#CheckError">CheckError</a>
+<span id="CheckEqualError.Out1"></span>    Out1 []<a href="../../builtin/index.html#any">any</a>
+<span id="CheckEqualError.Out2"></span>    Out2 []<a href="../../builtin/index.html#any">any</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="CheckEqualError.Error">func (*CheckEqualError) <a href="../../../src/testing/quick/quick.go?s=6786:6826#L234">Error</a>
+					<a class="permalink" href="index.html#CheckEqualError.Error">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (s *<a href="index.html#CheckEqualError">CheckEqualError</a>) Error() <a href="../../builtin/index.html#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="CheckError">type <a href="../../../src/testing/quick/quick.go?s=6486:6536#L218">CheckError</a>
+				<a class="permalink" href="index.html#CheckError">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A CheckError is the result of Check finding an error.
+
+			<pre>type CheckError struct {
+<span id="CheckError.Count"></span>    Count <a href="../../builtin/index.html#int">int</a>
+<span id="CheckError.In"></span>    In    []<a href="../../builtin/index.html#any">any</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="CheckError.Error">func (*CheckError) <a href="../../../src/testing/quick/quick.go?s=6538:6573#L223">Error</a>
+					<a class="permalink" href="index.html#CheckError.Error">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (s *<a href="index.html#CheckError">CheckError</a>) Error() <a href="../../builtin/index.html#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Config">type <a href="../../../src/testing/quick/quick.go?s=4942:5667#L167">Config</a>
+				<a class="permalink" href="index.html#Config">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A Config structure contains options for running a test.
+
+			<pre>type Config struct {
+<span id="Config.MaxCount"></span>    <span class="comment">// MaxCount sets the maximum number of iterations.</span>
+    <span class="comment">// If zero, MaxCountScale is used.</span>
+    MaxCount <a href="../../builtin/index.html#int">int</a>
+<span id="Config.MaxCountScale"></span>    <span class="comment">// MaxCountScale is a non-negative scale factor applied to the</span>
+    <span class="comment">// default maximum.</span>
+    <span class="comment">// A count of zero implies the default, which is usually 100</span>
+    <span class="comment">// but can be set by the -quickchecks flag.</span>
+    MaxCountScale <a href="../../builtin/index.html#float64">float64</a>
+<span id="Config.Rand"></span>    <span class="comment">// Rand specifies a source of random numbers.</span>
+    <span class="comment">// If nil, a default pseudo-random source will be used.</span>
+    Rand *<a href="../../math/rand/index.html">rand</a>.<a href="../../math/rand/index.html#Rand">Rand</a>
+<span id="Config.Values"></span>    <span class="comment">// Values specifies a function to generate a slice of</span>
+    <span class="comment">// arbitrary reflect.Values that are congruent with the</span>
+    <span class="comment">// arguments to the function being tested.</span>
+    <span class="comment">// If nil, the top-level Value function is used to generate them.</span>
+    Values func([]<a href="../../reflect/index.html">reflect</a>.<a href="../../reflect/index.html#Value">Value</a>, *<a href="../../math/rand/index.html">rand</a>.<a href="../../math/rand/index.html#Rand">Rand</a>)
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="Generator">type <a href="../../../src/testing/quick/quick.go?s=575:764#L13">Generator</a>
+				<a class="permalink" href="index.html#Generator">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A Generator can generate random values of its own type.
+
+			<pre>type Generator interface {
+    <span class="comment">// Generate returns a random instance of the type on which it is a</span>
+    <span class="comment">// method using the size as a size hint.</span>
+    Generate(rand *<a href="../../math/rand/index.html">rand</a>.<a href="../../math/rand/index.html#Rand">Rand</a>, size <a href="../../builtin/index.html#int">int</a>) <a href="../../reflect/index.html">reflect</a>.<a href="../../reflect/index.html#Value">Value</a>
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="SetupError">type <a href="../../../src/testing/quick/quick.go?s=6348:6370#L213">SetupError</a>
+				<a class="permalink" href="index.html#SetupError">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A SetupError is the result of an error in the way that check is being
+used, independent of the functions being tested.
+
+			<pre>type SetupError <a href="../../builtin/index.html#string">string</a></pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="SetupError.Error">func (SetupError) <a href="../../../src/testing/quick/quick.go?s=6372:6406#L215">Error</a>
+					<a class="permalink" href="index.html#SetupError.Error">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (s <a href="index.html#SetupError">SetupError</a>) Error() <a href="../../builtin/index.html#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+	
+
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

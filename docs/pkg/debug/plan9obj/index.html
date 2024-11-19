@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>plan9obj - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package plan9obj
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "debug/plan9obj"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>Package plan9obj implements access to Plan 9 a.out object files.
+<h3 id="hdr-Security">Security</h3>
+<p>This package is not designed to be hardened against adversarial inputs, and is
+outside the scope of <a href="https://go.dev/security/policy">https://go.dev/security/policy</a>. In particular, only basic
+validation is done when parsing object files. As such, care should be taken when
+parsing untrusted inputs, as parsing malformed files may consume significant
+resources, or cause panics.
+
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+				<dd><a href="index.html#pkg-constants">Constants</a></dd>
+			
+			
+				<dd><a href="index.html#pkg-variables">Variables</a></dd>
+			
+			
+			
+				
+				<dd><a href="index.html#File">type File</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewFile">func NewFile(r io.ReaderAt) (*File, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Open">func Open(name string) (*File, error)</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#File.Close">func (f *File) Close() error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#File.Section">func (f *File) Section(name string) *Section</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#File.Symbols">func (f *File) Symbols() ([]Sym, error)</a></dd>
+				
+			
+				
+				<dd><a href="index.html#FileHeader">type FileHeader</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#Section">type Section</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Section.Data">func (s *Section) Data() ([]byte, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Section.Open">func (s *Section) Open() io.ReadSeeker</a></dd>
+				
+			
+				
+				<dd><a href="index.html#SectionHeader">type SectionHeader</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#Sym">type Sym</a></dd>
+				
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../../src/debug/plan9obj/file.go">file.go</a>
+			
+				<a href="../../../src/debug/plan9obj/plan9obj.go">plan9obj.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+			<h2 id="pkg-constants">Constants</h2>
+			
+				
+				<pre>const (
+    <span id="Magic64">Magic64</span> = 0x8000 <span class="comment">// 64-bit expanded header</span>
+
+    <span id="Magic386">Magic386</span>   = (4*11+0)*11 + 7
+    <span id="MagicAMD64">MagicAMD64</span> = (4*26+0)*26 + 7 + <a href="index.html#Magic64">Magic64</a>
+    <span id="MagicARM">MagicARM</span>   = (4*20+0)*20 + 7
+)</pre>
+			
+		
+		
+			<h2 id="pkg-variables">Variables</h2>
+			
+				<p>ErrNoSymbols is returned by <a href="index.html#File.Symbols">File.Symbols</a> if there is no such section
+in the File.
+
+				<pre>var <span id="ErrNoSymbols">ErrNoSymbols</span> = <a href="../../errors/index.html">errors</a>.<a href="../../errors/index.html#New">New</a>(&#34;no symbol section&#34;)</pre>
+			
+		
+		
+		
+			
+			
+			<h2 id="File">type <a href="../../../src/debug/plan9obj/file.go?s=934:1007#L28">File</a>
+				<a class="permalink" href="index.html#File">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A File represents an open Plan 9 a.out file.
+
+			<pre>type File struct {
+    <a href="index.html#FileHeader">FileHeader</a>
+<span id="File.Sections"></span>    Sections []*<a href="index.html#Section">Section</a>
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="NewFile">func <a href="../../../src/debug/plan9obj/file.go?s=3387:3429#L131">NewFile</a>
+					<a class="permalink" href="index.html#NewFile">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func NewFile(r <a href="../../io/index.html">io</a>.<a href="../../io/index.html#ReaderAt">ReaderAt</a>) (*<a href="index.html#File">File</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+				<p>NewFile creates a new <a href="index.html#File">File</a> for accessing a Plan 9 binary in an underlying reader.
+The Plan 9 binary is expected to start at position 0 in the ReaderAt.
+
+				
+				
+			
+				
+				<h3 id="Open">func <a href="../../../src/debug/plan9obj/file.go?s=2553:2590#L94">Open</a>
+					<a class="permalink" href="index.html#Open">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func Open(name <a href="../../builtin/index.html#string">string</a>) (*<a href="index.html#File">File</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+				<p>Open opens the named file using <a href="http://localhost:8080/os#Open">os.Open</a> and prepares it for use as a Plan 9 a.out binary.
+
+				
+				
+			
+
+			
+				
+				<h3 id="File.Close">func (*File) <a href="../../../src/debug/plan9obj/file.go?s=2888:2916#L111">Close</a>
+					<a class="permalink" href="index.html#File.Close">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (f *<a href="index.html#File">File</a>) Close() <a href="../../builtin/index.html#error">error</a></pre>
+				<p>Close closes the <a href="index.html#File">File</a>.
+If the <a href="index.html#File">File</a> was created using <a href="index.html#NewFile">NewFile</a> directly instead of <a href="index.html#Open">Open</a>,
+Close has no effect.
+
+				
+				
+				
+			
+				
+				<h3 id="File.Section">func (*File) <a href="../../../src/debug/plan9obj/file.go?s=7228:7272#L323">Section</a>
+					<a class="permalink" href="index.html#File.Section">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (f *<a href="index.html#File">File</a>) Section(name <a href="../../builtin/index.html#string">string</a>) *<a href="index.html#Section">Section</a></pre>
+				<p>Section returns a section with the given name, or nil if no such
+section exists.
+
+				
+				
+				
+			
+				
+				<h3 id="File.Symbols">func (*File) <a href="../../../src/debug/plan9obj/file.go?s=6853:6892#L307">Symbols</a>
+					<a class="permalink" href="index.html#File.Symbols">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (f *<a href="index.html#File">File</a>) Symbols() ([]<a href="index.html#Sym">Sym</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+				<p>Symbols returns the symbol table for f.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="FileHeader">type <a href="../../../src/debug/plan9obj/file.go?s=741:884#L18">FileHeader</a>
+				<a class="permalink" href="index.html#FileHeader">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A FileHeader represents a Plan 9 a.out file header.
+
+			<pre>type FileHeader struct {
+<span id="FileHeader.Magic"></span>    Magic       <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="FileHeader.Bss"></span>    Bss         <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="FileHeader.Entry"></span>    Entry       <a href="../../builtin/index.html#uint64">uint64</a>
+<span id="FileHeader.PtrSize"></span>    PtrSize     <a href="../../builtin/index.html#int">int</a>
+<span id="FileHeader.LoadAddress"></span>    LoadAddress <a href="../../builtin/index.html#uint64">uint64</a>
+<span id="FileHeader.HdrSize"></span>    HdrSize     <a href="../../builtin/index.html#uint64">uint64</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="Section">type <a href="../../../src/debug/plan9obj/file.go?s=1308:1617#L44">Section</a>
+				<a class="permalink" href="index.html#Section">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A Section represents a single section in a Plan 9 a.out file.
+
+			<pre>type Section struct {
+    <a href="index.html#SectionHeader">SectionHeader</a>
+
+    <span class="comment">// Embed ReaderAt for ReadAt method.</span>
+    <span class="comment">// Do not embed SectionReader directly</span>
+    <span class="comment">// to avoid having Read and Seek.</span>
+    <span class="comment">// If a client wants Read and Seek it must use</span>
+    <span class="comment">// Open() to avoid fighting over the seek offset</span>
+    <span class="comment">// with other clients.</span>
+    <a href="../../io/index.html">io</a>.<a href="../../io/index.html#ReaderAt">ReaderAt</a>
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="Section.Data">func (*Section) <a href="../../../src/debug/plan9obj/file.go?s=1687:1727#L58">Data</a>
+					<a class="permalink" href="index.html#Section.Data">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (s *<a href="index.html#Section">Section</a>) Data() ([]<a href="../../builtin/index.html#byte">byte</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+				<p>Data reads and returns the contents of the Plan 9 a.out section.
+
+				
+				
+				
+			
+				
+				<h3 id="Section.Open">func (*Section) <a href="../../../src/debug/plan9obj/file.go?s=1852:1890#L63">Open</a>
+					<a class="permalink" href="index.html#Section.Open">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (s *<a href="index.html#Section">Section</a>) Open() <a href="../../io/index.html">io</a>.<a href="../../io/index.html#ReadSeeker">ReadSeeker</a></pre>
+				<p>Open returns a new ReadSeeker reading the Plan 9 a.out section.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="SectionHeader">type <a href="../../../src/debug/plan9obj/file.go?s=1167:1241#L37">SectionHeader</a>
+				<a class="permalink" href="index.html#SectionHeader">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A SectionHeader represents a single Plan 9 a.out section header.
+This structure doesn&apos;t exist on-disk, but eases navigation
+through the object file.
+
+			<pre>type SectionHeader struct {
+<span id="SectionHeader.Name"></span>    Name   <a href="../../builtin/index.html#string">string</a>
+<span id="SectionHeader.Size"></span>    Size   <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="SectionHeader.Offset"></span>    Offset <a href="../../builtin/index.html#uint32">uint32</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="Sym">type <a href="../../../src/debug/plan9obj/file.go?s=2013:2072#L66">Sym</a>
+				<a class="permalink" href="index.html#Sym">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A Symbol represents an entry in a Plan 9 a.out symbol table section.
+
+			<pre>type Sym struct {
+<span id="Sym.Value"></span>    Value <a href="../../builtin/index.html#uint64">uint64</a>
+<span id="Sym.Type"></span>    Type  <a href="../../builtin/index.html#rune">rune</a>
+<span id="Sym.Name"></span>    Name  <a href="../../builtin/index.html#string">string</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+	
+
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

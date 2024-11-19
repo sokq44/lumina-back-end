@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>src/github.com/google/uuid/uuid.go - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../../index.html">GoDoc</a></div>
+<a href="./uuid.go?s=353:371#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Source file
+    <a href="http://localhost:8080/src">src</a>/<a href="http://localhost:8080/src/github.com">github.com</a>/<a href="http://localhost:8080/src/github.com/google">google</a>/<a href="http://localhost:8080/src/github.com/google/uuid">uuid</a>/<span class="text-muted">uuid.go</span>
+  </h1>
+
+
+
+
+
+  <h2>
+    Documentation: <a href="http://localhost:8080/pkg/github.com/google/uuid">github.com/google/uuid</a>
+  </h2>
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1&nbsp;&nbsp;</span><span class="comment">// Copyright 2018 Google Inc.  All rights reserved.</span>
+<span id="L2" class="ln">     2&nbsp;&nbsp;</span><span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3&nbsp;&nbsp;</span><span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4&nbsp;&nbsp;</span>
+<span id="L5" class="ln">     5&nbsp;&nbsp;</span>package uuid
+<span id="L6" class="ln">     6&nbsp;&nbsp;</span>
+<span id="L7" class="ln">     7&nbsp;&nbsp;</span>import (
+<span id="L8" class="ln">     8&nbsp;&nbsp;</span>	&#34;bytes&#34;
+<span id="L9" class="ln">     9&nbsp;&nbsp;</span>	&#34;crypto/rand&#34;
+<span id="L10" class="ln">    10&nbsp;&nbsp;</span>	&#34;encoding/hex&#34;
+<span id="L11" class="ln">    11&nbsp;&nbsp;</span>	&#34;errors&#34;
+<span id="L12" class="ln">    12&nbsp;&nbsp;</span>	&#34;fmt&#34;
+<span id="L13" class="ln">    13&nbsp;&nbsp;</span>	&#34;io&#34;
+<span id="L14" class="ln">    14&nbsp;&nbsp;</span>	&#34;strings&#34;
+<span id="L15" class="ln">    15&nbsp;&nbsp;</span>	&#34;sync&#34;
+<span id="L16" class="ln">    16&nbsp;&nbsp;</span>)
+<span id="L17" class="ln">    17&nbsp;&nbsp;</span>
+<span id="L18" class="ln">    18&nbsp;&nbsp;</span><span class="comment">// A UUID is a 128 bit (16 byte) Universal Unique IDentifier as defined in RFC</span>
+<span id="L19" class="ln">    19&nbsp;&nbsp;</span><span class="comment">// 4122.</span>
+<span id="L20" class="ln">    20&nbsp;&nbsp;</span><span class="selection">type UUID [16]byte</span>
+<span id="L21" class="ln">    21&nbsp;&nbsp;</span>
+<span id="L22" class="ln">    22&nbsp;&nbsp;</span><span class="comment">// A Version represents a UUID&#39;s version.</span>
+<span id="L23" class="ln">    23&nbsp;&nbsp;</span>type Version byte
+<span id="L24" class="ln">    24&nbsp;&nbsp;</span>
+<span id="L25" class="ln">    25&nbsp;&nbsp;</span><span class="comment">// A Variant represents a UUID&#39;s variant.</span>
+<span id="L26" class="ln">    26&nbsp;&nbsp;</span>type Variant byte
+<span id="L27" class="ln">    27&nbsp;&nbsp;</span>
+<span id="L28" class="ln">    28&nbsp;&nbsp;</span><span class="comment">// Constants returned by Variant.</span>
+<span id="L29" class="ln">    29&nbsp;&nbsp;</span>const (
+<span id="L30" class="ln">    30&nbsp;&nbsp;</span>	Invalid   = Variant(iota) <span class="comment">// Invalid UUID</span>
+<span id="L31" class="ln">    31&nbsp;&nbsp;</span>	RFC4122                   <span class="comment">// The variant specified in RFC4122</span>
+<span id="L32" class="ln">    32&nbsp;&nbsp;</span>	Reserved                  <span class="comment">// Reserved, NCS backward compatibility.</span>
+<span id="L33" class="ln">    33&nbsp;&nbsp;</span>	Microsoft                 <span class="comment">// Reserved, Microsoft Corporation backward compatibility.</span>
+<span id="L34" class="ln">    34&nbsp;&nbsp;</span>	Future                    <span class="comment">// Reserved for future definition.</span>
+<span id="L35" class="ln">    35&nbsp;&nbsp;</span>)
+<span id="L36" class="ln">    36&nbsp;&nbsp;</span>
+<span id="L37" class="ln">    37&nbsp;&nbsp;</span>const randPoolSize = 16 * 16
+<span id="L38" class="ln">    38&nbsp;&nbsp;</span>
+<span id="L39" class="ln">    39&nbsp;&nbsp;</span>var (
+<span id="L40" class="ln">    40&nbsp;&nbsp;</span>	rander      = rand.Reader <span class="comment">// random function</span>
+<span id="L41" class="ln">    41&nbsp;&nbsp;</span>	poolEnabled = false
+<span id="L42" class="ln">    42&nbsp;&nbsp;</span>	poolMu      sync.Mutex
+<span id="L43" class="ln">    43&nbsp;&nbsp;</span>	poolPos     = randPoolSize     <span class="comment">// protected with poolMu</span>
+<span id="L44" class="ln">    44&nbsp;&nbsp;</span>	pool        [randPoolSize]byte <span class="comment">// protected with poolMu</span>
+<span id="L45" class="ln">    45&nbsp;&nbsp;</span>)
+<span id="L46" class="ln">    46&nbsp;&nbsp;</span>
+<span id="L47" class="ln">    47&nbsp;&nbsp;</span>type invalidLengthError struct{ len int }
+<span id="L48" class="ln">    48&nbsp;&nbsp;</span>
+<span id="L49" class="ln">    49&nbsp;&nbsp;</span>func (err invalidLengthError) Error() string {
+<span id="L50" class="ln">    50&nbsp;&nbsp;</span>	return fmt.Sprintf(&#34;invalid UUID length: %d&#34;, err.len)
+<span id="L51" class="ln">    51&nbsp;&nbsp;</span>}
+<span id="L52" class="ln">    52&nbsp;&nbsp;</span>
+<span id="L53" class="ln">    53&nbsp;&nbsp;</span><span class="comment">// IsInvalidLengthError is matcher function for custom error invalidLengthError</span>
+<span id="L54" class="ln">    54&nbsp;&nbsp;</span>func IsInvalidLengthError(err error) bool {
+<span id="L55" class="ln">    55&nbsp;&nbsp;</span>	_, ok := err.(invalidLengthError)
+<span id="L56" class="ln">    56&nbsp;&nbsp;</span>	return ok
+<span id="L57" class="ln">    57&nbsp;&nbsp;</span>}
+<span id="L58" class="ln">    58&nbsp;&nbsp;</span>
+<span id="L59" class="ln">    59&nbsp;&nbsp;</span><span class="comment">// Parse decodes s into a UUID or returns an error if it cannot be parsed.  Both</span>
+<span id="L60" class="ln">    60&nbsp;&nbsp;</span><span class="comment">// the standard UUID forms defined in RFC 4122</span>
+<span id="L61" class="ln">    61&nbsp;&nbsp;</span><span class="comment">// (xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx and</span>
+<span id="L62" class="ln">    62&nbsp;&nbsp;</span><span class="comment">// urn:uuid:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx) are decoded.  In addition,</span>
+<span id="L63" class="ln">    63&nbsp;&nbsp;</span><span class="comment">// Parse accepts non-standard strings such as the raw hex encoding</span>
+<span id="L64" class="ln">    64&nbsp;&nbsp;</span><span class="comment">// xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx and 38 byte &#34;Microsoft style&#34; encodings,</span>
+<span id="L65" class="ln">    65&nbsp;&nbsp;</span><span class="comment">// e.g.  {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}.  Only the middle 36 bytes are</span>
+<span id="L66" class="ln">    66&nbsp;&nbsp;</span><span class="comment">// examined in the latter case.  Parse should not be used to validate strings as</span>
+<span id="L67" class="ln">    67&nbsp;&nbsp;</span><span class="comment">// it parses non-standard encodings as indicated above.</span>
+<span id="L68" class="ln">    68&nbsp;&nbsp;</span>func Parse(s string) (UUID, error) {
+<span id="L69" class="ln">    69&nbsp;&nbsp;</span>	var uuid UUID
+<span id="L70" class="ln">    70&nbsp;&nbsp;</span>	switch len(s) {
+<span id="L71" class="ln">    71&nbsp;&nbsp;</span>	<span class="comment">// xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</span>
+<span id="L72" class="ln">    72&nbsp;&nbsp;</span>	case 36:
+<span id="L73" class="ln">    73&nbsp;&nbsp;</span>
+<span id="L74" class="ln">    74&nbsp;&nbsp;</span>	<span class="comment">// urn:uuid:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</span>
+<span id="L75" class="ln">    75&nbsp;&nbsp;</span>	case 36 + 9:
+<span id="L76" class="ln">    76&nbsp;&nbsp;</span>		if !strings.EqualFold(s[:9], &#34;urn:uuid:&#34;) {
+<span id="L77" class="ln">    77&nbsp;&nbsp;</span>			return uuid, fmt.Errorf(&#34;invalid urn prefix: %q&#34;, s[:9])
+<span id="L78" class="ln">    78&nbsp;&nbsp;</span>		}
+<span id="L79" class="ln">    79&nbsp;&nbsp;</span>		s = s[9:]
+<span id="L80" class="ln">    80&nbsp;&nbsp;</span>
+<span id="L81" class="ln">    81&nbsp;&nbsp;</span>	<span class="comment">// {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}</span>
+<span id="L82" class="ln">    82&nbsp;&nbsp;</span>	case 36 + 2:
+<span id="L83" class="ln">    83&nbsp;&nbsp;</span>		s = s[1:]
+<span id="L84" class="ln">    84&nbsp;&nbsp;</span>
+<span id="L85" class="ln">    85&nbsp;&nbsp;</span>	<span class="comment">// xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</span>
+<span id="L86" class="ln">    86&nbsp;&nbsp;</span>	case 32:
+<span id="L87" class="ln">    87&nbsp;&nbsp;</span>		var ok bool
+<span id="L88" class="ln">    88&nbsp;&nbsp;</span>		for i := range uuid {
+<span id="L89" class="ln">    89&nbsp;&nbsp;</span>			uuid[i], ok = xtob(s[i*2], s[i*2+1])
+<span id="L90" class="ln">    90&nbsp;&nbsp;</span>			if !ok {
+<span id="L91" class="ln">    91&nbsp;&nbsp;</span>				return uuid, errors.New(&#34;invalid UUID format&#34;)
+<span id="L92" class="ln">    92&nbsp;&nbsp;</span>			}
+<span id="L93" class="ln">    93&nbsp;&nbsp;</span>		}
+<span id="L94" class="ln">    94&nbsp;&nbsp;</span>		return uuid, nil
+<span id="L95" class="ln">    95&nbsp;&nbsp;</span>	default:
+<span id="L96" class="ln">    96&nbsp;&nbsp;</span>		return uuid, invalidLengthError{len(s)}
+<span id="L97" class="ln">    97&nbsp;&nbsp;</span>	}
+<span id="L98" class="ln">    98&nbsp;&nbsp;</span>	<span class="comment">// s is now at least 36 bytes long</span>
+<span id="L99" class="ln">    99&nbsp;&nbsp;</span>	<span class="comment">// it must be of the form  xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</span>
+<span id="L100" class="ln">   100&nbsp;&nbsp;</span>	if s[8] != &#39;-&#39; || s[13] != &#39;-&#39; || s[18] != &#39;-&#39; || s[23] != &#39;-&#39; {
+<span id="L101" class="ln">   101&nbsp;&nbsp;</span>		return uuid, errors.New(&#34;invalid UUID format&#34;)
+<span id="L102" class="ln">   102&nbsp;&nbsp;</span>	}
+<span id="L103" class="ln">   103&nbsp;&nbsp;</span>	for i, x := range [16]int{
+<span id="L104" class="ln">   104&nbsp;&nbsp;</span>		0, 2, 4, 6,
+<span id="L105" class="ln">   105&nbsp;&nbsp;</span>		9, 11,
+<span id="L106" class="ln">   106&nbsp;&nbsp;</span>		14, 16,
+<span id="L107" class="ln">   107&nbsp;&nbsp;</span>		19, 21,
+<span id="L108" class="ln">   108&nbsp;&nbsp;</span>		24, 26, 28, 30, 32, 34,
+<span id="L109" class="ln">   109&nbsp;&nbsp;</span>	} {
+<span id="L110" class="ln">   110&nbsp;&nbsp;</span>		v, ok := xtob(s[x], s[x+1])
+<span id="L111" class="ln">   111&nbsp;&nbsp;</span>		if !ok {
+<span id="L112" class="ln">   112&nbsp;&nbsp;</span>			return uuid, errors.New(&#34;invalid UUID format&#34;)
+<span id="L113" class="ln">   113&nbsp;&nbsp;</span>		}
+<span id="L114" class="ln">   114&nbsp;&nbsp;</span>		uuid[i] = v
+<span id="L115" class="ln">   115&nbsp;&nbsp;</span>	}
+<span id="L116" class="ln">   116&nbsp;&nbsp;</span>	return uuid, nil
+<span id="L117" class="ln">   117&nbsp;&nbsp;</span>}
+<span id="L118" class="ln">   118&nbsp;&nbsp;</span>
+<span id="L119" class="ln">   119&nbsp;&nbsp;</span><span class="comment">// ParseBytes is like Parse, except it parses a byte slice instead of a string.</span>
+<span id="L120" class="ln">   120&nbsp;&nbsp;</span>func ParseBytes(b []byte) (UUID, error) {
+<span id="L121" class="ln">   121&nbsp;&nbsp;</span>	var uuid UUID
+<span id="L122" class="ln">   122&nbsp;&nbsp;</span>	switch len(b) {
+<span id="L123" class="ln">   123&nbsp;&nbsp;</span>	case 36: <span class="comment">// xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</span>
+<span id="L124" class="ln">   124&nbsp;&nbsp;</span>	case 36 + 9: <span class="comment">// urn:uuid:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</span>
+<span id="L125" class="ln">   125&nbsp;&nbsp;</span>		if !bytes.EqualFold(b[:9], []byte(&#34;urn:uuid:&#34;)) {
+<span id="L126" class="ln">   126&nbsp;&nbsp;</span>			return uuid, fmt.Errorf(&#34;invalid urn prefix: %q&#34;, b[:9])
+<span id="L127" class="ln">   127&nbsp;&nbsp;</span>		}
+<span id="L128" class="ln">   128&nbsp;&nbsp;</span>		b = b[9:]
+<span id="L129" class="ln">   129&nbsp;&nbsp;</span>	case 36 + 2: <span class="comment">// {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}</span>
+<span id="L130" class="ln">   130&nbsp;&nbsp;</span>		b = b[1:]
+<span id="L131" class="ln">   131&nbsp;&nbsp;</span>	case 32: <span class="comment">// xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</span>
+<span id="L132" class="ln">   132&nbsp;&nbsp;</span>		var ok bool
+<span id="L133" class="ln">   133&nbsp;&nbsp;</span>		for i := 0; i &lt; 32; i += 2 {
+<span id="L134" class="ln">   134&nbsp;&nbsp;</span>			uuid[i/2], ok = xtob(b[i], b[i+1])
+<span id="L135" class="ln">   135&nbsp;&nbsp;</span>			if !ok {
+<span id="L136" class="ln">   136&nbsp;&nbsp;</span>				return uuid, errors.New(&#34;invalid UUID format&#34;)
+<span id="L137" class="ln">   137&nbsp;&nbsp;</span>			}
+<span id="L138" class="ln">   138&nbsp;&nbsp;</span>		}
+<span id="L139" class="ln">   139&nbsp;&nbsp;</span>		return uuid, nil
+<span id="L140" class="ln">   140&nbsp;&nbsp;</span>	default:
+<span id="L141" class="ln">   141&nbsp;&nbsp;</span>		return uuid, invalidLengthError{len(b)}
+<span id="L142" class="ln">   142&nbsp;&nbsp;</span>	}
+<span id="L143" class="ln">   143&nbsp;&nbsp;</span>	<span class="comment">// s is now at least 36 bytes long</span>
+<span id="L144" class="ln">   144&nbsp;&nbsp;</span>	<span class="comment">// it must be of the form  xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</span>
+<span id="L145" class="ln">   145&nbsp;&nbsp;</span>	if b[8] != &#39;-&#39; || b[13] != &#39;-&#39; || b[18] != &#39;-&#39; || b[23] != &#39;-&#39; {
+<span id="L146" class="ln">   146&nbsp;&nbsp;</span>		return uuid, errors.New(&#34;invalid UUID format&#34;)
+<span id="L147" class="ln">   147&nbsp;&nbsp;</span>	}
+<span id="L148" class="ln">   148&nbsp;&nbsp;</span>	for i, x := range [16]int{
+<span id="L149" class="ln">   149&nbsp;&nbsp;</span>		0, 2, 4, 6,
+<span id="L150" class="ln">   150&nbsp;&nbsp;</span>		9, 11,
+<span id="L151" class="ln">   151&nbsp;&nbsp;</span>		14, 16,
+<span id="L152" class="ln">   152&nbsp;&nbsp;</span>		19, 21,
+<span id="L153" class="ln">   153&nbsp;&nbsp;</span>		24, 26, 28, 30, 32, 34,
+<span id="L154" class="ln">   154&nbsp;&nbsp;</span>	} {
+<span id="L155" class="ln">   155&nbsp;&nbsp;</span>		v, ok := xtob(b[x], b[x+1])
+<span id="L156" class="ln">   156&nbsp;&nbsp;</span>		if !ok {
+<span id="L157" class="ln">   157&nbsp;&nbsp;</span>			return uuid, errors.New(&#34;invalid UUID format&#34;)
+<span id="L158" class="ln">   158&nbsp;&nbsp;</span>		}
+<span id="L159" class="ln">   159&nbsp;&nbsp;</span>		uuid[i] = v
+<span id="L160" class="ln">   160&nbsp;&nbsp;</span>	}
+<span id="L161" class="ln">   161&nbsp;&nbsp;</span>	return uuid, nil
+<span id="L162" class="ln">   162&nbsp;&nbsp;</span>}
+<span id="L163" class="ln">   163&nbsp;&nbsp;</span>
+<span id="L164" class="ln">   164&nbsp;&nbsp;</span><span class="comment">// MustParse is like Parse but panics if the string cannot be parsed.</span>
+<span id="L165" class="ln">   165&nbsp;&nbsp;</span><span class="comment">// It simplifies safe initialization of global variables holding compiled UUIDs.</span>
+<span id="L166" class="ln">   166&nbsp;&nbsp;</span>func MustParse(s string) UUID {
+<span id="L167" class="ln">   167&nbsp;&nbsp;</span>	uuid, err := Parse(s)
+<span id="L168" class="ln">   168&nbsp;&nbsp;</span>	if err != nil {
+<span id="L169" class="ln">   169&nbsp;&nbsp;</span>		panic(`uuid: Parse(` + s + `): ` + err.Error())
+<span id="L170" class="ln">   170&nbsp;&nbsp;</span>	}
+<span id="L171" class="ln">   171&nbsp;&nbsp;</span>	return uuid
+<span id="L172" class="ln">   172&nbsp;&nbsp;</span>}
+<span id="L173" class="ln">   173&nbsp;&nbsp;</span>
+<span id="L174" class="ln">   174&nbsp;&nbsp;</span><span class="comment">// FromBytes creates a new UUID from a byte slice. Returns an error if the slice</span>
+<span id="L175" class="ln">   175&nbsp;&nbsp;</span><span class="comment">// does not have a length of 16. The bytes are copied from the slice.</span>
+<span id="L176" class="ln">   176&nbsp;&nbsp;</span>func FromBytes(b []byte) (uuid UUID, err error) {
+<span id="L177" class="ln">   177&nbsp;&nbsp;</span>	err = uuid.UnmarshalBinary(b)
+<span id="L178" class="ln">   178&nbsp;&nbsp;</span>	return uuid, err
+<span id="L179" class="ln">   179&nbsp;&nbsp;</span>}
+<span id="L180" class="ln">   180&nbsp;&nbsp;</span>
+<span id="L181" class="ln">   181&nbsp;&nbsp;</span><span class="comment">// Must returns uuid if err is nil and panics otherwise.</span>
+<span id="L182" class="ln">   182&nbsp;&nbsp;</span>func Must(uuid UUID, err error) UUID {
+<span id="L183" class="ln">   183&nbsp;&nbsp;</span>	if err != nil {
+<span id="L184" class="ln">   184&nbsp;&nbsp;</span>		panic(err)
+<span id="L185" class="ln">   185&nbsp;&nbsp;</span>	}
+<span id="L186" class="ln">   186&nbsp;&nbsp;</span>	return uuid
+<span id="L187" class="ln">   187&nbsp;&nbsp;</span>}
+<span id="L188" class="ln">   188&nbsp;&nbsp;</span>
+<span id="L189" class="ln">   189&nbsp;&nbsp;</span><span class="comment">// Validate returns an error if s is not a properly formatted UUID in one of the following formats:</span>
+<span id="L190" class="ln">   190&nbsp;&nbsp;</span><span class="comment">//   xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</span>
+<span id="L191" class="ln">   191&nbsp;&nbsp;</span><span class="comment">//   urn:uuid:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</span>
+<span id="L192" class="ln">   192&nbsp;&nbsp;</span><span class="comment">//   xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</span>
+<span id="L193" class="ln">   193&nbsp;&nbsp;</span><span class="comment">//   {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}</span>
+<span id="L194" class="ln">   194&nbsp;&nbsp;</span><span class="comment">// It returns an error if the format is invalid, otherwise nil.</span>
+<span id="L195" class="ln">   195&nbsp;&nbsp;</span>func Validate(s string) error {
+<span id="L196" class="ln">   196&nbsp;&nbsp;</span>	switch len(s) {
+<span id="L197" class="ln">   197&nbsp;&nbsp;</span>	<span class="comment">// Standard UUID format</span>
+<span id="L198" class="ln">   198&nbsp;&nbsp;</span>	case 36:
+<span id="L199" class="ln">   199&nbsp;&nbsp;</span>
+<span id="L200" class="ln">   200&nbsp;&nbsp;</span>	<span class="comment">// UUID with &#34;urn:uuid:&#34; prefix</span>
+<span id="L201" class="ln">   201&nbsp;&nbsp;</span>	case 36 + 9:
+<span id="L202" class="ln">   202&nbsp;&nbsp;</span>		if !strings.EqualFold(s[:9], &#34;urn:uuid:&#34;) {
+<span id="L203" class="ln">   203&nbsp;&nbsp;</span>			return fmt.Errorf(&#34;invalid urn prefix: %q&#34;, s[:9])
+<span id="L204" class="ln">   204&nbsp;&nbsp;</span>		}
+<span id="L205" class="ln">   205&nbsp;&nbsp;</span>		s = s[9:]
+<span id="L206" class="ln">   206&nbsp;&nbsp;</span>
+<span id="L207" class="ln">   207&nbsp;&nbsp;</span>	<span class="comment">// UUID enclosed in braces</span>
+<span id="L208" class="ln">   208&nbsp;&nbsp;</span>	case 36 + 2:
+<span id="L209" class="ln">   209&nbsp;&nbsp;</span>		if s[0] != &#39;{&#39; || s[len(s)-1] != &#39;}&#39; {
+<span id="L210" class="ln">   210&nbsp;&nbsp;</span>			return fmt.Errorf(&#34;invalid bracketed UUID format&#34;)
+<span id="L211" class="ln">   211&nbsp;&nbsp;</span>		}
+<span id="L212" class="ln">   212&nbsp;&nbsp;</span>		s = s[1 : len(s)-1]
+<span id="L213" class="ln">   213&nbsp;&nbsp;</span>
+<span id="L214" class="ln">   214&nbsp;&nbsp;</span>	<span class="comment">// UUID without hyphens</span>
+<span id="L215" class="ln">   215&nbsp;&nbsp;</span>	case 32:
+<span id="L216" class="ln">   216&nbsp;&nbsp;</span>		for i := 0; i &lt; len(s); i += 2 {
+<span id="L217" class="ln">   217&nbsp;&nbsp;</span>			_, ok := xtob(s[i], s[i+1])
+<span id="L218" class="ln">   218&nbsp;&nbsp;</span>			if !ok {
+<span id="L219" class="ln">   219&nbsp;&nbsp;</span>				return errors.New(&#34;invalid UUID format&#34;)
+<span id="L220" class="ln">   220&nbsp;&nbsp;</span>			}
+<span id="L221" class="ln">   221&nbsp;&nbsp;</span>		}
+<span id="L222" class="ln">   222&nbsp;&nbsp;</span>
+<span id="L223" class="ln">   223&nbsp;&nbsp;</span>	default:
+<span id="L224" class="ln">   224&nbsp;&nbsp;</span>		return invalidLengthError{len(s)}
+<span id="L225" class="ln">   225&nbsp;&nbsp;</span>	}
+<span id="L226" class="ln">   226&nbsp;&nbsp;</span>
+<span id="L227" class="ln">   227&nbsp;&nbsp;</span>	<span class="comment">// Check for standard UUID format</span>
+<span id="L228" class="ln">   228&nbsp;&nbsp;</span>	if len(s) == 36 {
+<span id="L229" class="ln">   229&nbsp;&nbsp;</span>		if s[8] != &#39;-&#39; || s[13] != &#39;-&#39; || s[18] != &#39;-&#39; || s[23] != &#39;-&#39; {
+<span id="L230" class="ln">   230&nbsp;&nbsp;</span>			return errors.New(&#34;invalid UUID format&#34;)
+<span id="L231" class="ln">   231&nbsp;&nbsp;</span>		}
+<span id="L232" class="ln">   232&nbsp;&nbsp;</span>		for _, x := range []int{0, 2, 4, 6, 9, 11, 14, 16, 19, 21, 24, 26, 28, 30, 32, 34} {
+<span id="L233" class="ln">   233&nbsp;&nbsp;</span>			if _, ok := xtob(s[x], s[x+1]); !ok {
+<span id="L234" class="ln">   234&nbsp;&nbsp;</span>				return errors.New(&#34;invalid UUID format&#34;)
+<span id="L235" class="ln">   235&nbsp;&nbsp;</span>			}
+<span id="L236" class="ln">   236&nbsp;&nbsp;</span>		}
+<span id="L237" class="ln">   237&nbsp;&nbsp;</span>	}
+<span id="L238" class="ln">   238&nbsp;&nbsp;</span>
+<span id="L239" class="ln">   239&nbsp;&nbsp;</span>	return nil
+<span id="L240" class="ln">   240&nbsp;&nbsp;</span>}
+<span id="L241" class="ln">   241&nbsp;&nbsp;</span>
+<span id="L242" class="ln">   242&nbsp;&nbsp;</span><span class="comment">// String returns the string form of uuid, xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</span>
+<span id="L243" class="ln">   243&nbsp;&nbsp;</span><span class="comment">// , or &#34;&#34; if uuid is invalid.</span>
+<span id="L244" class="ln">   244&nbsp;&nbsp;</span>func (uuid UUID) String() string {
+<span id="L245" class="ln">   245&nbsp;&nbsp;</span>	var buf [36]byte
+<span id="L246" class="ln">   246&nbsp;&nbsp;</span>	encodeHex(buf[:], uuid)
+<span id="L247" class="ln">   247&nbsp;&nbsp;</span>	return string(buf[:])
+<span id="L248" class="ln">   248&nbsp;&nbsp;</span>}
+<span id="L249" class="ln">   249&nbsp;&nbsp;</span>
+<span id="L250" class="ln">   250&nbsp;&nbsp;</span><span class="comment">// URN returns the RFC 2141 URN form of uuid,</span>
+<span id="L251" class="ln">   251&nbsp;&nbsp;</span><span class="comment">// urn:uuid:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx,  or &#34;&#34; if uuid is invalid.</span>
+<span id="L252" class="ln">   252&nbsp;&nbsp;</span>func (uuid UUID) URN() string {
+<span id="L253" class="ln">   253&nbsp;&nbsp;</span>	var buf [36 + 9]byte
+<span id="L254" class="ln">   254&nbsp;&nbsp;</span>	copy(buf[:], &#34;urn:uuid:&#34;)
+<span id="L255" class="ln">   255&nbsp;&nbsp;</span>	encodeHex(buf[9:], uuid)
+<span id="L256" class="ln">   256&nbsp;&nbsp;</span>	return string(buf[:])
+<span id="L257" class="ln">   257&nbsp;&nbsp;</span>}
+<span id="L258" class="ln">   258&nbsp;&nbsp;</span>
+<span id="L259" class="ln">   259&nbsp;&nbsp;</span>func encodeHex(dst []byte, uuid UUID) {
+<span id="L260" class="ln">   260&nbsp;&nbsp;</span>	hex.Encode(dst, uuid[:4])
+<span id="L261" class="ln">   261&nbsp;&nbsp;</span>	dst[8] = &#39;-&#39;
+<span id="L262" class="ln">   262&nbsp;&nbsp;</span>	hex.Encode(dst[9:13], uuid[4:6])
+<span id="L263" class="ln">   263&nbsp;&nbsp;</span>	dst[13] = &#39;-&#39;
+<span id="L264" class="ln">   264&nbsp;&nbsp;</span>	hex.Encode(dst[14:18], uuid[6:8])
+<span id="L265" class="ln">   265&nbsp;&nbsp;</span>	dst[18] = &#39;-&#39;
+<span id="L266" class="ln">   266&nbsp;&nbsp;</span>	hex.Encode(dst[19:23], uuid[8:10])
+<span id="L267" class="ln">   267&nbsp;&nbsp;</span>	dst[23] = &#39;-&#39;
+<span id="L268" class="ln">   268&nbsp;&nbsp;</span>	hex.Encode(dst[24:], uuid[10:])
+<span id="L269" class="ln">   269&nbsp;&nbsp;</span>}
+<span id="L270" class="ln">   270&nbsp;&nbsp;</span>
+<span id="L271" class="ln">   271&nbsp;&nbsp;</span><span class="comment">// Variant returns the variant encoded in uuid.</span>
+<span id="L272" class="ln">   272&nbsp;&nbsp;</span>func (uuid UUID) Variant() Variant {
+<span id="L273" class="ln">   273&nbsp;&nbsp;</span>	switch {
+<span id="L274" class="ln">   274&nbsp;&nbsp;</span>	case (uuid[8] &amp; 0xc0) == 0x80:
+<span id="L275" class="ln">   275&nbsp;&nbsp;</span>		return RFC4122
+<span id="L276" class="ln">   276&nbsp;&nbsp;</span>	case (uuid[8] &amp; 0xe0) == 0xc0:
+<span id="L277" class="ln">   277&nbsp;&nbsp;</span>		return Microsoft
+<span id="L278" class="ln">   278&nbsp;&nbsp;</span>	case (uuid[8] &amp; 0xe0) == 0xe0:
+<span id="L279" class="ln">   279&nbsp;&nbsp;</span>		return Future
+<span id="L280" class="ln">   280&nbsp;&nbsp;</span>	default:
+<span id="L281" class="ln">   281&nbsp;&nbsp;</span>		return Reserved
+<span id="L282" class="ln">   282&nbsp;&nbsp;</span>	}
+<span id="L283" class="ln">   283&nbsp;&nbsp;</span>}
+<span id="L284" class="ln">   284&nbsp;&nbsp;</span>
+<span id="L285" class="ln">   285&nbsp;&nbsp;</span><span class="comment">// Version returns the version of uuid.</span>
+<span id="L286" class="ln">   286&nbsp;&nbsp;</span>func (uuid UUID) Version() Version {
+<span id="L287" class="ln">   287&nbsp;&nbsp;</span>	return Version(uuid[6] &gt;&gt; 4)
+<span id="L288" class="ln">   288&nbsp;&nbsp;</span>}
+<span id="L289" class="ln">   289&nbsp;&nbsp;</span>
+<span id="L290" class="ln">   290&nbsp;&nbsp;</span>func (v Version) String() string {
+<span id="L291" class="ln">   291&nbsp;&nbsp;</span>	if v &gt; 15 {
+<span id="L292" class="ln">   292&nbsp;&nbsp;</span>		return fmt.Sprintf(&#34;BAD_VERSION_%d&#34;, v)
+<span id="L293" class="ln">   293&nbsp;&nbsp;</span>	}
+<span id="L294" class="ln">   294&nbsp;&nbsp;</span>	return fmt.Sprintf(&#34;VERSION_%d&#34;, v)
+<span id="L295" class="ln">   295&nbsp;&nbsp;</span>}
+<span id="L296" class="ln">   296&nbsp;&nbsp;</span>
+<span id="L297" class="ln">   297&nbsp;&nbsp;</span>func (v Variant) String() string {
+<span id="L298" class="ln">   298&nbsp;&nbsp;</span>	switch v {
+<span id="L299" class="ln">   299&nbsp;&nbsp;</span>	case RFC4122:
+<span id="L300" class="ln">   300&nbsp;&nbsp;</span>		return &#34;RFC4122&#34;
+<span id="L301" class="ln">   301&nbsp;&nbsp;</span>	case Reserved:
+<span id="L302" class="ln">   302&nbsp;&nbsp;</span>		return &#34;Reserved&#34;
+<span id="L303" class="ln">   303&nbsp;&nbsp;</span>	case Microsoft:
+<span id="L304" class="ln">   304&nbsp;&nbsp;</span>		return &#34;Microsoft&#34;
+<span id="L305" class="ln">   305&nbsp;&nbsp;</span>	case Future:
+<span id="L306" class="ln">   306&nbsp;&nbsp;</span>		return &#34;Future&#34;
+<span id="L307" class="ln">   307&nbsp;&nbsp;</span>	case Invalid:
+<span id="L308" class="ln">   308&nbsp;&nbsp;</span>		return &#34;Invalid&#34;
+<span id="L309" class="ln">   309&nbsp;&nbsp;</span>	}
+<span id="L310" class="ln">   310&nbsp;&nbsp;</span>	return fmt.Sprintf(&#34;BadVariant%d&#34;, int(v))
+<span id="L311" class="ln">   311&nbsp;&nbsp;</span>}
+<span id="L312" class="ln">   312&nbsp;&nbsp;</span>
+<span id="L313" class="ln">   313&nbsp;&nbsp;</span><span class="comment">// SetRand sets the random number generator to r, which implements io.Reader.</span>
+<span id="L314" class="ln">   314&nbsp;&nbsp;</span><span class="comment">// If r.Read returns an error when the package requests random data then</span>
+<span id="L315" class="ln">   315&nbsp;&nbsp;</span><span class="comment">// a panic will be issued.</span>
+<span id="L316" class="ln">   316&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L317" class="ln">   317&nbsp;&nbsp;</span><span class="comment">// Calling SetRand with nil sets the random number generator to the default</span>
+<span id="L318" class="ln">   318&nbsp;&nbsp;</span><span class="comment">// generator.</span>
+<span id="L319" class="ln">   319&nbsp;&nbsp;</span>func SetRand(r io.Reader) {
+<span id="L320" class="ln">   320&nbsp;&nbsp;</span>	if r == nil {
+<span id="L321" class="ln">   321&nbsp;&nbsp;</span>		rander = rand.Reader
+<span id="L322" class="ln">   322&nbsp;&nbsp;</span>		return
+<span id="L323" class="ln">   323&nbsp;&nbsp;</span>	}
+<span id="L324" class="ln">   324&nbsp;&nbsp;</span>	rander = r
+<span id="L325" class="ln">   325&nbsp;&nbsp;</span>}
+<span id="L326" class="ln">   326&nbsp;&nbsp;</span>
+<span id="L327" class="ln">   327&nbsp;&nbsp;</span><span class="comment">// EnableRandPool enables internal randomness pool used for Random</span>
+<span id="L328" class="ln">   328&nbsp;&nbsp;</span><span class="comment">// (Version 4) UUID generation. The pool contains random bytes read from</span>
+<span id="L329" class="ln">   329&nbsp;&nbsp;</span><span class="comment">// the random number generator on demand in batches. Enabling the pool</span>
+<span id="L330" class="ln">   330&nbsp;&nbsp;</span><span class="comment">// may improve the UUID generation throughput significantly.</span>
+<span id="L331" class="ln">   331&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L332" class="ln">   332&nbsp;&nbsp;</span><span class="comment">// Since the pool is stored on the Go heap, this feature may be a bad fit</span>
+<span id="L333" class="ln">   333&nbsp;&nbsp;</span><span class="comment">// for security sensitive applications.</span>
+<span id="L334" class="ln">   334&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L335" class="ln">   335&nbsp;&nbsp;</span><span class="comment">// Both EnableRandPool and DisableRandPool are not thread-safe and should</span>
+<span id="L336" class="ln">   336&nbsp;&nbsp;</span><span class="comment">// only be called when there is no possibility that New or any other</span>
+<span id="L337" class="ln">   337&nbsp;&nbsp;</span><span class="comment">// UUID Version 4 generation function will be called concurrently.</span>
+<span id="L338" class="ln">   338&nbsp;&nbsp;</span>func EnableRandPool() {
+<span id="L339" class="ln">   339&nbsp;&nbsp;</span>	poolEnabled = true
+<span id="L340" class="ln">   340&nbsp;&nbsp;</span>}
+<span id="L341" class="ln">   341&nbsp;&nbsp;</span>
+<span id="L342" class="ln">   342&nbsp;&nbsp;</span><span class="comment">// DisableRandPool disables the randomness pool if it was previously</span>
+<span id="L343" class="ln">   343&nbsp;&nbsp;</span><span class="comment">// enabled with EnableRandPool.</span>
+<span id="L344" class="ln">   344&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L345" class="ln">   345&nbsp;&nbsp;</span><span class="comment">// Both EnableRandPool and DisableRandPool are not thread-safe and should</span>
+<span id="L346" class="ln">   346&nbsp;&nbsp;</span><span class="comment">// only be called when there is no possibility that New or any other</span>
+<span id="L347" class="ln">   347&nbsp;&nbsp;</span><span class="comment">// UUID Version 4 generation function will be called concurrently.</span>
+<span id="L348" class="ln">   348&nbsp;&nbsp;</span>func DisableRandPool() {
+<span id="L349" class="ln">   349&nbsp;&nbsp;</span>	poolEnabled = false
+<span id="L350" class="ln">   350&nbsp;&nbsp;</span>	defer poolMu.Unlock()
+<span id="L351" class="ln">   351&nbsp;&nbsp;</span>	poolMu.Lock()
+<span id="L352" class="ln">   352&nbsp;&nbsp;</span>	poolPos = randPoolSize
+<span id="L353" class="ln">   353&nbsp;&nbsp;</span>}
+<span id="L354" class="ln">   354&nbsp;&nbsp;</span>
+<span id="L355" class="ln">   355&nbsp;&nbsp;</span><span class="comment">// UUIDs is a slice of UUID types.</span>
+<span id="L356" class="ln">   356&nbsp;&nbsp;</span>type UUIDs []UUID
+<span id="L357" class="ln">   357&nbsp;&nbsp;</span>
+<span id="L358" class="ln">   358&nbsp;&nbsp;</span><span class="comment">// Strings returns a string slice containing the string form of each UUID in uuids.</span>
+<span id="L359" class="ln">   359&nbsp;&nbsp;</span>func (uuids UUIDs) Strings() []string {
+<span id="L360" class="ln">   360&nbsp;&nbsp;</span>	var uuidStrs = make([]string, len(uuids))
+<span id="L361" class="ln">   361&nbsp;&nbsp;</span>	for i, uuid := range uuids {
+<span id="L362" class="ln">   362&nbsp;&nbsp;</span>		uuidStrs[i] = uuid.String()
+<span id="L363" class="ln">   363&nbsp;&nbsp;</span>	}
+<span id="L364" class="ln">   364&nbsp;&nbsp;</span>	return uuidStrs
+<span id="L365" class="ln">   365&nbsp;&nbsp;</span>}
+<span id="L366" class="ln">   366&nbsp;&nbsp;</span>
+</pre><p><a href="uuid.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

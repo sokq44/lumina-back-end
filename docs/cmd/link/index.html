@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>link - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Command link
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<p>Link, typically invoked as “go tool link”, reads the Go archive or object
+for a package main, along with its dependencies, and combines them
+into an executable binary.
+<h3 id="hdr-Command_Line">Command Line</h3>
+<p>Usage:
+<pre>go tool link [flags] main.a
+</pre>
+<p>Flags:
+<pre>-B note
+	Add an ELF_NT_GNU_BUILD_ID note when using ELF.
+	The value should start with 0x and be an even number of hex digits.
+	Alternatively, you can pass &quot;gobuildid&quot; in order to derive the
+	GNU build ID from the Go build ID.
+-E entry
+	Set entry symbol name.
+-H type
+	Set executable format type.
+	The default format is inferred from GOOS and GOARCH.
+	On Windows, -H windowsgui writes a &quot;GUI binary&quot; instead of a &quot;console binary.&quot;
+-I interpreter
+	Set the ELF dynamic linker to use.
+-L dir1 -L dir2
+	Search for imported packages in dir1, dir2, etc,
+	after consulting $GOROOT/pkg/$GOOS_$GOARCH.
+-R quantum
+	Set address rounding quantum.
+-T address
+	Set the start address of text symbols.
+-V
+	Print linker version and exit.
+-X importpath.name=value
+	Set the value of the string variable in importpath named name to value.
+	This is only effective if the variable is declared in the source code either uninitialized
+	or initialized to a constant string expression. -X will not work if the initializer makes
+	a function call or refers to other variables.
+	Note that before Go 1.5 this option took two separate arguments.
+-asan
+	Link with C/C++ address sanitizer support.
+-aslr
+	Enable ASLR for buildmode=c-shared on windows (default true).
+-buildid id
+	Record id as Go toolchain build id.
+-buildmode mode
+	Set build mode (default exe).
+-c
+	Dump call graphs.
+-compressdwarf
+	Compress DWARF if possible (default true).
+-cpuprofile file
+	Write CPU profile to file.
+-d
+	Disable generation of dynamic executables.
+	The emitted code is the same in either case; the option
+	controls only whether a dynamic header is included.
+	The dynamic header is on by default, even without any
+	references to dynamic libraries, because many common
+	system tools now assume the presence of the header.
+-dumpdep
+	Dump symbol dependency graph.
+-extar ar
+	Set the external archive program (default &quot;ar&quot;).
+	Used only for -buildmode=c-archive.
+-extld linker
+	Set the external linker (default &quot;clang&quot; or &quot;gcc&quot;).
+-extldflags flags
+	Set space-separated flags to pass to the external linker.
+-f
+	Ignore version mismatch in the linked archives.
+-g
+	Disable Go package data checks.
+-importcfg file
+	Read import configuration from file.
+	In the file, set packagefile, packageshlib to specify import resolution.
+-installsuffix suffix
+	Look for packages in $GOROOT/pkg/$GOOS_$GOARCH_suffix
+	instead of $GOROOT/pkg/$GOOS_$GOARCH.
+-k symbol
+	Set field tracking symbol. Use this flag when GOEXPERIMENT=fieldtrack is set.
+-libgcc file
+	Set name of compiler support library.
+	This is only used in internal link mode.
+	If not set, default value comes from running the compiler,
+	which may be set by the -extld option.
+	Set to &quot;none&quot; to use no support library.
+-linkmode mode
+	Set link mode (internal, external, auto).
+	This sets the linking mode as described in cmd/cgo/doc.go.
+-linkshared
+	Link against installed Go shared libraries (experimental).
+-memprofile file
+	Write memory profile to file.
+-memprofilerate rate
+	Set runtime.MemProfileRate to rate.
+-msan
+	Link with C/C++ memory sanitizer support.
+-o file
+	Write output to file (default a.out, or a.out.exe on Windows).
+-pluginpath path
+	The path name used to prefix exported plugin symbols.
+-r dir1:dir2:...
+	Set the ELF dynamic linker search path.
+-race
+	Link with race detection libraries.
+-s
+	Omit the symbol table and debug information.
+-tmpdir dir
+	Write temporary files to dir.
+	Temporary files are only used in external linking mode.
+-v
+	Print trace of linker operations.
+-w
+	Omit the DWARF symbol table.
+</pre>
+
+	
+
+	
+
+
+
+
+
+	
+	
+		<h2 id="pkg-subdirectories">Subdirectories</h2>
+	
+	<div class="pkg-dir">
+		<table>
+			<tr>
+				<th class="pkg-name">Name</th>
+				<th class="pkg-synopsis">Synopsis</th>
+			</tr>
+
+			
+			<tr>
+				<td colspan="2"><a href="../index.html">..</a></td>
+			</tr>
+			
+
+			
+		</table>
+	</div>
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

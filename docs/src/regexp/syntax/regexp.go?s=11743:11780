@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>src/regexp/syntax/regexp.go - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="./regexp.go?s=11743:11780#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Source file
+    <a href="http://localhost:8080/src">src</a>/<a href="http://localhost:8080/src/regexp">regexp</a>/<a href="http://localhost:8080/src/regexp/syntax">syntax</a>/<span class="text-muted">regexp.go</span>
+  </h1>
+
+
+
+
+
+  <h2>
+    Documentation: <a href="http://localhost:8080/pkg/regexp/syntax">regexp/syntax</a>
+  </h2>
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1&nbsp;&nbsp;</span><span class="comment">// Copyright 2011 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2&nbsp;&nbsp;</span><span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3&nbsp;&nbsp;</span><span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4&nbsp;&nbsp;</span>
+<span id="L5" class="ln">     5&nbsp;&nbsp;</span>package syntax
+<span id="L6" class="ln">     6&nbsp;&nbsp;</span>
+<span id="L7" class="ln">     7&nbsp;&nbsp;</span><span class="comment">// Note to implementers:</span>
+<span id="L8" class="ln">     8&nbsp;&nbsp;</span><span class="comment">// In this package, re is always a *Regexp and r is always a rune.</span>
+<span id="L9" class="ln">     9&nbsp;&nbsp;</span>
+<span id="L10" class="ln">    10&nbsp;&nbsp;</span>import (
+<span id="L11" class="ln">    11&nbsp;&nbsp;</span>	&#34;strconv&#34;
+<span id="L12" class="ln">    12&nbsp;&nbsp;</span>	&#34;strings&#34;
+<span id="L13" class="ln">    13&nbsp;&nbsp;</span>	&#34;unicode&#34;
+<span id="L14" class="ln">    14&nbsp;&nbsp;</span>)
+<span id="L15" class="ln">    15&nbsp;&nbsp;</span>
+<span id="L16" class="ln">    16&nbsp;&nbsp;</span><span class="comment">// A Regexp is a node in a regular expression syntax tree.</span>
+<span id="L17" class="ln">    17&nbsp;&nbsp;</span>type Regexp struct {
+<span id="L18" class="ln">    18&nbsp;&nbsp;</span>	Op       Op <span class="comment">// operator</span>
+<span id="L19" class="ln">    19&nbsp;&nbsp;</span>	Flags    Flags
+<span id="L20" class="ln">    20&nbsp;&nbsp;</span>	Sub      []*Regexp  <span class="comment">// subexpressions, if any</span>
+<span id="L21" class="ln">    21&nbsp;&nbsp;</span>	Sub0     [1]*Regexp <span class="comment">// storage for short Sub</span>
+<span id="L22" class="ln">    22&nbsp;&nbsp;</span>	Rune     []rune     <span class="comment">// matched runes, for OpLiteral, OpCharClass</span>
+<span id="L23" class="ln">    23&nbsp;&nbsp;</span>	Rune0    [2]rune    <span class="comment">// storage for short Rune</span>
+<span id="L24" class="ln">    24&nbsp;&nbsp;</span>	Min, Max int        <span class="comment">// min, max for OpRepeat</span>
+<span id="L25" class="ln">    25&nbsp;&nbsp;</span>	Cap      int        <span class="comment">// capturing index, for OpCapture</span>
+<span id="L26" class="ln">    26&nbsp;&nbsp;</span>	Name     string     <span class="comment">// capturing name, for OpCapture</span>
+<span id="L27" class="ln">    27&nbsp;&nbsp;</span>}
+<span id="L28" class="ln">    28&nbsp;&nbsp;</span>
+<span id="L29" class="ln">    29&nbsp;&nbsp;</span><span class="comment">//go:generate stringer -type Op -trimprefix Op</span>
+<span id="L30" class="ln">    30&nbsp;&nbsp;</span>
+<span id="L31" class="ln">    31&nbsp;&nbsp;</span><span class="comment">// An Op is a single regular expression operator.</span>
+<span id="L32" class="ln">    32&nbsp;&nbsp;</span>type Op uint8
+<span id="L33" class="ln">    33&nbsp;&nbsp;</span>
+<span id="L34" class="ln">    34&nbsp;&nbsp;</span><span class="comment">// Operators are listed in precedence order, tightest binding to weakest.</span>
+<span id="L35" class="ln">    35&nbsp;&nbsp;</span><span class="comment">// Character class operators are listed simplest to most complex</span>
+<span id="L36" class="ln">    36&nbsp;&nbsp;</span><span class="comment">// (OpLiteral, OpCharClass, OpAnyCharNotNL, OpAnyChar).</span>
+<span id="L37" class="ln">    37&nbsp;&nbsp;</span>
+<span id="L38" class="ln">    38&nbsp;&nbsp;</span>const (
+<span id="L39" class="ln">    39&nbsp;&nbsp;</span>	OpNoMatch        Op = 1 + iota <span class="comment">// matches no strings</span>
+<span id="L40" class="ln">    40&nbsp;&nbsp;</span>	OpEmptyMatch                   <span class="comment">// matches empty string</span>
+<span id="L41" class="ln">    41&nbsp;&nbsp;</span>	OpLiteral                      <span class="comment">// matches Runes sequence</span>
+<span id="L42" class="ln">    42&nbsp;&nbsp;</span>	OpCharClass                    <span class="comment">// matches Runes interpreted as range pair list</span>
+<span id="L43" class="ln">    43&nbsp;&nbsp;</span>	OpAnyCharNotNL                 <span class="comment">// matches any character except newline</span>
+<span id="L44" class="ln">    44&nbsp;&nbsp;</span>	OpAnyChar                      <span class="comment">// matches any character</span>
+<span id="L45" class="ln">    45&nbsp;&nbsp;</span>	OpBeginLine                    <span class="comment">// matches empty string at beginning of line</span>
+<span id="L46" class="ln">    46&nbsp;&nbsp;</span>	OpEndLine                      <span class="comment">// matches empty string at end of line</span>
+<span id="L47" class="ln">    47&nbsp;&nbsp;</span>	OpBeginText                    <span class="comment">// matches empty string at beginning of text</span>
+<span id="L48" class="ln">    48&nbsp;&nbsp;</span>	OpEndText                      <span class="comment">// matches empty string at end of text</span>
+<span id="L49" class="ln">    49&nbsp;&nbsp;</span>	OpWordBoundary                 <span class="comment">// matches word boundary `\b`</span>
+<span id="L50" class="ln">    50&nbsp;&nbsp;</span>	OpNoWordBoundary               <span class="comment">// matches word non-boundary `\B`</span>
+<span id="L51" class="ln">    51&nbsp;&nbsp;</span>	OpCapture                      <span class="comment">// capturing subexpression with index Cap, optional name Name</span>
+<span id="L52" class="ln">    52&nbsp;&nbsp;</span>	OpStar                         <span class="comment">// matches Sub[0] zero or more times</span>
+<span id="L53" class="ln">    53&nbsp;&nbsp;</span>	OpPlus                         <span class="comment">// matches Sub[0] one or more times</span>
+<span id="L54" class="ln">    54&nbsp;&nbsp;</span>	OpQuest                        <span class="comment">// matches Sub[0] zero or one times</span>
+<span id="L55" class="ln">    55&nbsp;&nbsp;</span>	OpRepeat                       <span class="comment">// matches Sub[0] at least Min times, at most Max (Max == -1 is no limit)</span>
+<span id="L56" class="ln">    56&nbsp;&nbsp;</span>	OpConcat                       <span class="comment">// matches concatenation of Subs</span>
+<span id="L57" class="ln">    57&nbsp;&nbsp;</span>	OpAlternate                    <span class="comment">// matches alternation of Subs</span>
+<span id="L58" class="ln">    58&nbsp;&nbsp;</span>)
+<span id="L59" class="ln">    59&nbsp;&nbsp;</span>
+<span id="L60" class="ln">    60&nbsp;&nbsp;</span>const opPseudo Op = 128 <span class="comment">// where pseudo-ops start</span>
+<span id="L61" class="ln">    61&nbsp;&nbsp;</span>
+<span id="L62" class="ln">    62&nbsp;&nbsp;</span><span class="comment">// Equal reports whether x and y have identical structure.</span>
+<span id="L63" class="ln">    63&nbsp;&nbsp;</span>func (x *Regexp) Equal(y *Regexp) bool {
+<span id="L64" class="ln">    64&nbsp;&nbsp;</span>	if x == nil || y == nil {
+<span id="L65" class="ln">    65&nbsp;&nbsp;</span>		return x == y
+<span id="L66" class="ln">    66&nbsp;&nbsp;</span>	}
+<span id="L67" class="ln">    67&nbsp;&nbsp;</span>	if x.Op != y.Op {
+<span id="L68" class="ln">    68&nbsp;&nbsp;</span>		return false
+<span id="L69" class="ln">    69&nbsp;&nbsp;</span>	}
+<span id="L70" class="ln">    70&nbsp;&nbsp;</span>	switch x.Op {
+<span id="L71" class="ln">    71&nbsp;&nbsp;</span>	case OpEndText:
+<span id="L72" class="ln">    72&nbsp;&nbsp;</span>		<span class="comment">// The parse flags remember whether this is \z or \Z.</span>
+<span id="L73" class="ln">    73&nbsp;&nbsp;</span>		if x.Flags&amp;WasDollar != y.Flags&amp;WasDollar {
+<span id="L74" class="ln">    74&nbsp;&nbsp;</span>			return false
+<span id="L75" class="ln">    75&nbsp;&nbsp;</span>		}
+<span id="L76" class="ln">    76&nbsp;&nbsp;</span>
+<span id="L77" class="ln">    77&nbsp;&nbsp;</span>	case OpLiteral, OpCharClass:
+<span id="L78" class="ln">    78&nbsp;&nbsp;</span>		if len(x.Rune) != len(y.Rune) {
+<span id="L79" class="ln">    79&nbsp;&nbsp;</span>			return false
+<span id="L80" class="ln">    80&nbsp;&nbsp;</span>		}
+<span id="L81" class="ln">    81&nbsp;&nbsp;</span>		for i, r := range x.Rune {
+<span id="L82" class="ln">    82&nbsp;&nbsp;</span>			if r != y.Rune[i] {
+<span id="L83" class="ln">    83&nbsp;&nbsp;</span>				return false
+<span id="L84" class="ln">    84&nbsp;&nbsp;</span>			}
+<span id="L85" class="ln">    85&nbsp;&nbsp;</span>		}
+<span id="L86" class="ln">    86&nbsp;&nbsp;</span>
+<span id="L87" class="ln">    87&nbsp;&nbsp;</span>	case OpAlternate, OpConcat:
+<span id="L88" class="ln">    88&nbsp;&nbsp;</span>		if len(x.Sub) != len(y.Sub) {
+<span id="L89" class="ln">    89&nbsp;&nbsp;</span>			return false
+<span id="L90" class="ln">    90&nbsp;&nbsp;</span>		}
+<span id="L91" class="ln">    91&nbsp;&nbsp;</span>		for i, sub := range x.Sub {
+<span id="L92" class="ln">    92&nbsp;&nbsp;</span>			if !sub.Equal(y.Sub[i]) {
+<span id="L93" class="ln">    93&nbsp;&nbsp;</span>				return false
+<span id="L94" class="ln">    94&nbsp;&nbsp;</span>			}
+<span id="L95" class="ln">    95&nbsp;&nbsp;</span>		}
+<span id="L96" class="ln">    96&nbsp;&nbsp;</span>
+<span id="L97" class="ln">    97&nbsp;&nbsp;</span>	case OpStar, OpPlus, OpQuest:
+<span id="L98" class="ln">    98&nbsp;&nbsp;</span>		if x.Flags&amp;NonGreedy != y.Flags&amp;NonGreedy || !x.Sub[0].Equal(y.Sub[0]) {
+<span id="L99" class="ln">    99&nbsp;&nbsp;</span>			return false
+<span id="L100" class="ln">   100&nbsp;&nbsp;</span>		}
+<span id="L101" class="ln">   101&nbsp;&nbsp;</span>
+<span id="L102" class="ln">   102&nbsp;&nbsp;</span>	case OpRepeat:
+<span id="L103" class="ln">   103&nbsp;&nbsp;</span>		if x.Flags&amp;NonGreedy != y.Flags&amp;NonGreedy || x.Min != y.Min || x.Max != y.Max || !x.Sub[0].Equal(y.Sub[0]) {
+<span id="L104" class="ln">   104&nbsp;&nbsp;</span>			return false
+<span id="L105" class="ln">   105&nbsp;&nbsp;</span>		}
+<span id="L106" class="ln">   106&nbsp;&nbsp;</span>
+<span id="L107" class="ln">   107&nbsp;&nbsp;</span>	case OpCapture:
+<span id="L108" class="ln">   108&nbsp;&nbsp;</span>		if x.Cap != y.Cap || x.Name != y.Name || !x.Sub[0].Equal(y.Sub[0]) {
+<span id="L109" class="ln">   109&nbsp;&nbsp;</span>			return false
+<span id="L110" class="ln">   110&nbsp;&nbsp;</span>		}
+<span id="L111" class="ln">   111&nbsp;&nbsp;</span>	}
+<span id="L112" class="ln">   112&nbsp;&nbsp;</span>	return true
+<span id="L113" class="ln">   113&nbsp;&nbsp;</span>}
+<span id="L114" class="ln">   114&nbsp;&nbsp;</span>
+<span id="L115" class="ln">   115&nbsp;&nbsp;</span><span class="comment">// printFlags is a bit set indicating which flags (including non-capturing parens) to print around a regexp.</span>
+<span id="L116" class="ln">   116&nbsp;&nbsp;</span>type printFlags uint8
+<span id="L117" class="ln">   117&nbsp;&nbsp;</span>
+<span id="L118" class="ln">   118&nbsp;&nbsp;</span>const (
+<span id="L119" class="ln">   119&nbsp;&nbsp;</span>	flagI    printFlags = 1 &lt;&lt; iota <span class="comment">// (?i:</span>
+<span id="L120" class="ln">   120&nbsp;&nbsp;</span>	flagM                           <span class="comment">// (?m:</span>
+<span id="L121" class="ln">   121&nbsp;&nbsp;</span>	flagS                           <span class="comment">// (?s:</span>
+<span id="L122" class="ln">   122&nbsp;&nbsp;</span>	flagOff                         <span class="comment">// )</span>
+<span id="L123" class="ln">   123&nbsp;&nbsp;</span>	flagPrec                        <span class="comment">// (?: )</span>
+<span id="L124" class="ln">   124&nbsp;&nbsp;</span>	negShift = 5                    <span class="comment">// flagI&lt;&lt;negShift is (?-i:</span>
+<span id="L125" class="ln">   125&nbsp;&nbsp;</span>)
+<span id="L126" class="ln">   126&nbsp;&nbsp;</span>
+<span id="L127" class="ln">   127&nbsp;&nbsp;</span><span class="comment">// addSpan enables the flags f around start..last,</span>
+<span id="L128" class="ln">   128&nbsp;&nbsp;</span><span class="comment">// by setting flags[start] = f and flags[last] = flagOff.</span>
+<span id="L129" class="ln">   129&nbsp;&nbsp;</span>func addSpan(start, last *Regexp, f printFlags, flags *map[*Regexp]printFlags) {
+<span id="L130" class="ln">   130&nbsp;&nbsp;</span>	if *flags == nil {
+<span id="L131" class="ln">   131&nbsp;&nbsp;</span>		*flags = make(map[*Regexp]printFlags)
+<span id="L132" class="ln">   132&nbsp;&nbsp;</span>	}
+<span id="L133" class="ln">   133&nbsp;&nbsp;</span>	(*flags)[start] = f
+<span id="L134" class="ln">   134&nbsp;&nbsp;</span>	(*flags)[last] |= flagOff <span class="comment">// maybe start==last</span>
+<span id="L135" class="ln">   135&nbsp;&nbsp;</span>}
+<span id="L136" class="ln">   136&nbsp;&nbsp;</span>
+<span id="L137" class="ln">   137&nbsp;&nbsp;</span><span class="comment">// calcFlags calculates the flags to print around each subexpression in re,</span>
+<span id="L138" class="ln">   138&nbsp;&nbsp;</span><span class="comment">// storing that information in (*flags)[sub] for each affected subexpression.</span>
+<span id="L139" class="ln">   139&nbsp;&nbsp;</span><span class="comment">// The first time an entry needs to be written to *flags, calcFlags allocates the map.</span>
+<span id="L140" class="ln">   140&nbsp;&nbsp;</span><span class="comment">// calcFlags also calculates the flags that must be active or can&#39;t be active</span>
+<span id="L141" class="ln">   141&nbsp;&nbsp;</span><span class="comment">// around re and returns those flags.</span>
+<span id="L142" class="ln">   142&nbsp;&nbsp;</span>func calcFlags(re *Regexp, flags *map[*Regexp]printFlags) (must, cant printFlags) {
+<span id="L143" class="ln">   143&nbsp;&nbsp;</span>	switch re.Op {
+<span id="L144" class="ln">   144&nbsp;&nbsp;</span>	default:
+<span id="L145" class="ln">   145&nbsp;&nbsp;</span>		return 0, 0
+<span id="L146" class="ln">   146&nbsp;&nbsp;</span>
+<span id="L147" class="ln">   147&nbsp;&nbsp;</span>	case OpLiteral:
+<span id="L148" class="ln">   148&nbsp;&nbsp;</span>		<span class="comment">// If literal is fold-sensitive, return (flagI, 0) or (0, flagI)</span>
+<span id="L149" class="ln">   149&nbsp;&nbsp;</span>		<span class="comment">// according to whether (?i) is active.</span>
+<span id="L150" class="ln">   150&nbsp;&nbsp;</span>		<span class="comment">// If literal is not fold-sensitive, return 0, 0.</span>
+<span id="L151" class="ln">   151&nbsp;&nbsp;</span>		for _, r := range re.Rune {
+<span id="L152" class="ln">   152&nbsp;&nbsp;</span>			if minFold &lt;= r &amp;&amp; r &lt;= maxFold &amp;&amp; unicode.SimpleFold(r) != r {
+<span id="L153" class="ln">   153&nbsp;&nbsp;</span>				if re.Flags&amp;FoldCase != 0 {
+<span id="L154" class="ln">   154&nbsp;&nbsp;</span>					return flagI, 0
+<span id="L155" class="ln">   155&nbsp;&nbsp;</span>				} else {
+<span id="L156" class="ln">   156&nbsp;&nbsp;</span>					return 0, flagI
+<span id="L157" class="ln">   157&nbsp;&nbsp;</span>				}
+<span id="L158" class="ln">   158&nbsp;&nbsp;</span>			}
+<span id="L159" class="ln">   159&nbsp;&nbsp;</span>		}
+<span id="L160" class="ln">   160&nbsp;&nbsp;</span>		return 0, 0
+<span id="L161" class="ln">   161&nbsp;&nbsp;</span>
+<span id="L162" class="ln">   162&nbsp;&nbsp;</span>	case OpCharClass:
+<span id="L163" class="ln">   163&nbsp;&nbsp;</span>		<span class="comment">// If literal is fold-sensitive, return 0, flagI - (?i) has been compiled out.</span>
+<span id="L164" class="ln">   164&nbsp;&nbsp;</span>		<span class="comment">// If literal is not fold-sensitive, return 0, 0.</span>
+<span id="L165" class="ln">   165&nbsp;&nbsp;</span>		for i := 0; i &lt; len(re.Rune); i += 2 {
+<span id="L166" class="ln">   166&nbsp;&nbsp;</span>			lo := max(minFold, re.Rune[i])
+<span id="L167" class="ln">   167&nbsp;&nbsp;</span>			hi := min(maxFold, re.Rune[i+1])
+<span id="L168" class="ln">   168&nbsp;&nbsp;</span>			for r := lo; r &lt;= hi; r++ {
+<span id="L169" class="ln">   169&nbsp;&nbsp;</span>				for f := unicode.SimpleFold(r); f != r; f = unicode.SimpleFold(f) {
+<span id="L170" class="ln">   170&nbsp;&nbsp;</span>					if !(lo &lt;= f &amp;&amp; f &lt;= hi) &amp;&amp; !inCharClass(f, re.Rune) {
+<span id="L171" class="ln">   171&nbsp;&nbsp;</span>						return 0, flagI
+<span id="L172" class="ln">   172&nbsp;&nbsp;</span>					}
+<span id="L173" class="ln">   173&nbsp;&nbsp;</span>				}
+<span id="L174" class="ln">   174&nbsp;&nbsp;</span>			}
+<span id="L175" class="ln">   175&nbsp;&nbsp;</span>		}
+<span id="L176" class="ln">   176&nbsp;&nbsp;</span>		return 0, 0
+<span id="L177" class="ln">   177&nbsp;&nbsp;</span>
+<span id="L178" class="ln">   178&nbsp;&nbsp;</span>	case OpAnyCharNotNL: <span class="comment">// (?-s).</span>
+<span id="L179" class="ln">   179&nbsp;&nbsp;</span>		return 0, flagS
+<span id="L180" class="ln">   180&nbsp;&nbsp;</span>
+<span id="L181" class="ln">   181&nbsp;&nbsp;</span>	case OpAnyChar: <span class="comment">// (?s).</span>
+<span id="L182" class="ln">   182&nbsp;&nbsp;</span>		return flagS, 0
+<span id="L183" class="ln">   183&nbsp;&nbsp;</span>
+<span id="L184" class="ln">   184&nbsp;&nbsp;</span>	case OpBeginLine, OpEndLine: <span class="comment">// (?m)^ (?m)$</span>
+<span id="L185" class="ln">   185&nbsp;&nbsp;</span>		return flagM, 0
+<span id="L186" class="ln">   186&nbsp;&nbsp;</span>
+<span id="L187" class="ln">   187&nbsp;&nbsp;</span>	case OpEndText:
+<span id="L188" class="ln">   188&nbsp;&nbsp;</span>		if re.Flags&amp;WasDollar != 0 { <span class="comment">// (?-m)$</span>
+<span id="L189" class="ln">   189&nbsp;&nbsp;</span>			return 0, flagM
+<span id="L190" class="ln">   190&nbsp;&nbsp;</span>		}
+<span id="L191" class="ln">   191&nbsp;&nbsp;</span>		return 0, 0
+<span id="L192" class="ln">   192&nbsp;&nbsp;</span>
+<span id="L193" class="ln">   193&nbsp;&nbsp;</span>	case OpCapture, OpStar, OpPlus, OpQuest, OpRepeat:
+<span id="L194" class="ln">   194&nbsp;&nbsp;</span>		return calcFlags(re.Sub[0], flags)
+<span id="L195" class="ln">   195&nbsp;&nbsp;</span>
+<span id="L196" class="ln">   196&nbsp;&nbsp;</span>	case OpConcat, OpAlternate:
+<span id="L197" class="ln">   197&nbsp;&nbsp;</span>		<span class="comment">// Gather the must and cant for each subexpression.</span>
+<span id="L198" class="ln">   198&nbsp;&nbsp;</span>		<span class="comment">// When we find a conflicting subexpression, insert the necessary</span>
+<span id="L199" class="ln">   199&nbsp;&nbsp;</span>		<span class="comment">// flags around the previously identified span and start over.</span>
+<span id="L200" class="ln">   200&nbsp;&nbsp;</span>		var must, cant, allCant printFlags
+<span id="L201" class="ln">   201&nbsp;&nbsp;</span>		start := 0
+<span id="L202" class="ln">   202&nbsp;&nbsp;</span>		last := 0
+<span id="L203" class="ln">   203&nbsp;&nbsp;</span>		did := false
+<span id="L204" class="ln">   204&nbsp;&nbsp;</span>		for i, sub := range re.Sub {
+<span id="L205" class="ln">   205&nbsp;&nbsp;</span>			subMust, subCant := calcFlags(sub, flags)
+<span id="L206" class="ln">   206&nbsp;&nbsp;</span>			if must&amp;subCant != 0 || subMust&amp;cant != 0 {
+<span id="L207" class="ln">   207&nbsp;&nbsp;</span>				if must != 0 {
+<span id="L208" class="ln">   208&nbsp;&nbsp;</span>					addSpan(re.Sub[start], re.Sub[last], must, flags)
+<span id="L209" class="ln">   209&nbsp;&nbsp;</span>				}
+<span id="L210" class="ln">   210&nbsp;&nbsp;</span>				must = 0
+<span id="L211" class="ln">   211&nbsp;&nbsp;</span>				cant = 0
+<span id="L212" class="ln">   212&nbsp;&nbsp;</span>				start = i
+<span id="L213" class="ln">   213&nbsp;&nbsp;</span>				did = true
+<span id="L214" class="ln">   214&nbsp;&nbsp;</span>			}
+<span id="L215" class="ln">   215&nbsp;&nbsp;</span>			must |= subMust
+<span id="L216" class="ln">   216&nbsp;&nbsp;</span>			cant |= subCant
+<span id="L217" class="ln">   217&nbsp;&nbsp;</span>			allCant |= subCant
+<span id="L218" class="ln">   218&nbsp;&nbsp;</span>			if subMust != 0 {
+<span id="L219" class="ln">   219&nbsp;&nbsp;</span>				last = i
+<span id="L220" class="ln">   220&nbsp;&nbsp;</span>			}
+<span id="L221" class="ln">   221&nbsp;&nbsp;</span>			if must == 0 &amp;&amp; start == i {
+<span id="L222" class="ln">   222&nbsp;&nbsp;</span>				start++
+<span id="L223" class="ln">   223&nbsp;&nbsp;</span>			}
+<span id="L224" class="ln">   224&nbsp;&nbsp;</span>		}
+<span id="L225" class="ln">   225&nbsp;&nbsp;</span>		if !did {
+<span id="L226" class="ln">   226&nbsp;&nbsp;</span>			<span class="comment">// No conflicts: pass the accumulated must and cant upward.</span>
+<span id="L227" class="ln">   227&nbsp;&nbsp;</span>			return must, cant
+<span id="L228" class="ln">   228&nbsp;&nbsp;</span>		}
+<span id="L229" class="ln">   229&nbsp;&nbsp;</span>		if must != 0 {
+<span id="L230" class="ln">   230&nbsp;&nbsp;</span>			<span class="comment">// Conflicts found; need to finish final span.</span>
+<span id="L231" class="ln">   231&nbsp;&nbsp;</span>			addSpan(re.Sub[start], re.Sub[last], must, flags)
+<span id="L232" class="ln">   232&nbsp;&nbsp;</span>		}
+<span id="L233" class="ln">   233&nbsp;&nbsp;</span>		return 0, allCant
+<span id="L234" class="ln">   234&nbsp;&nbsp;</span>	}
+<span id="L235" class="ln">   235&nbsp;&nbsp;</span>}
+<span id="L236" class="ln">   236&nbsp;&nbsp;</span>
+<span id="L237" class="ln">   237&nbsp;&nbsp;</span><span class="comment">// writeRegexp writes the Perl syntax for the regular expression re to b.</span>
+<span id="L238" class="ln">   238&nbsp;&nbsp;</span>func writeRegexp(b *strings.Builder, re *Regexp, f printFlags, flags map[*Regexp]printFlags) {
+<span id="L239" class="ln">   239&nbsp;&nbsp;</span>	f |= flags[re]
+<span id="L240" class="ln">   240&nbsp;&nbsp;</span>	if f&amp;flagPrec != 0 &amp;&amp; f&amp;^(flagOff|flagPrec) != 0 &amp;&amp; f&amp;flagOff != 0 {
+<span id="L241" class="ln">   241&nbsp;&nbsp;</span>		<span class="comment">// flagPrec is redundant with other flags being added and terminated</span>
+<span id="L242" class="ln">   242&nbsp;&nbsp;</span>		f &amp;^= flagPrec
+<span id="L243" class="ln">   243&nbsp;&nbsp;</span>	}
+<span id="L244" class="ln">   244&nbsp;&nbsp;</span>	if f&amp;^(flagOff|flagPrec) != 0 {
+<span id="L245" class="ln">   245&nbsp;&nbsp;</span>		b.WriteString(`(?`)
+<span id="L246" class="ln">   246&nbsp;&nbsp;</span>		if f&amp;flagI != 0 {
+<span id="L247" class="ln">   247&nbsp;&nbsp;</span>			b.WriteString(`i`)
+<span id="L248" class="ln">   248&nbsp;&nbsp;</span>		}
+<span id="L249" class="ln">   249&nbsp;&nbsp;</span>		if f&amp;flagM != 0 {
+<span id="L250" class="ln">   250&nbsp;&nbsp;</span>			b.WriteString(`m`)
+<span id="L251" class="ln">   251&nbsp;&nbsp;</span>		}
+<span id="L252" class="ln">   252&nbsp;&nbsp;</span>		if f&amp;flagS != 0 {
+<span id="L253" class="ln">   253&nbsp;&nbsp;</span>			b.WriteString(`s`)
+<span id="L254" class="ln">   254&nbsp;&nbsp;</span>		}
+<span id="L255" class="ln">   255&nbsp;&nbsp;</span>		if f&amp;((flagM|flagS)&lt;&lt;negShift) != 0 {
+<span id="L256" class="ln">   256&nbsp;&nbsp;</span>			b.WriteString(`-`)
+<span id="L257" class="ln">   257&nbsp;&nbsp;</span>			if f&amp;(flagM&lt;&lt;negShift) != 0 {
+<span id="L258" class="ln">   258&nbsp;&nbsp;</span>				b.WriteString(`m`)
+<span id="L259" class="ln">   259&nbsp;&nbsp;</span>			}
+<span id="L260" class="ln">   260&nbsp;&nbsp;</span>			if f&amp;(flagS&lt;&lt;negShift) != 0 {
+<span id="L261" class="ln">   261&nbsp;&nbsp;</span>				b.WriteString(`s`)
+<span id="L262" class="ln">   262&nbsp;&nbsp;</span>			}
+<span id="L263" class="ln">   263&nbsp;&nbsp;</span>		}
+<span id="L264" class="ln">   264&nbsp;&nbsp;</span>		b.WriteString(`:`)
+<span id="L265" class="ln">   265&nbsp;&nbsp;</span>	}
+<span id="L266" class="ln">   266&nbsp;&nbsp;</span>	if f&amp;flagOff != 0 {
+<span id="L267" class="ln">   267&nbsp;&nbsp;</span>		defer b.WriteString(`)`)
+<span id="L268" class="ln">   268&nbsp;&nbsp;</span>	}
+<span id="L269" class="ln">   269&nbsp;&nbsp;</span>	if f&amp;flagPrec != 0 {
+<span id="L270" class="ln">   270&nbsp;&nbsp;</span>		b.WriteString(`(?:`)
+<span id="L271" class="ln">   271&nbsp;&nbsp;</span>		defer b.WriteString(`)`)
+<span id="L272" class="ln">   272&nbsp;&nbsp;</span>	}
+<span id="L273" class="ln">   273&nbsp;&nbsp;</span>
+<span id="L274" class="ln">   274&nbsp;&nbsp;</span>	switch re.Op {
+<span id="L275" class="ln">   275&nbsp;&nbsp;</span>	default:
+<span id="L276" class="ln">   276&nbsp;&nbsp;</span>		b.WriteString(&#34;&lt;invalid op&#34; + strconv.Itoa(int(re.Op)) + &#34;&gt;&#34;)
+<span id="L277" class="ln">   277&nbsp;&nbsp;</span>	case OpNoMatch:
+<span id="L278" class="ln">   278&nbsp;&nbsp;</span>		b.WriteString(`[^\x00-\x{10FFFF}]`)
+<span id="L279" class="ln">   279&nbsp;&nbsp;</span>	case OpEmptyMatch:
+<span id="L280" class="ln">   280&nbsp;&nbsp;</span>		b.WriteString(`(?:)`)
+<span id="L281" class="ln">   281&nbsp;&nbsp;</span>	case OpLiteral:
+<span id="L282" class="ln">   282&nbsp;&nbsp;</span>		for _, r := range re.Rune {
+<span id="L283" class="ln">   283&nbsp;&nbsp;</span>			escape(b, r, false)
+<span id="L284" class="ln">   284&nbsp;&nbsp;</span>		}
+<span id="L285" class="ln">   285&nbsp;&nbsp;</span>	case OpCharClass:
+<span id="L286" class="ln">   286&nbsp;&nbsp;</span>		if len(re.Rune)%2 != 0 {
+<span id="L287" class="ln">   287&nbsp;&nbsp;</span>			b.WriteString(`[invalid char class]`)
+<span id="L288" class="ln">   288&nbsp;&nbsp;</span>			break
+<span id="L289" class="ln">   289&nbsp;&nbsp;</span>		}
+<span id="L290" class="ln">   290&nbsp;&nbsp;</span>		b.WriteRune(&#39;[&#39;)
+<span id="L291" class="ln">   291&nbsp;&nbsp;</span>		if len(re.Rune) == 0 {
+<span id="L292" class="ln">   292&nbsp;&nbsp;</span>			b.WriteString(`^\x00-\x{10FFFF}`)
+<span id="L293" class="ln">   293&nbsp;&nbsp;</span>		} else if re.Rune[0] == 0 &amp;&amp; re.Rune[len(re.Rune)-1] == unicode.MaxRune &amp;&amp; len(re.Rune) &gt; 2 {
+<span id="L294" class="ln">   294&nbsp;&nbsp;</span>			<span class="comment">// Contains 0 and MaxRune. Probably a negated class.</span>
+<span id="L295" class="ln">   295&nbsp;&nbsp;</span>			<span class="comment">// Print the gaps.</span>
+<span id="L296" class="ln">   296&nbsp;&nbsp;</span>			b.WriteRune(&#39;^&#39;)
+<span id="L297" class="ln">   297&nbsp;&nbsp;</span>			for i := 1; i &lt; len(re.Rune)-1; i += 2 {
+<span id="L298" class="ln">   298&nbsp;&nbsp;</span>				lo, hi := re.Rune[i]+1, re.Rune[i+1]-1
+<span id="L299" class="ln">   299&nbsp;&nbsp;</span>				escape(b, lo, lo == &#39;-&#39;)
+<span id="L300" class="ln">   300&nbsp;&nbsp;</span>				if lo != hi {
+<span id="L301" class="ln">   301&nbsp;&nbsp;</span>					if hi != lo+1 {
+<span id="L302" class="ln">   302&nbsp;&nbsp;</span>						b.WriteRune(&#39;-&#39;)
+<span id="L303" class="ln">   303&nbsp;&nbsp;</span>					}
+<span id="L304" class="ln">   304&nbsp;&nbsp;</span>					escape(b, hi, hi == &#39;-&#39;)
+<span id="L305" class="ln">   305&nbsp;&nbsp;</span>				}
+<span id="L306" class="ln">   306&nbsp;&nbsp;</span>			}
+<span id="L307" class="ln">   307&nbsp;&nbsp;</span>		} else {
+<span id="L308" class="ln">   308&nbsp;&nbsp;</span>			for i := 0; i &lt; len(re.Rune); i += 2 {
+<span id="L309" class="ln">   309&nbsp;&nbsp;</span>				lo, hi := re.Rune[i], re.Rune[i+1]
+<span id="L310" class="ln">   310&nbsp;&nbsp;</span>				escape(b, lo, lo == &#39;-&#39;)
+<span id="L311" class="ln">   311&nbsp;&nbsp;</span>				if lo != hi {
+<span id="L312" class="ln">   312&nbsp;&nbsp;</span>					if hi != lo+1 {
+<span id="L313" class="ln">   313&nbsp;&nbsp;</span>						b.WriteRune(&#39;-&#39;)
+<span id="L314" class="ln">   314&nbsp;&nbsp;</span>					}
+<span id="L315" class="ln">   315&nbsp;&nbsp;</span>					escape(b, hi, hi == &#39;-&#39;)
+<span id="L316" class="ln">   316&nbsp;&nbsp;</span>				}
+<span id="L317" class="ln">   317&nbsp;&nbsp;</span>			}
+<span id="L318" class="ln">   318&nbsp;&nbsp;</span>		}
+<span id="L319" class="ln">   319&nbsp;&nbsp;</span>		b.WriteRune(&#39;]&#39;)
+<span id="L320" class="ln">   320&nbsp;&nbsp;</span>	case OpAnyCharNotNL, OpAnyChar:
+<span id="L321" class="ln">   321&nbsp;&nbsp;</span>		b.WriteString(`.`)
+<span id="L322" class="ln">   322&nbsp;&nbsp;</span>	case OpBeginLine:
+<span id="L323" class="ln">   323&nbsp;&nbsp;</span>		b.WriteString(`^`)
+<span id="L324" class="ln">   324&nbsp;&nbsp;</span>	case OpEndLine:
+<span id="L325" class="ln">   325&nbsp;&nbsp;</span>		b.WriteString(`$`)
+<span id="L326" class="ln">   326&nbsp;&nbsp;</span>	case OpBeginText:
+<span id="L327" class="ln">   327&nbsp;&nbsp;</span>		b.WriteString(`\A`)
+<span id="L328" class="ln">   328&nbsp;&nbsp;</span>	case OpEndText:
+<span id="L329" class="ln">   329&nbsp;&nbsp;</span>		if re.Flags&amp;WasDollar != 0 {
+<span id="L330" class="ln">   330&nbsp;&nbsp;</span>			b.WriteString(`$`)
+<span id="L331" class="ln">   331&nbsp;&nbsp;</span>		} else {
+<span id="L332" class="ln">   332&nbsp;&nbsp;</span>			b.WriteString(`\z`)
+<span id="L333" class="ln">   333&nbsp;&nbsp;</span>		}
+<span id="L334" class="ln">   334&nbsp;&nbsp;</span>	case OpWordBoundary:
+<span id="L335" class="ln">   335&nbsp;&nbsp;</span>		b.WriteString(`\b`)
+<span id="L336" class="ln">   336&nbsp;&nbsp;</span>	case OpNoWordBoundary:
+<span id="L337" class="ln">   337&nbsp;&nbsp;</span>		b.WriteString(`\B`)
+<span id="L338" class="ln">   338&nbsp;&nbsp;</span>	case OpCapture:
+<span id="L339" class="ln">   339&nbsp;&nbsp;</span>		if re.Name != &#34;&#34; {
+<span id="L340" class="ln">   340&nbsp;&nbsp;</span>			b.WriteString(`(?P&lt;`)
+<span id="L341" class="ln">   341&nbsp;&nbsp;</span>			b.WriteString(re.Name)
+<span id="L342" class="ln">   342&nbsp;&nbsp;</span>			b.WriteRune(&#39;&gt;&#39;)
+<span id="L343" class="ln">   343&nbsp;&nbsp;</span>		} else {
+<span id="L344" class="ln">   344&nbsp;&nbsp;</span>			b.WriteRune(&#39;(&#39;)
+<span id="L345" class="ln">   345&nbsp;&nbsp;</span>		}
+<span id="L346" class="ln">   346&nbsp;&nbsp;</span>		if re.Sub[0].Op != OpEmptyMatch {
+<span id="L347" class="ln">   347&nbsp;&nbsp;</span>			writeRegexp(b, re.Sub[0], flags[re.Sub[0]], flags)
+<span id="L348" class="ln">   348&nbsp;&nbsp;</span>		}
+<span id="L349" class="ln">   349&nbsp;&nbsp;</span>		b.WriteRune(&#39;)&#39;)
+<span id="L350" class="ln">   350&nbsp;&nbsp;</span>	case OpStar, OpPlus, OpQuest, OpRepeat:
+<span id="L351" class="ln">   351&nbsp;&nbsp;</span>		p := printFlags(0)
+<span id="L352" class="ln">   352&nbsp;&nbsp;</span>		sub := re.Sub[0]
+<span id="L353" class="ln">   353&nbsp;&nbsp;</span>		if sub.Op &gt; OpCapture || sub.Op == OpLiteral &amp;&amp; len(sub.Rune) &gt; 1 {
+<span id="L354" class="ln">   354&nbsp;&nbsp;</span>			p = flagPrec
+<span id="L355" class="ln">   355&nbsp;&nbsp;</span>		}
+<span id="L356" class="ln">   356&nbsp;&nbsp;</span>		writeRegexp(b, sub, p, flags)
+<span id="L357" class="ln">   357&nbsp;&nbsp;</span>
+<span id="L358" class="ln">   358&nbsp;&nbsp;</span>		switch re.Op {
+<span id="L359" class="ln">   359&nbsp;&nbsp;</span>		case OpStar:
+<span id="L360" class="ln">   360&nbsp;&nbsp;</span>			b.WriteRune(&#39;*&#39;)
+<span id="L361" class="ln">   361&nbsp;&nbsp;</span>		case OpPlus:
+<span id="L362" class="ln">   362&nbsp;&nbsp;</span>			b.WriteRune(&#39;+&#39;)
+<span id="L363" class="ln">   363&nbsp;&nbsp;</span>		case OpQuest:
+<span id="L364" class="ln">   364&nbsp;&nbsp;</span>			b.WriteRune(&#39;?&#39;)
+<span id="L365" class="ln">   365&nbsp;&nbsp;</span>		case OpRepeat:
+<span id="L366" class="ln">   366&nbsp;&nbsp;</span>			b.WriteRune(&#39;{&#39;)
+<span id="L367" class="ln">   367&nbsp;&nbsp;</span>			b.WriteString(strconv.Itoa(re.Min))
+<span id="L368" class="ln">   368&nbsp;&nbsp;</span>			if re.Max != re.Min {
+<span id="L369" class="ln">   369&nbsp;&nbsp;</span>				b.WriteRune(&#39;,&#39;)
+<span id="L370" class="ln">   370&nbsp;&nbsp;</span>				if re.Max &gt;= 0 {
+<span id="L371" class="ln">   371&nbsp;&nbsp;</span>					b.WriteString(strconv.Itoa(re.Max))
+<span id="L372" class="ln">   372&nbsp;&nbsp;</span>				}
+<span id="L373" class="ln">   373&nbsp;&nbsp;</span>			}
+<span id="L374" class="ln">   374&nbsp;&nbsp;</span>			b.WriteRune(&#39;}&#39;)
+<span id="L375" class="ln">   375&nbsp;&nbsp;</span>		}
+<span id="L376" class="ln">   376&nbsp;&nbsp;</span>		if re.Flags&amp;NonGreedy != 0 {
+<span id="L377" class="ln">   377&nbsp;&nbsp;</span>			b.WriteRune(&#39;?&#39;)
+<span id="L378" class="ln">   378&nbsp;&nbsp;</span>		}
+<span id="L379" class="ln">   379&nbsp;&nbsp;</span>	case OpConcat:
+<span id="L380" class="ln">   380&nbsp;&nbsp;</span>		for _, sub := range re.Sub {
+<span id="L381" class="ln">   381&nbsp;&nbsp;</span>			p := printFlags(0)
+<span id="L382" class="ln">   382&nbsp;&nbsp;</span>			if sub.Op == OpAlternate {
+<span id="L383" class="ln">   383&nbsp;&nbsp;</span>				p = flagPrec
+<span id="L384" class="ln">   384&nbsp;&nbsp;</span>			}
+<span id="L385" class="ln">   385&nbsp;&nbsp;</span>			writeRegexp(b, sub, p, flags)
+<span id="L386" class="ln">   386&nbsp;&nbsp;</span>		}
+<span id="L387" class="ln">   387&nbsp;&nbsp;</span>	case OpAlternate:
+<span id="L388" class="ln">   388&nbsp;&nbsp;</span>		for i, sub := range re.Sub {
+<span id="L389" class="ln">   389&nbsp;&nbsp;</span>			if i &gt; 0 {
+<span id="L390" class="ln">   390&nbsp;&nbsp;</span>				b.WriteRune(&#39;|&#39;)
+<span id="L391" class="ln">   391&nbsp;&nbsp;</span>			}
+<span id="L392" class="ln">   392&nbsp;&nbsp;</span>			writeRegexp(b, sub, 0, flags)
+<span id="L393" class="ln">   393&nbsp;&nbsp;</span>		}
+<span id="L394" class="ln">   394&nbsp;&nbsp;</span>	}
+<span id="L395" class="ln">   395&nbsp;&nbsp;</span>}
+<span id="L396" class="ln">   396&nbsp;&nbsp;</span>
+<span id="L397" class="ln">   397&nbsp;&nbsp;</span>func (re *Regexp) String() string {
+<span id="L398" class="ln">   398&nbsp;&nbsp;</span>	var b strings.Builder
+<span id="L399" class="ln">   399&nbsp;&nbsp;</span>	var flags map[*Regexp]printFlags
+<span id="L400" class="ln">   400&nbsp;&nbsp;</span>	must, cant := calcFlags(re, &amp;flags)
+<span id="L401" class="ln">   401&nbsp;&nbsp;</span>	must |= (cant &amp;^ flagI) &lt;&lt; negShift
+<span id="L402" class="ln">   402&nbsp;&nbsp;</span>	if must != 0 {
+<span id="L403" class="ln">   403&nbsp;&nbsp;</span>		must |= flagOff
+<span id="L404" class="ln">   404&nbsp;&nbsp;</span>	}
+<span id="L405" class="ln">   405&nbsp;&nbsp;</span>	writeRegexp(&amp;b, re, must, flags)
+<span id="L406" class="ln">   406&nbsp;&nbsp;</span>	return b.String()
+<span id="L407" class="ln">   407&nbsp;&nbsp;</span>}
+<span id="L408" class="ln">   408&nbsp;&nbsp;</span>
+<span id="L409" class="ln">   409&nbsp;&nbsp;</span>const meta = `\.+*?()|[]{}^$`
+<span id="L410" class="ln">   410&nbsp;&nbsp;</span>
+<span id="L411" class="ln">   411&nbsp;&nbsp;</span>func escape(b *strings.Builder, r rune, force bool) {
+<span id="L412" class="ln">   412&nbsp;&nbsp;</span>	if unicode.IsPrint(r) {
+<span id="L413" class="ln">   413&nbsp;&nbsp;</span>		if strings.ContainsRune(meta, r) || force {
+<span id="L414" class="ln">   414&nbsp;&nbsp;</span>			b.WriteRune(&#39;\\&#39;)
+<span id="L415" class="ln">   415&nbsp;&nbsp;</span>		}
+<span id="L416" class="ln">   416&nbsp;&nbsp;</span>		b.WriteRune(r)
+<span id="L417" class="ln">   417&nbsp;&nbsp;</span>		return
+<span id="L418" class="ln">   418&nbsp;&nbsp;</span>	}
+<span id="L419" class="ln">   419&nbsp;&nbsp;</span>
+<span id="L420" class="ln">   420&nbsp;&nbsp;</span>	switch r {
+<span id="L421" class="ln">   421&nbsp;&nbsp;</span>	case &#39;\a&#39;:
+<span id="L422" class="ln">   422&nbsp;&nbsp;</span>		b.WriteString(`\a`)
+<span id="L423" class="ln">   423&nbsp;&nbsp;</span>	case &#39;\f&#39;:
+<span id="L424" class="ln">   424&nbsp;&nbsp;</span>		b.WriteString(`\f`)
+<span id="L425" class="ln">   425&nbsp;&nbsp;</span>	case &#39;\n&#39;:
+<span id="L426" class="ln">   426&nbsp;&nbsp;</span>		b.WriteString(`\n`)
+<span id="L427" class="ln">   427&nbsp;&nbsp;</span>	case &#39;\r&#39;:
+<span id="L428" class="ln">   428&nbsp;&nbsp;</span>		b.WriteString(`\r`)
+<span id="L429" class="ln">   429&nbsp;&nbsp;</span>	case &#39;\t&#39;:
+<span id="L430" class="ln">   430&nbsp;&nbsp;</span>		b.WriteString(`\t`)
+<span id="L431" class="ln">   431&nbsp;&nbsp;</span>	case &#39;\v&#39;:
+<span id="L432" class="ln">   432&nbsp;&nbsp;</span>		b.WriteString(`\v`)
+<span id="L433" class="ln">   433&nbsp;&nbsp;</span>	default:
+<span id="L434" class="ln">   434&nbsp;&nbsp;</span>		if r &lt; 0x100 {
+<span id="L435" class="ln">   435&nbsp;&nbsp;</span>			b.WriteString(`\x`)
+<span id="L436" class="ln">   436&nbsp;&nbsp;</span>			s := strconv.FormatInt(int64(r), 16)
+<span id="L437" class="ln">   437&nbsp;&nbsp;</span>			if len(s) == 1 {
+<span id="L438" class="ln">   438&nbsp;&nbsp;</span>				b.WriteRune(&#39;0&#39;)
+<span id="L439" class="ln">   439&nbsp;&nbsp;</span>			}
+<span id="L440" class="ln">   440&nbsp;&nbsp;</span>			b.WriteString(s)
+<span id="L441" class="ln">   441&nbsp;&nbsp;</span>			break
+<span id="L442" class="ln">   442&nbsp;&nbsp;</span>		}
+<span id="L443" class="ln">   443&nbsp;&nbsp;</span>		b.WriteString(`\x{`)
+<span id="L444" class="ln">   444&nbsp;&nbsp;</span>		b.WriteString(strconv.FormatInt(int64(r), 16))
+<span id="L445" class="ln">   445&nbsp;&nbsp;</span>		b.WriteString(`}`)
+<span id="L446" class="ln">   446&nbsp;&nbsp;</span>	}
+<span id="L447" class="ln">   447&nbsp;&nbsp;</span>}
+<span id="L448" class="ln">   448&nbsp;&nbsp;</span>
+<span id="L449" class="ln">   449&nbsp;&nbsp;</span><span class="comment">// MaxCap walks the regexp to find the maximum capture index.</span>
+<span id="L450" class="ln">   450&nbsp;&nbsp;</span>func (re *Regexp) MaxCap() int {
+<span id="L451" class="ln">   451&nbsp;&nbsp;</span>	m := 0
+<span id="L452" class="ln">   452&nbsp;&nbsp;</span>	if re.Op == OpCapture {
+<span id="L453" class="ln">   453&nbsp;&nbsp;</span>		m = re.Cap
+<span id="L454" class="ln">   454&nbsp;&nbsp;</span>	}
+<span id="L455" class="ln">   455&nbsp;&nbsp;</span>	for _, sub := range re.Sub {
+<span id="L456" class="ln">   456&nbsp;&nbsp;</span>		if n := sub.MaxCap(); m &lt; n {
+<span id="L457" class="ln">   457&nbsp;&nbsp;</span>			m = n
+<span id="L458" class="ln">   458&nbsp;&nbsp;</span>		}
+<span id="L459" class="ln">   459&nbsp;&nbsp;</span>	}
+<span id="L460" class="ln">   460&nbsp;&nbsp;</span>	return m
+<span id="L461" class="ln">   461&nbsp;&nbsp;</span>}
+<span id="L462" class="ln">   462&nbsp;&nbsp;</span>
+<span id="L463" class="ln">   463&nbsp;&nbsp;</span><span class="comment">// CapNames walks the regexp to find the names of capturing groups.</span>
+<span id="L464" class="ln">   464&nbsp;&nbsp;</span><span class="selection">func (re *Regexp) CapNames() []string</span> {
+<span id="L465" class="ln">   465&nbsp;&nbsp;</span>	names := make([]string, re.MaxCap()+1)
+<span id="L466" class="ln">   466&nbsp;&nbsp;</span>	re.capNames(names)
+<span id="L467" class="ln">   467&nbsp;&nbsp;</span>	return names
+<span id="L468" class="ln">   468&nbsp;&nbsp;</span>}
+<span id="L469" class="ln">   469&nbsp;&nbsp;</span>
+<span id="L470" class="ln">   470&nbsp;&nbsp;</span>func (re *Regexp) capNames(names []string) {
+<span id="L471" class="ln">   471&nbsp;&nbsp;</span>	if re.Op == OpCapture {
+<span id="L472" class="ln">   472&nbsp;&nbsp;</span>		names[re.Cap] = re.Name
+<span id="L473" class="ln">   473&nbsp;&nbsp;</span>	}
+<span id="L474" class="ln">   474&nbsp;&nbsp;</span>	for _, sub := range re.Sub {
+<span id="L475" class="ln">   475&nbsp;&nbsp;</span>		sub.capNames(names)
+<span id="L476" class="ln">   476&nbsp;&nbsp;</span>	}
+<span id="L477" class="ln">   477&nbsp;&nbsp;</span>}
+<span id="L478" class="ln">   478&nbsp;&nbsp;</span>
+</pre><p><a href="regexp.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

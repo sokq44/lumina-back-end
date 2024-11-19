@@ -1,0 +1,756 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>handlers - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package handlers
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "backend/handlers"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>This package provides all the handlers for all the endpoints the API has.
+<p>It includes handlers for:
+<ul>
+<li>user registration,
+<li>user verification (through e-mail),
+<li>logging into one&apos;s account,
+<li>logging out from one&apos;s account,
+<li>getting user&apos;s data,
+<li>modifying user&apos;s data,
+<li>initializing password change,
+<li>changing user&apos;s password
+</ul>
+
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+			
+				<dd><a href="index.html#pkg-variables">Variables</a></dd>
+			
+			
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../../src/backend/handlers/user.go">user.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+		
+			<h2 id="pkg-variables">Variables</h2>
+			
+				<h3 id="hdr-ChangePassword">ChangePassword</h3>
+<pre>This handler is responsible for the password change.
+
+Methods: PATCH
+
+Request Body:
+{
+	password: &quot;...&quot;,
+	token: &quot;...&quot;
+}
+
+Possible Responses:
+	200 (OK): User&apos;s password has been changed.
+
+	400 (Bad Request): Problem while decoding the request body or while validating the new password.
+
+	404 (Not Found): Couldn&apos;t find the specified password change token or any user assigned to it in the database.
+
+	500 (Internal Server Error): Problem while retrieving the desired password change token or the user assigned
+	to it from the database. Could also be caused by an error while deleting the password change token or updating
+	the user assigned to it. Refer to the logs for more information.
+</pre>
+
+				<pre>var <span id="ChangePassword">ChangePassword</span> <a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#HandlerFunc">HandlerFunc</a> = func(w <a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#ResponseWriter">ResponseWriter</a>, r *<a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#Request">Request</a>) {
+    type RequestBody struct {
+        Password <a href="../../builtin/index.html#string">string</a> `json:&#34;password&#34;`
+        Token    <a href="../../builtin/index.html#string">string</a> `json:&#34;token&#34;`
+    }
+
+    var <span id="body">body</span> <a href="index.html#RequestBody">RequestBody</a>
+    if err := <a href="../../encoding/json/index.html">json</a>.<a href="../../encoding/json/index.html#NewDecoder">NewDecoder</a>(r.<a href="index.html#Body">Body</a>).<a href="index.html#Decode">Decode</a>(&amp;body); err != <a href="../../builtin/index.html#nil">nil</a> {
+        e := <a href="../utils/errhandle/index.html">errhandle</a>.<a href="../utils/errhandle/index.html#Error">Error</a>{
+            <a href="../utils/errhandle/index.html#Error.Type">Type</a>:          <a href="../utils/errhandle/index.html">errhandle</a>.<a href="../utils/errhandle/index.html#HandlerError">HandlerError</a>,
+            <a href="../utils/errhandle/index.html#Error.ServerMessage">ServerMessage</a>: <a href="../../fmt/index.html">fmt</a>.<a href="../../fmt/index.html#Sprintf">Sprintf</a>(&#34;error while decoding the request body: %v&#34;, err),
+            <a href="../utils/errhandle/index.html#Error.ClientMessage">ClientMessage</a>: &#34;An error has occurred while processing your request.&#34;,
+            <a href="../utils/errhandle/index.html#Error.Status">Status</a>:        <a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#StatusBadRequest">StatusBadRequest</a>,
+        }
+        if e.<a href="index.html#Handle">Handle</a>(w, r) {
+            return
+        }
+    }
+
+    passwordChange, e := db.<a href="index.html#GetPasswordChangeByToken">GetPasswordChangeByToken</a>(body.<a href="index.html#Token">Token</a>)
+    if e.<a href="index.html#Handle">Handle</a>(w, r) {
+        return
+    }
+
+    user, e := db.<a href="index.html#GetUserById">GetUserById</a>(passwordChange.<a href="index.html#UserId">UserId</a>)
+    if e.<a href="index.html#Handle">Handle</a>(w, r) {
+        return
+    }
+
+    user.<a href="index.html#Password">Password</a> = body.<a href="index.html#Password">Password</a>
+    if user.<a href="index.html#Validate">Validate</a>(<a href="../../builtin/index.html#false">false</a>).<a href="index.html#Handle">Handle</a>(w, r) {
+        return
+    }
+
+    if db.<a href="index.html#DeletePasswordChangeById">DeletePasswordChangeById</a>(passwordChange.<a href="index.html#Id">Id</a>).<a href="index.html#Handle">Handle</a>(w, r) {
+        return
+    }
+
+    user.<a href="index.html#Password">Password</a> = <a href="../utils/crypt/index.html">crypt</a>.<a href="../utils/crypt/index.html#Sha256">Sha256</a>(body.<a href="index.html#Password">Password</a>)
+    if db.<a href="index.html#UpdateUser">UpdateUser</a>(*user).<a href="index.html#Handle">Handle</a>(w, r) {
+        return
+    }
+
+    w.<a href="index.html#WriteHeader">WriteHeader</a>(<a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#StatusOK">StatusOK</a>)
+}</pre>
+			
+				<h3 id="hdr-GetUser">GetUser</h3>
+<pre>This handler allows the user to get his data.
+In order to access this endpoint the user must be logged in.
+
+Methods: GET
+
+Possible Responses:
+	200 (OK): There&apos;s been no error while getting user&apos;s information.
+
+	400 (Bad Request): When the token isn&apos;t properly formed (e.g. doesn&apos;t have three parts).
+
+	404 (Not found): Couldn&apos;t find the user in the the database.
+
+	500 (Internal Server Error): Problem while retrieving the access token or while unmarshaling it&apos;s payload.
+	Could also be caused by an error while retrieving the user from the database. Will also accur when there&apos;s
+	an error while encoding data to the response. Refer to the logs for more information.
+</pre>
+
+				<pre>var <span id="GetUser">GetUser</span> <a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#HandlerFunc">HandlerFunc</a> = func(w <a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#ResponseWriter">ResponseWriter</a>, r *<a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#Request">Request</a>) {
+    access, err := r.<a href="index.html#Cookie">Cookie</a>(&#34;access_token&#34;)
+    if err != <a href="../../builtin/index.html#nil">nil</a> {
+        e := <a href="../utils/errhandle/index.html">errhandle</a>.<a href="../utils/errhandle/index.html#Error">Error</a>{
+            <a href="../utils/errhandle/index.html#Error.Type">Type</a>:          <a href="../utils/errhandle/index.html">errhandle</a>.<a href="../utils/errhandle/index.html#HandlerError">HandlerError</a>,
+            <a href="../utils/errhandle/index.html#Error.ServerMessage">ServerMessage</a>: <a href="../../fmt/index.html">fmt</a>.<a href="../../fmt/index.html#Sprintf">Sprintf</a>(&#34;error while retrieving the access_token cookie: %v&#34;, err),
+            <a href="../utils/errhandle/index.html#Error.ClientMessage">ClientMessage</a>: &#34;An error has occurred while processing your request.&#34;,
+            <a href="../utils/errhandle/index.html#Error.Status">Status</a>:        <a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#StatusInternalServerError">StatusInternalServerError</a>,
+        }
+        if e.<a href="index.html#Handle">Handle</a>(w, r) {
+            return
+        }
+    }
+
+    claims, e := <a href="../utils/jwt/index.html">jwt</a>.<a href="../utils/jwt/index.html#DecodePayload">DecodePayload</a>(access.<a href="index.html#Value">Value</a>)
+    if e.<a href="index.html#Handle">Handle</a>(w, r) {
+        return
+    }
+
+    userId := claims[&#34;user&#34;].(<a href="../../builtin/index.html#string">string</a>)
+    user, e := db.<a href="index.html#GetUserById">GetUserById</a>(userId)
+    if e.<a href="index.html#Handle">Handle</a>(w, r) {
+        return
+    }
+
+    userData := map[<a href="../../builtin/index.html#string">string</a>]<a href="../../builtin/index.html#string">string</a>{
+        &#34;username&#34;: user.<a href="index.html#Username">Username</a>,
+        &#34;email&#34;:    user.<a href="index.html#Email">Email</a>,
+    }
+    if err := <a href="../../encoding/json/index.html">json</a>.<a href="../../encoding/json/index.html#NewEncoder">NewEncoder</a>(w).<a href="index.html#Encode">Encode</a>(userData); err != <a href="../../builtin/index.html#nil">nil</a> {
+        e := <a href="../utils/errhandle/index.html">errhandle</a>.<a href="../utils/errhandle/index.html#Error">Error</a>{
+            <a href="../utils/errhandle/index.html#Error.Type">Type</a>:          <a href="../utils/errhandle/index.html">errhandle</a>.<a href="../utils/errhandle/index.html#HandlerError">HandlerError</a>,
+            <a href="../utils/errhandle/index.html#Error.ServerMessage">ServerMessage</a>: <a href="../../fmt/index.html">fmt</a>.<a href="../../fmt/index.html#Sprintf">Sprintf</a>(&#34;error while encoding json data to the response: %v&#34;, err),
+            <a href="../utils/errhandle/index.html#Error.ClientMessage">ClientMessage</a>: &#34;An error has occurred while processing your request.&#34;,
+            <a href="../utils/errhandle/index.html#Error.Status">Status</a>:        <a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#StatusInternalServerError">StatusInternalServerError</a>,
+        }
+        if e.<a href="index.html#Handle">Handle</a>(w, r) {
+            return
+        }
+    }
+}</pre>
+			
+				<h3 id="hdr-LoginUser">LoginUser</h3>
+<pre>This handler allows the user to log into his account.
+This means generating access and refresh token which are passed in HTTP-ONLY Cookies.
+
+Methods: POST
+
+Request Body:
+{
+	email: &quot;...&quot;,
+	password: &quot;...&quot;
+}
+
+Possible Responses:
+	200 (OK): User has been logged in and his &apos;session&apos; started.
+
+	400 (Bad Request): Problem while decoding the request body.
+
+	404 (Not Found): User or his refresh token couldn&apos;t be found.
+
+	500 (Internal Server Error): Problem while retrieving the user or his refresh token from the database.
+	Could also occur when there&apos;s been a problem with access or refresh token generation. Another reason
+	for its occurance could be an error while storing the refresh toke in the database.
+</pre>
+
+				<pre>var <span id="LoginUser">LoginUser</span> <a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#HandlerFunc">HandlerFunc</a> = func(w <a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#ResponseWriter">ResponseWriter</a>, r *<a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#Request">Request</a>) {
+    type RequestBody struct {
+        Email    <a href="../../builtin/index.html#string">string</a> `json:&#34;email&#34;`
+        Password <a href="../../builtin/index.html#string">string</a> `json:&#34;password&#34;`
+    }
+
+    var <span id="body">body</span> <a href="index.html#RequestBody">RequestBody</a>
+    if err := <a href="../../encoding/json/index.html">json</a>.<a href="../../encoding/json/index.html#NewDecoder">NewDecoder</a>(r.<a href="index.html#Body">Body</a>).<a href="index.html#Decode">Decode</a>(&amp;body); err != <a href="../../builtin/index.html#nil">nil</a> {
+        e := <a href="../utils/errhandle/index.html">errhandle</a>.<a href="../utils/errhandle/index.html#Error">Error</a>{
+            <a href="../utils/errhandle/index.html#Error.Type">Type</a>:          <a href="../utils/errhandle/index.html">errhandle</a>.<a href="../utils/errhandle/index.html#HandlerError">HandlerError</a>,
+            <a href="../utils/errhandle/index.html#Error.ServerMessage">ServerMessage</a>: <a href="../../fmt/index.html">fmt</a>.<a href="../../fmt/index.html#Sprintf">Sprintf</a>(&#34;error while decoding the request body: %v&#34;, err),
+            <a href="../utils/errhandle/index.html#Error.ClientMessage">ClientMessage</a>: &#34;An error has occurred while processing your request.&#34;,
+            <a href="../utils/errhandle/index.html#Error.Status">Status</a>:        <a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#StatusBadRequest">StatusBadRequest</a>,
+        }
+        if e.<a href="index.html#Handle">Handle</a>(w, r) {
+            return
+        }
+    }
+
+    user, e := db.<a href="index.html#GetUserByEmail">GetUserByEmail</a>(body.<a href="index.html#Email">Email</a>)
+    if e.<a href="index.html#Handle">Handle</a>(w, r) {
+        return
+    }
+
+    refreshToken, _ := db.<a href="index.html#GetRefreshTokenByUserId">GetRefreshTokenByUserId</a>(user.<a href="index.html#Id">Id</a>)
+    if refreshToken != <a href="../../builtin/index.html#nil">nil</a> {
+        w.<a href="index.html#WriteHeader">WriteHeader</a>(<a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#StatusOK">StatusOK</a>)
+        return
+    }
+
+    hashedPasswd := <a href="../utils/crypt/index.html">crypt</a>.<a href="../utils/crypt/index.html#Sha256">Sha256</a>(body.<a href="index.html#Password">Password</a>)
+    if !user.<a href="index.html#Verified">Verified</a> || hashedPasswd != user.<a href="index.html#Password">Password</a> {
+        w.<a href="index.html#WriteHeader">WriteHeader</a>(<a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#StatusForbidden">StatusForbidden</a>)
+        return
+    }
+
+    now := <a href="../../time/index.html">time</a>.<a href="../../time/index.html#Now">Now</a>()
+    access, e := <a href="../utils/jwt/index.html">jwt</a>.<a href="../utils/jwt/index.html#GenerateAccessToken">GenerateAccessToken</a>(user.<a href="index.html#Id">Id</a>, now)
+    if e.<a href="index.html#Handle">Handle</a>(w, r) {
+        return
+    }
+
+    refresh, e := <a href="../utils/jwt/index.html">jwt</a>.<a href="../utils/jwt/index.html#GenerateRefreshToken">GenerateRefreshToken</a>(user.<a href="index.html#Id">Id</a>, now)
+    if e.<a href="index.html#Handle">Handle</a>(w, r) {
+        return
+    }
+
+    e = db.<a href="index.html#CreateRefreshToken">CreateRefreshToken</a>(refresh)
+    if e.<a href="index.html#Handle">Handle</a>(w, r) {
+        return
+    }
+
+    <a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#SetCookie">SetCookie</a>(w, &amp;<a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#Cookie">Cookie</a>{
+        <a href="../../net/http/index.html#Cookie.Name">Name</a>:     &#34;access_token&#34;,
+        <a href="../../net/http/index.html#Cookie.Value">Value</a>:    access,
+        <a href="../../net/http/index.html#Cookie.HttpOnly">HttpOnly</a>: <a href="../../builtin/index.html#true">true</a>,
+        <a href="../../net/http/index.html#Cookie.Path">Path</a>:     &#34;/&#34;,
+        <a href="../../net/http/index.html#Cookie.Expires">Expires</a>:  now.<a href="index.html#Add">Add</a>(<a href="../../time/index.html">time</a>.<a href="../../time/index.html#Duration">Duration</a>(<a href="../config/index.html">config</a>.<a href="../config/index.html#JwtAccExpTime">JwtAccExpTime</a>)),
+    })
+
+    <a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#SetCookie">SetCookie</a>(w, &amp;<a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#Cookie">Cookie</a>{
+        <a href="../../net/http/index.html#Cookie.Name">Name</a>:     &#34;refresh_token&#34;,
+        <a href="../../net/http/index.html#Cookie.Value">Value</a>:    refresh.<a href="index.html#Token">Token</a>,
+        <a href="../../net/http/index.html#Cookie.HttpOnly">HttpOnly</a>: <a href="../../builtin/index.html#true">true</a>,
+        <a href="../../net/http/index.html#Cookie.Path">Path</a>:     &#34;/&#34;,
+        <a href="../../net/http/index.html#Cookie.Expires">Expires</a>:  now.<a href="index.html#Add">Add</a>(<a href="../../time/index.html">time</a>.<a href="../../time/index.html#Duration">Duration</a>(<a href="../config/index.html">config</a>.<a href="../config/index.html#JwtRefExpTime">JwtRefExpTime</a>)),
+    })
+
+    w.<a href="index.html#WriteHeader">WriteHeader</a>(<a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#StatusOK">StatusOK</a>)
+}</pre>
+			
+				<h3 id="hdr-LogoutUser">LogoutUser</h3>
+<pre>This handler allows the user to log out from his account.
+This means destroying his session (deleting the access and refresh tokens Cookies).
+In order to access this endpoint the user must be logged in.
+
+Methods: DELETE
+
+Possible Responses:
+	200 (OK): User has been logged out which means his &apos;session&apos; has been destroyed.
+
+	500 (Internal Server Error): Problem while retrieving the refresh token or while deleting it from the database.
+	Refer to the logs for more information.
+</pre>
+
+				<pre>var <span id="LogoutUser">LogoutUser</span> <a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#HandlerFunc">HandlerFunc</a> = func(w <a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#ResponseWriter">ResponseWriter</a>, r *<a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#Request">Request</a>) {
+    refreshCookie, err := r.<a href="index.html#Cookie">Cookie</a>(&#34;refresh_token&#34;)
+    if err != <a href="../../builtin/index.html#nil">nil</a> {
+        e := <a href="../utils/errhandle/index.html">errhandle</a>.<a href="../utils/errhandle/index.html#Error">Error</a>{
+            <a href="../utils/errhandle/index.html#Error.Type">Type</a>:          <a href="../utils/errhandle/index.html">errhandle</a>.<a href="../utils/errhandle/index.html#HandlerError">HandlerError</a>,
+            <a href="../utils/errhandle/index.html#Error.ServerMessage">ServerMessage</a>: <a href="../../fmt/index.html">fmt</a>.<a href="../../fmt/index.html#Sprintf">Sprintf</a>(&#34;error while retrieving the refresh_token cookie: %v&#34;, err),
+            <a href="../utils/errhandle/index.html#Error.ClientMessage">ClientMessage</a>: &#34;An error has occurred while processing your request.&#34;,
+            <a href="../utils/errhandle/index.html#Error.Status">Status</a>:        <a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#StatusInternalServerError">StatusInternalServerError</a>,
+        }
+        if e.<a href="index.html#Handle">Handle</a>(w, r) {
+            return
+        }
+    }
+
+    e := db.<a href="index.html#DeleteRefreshTokenByToken">DeleteRefreshTokenByToken</a>(refreshCookie.<a href="index.html#Value">Value</a>)
+    if e.<a href="index.html#Handle">Handle</a>(w, r) {
+        return
+    }
+
+    <a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#SetCookie">SetCookie</a>(w, &amp;<a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#Cookie">Cookie</a>{
+        <a href="../../net/http/index.html#Cookie.Name">Name</a>:     &#34;access_token&#34;,
+        <a href="../../net/http/index.html#Cookie.Value">Value</a>:    &#34;&#34;,
+        <a href="../../net/http/index.html#Cookie.HttpOnly">HttpOnly</a>: <a href="../../builtin/index.html#true">true</a>,
+        <a href="../../net/http/index.html#Cookie.Path">Path</a>:     &#34;/&#34;,
+        <a href="../../net/http/index.html#Cookie.Expires">Expires</a>:  <a href="../../time/index.html">time</a>.<a href="../../time/index.html#Unix">Unix</a>(0, 0),
+    })
+
+    <a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#SetCookie">SetCookie</a>(w, &amp;<a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#Cookie">Cookie</a>{
+        <a href="../../net/http/index.html#Cookie.Name">Name</a>:     &#34;refresh_token&#34;,
+        <a href="../../net/http/index.html#Cookie.Value">Value</a>:    &#34;&#34;,
+        <a href="../../net/http/index.html#Cookie.HttpOnly">HttpOnly</a>: <a href="../../builtin/index.html#true">true</a>,
+        <a href="../../net/http/index.html#Cookie.Path">Path</a>:     &#34;/&#34;,
+        <a href="../../net/http/index.html#Cookie.Expires">Expires</a>:  <a href="../../time/index.html">time</a>.<a href="../../time/index.html#Unix">Unix</a>(0, 0),
+    })
+
+    w.<a href="index.html#WriteHeader">WriteHeader</a>(<a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#StatusOK">StatusOK</a>)
+}</pre>
+			
+				<h3 id="hdr-ModifyUser">ModifyUser</h3>
+<pre>This handler allows the user to modify his data.
+In order to access this endpoint the user must be logged in.
+
+Methods: PATCH
+
+Request Body:
+{
+	username: &quot;...&quot;,
+	email: &quot;...&quot;
+}
+
+Possible Responses:
+	200 (OK): There&apos;s been no error while modifying the user.
+
+	400 (Bad Request): Couldn&apos;t decode the body or the new data validation failed.
+
+	404 (Not Found): Couldn&apos;t find the user in the the database.
+
+	500 (Internal Server Error): Problem while retrieving the user from the database or while updating his data.
+	Refer to the logs for more information.
+</pre>
+
+				<pre>var <span id="ModifyUser">ModifyUser</span> <a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#HandlerFunc">HandlerFunc</a> = func(w <a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#ResponseWriter">ResponseWriter</a>, r *<a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#Request">Request</a>) {
+    type RequestBody struct {
+        Username <a href="../../builtin/index.html#string">string</a> `json:&#34;username&#34;`
+        Email    <a href="../../builtin/index.html#string">string</a> `json:&#34;email&#34;`
+    }
+
+    var <span id="body">body</span> <a href="index.html#RequestBody">RequestBody</a>
+    if err := <a href="../../encoding/json/index.html">json</a>.<a href="../../encoding/json/index.html#NewDecoder">NewDecoder</a>(r.<a href="index.html#Body">Body</a>).<a href="index.html#Decode">Decode</a>(&amp;body); err != <a href="../../builtin/index.html#nil">nil</a> {
+        e := <a href="../utils/errhandle/index.html">errhandle</a>.<a href="../utils/errhandle/index.html#Error">Error</a>{
+            <a href="../utils/errhandle/index.html#Error.Type">Type</a>:          <a href="../utils/errhandle/index.html">errhandle</a>.<a href="../utils/errhandle/index.html#HandlerError">HandlerError</a>,
+            <a href="../utils/errhandle/index.html#Error.ServerMessage">ServerMessage</a>: <a href="../../fmt/index.html">fmt</a>.<a href="../../fmt/index.html#Sprintf">Sprintf</a>(&#34;error while decoding the request body: %v&#34;, err),
+            <a href="../utils/errhandle/index.html#Error.ClientMessage">ClientMessage</a>: &#34;An error has occurred while processing your request.&#34;,
+            <a href="../utils/errhandle/index.html#Error.Status">Status</a>:        <a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#StatusBadRequest">StatusBadRequest</a>,
+        }
+        if e.<a href="index.html#Handle">Handle</a>(w, r) {
+            return
+        }
+    }
+
+    user, e := db.<a href="index.html#GetUserByEmail">GetUserByEmail</a>(body.<a href="index.html#Email">Email</a>)
+    if e.<a href="index.html#Handle">Handle</a>(w, r) {
+        return
+    }
+
+    var <span id="newUser">newUser</span> <a href="../models/index.html">models</a>.<a href="../models/index.html#User">User</a> = <a href="../models/index.html">models</a>.<a href="../models/index.html#User">User</a>{
+        <a href="../models/index.html#User.Id">Id</a>:       user.<a href="index.html#Id">Id</a>,
+        <a href="../models/index.html#User.Username">Username</a>: body.<a href="index.html#Username">Username</a>,
+        <a href="../models/index.html#User.Email">Email</a>:    body.<a href="index.html#Email">Email</a>,
+        <a href="../models/index.html#User.Password">Password</a>: user.<a href="index.html#Password">Password</a>,
+        <a href="../models/index.html#User.Verified">Verified</a>: user.<a href="index.html#Verified">Verified</a>,
+    }
+    if newUser.<a href="index.html#Validate">Validate</a>(<a href="../../builtin/index.html#true">true</a>).<a href="index.html#Handle">Handle</a>(w, r) {
+        return
+    }
+    if db.<a href="index.html#UpdateUser">UpdateUser</a>(newUser).<a href="index.html#Handle">Handle</a>(w, r) {
+        return
+    }
+}</pre>
+			
+				<h3 id="hdr-PasswordChangeInit">PasswordChangeInit</h3>
+<pre>This handler is responsible for initiating the password change procedure for a user.
+This means generating a password change token, storing it in the database and providing it
+for a user through an e-mail message.
+
+Methods: POST
+
+Request Body:
+{
+	email: &quot;...&quot;
+}
+
+Possible Responses:
+	201 (Created): The password change procedure has been initialized, which means that a new record of password change
+	token has been created in the database.
+
+	400 (Bad Request): Problem while decoding the request body.
+
+	404 (Not Found): Couldn&apos;t find any user with the provided e-mail address.
+
+	500 (Internal Server Error): Problem while retrieving a user with the specified e-mail. Could also be caused by
+	an error while generating, storing or sending the new password change token Refer to the logs for more information.
+</pre>
+
+				<pre>var <span id="PasswordChangeInit">PasswordChangeInit</span> <a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#HandlerFunc">HandlerFunc</a> = func(w <a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#ResponseWriter">ResponseWriter</a>, r *<a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#Request">Request</a>) {
+    type RequestBody struct {
+        Email <a href="../../builtin/index.html#string">string</a> `json:&#34;email&#34;`
+    }
+
+    var <span id="body">body</span> <a href="index.html#RequestBody">RequestBody</a>
+    if err := <a href="../../encoding/json/index.html">json</a>.<a href="../../encoding/json/index.html#NewDecoder">NewDecoder</a>(r.<a href="index.html#Body">Body</a>).<a href="index.html#Decode">Decode</a>(&amp;body); err != <a href="../../builtin/index.html#nil">nil</a> {
+        e := <a href="../utils/errhandle/index.html">errhandle</a>.<a href="../utils/errhandle/index.html#Error">Error</a>{
+            <a href="../utils/errhandle/index.html#Error.Type">Type</a>:          <a href="../utils/errhandle/index.html">errhandle</a>.<a href="../utils/errhandle/index.html#HandlerError">HandlerError</a>,
+            <a href="../utils/errhandle/index.html#Error.ServerMessage">ServerMessage</a>: <a href="../../fmt/index.html">fmt</a>.<a href="../../fmt/index.html#Sprintf">Sprintf</a>(&#34;error while decoding the request body: %v&#34;, err),
+            <a href="../utils/errhandle/index.html#Error.ClientMessage">ClientMessage</a>: &#34;An error has occurred while processing your request.&#34;,
+            <a href="../utils/errhandle/index.html#Error.Status">Status</a>:        <a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#StatusBadRequest">StatusBadRequest</a>,
+        }
+        if e.<a href="index.html#Handle">Handle</a>(w, r) {
+            return
+        }
+    }
+
+    u, e := db.<a href="index.html#GetUserByEmail">GetUserByEmail</a>(body.<a href="index.html#Email">Email</a>)
+    if e.<a href="index.html#Handle">Handle</a>(w, r) {
+        return
+    }
+
+    token, e := <a href="../utils/crypt/index.html">crypt</a>.<a href="../utils/crypt/index.html#RandomString">RandomString</a>(128)
+    if e.<a href="index.html#Handle">Handle</a>(w, r) {
+        return
+    }
+
+    duration := <a href="../../time/index.html">time</a>.<a href="../../time/index.html#Duration">Duration</a>(<a href="../config/index.html">config</a>.<a href="../config/index.html#PasswdChangeTime">PasswdChangeTime</a>)
+    passwdChange := <a href="../models/index.html">models</a>.<a href="../models/index.html#PasswordChange">PasswordChange</a>{
+        <a href="../models/index.html#PasswordChange.Token">Token</a>:   token,
+        <a href="../models/index.html#PasswordChange.UserId">UserId</a>:  u.<a href="index.html#Id">Id</a>,
+        <a href="../models/index.html#PasswordChange.Expires">Expires</a>: <a href="../../time/index.html">time</a>.<a href="../../time/index.html#Now">Now</a>().<a href="index.html#Add">Add</a>(duration),
+    }
+    if db.<a href="index.html#CreatePasswordChange">CreatePasswordChange</a>(passwdChange).<a href="index.html#Handle">Handle</a>(w, r) {
+        return
+    }
+
+    if em.<a href="index.html#SendPasswordChangeEmail">SendPasswordChangeEmail</a>(body.<a href="index.html#Email">Email</a>, token).<a href="index.html#Handle">Handle</a>(w, r) {
+        return
+    }
+
+    w.<a href="index.html#WriteHeader">WriteHeader</a>(<a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#StatusCreated">StatusCreated</a>)
+}</pre>
+			
+				<h3 id="hdr-RegisterUser">RegisterUser</h3>
+<pre>This handler allows the registratin process.
+This means creating an unverified user, after validation, in the database and sending a verification e-mail message.
+
+Methods: POST
+
+Request Body:
+{
+	username: &quot;...&quot;,
+	email: &quot;...&quot;,
+	password: &quot;...&quot;
+}
+
+Possible Responses:
+	201 (Created): A new unverified user record was created in the database.
+
+	400 (Bad Request): Error while decing the request body or validating the sent data.
+
+	409 (Conflict): A user with the provided credentials already exists.
+
+	500 (Internal Server Error): Problem while checking whether a user with the provided credentials already exists.
+	Could also occur when there&apos;s been a problem while creating a new user record in the database. Can also be caused
+	by a problem while the generation and storing of a new email verification token. The last possible cause for this
+	response to happen could be an error while sending the verification e-mail. Refer to the logs for more information.
+</pre>
+
+				<pre>var <span id="RegisterUser">RegisterUser</span> <a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#HandlerFunc">HandlerFunc</a> = func(w <a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#ResponseWriter">ResponseWriter</a>, r *<a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#Request">Request</a>) {
+    type RequestBody struct {
+        Username <a href="../../builtin/index.html#string">string</a> `json:&#34;username&#34;`
+        Email    <a href="../../builtin/index.html#string">string</a> `json:&#34;email&#34;`
+        Password <a href="../../builtin/index.html#string">string</a> `json:&#34;password&#34;`
+    }
+
+    var <span id="body">body</span> <a href="index.html#RequestBody">RequestBody</a>
+    if err := <a href="../../encoding/json/index.html">json</a>.<a href="../../encoding/json/index.html#NewDecoder">NewDecoder</a>(r.<a href="index.html#Body">Body</a>).<a href="index.html#Decode">Decode</a>(&amp;body); err != <a href="../../builtin/index.html#nil">nil</a> {
+        e := <a href="../utils/errhandle/index.html">errhandle</a>.<a href="../utils/errhandle/index.html#Error">Error</a>{
+            <a href="../utils/errhandle/index.html#Error.Type">Type</a>:          <a href="../utils/errhandle/index.html">errhandle</a>.<a href="../utils/errhandle/index.html#HandlerError">HandlerError</a>,
+            <a href="../utils/errhandle/index.html#Error.ServerMessage">ServerMessage</a>: <a href="../../fmt/index.html">fmt</a>.<a href="../../fmt/index.html#Sprintf">Sprintf</a>(&#34;error while decoding the request body: %v&#34;, err),
+            <a href="../utils/errhandle/index.html#Error.ClientMessage">ClientMessage</a>: &#34;An error has occurred while processing your request.&#34;,
+            <a href="../utils/errhandle/index.html#Error.Status">Status</a>:        <a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#StatusBadRequest">StatusBadRequest</a>,
+        }
+        if e.<a href="index.html#Handle">Handle</a>(w, r) {
+            return
+        }
+    }
+
+    u := <a href="../models/index.html">models</a>.<a href="../models/index.html#User">User</a>{
+        <a href="../models/index.html#User.Username">Username</a>: body.<a href="index.html#Username">Username</a>,
+        <a href="../models/index.html#User.Email">Email</a>:    body.<a href="index.html#Email">Email</a>,
+        <a href="../models/index.html#User.Password">Password</a>: body.<a href="index.html#Password">Password</a>,
+    }
+    if u.<a href="index.html#Validate">Validate</a>(<a href="../../builtin/index.html#false">false</a>).<a href="index.html#Handle">Handle</a>(w, r) {
+        return
+    }
+
+    exists, e := db.<a href="index.html#UserExists">UserExists</a>(u)
+    if e.<a href="index.html#Handle">Handle</a>(w, r) {
+        return
+    }
+    if exists {
+        e := <a href="../utils/errhandle/index.html">errhandle</a>.<a href="../utils/errhandle/index.html#Error">Error</a>{
+            <a href="../utils/errhandle/index.html#Error.Type">Type</a>:          <a href="../utils/errhandle/index.html">errhandle</a>.<a href="../utils/errhandle/index.html#DatabaseError">DatabaseError</a>,
+            <a href="../utils/errhandle/index.html#Error.ServerMessage">ServerMessage</a>: &#34;user already exists&#34;,
+            <a href="../utils/errhandle/index.html#Error.ClientMessage">ClientMessage</a>: &#34;A user with these credentials already exists.&#34;,
+            <a href="../utils/errhandle/index.html#Error.Status">Status</a>:        <a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#StatusConflict">StatusConflict</a>,
+        }
+        if e.<a href="index.html#Handle">Handle</a>(w, r) {
+            return
+        }
+    }
+
+    u.<a href="index.html#Password">Password</a> = <a href="../utils/crypt/index.html">crypt</a>.<a href="../utils/crypt/index.html#Sha256">Sha256</a>(body.<a href="index.html#Password">Password</a>)
+    if db.<a href="index.html#CreateUser">CreateUser</a>(u).<a href="index.html#Handle">Handle</a>(w, r) {
+        return
+    }
+
+    token, e := <a href="../utils/crypt/index.html">crypt</a>.<a href="../utils/crypt/index.html#RandomString">RandomString</a>(128)
+    if e.<a href="index.html#Handle">Handle</a>(w, r) {
+        return
+    }
+
+    duration := <a href="../../time/index.html">time</a>.<a href="../../time/index.html#Duration">Duration</a>(<a href="../config/index.html">config</a>.<a href="../config/index.html#EmailVerTime">EmailVerTime</a>)
+    verification := <a href="../models/index.html">models</a>.<a href="../models/index.html#EmailVerification">EmailVerification</a>{
+        <a href="../models/index.html#EmailVerification.Token">Token</a>:   token,
+        <a href="../models/index.html#EmailVerification.UserId">UserId</a>:  u.<a href="index.html#Id">Id</a>,
+        <a href="../models/index.html#EmailVerification.Expires">Expires</a>: <a href="../../time/index.html">time</a>.<a href="../../time/index.html#Now">Now</a>().<a href="index.html#Add">Add</a>(duration),
+    }
+    if db.<a href="index.html#CreateEmailVerification">CreateEmailVerification</a>(verification).<a href="index.html#Handle">Handle</a>(w, r) {
+        return
+    }
+
+    if em.<a href="index.html#SendVerificationEmail">SendVerificationEmail</a>(u.<a href="index.html#Email">Email</a>, token).<a href="index.html#Handle">Handle</a>(w, r) {
+        return
+    }
+
+    w.<a href="index.html#WriteHeader">WriteHeader</a>(<a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#StatusCreated">StatusCreated</a>)
+}</pre>
+			
+				<h3 id="hdr-VerifyEmail">VerifyEmail</h3>
+<pre>This handler allows the user to verify himself with an email verification token generated earlier.
+
+Methods: PATCH
+
+RequestBody:
+{
+	token: &quot;...&quot;
+}
+
+Possible Responses:
+	204 (No Content): User with the given token has been verified.
+
+	400 (Bad Request): Problem while decoding the request body.
+
+	404 (Not Found): No such e-mail verification token or unverified user was found in the database.
+
+	410 (Gone): The provided e-mail verification token has expired.
+
+	500 (Internal Server Error): Problem while retrieving the provided e-mail verification token. Could also be caused
+	by an error while deleting the e-mail verification token or when verifying a user. Refer to the logs for more
+	information.
+</pre>
+
+				<pre>var <span id="VerifyEmail">VerifyEmail</span> <a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#HandlerFunc">HandlerFunc</a> = func(w <a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#ResponseWriter">ResponseWriter</a>, r *<a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#Request">Request</a>) {
+    type RequestBody struct {
+        Token <a href="../../builtin/index.html#string">string</a> `json:&#34;token&#34;`
+    }
+
+    var <span id="body">body</span> <a href="index.html#RequestBody">RequestBody</a>
+    if err := <a href="../../encoding/json/index.html">json</a>.<a href="../../encoding/json/index.html#NewDecoder">NewDecoder</a>(r.<a href="index.html#Body">Body</a>).<a href="index.html#Decode">Decode</a>(&amp;body); err != <a href="../../builtin/index.html#nil">nil</a> {
+        e := <a href="../utils/errhandle/index.html">errhandle</a>.<a href="../utils/errhandle/index.html#Error">Error</a>{
+            <a href="../utils/errhandle/index.html#Error.Type">Type</a>:          <a href="../utils/errhandle/index.html">errhandle</a>.<a href="../utils/errhandle/index.html#HandlerError">HandlerError</a>,
+            <a href="../utils/errhandle/index.html#Error.ServerMessage">ServerMessage</a>: <a href="../../fmt/index.html">fmt</a>.<a href="../../fmt/index.html#Sprintf">Sprintf</a>(&#34;error while retrieving the access_token cookie: %v&#34;, err),
+            <a href="../utils/errhandle/index.html#Error.ClientMessage">ClientMessage</a>: &#34;An error has occurred while processing your request.&#34;,
+            <a href="../utils/errhandle/index.html#Error.Status">Status</a>:        <a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#StatusBadRequest">StatusBadRequest</a>,
+        }
+        if e.<a href="index.html#Handle">Handle</a>(w, r) {
+            return
+        }
+    }
+
+    emailValidation, e := db.<a href="index.html#GetEmailVerificationByToken">GetEmailVerificationByToken</a>(body.<a href="index.html#Token">Token</a>)
+    if e.<a href="index.html#Handle">Handle</a>(w, r) {
+        return
+    }
+
+    if emailValidation.<a href="index.html#Expires">Expires</a>.<a href="index.html#Before">Before</a>(<a href="../../time/index.html">time</a>.<a href="../../time/index.html#Now">Now</a>()) {
+        e := <a href="../utils/errhandle/index.html">errhandle</a>.<a href="../utils/errhandle/index.html#Error">Error</a>{
+            <a href="../utils/errhandle/index.html#Error.Type">Type</a>:          <a href="../utils/errhandle/index.html">errhandle</a>.<a href="../utils/errhandle/index.html#DatabaseError">DatabaseError</a>,
+            <a href="../utils/errhandle/index.html#Error.ServerMessage">ServerMessage</a>: &#34;email validation token has expired&#34;,
+            <a href="../utils/errhandle/index.html#Error.ClientMessage">ClientMessage</a>: &#34;The verification link is invalid or has expired.&#34;,
+            <a href="../utils/errhandle/index.html#Error.Status">Status</a>:        <a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#StatusGone">StatusGone</a>,
+        }
+        e.<a href="index.html#Handle">Handle</a>(w, r)
+        return
+    }
+
+    e = db.<a href="index.html#DeleteEmailVerificationById">DeleteEmailVerificationById</a>(emailValidation.<a href="index.html#Id">Id</a>)
+    if e.<a href="index.html#Handle">Handle</a>(w, r) {
+        return
+    }
+
+    e = db.<a href="index.html#VerifyUser">VerifyUser</a>(emailValidation.<a href="index.html#UserId">UserId</a>)
+    if e.<a href="index.html#Handle">Handle</a>(w, r) {
+        return
+    }
+
+    w.<a href="index.html#WriteHeader">WriteHeader</a>(<a href="../../net/http/index.html">http</a>.<a href="../../net/http/index.html#StatusNoContent">StatusNoContent</a>)
+}</pre>
+			
+		
+		
+		
+	
+
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

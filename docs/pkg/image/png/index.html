@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>png - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package png
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "image/png"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+				<dd><a href="index.html#pkg-examples" class="examplesLink">Examples</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>Package png implements a PNG image decoder and encoder.
+<p>The PNG specification is at <a href="https://www.w3.org/TR/PNG/">https://www.w3.org/TR/PNG/</a>.
+
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+			
+			
+				
+				<dd><a href="index.html#Decode">func Decode(r io.Reader) (image.Image, error)</a></dd>
+			
+				
+				<dd><a href="index.html#DecodeConfig">func DecodeConfig(r io.Reader) (image.Config, error)</a></dd>
+			
+				
+				<dd><a href="index.html#Encode">func Encode(w io.Writer, m image.Image) error</a></dd>
+			
+			
+				
+				<dd><a href="index.html#CompressionLevel">type CompressionLevel</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#Encoder">type Encoder</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Encoder.Encode">func (enc *Encoder) Encode(w io.Writer, m image.Image) error</a></dd>
+				
+			
+				
+				<dd><a href="index.html#EncoderBuffer">type EncoderBuffer</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#EncoderBufferPool">type EncoderBufferPool</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#FormatError">type FormatError</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#FormatError.Error">func (e FormatError) Error() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#UnsupportedError">type UnsupportedError</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#UnsupportedError.Error">func (e UnsupportedError) Error() string</a></dd>
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+		<div id="pkg-examples">
+			<h3>Examples</h3>
+			<div class="js-expandAll expandAll collapsed">(Expand All)</div>
+			<dl>
+			
+			<dd><a class="exampleLink" href="index.html#example_Decode">Decode</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Encode">Encode</a></dd>
+			
+			</dl>
+		</div>
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../../src/image/png/paeth.go">paeth.go</a>
+			
+				<a href="../../../src/image/png/reader.go">reader.go</a>
+			
+				<a href="../../../src/image/png/writer.go">writer.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+		
+		
+			
+			
+			<h2 id="Decode">func <a href="../../../src/image/png/reader.go?s=25072:25117#L959">Decode</a>
+				<a class="permalink" href="index.html#Decode">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Decode(r <a href="../../io/index.html">io</a>.<a href="../../io/index.html#Reader">Reader</a>) (<a href="../index.html">image</a>.<a href="../index.html#Image">Image</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+			<p>Decode reads a PNG image from r and returns it as an <a href="http://localhost:8080/image#Image">image.Image</a>.
+The type of Image returned depends on the PNG contents.
+
+			<div id="example_Decode" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">
+<span class="comment">// This example uses png.Decode which can only decode PNG images.</span>
+<span class="comment">// Consider using the general image.Decode as it can sniff and decode any registered image format.</span>
+img, err := png.Decode(gopherPNG())
+if err != nil {
+    log.Fatal(err)
+}
+
+levels := []string{&#34; &#34;, &#34;░&#34;, &#34;▒&#34;, &#34;▓&#34;, &#34;█&#34;}
+
+for y := img.Bounds().Min.Y; y &lt; img.Bounds().Max.Y; y++ {
+    for x := img.Bounds().Min.X; x &lt; img.Bounds().Max.X; x++ {
+        c := color.GrayModel.Convert(img.At(x, y)).(color.Gray)
+        level := c.Y / 51 <span class="comment">// 51 * 5 = 255</span>
+        if level == 5 {
+            level--
+        }
+        fmt.Print(levels[level])
+    }
+    fmt.Print(&#34;\n&#34;)
+}
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="DecodeConfig">func <a href="../../../src/image/png/reader.go?s=25577:25629#L983">DecodeConfig</a>
+				<a class="permalink" href="index.html#DecodeConfig">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func DecodeConfig(r <a href="../../io/index.html">io</a>.<a href="../../io/index.html#Reader">Reader</a>) (<a href="../index.html">image</a>.<a href="../index.html#Config">Config</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+			<p>DecodeConfig returns the color model and dimensions of a PNG image without
+decoding the entire image.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Encode">func <a href="../../../src/image/png/writer.go?s=14120:14165#L580">Encode</a>
+				<a class="permalink" href="index.html#Encode">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Encode(w <a href="../../io/index.html">io</a>.<a href="../../io/index.html#Writer">Writer</a>, m <a href="../index.html">image</a>.<a href="../index.html#Image">Image</a>) <a href="../../builtin/index.html#error">error</a></pre>
+			<p>Encode writes the Image m to w in PNG format. Any Image may be
+encoded, but images that are not <a href="http://localhost:8080/image#NRGBA">image.NRGBA</a> might be encoded lossily.
+
+			<div id="example_Encode" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">
+const width, height = 256, 256
+
+<span class="comment">// Create a colored image of the given width and height.</span>
+img := image.NewNRGBA(image.Rect(0, 0, width, height))
+
+for y := 0; y &lt; height; y++ {
+    for x := 0; x &lt; width; x++ {
+        img.Set(x, y, color.NRGBA{
+            R: uint8((x + y) &amp; 255),
+            G: uint8((x + y) &lt;&lt; 1 &amp; 255),
+            B: uint8((x + y) &lt;&lt; 2 &amp; 255),
+            A: 255,
+        })
+    }
+}
+
+f, err := os.Create(&#34;image.png&#34;)
+if err != nil {
+    log.Fatal(err)
+}
+
+if err := png.Encode(f, img); err != nil {
+    f.Close()
+    log.Fatal(err)
+}
+
+if err := f.Close(); err != nil {
+    log.Fatal(err)
+}
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+		
+			
+			
+			<h2 id="CompressionLevel">type <a href="../../../src/image/png/writer.go?s=1210:1235#L45">CompressionLevel</a>
+				<a class="permalink" href="index.html#CompressionLevel">&#xb6;</a>
+				
+				
+			</h2>
+			<p>CompressionLevel indicates the compression level.
+
+			<pre>type CompressionLevel <a href="../../builtin/index.html#int">int</a></pre>
+
+			
+				
+				<pre>const (
+    <span id="DefaultCompression">DefaultCompression</span> <a href="index.html#CompressionLevel">CompressionLevel</a> = 0
+    <span id="NoCompression">NoCompression</span>      <a href="index.html#CompressionLevel">CompressionLevel</a> = -1
+    <span id="BestSpeed">BestSpeed</span>          <a href="index.html#CompressionLevel">CompressionLevel</a> = -2
+    <span id="BestCompression">BestCompression</span>    <a href="index.html#CompressionLevel">CompressionLevel</a> = -3
+)</pre>
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="Encoder">type <a href="../../../src/image/png/writer.go?s=328:527#L9">Encoder</a>
+				<a class="permalink" href="index.html#Encoder">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Encoder configures encoding PNG images.
+
+			<pre>type Encoder struct {
+<span id="Encoder.CompressionLevel"></span>    CompressionLevel <a href="index.html#CompressionLevel">CompressionLevel</a>
+
+<span id="Encoder.BufferPool"></span>    <span class="comment">// BufferPool optionally specifies a buffer pool to get temporary</span>
+    <span class="comment">// EncoderBuffers when encoding an image.</span>
+    BufferPool <a href="index.html#EncoderBufferPool">EncoderBufferPool</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="Encoder.Encode">func (*Encoder) <a href="../../../src/image/png/writer.go?s=14258:14318#L586">Encode</a>
+					<a class="permalink" href="index.html#Encoder.Encode">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (enc *<a href="index.html#Encoder">Encoder</a>) Encode(w <a href="../../io/index.html">io</a>.<a href="../../io/index.html#Writer">Writer</a>, m <a href="../index.html">image</a>.<a href="../index.html#Image">Image</a>) <a href="../../builtin/index.html#error">error</a></pre>
+				<p>Encode writes the Image m to w in PNG format.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="EncoderBuffer">type <a href="../../../src/image/png/writer.go?s=860:886#L26">EncoderBuffer</a>
+				<a class="permalink" href="index.html#EncoderBuffer">&#xb6;</a>
+				
+				
+			</h2>
+			<p>EncoderBuffer holds the buffers used for encoding PNG images.
+
+			<pre>type EncoderBuffer encoder</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="EncoderBufferPool">type <a href="../../../src/image/png/writer.go?s=714:793#L20">EncoderBufferPool</a>
+				<a class="permalink" href="index.html#EncoderBufferPool">&#xb6;</a>
+				
+				
+			</h2>
+			<p>EncoderBufferPool is an interface for getting and returning temporary
+instances of the <a href="index.html#EncoderBuffer">EncoderBuffer</a> struct. This can be used to reuse buffers
+when encoding multiple images.
+
+			<pre>type EncoderBufferPool interface {
+    Get() *<a href="index.html#EncoderBuffer">EncoderBuffer</a>
+    Put(*<a href="index.html#EncoderBuffer">EncoderBuffer</a>)
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="FormatError">type <a href="../../../src/image/png/reader.go?s=2457:2480#L118">FormatError</a>
+				<a class="permalink" href="index.html#FormatError">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A FormatError reports that the input is not a valid PNG.
+
+			<pre>type FormatError <a href="../../builtin/index.html#string">string</a></pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="FormatError.Error">func (FormatError) <a href="../../../src/image/png/reader.go?s=2482:2517#L120">Error</a>
+					<a class="permalink" href="index.html#FormatError.Error">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (e <a href="index.html#FormatError">FormatError</a>) Error() <a href="../../builtin/index.html#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="UnsupportedError">type <a href="../../../src/image/png/reader.go?s=2713:2741#L125">UnsupportedError</a>
+				<a class="permalink" href="index.html#UnsupportedError">&#xb6;</a>
+				
+				
+			</h2>
+			<p>An UnsupportedError reports that the input uses a valid but unimplemented PNG feature.
+
+			<pre>type UnsupportedError <a href="../../builtin/index.html#string">string</a></pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="UnsupportedError.Error">func (UnsupportedError) <a href="../../../src/image/png/reader.go?s=2743:2783#L127">Error</a>
+					<a class="permalink" href="index.html#UnsupportedError.Error">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (e <a href="index.html#UnsupportedError">UnsupportedError</a>) Error() <a href="../../builtin/index.html#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+	
+
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

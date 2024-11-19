@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>src/runtime/coverage/apis.go - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="./apis.go?s=1837:1876#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Source file
+    <a href="http://localhost:8080/src">src</a>/<a href="http://localhost:8080/src/runtime">runtime</a>/<a href="http://localhost:8080/src/runtime/coverage">coverage</a>/<span class="text-muted">apis.go</span>
+  </h1>
+
+
+
+
+
+  <h2>
+    Documentation: <a href="http://localhost:8080/pkg/runtime/coverage">runtime/coverage</a>
+  </h2>
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1&nbsp;&nbsp;</span><span class="comment">// Copyright 2022 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2&nbsp;&nbsp;</span><span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3&nbsp;&nbsp;</span><span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4&nbsp;&nbsp;</span>
+<span id="L5" class="ln">     5&nbsp;&nbsp;</span>package coverage
+<span id="L6" class="ln">     6&nbsp;&nbsp;</span>
+<span id="L7" class="ln">     7&nbsp;&nbsp;</span>import (
+<span id="L8" class="ln">     8&nbsp;&nbsp;</span>	&#34;fmt&#34;
+<span id="L9" class="ln">     9&nbsp;&nbsp;</span>	&#34;internal/coverage&#34;
+<span id="L10" class="ln">    10&nbsp;&nbsp;</span>	&#34;io&#34;
+<span id="L11" class="ln">    11&nbsp;&nbsp;</span>	&#34;sync/atomic&#34;
+<span id="L12" class="ln">    12&nbsp;&nbsp;</span>	&#34;unsafe&#34;
+<span id="L13" class="ln">    13&nbsp;&nbsp;</span>)
+<span id="L14" class="ln">    14&nbsp;&nbsp;</span>
+<span id="L15" class="ln">    15&nbsp;&nbsp;</span><span class="comment">// WriteMetaDir writes a coverage meta-data file for the currently</span>
+<span id="L16" class="ln">    16&nbsp;&nbsp;</span><span class="comment">// running program to the directory specified in &#39;dir&#39;. An error will</span>
+<span id="L17" class="ln">    17&nbsp;&nbsp;</span><span class="comment">// be returned if the operation can&#39;t be completed successfully (for</span>
+<span id="L18" class="ln">    18&nbsp;&nbsp;</span><span class="comment">// example, if the currently running program was not built with</span>
+<span id="L19" class="ln">    19&nbsp;&nbsp;</span><span class="comment">// &#34;-cover&#34;, or if the directory does not exist).</span>
+<span id="L20" class="ln">    20&nbsp;&nbsp;</span>func WriteMetaDir(dir string) error {
+<span id="L21" class="ln">    21&nbsp;&nbsp;</span>	if !finalHashComputed {
+<span id="L22" class="ln">    22&nbsp;&nbsp;</span>		return fmt.Errorf(&#34;error: no meta-data available (binary not built with -cover?)&#34;)
+<span id="L23" class="ln">    23&nbsp;&nbsp;</span>	}
+<span id="L24" class="ln">    24&nbsp;&nbsp;</span>	return emitMetaDataToDirectory(dir, getCovMetaList())
+<span id="L25" class="ln">    25&nbsp;&nbsp;</span>}
+<span id="L26" class="ln">    26&nbsp;&nbsp;</span>
+<span id="L27" class="ln">    27&nbsp;&nbsp;</span><span class="comment">// WriteMeta writes the meta-data content (the payload that would</span>
+<span id="L28" class="ln">    28&nbsp;&nbsp;</span><span class="comment">// normally be emitted to a meta-data file) for the currently running</span>
+<span id="L29" class="ln">    29&nbsp;&nbsp;</span><span class="comment">// program to the writer &#39;w&#39;. An error will be returned if the</span>
+<span id="L30" class="ln">    30&nbsp;&nbsp;</span><span class="comment">// operation can&#39;t be completed successfully (for example, if the</span>
+<span id="L31" class="ln">    31&nbsp;&nbsp;</span><span class="comment">// currently running program was not built with &#34;-cover&#34;, or if a</span>
+<span id="L32" class="ln">    32&nbsp;&nbsp;</span><span class="comment">// write fails).</span>
+<span id="L33" class="ln">    33&nbsp;&nbsp;</span>func WriteMeta(w io.Writer) error {
+<span id="L34" class="ln">    34&nbsp;&nbsp;</span>	if w == nil {
+<span id="L35" class="ln">    35&nbsp;&nbsp;</span>		return fmt.Errorf(&#34;error: nil writer in WriteMeta&#34;)
+<span id="L36" class="ln">    36&nbsp;&nbsp;</span>	}
+<span id="L37" class="ln">    37&nbsp;&nbsp;</span>	if !finalHashComputed {
+<span id="L38" class="ln">    38&nbsp;&nbsp;</span>		return fmt.Errorf(&#34;error: no meta-data available (binary not built with -cover?)&#34;)
+<span id="L39" class="ln">    39&nbsp;&nbsp;</span>	}
+<span id="L40" class="ln">    40&nbsp;&nbsp;</span>	ml := getCovMetaList()
+<span id="L41" class="ln">    41&nbsp;&nbsp;</span>	return writeMetaData(w, ml, cmode, cgran, finalHash)
+<span id="L42" class="ln">    42&nbsp;&nbsp;</span>}
+<span id="L43" class="ln">    43&nbsp;&nbsp;</span>
+<span id="L44" class="ln">    44&nbsp;&nbsp;</span><span class="comment">// WriteCountersDir writes a coverage counter-data file for the</span>
+<span id="L45" class="ln">    45&nbsp;&nbsp;</span><span class="comment">// currently running program to the directory specified in &#39;dir&#39;. An</span>
+<span id="L46" class="ln">    46&nbsp;&nbsp;</span><span class="comment">// error will be returned if the operation can&#39;t be completed</span>
+<span id="L47" class="ln">    47&nbsp;&nbsp;</span><span class="comment">// successfully (for example, if the currently running program was not</span>
+<span id="L48" class="ln">    48&nbsp;&nbsp;</span><span class="comment">// built with &#34;-cover&#34;, or if the directory does not exist). The</span>
+<span id="L49" class="ln">    49&nbsp;&nbsp;</span><span class="comment">// counter data written will be a snapshot taken at the point of the</span>
+<span id="L50" class="ln">    50&nbsp;&nbsp;</span><span class="comment">// call.</span>
+<span id="L51" class="ln">    51&nbsp;&nbsp;</span><span class="selection">func WriteCountersDir(dir string) error</span> {
+<span id="L52" class="ln">    52&nbsp;&nbsp;</span>	if cmode != coverage.CtrModeAtomic {
+<span id="L53" class="ln">    53&nbsp;&nbsp;</span>		return fmt.Errorf(&#34;WriteCountersDir invoked for program built with -covermode=%s (please use -covermode=atomic)&#34;, cmode.String())
+<span id="L54" class="ln">    54&nbsp;&nbsp;</span>	}
+<span id="L55" class="ln">    55&nbsp;&nbsp;</span>	return emitCounterDataToDirectory(dir)
+<span id="L56" class="ln">    56&nbsp;&nbsp;</span>}
+<span id="L57" class="ln">    57&nbsp;&nbsp;</span>
+<span id="L58" class="ln">    58&nbsp;&nbsp;</span><span class="comment">// WriteCounters writes coverage counter-data content for the</span>
+<span id="L59" class="ln">    59&nbsp;&nbsp;</span><span class="comment">// currently running program to the writer &#39;w&#39;. An error will be</span>
+<span id="L60" class="ln">    60&nbsp;&nbsp;</span><span class="comment">// returned if the operation can&#39;t be completed successfully (for</span>
+<span id="L61" class="ln">    61&nbsp;&nbsp;</span><span class="comment">// example, if the currently running program was not built with</span>
+<span id="L62" class="ln">    62&nbsp;&nbsp;</span><span class="comment">// &#34;-cover&#34;, or if a write fails). The counter data written will be a</span>
+<span id="L63" class="ln">    63&nbsp;&nbsp;</span><span class="comment">// snapshot taken at the point of the invocation.</span>
+<span id="L64" class="ln">    64&nbsp;&nbsp;</span>func WriteCounters(w io.Writer) error {
+<span id="L65" class="ln">    65&nbsp;&nbsp;</span>	if w == nil {
+<span id="L66" class="ln">    66&nbsp;&nbsp;</span>		return fmt.Errorf(&#34;error: nil writer in WriteCounters&#34;)
+<span id="L67" class="ln">    67&nbsp;&nbsp;</span>	}
+<span id="L68" class="ln">    68&nbsp;&nbsp;</span>	if cmode != coverage.CtrModeAtomic {
+<span id="L69" class="ln">    69&nbsp;&nbsp;</span>		return fmt.Errorf(&#34;WriteCounters invoked for program built with -covermode=%s (please use -covermode=atomic)&#34;, cmode.String())
+<span id="L70" class="ln">    70&nbsp;&nbsp;</span>	}
+<span id="L71" class="ln">    71&nbsp;&nbsp;</span>	<span class="comment">// Ask the runtime for the list of coverage counter symbols.</span>
+<span id="L72" class="ln">    72&nbsp;&nbsp;</span>	cl := getCovCounterList()
+<span id="L73" class="ln">    73&nbsp;&nbsp;</span>	if len(cl) == 0 {
+<span id="L74" class="ln">    74&nbsp;&nbsp;</span>		return fmt.Errorf(&#34;program not built with -cover&#34;)
+<span id="L75" class="ln">    75&nbsp;&nbsp;</span>	}
+<span id="L76" class="ln">    76&nbsp;&nbsp;</span>	if !finalHashComputed {
+<span id="L77" class="ln">    77&nbsp;&nbsp;</span>		return fmt.Errorf(&#34;meta-data not written yet, unable to write counter data&#34;)
+<span id="L78" class="ln">    78&nbsp;&nbsp;</span>	}
+<span id="L79" class="ln">    79&nbsp;&nbsp;</span>
+<span id="L80" class="ln">    80&nbsp;&nbsp;</span>	pm := getCovPkgMap()
+<span id="L81" class="ln">    81&nbsp;&nbsp;</span>	s := &amp;emitState{
+<span id="L82" class="ln">    82&nbsp;&nbsp;</span>		counterlist: cl,
+<span id="L83" class="ln">    83&nbsp;&nbsp;</span>		pkgmap:      pm,
+<span id="L84" class="ln">    84&nbsp;&nbsp;</span>	}
+<span id="L85" class="ln">    85&nbsp;&nbsp;</span>	return s.emitCounterDataToWriter(w)
+<span id="L86" class="ln">    86&nbsp;&nbsp;</span>}
+<span id="L87" class="ln">    87&nbsp;&nbsp;</span>
+<span id="L88" class="ln">    88&nbsp;&nbsp;</span><span class="comment">// ClearCounters clears/resets all coverage counter variables in the</span>
+<span id="L89" class="ln">    89&nbsp;&nbsp;</span><span class="comment">// currently running program. It returns an error if the program in</span>
+<span id="L90" class="ln">    90&nbsp;&nbsp;</span><span class="comment">// question was not built with the &#34;-cover&#34; flag. Clearing of coverage</span>
+<span id="L91" class="ln">    91&nbsp;&nbsp;</span><span class="comment">// counters is also not supported for programs not using atomic</span>
+<span id="L92" class="ln">    92&nbsp;&nbsp;</span><span class="comment">// counter mode (see more detailed comments below for the rationale</span>
+<span id="L93" class="ln">    93&nbsp;&nbsp;</span><span class="comment">// here).</span>
+<span id="L94" class="ln">    94&nbsp;&nbsp;</span>func ClearCounters() error {
+<span id="L95" class="ln">    95&nbsp;&nbsp;</span>	cl := getCovCounterList()
+<span id="L96" class="ln">    96&nbsp;&nbsp;</span>	if len(cl) == 0 {
+<span id="L97" class="ln">    97&nbsp;&nbsp;</span>		return fmt.Errorf(&#34;program not built with -cover&#34;)
+<span id="L98" class="ln">    98&nbsp;&nbsp;</span>	}
+<span id="L99" class="ln">    99&nbsp;&nbsp;</span>	if cmode != coverage.CtrModeAtomic {
+<span id="L100" class="ln">   100&nbsp;&nbsp;</span>		return fmt.Errorf(&#34;ClearCounters invoked for program built with -covermode=%s (please use -covermode=atomic)&#34;, cmode.String())
+<span id="L101" class="ln">   101&nbsp;&nbsp;</span>	}
+<span id="L102" class="ln">   102&nbsp;&nbsp;</span>
+<span id="L103" class="ln">   103&nbsp;&nbsp;</span>	<span class="comment">// Implementation note: this function would be faster and simpler</span>
+<span id="L104" class="ln">   104&nbsp;&nbsp;</span>	<span class="comment">// if we could just zero out the entire counter array, but for the</span>
+<span id="L105" class="ln">   105&nbsp;&nbsp;</span>	<span class="comment">// moment we go through and zero out just the slots in the array</span>
+<span id="L106" class="ln">   106&nbsp;&nbsp;</span>	<span class="comment">// corresponding to the counter values. We do this to avoid the</span>
+<span id="L107" class="ln">   107&nbsp;&nbsp;</span>	<span class="comment">// following bad scenario: suppose that a user builds their Go</span>
+<span id="L108" class="ln">   108&nbsp;&nbsp;</span>	<span class="comment">// program with &#34;-cover&#34;, and that program has a function (call it</span>
+<span id="L109" class="ln">   109&nbsp;&nbsp;</span>	<span class="comment">// main.XYZ) that invokes ClearCounters:</span>
+<span id="L110" class="ln">   110&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L111" class="ln">   111&nbsp;&nbsp;</span>	<span class="comment">//     func XYZ() {</span>
+<span id="L112" class="ln">   112&nbsp;&nbsp;</span>	<span class="comment">//       ... do some stuff ...</span>
+<span id="L113" class="ln">   113&nbsp;&nbsp;</span>	<span class="comment">//       coverage.ClearCounters()</span>
+<span id="L114" class="ln">   114&nbsp;&nbsp;</span>	<span class="comment">//       if someCondition {   &lt;&lt;--- HERE</span>
+<span id="L115" class="ln">   115&nbsp;&nbsp;</span>	<span class="comment">//         ...</span>
+<span id="L116" class="ln">   116&nbsp;&nbsp;</span>	<span class="comment">//       }</span>
+<span id="L117" class="ln">   117&nbsp;&nbsp;</span>	<span class="comment">//     }</span>
+<span id="L118" class="ln">   118&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L119" class="ln">   119&nbsp;&nbsp;</span>	<span class="comment">// At the point where ClearCounters executes, main.XYZ has not yet</span>
+<span id="L120" class="ln">   120&nbsp;&nbsp;</span>	<span class="comment">// finished running, thus as soon as the call returns the line</span>
+<span id="L121" class="ln">   121&nbsp;&nbsp;</span>	<span class="comment">// marked &#34;HERE&#34; above will trigger the writing of a non-zero</span>
+<span id="L122" class="ln">   122&nbsp;&nbsp;</span>	<span class="comment">// value into main.XYZ&#39;s counter slab. However since we&#39;ve just</span>
+<span id="L123" class="ln">   123&nbsp;&nbsp;</span>	<span class="comment">// finished clearing the entire counter segment, we will have lost</span>
+<span id="L124" class="ln">   124&nbsp;&nbsp;</span>	<span class="comment">// the values in the prolog portion of main.XYZ&#39;s counter slab</span>
+<span id="L125" class="ln">   125&nbsp;&nbsp;</span>	<span class="comment">// (nctrs, pkgid, funcid). This means that later on at the end of</span>
+<span id="L126" class="ln">   126&nbsp;&nbsp;</span>	<span class="comment">// program execution as we walk through the entire counter array</span>
+<span id="L127" class="ln">   127&nbsp;&nbsp;</span>	<span class="comment">// for the program looking for executed functions, we&#39;ll zoom past</span>
+<span id="L128" class="ln">   128&nbsp;&nbsp;</span>	<span class="comment">// main.XYZ&#39;s prolog (which was zero&#39;d) and hit the non-zero</span>
+<span id="L129" class="ln">   129&nbsp;&nbsp;</span>	<span class="comment">// counter value corresponding to the &#34;HERE&#34; block, which will</span>
+<span id="L130" class="ln">   130&nbsp;&nbsp;</span>	<span class="comment">// then be interpreted as the start of another live function.</span>
+<span id="L131" class="ln">   131&nbsp;&nbsp;</span>	<span class="comment">// Things will go downhill from there.</span>
+<span id="L132" class="ln">   132&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L133" class="ln">   133&nbsp;&nbsp;</span>	<span class="comment">// This same scenario is also a potential risk if the program is</span>
+<span id="L134" class="ln">   134&nbsp;&nbsp;</span>	<span class="comment">// running on an architecture that permits reordering of</span>
+<span id="L135" class="ln">   135&nbsp;&nbsp;</span>	<span class="comment">// writes/stores, since the inconsistency described above could</span>
+<span id="L136" class="ln">   136&nbsp;&nbsp;</span>	<span class="comment">// arise here. Example scenario:</span>
+<span id="L137" class="ln">   137&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L138" class="ln">   138&nbsp;&nbsp;</span>	<span class="comment">//     func ABC() {</span>
+<span id="L139" class="ln">   139&nbsp;&nbsp;</span>	<span class="comment">//       ...                    // prolog</span>
+<span id="L140" class="ln">   140&nbsp;&nbsp;</span>	<span class="comment">//       if alwaysTrue() {</span>
+<span id="L141" class="ln">   141&nbsp;&nbsp;</span>	<span class="comment">//         XYZ()                // counter update here</span>
+<span id="L142" class="ln">   142&nbsp;&nbsp;</span>	<span class="comment">//       }</span>
+<span id="L143" class="ln">   143&nbsp;&nbsp;</span>	<span class="comment">//     }</span>
+<span id="L144" class="ln">   144&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L145" class="ln">   145&nbsp;&nbsp;</span>	<span class="comment">// In the instrumented version of ABC, the prolog of the function</span>
+<span id="L146" class="ln">   146&nbsp;&nbsp;</span>	<span class="comment">// will contain a series of stores to the initial portion of the</span>
+<span id="L147" class="ln">   147&nbsp;&nbsp;</span>	<span class="comment">// counter array to write number-of-counters, pkgid, funcid. Later</span>
+<span id="L148" class="ln">   148&nbsp;&nbsp;</span>	<span class="comment">// in the function there is also a store to increment a counter</span>
+<span id="L149" class="ln">   149&nbsp;&nbsp;</span>	<span class="comment">// for the block containing the call to XYZ(). If the CPU is</span>
+<span id="L150" class="ln">   150&nbsp;&nbsp;</span>	<span class="comment">// allowed to reorder stores and decides to issue the XYZ store</span>
+<span id="L151" class="ln">   151&nbsp;&nbsp;</span>	<span class="comment">// before the prolog stores, this could be observable as an</span>
+<span id="L152" class="ln">   152&nbsp;&nbsp;</span>	<span class="comment">// inconsistency similar to the one above. Hence the requirement</span>
+<span id="L153" class="ln">   153&nbsp;&nbsp;</span>	<span class="comment">// for atomic counter mode: according to package atomic docs,</span>
+<span id="L154" class="ln">   154&nbsp;&nbsp;</span>	<span class="comment">// &#34;...operations that happen in a specific order on one thread,</span>
+<span id="L155" class="ln">   155&nbsp;&nbsp;</span>	<span class="comment">// will always be observed to happen in exactly that order by</span>
+<span id="L156" class="ln">   156&nbsp;&nbsp;</span>	<span class="comment">// another thread&#34;. Thus we can be sure that there will be no</span>
+<span id="L157" class="ln">   157&nbsp;&nbsp;</span>	<span class="comment">// inconsistency when reading the counter array from the thread</span>
+<span id="L158" class="ln">   158&nbsp;&nbsp;</span>	<span class="comment">// running ClearCounters.</span>
+<span id="L159" class="ln">   159&nbsp;&nbsp;</span>
+<span id="L160" class="ln">   160&nbsp;&nbsp;</span>	for _, c := range cl {
+<span id="L161" class="ln">   161&nbsp;&nbsp;</span>		sd := unsafe.Slice((*atomic.Uint32)(unsafe.Pointer(c.Counters)), int(c.Len))
+<span id="L162" class="ln">   162&nbsp;&nbsp;</span>		for i := 0; i &lt; len(sd); i++ {
+<span id="L163" class="ln">   163&nbsp;&nbsp;</span>			<span class="comment">// Skip ahead until the next non-zero value.</span>
+<span id="L164" class="ln">   164&nbsp;&nbsp;</span>			sdi := sd[i].Load()
+<span id="L165" class="ln">   165&nbsp;&nbsp;</span>			if sdi == 0 {
+<span id="L166" class="ln">   166&nbsp;&nbsp;</span>				continue
+<span id="L167" class="ln">   167&nbsp;&nbsp;</span>			}
+<span id="L168" class="ln">   168&nbsp;&nbsp;</span>			<span class="comment">// We found a function that was executed; clear its counters.</span>
+<span id="L169" class="ln">   169&nbsp;&nbsp;</span>			nCtrs := sdi
+<span id="L170" class="ln">   170&nbsp;&nbsp;</span>			for j := 0; j &lt; int(nCtrs); j++ {
+<span id="L171" class="ln">   171&nbsp;&nbsp;</span>				sd[i+coverage.FirstCtrOffset+j].Store(0)
+<span id="L172" class="ln">   172&nbsp;&nbsp;</span>			}
+<span id="L173" class="ln">   173&nbsp;&nbsp;</span>			<span class="comment">// Move to next function.</span>
+<span id="L174" class="ln">   174&nbsp;&nbsp;</span>			i += coverage.FirstCtrOffset + int(nCtrs) - 1
+<span id="L175" class="ln">   175&nbsp;&nbsp;</span>		}
+<span id="L176" class="ln">   176&nbsp;&nbsp;</span>	}
+<span id="L177" class="ln">   177&nbsp;&nbsp;</span>	return nil
+<span id="L178" class="ln">   178&nbsp;&nbsp;</span>}
+<span id="L179" class="ln">   179&nbsp;&nbsp;</span>
+</pre><p><a href="apis.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

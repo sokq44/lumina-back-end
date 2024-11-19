@@ -1,0 +1,1966 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>strconv - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package strconv
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "strconv"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+				<dd><a href="index.html#pkg-examples" class="examplesLink">Examples</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>Package strconv implements conversions to and from string representations
+of basic data types.
+<h3 id="hdr-Numeric_Conversions">Numeric Conversions</h3>
+<p>The most common numeric conversions are Atoi (string to int) and Itoa (int to string).
+<pre>i, err := strconv.Atoi(&quot;-42&quot;)
+s := strconv.Itoa(-42)
+</pre>
+<p>These assume decimal and the Go int type.
+<p><a href="index.html#ParseBool">ParseBool</a>, <a href="index.html#ParseFloat">ParseFloat</a>, <a href="index.html#ParseInt">ParseInt</a>, and <a href="index.html#ParseUint">ParseUint</a> convert strings to values:
+<pre>b, err := strconv.ParseBool(&quot;true&quot;)
+f, err := strconv.ParseFloat(&quot;3.1415&quot;, 64)
+i, err := strconv.ParseInt(&quot;-42&quot;, 10, 64)
+u, err := strconv.ParseUint(&quot;42&quot;, 10, 64)
+</pre>
+<p>The parse functions return the widest type (float64, int64, and uint64),
+but if the size argument specifies a narrower width the result can be
+converted to that narrower type without data loss:
+<pre>s := &quot;2147483647&quot; // biggest int32
+i64, err := strconv.ParseInt(s, 10, 32)
+...
+i := int32(i64)
+</pre>
+<p><a href="index.html#FormatBool">FormatBool</a>, <a href="index.html#FormatFloat">FormatFloat</a>, <a href="index.html#FormatInt">FormatInt</a>, and <a href="index.html#FormatUint">FormatUint</a> convert values to strings:
+<pre>s := strconv.FormatBool(true)
+s := strconv.FormatFloat(3.1415, &apos;E&apos;, -1, 64)
+s := strconv.FormatInt(-42, 16)
+s := strconv.FormatUint(42, 16)
+</pre>
+<p><a href="index.html#AppendBool">AppendBool</a>, <a href="index.html#AppendFloat">AppendFloat</a>, <a href="index.html#AppendInt">AppendInt</a>, and <a href="index.html#AppendUint">AppendUint</a> are similar but
+append the formatted value to a destination slice.
+<h3 id="hdr-String_Conversions">String Conversions</h3>
+<p><a href="index.html#Quote">Quote</a> and <a href="index.html#QuoteToASCII">QuoteToASCII</a> convert strings to quoted Go string literals.
+The latter guarantees that the result is an ASCII string, by escaping
+any non-ASCII Unicode with \u:
+<pre>q := strconv.Quote(&quot;Hello, 世界&quot;)
+q := strconv.QuoteToASCII(&quot;Hello, 世界&quot;)
+</pre>
+<p><a href="index.html#QuoteRune">QuoteRune</a> and <a href="index.html#QuoteRuneToASCII">QuoteRuneToASCII</a> are similar but accept runes and
+return quoted Go rune literals.
+<p><a href="index.html#Unquote">Unquote</a> and <a href="index.html#UnquoteChar">UnquoteChar</a> unquote Go string and rune literals.
+
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+				<dd><a href="index.html#pkg-constants">Constants</a></dd>
+			
+			
+				<dd><a href="index.html#pkg-variables">Variables</a></dd>
+			
+			
+				
+				<dd><a href="index.html#AppendBool">func AppendBool(dst []byte, b bool) []byte</a></dd>
+			
+				
+				<dd><a href="index.html#AppendFloat">func AppendFloat(dst []byte, f float64, fmt byte, prec, bitSize int) []byte</a></dd>
+			
+				
+				<dd><a href="index.html#AppendInt">func AppendInt(dst []byte, i int64, base int) []byte</a></dd>
+			
+				
+				<dd><a href="index.html#AppendQuote">func AppendQuote(dst []byte, s string) []byte</a></dd>
+			
+				
+				<dd><a href="index.html#AppendQuoteRune">func AppendQuoteRune(dst []byte, r rune) []byte</a></dd>
+			
+				
+				<dd><a href="index.html#AppendQuoteRuneToASCII">func AppendQuoteRuneToASCII(dst []byte, r rune) []byte</a></dd>
+			
+				
+				<dd><a href="index.html#AppendQuoteRuneToGraphic">func AppendQuoteRuneToGraphic(dst []byte, r rune) []byte</a></dd>
+			
+				
+				<dd><a href="index.html#AppendQuoteToASCII">func AppendQuoteToASCII(dst []byte, s string) []byte</a></dd>
+			
+				
+				<dd><a href="index.html#AppendQuoteToGraphic">func AppendQuoteToGraphic(dst []byte, s string) []byte</a></dd>
+			
+				
+				<dd><a href="index.html#AppendUint">func AppendUint(dst []byte, i uint64, base int) []byte</a></dd>
+			
+				
+				<dd><a href="index.html#Atoi">func Atoi(s string) (int, error)</a></dd>
+			
+				
+				<dd><a href="index.html#CanBackquote">func CanBackquote(s string) bool</a></dd>
+			
+				
+				<dd><a href="index.html#FormatBool">func FormatBool(b bool) string</a></dd>
+			
+				
+				<dd><a href="index.html#FormatComplex">func FormatComplex(c complex128, fmt byte, prec, bitSize int) string</a></dd>
+			
+				
+				<dd><a href="index.html#FormatFloat">func FormatFloat(f float64, fmt byte, prec, bitSize int) string</a></dd>
+			
+				
+				<dd><a href="index.html#FormatInt">func FormatInt(i int64, base int) string</a></dd>
+			
+				
+				<dd><a href="index.html#FormatUint">func FormatUint(i uint64, base int) string</a></dd>
+			
+				
+				<dd><a href="index.html#IsGraphic">func IsGraphic(r rune) bool</a></dd>
+			
+				
+				<dd><a href="index.html#IsPrint">func IsPrint(r rune) bool</a></dd>
+			
+				
+				<dd><a href="index.html#Itoa">func Itoa(i int) string</a></dd>
+			
+				
+				<dd><a href="index.html#ParseBool">func ParseBool(str string) (bool, error)</a></dd>
+			
+				
+				<dd><a href="index.html#ParseComplex">func ParseComplex(s string, bitSize int) (complex128, error)</a></dd>
+			
+				
+				<dd><a href="index.html#ParseFloat">func ParseFloat(s string, bitSize int) (float64, error)</a></dd>
+			
+				
+				<dd><a href="index.html#ParseInt">func ParseInt(s string, base int, bitSize int) (i int64, err error)</a></dd>
+			
+				
+				<dd><a href="index.html#ParseUint">func ParseUint(s string, base int, bitSize int) (uint64, error)</a></dd>
+			
+				
+				<dd><a href="index.html#Quote">func Quote(s string) string</a></dd>
+			
+				
+				<dd><a href="index.html#QuoteRune">func QuoteRune(r rune) string</a></dd>
+			
+				
+				<dd><a href="index.html#QuoteRuneToASCII">func QuoteRuneToASCII(r rune) string</a></dd>
+			
+				
+				<dd><a href="index.html#QuoteRuneToGraphic">func QuoteRuneToGraphic(r rune) string</a></dd>
+			
+				
+				<dd><a href="index.html#QuoteToASCII">func QuoteToASCII(s string) string</a></dd>
+			
+				
+				<dd><a href="index.html#QuoteToGraphic">func QuoteToGraphic(s string) string</a></dd>
+			
+				
+				<dd><a href="index.html#QuotedPrefix">func QuotedPrefix(s string) (string, error)</a></dd>
+			
+				
+				<dd><a href="index.html#Unquote">func Unquote(s string) (string, error)</a></dd>
+			
+				
+				<dd><a href="index.html#UnquoteChar">func UnquoteChar(s string, quote byte) (value rune, multibyte bool, tail string, err error)</a></dd>
+			
+			
+				
+				<dd><a href="index.html#NumError">type NumError</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NumError.Error">func (e *NumError) Error() string</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NumError.Unwrap">func (e *NumError) Unwrap() error</a></dd>
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+		<div id="pkg-examples">
+			<h3>Examples</h3>
+			<div class="js-expandAll expandAll collapsed">(Expand All)</div>
+			<dl>
+			
+			<dd><a class="exampleLink" href="index.html#example_AppendBool">AppendBool</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_AppendFloat">AppendFloat</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_AppendInt">AppendInt</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_AppendQuote">AppendQuote</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_AppendQuoteRune">AppendQuoteRune</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_AppendQuoteRuneToASCII">AppendQuoteRuneToASCII</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_AppendQuoteToASCII">AppendQuoteToASCII</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_AppendUint">AppendUint</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Atoi">Atoi</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_CanBackquote">CanBackquote</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_FormatBool">FormatBool</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_FormatFloat">FormatFloat</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_FormatInt">FormatInt</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_FormatUint">FormatUint</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_IsGraphic">IsGraphic</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_IsPrint">IsPrint</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Itoa">Itoa</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_NumError">NumError</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_ParseBool">ParseBool</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_ParseFloat">ParseFloat</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_ParseInt">ParseInt</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_ParseUint">ParseUint</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Quote">Quote</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_QuoteRune">QuoteRune</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_QuoteRuneToASCII">QuoteRuneToASCII</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_QuoteRuneToGraphic">QuoteRuneToGraphic</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_QuoteToASCII">QuoteToASCII</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_QuoteToGraphic">QuoteToGraphic</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_QuotedPrefix">QuotedPrefix</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Unquote">Unquote</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_UnquoteChar">UnquoteChar</a></dd>
+			
+			</dl>
+		</div>
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../src/strconv/atob.go">atob.go</a>
+			
+				<a href="../../src/strconv/atoc.go">atoc.go</a>
+			
+				<a href="../../src/strconv/atof.go">atof.go</a>
+			
+				<a href="../../src/strconv/atoi.go">atoi.go</a>
+			
+				<a href="../../src/strconv/bytealg.go">bytealg.go</a>
+			
+				<a href="../../src/strconv/ctoa.go">ctoa.go</a>
+			
+				<a href="../../src/strconv/decimal.go">decimal.go</a>
+			
+				<a href="../../src/strconv/doc.go">doc.go</a>
+			
+				<a href="../../src/strconv/eisel_lemire.go">eisel_lemire.go</a>
+			
+				<a href="../../src/strconv/ftoa.go">ftoa.go</a>
+			
+				<a href="../../src/strconv/ftoaryu.go">ftoaryu.go</a>
+			
+				<a href="../../src/strconv/isprint.go">isprint.go</a>
+			
+				<a href="../../src/strconv/itoa.go">itoa.go</a>
+			
+				<a href="../../src/strconv/quote.go">quote.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+			<h2 id="pkg-constants">Constants</h2>
+			
+				<p>IntSize is the size in bits of an int or uint value.
+
+				<pre>const <span id="IntSize">IntSize</span> = intSize</pre>
+			
+		
+		
+			<h2 id="pkg-variables">Variables</h2>
+			
+				<p>ErrRange indicates that a value is out of range for the target type.
+
+				<pre>var <span id="ErrRange">ErrRange</span> = <a href="../errors/index.html">errors</a>.<a href="../errors/index.html#New">New</a>(&#34;value out of range&#34;)</pre>
+			
+				<p>ErrSyntax indicates that a value does not have the right syntax for the target type.
+
+				<pre>var <span id="ErrSyntax">ErrSyntax</span> = <a href="../errors/index.html">errors</a>.<a href="../errors/index.html#New">New</a>(&#34;invalid syntax&#34;)</pre>
+			
+		
+		
+			
+			
+			<h2 id="AppendBool">func <a href="../../src/strconv/atob.go?s=852:894#L20">AppendBool</a>
+				<a class="permalink" href="index.html#AppendBool">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func AppendBool(dst []<a href="../builtin/index.html#byte">byte</a>, b <a href="../builtin/index.html#bool">bool</a>) []<a href="../builtin/index.html#byte">byte</a></pre>
+			<p>AppendBool appends &quot;true&quot; or &quot;false&quot;, according to the value of b,
+to dst and returns the extended buffer.
+
+			<div id="example_AppendBool" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">b := []byte(&#34;bool:&#34;)
+b = strconv.AppendBool(b, true)
+fmt.Println(string(b))
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">bool:true
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="AppendFloat">func <a href="../../src/strconv/ftoa.go?s=1994:2069#L43">AppendFloat</a>
+				<a class="permalink" href="index.html#AppendFloat">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func AppendFloat(dst []<a href="../builtin/index.html#byte">byte</a>, f <a href="../builtin/index.html#float64">float64</a>, fmt <a href="../builtin/index.html#byte">byte</a>, prec, bitSize <a href="../builtin/index.html#int">int</a>) []<a href="../builtin/index.html#byte">byte</a></pre>
+			<p>AppendFloat appends the string form of the floating-point number f,
+as generated by FormatFloat, to dst and returns the extended buffer.
+
+			<div id="example_AppendFloat" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">b32 := []byte(&#34;float32:&#34;)
+b32 = strconv.AppendFloat(b32, 3.1415926535, &#39;E&#39;, -1, 32)
+fmt.Println(string(b32))
+
+b64 := []byte(&#34;float64:&#34;)
+b64 = strconv.AppendFloat(b64, 3.1415926535, &#39;E&#39;, -1, 64)
+fmt.Println(string(b64))
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">float32:3.1415927E+00
+float64:3.1415926535E+00
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="AppendInt">func <a href="../../src/strconv/itoa.go?s=1214:1266#L30">AppendInt</a>
+				<a class="permalink" href="index.html#AppendInt">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func AppendInt(dst []<a href="../builtin/index.html#byte">byte</a>, i <a href="../builtin/index.html#int64">int64</a>, base <a href="../builtin/index.html#int">int</a>) []<a href="../builtin/index.html#byte">byte</a></pre>
+			<p>AppendInt appends the string form of the integer i,
+as generated by FormatInt, to dst and returns the extended buffer.
+
+			<div id="example_AppendInt" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">b10 := []byte(&#34;int (base 10):&#34;)
+b10 = strconv.AppendInt(b10, -42, 10)
+fmt.Println(string(b10))
+
+b16 := []byte(&#34;int (base 16):&#34;)
+b16 = strconv.AppendInt(b16, -42, 16)
+fmt.Println(string(b16))
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">int (base 10):-42
+int (base 16):-2a
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="AppendQuote">func <a href="../../src/strconv/quote.go?s=3511:3556#L121">AppendQuote</a>
+				<a class="permalink" href="index.html#AppendQuote">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func AppendQuote(dst []<a href="../builtin/index.html#byte">byte</a>, s <a href="../builtin/index.html#string">string</a>) []<a href="../builtin/index.html#byte">byte</a></pre>
+			<p>AppendQuote appends a double-quoted Go string literal representing s,
+as generated by Quote, to dst and returns the extended buffer.
+
+			<div id="example_AppendQuote" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">b := []byte(&#34;quote:&#34;)
+b = strconv.AppendQuote(b, `&#34;Fran &amp; Freddie&#39;s Diner&#34;`)
+fmt.Println(string(b))
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">quote:&#34;\&#34;Fran &amp; Freddie&#39;s Diner\&#34;&#34;
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="AppendQuoteRune">func <a href="../../src/strconv/quote.go?s=5360:5407#L163">AppendQuoteRune</a>
+				<a class="permalink" href="index.html#AppendQuoteRune">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func AppendQuoteRune(dst []<a href="../builtin/index.html#byte">byte</a>, r <a href="../builtin/index.html#rune">rune</a>) []<a href="../builtin/index.html#byte">byte</a></pre>
+			<p>AppendQuoteRune appends a single-quoted Go character literal representing the rune,
+as generated by QuoteRune, to dst and returns the extended buffer.
+
+			<div id="example_AppendQuoteRune" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">b := []byte(&#34;rune:&#34;)
+b = strconv.AppendQuoteRune(b, &#39;☺&#39;)
+fmt.Println(string(b))
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">rune:&#39;☺&#39;
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="AppendQuoteRuneToASCII">func <a href="../../src/strconv/quote.go?s=6078:6132#L179">AppendQuoteRuneToASCII</a>
+				<a class="permalink" href="index.html#AppendQuoteRuneToASCII">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func AppendQuoteRuneToASCII(dst []<a href="../builtin/index.html#byte">byte</a>, r <a href="../builtin/index.html#rune">rune</a>) []<a href="../builtin/index.html#byte">byte</a></pre>
+			<p>AppendQuoteRuneToASCII appends a single-quoted Go character literal representing the rune,
+as generated by QuoteRuneToASCII, to dst and returns the extended buffer.
+
+			<div id="example_AppendQuoteRuneToASCII" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">b := []byte(&#34;rune (ascii):&#34;)
+b = strconv.AppendQuoteRuneToASCII(b, &#39;☺&#39;)
+fmt.Println(string(b))
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">rune (ascii):&#39;\u263a&#39;
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="AppendQuoteRuneToGraphic">func <a href="../../src/strconv/quote.go?s=6812:6868#L195">AppendQuoteRuneToGraphic</a>
+				<a class="permalink" href="index.html#AppendQuoteRuneToGraphic">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func AppendQuoteRuneToGraphic(dst []<a href="../builtin/index.html#byte">byte</a>, r <a href="../builtin/index.html#rune">rune</a>) []<a href="../builtin/index.html#byte">byte</a></pre>
+			<p>AppendQuoteRuneToGraphic appends a single-quoted Go character literal representing the rune,
+as generated by QuoteRuneToGraphic, to dst and returns the extended buffer.
+
+			
+			
+
+		
+			
+			
+			<h2 id="AppendQuoteToASCII">func <a href="../../src/strconv/quote.go?s=4071:4123#L134">AppendQuoteToASCII</a>
+				<a class="permalink" href="index.html#AppendQuoteToASCII">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func AppendQuoteToASCII(dst []<a href="../builtin/index.html#byte">byte</a>, s <a href="../builtin/index.html#string">string</a>) []<a href="../builtin/index.html#byte">byte</a></pre>
+			<p>AppendQuoteToASCII appends a double-quoted Go string literal representing s,
+as generated by QuoteToASCII, to dst and returns the extended buffer.
+
+			<div id="example_AppendQuoteToASCII" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">b := []byte(&#34;quote (ascii):&#34;)
+b = strconv.AppendQuoteToASCII(b, `&#34;Fran &amp; Freddie&#39;s Diner&#34;`)
+fmt.Println(string(b))
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">quote (ascii):&#34;\&#34;Fran &amp; Freddie&#39;s Diner\&#34;&#34;
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="AppendQuoteToGraphic">func <a href="../../src/strconv/quote.go?s=4673:4727#L148">AppendQuoteToGraphic</a>
+				<a class="permalink" href="index.html#AppendQuoteToGraphic">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func AppendQuoteToGraphic(dst []<a href="../builtin/index.html#byte">byte</a>, s <a href="../builtin/index.html#string">string</a>) []<a href="../builtin/index.html#byte">byte</a></pre>
+			<p>AppendQuoteToGraphic appends a double-quoted Go string literal representing s,
+as generated by QuoteToGraphic, to dst and returns the extended buffer.
+
+			
+			
+
+		
+			
+			
+			<h2 id="AppendUint">func <a href="../../src/strconv/itoa.go?s=1574:1628#L40">AppendUint</a>
+				<a class="permalink" href="index.html#AppendUint">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func AppendUint(dst []<a href="../builtin/index.html#byte">byte</a>, i <a href="../builtin/index.html#uint64">uint64</a>, base <a href="../builtin/index.html#int">int</a>) []<a href="../builtin/index.html#byte">byte</a></pre>
+			<p>AppendUint appends the string form of the unsigned integer i,
+as generated by FormatUint, to dst and returns the extended buffer.
+
+			<div id="example_AppendUint" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">b10 := []byte(&#34;uint (base 10):&#34;)
+b10 = strconv.AppendUint(b10, 42, 10)
+fmt.Println(string(b10))
+
+b16 := []byte(&#34;uint (base 16):&#34;)
+b16 = strconv.AppendUint(b16, 42, 16)
+fmt.Println(string(b16))
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">uint (base 10):42
+uint (base 16):2a
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Atoi">func <a href="../../src/strconv/atoi.go?s=6830:6862#L237">Atoi</a>
+				<a class="permalink" href="index.html#Atoi">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Atoi(s <a href="../builtin/index.html#string">string</a>) (<a href="../builtin/index.html#int">int</a>, <a href="../builtin/index.html#error">error</a>)</pre>
+			<p>Atoi is equivalent to ParseInt(s, 10, 0), converted to type int.
+
+			<div id="example_Atoi" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">v := &#34;10&#34;
+if s, err := strconv.Atoi(v); err == nil {
+    fmt.Printf(&#34;%T, %v&#34;, s, s)
+}
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">int, 10
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="CanBackquote">func <a href="../../src/strconv/quote.go?s=7088:7120#L202">CanBackquote</a>
+				<a class="permalink" href="index.html#CanBackquote">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func CanBackquote(s <a href="../builtin/index.html#string">string</a>) <a href="../builtin/index.html#bool">bool</a></pre>
+			<p>CanBackquote reports whether the string s can be represented
+unchanged as a single-line backquoted string without control
+characters other than tab.
+
+			<div id="example_CanBackquote" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">fmt.Println(strconv.CanBackquote(&#34;Fran &amp; Freddie&#39;s Diner ☺&#34;))
+fmt.Println(strconv.CanBackquote(&#34;`can&#39;t backquote this`&#34;))
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">true
+false
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="FormatBool">func <a href="../../src/strconv/atob.go?s=660:690#L11">FormatBool</a>
+				<a class="permalink" href="index.html#FormatBool">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func FormatBool(b <a href="../builtin/index.html#bool">bool</a>) <a href="../builtin/index.html#string">string</a></pre>
+			<p>FormatBool returns &quot;true&quot; or &quot;false&quot; according to the value of b.
+
+			<div id="example_FormatBool" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">v := true
+s := strconv.FormatBool(v)
+fmt.Printf(&#34;%T, %v\n&#34;, s, s)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">string, true
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="FormatComplex">func <a href="../../src/strconv/ctoa.go?s=608:676#L4">FormatComplex</a>
+				<a class="permalink" href="index.html#FormatComplex">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func FormatComplex(c <a href="../builtin/index.html#complex128">complex128</a>, fmt <a href="../builtin/index.html#byte">byte</a>, prec, bitSize <a href="../builtin/index.html#int">int</a>) <a href="../builtin/index.html#string">string</a></pre>
+			<p>FormatComplex converts the complex number c to a string of the
+form (a+bi) where a and b are the real and imaginary parts,
+formatted according to the format fmt and precision prec.
+<p>The format fmt and precision prec have the same meaning as in FormatFloat.
+It rounds the result assuming that the original was obtained from a complex
+value of bitSize bits, which must be 64 for complex64 and 128 for complex128.
+
+			
+			
+
+		
+			
+			
+			<h2 id="FormatFloat">func <a href="../../src/strconv/ftoa.go?s=1697:1760#L37">FormatFloat</a>
+				<a class="permalink" href="index.html#FormatFloat">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func FormatFloat(f <a href="../builtin/index.html#float64">float64</a>, fmt <a href="../builtin/index.html#byte">byte</a>, prec, bitSize <a href="../builtin/index.html#int">int</a>) <a href="../builtin/index.html#string">string</a></pre>
+			<p>FormatFloat converts the floating-point number f to a string,
+according to the format fmt and precision prec. It rounds the
+result assuming that the original was obtained from a floating-point
+value of bitSize bits (32 for float32, 64 for float64).
+<p>The format fmt is one of
+&apos;b&apos; (-ddddp±ddd, a binary exponent),
+&apos;e&apos; (-d.dddde±dd, a decimal exponent),
+&apos;E&apos; (-d.ddddE±dd, a decimal exponent),
+&apos;f&apos; (-ddd.dddd, no exponent),
+&apos;g&apos; (&apos;e&apos; for large exponents, &apos;f&apos; otherwise),
+&apos;G&apos; (&apos;E&apos; for large exponents, &apos;f&apos; otherwise),
+&apos;x&apos; (-0xd.ddddp±ddd, a hexadecimal fraction and binary exponent), or
+&apos;X&apos; (-0Xd.ddddP±ddd, a hexadecimal fraction and binary exponent).
+<p>The precision prec controls the number of digits (excluding the exponent)
+printed by the &apos;e&apos;, &apos;E&apos;, &apos;f&apos;, &apos;g&apos;, &apos;G&apos;, &apos;x&apos;, and &apos;X&apos; formats.
+For &apos;e&apos;, &apos;E&apos;, &apos;f&apos;, &apos;x&apos;, and &apos;X&apos;, it is the number of digits after the decimal point.
+For &apos;g&apos; and &apos;G&apos; it is the maximum number of significant digits (trailing
+zeros are removed).
+The special precision -1 uses the smallest number of digits
+necessary such that ParseFloat will return f exactly.
+
+			<div id="example_FormatFloat" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">v := 3.1415926535
+
+s32 := strconv.FormatFloat(v, &#39;E&#39;, -1, 32)
+fmt.Printf(&#34;%T, %v\n&#34;, s32, s32)
+
+s64 := strconv.FormatFloat(v, &#39;E&#39;, -1, 64)
+fmt.Printf(&#34;%T, %v\n&#34;, s64, s64)
+
+<span class="comment">// fmt.Println uses these arguments to print floats</span>
+fmt64 := strconv.FormatFloat(v, &#39;g&#39;, -1, 64)
+fmt.Printf(&#34;%T, %v\n&#34;, fmt64, fmt64)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">string, 3.1415927E+00
+string, 3.1415926535E+00
+string, 3.1415926535
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="FormatInt">func <a href="../../src/strconv/itoa.go?s=784:824#L15">FormatInt</a>
+				<a class="permalink" href="index.html#FormatInt">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func FormatInt(i <a href="../builtin/index.html#int64">int64</a>, base <a href="../builtin/index.html#int">int</a>) <a href="../builtin/index.html#string">string</a></pre>
+			<p>FormatInt returns the string representation of i in the given base,
+for 2 &lt;= base &lt;= 36. The result uses the lower-case letters &apos;a&apos; to &apos;z&apos;
+for digit values &gt;= 10.
+
+			<div id="example_FormatInt" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">v := int64(-42)
+
+s10 := strconv.FormatInt(v, 10)
+fmt.Printf(&#34;%T, %v\n&#34;, s10, s10)
+
+s16 := strconv.FormatInt(v, 16)
+fmt.Printf(&#34;%T, %v\n&#34;, s16, s16)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">string, -42
+string, -2a
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="FormatUint">func <a href="../../src/strconv/itoa.go?s=434:476#L4">FormatUint</a>
+				<a class="permalink" href="index.html#FormatUint">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func FormatUint(i <a href="../builtin/index.html#uint64">uint64</a>, base <a href="../builtin/index.html#int">int</a>) <a href="../builtin/index.html#string">string</a></pre>
+			<p>FormatUint returns the string representation of i in the given base,
+for 2 &lt;= base &lt;= 36. The result uses the lower-case letters &apos;a&apos; to &apos;z&apos;
+for digit values &gt;= 10.
+
+			<div id="example_FormatUint" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">v := uint64(42)
+
+s10 := strconv.FormatUint(v, 10)
+fmt.Printf(&#34;%T, %v\n&#34;, s10, s10)
+
+s16 := strconv.FormatUint(v, 16)
+fmt.Printf(&#34;%T, %v\n&#34;, s16, s16)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">string, 42
+string, 2a
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="IsGraphic">func <a href="../../src/strconv/quote.go?s=16673:16700#L571">IsGraphic</a>
+				<a class="permalink" href="index.html#IsGraphic">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func IsGraphic(r <a href="../builtin/index.html#rune">rune</a>) <a href="../builtin/index.html#bool">bool</a></pre>
+			<p>IsGraphic reports whether the rune is defined as a Graphic by Unicode. Such
+characters include letters, marks, numbers, punctuation, symbols, and
+spaces, from categories L, M, N, P, S, and Zs.
+
+			<div id="example_IsGraphic" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">shamrock := strconv.IsGraphic(&#39;☘&#39;)
+fmt.Println(shamrock)
+
+a := strconv.IsGraphic(&#39;a&#39;)
+fmt.Println(a)
+
+bel := strconv.IsGraphic(&#39;\007&#39;)
+fmt.Println(bel)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">true
+true
+false
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="IsPrint">func <a href="../../src/strconv/quote.go?s=15189:15214#L525">IsPrint</a>
+				<a class="permalink" href="index.html#IsPrint">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func IsPrint(r <a href="../builtin/index.html#rune">rune</a>) <a href="../builtin/index.html#bool">bool</a></pre>
+			<p>IsPrint reports whether the rune is defined as printable by Go, with
+the same definition as unicode.IsPrint: letters, numbers, punctuation,
+symbols and ASCII space.
+
+			<div id="example_IsPrint" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">c := strconv.IsPrint(&#39;\u263a&#39;)
+fmt.Println(c)
+
+bel := strconv.IsPrint(&#39;\007&#39;)
+fmt.Println(bel)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">true
+false
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Itoa">func <a href="../../src/strconv/itoa.go?s=1028:1051#L24">Itoa</a>
+				<a class="permalink" href="index.html#Itoa">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Itoa(i <a href="../builtin/index.html#int">int</a>) <a href="../builtin/index.html#string">string</a></pre>
+			<p>Itoa is equivalent to FormatInt(int64(i), 10).
+
+			<div id="example_Itoa" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">i := 10
+s := strconv.Itoa(i)
+fmt.Printf(&#34;%T, %v\n&#34;, s, s)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">string, 10
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="ParseBool">func <a href="../../src/strconv/atob.go?s=351:391#L1">ParseBool</a>
+				<a class="permalink" href="index.html#ParseBool">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func ParseBool(str <a href="../builtin/index.html#string">string</a>) (<a href="../builtin/index.html#bool">bool</a>, <a href="../builtin/index.html#error">error</a>)</pre>
+			<p>ParseBool returns the boolean value represented by the string.
+It accepts 1, t, T, TRUE, true, True, 0, f, F, FALSE, false, False.
+Any other value returns an error.
+
+			<div id="example_ParseBool" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">v := &#34;true&#34;
+if s, err := strconv.ParseBool(v); err == nil {
+    fmt.Printf(&#34;%T, %v\n&#34;, s, s)
+}
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">bool, true
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="ParseComplex">func <a href="../../src/strconv/atoc.go?s=1732:1792#L32">ParseComplex</a>
+				<a class="permalink" href="index.html#ParseComplex">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func ParseComplex(s <a href="../builtin/index.html#string">string</a>, bitSize <a href="../builtin/index.html#int">int</a>) (<a href="../builtin/index.html#complex128">complex128</a>, <a href="../builtin/index.html#error">error</a>)</pre>
+			<p>ParseComplex converts the string s to a complex number
+with the precision specified by bitSize: 64 for complex64, or 128 for complex128.
+When bitSize=64, the result still has type complex128, but it will be
+convertible to complex64 without changing its value.
+<p>The number represented by s must be of the form N, Ni, or N±Ni, where N stands
+for a floating-point number as recognized by ParseFloat, and i is the imaginary
+component. If the second N is unsigned, a + sign is required between the two components
+as indicated by the ±. If the second N is NaN, only a + sign is accepted.
+The form may be parenthesized and cannot contain any spaces.
+The resulting complex number consists of the two components converted by ParseFloat.
+<p>The errors that ParseComplex returns have concrete type *NumError
+and include err.Num = s.
+<p>If s is not syntactically well-formed, ParseComplex returns err.Err = ErrSyntax.
+<p>If s is syntactically well-formed but either component is more than 1/2 ULP
+away from the largest floating point number of the given component&apos;s size,
+ParseComplex returns err.Err = ErrRange and c = ±Inf for the respective component.
+
+			
+			
+
+		
+			
+			
+			<h2 id="ParseFloat">func <a href="../../src/strconv/atof.go?s=15883:15938#L685">ParseFloat</a>
+				<a class="permalink" href="index.html#ParseFloat">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func ParseFloat(s <a href="../builtin/index.html#string">string</a>, bitSize <a href="../builtin/index.html#int">int</a>) (<a href="../builtin/index.html#float64">float64</a>, <a href="../builtin/index.html#error">error</a>)</pre>
+			<p>ParseFloat converts the string s to a floating-point number
+with the precision specified by bitSize: 32 for float32, or 64 for float64.
+When bitSize=32, the result still has type float64, but it will be
+convertible to float32 without changing its value.
+<p>ParseFloat accepts decimal and hexadecimal floating-point numbers
+as defined by the Go syntax for <a href="https://go.dev/ref/spec#Floating-point_literals">floating-point literals</a>.
+If s is well-formed and near a valid floating-point number,
+ParseFloat returns the nearest floating-point number rounded
+using IEEE754 unbiased rounding.
+(Parsing a hexadecimal floating-point value only rounds when
+there are more bits in the hexadecimal representation than
+will fit in the mantissa.)
+<p>The errors that ParseFloat returns have concrete type *NumError
+and include err.Num = s.
+<p>If s is not syntactically well-formed, ParseFloat returns err.Err = ErrSyntax.
+<p>If s is syntactically well-formed but is more than 1/2 ULP
+away from the largest floating point number of the given size,
+ParseFloat returns f = ±Inf, err.Err = ErrRange.
+<p>ParseFloat recognizes the string &quot;NaN&quot;, and the (possibly signed) strings &quot;Inf&quot; and &quot;Infinity&quot;
+as their respective special floating point values. It ignores case when matching.
+
+			<div id="example_ParseFloat" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">v := &#34;3.1415926535&#34;
+if s, err := strconv.ParseFloat(v, 32); err == nil {
+    fmt.Printf(&#34;%T, %v\n&#34;, s, s)
+}
+if s, err := strconv.ParseFloat(v, 64); err == nil {
+    fmt.Printf(&#34;%T, %v\n&#34;, s, s)
+}
+if s, err := strconv.ParseFloat(&#34;NaN&#34;, 32); err == nil {
+    fmt.Printf(&#34;%T, %v\n&#34;, s, s)
+}
+<span class="comment">// ParseFloat is case insensitive</span>
+if s, err := strconv.ParseFloat(&#34;nan&#34;, 32); err == nil {
+    fmt.Printf(&#34;%T, %v\n&#34;, s, s)
+}
+if s, err := strconv.ParseFloat(&#34;inf&#34;, 32); err == nil {
+    fmt.Printf(&#34;%T, %v\n&#34;, s, s)
+}
+if s, err := strconv.ParseFloat(&#34;+Inf&#34;, 32); err == nil {
+    fmt.Printf(&#34;%T, %v\n&#34;, s, s)
+}
+if s, err := strconv.ParseFloat(&#34;-Inf&#34;, 32); err == nil {
+    fmt.Printf(&#34;%T, %v\n&#34;, s, s)
+}
+if s, err := strconv.ParseFloat(&#34;-0&#34;, 32); err == nil {
+    fmt.Printf(&#34;%T, %v\n&#34;, s, s)
+}
+if s, err := strconv.ParseFloat(&#34;+0&#34;, 32); err == nil {
+    fmt.Printf(&#34;%T, %v\n&#34;, s, s)
+}
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">float64, 3.1415927410125732
+float64, 3.1415926535
+float64, NaN
+float64, NaN
+float64, +Inf
+float64, +Inf
+float64, -Inf
+float64, -0
+float64, 0
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="ParseInt">func <a href="../../src/strconv/atoi.go?s=5925:5992#L192">ParseInt</a>
+				<a class="permalink" href="index.html#ParseInt">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func ParseInt(s <a href="../builtin/index.html#string">string</a>, base <a href="../builtin/index.html#int">int</a>, bitSize <a href="../builtin/index.html#int">int</a>) (i <a href="../builtin/index.html#int64">int64</a>, err <a href="../builtin/index.html#error">error</a>)</pre>
+			<p>ParseInt interprets a string s in the given base (0, 2 to 36) and
+bit size (0 to 64) and returns the corresponding value i.
+<p>The string may begin with a leading sign: &quot;+&quot; or &quot;-&quot;.
+<p>If the base argument is 0, the true base is implied by the string&apos;s
+prefix following the sign (if present): 2 for &quot;0b&quot;, 8 for &quot;0&quot; or &quot;0o&quot;,
+16 for &quot;0x&quot;, and 10 otherwise. Also, for argument base 0 only,
+underscore characters are permitted as defined by the Go syntax for
+<a href="https://go.dev/ref/spec#Integer_literals">integer literals</a>.
+<p>The bitSize argument specifies the integer type
+that the result must fit into. Bit sizes 0, 8, 16, 32, and 64
+correspond to int, int8, int16, int32, and int64.
+If bitSize is below 0 or above 64, an error is returned.
+<p>The errors that ParseInt returns have concrete type *NumError
+and include err.Num = s. If s is empty or contains invalid
+digits, err.Err = ErrSyntax and the returned value is 0;
+if the value corresponding to s cannot be represented by a
+signed integer of the given size, err.Err = ErrRange and the
+returned value is the maximum magnitude integer of the
+appropriate bitSize and sign.
+
+			<div id="example_ParseInt" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">v32 := &#34;-354634382&#34;
+if s, err := strconv.ParseInt(v32, 10, 32); err == nil {
+    fmt.Printf(&#34;%T, %v\n&#34;, s, s)
+}
+if s, err := strconv.ParseInt(v32, 16, 32); err == nil {
+    fmt.Printf(&#34;%T, %v\n&#34;, s, s)
+}
+
+v64 := &#34;-3546343826724305832&#34;
+if s, err := strconv.ParseInt(v64, 10, 64); err == nil {
+    fmt.Printf(&#34;%T, %v\n&#34;, s, s)
+}
+if s, err := strconv.ParseInt(v64, 16, 64); err == nil {
+    fmt.Printf(&#34;%T, %v\n&#34;, s, s)
+}
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">int64, -354634382
+int64, -3546343826724305832
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="ParseUint">func <a href="../../src/strconv/atoi.go?s=2850:2913#L68">ParseUint</a>
+				<a class="permalink" href="index.html#ParseUint">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func ParseUint(s <a href="../builtin/index.html#string">string</a>, base <a href="../builtin/index.html#int">int</a>, bitSize <a href="../builtin/index.html#int">int</a>) (<a href="../builtin/index.html#uint64">uint64</a>, <a href="../builtin/index.html#error">error</a>)</pre>
+			<p>ParseUint is like ParseInt but for unsigned numbers.
+<p>A sign prefix is not permitted.
+
+			<div id="example_ParseUint" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">v := &#34;42&#34;
+if s, err := strconv.ParseUint(v, 10, 32); err == nil {
+    fmt.Printf(&#34;%T, %v\n&#34;, s, s)
+}
+if s, err := strconv.ParseUint(v, 10, 64); err == nil {
+    fmt.Printf(&#34;%T, %v\n&#34;, s, s)
+}
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">uint64, 42
+uint64, 42
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Quote">func <a href="../../src/strconv/quote.go?s=3299:3326#L115">Quote</a>
+				<a class="permalink" href="index.html#Quote">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Quote(s <a href="../builtin/index.html#string">string</a>) <a href="../builtin/index.html#string">string</a></pre>
+			<p>Quote returns a double-quoted Go string literal representing s. The
+returned string uses Go escape sequences (\t, \n, \xFF, \u0100) for
+control characters and non-printable characters as defined by
+IsPrint.
+
+			<div id="example_Quote" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code"><span class="comment">// This string literal contains a tab character.</span>
+s := strconv.Quote(`&#34;Fran &amp; Freddie&#39;s Diner	☺&#34;`)
+fmt.Println(s)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">&#34;\&#34;Fran &amp; Freddie&#39;s Diner\t☺\&#34;&#34;
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="QuoteRune">func <a href="../../src/strconv/quote.go?s=5123:5152#L157">QuoteRune</a>
+				<a class="permalink" href="index.html#QuoteRune">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func QuoteRune(r <a href="../builtin/index.html#rune">rune</a>) <a href="../builtin/index.html#string">string</a></pre>
+			<p>QuoteRune returns a single-quoted Go character literal representing the
+rune. The returned string uses Go escape sequences (\t, \n, \xFF, \u0100)
+for control characters and non-printable characters as defined by IsPrint.
+If r is not a valid Unicode code point, it is interpreted as the Unicode
+replacement character U+FFFD.
+
+			<div id="example_QuoteRune" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">s := strconv.QuoteRune(&#39;☺&#39;)
+fmt.Println(s)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">&#39;☺&#39;
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="QuoteRuneToASCII">func <a href="../../src/strconv/quote.go?s=5821:5857#L173">QuoteRuneToASCII</a>
+				<a class="permalink" href="index.html#QuoteRuneToASCII">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func QuoteRuneToASCII(r <a href="../builtin/index.html#rune">rune</a>) <a href="../builtin/index.html#string">string</a></pre>
+			<p>QuoteRuneToASCII returns a single-quoted Go character literal representing
+the rune. The returned string uses Go escape sequences (\t, \n, \xFF,
+\u0100) for non-ASCII characters and non-printable characters as defined
+by IsPrint.
+If r is not a valid Unicode code point, it is interpreted as the Unicode
+replacement character U+FFFD.
+
+			<div id="example_QuoteRuneToASCII" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">s := strconv.QuoteRuneToASCII(&#39;☺&#39;)
+fmt.Println(s)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">&#39;\u263a&#39;
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="QuoteRuneToGraphic">func <a href="../../src/strconv/quote.go?s=6549:6587#L189">QuoteRuneToGraphic</a>
+				<a class="permalink" href="index.html#QuoteRuneToGraphic">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func QuoteRuneToGraphic(r <a href="../builtin/index.html#rune">rune</a>) <a href="../builtin/index.html#string">string</a></pre>
+			<p>QuoteRuneToGraphic returns a single-quoted Go character literal representing
+the rune. If the rune is not a Unicode graphic character,
+as defined by IsGraphic, the returned string will use a Go escape sequence
+(\t, \n, \xFF, \u0100).
+If r is not a valid Unicode code point, it is interpreted as the Unicode
+replacement character U+FFFD.
+
+			<div id="example_QuoteRuneToGraphic" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">s := strconv.QuoteRuneToGraphic(&#39;☺&#39;)
+fmt.Println(s)
+
+s = strconv.QuoteRuneToGraphic(&#39;\u263a&#39;)
+fmt.Println(s)
+
+s = strconv.QuoteRuneToGraphic(&#39;\u000a&#39;)
+fmt.Println(s)
+
+s = strconv.QuoteRuneToGraphic(&#39;	&#39;) <span class="comment">// tab character</span>
+fmt.Println(s)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">&#39;☺&#39;
+&#39;☺&#39;
+&#39;\n&#39;
+&#39;\t&#39;
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="QuoteToASCII">func <a href="../../src/strconv/quote.go?s=3839:3873#L128">QuoteToASCII</a>
+				<a class="permalink" href="index.html#QuoteToASCII">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func QuoteToASCII(s <a href="../builtin/index.html#string">string</a>) <a href="../builtin/index.html#string">string</a></pre>
+			<p>QuoteToASCII returns a double-quoted Go string literal representing s.
+The returned string uses Go escape sequences (\t, \n, \xFF, \u0100) for
+non-ASCII characters and non-printable characters as defined by IsPrint.
+
+			<div id="example_QuoteToASCII" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code"><span class="comment">// This string literal contains a tab character.</span>
+s := strconv.QuoteToASCII(`&#34;Fran &amp; Freddie&#39;s Diner	☺&#34;`)
+fmt.Println(s)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">&#34;\&#34;Fran &amp; Freddie&#39;s Diner\t\u263a\&#34;&#34;
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="QuoteToGraphic">func <a href="../../src/strconv/quote.go?s=4435:4471#L142">QuoteToGraphic</a>
+				<a class="permalink" href="index.html#QuoteToGraphic">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func QuoteToGraphic(s <a href="../builtin/index.html#string">string</a>) <a href="../builtin/index.html#string">string</a></pre>
+			<p>QuoteToGraphic returns a double-quoted Go string literal representing s.
+The returned string leaves Unicode graphic characters, as defined by
+IsGraphic, unchanged and uses Go escape sequences (\t, \n, \xFF, \u0100)
+for non-graphic characters.
+
+			<div id="example_QuoteToGraphic" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">s := strconv.QuoteToGraphic(&#34;☺&#34;)
+fmt.Println(s)
+
+<span class="comment">// This string literal contains a tab character.</span>
+s = strconv.QuoteToGraphic(&#34;This is a \u263a	\u000a&#34;)
+fmt.Println(s)
+
+s = strconv.QuoteToGraphic(`&#34; This is a ☺ \n &#34;`)
+fmt.Println(s)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">&#34;☺&#34;
+&#34;This is a ☺\t\n&#34;
+&#34;\&#34; This is a ☺ \\n \&#34;&#34;
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="QuotedPrefix">func <a href="../../src/strconv/quote.go?s=10535:10578#L362">QuotedPrefix</a>
+				<a class="permalink" href="index.html#QuotedPrefix">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func QuotedPrefix(s <a href="../builtin/index.html#string">string</a>) (<a href="../builtin/index.html#string">string</a>, <a href="../builtin/index.html#error">error</a>)</pre>
+			<p>QuotedPrefix returns the quoted string (as understood by Unquote) at the prefix of s.
+If s does not start with a valid quoted string, QuotedPrefix returns an error.
+
+			<div id="example_QuotedPrefix" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">s, err := strconv.QuotedPrefix(&#34;not a quoted string&#34;)
+fmt.Printf(&#34;%q, %v\n&#34;, s, err)
+s, err = strconv.QuotedPrefix(&#34;\&#34;double-quoted string\&#34; with trailing text&#34;)
+fmt.Printf(&#34;%q, %v\n&#34;, s, err)
+s, err = strconv.QuotedPrefix(&#34;`or backquoted` with more trailing text&#34;)
+fmt.Printf(&#34;%q, %v\n&#34;, s, err)
+s, err = strconv.QuotedPrefix(&#34;&#39;\u263a&#39; is also okay&#34;)
+fmt.Printf(&#34;%q, %v\n&#34;, s, err)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">&#34;&#34;, invalid syntax
+&#34;\&#34;double-quoted string\&#34;&#34;, &lt;nil&gt;
+&#34;`or backquoted`&#34;, &lt;nil&gt;
+&#34;&#39;☺&#39;&#34;, &lt;nil&gt;
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Unquote">func <a href="../../src/strconv/quote.go?s=10899:10937#L372">Unquote</a>
+				<a class="permalink" href="index.html#Unquote">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Unquote(s <a href="../builtin/index.html#string">string</a>) (<a href="../builtin/index.html#string">string</a>, <a href="../builtin/index.html#error">error</a>)</pre>
+			<p>Unquote interprets s as a single-quoted, double-quoted,
+or backquoted Go string literal, returning the string value
+that s quotes.  (If s is single-quoted, it would be a Go
+character literal; Unquote returns the corresponding
+one-character string.)
+
+			<div id="example_Unquote" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">s, err := strconv.Unquote(&#34;You can&#39;t unquote a string without quotes&#34;)
+fmt.Printf(&#34;%q, %v\n&#34;, s, err)
+s, err = strconv.Unquote(&#34;\&#34;The string must be either double-quoted\&#34;&#34;)
+fmt.Printf(&#34;%q, %v\n&#34;, s, err)
+s, err = strconv.Unquote(&#34;`or backquoted.`&#34;)
+fmt.Printf(&#34;%q, %v\n&#34;, s, err)
+s, err = strconv.Unquote(&#34;&#39;\u263a&#39;&#34;) <span class="comment">// single character only allowed in single quotes</span>
+fmt.Printf(&#34;%q, %v\n&#34;, s, err)
+s, err = strconv.Unquote(&#34;&#39;\u2639\u2639&#39;&#34;)
+fmt.Printf(&#34;%q, %v\n&#34;, s, err)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">&#34;&#34;, invalid syntax
+&#34;The string must be either double-quoted&#34;, &lt;nil&gt;
+&#34;or backquoted.&#34;, &lt;nil&gt;
+&#34;☺&#34;, &lt;nil&gt;
+&#34;&#34;, invalid syntax
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="UnquoteChar">func <a href="../../src/strconv/quote.go?s=8641:8732#L249">UnquoteChar</a>
+				<a class="permalink" href="index.html#UnquoteChar">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func UnquoteChar(s <a href="../builtin/index.html#string">string</a>, quote <a href="../builtin/index.html#byte">byte</a>) (value <a href="../builtin/index.html#rune">rune</a>, multibyte <a href="../builtin/index.html#bool">bool</a>, tail <a href="../builtin/index.html#string">string</a>, err <a href="../builtin/index.html#error">error</a>)</pre>
+			<p>UnquoteChar decodes the first character or byte in the escaped string
+or character literal represented by the string s.
+It returns four values:
+<ol>
+<li>value, the decoded Unicode code point or byte value;
+<li>multibyte, a boolean indicating whether the decoded character requires a multibyte UTF-8 representation;
+<li>tail, the remainder of the string after the character; and
+<li>an error that will be nil if the character is syntactically valid.
+</ol>
+<p>The second argument, quote, specifies the type of literal being parsed
+and therefore which escaped quote character is permitted.
+If set to a single quote, it permits the sequence \&apos; and disallows unescaped &apos;.
+If set to a double quote, it permits \&quot; and disallows unescaped &quot;.
+If set to zero, it does not permit either escape and allows both quote characters to appear unescaped.
+
+			<div id="example_UnquoteChar" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">v, mb, t, err := strconv.UnquoteChar(`\&#34;Fran &amp; Freddie&#39;s Diner\&#34;`, &#39;&#34;&#39;)
+if err != nil {
+    log.Fatal(err)
+}
+
+fmt.Println(&#34;value:&#34;, string(v))
+fmt.Println(&#34;multibyte:&#34;, mb)
+fmt.Println(&#34;tail:&#34;, t)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">value: &#34;
+multibyte: false
+tail: Fran &amp; Freddie&#39;s Diner\&#34;
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+		
+			
+			
+			<h2 id="NumError">type <a href="../../src/strconv/atoi.go?s=809:1037#L14">NumError</a>
+				<a class="permalink" href="index.html#NumError">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A NumError records a failed conversion.
+
+			<pre>type NumError struct {
+<span id="NumError.Func"></span>    Func <a href="../builtin/index.html#string">string</a> <span class="comment">// the failing function (ParseBool, ParseInt, ParseUint, ParseFloat, ParseComplex)</span>
+<span id="NumError.Num"></span>    Num  <a href="../builtin/index.html#string">string</a> <span class="comment">// the input</span>
+<span id="NumError.Err"></span>    Err  <a href="../builtin/index.html#error">error</a>  <span class="comment">// the reason the conversion failed (e.g. ErrRange, ErrSyntax, etc.)</span>
+}
+</pre>
+
+			
+
+			
+
+			<div id="example_NumError" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">str := &#34;Not a number&#34;
+if _, err := strconv.ParseFloat(str, 64); err != nil {
+    e := err.(*strconv.NumError)
+    fmt.Println(&#34;Func:&#34;, e.Func)
+    fmt.Println(&#34;Num:&#34;, e.Num)
+    fmt.Println(&#34;Err:&#34;, e.Err)
+    fmt.Println(err)
+}
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">Func: ParseFloat
+Num: Not a number
+Err: invalid syntax
+strconv.ParseFloat: parsing &#34;Not a number&#34;: invalid syntax
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+			
+
+			
+
+			
+				
+				<h3 id="NumError.Error">func (*NumError) <a href="../../src/strconv/atoi.go?s=1039:1072#L20">Error</a>
+					<a class="permalink" href="index.html#NumError.Error">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (e *<a href="index.html#NumError">NumError</a>) Error() <a href="../builtin/index.html#string">string</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="NumError.Unwrap">func (*NumError) <a href="../../src/strconv/atoi.go?s=1164:1197#L24">Unwrap</a>
+					<a class="permalink" href="index.html#NumError.Unwrap">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (e *<a href="index.html#NumError">NumError</a>) Unwrap() <a href="../builtin/index.html#error">error</a></pre>
+				
+				
+				
+				
+			
+		
+	
+
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

@@ -1,0 +1,1511 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>uuid - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package uuid
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "github.com/google/uuid"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>Package uuid generates and inspects UUIDs.
+<p>UUIDs are based on RFC 4122 and DCE 1.1: Authentication and Security
+Services.
+<p>A UUID is a 16 byte (128 bit) array.  UUIDs may be used as keys to
+maps or compared directly.
+
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+				<dd><a href="index.html#pkg-constants">Constants</a></dd>
+			
+			
+				<dd><a href="index.html#pkg-variables">Variables</a></dd>
+			
+			
+				
+				<dd><a href="index.html#ClockSequence">func ClockSequence() int</a></dd>
+			
+				
+				<dd><a href="index.html#DisableRandPool">func DisableRandPool()</a></dd>
+			
+				
+				<dd><a href="index.html#EnableRandPool">func EnableRandPool()</a></dd>
+			
+				
+				<dd><a href="index.html#IsInvalidLengthError">func IsInvalidLengthError(err error) bool</a></dd>
+			
+				
+				<dd><a href="index.html#NewString">func NewString() string</a></dd>
+			
+				
+				<dd><a href="index.html#NodeID">func NodeID() []byte</a></dd>
+			
+				
+				<dd><a href="index.html#NodeInterface">func NodeInterface() string</a></dd>
+			
+				
+				<dd><a href="index.html#SetClockSequence">func SetClockSequence(seq int)</a></dd>
+			
+				
+				<dd><a href="index.html#SetNodeID">func SetNodeID(id []byte) bool</a></dd>
+			
+				
+				<dd><a href="index.html#SetNodeInterface">func SetNodeInterface(name string) bool</a></dd>
+			
+				
+				<dd><a href="index.html#SetRand">func SetRand(r io.Reader)</a></dd>
+			
+				
+				<dd><a href="index.html#Validate">func Validate(s string) error</a></dd>
+			
+			
+				
+				<dd><a href="index.html#Domain">type Domain</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Domain.String">func (d Domain) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#NullUUID">type NullUUID</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NullUUID.MarshalBinary">func (nu NullUUID) MarshalBinary() ([]byte, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NullUUID.MarshalJSON">func (nu NullUUID) MarshalJSON() ([]byte, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NullUUID.MarshalText">func (nu NullUUID) MarshalText() ([]byte, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NullUUID.Scan">func (nu *NullUUID) Scan(value interface{}) error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NullUUID.UnmarshalBinary">func (nu *NullUUID) UnmarshalBinary(data []byte) error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NullUUID.UnmarshalJSON">func (nu *NullUUID) UnmarshalJSON(data []byte) error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NullUUID.UnmarshalText">func (nu *NullUUID) UnmarshalText(data []byte) error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NullUUID.Value">func (nu NullUUID) Value() (driver.Value, error)</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Time">type Time</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#GetTime">func GetTime() (Time, uint16, error)</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Time.UnixTime">func (t Time) UnixTime() (sec, nsec int64)</a></dd>
+				
+			
+				
+				<dd><a href="index.html#UUID">type UUID</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#FromBytes">func FromBytes(b []byte) (uuid UUID, err error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Must">func Must(uuid UUID, err error) UUID</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#MustParse">func MustParse(s string) UUID</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#New">func New() UUID</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewDCEGroup">func NewDCEGroup() (UUID, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewDCEPerson">func NewDCEPerson() (UUID, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewDCESecurity">func NewDCESecurity(domain Domain, id uint32) (UUID, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewHash">func NewHash(h hash.Hash, space UUID, data []byte, version int) UUID</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewMD5">func NewMD5(space UUID, data []byte) UUID</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewRandom">func NewRandom() (UUID, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewRandomFromReader">func NewRandomFromReader(r io.Reader) (UUID, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewSHA1">func NewSHA1(space UUID, data []byte) UUID</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewUUID">func NewUUID() (UUID, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewV6">func NewV6() (UUID, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewV7">func NewV7() (UUID, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewV7FromReader">func NewV7FromReader(r io.Reader) (UUID, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Parse">func Parse(s string) (UUID, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ParseBytes">func ParseBytes(b []byte) (UUID, error)</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#UUID.ClockSequence">func (uuid UUID) ClockSequence() int</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#UUID.Domain">func (uuid UUID) Domain() Domain</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#UUID.ID">func (uuid UUID) ID() uint32</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#UUID.MarshalBinary">func (uuid UUID) MarshalBinary() ([]byte, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#UUID.MarshalText">func (uuid UUID) MarshalText() ([]byte, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#UUID.NodeID">func (uuid UUID) NodeID() []byte</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#UUID.Scan">func (uuid *UUID) Scan(src interface{}) error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#UUID.String">func (uuid UUID) String() string</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#UUID.Time">func (uuid UUID) Time() Time</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#UUID.URN">func (uuid UUID) URN() string</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#UUID.UnmarshalBinary">func (uuid *UUID) UnmarshalBinary(data []byte) error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#UUID.UnmarshalText">func (uuid *UUID) UnmarshalText(data []byte) error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#UUID.Value">func (uuid UUID) Value() (driver.Value, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#UUID.Variant">func (uuid UUID) Variant() Variant</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#UUID.Version">func (uuid UUID) Version() Version</a></dd>
+				
+			
+				
+				<dd><a href="index.html#UUIDs">type UUIDs</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#UUIDs.Strings">func (uuids UUIDs) Strings() []string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Variant">type Variant</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Variant.String">func (v Variant) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Version">type Version</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Version.String">func (v Version) String() string</a></dd>
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../../../src/github.com/google/uuid/dce.go">dce.go</a>
+			
+				<a href="../../../../src/github.com/google/uuid/doc.go">doc.go</a>
+			
+				<a href="../../../../src/github.com/google/uuid/hash.go">hash.go</a>
+			
+				<a href="../../../../src/github.com/google/uuid/marshal.go">marshal.go</a>
+			
+				<a href="../../../../src/github.com/google/uuid/node.go">node.go</a>
+			
+				<a href="../../../../src/github.com/google/uuid/node_net.go">node_net.go</a>
+			
+				<a href="../../../../src/github.com/google/uuid/null.go">null.go</a>
+			
+				<a href="../../../../src/github.com/google/uuid/sql.go">sql.go</a>
+			
+				<a href="../../../../src/github.com/google/uuid/time.go">time.go</a>
+			
+				<a href="../../../../src/github.com/google/uuid/util.go">util.go</a>
+			
+				<a href="../../../../src/github.com/google/uuid/uuid.go">uuid.go</a>
+			
+				<a href="../../../../src/github.com/google/uuid/version1.go">version1.go</a>
+			
+				<a href="../../../../src/github.com/google/uuid/version4.go">version4.go</a>
+			
+				<a href="../../../../src/github.com/google/uuid/version6.go">version6.go</a>
+			
+				<a href="../../../../src/github.com/google/uuid/version7.go">version7.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+			<h2 id="pkg-constants">Constants</h2>
+			
+				<p>Domain constants for DCE Security (Version 2) UUIDs.
+
+				<pre>const (
+    <span id="Person">Person</span> = <a href="index.html#Domain">Domain</a>(0)
+    <span id="Group">Group</span>  = <a href="index.html#Domain">Domain</a>(1)
+    <span id="Org">Org</span>    = <a href="index.html#Domain">Domain</a>(2)
+)</pre>
+			
+				<p>Constants returned by Variant.
+
+				<pre>const (
+    <span id="Invalid">Invalid</span>   = <a href="index.html#Variant">Variant</a>(<a href="../../../builtin/index.html#iota">iota</a>) <span class="comment">// Invalid UUID</span>
+    <span id="RFC4122">RFC4122</span>                   <span class="comment">// The variant specified in RFC4122</span>
+    <span id="Reserved">Reserved</span>                  <span class="comment">// Reserved, NCS backward compatibility.</span>
+    <span id="Microsoft">Microsoft</span>                 <span class="comment">// Reserved, Microsoft Corporation backward compatibility.</span>
+    <span id="Future">Future</span>                    <span class="comment">// Reserved for future definition.</span>
+)</pre>
+			
+		
+		
+			<h2 id="pkg-variables">Variables</h2>
+			
+				<p>Well known namespace IDs and UUIDs
+
+				<pre>var (
+    <span id="NameSpaceDNS">NameSpaceDNS</span>  = <a href="index.html#Must">Must</a>(<a href="index.html#Parse">Parse</a>(&#34;6ba7b810-9dad-11d1-80b4-00c04fd430c8&#34;))
+    <span id="NameSpaceURL">NameSpaceURL</span>  = <a href="index.html#Must">Must</a>(<a href="index.html#Parse">Parse</a>(&#34;6ba7b811-9dad-11d1-80b4-00c04fd430c8&#34;))
+    <span id="NameSpaceOID">NameSpaceOID</span>  = <a href="index.html#Must">Must</a>(<a href="index.html#Parse">Parse</a>(&#34;6ba7b812-9dad-11d1-80b4-00c04fd430c8&#34;))
+    <span id="NameSpaceX500">NameSpaceX500</span> = <a href="index.html#Must">Must</a>(<a href="index.html#Parse">Parse</a>(&#34;6ba7b814-9dad-11d1-80b4-00c04fd430c8&#34;))
+    <span id="Nil">Nil</span>           <a href="index.html#UUID">UUID</a> <span class="comment">// empty UUID, all zeros</span>
+
+    <span class="comment">// The Max UUID is special form of UUID that is specified to have all 128 bits set to 1.</span>
+    <span id="Max">Max</span> = <a href="index.html#UUID">UUID</a>{
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+        0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF,
+    }
+)</pre>
+			
+		
+		
+			
+			
+			<h2 id="ClockSequence">func <a href="../../../../src/github.com/google/uuid/time.go?s=2227:2251#L66">ClockSequence</a>
+				<a class="permalink" href="index.html#ClockSequence">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func ClockSequence() <a href="../../../builtin/index.html#int">int</a></pre>
+			<p>ClockSequence returns the current clock sequence, generating one if not
+already set.  The clock sequence is only used for Version 1 UUIDs.
+<p>The uuid package does not use global static storage for the clock sequence or
+the last time a UUID was generated.  Unless SetClockSequence is used, a new
+random clock sequence is generated the first time a clock sequence is
+requested by ClockSequence, GetTime, or NewUUID.  (section 4.2.1.1)
+
+			
+			
+
+		
+			
+			
+			<h2 id="DisableRandPool">func <a href="../../../../src/github.com/google/uuid/uuid.go?s=9219:9241#L338">DisableRandPool</a>
+				<a class="permalink" href="index.html#DisableRandPool">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func DisableRandPool()</pre>
+			<p>DisableRandPool disables the randomness pool if it was previously
+enabled with EnableRandPool.
+<p>Both EnableRandPool and DisableRandPool are not thread-safe and should
+only be called when there is no possibility that New or any other
+UUID Version 4 generation function will be called concurrently.
+
+			
+			
+
+		
+			
+			
+			<h2 id="EnableRandPool">func <a href="../../../../src/github.com/google/uuid/uuid.go?s=8858:8879#L328">EnableRandPool</a>
+				<a class="permalink" href="index.html#EnableRandPool">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func EnableRandPool()</pre>
+			<p>EnableRandPool enables internal randomness pool used for Random
+(Version 4) UUID generation. The pool contains random bytes read from
+the random number generator on demand in batches. Enabling the pool
+may improve the UUID generation throughput significantly.
+<p>Since the pool is stored on the Go heap, this feature may be a bad fit
+for security sensitive applications.
+<p>Both EnableRandPool and DisableRandPool are not thread-safe and should
+only be called when there is no possibility that New or any other
+UUID Version 4 generation function will be called concurrently.
+
+			
+			
+
+		
+			
+			
+			<h2 id="IsInvalidLengthError">func <a href="../../../../src/github.com/google/uuid/uuid.go?s=1335:1376#L44">IsInvalidLengthError</a>
+				<a class="permalink" href="index.html#IsInvalidLengthError">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func IsInvalidLengthError(err <a href="../../../builtin/index.html#error">error</a>) <a href="../../../builtin/index.html#bool">bool</a></pre>
+			<p>IsInvalidLengthError is matcher function for custom error invalidLengthError
+
+			
+			
+
+		
+			
+			
+			<h2 id="NewString">func <a href="../../../../src/github.com/google/uuid/version4.go?s=503:526#L11">NewString</a>
+				<a class="permalink" href="index.html#NewString">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func NewString() <a href="../../../builtin/index.html#string">string</a></pre>
+			<p>NewString creates a new random UUID and returns it as a string or panics.
+NewString is equivalent to the expression
+<pre>uuid.New().String()
+</pre>
+
+			
+			
+
+		
+			
+			
+			<h2 id="NodeID">func <a href="../../../../src/github.com/google/uuid/node.go?s=1585:1605#L50">NodeID</a>
+				<a class="permalink" href="index.html#NodeID">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func NodeID() []<a href="../../../builtin/index.html#byte">byte</a></pre>
+			<p>NodeID returns a slice of a copy of the current Node ID, setting the Node ID
+if not already set.
+
+			
+			
+
+		
+			
+			
+			<h2 id="NodeInterface">func <a href="../../../../src/github.com/google/uuid/node.go?s=517:544#L11">NodeInterface</a>
+				<a class="permalink" href="index.html#NodeInterface">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func NodeInterface() <a href="../../../builtin/index.html#string">string</a></pre>
+			<p>NodeInterface returns the name of the interface from which the NodeID was
+derived.  The interface &quot;user&quot; is returned if the NodeID was set by
+SetNodeID.
+
+			
+			
+
+		
+			
+			
+			<h2 id="SetClockSequence">func <a href="../../../../src/github.com/google/uuid/time.go?s=2556:2586#L81">SetClockSequence</a>
+				<a class="permalink" href="index.html#SetClockSequence">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func SetClockSequence(seq <a href="../../../builtin/index.html#int">int</a>)</pre>
+			<p>SetClockSequence sets the clock sequence to the lower 14 bits of seq.  Setting to
+-1 causes a new sequence to be generated.
+
+			
+			
+
+		
+			
+			
+			<h2 id="SetNodeID">func <a href="../../../../src/github.com/google/uuid/node.go?s=1910:1940#L63">SetNodeID</a>
+				<a class="permalink" href="index.html#SetNodeID">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func SetNodeID(id []<a href="../../../builtin/index.html#byte">byte</a>) <a href="../../../builtin/index.html#bool">bool</a></pre>
+			<p>SetNodeID sets the Node ID to be used for Version 1 UUIDs.  The first 6 bytes
+of id are used.  If id is less than 6 bytes then false is returned and the
+Node ID is not set.
+
+			
+			
+
+		
+			
+			
+			<h2 id="SetNodeInterface">func <a href="../../../../src/github.com/google/uuid/node.go?s=911:950#L23">SetNodeInterface</a>
+				<a class="permalink" href="index.html#SetNodeInterface">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func SetNodeInterface(name <a href="../../../builtin/index.html#string">string</a>) <a href="../../../builtin/index.html#bool">bool</a></pre>
+			<p>SetNodeInterface selects the hardware address to be used for Version 1 UUIDs.
+If name is &quot;&quot; then the first usable interface found will be used or a random
+Node ID will be generated.  If a named interface cannot be found then false
+is returned.
+<p>SetNodeInterface never fails when name is &quot;&quot;.
+
+			
+			
+
+		
+			
+			
+			<h2 id="SetRand">func <a href="../../../../src/github.com/google/uuid/uuid.go?s=8163:8188#L309">SetRand</a>
+				<a class="permalink" href="index.html#SetRand">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func SetRand(r <a href="../../../io/index.html">io</a>.<a href="../../../io/index.html#Reader">Reader</a>)</pre>
+			<p>SetRand sets the random number generator to r, which implements io.Reader.
+If r.Read returns an error when the package requests random data then
+a panic will be issued.
+<p>Calling SetRand with nil sets the random number generator to the default
+generator.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Validate">func <a href="../../../../src/github.com/google/uuid/uuid.go?s=5362:5391#L185">Validate</a>
+				<a class="permalink" href="index.html#Validate">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Validate(s <a href="../../../builtin/index.html#string">string</a>) <a href="../../../builtin/index.html#error">error</a></pre>
+			<p>Validate returns an error if s is not a properly formatted UUID in one of the following formats:
+<pre>xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+urn:uuid:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+{xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}
+</pre>
+<p>It returns an error if the format is invalid, otherwise nil.
+
+			
+			
+
+		
+		
+			
+			
+			<h2 id="Domain">type <a href="../../../../src/github.com/google/uuid/dce.go?s=257:273#L4">Domain</a>
+				<a class="permalink" href="index.html#Domain">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A Domain represents a Version 2 domain
+
+			<pre>type Domain <a href="../../../builtin/index.html#byte">byte</a></pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="Domain.String">func (Domain) <a href="../../../../src/github.com/google/uuid/dce.go?s=1893:1924#L60">String</a>
+					<a class="permalink" href="index.html#Domain.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (d <a href="index.html#Domain">Domain</a>) String() <a href="../../../builtin/index.html#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="NullUUID">type <a href="../../../../src/github.com/google/uuid/null.go?s=605:690#L19">NullUUID</a>
+				<a class="permalink" href="index.html#NullUUID">&#xb6;</a>
+				
+				
+			</h2>
+			<p>NullUUID represents a UUID that may be null.
+NullUUID implements the SQL driver.Scanner interface so
+it can be used as a scan destination:
+<pre>var u uuid.NullUUID
+err := db.QueryRow(&quot;SELECT name FROM foo WHERE id=?&quot;, id).Scan(&amp;u)
+...
+if u.Valid {
+   // use u.UUID
+} else {
+   // NULL value
+}
+</pre>
+
+			<pre>type NullUUID struct {
+<span id="NullUUID.UUID"></span>    UUID  <a href="index.html#UUID">UUID</a>
+<span id="NullUUID.Valid"></span>    Valid <a href="../../../builtin/index.html#bool">bool</a> <span class="comment">// Valid is true if UUID is not NULL</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="NullUUID.MarshalBinary">func (NullUUID) <a href="../../../../src/github.com/google/uuid/null.go?s=1233:1283#L51">MarshalBinary</a>
+					<a class="permalink" href="index.html#NullUUID.MarshalBinary">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (nu <a href="index.html#NullUUID">NullUUID</a>) MarshalBinary() ([]<a href="../../../builtin/index.html#byte">byte</a>, <a href="../../../builtin/index.html#error">error</a>)</pre>
+				<p>MarshalBinary implements encoding.BinaryMarshaler.
+
+				
+				
+				
+			
+				
+				<h3 id="NullUUID.MarshalJSON">func (NullUUID) <a href="../../../../src/github.com/google/uuid/null.go?s=2070:2118#L91">MarshalJSON</a>
+					<a class="permalink" href="index.html#NullUUID.MarshalJSON">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (nu <a href="index.html#NullUUID">NullUUID</a>) MarshalJSON() ([]<a href="../../../builtin/index.html#byte">byte</a>, <a href="../../../builtin/index.html#error">error</a>)</pre>
+				<p>MarshalJSON implements json.Marshaler.
+
+				
+				
+				
+			
+				
+				<h3 id="NullUUID.MarshalText">func (NullUUID) <a href="../../../../src/github.com/google/uuid/null.go?s=1666:1714#L70">MarshalText</a>
+					<a class="permalink" href="index.html#NullUUID.MarshalText">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (nu <a href="index.html#NullUUID">NullUUID</a>) MarshalText() ([]<a href="../../../builtin/index.html#byte">byte</a>, <a href="../../../builtin/index.html#error">error</a>)</pre>
+				<p>MarshalText implements encoding.TextMarshaler.
+
+				
+				
+				
+			
+				
+				<h3 id="NullUUID.Scan">func (*NullUUID) <a href="../../../../src/github.com/google/uuid/null.go?s=745:794#L25">Scan</a>
+					<a class="permalink" href="index.html#NullUUID.Scan">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (nu *<a href="index.html#NullUUID">NullUUID</a>) Scan(value interface{}) <a href="../../../builtin/index.html#error">error</a></pre>
+				<p>Scan implements the SQL driver.Scanner interface.
+
+				
+				
+				
+			
+				
+				<h3 id="NullUUID.UnmarshalBinary">func (*NullUUID) <a href="../../../../src/github.com/google/uuid/null.go?s=1416:1470#L60">UnmarshalBinary</a>
+					<a class="permalink" href="index.html#NullUUID.UnmarshalBinary">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (nu *<a href="index.html#NullUUID">NullUUID</a>) UnmarshalBinary(data []<a href="../../../builtin/index.html#byte">byte</a>) <a href="../../../builtin/index.html#error">error</a></pre>
+				<p>UnmarshalBinary implements encoding.BinaryUnmarshaler.
+
+				
+				
+				
+			
+				
+				<h3 id="NullUUID.UnmarshalJSON">func (*NullUUID) <a href="../../../../src/github.com/google/uuid/null.go?s=2242:2294#L100">UnmarshalJSON</a>
+					<a class="permalink" href="index.html#NullUUID.UnmarshalJSON">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (nu *<a href="index.html#NullUUID">NullUUID</a>) UnmarshalJSON(data []<a href="../../../builtin/index.html#byte">byte</a>) <a href="../../../builtin/index.html#error">error</a></pre>
+				<p>UnmarshalJSON implements json.Unmarshaler.
+
+				
+				
+				
+			
+				
+				<h3 id="NullUUID.UnmarshalText">func (*NullUUID) <a href="../../../../src/github.com/google/uuid/null.go?s=1846:1898#L79">UnmarshalText</a>
+					<a class="permalink" href="index.html#NullUUID.UnmarshalText">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (nu *<a href="index.html#NullUUID">NullUUID</a>) UnmarshalText(data []<a href="../../../builtin/index.html#byte">byte</a>) <a href="../../../builtin/index.html#error">error</a></pre>
+				<p>UnmarshalText implements encoding.TextUnmarshaler.
+
+				
+				
+				
+			
+				
+				<h3 id="NullUUID.Value">func (NullUUID) <a href="../../../../src/github.com/google/uuid/null.go?s=1028:1076#L42">Value</a>
+					<a class="permalink" href="index.html#NullUUID.Value">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (nu <a href="index.html#NullUUID">NullUUID</a>) Value() (<a href="../../../database/sql/driver/index.html">driver</a>.<a href="../../../database/sql/driver/index.html#Value">Value</a>, <a href="../../../builtin/index.html#error">error</a>)</pre>
+				<p>Value implements the driver Valuer interface.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Time">type <a href="../../../../src/github.com/google/uuid/time.go?s=306:321#L5">Time</a>
+				<a class="permalink" href="index.html#Time">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A Time represents a time as the number of 100&apos;s of nanoseconds since 15 Oct
+1582.
+
+			<pre>type Time <a href="../../../builtin/index.html#int64">int64</a></pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="GetTime">func <a href="../../../../src/github.com/google/uuid/time.go?s=1250:1286#L35">GetTime</a>
+					<a class="permalink" href="index.html#GetTime">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func GetTime() (<a href="index.html#Time">Time</a>, <a href="../../../builtin/index.html#uint16">uint16</a>, <a href="../../../builtin/index.html#error">error</a>)</pre>
+				<p>GetTime returns the current Time (100s of nanoseconds since 15 Oct 1582) and
+clock sequence as well as adjusting the clock sequence as needed.  An error
+is returned if the current time cannot be determined.
+
+				
+				
+			
+
+			
+				
+				<h3 id="Time.UnixTime">func (Time) <a href="../../../../src/github.com/google/uuid/time.go?s=891:933#L25">UnixTime</a>
+					<a class="permalink" href="index.html#Time.UnixTime">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t <a href="index.html#Time">Time</a>) UnixTime() (sec, nsec <a href="../../../builtin/index.html#int64">int64</a>)</pre>
+				<p>UnixTime converts t the number of seconds and nanoseconds using the Unix
+epoch of 1 Jan 1970.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="UUID">type <a href="../../../../src/github.com/google/uuid/uuid.go?s=353:371#L10">UUID</a>
+				<a class="permalink" href="index.html#UUID">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A UUID is a 128 bit (16 byte) Universal Unique IDentifier as defined in RFC
+4122.
+
+			<pre>type UUID [16]<a href="../../../builtin/index.html#byte">byte</a></pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="FromBytes">func <a href="../../../../src/github.com/google/uuid/uuid.go?s=4776:4823#L166">FromBytes</a>
+					<a class="permalink" href="index.html#FromBytes">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func FromBytes(b []<a href="../../../builtin/index.html#byte">byte</a>) (uuid <a href="index.html#UUID">UUID</a>, err <a href="../../../builtin/index.html#error">error</a>)</pre>
+				<p>FromBytes creates a new UUID from a byte slice. Returns an error if the slice
+does not have a length of 16. The bytes are copied from the slice.
+
+				
+				
+			
+				
+				<h3 id="Must">func <a href="../../../../src/github.com/google/uuid/uuid.go?s=4935:4971#L172">Must</a>
+					<a class="permalink" href="index.html#Must">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func Must(uuid <a href="index.html#UUID">UUID</a>, err <a href="../../../builtin/index.html#error">error</a>) <a href="index.html#UUID">UUID</a></pre>
+				<p>Must returns uuid if err is nil and panics otherwise.
+
+				
+				
+			
+				
+				<h3 id="MustParse">func <a href="../../../../src/github.com/google/uuid/uuid.go?s=4484:4513#L156">MustParse</a>
+					<a class="permalink" href="index.html#MustParse">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func MustParse(s <a href="../../../builtin/index.html#string">string</a>) <a href="index.html#UUID">UUID</a></pre>
+				<p>MustParse is like Parse but panics if the string cannot be parsed.
+It simplifies safe initialization of global variables holding compiled UUIDs.
+
+				
+				
+			
+				
+				<h3 id="New">func <a href="../../../../src/github.com/google/uuid/version4.go?s=305:320#L3">New</a>
+					<a class="permalink" href="index.html#New">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func New() <a href="index.html#UUID">UUID</a></pre>
+				<p>New creates a new random UUID or panics.  New is equivalent to
+the expression
+<pre>uuid.Must(uuid.NewRandom())
+</pre>
+
+				
+				
+			
+				
+				<h3 id="NewDCEGroup">func <a href="../../../../src/github.com/google/uuid/dce.go?s=1476:1508#L44">NewDCEGroup</a>
+					<a class="permalink" href="index.html#NewDCEGroup">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func NewDCEGroup() (<a href="index.html#UUID">UUID</a>, <a href="../../../builtin/index.html#error">error</a>)</pre>
+				<p>NewDCEGroup returns a DCE Security (Version 2) UUID in the group
+domain with the id returned by os.Getgid.
+<pre>NewDCESecurity(Group, uint32(os.Getgid()))
+</pre>
+
+				
+				
+			
+				
+				<h3 id="NewDCEPerson">func <a href="../../../../src/github.com/google/uuid/dce.go?s=1222:1255#L36">NewDCEPerson</a>
+					<a class="permalink" href="index.html#NewDCEPerson">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func NewDCEPerson() (<a href="index.html#UUID">UUID</a>, <a href="../../../builtin/index.html#error">error</a>)</pre>
+				<p>NewDCEPerson returns a DCE Security (Version 2) UUID in the person
+domain with the id returned by os.Getuid.
+<pre>NewDCESecurity(Person, uint32(os.Getuid()))
+</pre>
+
+				
+				
+			
+				
+				<h3 id="NewDCESecurity">func <a href="../../../../src/github.com/google/uuid/dce.go?s=812:871#L22">NewDCESecurity</a>
+					<a class="permalink" href="index.html#NewDCESecurity">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func NewDCESecurity(domain <a href="index.html#Domain">Domain</a>, id <a href="../../../builtin/index.html#uint32">uint32</a>) (<a href="index.html#UUID">UUID</a>, <a href="../../../builtin/index.html#error">error</a>)</pre>
+				<p>NewDCESecurity returns a DCE Security (Version 2) UUID.
+<p>The domain should be one of Person, Group or Org.
+On a POSIX system the id should be the users UID for the Person
+domain and the users GID for the Group.  The meaning of id for
+the domain Org or on non-POSIX systems is site defined.
+<p>For a given domain/id pair the same token may be returned for up to
+7 minutes and 10 seconds.
+
+				
+				
+			
+				
+				<h3 id="NewHash">func <a href="../../../../src/github.com/google/uuid/hash.go?s=1126:1194#L23">NewHash</a>
+					<a class="permalink" href="index.html#NewHash">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func NewHash(h <a href="../../../hash/index.html">hash</a>.<a href="../../../hash/index.html#Hash">Hash</a>, space <a href="index.html#UUID">UUID</a>, data []<a href="../../../builtin/index.html#byte">byte</a>, version <a href="../../../builtin/index.html#int">int</a>) <a href="index.html#UUID">UUID</a></pre>
+				<p>NewHash returns a new UUID derived from the hash of space concatenated with
+data generated by h.  The hash should be at least 16 byte in length.  The
+first 16 bytes of the hash are used to form the UUID.  The version of the
+UUID will be the lower 4 bits of version.  NewHash is used to implement
+NewMD5 and NewSHA1.
+
+				
+				
+			
+				
+				<h3 id="NewMD5">func <a href="../../../../src/github.com/google/uuid/hash.go?s=1618:1659#L39">NewMD5</a>
+					<a class="permalink" href="index.html#NewMD5">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func NewMD5(space <a href="index.html#UUID">UUID</a>, data []<a href="../../../builtin/index.html#byte">byte</a>) <a href="index.html#UUID">UUID</a></pre>
+				<p>NewMD5 returns a new MD5 (Version 3) UUID based on the
+supplied name space and data.  It is the same as calling:
+<pre>NewHash(md5.New(), space, data, 3)
+</pre>
+
+				
+				
+			
+				
+				<h3 id="NewRandom">func <a href="../../../../src/github.com/google/uuid/version4.go?s=1174:1204#L29">NewRandom</a>
+					<a class="permalink" href="index.html#NewRandom">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func NewRandom() (<a href="index.html#UUID">UUID</a>, <a href="../../../builtin/index.html#error">error</a>)</pre>
+				<p>NewRandom returns a Random (Version 4) UUID.
+<p>The strength of the UUIDs is based on the strength of the crypto/rand
+package.
+<p>Uses the randomness pool if it was enabled with EnableRandPool.
+<p>A note about uniqueness derived from the UUID Wikipedia entry:
+<pre>Randomly generated UUIDs have 122 random bits.  One&apos;s annual risk of being
+hit by a meteorite is estimated to be one chance in 17 billion, that
+means the probability is about 0.00000000006 (6 × 10−11),
+equivalent to the odds of creating a few tens of trillions of UUIDs in a
+year and having one duplicate.
+</pre>
+
+				
+				
+			
+				
+				<h3 id="NewRandomFromReader">func <a href="../../../../src/github.com/google/uuid/version4.go?s=1379:1430#L37">NewRandomFromReader</a>
+					<a class="permalink" href="index.html#NewRandomFromReader">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func NewRandomFromReader(r <a href="../../../io/index.html">io</a>.<a href="../../../io/index.html#Reader">Reader</a>) (<a href="index.html#UUID">UUID</a>, <a href="../../../builtin/index.html#error">error</a>)</pre>
+				<p>NewRandomFromReader returns a UUID based on bytes read from a given io.Reader.
+
+				
+				
+			
+				
+				<h3 id="NewSHA1">func <a href="../../../../src/github.com/google/uuid/hash.go?s=1872:1914#L47">NewSHA1</a>
+					<a class="permalink" href="index.html#NewSHA1">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func NewSHA1(space <a href="index.html#UUID">UUID</a>, data []<a href="../../../builtin/index.html#byte">byte</a>) <a href="index.html#UUID">UUID</a></pre>
+				<p>NewSHA1 returns a new SHA1 (Version 5) UUID based on the
+supplied name space and data.  It is the same as calling:
+<pre>NewHash(sha1.New(), space, data, 5)
+</pre>
+
+				
+				
+			
+				
+				<h3 id="NewUUID">func <a href="../../../../src/github.com/google/uuid/version1.go?s=679:707#L9">NewUUID</a>
+					<a class="permalink" href="index.html#NewUUID">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func NewUUID() (<a href="index.html#UUID">UUID</a>, <a href="../../../builtin/index.html#error">error</a>)</pre>
+				<p>NewUUID returns a Version 1 UUID based on the current NodeID and clock
+sequence, and the current time.  If the NodeID has not been set by SetNodeID
+or SetNodeInterface then it will be set automatically.  If the NodeID cannot
+be set NewUUID returns nil.  If clock sequence has not been set by
+SetClockSequence then it will be set automatically.  If GetTime fails to
+return the current NewUUID returns nil and an error.
+<p>In most cases, New should be used.
+
+				
+				
+			
+				
+				<h3 id="NewV6">func <a href="../../../../src/github.com/google/uuid/version6.go?s=1030:1056#L11">NewV6</a>
+					<a class="permalink" href="index.html#NewV6">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func NewV6() (<a href="index.html#UUID">UUID</a>, <a href="../../../builtin/index.html#error">error</a>)</pre>
+				<p>UUID version 6 is a field-compatible version of UUIDv1, reordered for improved DB locality.
+It is expected that UUIDv6 will primarily be used in contexts where there are existing v1 UUIDs.
+Systems that do not involve legacy UUIDv1 SHOULD consider using UUIDv7 instead.
+<p>see <a href="https://datatracker.ietf.org/doc/html/draft-peabody-dispatch-new-uuid-format-03#uuidv6">https://datatracker.ietf.org/doc/html/draft-peabody-dispatch-new-uuid-format-03#uuidv6</a>
+<p>NewV6 returns a Version 6 UUID based on the current NodeID and clock
+sequence, and the current time. If the NodeID has not been set by SetNodeID
+or SetNodeInterface then it will be set automatically. If the NodeID cannot
+be set NewV6 set NodeID is random bits automatically . If clock sequence has not been set by
+SetClockSequence then it will be set automatically. If GetTime fails to
+return the current NewV6 returns Nil and an error.
+
+				
+				
+			
+				
+				<h3 id="NewV7">func <a href="../../../../src/github.com/google/uuid/version7.go?s=875:901#L13">NewV7</a>
+					<a class="permalink" href="index.html#NewV7">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func NewV7() (<a href="index.html#UUID">UUID</a>, <a href="../../../builtin/index.html#error">error</a>)</pre>
+				<p>UUID version 7 features a time-ordered value field derived from the widely
+implemented and well known Unix Epoch timestamp source,
+the number of milliseconds seconds since midnight 1 Jan 1970 UTC, leap seconds excluded.
+As well as improved entropy characteristics over versions 1 or 6.
+<p>see <a href="https://datatracker.ietf.org/doc/html/draft-peabody-dispatch-new-uuid-format-03#name-uuid-version-7">https://datatracker.ietf.org/doc/html/draft-peabody-dispatch-new-uuid-format-03#name-uuid-version-7</a>
+<p>Implementations SHOULD utilize UUID version 7 over UUID version 1 and 6 if possible.
+<p>NewV7 returns a Version 7 UUID based on the current time(Unix Epoch).
+Uses the randomness pool if it was enabled with EnableRandPool.
+On error, NewV7 returns Nil and an error
+
+				
+				
+			
+				
+				<h3 id="NewV7FromReader">func <a href="../../../../src/github.com/google/uuid/version7.go?s=1193:1240#L25">NewV7FromReader</a>
+					<a class="permalink" href="index.html#NewV7FromReader">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func NewV7FromReader(r <a href="../../../io/index.html">io</a>.<a href="../../../io/index.html#Reader">Reader</a>) (<a href="index.html#UUID">UUID</a>, <a href="../../../builtin/index.html#error">error</a>)</pre>
+				<p>NewV7FromReader returns a Version 7 UUID based on the current time(Unix Epoch).
+it use NewRandomFromReader fill random bits.
+On error, NewV7FromReader returns Nil and an error.
+
+				
+				
+			
+				
+				<h3 id="Parse">func <a href="../../../../src/github.com/google/uuid/uuid.go?s=2038:2072#L58">Parse</a>
+					<a class="permalink" href="index.html#Parse">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func Parse(s <a href="../../../builtin/index.html#string">string</a>) (<a href="index.html#UUID">UUID</a>, <a href="../../../builtin/index.html#error">error</a>)</pre>
+				<p>Parse decodes s into a UUID or returns an error if it cannot be parsed.  Both
+the standard UUID forms defined in RFC 4122
+(xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx and
+urn:uuid:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx) are decoded.  In addition,
+Parse accepts non-standard strings such as the raw hex encoding
+xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx and 38 byte &quot;Microsoft style&quot; encodings,
+e.g.  {xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx}.  Only the middle 36 bytes are
+examined in the latter case.  Parse should not be used to validate strings as
+it parses non-standard encodings as indicated above.
+
+				
+				
+			
+				
+				<h3 id="ParseBytes">func <a href="../../../../src/github.com/google/uuid/uuid.go?s=3221:3260#L110">ParseBytes</a>
+					<a class="permalink" href="index.html#ParseBytes">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func ParseBytes(b []<a href="../../../builtin/index.html#byte">byte</a>) (<a href="index.html#UUID">UUID</a>, <a href="../../../builtin/index.html#error">error</a>)</pre>
+				<p>ParseBytes is like Parse, except it parses a byte slice instead of a string.
+
+				
+				
+			
+
+			
+				
+				<h3 id="UUID.ClockSequence">func (UUID) <a href="../../../../src/github.com/google/uuid/time.go?s=3696:3732#L122">ClockSequence</a>
+					<a class="permalink" href="index.html#UUID.ClockSequence">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (uuid <a href="index.html#UUID">UUID</a>) ClockSequence() <a href="../../../builtin/index.html#int">int</a></pre>
+				<p>ClockSequence returns the clock sequence encoded in uuid.
+The clock sequence is only well defined for version 1 and 2 UUIDs.
+
+				
+				
+				
+			
+				
+				<h3 id="UUID.Domain">func (UUID) <a href="../../../../src/github.com/google/uuid/dce.go?s=1666:1698#L50">Domain</a>
+					<a class="permalink" href="index.html#UUID.Domain">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (uuid <a href="index.html#UUID">UUID</a>) Domain() <a href="index.html#Domain">Domain</a></pre>
+				<p>Domain returns the domain for a Version 2 UUID.  Domains are only defined
+for Version 2 UUIDs.
+
+				
+				
+				
+			
+				
+				<h3 id="UUID.ID">func (UUID) <a href="../../../../src/github.com/google/uuid/dce.go?s=1816:1844#L56">ID</a>
+					<a class="permalink" href="index.html#UUID.ID">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (uuid <a href="index.html#UUID">UUID</a>) ID() <a href="../../../builtin/index.html#uint32">uint32</a></pre>
+				<p>ID returns the id for a Version 2 UUID. IDs are only defined for Version 2
+UUIDs.
+
+				
+				
+				
+			
+				
+				<h3 id="UUID.MarshalBinary">func (UUID) <a href="../../../../src/github.com/google/uuid/marshal.go?s=597:645#L17">MarshalBinary</a>
+					<a class="permalink" href="index.html#UUID.MarshalBinary">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (uuid <a href="index.html#UUID">UUID</a>) MarshalBinary() ([]<a href="../../../builtin/index.html#byte">byte</a>, <a href="../../../builtin/index.html#error">error</a>)</pre>
+				<p>MarshalBinary implements encoding.BinaryMarshaler.
+
+				
+				
+				
+			
+				
+				<h3 id="UUID.MarshalText">func (UUID) <a href="../../../../src/github.com/google/uuid/marshal.go?s=235:281#L1">MarshalText</a>
+					<a class="permalink" href="index.html#UUID.MarshalText">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (uuid <a href="index.html#UUID">UUID</a>) MarshalText() ([]<a href="../../../builtin/index.html#byte">byte</a>, <a href="../../../builtin/index.html#error">error</a>)</pre>
+				<p>MarshalText implements encoding.TextMarshaler.
+
+				
+				
+				
+			
+				
+				<h3 id="UUID.NodeID">func (UUID) <a href="../../../../src/github.com/google/uuid/node.go?s=2226:2258#L76">NodeID</a>
+					<a class="permalink" href="index.html#UUID.NodeID">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (uuid <a href="index.html#UUID">UUID</a>) NodeID() []<a href="../../../builtin/index.html#byte">byte</a></pre>
+				<p>NodeID returns the 6 byte node id encoded in uuid.  It returns nil if uuid is
+not valid.  The NodeID is only well defined for version 1 and 2 UUIDs.
+
+				
+				
+				
+			
+				
+				<h3 id="UUID.Scan">func (*UUID) <a href="../../../../src/github.com/google/uuid/sql.go?s=446:491#L5">Scan</a>
+					<a class="permalink" href="index.html#UUID.Scan">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (uuid *<a href="index.html#UUID">UUID</a>) Scan(src interface{}) <a href="../../../builtin/index.html#error">error</a></pre>
+				<p>Scan implements sql.Scanner so UUIDs can be read from databases transparently.
+Currently, database types that map to string and []byte are supported. Please
+consult database-specific driver documentation for matching types.
+
+				
+				
+				
+			
+				
+				<h3 id="UUID.String">func (UUID) <a href="../../../../src/github.com/google/uuid/uuid.go?s=6474:6506#L234">String</a>
+					<a class="permalink" href="index.html#UUID.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (uuid <a href="index.html#UUID">UUID</a>) String() <a href="../../../builtin/index.html#string">string</a></pre>
+				<p>String returns the string form of uuid, xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+, or &quot;&quot; if uuid is invalid.
+
+				
+				
+				
+			
+				
+				<h3 id="UUID.Time">func (UUID) <a href="../../../../src/github.com/google/uuid/time.go?s=3061:3089#L102">Time</a>
+					<a class="permalink" href="index.html#UUID.Time">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (uuid <a href="index.html#UUID">UUID</a>) Time() <a href="index.html#Time">Time</a></pre>
+				<p>Time returns the time in 100s of nanoseconds since 15 Oct 1582 encoded in
+uuid.  The time is only defined for version 1, 2, 6 and 7 UUIDs.
+
+				
+				
+				
+			
+				
+				<h3 id="UUID.URN">func (UUID) <a href="../../../../src/github.com/google/uuid/uuid.go?s=6701:6730#L242">URN</a>
+					<a class="permalink" href="index.html#UUID.URN">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (uuid <a href="index.html#UUID">UUID</a>) URN() <a href="../../../builtin/index.html#string">string</a></pre>
+				<p>URN returns the RFC 2141 URN form of uuid,
+urn:uuid:xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx,  or &quot;&quot; if uuid is invalid.
+
+				
+				
+				
+			
+				
+				<h3 id="UUID.UnmarshalBinary">func (*UUID) <a href="../../../../src/github.com/google/uuid/marshal.go?s=730:782#L22">UnmarshalBinary</a>
+					<a class="permalink" href="index.html#UUID.UnmarshalBinary">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (uuid *<a href="index.html#UUID">UUID</a>) UnmarshalBinary(data []<a href="../../../builtin/index.html#byte">byte</a>) <a href="../../../builtin/index.html#error">error</a></pre>
+				<p>UnmarshalBinary implements encoding.BinaryUnmarshaler.
+
+				
+				
+				
+			
+				
+				<h3 id="UUID.UnmarshalText">func (*UUID) <a href="../../../../src/github.com/google/uuid/marshal.go?s=401:451#L7">UnmarshalText</a>
+					<a class="permalink" href="index.html#UUID.UnmarshalText">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (uuid *<a href="index.html#UUID">UUID</a>) UnmarshalText(data []<a href="../../../builtin/index.html#byte">byte</a>) <a href="../../../builtin/index.html#error">error</a></pre>
+				<p>UnmarshalText implements encoding.TextUnmarshaler.
+
+				
+				
+				
+			
+				
+				<h3 id="UUID.Value">func (UUID) <a href="../../../../src/github.com/google/uuid/sql.go?s=1381:1427#L47">Value</a>
+					<a class="permalink" href="index.html#UUID.Value">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (uuid <a href="index.html#UUID">UUID</a>) Value() (<a href="../../../database/sql/driver/index.html">driver</a>.<a href="../../../database/sql/driver/index.html#Value">Value</a>, <a href="../../../builtin/index.html#error">error</a>)</pre>
+				<p>Value implements sql.Valuer so that UUIDs can be written to databases
+transparently. Currently, UUIDs map to strings. Please consult
+database-specific driver documentation for matching types.
+
+				
+				
+				
+			
+				
+				<h3 id="UUID.Variant">func (UUID) <a href="../../../../src/github.com/google/uuid/uuid.go?s=7149:7183#L262">Variant</a>
+					<a class="permalink" href="index.html#UUID.Variant">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (uuid <a href="index.html#UUID">UUID</a>) Variant() <a href="index.html#Variant">Variant</a></pre>
+				<p>Variant returns the variant encoded in uuid.
+
+				
+				
+				
+			
+				
+				<h3 id="UUID.Version">func (UUID) <a href="../../../../src/github.com/google/uuid/uuid.go?s=7418:7452#L276">Version</a>
+					<a class="permalink" href="index.html#UUID.Version">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (uuid <a href="index.html#UUID">UUID</a>) Version() <a href="index.html#Version">Version</a></pre>
+				<p>Version returns the version of uuid.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="UUIDs">type <a href="../../../../src/github.com/google/uuid/uuid.go?s=9365:9382#L346">UUIDs</a>
+				<a class="permalink" href="index.html#UUIDs">&#xb6;</a>
+				
+				
+			</h2>
+			<p>UUIDs is a slice of UUID types.
+
+			<pre>type UUIDs []<a href="index.html#UUID">UUID</a></pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="UUIDs.Strings">func (UUIDs) <a href="../../../../src/github.com/google/uuid/uuid.go?s=9468:9505#L349">Strings</a>
+					<a class="permalink" href="index.html#UUIDs.Strings">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (uuids <a href="index.html#UUIDs">UUIDs</a>) Strings() []<a href="../../../builtin/index.html#string">string</a></pre>
+				<p>Strings returns a string slice containing the string form of each UUID in uuids.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Variant">type <a href="../../../../src/github.com/google/uuid/uuid.go?s=476:493#L16">Variant</a>
+				<a class="permalink" href="index.html#Variant">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A Variant represents a UUID&apos;s variant.
+
+			<pre>type Variant <a href="../../../builtin/index.html#byte">byte</a></pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="Variant.String">func (Variant) <a href="../../../../src/github.com/google/uuid/uuid.go?s=7621:7653#L287">String</a>
+					<a class="permalink" href="index.html#Variant.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v <a href="index.html#Variant">Variant</a>) String() <a href="../../../builtin/index.html#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Version">type <a href="../../../../src/github.com/google/uuid/uuid.go?s=415:432#L13">Version</a>
+				<a class="permalink" href="index.html#Version">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A Version represents a UUID&apos;s version.
+
+			<pre>type Version <a href="../../../builtin/index.html#byte">byte</a></pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="Version.String">func (Version) <a href="../../../../src/github.com/google/uuid/uuid.go?s=7488:7520#L280">String</a>
+					<a class="permalink" href="index.html#Version.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v <a href="index.html#Version">Version</a>) String() <a href="../../../builtin/index.html#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+	
+
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

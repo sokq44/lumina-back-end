@@ -1,0 +1,1340 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>src/go/doc/comment/parse.go - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../../index.html">GoDoc</a></div>
+<a href="./parse.go?s=485:623#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Source file
+    <a href="http://localhost:8080/src">src</a>/<a href="http://localhost:8080/src/go">go</a>/<a href="http://localhost:8080/src/go/doc">doc</a>/<a href="http://localhost:8080/src/go/doc/comment">comment</a>/<span class="text-muted">parse.go</span>
+  </h1>
+
+
+
+
+
+  <h2>
+    Documentation: <a href="http://localhost:8080/pkg/go/doc/comment">go/doc/comment</a>
+  </h2>
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1&nbsp;&nbsp;</span><span class="comment">// Copyright 2022 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2&nbsp;&nbsp;</span><span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3&nbsp;&nbsp;</span><span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4&nbsp;&nbsp;</span>
+<span id="L5" class="ln">     5&nbsp;&nbsp;</span>package comment
+<span id="L6" class="ln">     6&nbsp;&nbsp;</span>
+<span id="L7" class="ln">     7&nbsp;&nbsp;</span>import (
+<span id="L8" class="ln">     8&nbsp;&nbsp;</span>	&#34;slices&#34;
+<span id="L9" class="ln">     9&nbsp;&nbsp;</span>	&#34;strings&#34;
+<span id="L10" class="ln">    10&nbsp;&nbsp;</span>	&#34;unicode&#34;
+<span id="L11" class="ln">    11&nbsp;&nbsp;</span>	&#34;unicode/utf8&#34;
+<span id="L12" class="ln">    12&nbsp;&nbsp;</span>)
+<span id="L13" class="ln">    13&nbsp;&nbsp;</span>
+<span id="L14" class="ln">    14&nbsp;&nbsp;</span><span class="comment">// A Doc is a parsed Go doc comment.</span>
+<span id="L15" class="ln">    15&nbsp;&nbsp;</span>type Doc struct {
+<span id="L16" class="ln">    16&nbsp;&nbsp;</span>	<span class="comment">// Content is the sequence of content blocks in the comment.</span>
+<span id="L17" class="ln">    17&nbsp;&nbsp;</span>	Content []Block
+<span id="L18" class="ln">    18&nbsp;&nbsp;</span>
+<span id="L19" class="ln">    19&nbsp;&nbsp;</span>	<span class="comment">// Links is the link definitions in the comment.</span>
+<span id="L20" class="ln">    20&nbsp;&nbsp;</span>	Links []*LinkDef
+<span id="L21" class="ln">    21&nbsp;&nbsp;</span>}
+<span id="L22" class="ln">    22&nbsp;&nbsp;</span>
+<span id="L23" class="ln">    23&nbsp;&nbsp;</span><span class="comment">// A LinkDef is a single link definition.</span>
+<span id="L24" class="ln">    24&nbsp;&nbsp;</span><span class="selection">type LinkDef struct {
+<span id="L25" class="ln">    25&nbsp;&nbsp;</span>	Text string </span><span class="selection-comment">// the link text</span><span class="selection">
+<span id="L26" class="ln">    26&nbsp;&nbsp;</span>	URL  string </span><span class="selection-comment">// the link URL</span><span class="selection">
+<span id="L27" class="ln">    27&nbsp;&nbsp;</span>	Used bool   </span><span class="selection-comment">// whether the comment uses the definition</span><span class="selection">
+<span id="L28" class="ln">    28&nbsp;&nbsp;</span>}</span>
+<span id="L29" class="ln">    29&nbsp;&nbsp;</span>
+<span id="L30" class="ln">    30&nbsp;&nbsp;</span><span class="comment">// A Block is block-level content in a doc comment,</span>
+<span id="L31" class="ln">    31&nbsp;&nbsp;</span><span class="comment">// one of [*Code], [*Heading], [*List], or [*Paragraph].</span>
+<span id="L32" class="ln">    32&nbsp;&nbsp;</span>type Block interface {
+<span id="L33" class="ln">    33&nbsp;&nbsp;</span>	block()
+<span id="L34" class="ln">    34&nbsp;&nbsp;</span>}
+<span id="L35" class="ln">    35&nbsp;&nbsp;</span>
+<span id="L36" class="ln">    36&nbsp;&nbsp;</span><span class="comment">// A Heading is a doc comment heading.</span>
+<span id="L37" class="ln">    37&nbsp;&nbsp;</span>type Heading struct {
+<span id="L38" class="ln">    38&nbsp;&nbsp;</span>	Text []Text <span class="comment">// the heading text</span>
+<span id="L39" class="ln">    39&nbsp;&nbsp;</span>}
+<span id="L40" class="ln">    40&nbsp;&nbsp;</span>
+<span id="L41" class="ln">    41&nbsp;&nbsp;</span>func (*Heading) block() {}
+<span id="L42" class="ln">    42&nbsp;&nbsp;</span>
+<span id="L43" class="ln">    43&nbsp;&nbsp;</span><span class="comment">// A List is a numbered or bullet list.</span>
+<span id="L44" class="ln">    44&nbsp;&nbsp;</span><span class="comment">// Lists are always non-empty: len(Items) &gt; 0.</span>
+<span id="L45" class="ln">    45&nbsp;&nbsp;</span><span class="comment">// In a numbered list, every Items[i].Number is a non-empty string.</span>
+<span id="L46" class="ln">    46&nbsp;&nbsp;</span><span class="comment">// In a bullet list, every Items[i].Number is an empty string.</span>
+<span id="L47" class="ln">    47&nbsp;&nbsp;</span>type List struct {
+<span id="L48" class="ln">    48&nbsp;&nbsp;</span>	<span class="comment">// Items is the list items.</span>
+<span id="L49" class="ln">    49&nbsp;&nbsp;</span>	Items []*ListItem
+<span id="L50" class="ln">    50&nbsp;&nbsp;</span>
+<span id="L51" class="ln">    51&nbsp;&nbsp;</span>	<span class="comment">// ForceBlankBefore indicates that the list must be</span>
+<span id="L52" class="ln">    52&nbsp;&nbsp;</span>	<span class="comment">// preceded by a blank line when reformatting the comment,</span>
+<span id="L53" class="ln">    53&nbsp;&nbsp;</span>	<span class="comment">// overriding the usual conditions. See the BlankBefore method.</span>
+<span id="L54" class="ln">    54&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L55" class="ln">    55&nbsp;&nbsp;</span>	<span class="comment">// The comment parser sets ForceBlankBefore for any list</span>
+<span id="L56" class="ln">    56&nbsp;&nbsp;</span>	<span class="comment">// that is preceded by a blank line, to make sure</span>
+<span id="L57" class="ln">    57&nbsp;&nbsp;</span>	<span class="comment">// the blank line is preserved when printing.</span>
+<span id="L58" class="ln">    58&nbsp;&nbsp;</span>	ForceBlankBefore bool
+<span id="L59" class="ln">    59&nbsp;&nbsp;</span>
+<span id="L60" class="ln">    60&nbsp;&nbsp;</span>	<span class="comment">// ForceBlankBetween indicates that list items must be</span>
+<span id="L61" class="ln">    61&nbsp;&nbsp;</span>	<span class="comment">// separated by blank lines when reformatting the comment,</span>
+<span id="L62" class="ln">    62&nbsp;&nbsp;</span>	<span class="comment">// overriding the usual conditions. See the BlankBetween method.</span>
+<span id="L63" class="ln">    63&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L64" class="ln">    64&nbsp;&nbsp;</span>	<span class="comment">// The comment parser sets ForceBlankBetween for any list</span>
+<span id="L65" class="ln">    65&nbsp;&nbsp;</span>	<span class="comment">// that has a blank line between any two of its items, to make sure</span>
+<span id="L66" class="ln">    66&nbsp;&nbsp;</span>	<span class="comment">// the blank lines are preserved when printing.</span>
+<span id="L67" class="ln">    67&nbsp;&nbsp;</span>	ForceBlankBetween bool
+<span id="L68" class="ln">    68&nbsp;&nbsp;</span>}
+<span id="L69" class="ln">    69&nbsp;&nbsp;</span>
+<span id="L70" class="ln">    70&nbsp;&nbsp;</span>func (*List) block() {}
+<span id="L71" class="ln">    71&nbsp;&nbsp;</span>
+<span id="L72" class="ln">    72&nbsp;&nbsp;</span><span class="comment">// BlankBefore reports whether a reformatting of the comment</span>
+<span id="L73" class="ln">    73&nbsp;&nbsp;</span><span class="comment">// should include a blank line before the list.</span>
+<span id="L74" class="ln">    74&nbsp;&nbsp;</span><span class="comment">// The default rule is the same as for [BlankBetween]:</span>
+<span id="L75" class="ln">    75&nbsp;&nbsp;</span><span class="comment">// if the list item content contains any blank lines</span>
+<span id="L76" class="ln">    76&nbsp;&nbsp;</span><span class="comment">// (meaning at least one item has multiple paragraphs)</span>
+<span id="L77" class="ln">    77&nbsp;&nbsp;</span><span class="comment">// then the list itself must be preceded by a blank line.</span>
+<span id="L78" class="ln">    78&nbsp;&nbsp;</span><span class="comment">// A preceding blank line can be forced by setting [List].ForceBlankBefore.</span>
+<span id="L79" class="ln">    79&nbsp;&nbsp;</span>func (l *List) BlankBefore() bool {
+<span id="L80" class="ln">    80&nbsp;&nbsp;</span>	return l.ForceBlankBefore || l.BlankBetween()
+<span id="L81" class="ln">    81&nbsp;&nbsp;</span>}
+<span id="L82" class="ln">    82&nbsp;&nbsp;</span>
+<span id="L83" class="ln">    83&nbsp;&nbsp;</span><span class="comment">// BlankBetween reports whether a reformatting of the comment</span>
+<span id="L84" class="ln">    84&nbsp;&nbsp;</span><span class="comment">// should include a blank line between each pair of list items.</span>
+<span id="L85" class="ln">    85&nbsp;&nbsp;</span><span class="comment">// The default rule is that if the list item content contains any blank lines</span>
+<span id="L86" class="ln">    86&nbsp;&nbsp;</span><span class="comment">// (meaning at least one item has multiple paragraphs)</span>
+<span id="L87" class="ln">    87&nbsp;&nbsp;</span><span class="comment">// then list items must themselves be separated by blank lines.</span>
+<span id="L88" class="ln">    88&nbsp;&nbsp;</span><span class="comment">// Blank line separators can be forced by setting [List].ForceBlankBetween.</span>
+<span id="L89" class="ln">    89&nbsp;&nbsp;</span>func (l *List) BlankBetween() bool {
+<span id="L90" class="ln">    90&nbsp;&nbsp;</span>	if l.ForceBlankBetween {
+<span id="L91" class="ln">    91&nbsp;&nbsp;</span>		return true
+<span id="L92" class="ln">    92&nbsp;&nbsp;</span>	}
+<span id="L93" class="ln">    93&nbsp;&nbsp;</span>	for _, item := range l.Items {
+<span id="L94" class="ln">    94&nbsp;&nbsp;</span>		if len(item.Content) != 1 {
+<span id="L95" class="ln">    95&nbsp;&nbsp;</span>			<span class="comment">// Unreachable for parsed comments today,</span>
+<span id="L96" class="ln">    96&nbsp;&nbsp;</span>			<span class="comment">// since the only way to get multiple item.Content</span>
+<span id="L97" class="ln">    97&nbsp;&nbsp;</span>			<span class="comment">// is multiple paragraphs, which must have been</span>
+<span id="L98" class="ln">    98&nbsp;&nbsp;</span>			<span class="comment">// separated by a blank line.</span>
+<span id="L99" class="ln">    99&nbsp;&nbsp;</span>			return true
+<span id="L100" class="ln">   100&nbsp;&nbsp;</span>		}
+<span id="L101" class="ln">   101&nbsp;&nbsp;</span>	}
+<span id="L102" class="ln">   102&nbsp;&nbsp;</span>	return false
+<span id="L103" class="ln">   103&nbsp;&nbsp;</span>}
+<span id="L104" class="ln">   104&nbsp;&nbsp;</span>
+<span id="L105" class="ln">   105&nbsp;&nbsp;</span><span class="comment">// A ListItem is a single item in a numbered or bullet list.</span>
+<span id="L106" class="ln">   106&nbsp;&nbsp;</span>type ListItem struct {
+<span id="L107" class="ln">   107&nbsp;&nbsp;</span>	<span class="comment">// Number is a decimal string in a numbered list</span>
+<span id="L108" class="ln">   108&nbsp;&nbsp;</span>	<span class="comment">// or an empty string in a bullet list.</span>
+<span id="L109" class="ln">   109&nbsp;&nbsp;</span>	Number string <span class="comment">// &#34;1&#34;, &#34;2&#34;, ...; &#34;&#34; for bullet list</span>
+<span id="L110" class="ln">   110&nbsp;&nbsp;</span>
+<span id="L111" class="ln">   111&nbsp;&nbsp;</span>	<span class="comment">// Content is the list content.</span>
+<span id="L112" class="ln">   112&nbsp;&nbsp;</span>	<span class="comment">// Currently, restrictions in the parser and printer</span>
+<span id="L113" class="ln">   113&nbsp;&nbsp;</span>	<span class="comment">// require every element of Content to be a *Paragraph.</span>
+<span id="L114" class="ln">   114&nbsp;&nbsp;</span>	Content []Block <span class="comment">// Content of this item.</span>
+<span id="L115" class="ln">   115&nbsp;&nbsp;</span>}
+<span id="L116" class="ln">   116&nbsp;&nbsp;</span>
+<span id="L117" class="ln">   117&nbsp;&nbsp;</span><span class="comment">// A Paragraph is a paragraph of text.</span>
+<span id="L118" class="ln">   118&nbsp;&nbsp;</span>type Paragraph struct {
+<span id="L119" class="ln">   119&nbsp;&nbsp;</span>	Text []Text
+<span id="L120" class="ln">   120&nbsp;&nbsp;</span>}
+<span id="L121" class="ln">   121&nbsp;&nbsp;</span>
+<span id="L122" class="ln">   122&nbsp;&nbsp;</span>func (*Paragraph) block() {}
+<span id="L123" class="ln">   123&nbsp;&nbsp;</span>
+<span id="L124" class="ln">   124&nbsp;&nbsp;</span><span class="comment">// A Code is a preformatted code block.</span>
+<span id="L125" class="ln">   125&nbsp;&nbsp;</span>type Code struct {
+<span id="L126" class="ln">   126&nbsp;&nbsp;</span>	<span class="comment">// Text is the preformatted text, ending with a newline character.</span>
+<span id="L127" class="ln">   127&nbsp;&nbsp;</span>	<span class="comment">// It may be multiple lines, each of which ends with a newline character.</span>
+<span id="L128" class="ln">   128&nbsp;&nbsp;</span>	<span class="comment">// It is never empty, nor does it start or end with a blank line.</span>
+<span id="L129" class="ln">   129&nbsp;&nbsp;</span>	Text string
+<span id="L130" class="ln">   130&nbsp;&nbsp;</span>}
+<span id="L131" class="ln">   131&nbsp;&nbsp;</span>
+<span id="L132" class="ln">   132&nbsp;&nbsp;</span>func (*Code) block() {}
+<span id="L133" class="ln">   133&nbsp;&nbsp;</span>
+<span id="L134" class="ln">   134&nbsp;&nbsp;</span><span class="comment">// A Text is text-level content in a doc comment,</span>
+<span id="L135" class="ln">   135&nbsp;&nbsp;</span><span class="comment">// one of [Plain], [Italic], [*Link], or [*DocLink].</span>
+<span id="L136" class="ln">   136&nbsp;&nbsp;</span>type Text interface {
+<span id="L137" class="ln">   137&nbsp;&nbsp;</span>	text()
+<span id="L138" class="ln">   138&nbsp;&nbsp;</span>}
+<span id="L139" class="ln">   139&nbsp;&nbsp;</span>
+<span id="L140" class="ln">   140&nbsp;&nbsp;</span><span class="comment">// A Plain is a string rendered as plain text (not italicized).</span>
+<span id="L141" class="ln">   141&nbsp;&nbsp;</span>type Plain string
+<span id="L142" class="ln">   142&nbsp;&nbsp;</span>
+<span id="L143" class="ln">   143&nbsp;&nbsp;</span>func (Plain) text() {}
+<span id="L144" class="ln">   144&nbsp;&nbsp;</span>
+<span id="L145" class="ln">   145&nbsp;&nbsp;</span><span class="comment">// An Italic is a string rendered as italicized text.</span>
+<span id="L146" class="ln">   146&nbsp;&nbsp;</span>type Italic string
+<span id="L147" class="ln">   147&nbsp;&nbsp;</span>
+<span id="L148" class="ln">   148&nbsp;&nbsp;</span>func (Italic) text() {}
+<span id="L149" class="ln">   149&nbsp;&nbsp;</span>
+<span id="L150" class="ln">   150&nbsp;&nbsp;</span><span class="comment">// A Link is a link to a specific URL.</span>
+<span id="L151" class="ln">   151&nbsp;&nbsp;</span>type Link struct {
+<span id="L152" class="ln">   152&nbsp;&nbsp;</span>	Auto bool   <span class="comment">// is this an automatic (implicit) link of a literal URL?</span>
+<span id="L153" class="ln">   153&nbsp;&nbsp;</span>	Text []Text <span class="comment">// text of link</span>
+<span id="L154" class="ln">   154&nbsp;&nbsp;</span>	URL  string <span class="comment">// target URL of link</span>
+<span id="L155" class="ln">   155&nbsp;&nbsp;</span>}
+<span id="L156" class="ln">   156&nbsp;&nbsp;</span>
+<span id="L157" class="ln">   157&nbsp;&nbsp;</span>func (*Link) text() {}
+<span id="L158" class="ln">   158&nbsp;&nbsp;</span>
+<span id="L159" class="ln">   159&nbsp;&nbsp;</span><span class="comment">// A DocLink is a link to documentation for a Go package or symbol.</span>
+<span id="L160" class="ln">   160&nbsp;&nbsp;</span>type DocLink struct {
+<span id="L161" class="ln">   161&nbsp;&nbsp;</span>	Text []Text <span class="comment">// text of link</span>
+<span id="L162" class="ln">   162&nbsp;&nbsp;</span>
+<span id="L163" class="ln">   163&nbsp;&nbsp;</span>	<span class="comment">// ImportPath, Recv, and Name identify the Go package or symbol</span>
+<span id="L164" class="ln">   164&nbsp;&nbsp;</span>	<span class="comment">// that is the link target. The potential combinations of</span>
+<span id="L165" class="ln">   165&nbsp;&nbsp;</span>	<span class="comment">// non-empty fields are:</span>
+<span id="L166" class="ln">   166&nbsp;&nbsp;</span>	<span class="comment">//  - ImportPath: a link to another package</span>
+<span id="L167" class="ln">   167&nbsp;&nbsp;</span>	<span class="comment">//  - ImportPath, Name: a link to a const, func, type, or var in another package</span>
+<span id="L168" class="ln">   168&nbsp;&nbsp;</span>	<span class="comment">//  - ImportPath, Recv, Name: a link to a method in another package</span>
+<span id="L169" class="ln">   169&nbsp;&nbsp;</span>	<span class="comment">//  - Name: a link to a const, func, type, or var in this package</span>
+<span id="L170" class="ln">   170&nbsp;&nbsp;</span>	<span class="comment">//  - Recv, Name: a link to a method in this package</span>
+<span id="L171" class="ln">   171&nbsp;&nbsp;</span>	ImportPath string <span class="comment">// import path</span>
+<span id="L172" class="ln">   172&nbsp;&nbsp;</span>	Recv       string <span class="comment">// receiver type, without any pointer star, for methods</span>
+<span id="L173" class="ln">   173&nbsp;&nbsp;</span>	Name       string <span class="comment">// const, func, type, var, or method name</span>
+<span id="L174" class="ln">   174&nbsp;&nbsp;</span>}
+<span id="L175" class="ln">   175&nbsp;&nbsp;</span>
+<span id="L176" class="ln">   176&nbsp;&nbsp;</span>func (*DocLink) text() {}
+<span id="L177" class="ln">   177&nbsp;&nbsp;</span>
+<span id="L178" class="ln">   178&nbsp;&nbsp;</span><span class="comment">// A Parser is a doc comment parser.</span>
+<span id="L179" class="ln">   179&nbsp;&nbsp;</span><span class="comment">// The fields in the struct can be filled in before calling [Parser.Parse]</span>
+<span id="L180" class="ln">   180&nbsp;&nbsp;</span><span class="comment">// in order to customize the details of the parsing process.</span>
+<span id="L181" class="ln">   181&nbsp;&nbsp;</span>type Parser struct {
+<span id="L182" class="ln">   182&nbsp;&nbsp;</span>	<span class="comment">// Words is a map of Go identifier words that</span>
+<span id="L183" class="ln">   183&nbsp;&nbsp;</span>	<span class="comment">// should be italicized and potentially linked.</span>
+<span id="L184" class="ln">   184&nbsp;&nbsp;</span>	<span class="comment">// If Words[w] is the empty string, then the word w</span>
+<span id="L185" class="ln">   185&nbsp;&nbsp;</span>	<span class="comment">// is only italicized. Otherwise it is linked, using</span>
+<span id="L186" class="ln">   186&nbsp;&nbsp;</span>	<span class="comment">// Words[w] as the link target.</span>
+<span id="L187" class="ln">   187&nbsp;&nbsp;</span>	<span class="comment">// Words corresponds to the [go/doc.ToHTML] words parameter.</span>
+<span id="L188" class="ln">   188&nbsp;&nbsp;</span>	Words map[string]string
+<span id="L189" class="ln">   189&nbsp;&nbsp;</span>
+<span id="L190" class="ln">   190&nbsp;&nbsp;</span>	<span class="comment">// LookupPackage resolves a package name to an import path.</span>
+<span id="L191" class="ln">   191&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L192" class="ln">   192&nbsp;&nbsp;</span>	<span class="comment">// If LookupPackage(name) returns ok == true, then [name]</span>
+<span id="L193" class="ln">   193&nbsp;&nbsp;</span>	<span class="comment">// (or [name.Sym] or [name.Sym.Method])</span>
+<span id="L194" class="ln">   194&nbsp;&nbsp;</span>	<span class="comment">// is considered a documentation link to importPath&#39;s package docs.</span>
+<span id="L195" class="ln">   195&nbsp;&nbsp;</span>	<span class="comment">// It is valid to return &#34;&#34;, true, in which case name is considered</span>
+<span id="L196" class="ln">   196&nbsp;&nbsp;</span>	<span class="comment">// to refer to the current package.</span>
+<span id="L197" class="ln">   197&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L198" class="ln">   198&nbsp;&nbsp;</span>	<span class="comment">// If LookupPackage(name) returns ok == false,</span>
+<span id="L199" class="ln">   199&nbsp;&nbsp;</span>	<span class="comment">// then [name] (or [name.Sym] or [name.Sym.Method])</span>
+<span id="L200" class="ln">   200&nbsp;&nbsp;</span>	<span class="comment">// will not be considered a documentation link,</span>
+<span id="L201" class="ln">   201&nbsp;&nbsp;</span>	<span class="comment">// except in the case where name is the full (but single-element) import path</span>
+<span id="L202" class="ln">   202&nbsp;&nbsp;</span>	<span class="comment">// of a package in the standard library, such as in [math] or [io.Reader].</span>
+<span id="L203" class="ln">   203&nbsp;&nbsp;</span>	<span class="comment">// LookupPackage is still called for such names,</span>
+<span id="L204" class="ln">   204&nbsp;&nbsp;</span>	<span class="comment">// in order to permit references to imports of other packages</span>
+<span id="L205" class="ln">   205&nbsp;&nbsp;</span>	<span class="comment">// with the same package names.</span>
+<span id="L206" class="ln">   206&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L207" class="ln">   207&nbsp;&nbsp;</span>	<span class="comment">// Setting LookupPackage to nil is equivalent to setting it to</span>
+<span id="L208" class="ln">   208&nbsp;&nbsp;</span>	<span class="comment">// a function that always returns &#34;&#34;, false.</span>
+<span id="L209" class="ln">   209&nbsp;&nbsp;</span>	LookupPackage func(name string) (importPath string, ok bool)
+<span id="L210" class="ln">   210&nbsp;&nbsp;</span>
+<span id="L211" class="ln">   211&nbsp;&nbsp;</span>	<span class="comment">// LookupSym reports whether a symbol name or method name</span>
+<span id="L212" class="ln">   212&nbsp;&nbsp;</span>	<span class="comment">// exists in the current package.</span>
+<span id="L213" class="ln">   213&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L214" class="ln">   214&nbsp;&nbsp;</span>	<span class="comment">// If LookupSym(&#34;&#34;, &#34;Name&#34;) returns true, then [Name]</span>
+<span id="L215" class="ln">   215&nbsp;&nbsp;</span>	<span class="comment">// is considered a documentation link for a const, func, type, or var.</span>
+<span id="L216" class="ln">   216&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L217" class="ln">   217&nbsp;&nbsp;</span>	<span class="comment">// Similarly, if LookupSym(&#34;Recv&#34;, &#34;Name&#34;) returns true,</span>
+<span id="L218" class="ln">   218&nbsp;&nbsp;</span>	<span class="comment">// then [Recv.Name] is considered a documentation link for</span>
+<span id="L219" class="ln">   219&nbsp;&nbsp;</span>	<span class="comment">// type Recv&#39;s method Name.</span>
+<span id="L220" class="ln">   220&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L221" class="ln">   221&nbsp;&nbsp;</span>	<span class="comment">// Setting LookupSym to nil is equivalent to setting it to a function</span>
+<span id="L222" class="ln">   222&nbsp;&nbsp;</span>	<span class="comment">// that always returns false.</span>
+<span id="L223" class="ln">   223&nbsp;&nbsp;</span>	LookupSym func(recv, name string) (ok bool)
+<span id="L224" class="ln">   224&nbsp;&nbsp;</span>}
+<span id="L225" class="ln">   225&nbsp;&nbsp;</span>
+<span id="L226" class="ln">   226&nbsp;&nbsp;</span><span class="comment">// parseDoc is parsing state for a single doc comment.</span>
+<span id="L227" class="ln">   227&nbsp;&nbsp;</span>type parseDoc struct {
+<span id="L228" class="ln">   228&nbsp;&nbsp;</span>	*Parser
+<span id="L229" class="ln">   229&nbsp;&nbsp;</span>	*Doc
+<span id="L230" class="ln">   230&nbsp;&nbsp;</span>	links     map[string]*LinkDef
+<span id="L231" class="ln">   231&nbsp;&nbsp;</span>	lines     []string
+<span id="L232" class="ln">   232&nbsp;&nbsp;</span>	lookupSym func(recv, name string) bool
+<span id="L233" class="ln">   233&nbsp;&nbsp;</span>}
+<span id="L234" class="ln">   234&nbsp;&nbsp;</span>
+<span id="L235" class="ln">   235&nbsp;&nbsp;</span><span class="comment">// lookupPkg is called to look up the pkg in [pkg], [pkg.Name], and [pkg.Name.Recv].</span>
+<span id="L236" class="ln">   236&nbsp;&nbsp;</span><span class="comment">// If pkg has a slash, it is assumed to be the full import path and is returned with ok = true.</span>
+<span id="L237" class="ln">   237&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L238" class="ln">   238&nbsp;&nbsp;</span><span class="comment">// Otherwise, pkg is probably a simple package name like &#34;rand&#34; (not &#34;crypto/rand&#34; or &#34;math/rand&#34;).</span>
+<span id="L239" class="ln">   239&nbsp;&nbsp;</span><span class="comment">// d.LookupPackage provides a way for the caller to allow resolving such names with reference</span>
+<span id="L240" class="ln">   240&nbsp;&nbsp;</span><span class="comment">// to the imports in the surrounding package.</span>
+<span id="L241" class="ln">   241&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L242" class="ln">   242&nbsp;&nbsp;</span><span class="comment">// There is one collision between these two cases: single-element standard library names</span>
+<span id="L243" class="ln">   243&nbsp;&nbsp;</span><span class="comment">// like &#34;math&#34; are full import paths but don&#39;t contain slashes. We let d.LookupPackage have</span>
+<span id="L244" class="ln">   244&nbsp;&nbsp;</span><span class="comment">// the first chance to resolve it, in case there&#39;s a different package imported as math,</span>
+<span id="L245" class="ln">   245&nbsp;&nbsp;</span><span class="comment">// and otherwise we refer to a built-in list of single-element standard library package names.</span>
+<span id="L246" class="ln">   246&nbsp;&nbsp;</span>func (d *parseDoc) lookupPkg(pkg string) (importPath string, ok bool) {
+<span id="L247" class="ln">   247&nbsp;&nbsp;</span>	if strings.Contains(pkg, &#34;/&#34;) { <span class="comment">// assume a full import path</span>
+<span id="L248" class="ln">   248&nbsp;&nbsp;</span>		if validImportPath(pkg) {
+<span id="L249" class="ln">   249&nbsp;&nbsp;</span>			return pkg, true
+<span id="L250" class="ln">   250&nbsp;&nbsp;</span>		}
+<span id="L251" class="ln">   251&nbsp;&nbsp;</span>		return &#34;&#34;, false
+<span id="L252" class="ln">   252&nbsp;&nbsp;</span>	}
+<span id="L253" class="ln">   253&nbsp;&nbsp;</span>	if d.LookupPackage != nil {
+<span id="L254" class="ln">   254&nbsp;&nbsp;</span>		<span class="comment">// Give LookupPackage a chance.</span>
+<span id="L255" class="ln">   255&nbsp;&nbsp;</span>		if path, ok := d.LookupPackage(pkg); ok {
+<span id="L256" class="ln">   256&nbsp;&nbsp;</span>			return path, true
+<span id="L257" class="ln">   257&nbsp;&nbsp;</span>		}
+<span id="L258" class="ln">   258&nbsp;&nbsp;</span>	}
+<span id="L259" class="ln">   259&nbsp;&nbsp;</span>	return DefaultLookupPackage(pkg)
+<span id="L260" class="ln">   260&nbsp;&nbsp;</span>}
+<span id="L261" class="ln">   261&nbsp;&nbsp;</span>
+<span id="L262" class="ln">   262&nbsp;&nbsp;</span>func isStdPkg(path string) bool {
+<span id="L263" class="ln">   263&nbsp;&nbsp;</span>	_, ok := slices.BinarySearch(stdPkgs, path)
+<span id="L264" class="ln">   264&nbsp;&nbsp;</span>	return ok
+<span id="L265" class="ln">   265&nbsp;&nbsp;</span>}
+<span id="L266" class="ln">   266&nbsp;&nbsp;</span>
+<span id="L267" class="ln">   267&nbsp;&nbsp;</span><span class="comment">// DefaultLookupPackage is the default package lookup</span>
+<span id="L268" class="ln">   268&nbsp;&nbsp;</span><span class="comment">// function, used when [Parser.LookupPackage] is nil.</span>
+<span id="L269" class="ln">   269&nbsp;&nbsp;</span><span class="comment">// It recognizes names of the packages from the standard</span>
+<span id="L270" class="ln">   270&nbsp;&nbsp;</span><span class="comment">// library with single-element import paths, such as math,</span>
+<span id="L271" class="ln">   271&nbsp;&nbsp;</span><span class="comment">// which would otherwise be impossible to name.</span>
+<span id="L272" class="ln">   272&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L273" class="ln">   273&nbsp;&nbsp;</span><span class="comment">// Note that the go/doc package provides a more sophisticated</span>
+<span id="L274" class="ln">   274&nbsp;&nbsp;</span><span class="comment">// lookup based on the imports used in the current package.</span>
+<span id="L275" class="ln">   275&nbsp;&nbsp;</span>func DefaultLookupPackage(name string) (importPath string, ok bool) {
+<span id="L276" class="ln">   276&nbsp;&nbsp;</span>	if isStdPkg(name) {
+<span id="L277" class="ln">   277&nbsp;&nbsp;</span>		return name, true
+<span id="L278" class="ln">   278&nbsp;&nbsp;</span>	}
+<span id="L279" class="ln">   279&nbsp;&nbsp;</span>	return &#34;&#34;, false
+<span id="L280" class="ln">   280&nbsp;&nbsp;</span>}
+<span id="L281" class="ln">   281&nbsp;&nbsp;</span>
+<span id="L282" class="ln">   282&nbsp;&nbsp;</span><span class="comment">// Parse parses the doc comment text and returns the *[Doc] form.</span>
+<span id="L283" class="ln">   283&nbsp;&nbsp;</span><span class="comment">// Comment markers (/* // and */) in the text must have already been removed.</span>
+<span id="L284" class="ln">   284&nbsp;&nbsp;</span>func (p *Parser) Parse(text string) *Doc {
+<span id="L285" class="ln">   285&nbsp;&nbsp;</span>	lines := unindent(strings.Split(text, &#34;\n&#34;))
+<span id="L286" class="ln">   286&nbsp;&nbsp;</span>	d := &amp;parseDoc{
+<span id="L287" class="ln">   287&nbsp;&nbsp;</span>		Parser:    p,
+<span id="L288" class="ln">   288&nbsp;&nbsp;</span>		Doc:       new(Doc),
+<span id="L289" class="ln">   289&nbsp;&nbsp;</span>		links:     make(map[string]*LinkDef),
+<span id="L290" class="ln">   290&nbsp;&nbsp;</span>		lines:     lines,
+<span id="L291" class="ln">   291&nbsp;&nbsp;</span>		lookupSym: func(recv, name string) bool { return false },
+<span id="L292" class="ln">   292&nbsp;&nbsp;</span>	}
+<span id="L293" class="ln">   293&nbsp;&nbsp;</span>	if p.LookupSym != nil {
+<span id="L294" class="ln">   294&nbsp;&nbsp;</span>		d.lookupSym = p.LookupSym
+<span id="L295" class="ln">   295&nbsp;&nbsp;</span>	}
+<span id="L296" class="ln">   296&nbsp;&nbsp;</span>
+<span id="L297" class="ln">   297&nbsp;&nbsp;</span>	<span class="comment">// First pass: break into block structure and collect known links.</span>
+<span id="L298" class="ln">   298&nbsp;&nbsp;</span>	<span class="comment">// The text is all recorded as Plain for now.</span>
+<span id="L299" class="ln">   299&nbsp;&nbsp;</span>	var prev span
+<span id="L300" class="ln">   300&nbsp;&nbsp;</span>	for _, s := range parseSpans(lines) {
+<span id="L301" class="ln">   301&nbsp;&nbsp;</span>		var b Block
+<span id="L302" class="ln">   302&nbsp;&nbsp;</span>		switch s.kind {
+<span id="L303" class="ln">   303&nbsp;&nbsp;</span>		default:
+<span id="L304" class="ln">   304&nbsp;&nbsp;</span>			panic(&#34;go/doc/comment: internal error: unknown span kind&#34;)
+<span id="L305" class="ln">   305&nbsp;&nbsp;</span>		case spanList:
+<span id="L306" class="ln">   306&nbsp;&nbsp;</span>			b = d.list(lines[s.start:s.end], prev.end &lt; s.start)
+<span id="L307" class="ln">   307&nbsp;&nbsp;</span>		case spanCode:
+<span id="L308" class="ln">   308&nbsp;&nbsp;</span>			b = d.code(lines[s.start:s.end])
+<span id="L309" class="ln">   309&nbsp;&nbsp;</span>		case spanOldHeading:
+<span id="L310" class="ln">   310&nbsp;&nbsp;</span>			b = d.oldHeading(lines[s.start])
+<span id="L311" class="ln">   311&nbsp;&nbsp;</span>		case spanHeading:
+<span id="L312" class="ln">   312&nbsp;&nbsp;</span>			b = d.heading(lines[s.start])
+<span id="L313" class="ln">   313&nbsp;&nbsp;</span>		case spanPara:
+<span id="L314" class="ln">   314&nbsp;&nbsp;</span>			b = d.paragraph(lines[s.start:s.end])
+<span id="L315" class="ln">   315&nbsp;&nbsp;</span>		}
+<span id="L316" class="ln">   316&nbsp;&nbsp;</span>		if b != nil {
+<span id="L317" class="ln">   317&nbsp;&nbsp;</span>			d.Content = append(d.Content, b)
+<span id="L318" class="ln">   318&nbsp;&nbsp;</span>		}
+<span id="L319" class="ln">   319&nbsp;&nbsp;</span>		prev = s
+<span id="L320" class="ln">   320&nbsp;&nbsp;</span>	}
+<span id="L321" class="ln">   321&nbsp;&nbsp;</span>
+<span id="L322" class="ln">   322&nbsp;&nbsp;</span>	<span class="comment">// Second pass: interpret all the Plain text now that we know the links.</span>
+<span id="L323" class="ln">   323&nbsp;&nbsp;</span>	for _, b := range d.Content {
+<span id="L324" class="ln">   324&nbsp;&nbsp;</span>		switch b := b.(type) {
+<span id="L325" class="ln">   325&nbsp;&nbsp;</span>		case *Paragraph:
+<span id="L326" class="ln">   326&nbsp;&nbsp;</span>			b.Text = d.parseLinkedText(string(b.Text[0].(Plain)))
+<span id="L327" class="ln">   327&nbsp;&nbsp;</span>		case *List:
+<span id="L328" class="ln">   328&nbsp;&nbsp;</span>			for _, i := range b.Items {
+<span id="L329" class="ln">   329&nbsp;&nbsp;</span>				for _, c := range i.Content {
+<span id="L330" class="ln">   330&nbsp;&nbsp;</span>					p := c.(*Paragraph)
+<span id="L331" class="ln">   331&nbsp;&nbsp;</span>					p.Text = d.parseLinkedText(string(p.Text[0].(Plain)))
+<span id="L332" class="ln">   332&nbsp;&nbsp;</span>				}
+<span id="L333" class="ln">   333&nbsp;&nbsp;</span>			}
+<span id="L334" class="ln">   334&nbsp;&nbsp;</span>		}
+<span id="L335" class="ln">   335&nbsp;&nbsp;</span>	}
+<span id="L336" class="ln">   336&nbsp;&nbsp;</span>
+<span id="L337" class="ln">   337&nbsp;&nbsp;</span>	return d.Doc
+<span id="L338" class="ln">   338&nbsp;&nbsp;</span>}
+<span id="L339" class="ln">   339&nbsp;&nbsp;</span>
+<span id="L340" class="ln">   340&nbsp;&nbsp;</span><span class="comment">// A span represents a single span of comment lines (lines[start:end])</span>
+<span id="L341" class="ln">   341&nbsp;&nbsp;</span><span class="comment">// of an identified kind (code, heading, paragraph, and so on).</span>
+<span id="L342" class="ln">   342&nbsp;&nbsp;</span>type span struct {
+<span id="L343" class="ln">   343&nbsp;&nbsp;</span>	start int
+<span id="L344" class="ln">   344&nbsp;&nbsp;</span>	end   int
+<span id="L345" class="ln">   345&nbsp;&nbsp;</span>	kind  spanKind
+<span id="L346" class="ln">   346&nbsp;&nbsp;</span>}
+<span id="L347" class="ln">   347&nbsp;&nbsp;</span>
+<span id="L348" class="ln">   348&nbsp;&nbsp;</span><span class="comment">// A spanKind describes the kind of span.</span>
+<span id="L349" class="ln">   349&nbsp;&nbsp;</span>type spanKind int
+<span id="L350" class="ln">   350&nbsp;&nbsp;</span>
+<span id="L351" class="ln">   351&nbsp;&nbsp;</span>const (
+<span id="L352" class="ln">   352&nbsp;&nbsp;</span>	_ spanKind = iota
+<span id="L353" class="ln">   353&nbsp;&nbsp;</span>	spanCode
+<span id="L354" class="ln">   354&nbsp;&nbsp;</span>	spanHeading
+<span id="L355" class="ln">   355&nbsp;&nbsp;</span>	spanList
+<span id="L356" class="ln">   356&nbsp;&nbsp;</span>	spanOldHeading
+<span id="L357" class="ln">   357&nbsp;&nbsp;</span>	spanPara
+<span id="L358" class="ln">   358&nbsp;&nbsp;</span>)
+<span id="L359" class="ln">   359&nbsp;&nbsp;</span>
+<span id="L360" class="ln">   360&nbsp;&nbsp;</span>func parseSpans(lines []string) []span {
+<span id="L361" class="ln">   361&nbsp;&nbsp;</span>	var spans []span
+<span id="L362" class="ln">   362&nbsp;&nbsp;</span>
+<span id="L363" class="ln">   363&nbsp;&nbsp;</span>	<span class="comment">// The loop may process a line twice: once as unindented</span>
+<span id="L364" class="ln">   364&nbsp;&nbsp;</span>	<span class="comment">// and again forced indented. So the maximum expected</span>
+<span id="L365" class="ln">   365&nbsp;&nbsp;</span>	<span class="comment">// number of iterations is 2*len(lines). The repeating logic</span>
+<span id="L366" class="ln">   366&nbsp;&nbsp;</span>	<span class="comment">// can be subtle, though, and to protect against introduction</span>
+<span id="L367" class="ln">   367&nbsp;&nbsp;</span>	<span class="comment">// of infinite loops in future changes, we watch to see that</span>
+<span id="L368" class="ln">   368&nbsp;&nbsp;</span>	<span class="comment">// we are not looping too much. A panic is better than a</span>
+<span id="L369" class="ln">   369&nbsp;&nbsp;</span>	<span class="comment">// quiet infinite loop.</span>
+<span id="L370" class="ln">   370&nbsp;&nbsp;</span>	watchdog := 2 * len(lines)
+<span id="L371" class="ln">   371&nbsp;&nbsp;</span>
+<span id="L372" class="ln">   372&nbsp;&nbsp;</span>	i := 0
+<span id="L373" class="ln">   373&nbsp;&nbsp;</span>	forceIndent := 0
+<span id="L374" class="ln">   374&nbsp;&nbsp;</span>Spans:
+<span id="L375" class="ln">   375&nbsp;&nbsp;</span>	for {
+<span id="L376" class="ln">   376&nbsp;&nbsp;</span>		<span class="comment">// Skip blank lines.</span>
+<span id="L377" class="ln">   377&nbsp;&nbsp;</span>		for i &lt; len(lines) &amp;&amp; lines[i] == &#34;&#34; {
+<span id="L378" class="ln">   378&nbsp;&nbsp;</span>			i++
+<span id="L379" class="ln">   379&nbsp;&nbsp;</span>		}
+<span id="L380" class="ln">   380&nbsp;&nbsp;</span>		if i &gt;= len(lines) {
+<span id="L381" class="ln">   381&nbsp;&nbsp;</span>			break
+<span id="L382" class="ln">   382&nbsp;&nbsp;</span>		}
+<span id="L383" class="ln">   383&nbsp;&nbsp;</span>		if watchdog--; watchdog &lt; 0 {
+<span id="L384" class="ln">   384&nbsp;&nbsp;</span>			panic(&#34;go/doc/comment: internal error: not making progress&#34;)
+<span id="L385" class="ln">   385&nbsp;&nbsp;</span>		}
+<span id="L386" class="ln">   386&nbsp;&nbsp;</span>
+<span id="L387" class="ln">   387&nbsp;&nbsp;</span>		var kind spanKind
+<span id="L388" class="ln">   388&nbsp;&nbsp;</span>		start := i
+<span id="L389" class="ln">   389&nbsp;&nbsp;</span>		end := i
+<span id="L390" class="ln">   390&nbsp;&nbsp;</span>		if i &lt; forceIndent || indented(lines[i]) {
+<span id="L391" class="ln">   391&nbsp;&nbsp;</span>			<span class="comment">// Indented (or force indented).</span>
+<span id="L392" class="ln">   392&nbsp;&nbsp;</span>			<span class="comment">// Ends before next unindented. (Blank lines are OK.)</span>
+<span id="L393" class="ln">   393&nbsp;&nbsp;</span>			<span class="comment">// If this is an unindented list that we are heuristically treating as indented,</span>
+<span id="L394" class="ln">   394&nbsp;&nbsp;</span>			<span class="comment">// then accept unindented list item lines up to the first blank lines.</span>
+<span id="L395" class="ln">   395&nbsp;&nbsp;</span>			<span class="comment">// The heuristic is disabled at blank lines to contain its effect</span>
+<span id="L396" class="ln">   396&nbsp;&nbsp;</span>			<span class="comment">// to non-gofmt&#39;ed sections of the comment.</span>
+<span id="L397" class="ln">   397&nbsp;&nbsp;</span>			unindentedListOK := isList(lines[i]) &amp;&amp; i &lt; forceIndent
+<span id="L398" class="ln">   398&nbsp;&nbsp;</span>			i++
+<span id="L399" class="ln">   399&nbsp;&nbsp;</span>			for i &lt; len(lines) &amp;&amp; (lines[i] == &#34;&#34; || i &lt; forceIndent || indented(lines[i]) || (unindentedListOK &amp;&amp; isList(lines[i]))) {
+<span id="L400" class="ln">   400&nbsp;&nbsp;</span>				if lines[i] == &#34;&#34; {
+<span id="L401" class="ln">   401&nbsp;&nbsp;</span>					unindentedListOK = false
+<span id="L402" class="ln">   402&nbsp;&nbsp;</span>				}
+<span id="L403" class="ln">   403&nbsp;&nbsp;</span>				i++
+<span id="L404" class="ln">   404&nbsp;&nbsp;</span>			}
+<span id="L405" class="ln">   405&nbsp;&nbsp;</span>
+<span id="L406" class="ln">   406&nbsp;&nbsp;</span>			<span class="comment">// Drop trailing blank lines.</span>
+<span id="L407" class="ln">   407&nbsp;&nbsp;</span>			end = i
+<span id="L408" class="ln">   408&nbsp;&nbsp;</span>			for end &gt; start &amp;&amp; lines[end-1] == &#34;&#34; {
+<span id="L409" class="ln">   409&nbsp;&nbsp;</span>				end--
+<span id="L410" class="ln">   410&nbsp;&nbsp;</span>			}
+<span id="L411" class="ln">   411&nbsp;&nbsp;</span>
+<span id="L412" class="ln">   412&nbsp;&nbsp;</span>			<span class="comment">// If indented lines are followed (without a blank line)</span>
+<span id="L413" class="ln">   413&nbsp;&nbsp;</span>			<span class="comment">// by an unindented line ending in a brace,</span>
+<span id="L414" class="ln">   414&nbsp;&nbsp;</span>			<span class="comment">// take that one line too. This fixes the common mistake</span>
+<span id="L415" class="ln">   415&nbsp;&nbsp;</span>			<span class="comment">// of pasting in something like</span>
+<span id="L416" class="ln">   416&nbsp;&nbsp;</span>			<span class="comment">//</span>
+<span id="L417" class="ln">   417&nbsp;&nbsp;</span>			<span class="comment">// func main() {</span>
+<span id="L418" class="ln">   418&nbsp;&nbsp;</span>			<span class="comment">//	fmt.Println(&#34;hello, world&#34;)</span>
+<span id="L419" class="ln">   419&nbsp;&nbsp;</span>			<span class="comment">// }</span>
+<span id="L420" class="ln">   420&nbsp;&nbsp;</span>			<span class="comment">//</span>
+<span id="L421" class="ln">   421&nbsp;&nbsp;</span>			<span class="comment">// and forgetting to indent it.</span>
+<span id="L422" class="ln">   422&nbsp;&nbsp;</span>			<span class="comment">// The heuristic will never trigger on a gofmt&#39;ed comment,</span>
+<span id="L423" class="ln">   423&nbsp;&nbsp;</span>			<span class="comment">// because any gofmt&#39;ed code block or list would be</span>
+<span id="L424" class="ln">   424&nbsp;&nbsp;</span>			<span class="comment">// followed by a blank line or end of comment.</span>
+<span id="L425" class="ln">   425&nbsp;&nbsp;</span>			if end &lt; len(lines) &amp;&amp; strings.HasPrefix(lines[end], &#34;}&#34;) {
+<span id="L426" class="ln">   426&nbsp;&nbsp;</span>				end++
+<span id="L427" class="ln">   427&nbsp;&nbsp;</span>			}
+<span id="L428" class="ln">   428&nbsp;&nbsp;</span>
+<span id="L429" class="ln">   429&nbsp;&nbsp;</span>			if isList(lines[start]) {
+<span id="L430" class="ln">   430&nbsp;&nbsp;</span>				kind = spanList
+<span id="L431" class="ln">   431&nbsp;&nbsp;</span>			} else {
+<span id="L432" class="ln">   432&nbsp;&nbsp;</span>				kind = spanCode
+<span id="L433" class="ln">   433&nbsp;&nbsp;</span>			}
+<span id="L434" class="ln">   434&nbsp;&nbsp;</span>		} else {
+<span id="L435" class="ln">   435&nbsp;&nbsp;</span>			<span class="comment">// Unindented. Ends at next blank or indented line.</span>
+<span id="L436" class="ln">   436&nbsp;&nbsp;</span>			i++
+<span id="L437" class="ln">   437&nbsp;&nbsp;</span>			for i &lt; len(lines) &amp;&amp; lines[i] != &#34;&#34; &amp;&amp; !indented(lines[i]) {
+<span id="L438" class="ln">   438&nbsp;&nbsp;</span>				i++
+<span id="L439" class="ln">   439&nbsp;&nbsp;</span>			}
+<span id="L440" class="ln">   440&nbsp;&nbsp;</span>			end = i
+<span id="L441" class="ln">   441&nbsp;&nbsp;</span>
+<span id="L442" class="ln">   442&nbsp;&nbsp;</span>			<span class="comment">// If unindented lines are followed (without a blank line)</span>
+<span id="L443" class="ln">   443&nbsp;&nbsp;</span>			<span class="comment">// by an indented line that would start a code block,</span>
+<span id="L444" class="ln">   444&nbsp;&nbsp;</span>			<span class="comment">// check whether the final unindented lines</span>
+<span id="L445" class="ln">   445&nbsp;&nbsp;</span>			<span class="comment">// should be left for the indented section.</span>
+<span id="L446" class="ln">   446&nbsp;&nbsp;</span>			<span class="comment">// This can happen for the common mistakes of</span>
+<span id="L447" class="ln">   447&nbsp;&nbsp;</span>			<span class="comment">// unindented code or unindented lists.</span>
+<span id="L448" class="ln">   448&nbsp;&nbsp;</span>			<span class="comment">// The heuristic will never trigger on a gofmt&#39;ed comment,</span>
+<span id="L449" class="ln">   449&nbsp;&nbsp;</span>			<span class="comment">// because any gofmt&#39;ed code block would have a blank line</span>
+<span id="L450" class="ln">   450&nbsp;&nbsp;</span>			<span class="comment">// preceding it after the unindented lines.</span>
+<span id="L451" class="ln">   451&nbsp;&nbsp;</span>			if i &lt; len(lines) &amp;&amp; lines[i] != &#34;&#34; &amp;&amp; !isList(lines[i]) {
+<span id="L452" class="ln">   452&nbsp;&nbsp;</span>				switch {
+<span id="L453" class="ln">   453&nbsp;&nbsp;</span>				case isList(lines[i-1]):
+<span id="L454" class="ln">   454&nbsp;&nbsp;</span>					<span class="comment">// If the final unindented line looks like a list item,</span>
+<span id="L455" class="ln">   455&nbsp;&nbsp;</span>					<span class="comment">// this may be the first indented line wrap of</span>
+<span id="L456" class="ln">   456&nbsp;&nbsp;</span>					<span class="comment">// a mistakenly unindented list.</span>
+<span id="L457" class="ln">   457&nbsp;&nbsp;</span>					<span class="comment">// Leave all the unindented list items.</span>
+<span id="L458" class="ln">   458&nbsp;&nbsp;</span>					forceIndent = end
+<span id="L459" class="ln">   459&nbsp;&nbsp;</span>					end--
+<span id="L460" class="ln">   460&nbsp;&nbsp;</span>					for end &gt; start &amp;&amp; isList(lines[end-1]) {
+<span id="L461" class="ln">   461&nbsp;&nbsp;</span>						end--
+<span id="L462" class="ln">   462&nbsp;&nbsp;</span>					}
+<span id="L463" class="ln">   463&nbsp;&nbsp;</span>
+<span id="L464" class="ln">   464&nbsp;&nbsp;</span>				case strings.HasSuffix(lines[i-1], &#34;{&#34;) || strings.HasSuffix(lines[i-1], `\`):
+<span id="L465" class="ln">   465&nbsp;&nbsp;</span>					<span class="comment">// If the final unindented line ended in { or \</span>
+<span id="L466" class="ln">   466&nbsp;&nbsp;</span>					<span class="comment">// it is probably the start of a misindented code block.</span>
+<span id="L467" class="ln">   467&nbsp;&nbsp;</span>					<span class="comment">// Give the user a single line fix.</span>
+<span id="L468" class="ln">   468&nbsp;&nbsp;</span>					<span class="comment">// Often that&#39;s enough; if not, the user can fix the others themselves.</span>
+<span id="L469" class="ln">   469&nbsp;&nbsp;</span>					forceIndent = end
+<span id="L470" class="ln">   470&nbsp;&nbsp;</span>					end--
+<span id="L471" class="ln">   471&nbsp;&nbsp;</span>				}
+<span id="L472" class="ln">   472&nbsp;&nbsp;</span>
+<span id="L473" class="ln">   473&nbsp;&nbsp;</span>				if start == end &amp;&amp; forceIndent &gt; start {
+<span id="L474" class="ln">   474&nbsp;&nbsp;</span>					i = start
+<span id="L475" class="ln">   475&nbsp;&nbsp;</span>					continue Spans
+<span id="L476" class="ln">   476&nbsp;&nbsp;</span>				}
+<span id="L477" class="ln">   477&nbsp;&nbsp;</span>			}
+<span id="L478" class="ln">   478&nbsp;&nbsp;</span>
+<span id="L479" class="ln">   479&nbsp;&nbsp;</span>			<span class="comment">// Span is either paragraph or heading.</span>
+<span id="L480" class="ln">   480&nbsp;&nbsp;</span>			if end-start == 1 &amp;&amp; isHeading(lines[start]) {
+<span id="L481" class="ln">   481&nbsp;&nbsp;</span>				kind = spanHeading
+<span id="L482" class="ln">   482&nbsp;&nbsp;</span>			} else if end-start == 1 &amp;&amp; isOldHeading(lines[start], lines, start) {
+<span id="L483" class="ln">   483&nbsp;&nbsp;</span>				kind = spanOldHeading
+<span id="L484" class="ln">   484&nbsp;&nbsp;</span>			} else {
+<span id="L485" class="ln">   485&nbsp;&nbsp;</span>				kind = spanPara
+<span id="L486" class="ln">   486&nbsp;&nbsp;</span>			}
+<span id="L487" class="ln">   487&nbsp;&nbsp;</span>		}
+<span id="L488" class="ln">   488&nbsp;&nbsp;</span>
+<span id="L489" class="ln">   489&nbsp;&nbsp;</span>		spans = append(spans, span{start, end, kind})
+<span id="L490" class="ln">   490&nbsp;&nbsp;</span>		i = end
+<span id="L491" class="ln">   491&nbsp;&nbsp;</span>	}
+<span id="L492" class="ln">   492&nbsp;&nbsp;</span>
+<span id="L493" class="ln">   493&nbsp;&nbsp;</span>	return spans
+<span id="L494" class="ln">   494&nbsp;&nbsp;</span>}
+<span id="L495" class="ln">   495&nbsp;&nbsp;</span>
+<span id="L496" class="ln">   496&nbsp;&nbsp;</span><span class="comment">// indented reports whether line is indented</span>
+<span id="L497" class="ln">   497&nbsp;&nbsp;</span><span class="comment">// (starts with a leading space or tab).</span>
+<span id="L498" class="ln">   498&nbsp;&nbsp;</span>func indented(line string) bool {
+<span id="L499" class="ln">   499&nbsp;&nbsp;</span>	return line != &#34;&#34; &amp;&amp; (line[0] == &#39; &#39; || line[0] == &#39;\t&#39;)
+<span id="L500" class="ln">   500&nbsp;&nbsp;</span>}
+<span id="L501" class="ln">   501&nbsp;&nbsp;</span>
+<span id="L502" class="ln">   502&nbsp;&nbsp;</span><span class="comment">// unindent removes any common space/tab prefix</span>
+<span id="L503" class="ln">   503&nbsp;&nbsp;</span><span class="comment">// from each line in lines, returning a copy of lines in which</span>
+<span id="L504" class="ln">   504&nbsp;&nbsp;</span><span class="comment">// those prefixes have been trimmed from each line.</span>
+<span id="L505" class="ln">   505&nbsp;&nbsp;</span><span class="comment">// It also replaces any lines containing only spaces with blank lines (empty strings).</span>
+<span id="L506" class="ln">   506&nbsp;&nbsp;</span>func unindent(lines []string) []string {
+<span id="L507" class="ln">   507&nbsp;&nbsp;</span>	<span class="comment">// Trim leading and trailing blank lines.</span>
+<span id="L508" class="ln">   508&nbsp;&nbsp;</span>	for len(lines) &gt; 0 &amp;&amp; isBlank(lines[0]) {
+<span id="L509" class="ln">   509&nbsp;&nbsp;</span>		lines = lines[1:]
+<span id="L510" class="ln">   510&nbsp;&nbsp;</span>	}
+<span id="L511" class="ln">   511&nbsp;&nbsp;</span>	for len(lines) &gt; 0 &amp;&amp; isBlank(lines[len(lines)-1]) {
+<span id="L512" class="ln">   512&nbsp;&nbsp;</span>		lines = lines[:len(lines)-1]
+<span id="L513" class="ln">   513&nbsp;&nbsp;</span>	}
+<span id="L514" class="ln">   514&nbsp;&nbsp;</span>	if len(lines) == 0 {
+<span id="L515" class="ln">   515&nbsp;&nbsp;</span>		return nil
+<span id="L516" class="ln">   516&nbsp;&nbsp;</span>	}
+<span id="L517" class="ln">   517&nbsp;&nbsp;</span>
+<span id="L518" class="ln">   518&nbsp;&nbsp;</span>	<span class="comment">// Compute and remove common indentation.</span>
+<span id="L519" class="ln">   519&nbsp;&nbsp;</span>	prefix := leadingSpace(lines[0])
+<span id="L520" class="ln">   520&nbsp;&nbsp;</span>	for _, line := range lines[1:] {
+<span id="L521" class="ln">   521&nbsp;&nbsp;</span>		if !isBlank(line) {
+<span id="L522" class="ln">   522&nbsp;&nbsp;</span>			prefix = commonPrefix(prefix, leadingSpace(line))
+<span id="L523" class="ln">   523&nbsp;&nbsp;</span>		}
+<span id="L524" class="ln">   524&nbsp;&nbsp;</span>	}
+<span id="L525" class="ln">   525&nbsp;&nbsp;</span>
+<span id="L526" class="ln">   526&nbsp;&nbsp;</span>	out := make([]string, len(lines))
+<span id="L527" class="ln">   527&nbsp;&nbsp;</span>	for i, line := range lines {
+<span id="L528" class="ln">   528&nbsp;&nbsp;</span>		line = strings.TrimPrefix(line, prefix)
+<span id="L529" class="ln">   529&nbsp;&nbsp;</span>		if strings.TrimSpace(line) == &#34;&#34; {
+<span id="L530" class="ln">   530&nbsp;&nbsp;</span>			line = &#34;&#34;
+<span id="L531" class="ln">   531&nbsp;&nbsp;</span>		}
+<span id="L532" class="ln">   532&nbsp;&nbsp;</span>		out[i] = line
+<span id="L533" class="ln">   533&nbsp;&nbsp;</span>	}
+<span id="L534" class="ln">   534&nbsp;&nbsp;</span>	for len(out) &gt; 0 &amp;&amp; out[0] == &#34;&#34; {
+<span id="L535" class="ln">   535&nbsp;&nbsp;</span>		out = out[1:]
+<span id="L536" class="ln">   536&nbsp;&nbsp;</span>	}
+<span id="L537" class="ln">   537&nbsp;&nbsp;</span>	for len(out) &gt; 0 &amp;&amp; out[len(out)-1] == &#34;&#34; {
+<span id="L538" class="ln">   538&nbsp;&nbsp;</span>		out = out[:len(out)-1]
+<span id="L539" class="ln">   539&nbsp;&nbsp;</span>	}
+<span id="L540" class="ln">   540&nbsp;&nbsp;</span>	return out
+<span id="L541" class="ln">   541&nbsp;&nbsp;</span>}
+<span id="L542" class="ln">   542&nbsp;&nbsp;</span>
+<span id="L543" class="ln">   543&nbsp;&nbsp;</span><span class="comment">// isBlank reports whether s is a blank line.</span>
+<span id="L544" class="ln">   544&nbsp;&nbsp;</span>func isBlank(s string) bool {
+<span id="L545" class="ln">   545&nbsp;&nbsp;</span>	return len(s) == 0 || (len(s) == 1 &amp;&amp; s[0] == &#39;\n&#39;)
+<span id="L546" class="ln">   546&nbsp;&nbsp;</span>}
+<span id="L547" class="ln">   547&nbsp;&nbsp;</span>
+<span id="L548" class="ln">   548&nbsp;&nbsp;</span><span class="comment">// commonPrefix returns the longest common prefix of a and b.</span>
+<span id="L549" class="ln">   549&nbsp;&nbsp;</span>func commonPrefix(a, b string) string {
+<span id="L550" class="ln">   550&nbsp;&nbsp;</span>	i := 0
+<span id="L551" class="ln">   551&nbsp;&nbsp;</span>	for i &lt; len(a) &amp;&amp; i &lt; len(b) &amp;&amp; a[i] == b[i] {
+<span id="L552" class="ln">   552&nbsp;&nbsp;</span>		i++
+<span id="L553" class="ln">   553&nbsp;&nbsp;</span>	}
+<span id="L554" class="ln">   554&nbsp;&nbsp;</span>	return a[0:i]
+<span id="L555" class="ln">   555&nbsp;&nbsp;</span>}
+<span id="L556" class="ln">   556&nbsp;&nbsp;</span>
+<span id="L557" class="ln">   557&nbsp;&nbsp;</span><span class="comment">// leadingSpace returns the longest prefix of s consisting of spaces and tabs.</span>
+<span id="L558" class="ln">   558&nbsp;&nbsp;</span>func leadingSpace(s string) string {
+<span id="L559" class="ln">   559&nbsp;&nbsp;</span>	i := 0
+<span id="L560" class="ln">   560&nbsp;&nbsp;</span>	for i &lt; len(s) &amp;&amp; (s[i] == &#39; &#39; || s[i] == &#39;\t&#39;) {
+<span id="L561" class="ln">   561&nbsp;&nbsp;</span>		i++
+<span id="L562" class="ln">   562&nbsp;&nbsp;</span>	}
+<span id="L563" class="ln">   563&nbsp;&nbsp;</span>	return s[:i]
+<span id="L564" class="ln">   564&nbsp;&nbsp;</span>}
+<span id="L565" class="ln">   565&nbsp;&nbsp;</span>
+<span id="L566" class="ln">   566&nbsp;&nbsp;</span><span class="comment">// isOldHeading reports whether line is an old-style section heading.</span>
+<span id="L567" class="ln">   567&nbsp;&nbsp;</span><span class="comment">// line is all[off].</span>
+<span id="L568" class="ln">   568&nbsp;&nbsp;</span>func isOldHeading(line string, all []string, off int) bool {
+<span id="L569" class="ln">   569&nbsp;&nbsp;</span>	if off &lt;= 0 || all[off-1] != &#34;&#34; || off+2 &gt;= len(all) || all[off+1] != &#34;&#34; || leadingSpace(all[off+2]) != &#34;&#34; {
+<span id="L570" class="ln">   570&nbsp;&nbsp;</span>		return false
+<span id="L571" class="ln">   571&nbsp;&nbsp;</span>	}
+<span id="L572" class="ln">   572&nbsp;&nbsp;</span>
+<span id="L573" class="ln">   573&nbsp;&nbsp;</span>	line = strings.TrimSpace(line)
+<span id="L574" class="ln">   574&nbsp;&nbsp;</span>
+<span id="L575" class="ln">   575&nbsp;&nbsp;</span>	<span class="comment">// a heading must start with an uppercase letter</span>
+<span id="L576" class="ln">   576&nbsp;&nbsp;</span>	r, _ := utf8.DecodeRuneInString(line)
+<span id="L577" class="ln">   577&nbsp;&nbsp;</span>	if !unicode.IsLetter(r) || !unicode.IsUpper(r) {
+<span id="L578" class="ln">   578&nbsp;&nbsp;</span>		return false
+<span id="L579" class="ln">   579&nbsp;&nbsp;</span>	}
+<span id="L580" class="ln">   580&nbsp;&nbsp;</span>
+<span id="L581" class="ln">   581&nbsp;&nbsp;</span>	<span class="comment">// it must end in a letter or digit:</span>
+<span id="L582" class="ln">   582&nbsp;&nbsp;</span>	r, _ = utf8.DecodeLastRuneInString(line)
+<span id="L583" class="ln">   583&nbsp;&nbsp;</span>	if !unicode.IsLetter(r) &amp;&amp; !unicode.IsDigit(r) {
+<span id="L584" class="ln">   584&nbsp;&nbsp;</span>		return false
+<span id="L585" class="ln">   585&nbsp;&nbsp;</span>	}
+<span id="L586" class="ln">   586&nbsp;&nbsp;</span>
+<span id="L587" class="ln">   587&nbsp;&nbsp;</span>	<span class="comment">// exclude lines with illegal characters. we allow &#34;(),&#34;</span>
+<span id="L588" class="ln">   588&nbsp;&nbsp;</span>	if strings.ContainsAny(line, &#34;;:!?+*/=[]{}_^°&amp;§~%#@&lt;\&#34;&gt;\\&#34;) {
+<span id="L589" class="ln">   589&nbsp;&nbsp;</span>		return false
+<span id="L590" class="ln">   590&nbsp;&nbsp;</span>	}
+<span id="L591" class="ln">   591&nbsp;&nbsp;</span>
+<span id="L592" class="ln">   592&nbsp;&nbsp;</span>	<span class="comment">// allow &#34;&#39;&#34; for possessive &#34;&#39;s&#34; only</span>
+<span id="L593" class="ln">   593&nbsp;&nbsp;</span>	for b := line; ; {
+<span id="L594" class="ln">   594&nbsp;&nbsp;</span>		var ok bool
+<span id="L595" class="ln">   595&nbsp;&nbsp;</span>		if _, b, ok = strings.Cut(b, &#34;&#39;&#34;); !ok {
+<span id="L596" class="ln">   596&nbsp;&nbsp;</span>			break
+<span id="L597" class="ln">   597&nbsp;&nbsp;</span>		}
+<span id="L598" class="ln">   598&nbsp;&nbsp;</span>		if b != &#34;s&#34; &amp;&amp; !strings.HasPrefix(b, &#34;s &#34;) {
+<span id="L599" class="ln">   599&nbsp;&nbsp;</span>			return false <span class="comment">// &#39; not followed by s and then end-of-word</span>
+<span id="L600" class="ln">   600&nbsp;&nbsp;</span>		}
+<span id="L601" class="ln">   601&nbsp;&nbsp;</span>	}
+<span id="L602" class="ln">   602&nbsp;&nbsp;</span>
+<span id="L603" class="ln">   603&nbsp;&nbsp;</span>	<span class="comment">// allow &#34;.&#34; when followed by non-space</span>
+<span id="L604" class="ln">   604&nbsp;&nbsp;</span>	for b := line; ; {
+<span id="L605" class="ln">   605&nbsp;&nbsp;</span>		var ok bool
+<span id="L606" class="ln">   606&nbsp;&nbsp;</span>		if _, b, ok = strings.Cut(b, &#34;.&#34;); !ok {
+<span id="L607" class="ln">   607&nbsp;&nbsp;</span>			break
+<span id="L608" class="ln">   608&nbsp;&nbsp;</span>		}
+<span id="L609" class="ln">   609&nbsp;&nbsp;</span>		if b == &#34;&#34; || strings.HasPrefix(b, &#34; &#34;) {
+<span id="L610" class="ln">   610&nbsp;&nbsp;</span>			return false <span class="comment">// not followed by non-space</span>
+<span id="L611" class="ln">   611&nbsp;&nbsp;</span>		}
+<span id="L612" class="ln">   612&nbsp;&nbsp;</span>	}
+<span id="L613" class="ln">   613&nbsp;&nbsp;</span>
+<span id="L614" class="ln">   614&nbsp;&nbsp;</span>	return true
+<span id="L615" class="ln">   615&nbsp;&nbsp;</span>}
+<span id="L616" class="ln">   616&nbsp;&nbsp;</span>
+<span id="L617" class="ln">   617&nbsp;&nbsp;</span><span class="comment">// oldHeading returns the *Heading for the given old-style section heading line.</span>
+<span id="L618" class="ln">   618&nbsp;&nbsp;</span>func (d *parseDoc) oldHeading(line string) Block {
+<span id="L619" class="ln">   619&nbsp;&nbsp;</span>	return &amp;Heading{Text: []Text{Plain(strings.TrimSpace(line))}}
+<span id="L620" class="ln">   620&nbsp;&nbsp;</span>}
+<span id="L621" class="ln">   621&nbsp;&nbsp;</span>
+<span id="L622" class="ln">   622&nbsp;&nbsp;</span><span class="comment">// isHeading reports whether line is a new-style section heading.</span>
+<span id="L623" class="ln">   623&nbsp;&nbsp;</span>func isHeading(line string) bool {
+<span id="L624" class="ln">   624&nbsp;&nbsp;</span>	return len(line) &gt;= 2 &amp;&amp;
+<span id="L625" class="ln">   625&nbsp;&nbsp;</span>		line[0] == &#39;#&#39; &amp;&amp;
+<span id="L626" class="ln">   626&nbsp;&nbsp;</span>		(line[1] == &#39; &#39; || line[1] == &#39;\t&#39;) &amp;&amp;
+<span id="L627" class="ln">   627&nbsp;&nbsp;</span>		strings.TrimSpace(line) != &#34;#&#34;
+<span id="L628" class="ln">   628&nbsp;&nbsp;</span>}
+<span id="L629" class="ln">   629&nbsp;&nbsp;</span>
+<span id="L630" class="ln">   630&nbsp;&nbsp;</span><span class="comment">// heading returns the *Heading for the given new-style section heading line.</span>
+<span id="L631" class="ln">   631&nbsp;&nbsp;</span>func (d *parseDoc) heading(line string) Block {
+<span id="L632" class="ln">   632&nbsp;&nbsp;</span>	return &amp;Heading{Text: []Text{Plain(strings.TrimSpace(line[1:]))}}
+<span id="L633" class="ln">   633&nbsp;&nbsp;</span>}
+<span id="L634" class="ln">   634&nbsp;&nbsp;</span>
+<span id="L635" class="ln">   635&nbsp;&nbsp;</span><span class="comment">// code returns a code block built from the lines.</span>
+<span id="L636" class="ln">   636&nbsp;&nbsp;</span>func (d *parseDoc) code(lines []string) *Code {
+<span id="L637" class="ln">   637&nbsp;&nbsp;</span>	body := unindent(lines)
+<span id="L638" class="ln">   638&nbsp;&nbsp;</span>	body = append(body, &#34;&#34;) <span class="comment">// to get final \n from Join</span>
+<span id="L639" class="ln">   639&nbsp;&nbsp;</span>	return &amp;Code{Text: strings.Join(body, &#34;\n&#34;)}
+<span id="L640" class="ln">   640&nbsp;&nbsp;</span>}
+<span id="L641" class="ln">   641&nbsp;&nbsp;</span>
+<span id="L642" class="ln">   642&nbsp;&nbsp;</span><span class="comment">// paragraph returns a paragraph block built from the lines.</span>
+<span id="L643" class="ln">   643&nbsp;&nbsp;</span><span class="comment">// If the lines are link definitions, paragraph adds them to d and returns nil.</span>
+<span id="L644" class="ln">   644&nbsp;&nbsp;</span>func (d *parseDoc) paragraph(lines []string) Block {
+<span id="L645" class="ln">   645&nbsp;&nbsp;</span>	<span class="comment">// Is this a block of known links? Handle.</span>
+<span id="L646" class="ln">   646&nbsp;&nbsp;</span>	var defs []*LinkDef
+<span id="L647" class="ln">   647&nbsp;&nbsp;</span>	for _, line := range lines {
+<span id="L648" class="ln">   648&nbsp;&nbsp;</span>		def, ok := parseLink(line)
+<span id="L649" class="ln">   649&nbsp;&nbsp;</span>		if !ok {
+<span id="L650" class="ln">   650&nbsp;&nbsp;</span>			goto NoDefs
+<span id="L651" class="ln">   651&nbsp;&nbsp;</span>		}
+<span id="L652" class="ln">   652&nbsp;&nbsp;</span>		defs = append(defs, def)
+<span id="L653" class="ln">   653&nbsp;&nbsp;</span>	}
+<span id="L654" class="ln">   654&nbsp;&nbsp;</span>	for _, def := range defs {
+<span id="L655" class="ln">   655&nbsp;&nbsp;</span>		d.Links = append(d.Links, def)
+<span id="L656" class="ln">   656&nbsp;&nbsp;</span>		if d.links[def.Text] == nil {
+<span id="L657" class="ln">   657&nbsp;&nbsp;</span>			d.links[def.Text] = def
+<span id="L658" class="ln">   658&nbsp;&nbsp;</span>		}
+<span id="L659" class="ln">   659&nbsp;&nbsp;</span>	}
+<span id="L660" class="ln">   660&nbsp;&nbsp;</span>	return nil
+<span id="L661" class="ln">   661&nbsp;&nbsp;</span>NoDefs:
+<span id="L662" class="ln">   662&nbsp;&nbsp;</span>
+<span id="L663" class="ln">   663&nbsp;&nbsp;</span>	return &amp;Paragraph{Text: []Text{Plain(strings.Join(lines, &#34;\n&#34;))}}
+<span id="L664" class="ln">   664&nbsp;&nbsp;</span>}
+<span id="L665" class="ln">   665&nbsp;&nbsp;</span>
+<span id="L666" class="ln">   666&nbsp;&nbsp;</span><span class="comment">// parseLink parses a single link definition line:</span>
+<span id="L667" class="ln">   667&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L668" class="ln">   668&nbsp;&nbsp;</span><span class="comment">//	[text]: url</span>
+<span id="L669" class="ln">   669&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L670" class="ln">   670&nbsp;&nbsp;</span><span class="comment">// It returns the link definition and whether the line was well formed.</span>
+<span id="L671" class="ln">   671&nbsp;&nbsp;</span>func parseLink(line string) (*LinkDef, bool) {
+<span id="L672" class="ln">   672&nbsp;&nbsp;</span>	if line == &#34;&#34; || line[0] != &#39;[&#39; {
+<span id="L673" class="ln">   673&nbsp;&nbsp;</span>		return nil, false
+<span id="L674" class="ln">   674&nbsp;&nbsp;</span>	}
+<span id="L675" class="ln">   675&nbsp;&nbsp;</span>	i := strings.Index(line, &#34;]:&#34;)
+<span id="L676" class="ln">   676&nbsp;&nbsp;</span>	if i &lt; 0 || i+3 &gt;= len(line) || (line[i+2] != &#39; &#39; &amp;&amp; line[i+2] != &#39;\t&#39;) {
+<span id="L677" class="ln">   677&nbsp;&nbsp;</span>		return nil, false
+<span id="L678" class="ln">   678&nbsp;&nbsp;</span>	}
+<span id="L679" class="ln">   679&nbsp;&nbsp;</span>
+<span id="L680" class="ln">   680&nbsp;&nbsp;</span>	text := line[1:i]
+<span id="L681" class="ln">   681&nbsp;&nbsp;</span>	url := strings.TrimSpace(line[i+3:])
+<span id="L682" class="ln">   682&nbsp;&nbsp;</span>	j := strings.Index(url, &#34;://&#34;)
+<span id="L683" class="ln">   683&nbsp;&nbsp;</span>	if j &lt; 0 || !isScheme(url[:j]) {
+<span id="L684" class="ln">   684&nbsp;&nbsp;</span>		return nil, false
+<span id="L685" class="ln">   685&nbsp;&nbsp;</span>	}
+<span id="L686" class="ln">   686&nbsp;&nbsp;</span>
+<span id="L687" class="ln">   687&nbsp;&nbsp;</span>	<span class="comment">// Line has right form and has valid scheme://.</span>
+<span id="L688" class="ln">   688&nbsp;&nbsp;</span>	<span class="comment">// That&#39;s good enough for us - we are not as picky</span>
+<span id="L689" class="ln">   689&nbsp;&nbsp;</span>	<span class="comment">// about the characters beyond the :// as we are</span>
+<span id="L690" class="ln">   690&nbsp;&nbsp;</span>	<span class="comment">// when extracting inline URLs from text.</span>
+<span id="L691" class="ln">   691&nbsp;&nbsp;</span>	return &amp;LinkDef{Text: text, URL: url}, true
+<span id="L692" class="ln">   692&nbsp;&nbsp;</span>}
+<span id="L693" class="ln">   693&nbsp;&nbsp;</span>
+<span id="L694" class="ln">   694&nbsp;&nbsp;</span><span class="comment">// list returns a list built from the indented lines,</span>
+<span id="L695" class="ln">   695&nbsp;&nbsp;</span><span class="comment">// using forceBlankBefore as the value of the List&#39;s ForceBlankBefore field.</span>
+<span id="L696" class="ln">   696&nbsp;&nbsp;</span>func (d *parseDoc) list(lines []string, forceBlankBefore bool) *List {
+<span id="L697" class="ln">   697&nbsp;&nbsp;</span>	num, _, _ := listMarker(lines[0])
+<span id="L698" class="ln">   698&nbsp;&nbsp;</span>	var (
+<span id="L699" class="ln">   699&nbsp;&nbsp;</span>		list *List = &amp;List{ForceBlankBefore: forceBlankBefore}
+<span id="L700" class="ln">   700&nbsp;&nbsp;</span>		item *ListItem
+<span id="L701" class="ln">   701&nbsp;&nbsp;</span>		text []string
+<span id="L702" class="ln">   702&nbsp;&nbsp;</span>	)
+<span id="L703" class="ln">   703&nbsp;&nbsp;</span>	flush := func() {
+<span id="L704" class="ln">   704&nbsp;&nbsp;</span>		if item != nil {
+<span id="L705" class="ln">   705&nbsp;&nbsp;</span>			if para := d.paragraph(text); para != nil {
+<span id="L706" class="ln">   706&nbsp;&nbsp;</span>				item.Content = append(item.Content, para)
+<span id="L707" class="ln">   707&nbsp;&nbsp;</span>			}
+<span id="L708" class="ln">   708&nbsp;&nbsp;</span>		}
+<span id="L709" class="ln">   709&nbsp;&nbsp;</span>		text = nil
+<span id="L710" class="ln">   710&nbsp;&nbsp;</span>	}
+<span id="L711" class="ln">   711&nbsp;&nbsp;</span>
+<span id="L712" class="ln">   712&nbsp;&nbsp;</span>	for _, line := range lines {
+<span id="L713" class="ln">   713&nbsp;&nbsp;</span>		if n, after, ok := listMarker(line); ok &amp;&amp; (n != &#34;&#34;) == (num != &#34;&#34;) {
+<span id="L714" class="ln">   714&nbsp;&nbsp;</span>			<span class="comment">// start new list item</span>
+<span id="L715" class="ln">   715&nbsp;&nbsp;</span>			flush()
+<span id="L716" class="ln">   716&nbsp;&nbsp;</span>
+<span id="L717" class="ln">   717&nbsp;&nbsp;</span>			item = &amp;ListItem{Number: n}
+<span id="L718" class="ln">   718&nbsp;&nbsp;</span>			list.Items = append(list.Items, item)
+<span id="L719" class="ln">   719&nbsp;&nbsp;</span>			line = after
+<span id="L720" class="ln">   720&nbsp;&nbsp;</span>		}
+<span id="L721" class="ln">   721&nbsp;&nbsp;</span>		line = strings.TrimSpace(line)
+<span id="L722" class="ln">   722&nbsp;&nbsp;</span>		if line == &#34;&#34; {
+<span id="L723" class="ln">   723&nbsp;&nbsp;</span>			list.ForceBlankBetween = true
+<span id="L724" class="ln">   724&nbsp;&nbsp;</span>			flush()
+<span id="L725" class="ln">   725&nbsp;&nbsp;</span>			continue
+<span id="L726" class="ln">   726&nbsp;&nbsp;</span>		}
+<span id="L727" class="ln">   727&nbsp;&nbsp;</span>		text = append(text, strings.TrimSpace(line))
+<span id="L728" class="ln">   728&nbsp;&nbsp;</span>	}
+<span id="L729" class="ln">   729&nbsp;&nbsp;</span>	flush()
+<span id="L730" class="ln">   730&nbsp;&nbsp;</span>	return list
+<span id="L731" class="ln">   731&nbsp;&nbsp;</span>}
+<span id="L732" class="ln">   732&nbsp;&nbsp;</span>
+<span id="L733" class="ln">   733&nbsp;&nbsp;</span><span class="comment">// listMarker parses the line as beginning with a list marker.</span>
+<span id="L734" class="ln">   734&nbsp;&nbsp;</span><span class="comment">// If it can do that, it returns the numeric marker (&#34;&#34; for a bullet list),</span>
+<span id="L735" class="ln">   735&nbsp;&nbsp;</span><span class="comment">// the rest of the line, and ok == true.</span>
+<span id="L736" class="ln">   736&nbsp;&nbsp;</span><span class="comment">// Otherwise, it returns &#34;&#34;, &#34;&#34;, false.</span>
+<span id="L737" class="ln">   737&nbsp;&nbsp;</span>func listMarker(line string) (num, rest string, ok bool) {
+<span id="L738" class="ln">   738&nbsp;&nbsp;</span>	line = strings.TrimSpace(line)
+<span id="L739" class="ln">   739&nbsp;&nbsp;</span>	if line == &#34;&#34; {
+<span id="L740" class="ln">   740&nbsp;&nbsp;</span>		return &#34;&#34;, &#34;&#34;, false
+<span id="L741" class="ln">   741&nbsp;&nbsp;</span>	}
+<span id="L742" class="ln">   742&nbsp;&nbsp;</span>
+<span id="L743" class="ln">   743&nbsp;&nbsp;</span>	<span class="comment">// Can we find a marker?</span>
+<span id="L744" class="ln">   744&nbsp;&nbsp;</span>	if r, n := utf8.DecodeRuneInString(line); r == &#39;•&#39; || r == &#39;*&#39; || r == &#39;+&#39; || r == &#39;-&#39; {
+<span id="L745" class="ln">   745&nbsp;&nbsp;</span>		num, rest = &#34;&#34;, line[n:]
+<span id="L746" class="ln">   746&nbsp;&nbsp;</span>	} else if &#39;0&#39; &lt;= line[0] &amp;&amp; line[0] &lt;= &#39;9&#39; {
+<span id="L747" class="ln">   747&nbsp;&nbsp;</span>		n := 1
+<span id="L748" class="ln">   748&nbsp;&nbsp;</span>		for n &lt; len(line) &amp;&amp; &#39;0&#39; &lt;= line[n] &amp;&amp; line[n] &lt;= &#39;9&#39; {
+<span id="L749" class="ln">   749&nbsp;&nbsp;</span>			n++
+<span id="L750" class="ln">   750&nbsp;&nbsp;</span>		}
+<span id="L751" class="ln">   751&nbsp;&nbsp;</span>		if n &gt;= len(line) || (line[n] != &#39;.&#39; &amp;&amp; line[n] != &#39;)&#39;) {
+<span id="L752" class="ln">   752&nbsp;&nbsp;</span>			return &#34;&#34;, &#34;&#34;, false
+<span id="L753" class="ln">   753&nbsp;&nbsp;</span>		}
+<span id="L754" class="ln">   754&nbsp;&nbsp;</span>		num, rest = line[:n], line[n+1:]
+<span id="L755" class="ln">   755&nbsp;&nbsp;</span>	} else {
+<span id="L756" class="ln">   756&nbsp;&nbsp;</span>		return &#34;&#34;, &#34;&#34;, false
+<span id="L757" class="ln">   757&nbsp;&nbsp;</span>	}
+<span id="L758" class="ln">   758&nbsp;&nbsp;</span>
+<span id="L759" class="ln">   759&nbsp;&nbsp;</span>	if !indented(rest) || strings.TrimSpace(rest) == &#34;&#34; {
+<span id="L760" class="ln">   760&nbsp;&nbsp;</span>		return &#34;&#34;, &#34;&#34;, false
+<span id="L761" class="ln">   761&nbsp;&nbsp;</span>	}
+<span id="L762" class="ln">   762&nbsp;&nbsp;</span>
+<span id="L763" class="ln">   763&nbsp;&nbsp;</span>	return num, rest, true
+<span id="L764" class="ln">   764&nbsp;&nbsp;</span>}
+<span id="L765" class="ln">   765&nbsp;&nbsp;</span>
+<span id="L766" class="ln">   766&nbsp;&nbsp;</span><span class="comment">// isList reports whether the line is the first line of a list,</span>
+<span id="L767" class="ln">   767&nbsp;&nbsp;</span><span class="comment">// meaning starts with a list marker after any indentation.</span>
+<span id="L768" class="ln">   768&nbsp;&nbsp;</span><span class="comment">// (The caller is responsible for checking the line is indented, as appropriate.)</span>
+<span id="L769" class="ln">   769&nbsp;&nbsp;</span>func isList(line string) bool {
+<span id="L770" class="ln">   770&nbsp;&nbsp;</span>	_, _, ok := listMarker(line)
+<span id="L771" class="ln">   771&nbsp;&nbsp;</span>	return ok
+<span id="L772" class="ln">   772&nbsp;&nbsp;</span>}
+<span id="L773" class="ln">   773&nbsp;&nbsp;</span>
+<span id="L774" class="ln">   774&nbsp;&nbsp;</span><span class="comment">// parseLinkedText parses text that is allowed to contain explicit links,</span>
+<span id="L775" class="ln">   775&nbsp;&nbsp;</span><span class="comment">// such as [math.Sin] or [Go home page], into a slice of Text items.</span>
+<span id="L776" class="ln">   776&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L777" class="ln">   777&nbsp;&nbsp;</span><span class="comment">// A “pkg” is only assumed to be a full import path if it starts with</span>
+<span id="L778" class="ln">   778&nbsp;&nbsp;</span><span class="comment">// a domain name (a path element with a dot) or is one of the packages</span>
+<span id="L779" class="ln">   779&nbsp;&nbsp;</span><span class="comment">// from the standard library (“[os]”, “[encoding/json]”, and so on).</span>
+<span id="L780" class="ln">   780&nbsp;&nbsp;</span><span class="comment">// To avoid problems with maps, generics, and array types, doc links</span>
+<span id="L781" class="ln">   781&nbsp;&nbsp;</span><span class="comment">// must be both preceded and followed by punctuation, spaces, tabs,</span>
+<span id="L782" class="ln">   782&nbsp;&nbsp;</span><span class="comment">// or the start or end of a line. An example problem would be treating</span>
+<span id="L783" class="ln">   783&nbsp;&nbsp;</span><span class="comment">// map[ast.Expr]TypeAndValue as containing a link.</span>
+<span id="L784" class="ln">   784&nbsp;&nbsp;</span>func (d *parseDoc) parseLinkedText(text string) []Text {
+<span id="L785" class="ln">   785&nbsp;&nbsp;</span>	var out []Text
+<span id="L786" class="ln">   786&nbsp;&nbsp;</span>	wrote := 0
+<span id="L787" class="ln">   787&nbsp;&nbsp;</span>	flush := func(i int) {
+<span id="L788" class="ln">   788&nbsp;&nbsp;</span>		if wrote &lt; i {
+<span id="L789" class="ln">   789&nbsp;&nbsp;</span>			out = d.parseText(out, text[wrote:i], true)
+<span id="L790" class="ln">   790&nbsp;&nbsp;</span>			wrote = i
+<span id="L791" class="ln">   791&nbsp;&nbsp;</span>		}
+<span id="L792" class="ln">   792&nbsp;&nbsp;</span>	}
+<span id="L793" class="ln">   793&nbsp;&nbsp;</span>
+<span id="L794" class="ln">   794&nbsp;&nbsp;</span>	start := -1
+<span id="L795" class="ln">   795&nbsp;&nbsp;</span>	var buf []byte
+<span id="L796" class="ln">   796&nbsp;&nbsp;</span>	for i := 0; i &lt; len(text); i++ {
+<span id="L797" class="ln">   797&nbsp;&nbsp;</span>		c := text[i]
+<span id="L798" class="ln">   798&nbsp;&nbsp;</span>		if c == &#39;\n&#39; || c == &#39;\t&#39; {
+<span id="L799" class="ln">   799&nbsp;&nbsp;</span>			c = &#39; &#39;
+<span id="L800" class="ln">   800&nbsp;&nbsp;</span>		}
+<span id="L801" class="ln">   801&nbsp;&nbsp;</span>		switch c {
+<span id="L802" class="ln">   802&nbsp;&nbsp;</span>		case &#39;[&#39;:
+<span id="L803" class="ln">   803&nbsp;&nbsp;</span>			start = i
+<span id="L804" class="ln">   804&nbsp;&nbsp;</span>		case &#39;]&#39;:
+<span id="L805" class="ln">   805&nbsp;&nbsp;</span>			if start &gt;= 0 {
+<span id="L806" class="ln">   806&nbsp;&nbsp;</span>				if def, ok := d.links[string(buf)]; ok {
+<span id="L807" class="ln">   807&nbsp;&nbsp;</span>					def.Used = true
+<span id="L808" class="ln">   808&nbsp;&nbsp;</span>					flush(start)
+<span id="L809" class="ln">   809&nbsp;&nbsp;</span>					out = append(out, &amp;Link{
+<span id="L810" class="ln">   810&nbsp;&nbsp;</span>						Text: d.parseText(nil, text[start+1:i], false),
+<span id="L811" class="ln">   811&nbsp;&nbsp;</span>						URL:  def.URL,
+<span id="L812" class="ln">   812&nbsp;&nbsp;</span>					})
+<span id="L813" class="ln">   813&nbsp;&nbsp;</span>					wrote = i + 1
+<span id="L814" class="ln">   814&nbsp;&nbsp;</span>				} else if link, ok := d.docLink(text[start+1:i], text[:start], text[i+1:]); ok {
+<span id="L815" class="ln">   815&nbsp;&nbsp;</span>					flush(start)
+<span id="L816" class="ln">   816&nbsp;&nbsp;</span>					link.Text = d.parseText(nil, text[start+1:i], false)
+<span id="L817" class="ln">   817&nbsp;&nbsp;</span>					out = append(out, link)
+<span id="L818" class="ln">   818&nbsp;&nbsp;</span>					wrote = i + 1
+<span id="L819" class="ln">   819&nbsp;&nbsp;</span>				}
+<span id="L820" class="ln">   820&nbsp;&nbsp;</span>			}
+<span id="L821" class="ln">   821&nbsp;&nbsp;</span>			start = -1
+<span id="L822" class="ln">   822&nbsp;&nbsp;</span>			buf = buf[:0]
+<span id="L823" class="ln">   823&nbsp;&nbsp;</span>		}
+<span id="L824" class="ln">   824&nbsp;&nbsp;</span>		if start &gt;= 0 &amp;&amp; i != start {
+<span id="L825" class="ln">   825&nbsp;&nbsp;</span>			buf = append(buf, c)
+<span id="L826" class="ln">   826&nbsp;&nbsp;</span>		}
+<span id="L827" class="ln">   827&nbsp;&nbsp;</span>	}
+<span id="L828" class="ln">   828&nbsp;&nbsp;</span>
+<span id="L829" class="ln">   829&nbsp;&nbsp;</span>	flush(len(text))
+<span id="L830" class="ln">   830&nbsp;&nbsp;</span>	return out
+<span id="L831" class="ln">   831&nbsp;&nbsp;</span>}
+<span id="L832" class="ln">   832&nbsp;&nbsp;</span>
+<span id="L833" class="ln">   833&nbsp;&nbsp;</span><span class="comment">// docLink parses text, which was found inside [ ] brackets,</span>
+<span id="L834" class="ln">   834&nbsp;&nbsp;</span><span class="comment">// as a doc link if possible, returning the DocLink and ok == true</span>
+<span id="L835" class="ln">   835&nbsp;&nbsp;</span><span class="comment">// or else nil, false.</span>
+<span id="L836" class="ln">   836&nbsp;&nbsp;</span><span class="comment">// The before and after strings are the text before the [ and after the ]</span>
+<span id="L837" class="ln">   837&nbsp;&nbsp;</span><span class="comment">// on the same line. Doc links must be preceded and followed by</span>
+<span id="L838" class="ln">   838&nbsp;&nbsp;</span><span class="comment">// punctuation, spaces, tabs, or the start or end of a line.</span>
+<span id="L839" class="ln">   839&nbsp;&nbsp;</span>func (d *parseDoc) docLink(text, before, after string) (link *DocLink, ok bool) {
+<span id="L840" class="ln">   840&nbsp;&nbsp;</span>	if before != &#34;&#34; {
+<span id="L841" class="ln">   841&nbsp;&nbsp;</span>		r, _ := utf8.DecodeLastRuneInString(before)
+<span id="L842" class="ln">   842&nbsp;&nbsp;</span>		if !unicode.IsPunct(r) &amp;&amp; r != &#39; &#39; &amp;&amp; r != &#39;\t&#39; &amp;&amp; r != &#39;\n&#39; {
+<span id="L843" class="ln">   843&nbsp;&nbsp;</span>			return nil, false
+<span id="L844" class="ln">   844&nbsp;&nbsp;</span>		}
+<span id="L845" class="ln">   845&nbsp;&nbsp;</span>	}
+<span id="L846" class="ln">   846&nbsp;&nbsp;</span>	if after != &#34;&#34; {
+<span id="L847" class="ln">   847&nbsp;&nbsp;</span>		r, _ := utf8.DecodeRuneInString(after)
+<span id="L848" class="ln">   848&nbsp;&nbsp;</span>		if !unicode.IsPunct(r) &amp;&amp; r != &#39; &#39; &amp;&amp; r != &#39;\t&#39; &amp;&amp; r != &#39;\n&#39; {
+<span id="L849" class="ln">   849&nbsp;&nbsp;</span>			return nil, false
+<span id="L850" class="ln">   850&nbsp;&nbsp;</span>		}
+<span id="L851" class="ln">   851&nbsp;&nbsp;</span>	}
+<span id="L852" class="ln">   852&nbsp;&nbsp;</span>	text = strings.TrimPrefix(text, &#34;*&#34;)
+<span id="L853" class="ln">   853&nbsp;&nbsp;</span>	pkg, name, ok := splitDocName(text)
+<span id="L854" class="ln">   854&nbsp;&nbsp;</span>	var recv string
+<span id="L855" class="ln">   855&nbsp;&nbsp;</span>	if ok {
+<span id="L856" class="ln">   856&nbsp;&nbsp;</span>		pkg, recv, _ = splitDocName(pkg)
+<span id="L857" class="ln">   857&nbsp;&nbsp;</span>	}
+<span id="L858" class="ln">   858&nbsp;&nbsp;</span>	if pkg != &#34;&#34; {
+<span id="L859" class="ln">   859&nbsp;&nbsp;</span>		if pkg, ok = d.lookupPkg(pkg); !ok {
+<span id="L860" class="ln">   860&nbsp;&nbsp;</span>			return nil, false
+<span id="L861" class="ln">   861&nbsp;&nbsp;</span>		}
+<span id="L862" class="ln">   862&nbsp;&nbsp;</span>	} else {
+<span id="L863" class="ln">   863&nbsp;&nbsp;</span>		if ok = d.lookupSym(recv, name); !ok {
+<span id="L864" class="ln">   864&nbsp;&nbsp;</span>			return nil, false
+<span id="L865" class="ln">   865&nbsp;&nbsp;</span>		}
+<span id="L866" class="ln">   866&nbsp;&nbsp;</span>	}
+<span id="L867" class="ln">   867&nbsp;&nbsp;</span>	link = &amp;DocLink{
+<span id="L868" class="ln">   868&nbsp;&nbsp;</span>		ImportPath: pkg,
+<span id="L869" class="ln">   869&nbsp;&nbsp;</span>		Recv:       recv,
+<span id="L870" class="ln">   870&nbsp;&nbsp;</span>		Name:       name,
+<span id="L871" class="ln">   871&nbsp;&nbsp;</span>	}
+<span id="L872" class="ln">   872&nbsp;&nbsp;</span>	return link, true
+<span id="L873" class="ln">   873&nbsp;&nbsp;</span>}
+<span id="L874" class="ln">   874&nbsp;&nbsp;</span>
+<span id="L875" class="ln">   875&nbsp;&nbsp;</span><span class="comment">// If text is of the form before.Name, where Name is a capitalized Go identifier,</span>
+<span id="L876" class="ln">   876&nbsp;&nbsp;</span><span class="comment">// then splitDocName returns before, name, true.</span>
+<span id="L877" class="ln">   877&nbsp;&nbsp;</span><span class="comment">// Otherwise it returns text, &#34;&#34;, false.</span>
+<span id="L878" class="ln">   878&nbsp;&nbsp;</span>func splitDocName(text string) (before, name string, foundDot bool) {
+<span id="L879" class="ln">   879&nbsp;&nbsp;</span>	i := strings.LastIndex(text, &#34;.&#34;)
+<span id="L880" class="ln">   880&nbsp;&nbsp;</span>	name = text[i+1:]
+<span id="L881" class="ln">   881&nbsp;&nbsp;</span>	if !isName(name) {
+<span id="L882" class="ln">   882&nbsp;&nbsp;</span>		return text, &#34;&#34;, false
+<span id="L883" class="ln">   883&nbsp;&nbsp;</span>	}
+<span id="L884" class="ln">   884&nbsp;&nbsp;</span>	if i &gt;= 0 {
+<span id="L885" class="ln">   885&nbsp;&nbsp;</span>		before = text[:i]
+<span id="L886" class="ln">   886&nbsp;&nbsp;</span>	}
+<span id="L887" class="ln">   887&nbsp;&nbsp;</span>	return before, name, true
+<span id="L888" class="ln">   888&nbsp;&nbsp;</span>}
+<span id="L889" class="ln">   889&nbsp;&nbsp;</span>
+<span id="L890" class="ln">   890&nbsp;&nbsp;</span><span class="comment">// parseText parses s as text and returns the result of appending</span>
+<span id="L891" class="ln">   891&nbsp;&nbsp;</span><span class="comment">// those parsed Text elements to out.</span>
+<span id="L892" class="ln">   892&nbsp;&nbsp;</span><span class="comment">// parseText does not handle explicit links like [math.Sin] or [Go home page]:</span>
+<span id="L893" class="ln">   893&nbsp;&nbsp;</span><span class="comment">// those are handled by parseLinkedText.</span>
+<span id="L894" class="ln">   894&nbsp;&nbsp;</span><span class="comment">// If autoLink is true, then parseText recognizes URLs and words from d.Words</span>
+<span id="L895" class="ln">   895&nbsp;&nbsp;</span><span class="comment">// and converts those to links as appropriate.</span>
+<span id="L896" class="ln">   896&nbsp;&nbsp;</span>func (d *parseDoc) parseText(out []Text, s string, autoLink bool) []Text {
+<span id="L897" class="ln">   897&nbsp;&nbsp;</span>	var w strings.Builder
+<span id="L898" class="ln">   898&nbsp;&nbsp;</span>	wrote := 0
+<span id="L899" class="ln">   899&nbsp;&nbsp;</span>	writeUntil := func(i int) {
+<span id="L900" class="ln">   900&nbsp;&nbsp;</span>		w.WriteString(s[wrote:i])
+<span id="L901" class="ln">   901&nbsp;&nbsp;</span>		wrote = i
+<span id="L902" class="ln">   902&nbsp;&nbsp;</span>	}
+<span id="L903" class="ln">   903&nbsp;&nbsp;</span>	flush := func(i int) {
+<span id="L904" class="ln">   904&nbsp;&nbsp;</span>		writeUntil(i)
+<span id="L905" class="ln">   905&nbsp;&nbsp;</span>		if w.Len() &gt; 0 {
+<span id="L906" class="ln">   906&nbsp;&nbsp;</span>			out = append(out, Plain(w.String()))
+<span id="L907" class="ln">   907&nbsp;&nbsp;</span>			w.Reset()
+<span id="L908" class="ln">   908&nbsp;&nbsp;</span>		}
+<span id="L909" class="ln">   909&nbsp;&nbsp;</span>	}
+<span id="L910" class="ln">   910&nbsp;&nbsp;</span>	for i := 0; i &lt; len(s); {
+<span id="L911" class="ln">   911&nbsp;&nbsp;</span>		t := s[i:]
+<span id="L912" class="ln">   912&nbsp;&nbsp;</span>		if autoLink {
+<span id="L913" class="ln">   913&nbsp;&nbsp;</span>			if url, ok := autoURL(t); ok {
+<span id="L914" class="ln">   914&nbsp;&nbsp;</span>				flush(i)
+<span id="L915" class="ln">   915&nbsp;&nbsp;</span>				<span class="comment">// Note: The old comment parser would look up the URL in words</span>
+<span id="L916" class="ln">   916&nbsp;&nbsp;</span>				<span class="comment">// and replace the target with words[URL] if it was non-empty.</span>
+<span id="L917" class="ln">   917&nbsp;&nbsp;</span>				<span class="comment">// That would allow creating links that display as one URL but</span>
+<span id="L918" class="ln">   918&nbsp;&nbsp;</span>				<span class="comment">// when clicked go to a different URL. Not sure what the point</span>
+<span id="L919" class="ln">   919&nbsp;&nbsp;</span>				<span class="comment">// of that is, so we&#39;re not doing that lookup here.</span>
+<span id="L920" class="ln">   920&nbsp;&nbsp;</span>				out = append(out, &amp;Link{Auto: true, Text: []Text{Plain(url)}, URL: url})
+<span id="L921" class="ln">   921&nbsp;&nbsp;</span>				i += len(url)
+<span id="L922" class="ln">   922&nbsp;&nbsp;</span>				wrote = i
+<span id="L923" class="ln">   923&nbsp;&nbsp;</span>				continue
+<span id="L924" class="ln">   924&nbsp;&nbsp;</span>			}
+<span id="L925" class="ln">   925&nbsp;&nbsp;</span>			if id, ok := ident(t); ok {
+<span id="L926" class="ln">   926&nbsp;&nbsp;</span>				url, italics := d.Words[id]
+<span id="L927" class="ln">   927&nbsp;&nbsp;</span>				if !italics {
+<span id="L928" class="ln">   928&nbsp;&nbsp;</span>					i += len(id)
+<span id="L929" class="ln">   929&nbsp;&nbsp;</span>					continue
+<span id="L930" class="ln">   930&nbsp;&nbsp;</span>				}
+<span id="L931" class="ln">   931&nbsp;&nbsp;</span>				flush(i)
+<span id="L932" class="ln">   932&nbsp;&nbsp;</span>				if url == &#34;&#34; {
+<span id="L933" class="ln">   933&nbsp;&nbsp;</span>					out = append(out, Italic(id))
+<span id="L934" class="ln">   934&nbsp;&nbsp;</span>				} else {
+<span id="L935" class="ln">   935&nbsp;&nbsp;</span>					out = append(out, &amp;Link{Auto: true, Text: []Text{Italic(id)}, URL: url})
+<span id="L936" class="ln">   936&nbsp;&nbsp;</span>				}
+<span id="L937" class="ln">   937&nbsp;&nbsp;</span>				i += len(id)
+<span id="L938" class="ln">   938&nbsp;&nbsp;</span>				wrote = i
+<span id="L939" class="ln">   939&nbsp;&nbsp;</span>				continue
+<span id="L940" class="ln">   940&nbsp;&nbsp;</span>			}
+<span id="L941" class="ln">   941&nbsp;&nbsp;</span>		}
+<span id="L942" class="ln">   942&nbsp;&nbsp;</span>		switch {
+<span id="L943" class="ln">   943&nbsp;&nbsp;</span>		case strings.HasPrefix(t, &#34;``&#34;):
+<span id="L944" class="ln">   944&nbsp;&nbsp;</span>			if len(t) &gt;= 3 &amp;&amp; t[2] == &#39;`&#39; {
+<span id="L945" class="ln">   945&nbsp;&nbsp;</span>				<span class="comment">// Do not convert `` inside ```, in case people are mistakenly writing Markdown.</span>
+<span id="L946" class="ln">   946&nbsp;&nbsp;</span>				i += 3
+<span id="L947" class="ln">   947&nbsp;&nbsp;</span>				for i &lt; len(t) &amp;&amp; t[i] == &#39;`&#39; {
+<span id="L948" class="ln">   948&nbsp;&nbsp;</span>					i++
+<span id="L949" class="ln">   949&nbsp;&nbsp;</span>				}
+<span id="L950" class="ln">   950&nbsp;&nbsp;</span>				break
+<span id="L951" class="ln">   951&nbsp;&nbsp;</span>			}
+<span id="L952" class="ln">   952&nbsp;&nbsp;</span>			writeUntil(i)
+<span id="L953" class="ln">   953&nbsp;&nbsp;</span>			w.WriteRune(&#39;“&#39;)
+<span id="L954" class="ln">   954&nbsp;&nbsp;</span>			i += 2
+<span id="L955" class="ln">   955&nbsp;&nbsp;</span>			wrote = i
+<span id="L956" class="ln">   956&nbsp;&nbsp;</span>		case strings.HasPrefix(t, &#34;&#39;&#39;&#34;):
+<span id="L957" class="ln">   957&nbsp;&nbsp;</span>			writeUntil(i)
+<span id="L958" class="ln">   958&nbsp;&nbsp;</span>			w.WriteRune(&#39;”&#39;)
+<span id="L959" class="ln">   959&nbsp;&nbsp;</span>			i += 2
+<span id="L960" class="ln">   960&nbsp;&nbsp;</span>			wrote = i
+<span id="L961" class="ln">   961&nbsp;&nbsp;</span>		default:
+<span id="L962" class="ln">   962&nbsp;&nbsp;</span>			i++
+<span id="L963" class="ln">   963&nbsp;&nbsp;</span>		}
+<span id="L964" class="ln">   964&nbsp;&nbsp;</span>	}
+<span id="L965" class="ln">   965&nbsp;&nbsp;</span>	flush(len(s))
+<span id="L966" class="ln">   966&nbsp;&nbsp;</span>	return out
+<span id="L967" class="ln">   967&nbsp;&nbsp;</span>}
+<span id="L968" class="ln">   968&nbsp;&nbsp;</span>
+<span id="L969" class="ln">   969&nbsp;&nbsp;</span><span class="comment">// autoURL checks whether s begins with a URL that should be hyperlinked.</span>
+<span id="L970" class="ln">   970&nbsp;&nbsp;</span><span class="comment">// If so, it returns the URL, which is a prefix of s, and ok == true.</span>
+<span id="L971" class="ln">   971&nbsp;&nbsp;</span><span class="comment">// Otherwise it returns &#34;&#34;, false.</span>
+<span id="L972" class="ln">   972&nbsp;&nbsp;</span><span class="comment">// The caller should skip over the first len(url) bytes of s</span>
+<span id="L973" class="ln">   973&nbsp;&nbsp;</span><span class="comment">// before further processing.</span>
+<span id="L974" class="ln">   974&nbsp;&nbsp;</span>func autoURL(s string) (url string, ok bool) {
+<span id="L975" class="ln">   975&nbsp;&nbsp;</span>	<span class="comment">// Find the ://. Fast path to pick off non-URL,</span>
+<span id="L976" class="ln">   976&nbsp;&nbsp;</span>	<span class="comment">// since we call this at every position in the string.</span>
+<span id="L977" class="ln">   977&nbsp;&nbsp;</span>	<span class="comment">// The shortest possible URL is ftp://x, 7 bytes.</span>
+<span id="L978" class="ln">   978&nbsp;&nbsp;</span>	var i int
+<span id="L979" class="ln">   979&nbsp;&nbsp;</span>	switch {
+<span id="L980" class="ln">   980&nbsp;&nbsp;</span>	case len(s) &lt; 7:
+<span id="L981" class="ln">   981&nbsp;&nbsp;</span>		return &#34;&#34;, false
+<span id="L982" class="ln">   982&nbsp;&nbsp;</span>	case s[3] == &#39;:&#39;:
+<span id="L983" class="ln">   983&nbsp;&nbsp;</span>		i = 3
+<span id="L984" class="ln">   984&nbsp;&nbsp;</span>	case s[4] == &#39;:&#39;:
+<span id="L985" class="ln">   985&nbsp;&nbsp;</span>		i = 4
+<span id="L986" class="ln">   986&nbsp;&nbsp;</span>	case s[5] == &#39;:&#39;:
+<span id="L987" class="ln">   987&nbsp;&nbsp;</span>		i = 5
+<span id="L988" class="ln">   988&nbsp;&nbsp;</span>	case s[6] == &#39;:&#39;:
+<span id="L989" class="ln">   989&nbsp;&nbsp;</span>		i = 6
+<span id="L990" class="ln">   990&nbsp;&nbsp;</span>	default:
+<span id="L991" class="ln">   991&nbsp;&nbsp;</span>		return &#34;&#34;, false
+<span id="L992" class="ln">   992&nbsp;&nbsp;</span>	}
+<span id="L993" class="ln">   993&nbsp;&nbsp;</span>	if i+3 &gt; len(s) || s[i:i+3] != &#34;://&#34; {
+<span id="L994" class="ln">   994&nbsp;&nbsp;</span>		return &#34;&#34;, false
+<span id="L995" class="ln">   995&nbsp;&nbsp;</span>	}
+<span id="L996" class="ln">   996&nbsp;&nbsp;</span>
+<span id="L997" class="ln">   997&nbsp;&nbsp;</span>	<span class="comment">// Check valid scheme.</span>
+<span id="L998" class="ln">   998&nbsp;&nbsp;</span>	if !isScheme(s[:i]) {
+<span id="L999" class="ln">   999&nbsp;&nbsp;</span>		return &#34;&#34;, false
+<span id="L1000" class="ln">  1000&nbsp;&nbsp;</span>	}
+<span id="L1001" class="ln">  1001&nbsp;&nbsp;</span>
+<span id="L1002" class="ln">  1002&nbsp;&nbsp;</span>	<span class="comment">// Scan host part. Must have at least one byte,</span>
+<span id="L1003" class="ln">  1003&nbsp;&nbsp;</span>	<span class="comment">// and must start and end in non-punctuation.</span>
+<span id="L1004" class="ln">  1004&nbsp;&nbsp;</span>	i += 3
+<span id="L1005" class="ln">  1005&nbsp;&nbsp;</span>	if i &gt;= len(s) || !isHost(s[i]) || isPunct(s[i]) {
+<span id="L1006" class="ln">  1006&nbsp;&nbsp;</span>		return &#34;&#34;, false
+<span id="L1007" class="ln">  1007&nbsp;&nbsp;</span>	}
+<span id="L1008" class="ln">  1008&nbsp;&nbsp;</span>	i++
+<span id="L1009" class="ln">  1009&nbsp;&nbsp;</span>	end := i
+<span id="L1010" class="ln">  1010&nbsp;&nbsp;</span>	for i &lt; len(s) &amp;&amp; isHost(s[i]) {
+<span id="L1011" class="ln">  1011&nbsp;&nbsp;</span>		if !isPunct(s[i]) {
+<span id="L1012" class="ln">  1012&nbsp;&nbsp;</span>			end = i + 1
+<span id="L1013" class="ln">  1013&nbsp;&nbsp;</span>		}
+<span id="L1014" class="ln">  1014&nbsp;&nbsp;</span>		i++
+<span id="L1015" class="ln">  1015&nbsp;&nbsp;</span>	}
+<span id="L1016" class="ln">  1016&nbsp;&nbsp;</span>	i = end
+<span id="L1017" class="ln">  1017&nbsp;&nbsp;</span>
+<span id="L1018" class="ln">  1018&nbsp;&nbsp;</span>	<span class="comment">// At this point we are definitely returning a URL (scheme://host).</span>
+<span id="L1019" class="ln">  1019&nbsp;&nbsp;</span>	<span class="comment">// We just have to find the longest path we can add to it.</span>
+<span id="L1020" class="ln">  1020&nbsp;&nbsp;</span>	<span class="comment">// Heuristics abound.</span>
+<span id="L1021" class="ln">  1021&nbsp;&nbsp;</span>	<span class="comment">// We allow parens, braces, and brackets,</span>
+<span id="L1022" class="ln">  1022&nbsp;&nbsp;</span>	<span class="comment">// but only if they match (#5043, #22285).</span>
+<span id="L1023" class="ln">  1023&nbsp;&nbsp;</span>	<span class="comment">// We allow .,:;?! in the path but not at the end,</span>
+<span id="L1024" class="ln">  1024&nbsp;&nbsp;</span>	<span class="comment">// to avoid end-of-sentence punctuation (#18139, #16565).</span>
+<span id="L1025" class="ln">  1025&nbsp;&nbsp;</span>	stk := []byte{}
+<span id="L1026" class="ln">  1026&nbsp;&nbsp;</span>	end = i
+<span id="L1027" class="ln">  1027&nbsp;&nbsp;</span>Path:
+<span id="L1028" class="ln">  1028&nbsp;&nbsp;</span>	for ; i &lt; len(s); i++ {
+<span id="L1029" class="ln">  1029&nbsp;&nbsp;</span>		if isPunct(s[i]) {
+<span id="L1030" class="ln">  1030&nbsp;&nbsp;</span>			continue
+<span id="L1031" class="ln">  1031&nbsp;&nbsp;</span>		}
+<span id="L1032" class="ln">  1032&nbsp;&nbsp;</span>		if !isPath(s[i]) {
+<span id="L1033" class="ln">  1033&nbsp;&nbsp;</span>			break
+<span id="L1034" class="ln">  1034&nbsp;&nbsp;</span>		}
+<span id="L1035" class="ln">  1035&nbsp;&nbsp;</span>		switch s[i] {
+<span id="L1036" class="ln">  1036&nbsp;&nbsp;</span>		case &#39;(&#39;:
+<span id="L1037" class="ln">  1037&nbsp;&nbsp;</span>			stk = append(stk, &#39;)&#39;)
+<span id="L1038" class="ln">  1038&nbsp;&nbsp;</span>		case &#39;{&#39;:
+<span id="L1039" class="ln">  1039&nbsp;&nbsp;</span>			stk = append(stk, &#39;}&#39;)
+<span id="L1040" class="ln">  1040&nbsp;&nbsp;</span>		case &#39;[&#39;:
+<span id="L1041" class="ln">  1041&nbsp;&nbsp;</span>			stk = append(stk, &#39;]&#39;)
+<span id="L1042" class="ln">  1042&nbsp;&nbsp;</span>		case &#39;)&#39;, &#39;}&#39;, &#39;]&#39;:
+<span id="L1043" class="ln">  1043&nbsp;&nbsp;</span>			if len(stk) == 0 || stk[len(stk)-1] != s[i] {
+<span id="L1044" class="ln">  1044&nbsp;&nbsp;</span>				break Path
+<span id="L1045" class="ln">  1045&nbsp;&nbsp;</span>			}
+<span id="L1046" class="ln">  1046&nbsp;&nbsp;</span>			stk = stk[:len(stk)-1]
+<span id="L1047" class="ln">  1047&nbsp;&nbsp;</span>		}
+<span id="L1048" class="ln">  1048&nbsp;&nbsp;</span>		if len(stk) == 0 {
+<span id="L1049" class="ln">  1049&nbsp;&nbsp;</span>			end = i + 1
+<span id="L1050" class="ln">  1050&nbsp;&nbsp;</span>		}
+<span id="L1051" class="ln">  1051&nbsp;&nbsp;</span>	}
+<span id="L1052" class="ln">  1052&nbsp;&nbsp;</span>
+<span id="L1053" class="ln">  1053&nbsp;&nbsp;</span>	return s[:end], true
+<span id="L1054" class="ln">  1054&nbsp;&nbsp;</span>}
+<span id="L1055" class="ln">  1055&nbsp;&nbsp;</span>
+<span id="L1056" class="ln">  1056&nbsp;&nbsp;</span><span class="comment">// isScheme reports whether s is a recognized URL scheme.</span>
+<span id="L1057" class="ln">  1057&nbsp;&nbsp;</span><span class="comment">// Note that if strings of new length (beyond 3-7)</span>
+<span id="L1058" class="ln">  1058&nbsp;&nbsp;</span><span class="comment">// are added here, the fast path at the top of autoURL will need updating.</span>
+<span id="L1059" class="ln">  1059&nbsp;&nbsp;</span>func isScheme(s string) bool {
+<span id="L1060" class="ln">  1060&nbsp;&nbsp;</span>	switch s {
+<span id="L1061" class="ln">  1061&nbsp;&nbsp;</span>	case &#34;file&#34;,
+<span id="L1062" class="ln">  1062&nbsp;&nbsp;</span>		&#34;ftp&#34;,
+<span id="L1063" class="ln">  1063&nbsp;&nbsp;</span>		&#34;gopher&#34;,
+<span id="L1064" class="ln">  1064&nbsp;&nbsp;</span>		&#34;http&#34;,
+<span id="L1065" class="ln">  1065&nbsp;&nbsp;</span>		&#34;https&#34;,
+<span id="L1066" class="ln">  1066&nbsp;&nbsp;</span>		&#34;mailto&#34;,
+<span id="L1067" class="ln">  1067&nbsp;&nbsp;</span>		&#34;nntp&#34;:
+<span id="L1068" class="ln">  1068&nbsp;&nbsp;</span>		return true
+<span id="L1069" class="ln">  1069&nbsp;&nbsp;</span>	}
+<span id="L1070" class="ln">  1070&nbsp;&nbsp;</span>	return false
+<span id="L1071" class="ln">  1071&nbsp;&nbsp;</span>}
+<span id="L1072" class="ln">  1072&nbsp;&nbsp;</span>
+<span id="L1073" class="ln">  1073&nbsp;&nbsp;</span><span class="comment">// isHost reports whether c is a byte that can appear in a URL host,</span>
+<span id="L1074" class="ln">  1074&nbsp;&nbsp;</span><span class="comment">// like www.example.com or user@[::1]:8080</span>
+<span id="L1075" class="ln">  1075&nbsp;&nbsp;</span>func isHost(c byte) bool {
+<span id="L1076" class="ln">  1076&nbsp;&nbsp;</span>	<span class="comment">// mask is a 128-bit bitmap with 1s for allowed bytes,</span>
+<span id="L1077" class="ln">  1077&nbsp;&nbsp;</span>	<span class="comment">// so that the byte c can be tested with a shift and an and.</span>
+<span id="L1078" class="ln">  1078&nbsp;&nbsp;</span>	<span class="comment">// If c &gt; 128, then 1&lt;&lt;c and 1&lt;&lt;(c-64) will both be zero,</span>
+<span id="L1079" class="ln">  1079&nbsp;&nbsp;</span>	<span class="comment">// and this function will return false.</span>
+<span id="L1080" class="ln">  1080&nbsp;&nbsp;</span>	const mask = 0 |
+<span id="L1081" class="ln">  1081&nbsp;&nbsp;</span>		(1&lt;&lt;26-1)&lt;&lt;&#39;A&#39; |
+<span id="L1082" class="ln">  1082&nbsp;&nbsp;</span>		(1&lt;&lt;26-1)&lt;&lt;&#39;a&#39; |
+<span id="L1083" class="ln">  1083&nbsp;&nbsp;</span>		(1&lt;&lt;10-1)&lt;&lt;&#39;0&#39; |
+<span id="L1084" class="ln">  1084&nbsp;&nbsp;</span>		1&lt;&lt;&#39;_&#39; |
+<span id="L1085" class="ln">  1085&nbsp;&nbsp;</span>		1&lt;&lt;&#39;@&#39; |
+<span id="L1086" class="ln">  1086&nbsp;&nbsp;</span>		1&lt;&lt;&#39;-&#39; |
+<span id="L1087" class="ln">  1087&nbsp;&nbsp;</span>		1&lt;&lt;&#39;.&#39; |
+<span id="L1088" class="ln">  1088&nbsp;&nbsp;</span>		1&lt;&lt;&#39;[&#39; |
+<span id="L1089" class="ln">  1089&nbsp;&nbsp;</span>		1&lt;&lt;&#39;]&#39; |
+<span id="L1090" class="ln">  1090&nbsp;&nbsp;</span>		1&lt;&lt;&#39;:&#39;
+<span id="L1091" class="ln">  1091&nbsp;&nbsp;</span>
+<span id="L1092" class="ln">  1092&nbsp;&nbsp;</span>	return ((uint64(1)&lt;&lt;c)&amp;(mask&amp;(1&lt;&lt;64-1)) |
+<span id="L1093" class="ln">  1093&nbsp;&nbsp;</span>		(uint64(1)&lt;&lt;(c-64))&amp;(mask&gt;&gt;64)) != 0
+<span id="L1094" class="ln">  1094&nbsp;&nbsp;</span>}
+<span id="L1095" class="ln">  1095&nbsp;&nbsp;</span>
+<span id="L1096" class="ln">  1096&nbsp;&nbsp;</span><span class="comment">// isPunct reports whether c is a punctuation byte that can appear</span>
+<span id="L1097" class="ln">  1097&nbsp;&nbsp;</span><span class="comment">// inside a path but not at the end.</span>
+<span id="L1098" class="ln">  1098&nbsp;&nbsp;</span>func isPunct(c byte) bool {
+<span id="L1099" class="ln">  1099&nbsp;&nbsp;</span>	<span class="comment">// mask is a 128-bit bitmap with 1s for allowed bytes,</span>
+<span id="L1100" class="ln">  1100&nbsp;&nbsp;</span>	<span class="comment">// so that the byte c can be tested with a shift and an and.</span>
+<span id="L1101" class="ln">  1101&nbsp;&nbsp;</span>	<span class="comment">// If c &gt; 128, then 1&lt;&lt;c and 1&lt;&lt;(c-64) will both be zero,</span>
+<span id="L1102" class="ln">  1102&nbsp;&nbsp;</span>	<span class="comment">// and this function will return false.</span>
+<span id="L1103" class="ln">  1103&nbsp;&nbsp;</span>	const mask = 0 |
+<span id="L1104" class="ln">  1104&nbsp;&nbsp;</span>		1&lt;&lt;&#39;.&#39; |
+<span id="L1105" class="ln">  1105&nbsp;&nbsp;</span>		1&lt;&lt;&#39;,&#39; |
+<span id="L1106" class="ln">  1106&nbsp;&nbsp;</span>		1&lt;&lt;&#39;:&#39; |
+<span id="L1107" class="ln">  1107&nbsp;&nbsp;</span>		1&lt;&lt;&#39;;&#39; |
+<span id="L1108" class="ln">  1108&nbsp;&nbsp;</span>		1&lt;&lt;&#39;?&#39; |
+<span id="L1109" class="ln">  1109&nbsp;&nbsp;</span>		1&lt;&lt;&#39;!&#39;
+<span id="L1110" class="ln">  1110&nbsp;&nbsp;</span>
+<span id="L1111" class="ln">  1111&nbsp;&nbsp;</span>	return ((uint64(1)&lt;&lt;c)&amp;(mask&amp;(1&lt;&lt;64-1)) |
+<span id="L1112" class="ln">  1112&nbsp;&nbsp;</span>		(uint64(1)&lt;&lt;(c-64))&amp;(mask&gt;&gt;64)) != 0
+<span id="L1113" class="ln">  1113&nbsp;&nbsp;</span>}
+<span id="L1114" class="ln">  1114&nbsp;&nbsp;</span>
+<span id="L1115" class="ln">  1115&nbsp;&nbsp;</span><span class="comment">// isPath reports whether c is a (non-punctuation) path byte.</span>
+<span id="L1116" class="ln">  1116&nbsp;&nbsp;</span>func isPath(c byte) bool {
+<span id="L1117" class="ln">  1117&nbsp;&nbsp;</span>	<span class="comment">// mask is a 128-bit bitmap with 1s for allowed bytes,</span>
+<span id="L1118" class="ln">  1118&nbsp;&nbsp;</span>	<span class="comment">// so that the byte c can be tested with a shift and an and.</span>
+<span id="L1119" class="ln">  1119&nbsp;&nbsp;</span>	<span class="comment">// If c &gt; 128, then 1&lt;&lt;c and 1&lt;&lt;(c-64) will both be zero,</span>
+<span id="L1120" class="ln">  1120&nbsp;&nbsp;</span>	<span class="comment">// and this function will return false.</span>
+<span id="L1121" class="ln">  1121&nbsp;&nbsp;</span>	const mask = 0 |
+<span id="L1122" class="ln">  1122&nbsp;&nbsp;</span>		(1&lt;&lt;26-1)&lt;&lt;&#39;A&#39; |
+<span id="L1123" class="ln">  1123&nbsp;&nbsp;</span>		(1&lt;&lt;26-1)&lt;&lt;&#39;a&#39; |
+<span id="L1124" class="ln">  1124&nbsp;&nbsp;</span>		(1&lt;&lt;10-1)&lt;&lt;&#39;0&#39; |
+<span id="L1125" class="ln">  1125&nbsp;&nbsp;</span>		1&lt;&lt;&#39;$&#39; |
+<span id="L1126" class="ln">  1126&nbsp;&nbsp;</span>		1&lt;&lt;&#39;\&#39;&#39; |
+<span id="L1127" class="ln">  1127&nbsp;&nbsp;</span>		1&lt;&lt;&#39;(&#39; |
+<span id="L1128" class="ln">  1128&nbsp;&nbsp;</span>		1&lt;&lt;&#39;)&#39; |
+<span id="L1129" class="ln">  1129&nbsp;&nbsp;</span>		1&lt;&lt;&#39;*&#39; |
+<span id="L1130" class="ln">  1130&nbsp;&nbsp;</span>		1&lt;&lt;&#39;+&#39; |
+<span id="L1131" class="ln">  1131&nbsp;&nbsp;</span>		1&lt;&lt;&#39;&amp;&#39; |
+<span id="L1132" class="ln">  1132&nbsp;&nbsp;</span>		1&lt;&lt;&#39;#&#39; |
+<span id="L1133" class="ln">  1133&nbsp;&nbsp;</span>		1&lt;&lt;&#39;=&#39; |
+<span id="L1134" class="ln">  1134&nbsp;&nbsp;</span>		1&lt;&lt;&#39;@&#39; |
+<span id="L1135" class="ln">  1135&nbsp;&nbsp;</span>		1&lt;&lt;&#39;~&#39; |
+<span id="L1136" class="ln">  1136&nbsp;&nbsp;</span>		1&lt;&lt;&#39;_&#39; |
+<span id="L1137" class="ln">  1137&nbsp;&nbsp;</span>		1&lt;&lt;&#39;/&#39; |
+<span id="L1138" class="ln">  1138&nbsp;&nbsp;</span>		1&lt;&lt;&#39;-&#39; |
+<span id="L1139" class="ln">  1139&nbsp;&nbsp;</span>		1&lt;&lt;&#39;[&#39; |
+<span id="L1140" class="ln">  1140&nbsp;&nbsp;</span>		1&lt;&lt;&#39;]&#39; |
+<span id="L1141" class="ln">  1141&nbsp;&nbsp;</span>		1&lt;&lt;&#39;{&#39; |
+<span id="L1142" class="ln">  1142&nbsp;&nbsp;</span>		1&lt;&lt;&#39;}&#39; |
+<span id="L1143" class="ln">  1143&nbsp;&nbsp;</span>		1&lt;&lt;&#39;%&#39;
+<span id="L1144" class="ln">  1144&nbsp;&nbsp;</span>
+<span id="L1145" class="ln">  1145&nbsp;&nbsp;</span>	return ((uint64(1)&lt;&lt;c)&amp;(mask&amp;(1&lt;&lt;64-1)) |
+<span id="L1146" class="ln">  1146&nbsp;&nbsp;</span>		(uint64(1)&lt;&lt;(c-64))&amp;(mask&gt;&gt;64)) != 0
+<span id="L1147" class="ln">  1147&nbsp;&nbsp;</span>}
+<span id="L1148" class="ln">  1148&nbsp;&nbsp;</span>
+<span id="L1149" class="ln">  1149&nbsp;&nbsp;</span><span class="comment">// isName reports whether s is a capitalized Go identifier (like Name).</span>
+<span id="L1150" class="ln">  1150&nbsp;&nbsp;</span>func isName(s string) bool {
+<span id="L1151" class="ln">  1151&nbsp;&nbsp;</span>	t, ok := ident(s)
+<span id="L1152" class="ln">  1152&nbsp;&nbsp;</span>	if !ok || t != s {
+<span id="L1153" class="ln">  1153&nbsp;&nbsp;</span>		return false
+<span id="L1154" class="ln">  1154&nbsp;&nbsp;</span>	}
+<span id="L1155" class="ln">  1155&nbsp;&nbsp;</span>	r, _ := utf8.DecodeRuneInString(s)
+<span id="L1156" class="ln">  1156&nbsp;&nbsp;</span>	return unicode.IsUpper(r)
+<span id="L1157" class="ln">  1157&nbsp;&nbsp;</span>}
+<span id="L1158" class="ln">  1158&nbsp;&nbsp;</span>
+<span id="L1159" class="ln">  1159&nbsp;&nbsp;</span><span class="comment">// ident checks whether s begins with a Go identifier.</span>
+<span id="L1160" class="ln">  1160&nbsp;&nbsp;</span><span class="comment">// If so, it returns the identifier, which is a prefix of s, and ok == true.</span>
+<span id="L1161" class="ln">  1161&nbsp;&nbsp;</span><span class="comment">// Otherwise it returns &#34;&#34;, false.</span>
+<span id="L1162" class="ln">  1162&nbsp;&nbsp;</span><span class="comment">// The caller should skip over the first len(id) bytes of s</span>
+<span id="L1163" class="ln">  1163&nbsp;&nbsp;</span><span class="comment">// before further processing.</span>
+<span id="L1164" class="ln">  1164&nbsp;&nbsp;</span>func ident(s string) (id string, ok bool) {
+<span id="L1165" class="ln">  1165&nbsp;&nbsp;</span>	<span class="comment">// Scan [\pL_][\pL_0-9]*</span>
+<span id="L1166" class="ln">  1166&nbsp;&nbsp;</span>	n := 0
+<span id="L1167" class="ln">  1167&nbsp;&nbsp;</span>	for n &lt; len(s) {
+<span id="L1168" class="ln">  1168&nbsp;&nbsp;</span>		if c := s[n]; c &lt; utf8.RuneSelf {
+<span id="L1169" class="ln">  1169&nbsp;&nbsp;</span>			if isIdentASCII(c) &amp;&amp; (n &gt; 0 || c &lt; &#39;0&#39; || c &gt; &#39;9&#39;) {
+<span id="L1170" class="ln">  1170&nbsp;&nbsp;</span>				n++
+<span id="L1171" class="ln">  1171&nbsp;&nbsp;</span>				continue
+<span id="L1172" class="ln">  1172&nbsp;&nbsp;</span>			}
+<span id="L1173" class="ln">  1173&nbsp;&nbsp;</span>			break
+<span id="L1174" class="ln">  1174&nbsp;&nbsp;</span>		}
+<span id="L1175" class="ln">  1175&nbsp;&nbsp;</span>		r, nr := utf8.DecodeRuneInString(s[n:])
+<span id="L1176" class="ln">  1176&nbsp;&nbsp;</span>		if unicode.IsLetter(r) {
+<span id="L1177" class="ln">  1177&nbsp;&nbsp;</span>			n += nr
+<span id="L1178" class="ln">  1178&nbsp;&nbsp;</span>			continue
+<span id="L1179" class="ln">  1179&nbsp;&nbsp;</span>		}
+<span id="L1180" class="ln">  1180&nbsp;&nbsp;</span>		break
+<span id="L1181" class="ln">  1181&nbsp;&nbsp;</span>	}
+<span id="L1182" class="ln">  1182&nbsp;&nbsp;</span>	return s[:n], n &gt; 0
+<span id="L1183" class="ln">  1183&nbsp;&nbsp;</span>}
+<span id="L1184" class="ln">  1184&nbsp;&nbsp;</span>
+<span id="L1185" class="ln">  1185&nbsp;&nbsp;</span><span class="comment">// isIdentASCII reports whether c is an ASCII identifier byte.</span>
+<span id="L1186" class="ln">  1186&nbsp;&nbsp;</span>func isIdentASCII(c byte) bool {
+<span id="L1187" class="ln">  1187&nbsp;&nbsp;</span>	<span class="comment">// mask is a 128-bit bitmap with 1s for allowed bytes,</span>
+<span id="L1188" class="ln">  1188&nbsp;&nbsp;</span>	<span class="comment">// so that the byte c can be tested with a shift and an and.</span>
+<span id="L1189" class="ln">  1189&nbsp;&nbsp;</span>	<span class="comment">// If c &gt; 128, then 1&lt;&lt;c and 1&lt;&lt;(c-64) will both be zero,</span>
+<span id="L1190" class="ln">  1190&nbsp;&nbsp;</span>	<span class="comment">// and this function will return false.</span>
+<span id="L1191" class="ln">  1191&nbsp;&nbsp;</span>	const mask = 0 |
+<span id="L1192" class="ln">  1192&nbsp;&nbsp;</span>		(1&lt;&lt;26-1)&lt;&lt;&#39;A&#39; |
+<span id="L1193" class="ln">  1193&nbsp;&nbsp;</span>		(1&lt;&lt;26-1)&lt;&lt;&#39;a&#39; |
+<span id="L1194" class="ln">  1194&nbsp;&nbsp;</span>		(1&lt;&lt;10-1)&lt;&lt;&#39;0&#39; |
+<span id="L1195" class="ln">  1195&nbsp;&nbsp;</span>		1&lt;&lt;&#39;_&#39;
+<span id="L1196" class="ln">  1196&nbsp;&nbsp;</span>
+<span id="L1197" class="ln">  1197&nbsp;&nbsp;</span>	return ((uint64(1)&lt;&lt;c)&amp;(mask&amp;(1&lt;&lt;64-1)) |
+<span id="L1198" class="ln">  1198&nbsp;&nbsp;</span>		(uint64(1)&lt;&lt;(c-64))&amp;(mask&gt;&gt;64)) != 0
+<span id="L1199" class="ln">  1199&nbsp;&nbsp;</span>}
+<span id="L1200" class="ln">  1200&nbsp;&nbsp;</span>
+<span id="L1201" class="ln">  1201&nbsp;&nbsp;</span><span class="comment">// validImportPath reports whether path is a valid import path.</span>
+<span id="L1202" class="ln">  1202&nbsp;&nbsp;</span><span class="comment">// It is a lightly edited copy of golang.org/x/mod/module.CheckImportPath.</span>
+<span id="L1203" class="ln">  1203&nbsp;&nbsp;</span>func validImportPath(path string) bool {
+<span id="L1204" class="ln">  1204&nbsp;&nbsp;</span>	if !utf8.ValidString(path) {
+<span id="L1205" class="ln">  1205&nbsp;&nbsp;</span>		return false
+<span id="L1206" class="ln">  1206&nbsp;&nbsp;</span>	}
+<span id="L1207" class="ln">  1207&nbsp;&nbsp;</span>	if path == &#34;&#34; {
+<span id="L1208" class="ln">  1208&nbsp;&nbsp;</span>		return false
+<span id="L1209" class="ln">  1209&nbsp;&nbsp;</span>	}
+<span id="L1210" class="ln">  1210&nbsp;&nbsp;</span>	if path[0] == &#39;-&#39; {
+<span id="L1211" class="ln">  1211&nbsp;&nbsp;</span>		return false
+<span id="L1212" class="ln">  1212&nbsp;&nbsp;</span>	}
+<span id="L1213" class="ln">  1213&nbsp;&nbsp;</span>	if strings.Contains(path, &#34;//&#34;) {
+<span id="L1214" class="ln">  1214&nbsp;&nbsp;</span>		return false
+<span id="L1215" class="ln">  1215&nbsp;&nbsp;</span>	}
+<span id="L1216" class="ln">  1216&nbsp;&nbsp;</span>	if path[len(path)-1] == &#39;/&#39; {
+<span id="L1217" class="ln">  1217&nbsp;&nbsp;</span>		return false
+<span id="L1218" class="ln">  1218&nbsp;&nbsp;</span>	}
+<span id="L1219" class="ln">  1219&nbsp;&nbsp;</span>	elemStart := 0
+<span id="L1220" class="ln">  1220&nbsp;&nbsp;</span>	for i, r := range path {
+<span id="L1221" class="ln">  1221&nbsp;&nbsp;</span>		if r == &#39;/&#39; {
+<span id="L1222" class="ln">  1222&nbsp;&nbsp;</span>			if !validImportPathElem(path[elemStart:i]) {
+<span id="L1223" class="ln">  1223&nbsp;&nbsp;</span>				return false
+<span id="L1224" class="ln">  1224&nbsp;&nbsp;</span>			}
+<span id="L1225" class="ln">  1225&nbsp;&nbsp;</span>			elemStart = i + 1
+<span id="L1226" class="ln">  1226&nbsp;&nbsp;</span>		}
+<span id="L1227" class="ln">  1227&nbsp;&nbsp;</span>	}
+<span id="L1228" class="ln">  1228&nbsp;&nbsp;</span>	return validImportPathElem(path[elemStart:])
+<span id="L1229" class="ln">  1229&nbsp;&nbsp;</span>}
+<span id="L1230" class="ln">  1230&nbsp;&nbsp;</span>
+<span id="L1231" class="ln">  1231&nbsp;&nbsp;</span>func validImportPathElem(elem string) bool {
+<span id="L1232" class="ln">  1232&nbsp;&nbsp;</span>	if elem == &#34;&#34; || elem[0] == &#39;.&#39; || elem[len(elem)-1] == &#39;.&#39; {
+<span id="L1233" class="ln">  1233&nbsp;&nbsp;</span>		return false
+<span id="L1234" class="ln">  1234&nbsp;&nbsp;</span>	}
+<span id="L1235" class="ln">  1235&nbsp;&nbsp;</span>	for i := 0; i &lt; len(elem); i++ {
+<span id="L1236" class="ln">  1236&nbsp;&nbsp;</span>		if !importPathOK(elem[i]) {
+<span id="L1237" class="ln">  1237&nbsp;&nbsp;</span>			return false
+<span id="L1238" class="ln">  1238&nbsp;&nbsp;</span>		}
+<span id="L1239" class="ln">  1239&nbsp;&nbsp;</span>	}
+<span id="L1240" class="ln">  1240&nbsp;&nbsp;</span>	return true
+<span id="L1241" class="ln">  1241&nbsp;&nbsp;</span>}
+<span id="L1242" class="ln">  1242&nbsp;&nbsp;</span>
+<span id="L1243" class="ln">  1243&nbsp;&nbsp;</span>func importPathOK(c byte) bool {
+<span id="L1244" class="ln">  1244&nbsp;&nbsp;</span>	<span class="comment">// mask is a 128-bit bitmap with 1s for allowed bytes,</span>
+<span id="L1245" class="ln">  1245&nbsp;&nbsp;</span>	<span class="comment">// so that the byte c can be tested with a shift and an and.</span>
+<span id="L1246" class="ln">  1246&nbsp;&nbsp;</span>	<span class="comment">// If c &gt; 128, then 1&lt;&lt;c and 1&lt;&lt;(c-64) will both be zero,</span>
+<span id="L1247" class="ln">  1247&nbsp;&nbsp;</span>	<span class="comment">// and this function will return false.</span>
+<span id="L1248" class="ln">  1248&nbsp;&nbsp;</span>	const mask = 0 |
+<span id="L1249" class="ln">  1249&nbsp;&nbsp;</span>		(1&lt;&lt;26-1)&lt;&lt;&#39;A&#39; |
+<span id="L1250" class="ln">  1250&nbsp;&nbsp;</span>		(1&lt;&lt;26-1)&lt;&lt;&#39;a&#39; |
+<span id="L1251" class="ln">  1251&nbsp;&nbsp;</span>		(1&lt;&lt;10-1)&lt;&lt;&#39;0&#39; |
+<span id="L1252" class="ln">  1252&nbsp;&nbsp;</span>		1&lt;&lt;&#39;-&#39; |
+<span id="L1253" class="ln">  1253&nbsp;&nbsp;</span>		1&lt;&lt;&#39;.&#39; |
+<span id="L1254" class="ln">  1254&nbsp;&nbsp;</span>		1&lt;&lt;&#39;~&#39; |
+<span id="L1255" class="ln">  1255&nbsp;&nbsp;</span>		1&lt;&lt;&#39;_&#39; |
+<span id="L1256" class="ln">  1256&nbsp;&nbsp;</span>		1&lt;&lt;&#39;+&#39;
+<span id="L1257" class="ln">  1257&nbsp;&nbsp;</span>
+<span id="L1258" class="ln">  1258&nbsp;&nbsp;</span>	return ((uint64(1)&lt;&lt;c)&amp;(mask&amp;(1&lt;&lt;64-1)) |
+<span id="L1259" class="ln">  1259&nbsp;&nbsp;</span>		(uint64(1)&lt;&lt;(c-64))&amp;(mask&gt;&gt;64)) != 0
+<span id="L1260" class="ln">  1260&nbsp;&nbsp;</span>}
+<span id="L1261" class="ln">  1261&nbsp;&nbsp;</span>
+</pre><p><a href="parse.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

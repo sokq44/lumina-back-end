@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>cmp - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package cmp
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "cmp"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+				<dd><a href="index.html#pkg-examples" class="examplesLink">Examples</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>Package cmp provides types and functions related to comparing
+ordered values.
+
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+			
+			
+				
+				<dd><a href="index.html#Compare">func Compare[T Ordered](x, y T) int</a></dd>
+			
+				
+				<dd><a href="index.html#Less">func Less[T Ordered](x, y T) bool</a></dd>
+			
+				
+				<dd><a href="index.html#Or">func Or[T comparable](vals ...T) T</a></dd>
+			
+			
+				
+				<dd><a href="index.html#Ordered">type Ordered</a></dd>
+				
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+		<div id="pkg-examples">
+			<h3>Examples</h3>
+			<div class="js-expandAll expandAll collapsed">(Expand All)</div>
+			<dl>
+			
+			<dd><a class="exampleLink" href="index.html#example_Or">Or</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Or_sort">Or (Sort)</a></dd>
+			
+			</dl>
+		</div>
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../src/cmp/cmp.go">cmp.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+		
+		
+			
+			
+			<h2 id="Compare">func <a href="../../src/cmp/cmp.go?s=1389:1424#L30">Compare</a>
+				<a class="permalink" href="index.html#Compare">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Compare[T <a href="index.html#Ordered">Ordered</a>](x, y T) <a href="../builtin/index.html#int">int</a></pre>
+			<p>Compare returns
+<pre>-1 if x is less than y,
+ 0 if x equals y,
++1 if x is greater than y.
+</pre>
+<p>For floating-point types, a NaN is considered less than any non-NaN,
+a NaN is considered equal to a NaN, and -0.0 is equal to 0.0.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Less">func <a href="../../src/cmp/cmp.go?s=1069:1102#L18">Less</a>
+				<a class="permalink" href="index.html#Less">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Less[T <a href="index.html#Ordered">Ordered</a>](x, y T) <a href="../builtin/index.html#bool">bool</a></pre>
+			<p>Less reports whether x is less than y.
+For floating-point types, a NaN is considered less than any non-NaN,
+and -0.0 is not less than (is equal to) 0.0.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Or">func <a href="../../src/cmp/cmp.go?s=1900:1934#L53">Or</a>
+				<a class="permalink" href="index.html#Or">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Or[T <a href="../builtin/index.html#comparable">comparable</a>](vals ...T) T</pre>
+			<p>Or returns the first of its arguments that is not equal to the zero value.
+If no argument is non-zero, it returns the zero value.
+
+			<div id="example_Or" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code"><span class="comment">// Suppose we have some user input</span>
+<span class="comment">// that may or may not be an empty string</span>
+userInput1 := &#34;&#34;
+userInput2 := &#34;some text&#34;
+
+fmt.Println(cmp.Or(userInput1, &#34;default&#34;))
+fmt.Println(cmp.Or(userInput2, &#34;default&#34;))
+fmt.Println(cmp.Or(userInput1, userInput2, &#34;default&#34;))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">default
+some text
+some text
+</pre>
+			
+		
+	</div>
+</div>
+<div id="example_Or_sort" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example (Sort)</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example (Sort)</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">type Order struct {
+    Product  string
+    Customer string
+    Price    float64
+}
+orders := []Order{
+    {&#34;foo&#34;, &#34;alice&#34;, 1.00},
+    {&#34;bar&#34;, &#34;bob&#34;, 3.00},
+    {&#34;baz&#34;, &#34;carol&#34;, 4.00},
+    {&#34;foo&#34;, &#34;alice&#34;, 2.00},
+    {&#34;bar&#34;, &#34;carol&#34;, 1.00},
+    {&#34;foo&#34;, &#34;bob&#34;, 4.00},
+}
+<span class="comment">// Sort by customer first, product second, and last by higher price</span>
+slices.SortFunc(orders, func(a, b Order) int {
+    return cmp.Or(
+        cmp.Compare(a.Customer, b.Customer),
+        cmp.Compare(a.Product, b.Product),
+        cmp.Compare(b.Price, a.Price),
+    )
+})
+for _, order := range orders {
+    fmt.Printf(&#34;%s %s %.2f\n&#34;, order.Product, order.Customer, order.Price)
+}
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">foo alice 2.00
+foo alice 1.00
+bar bob 3.00
+foo bob 4.00
+bar carol 1.00
+baz carol 4.00
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+		
+			
+			
+			<h2 id="Ordered">type <a href="../../src/cmp/cmp.go?s=742:905#L8">Ordered</a>
+				<a class="permalink" href="index.html#Ordered">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Ordered is a constraint that permits any ordered type: any type
+that supports the operators &lt; &lt;= &gt;= &gt;.
+If future releases of Go add new ordered types,
+this constraint will be modified to include them.
+<p>Note that floating-point types may contain NaN (&quot;not-a-number&quot;) values.
+An operator such as == or &lt; will always report false when
+comparing a NaN value with any other value, NaN or not.
+See the <a href="index.html#Compare">Compare</a> function for a consistent way to compare NaN values.
+
+			<pre>type Ordered interface {
+    ~<a href="../builtin/index.html#int">int</a> | ~<a href="../builtin/index.html#int8">int8</a> | ~<a href="../builtin/index.html#int16">int16</a> | ~<a href="../builtin/index.html#int32">int32</a> | ~<a href="../builtin/index.html#int64">int64</a> |
+        ~<a href="../builtin/index.html#uint">uint</a> | ~<a href="../builtin/index.html#uint8">uint8</a> | ~<a href="../builtin/index.html#uint16">uint16</a> | ~<a href="../builtin/index.html#uint32">uint32</a> | ~<a href="../builtin/index.html#uint64">uint64</a> | ~<a href="../builtin/index.html#uintptr">uintptr</a> |
+        ~<a href="../builtin/index.html#float32">float32</a> | ~<a href="../builtin/index.html#float64">float64</a> |
+        ~<a href="../builtin/index.html#string">string</a>
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+	
+
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

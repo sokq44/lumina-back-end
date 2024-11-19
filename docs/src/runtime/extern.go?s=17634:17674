@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>src/runtime/extern.go - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../index.html">GoDoc</a></div>
+<a href="./extern.go?s=17634:17674#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Source file
+    <a href="http://localhost:8080/src">src</a>/<a href="http://localhost:8080/src/runtime">runtime</a>/<span class="text-muted">extern.go</span>
+  </h1>
+
+
+
+
+
+  <h2>
+    Documentation: <a href="http://localhost:8080/pkg/runtime">runtime</a>
+  </h2>
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1&nbsp;&nbsp;</span><span class="comment">// Copyright 2009 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2&nbsp;&nbsp;</span><span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3&nbsp;&nbsp;</span><span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4&nbsp;&nbsp;</span>
+<span id="L5" class="ln">     5&nbsp;&nbsp;</span><span class="comment">/*
+<span id="L6" class="ln">     6&nbsp;&nbsp;</span>Package runtime contains operations that interact with Go&#39;s runtime system,
+<span id="L7" class="ln">     7&nbsp;&nbsp;</span>such as functions to control goroutines. It also includes the low-level type information
+<span id="L8" class="ln">     8&nbsp;&nbsp;</span>used by the reflect package; see [reflect]&#39;s documentation for the programmable
+<span id="L9" class="ln">     9&nbsp;&nbsp;</span>interface to the run-time type system.
+<span id="L10" class="ln">    10&nbsp;&nbsp;</span>
+<span id="L11" class="ln">    11&nbsp;&nbsp;</span># Environment Variables
+<span id="L12" class="ln">    12&nbsp;&nbsp;</span>
+<span id="L13" class="ln">    13&nbsp;&nbsp;</span>The following environment variables ($name or %name%, depending on the host
+<span id="L14" class="ln">    14&nbsp;&nbsp;</span>operating system) control the run-time behavior of Go programs. The meanings
+<span id="L15" class="ln">    15&nbsp;&nbsp;</span>and use may change from release to release.
+<span id="L16" class="ln">    16&nbsp;&nbsp;</span>
+<span id="L17" class="ln">    17&nbsp;&nbsp;</span>The GOGC variable sets the initial garbage collection target percentage.
+<span id="L18" class="ln">    18&nbsp;&nbsp;</span>A collection is triggered when the ratio of freshly allocated data to live data
+<span id="L19" class="ln">    19&nbsp;&nbsp;</span>remaining after the previous collection reaches this percentage. The default
+<span id="L20" class="ln">    20&nbsp;&nbsp;</span>is GOGC=100. Setting GOGC=off disables the garbage collector entirely.
+<span id="L21" class="ln">    21&nbsp;&nbsp;</span>[runtime/debug.SetGCPercent] allows changing this percentage at run time.
+<span id="L22" class="ln">    22&nbsp;&nbsp;</span>
+<span id="L23" class="ln">    23&nbsp;&nbsp;</span>The GOMEMLIMIT variable sets a soft memory limit for the runtime. This memory limit
+<span id="L24" class="ln">    24&nbsp;&nbsp;</span>includes the Go heap and all other memory managed by the runtime, and excludes
+<span id="L25" class="ln">    25&nbsp;&nbsp;</span>external memory sources such as mappings of the binary itself, memory managed in
+<span id="L26" class="ln">    26&nbsp;&nbsp;</span>other languages, and memory held by the operating system on behalf of the Go
+<span id="L27" class="ln">    27&nbsp;&nbsp;</span>program. GOMEMLIMIT is a numeric value in bytes with an optional unit suffix.
+<span id="L28" class="ln">    28&nbsp;&nbsp;</span>The supported suffixes include B, KiB, MiB, GiB, and TiB. These suffixes
+<span id="L29" class="ln">    29&nbsp;&nbsp;</span>represent quantities of bytes as defined by the IEC 80000-13 standard. That is,
+<span id="L30" class="ln">    30&nbsp;&nbsp;</span>they are based on powers of two: KiB means 2^10 bytes, MiB means 2^20 bytes,
+<span id="L31" class="ln">    31&nbsp;&nbsp;</span>and so on. The default setting is [math.MaxInt64], which effectively disables the
+<span id="L32" class="ln">    32&nbsp;&nbsp;</span>memory limit. [runtime/debug.SetMemoryLimit] allows changing this limit at run
+<span id="L33" class="ln">    33&nbsp;&nbsp;</span>time.
+<span id="L34" class="ln">    34&nbsp;&nbsp;</span>
+<span id="L35" class="ln">    35&nbsp;&nbsp;</span>The GODEBUG variable controls debugging variables within the runtime.
+<span id="L36" class="ln">    36&nbsp;&nbsp;</span>It is a comma-separated list of name=val pairs setting these named variables:
+<span id="L37" class="ln">    37&nbsp;&nbsp;</span>
+<span id="L38" class="ln">    38&nbsp;&nbsp;</span>	allocfreetrace: setting allocfreetrace=1 causes every allocation to be
+<span id="L39" class="ln">    39&nbsp;&nbsp;</span>	profiled and a stack trace printed on each object&#39;s allocation and free.
+<span id="L40" class="ln">    40&nbsp;&nbsp;</span>
+<span id="L41" class="ln">    41&nbsp;&nbsp;</span>	clobberfree: setting clobberfree=1 causes the garbage collector to
+<span id="L42" class="ln">    42&nbsp;&nbsp;</span>	clobber the memory content of an object with bad content when it frees
+<span id="L43" class="ln">    43&nbsp;&nbsp;</span>	the object.
+<span id="L44" class="ln">    44&nbsp;&nbsp;</span>
+<span id="L45" class="ln">    45&nbsp;&nbsp;</span>	cpu.*: cpu.all=off disables the use of all optional instruction set extensions.
+<span id="L46" class="ln">    46&nbsp;&nbsp;</span>	cpu.extension=off disables use of instructions from the specified instruction set extension.
+<span id="L47" class="ln">    47&nbsp;&nbsp;</span>	extension is the lower case name for the instruction set extension such as sse41 or avx
+<span id="L48" class="ln">    48&nbsp;&nbsp;</span>	as listed in internal/cpu package. As an example cpu.avx=off disables runtime detection
+<span id="L49" class="ln">    49&nbsp;&nbsp;</span>	and thereby use of AVX instructions.
+<span id="L50" class="ln">    50&nbsp;&nbsp;</span>
+<span id="L51" class="ln">    51&nbsp;&nbsp;</span>	cgocheck: setting cgocheck=0 disables all checks for packages
+<span id="L52" class="ln">    52&nbsp;&nbsp;</span>	using cgo to incorrectly pass Go pointers to non-Go code.
+<span id="L53" class="ln">    53&nbsp;&nbsp;</span>	Setting cgocheck=1 (the default) enables relatively cheap
+<span id="L54" class="ln">    54&nbsp;&nbsp;</span>	checks that may miss some errors. A more complete, but slow,
+<span id="L55" class="ln">    55&nbsp;&nbsp;</span>	cgocheck mode can be enabled using GOEXPERIMENT (which
+<span id="L56" class="ln">    56&nbsp;&nbsp;</span>	requires a rebuild), see https://pkg.go.dev/internal/goexperiment for details.
+<span id="L57" class="ln">    57&nbsp;&nbsp;</span>
+<span id="L58" class="ln">    58&nbsp;&nbsp;</span>	disablethp: setting disablethp=1 on Linux disables transparent huge pages for the heap.
+<span id="L59" class="ln">    59&nbsp;&nbsp;</span>	It has no effect on other platforms. disablethp is meant for compatibility with versions
+<span id="L60" class="ln">    60&nbsp;&nbsp;</span>	of Go before 1.21, which stopped working around a Linux kernel default that can result
+<span id="L61" class="ln">    61&nbsp;&nbsp;</span>	in significant memory overuse. See https://go.dev/issue/64332. This setting will be
+<span id="L62" class="ln">    62&nbsp;&nbsp;</span>	removed in a future release, so operators should tweak their Linux configuration to suit
+<span id="L63" class="ln">    63&nbsp;&nbsp;</span>	their needs before then. See https://go.dev/doc/gc-guide#Linux_transparent_huge_pages.
+<span id="L64" class="ln">    64&nbsp;&nbsp;</span>
+<span id="L65" class="ln">    65&nbsp;&nbsp;</span>	dontfreezetheworld: by default, the start of a fatal panic or throw
+<span id="L66" class="ln">    66&nbsp;&nbsp;</span>	&#34;freezes the world&#34;, preempting all threads to stop all running
+<span id="L67" class="ln">    67&nbsp;&nbsp;</span>	goroutines, which makes it possible to traceback all goroutines, and
+<span id="L68" class="ln">    68&nbsp;&nbsp;</span>	keeps their state close to the point of panic. Setting
+<span id="L69" class="ln">    69&nbsp;&nbsp;</span>	dontfreezetheworld=1 disables this preemption, allowing goroutines to
+<span id="L70" class="ln">    70&nbsp;&nbsp;</span>	continue executing during panic processing. Note that goroutines that
+<span id="L71" class="ln">    71&nbsp;&nbsp;</span>	naturally enter the scheduler will still stop. This can be useful when
+<span id="L72" class="ln">    72&nbsp;&nbsp;</span>	debugging the runtime scheduler, as freezetheworld perturbs scheduler
+<span id="L73" class="ln">    73&nbsp;&nbsp;</span>	state and thus may hide problems.
+<span id="L74" class="ln">    74&nbsp;&nbsp;</span>
+<span id="L75" class="ln">    75&nbsp;&nbsp;</span>	efence: setting efence=1 causes the allocator to run in a mode
+<span id="L76" class="ln">    76&nbsp;&nbsp;</span>	where each object is allocated on a unique page and addresses are
+<span id="L77" class="ln">    77&nbsp;&nbsp;</span>	never recycled.
+<span id="L78" class="ln">    78&nbsp;&nbsp;</span>
+<span id="L79" class="ln">    79&nbsp;&nbsp;</span>	gccheckmark: setting gccheckmark=1 enables verification of the
+<span id="L80" class="ln">    80&nbsp;&nbsp;</span>	garbage collector&#39;s concurrent mark phase by performing a
+<span id="L81" class="ln">    81&nbsp;&nbsp;</span>	second mark pass while the world is stopped.  If the second
+<span id="L82" class="ln">    82&nbsp;&nbsp;</span>	pass finds a reachable object that was not found by concurrent
+<span id="L83" class="ln">    83&nbsp;&nbsp;</span>	mark, the garbage collector will panic.
+<span id="L84" class="ln">    84&nbsp;&nbsp;</span>
+<span id="L85" class="ln">    85&nbsp;&nbsp;</span>	gcpacertrace: setting gcpacertrace=1 causes the garbage collector to
+<span id="L86" class="ln">    86&nbsp;&nbsp;</span>	print information about the internal state of the concurrent pacer.
+<span id="L87" class="ln">    87&nbsp;&nbsp;</span>
+<span id="L88" class="ln">    88&nbsp;&nbsp;</span>	gcshrinkstackoff: setting gcshrinkstackoff=1 disables moving goroutines
+<span id="L89" class="ln">    89&nbsp;&nbsp;</span>	onto smaller stacks. In this mode, a goroutine&#39;s stack can only grow.
+<span id="L90" class="ln">    90&nbsp;&nbsp;</span>
+<span id="L91" class="ln">    91&nbsp;&nbsp;</span>	gcstoptheworld: setting gcstoptheworld=1 disables concurrent garbage collection,
+<span id="L92" class="ln">    92&nbsp;&nbsp;</span>	making every garbage collection a stop-the-world event. Setting gcstoptheworld=2
+<span id="L93" class="ln">    93&nbsp;&nbsp;</span>	also disables concurrent sweeping after the garbage collection finishes.
+<span id="L94" class="ln">    94&nbsp;&nbsp;</span>
+<span id="L95" class="ln">    95&nbsp;&nbsp;</span>	gctrace: setting gctrace=1 causes the garbage collector to emit a single line to standard
+<span id="L96" class="ln">    96&nbsp;&nbsp;</span>	error at each collection, summarizing the amount of memory collected and the
+<span id="L97" class="ln">    97&nbsp;&nbsp;</span>	length of the pause. The format of this line is subject to change. Included in
+<span id="L98" class="ln">    98&nbsp;&nbsp;</span>	the explanation below is also the relevant runtime/metrics metric for each field.
+<span id="L99" class="ln">    99&nbsp;&nbsp;</span>	Currently, it is:
+<span id="L100" class="ln">   100&nbsp;&nbsp;</span>		gc # @#s #%: #+#+# ms clock, #+#/#/#+# ms cpu, #-&gt;#-&gt;# MB, # MB goal, # MB stacks, #MB globals, # P
+<span id="L101" class="ln">   101&nbsp;&nbsp;</span>	where the fields are as follows:
+<span id="L102" class="ln">   102&nbsp;&nbsp;</span>		gc #         the GC number, incremented at each GC
+<span id="L103" class="ln">   103&nbsp;&nbsp;</span>		@#s          time in seconds since program start
+<span id="L104" class="ln">   104&nbsp;&nbsp;</span>		#%           percentage of time spent in GC since program start
+<span id="L105" class="ln">   105&nbsp;&nbsp;</span>		#+...+#      wall-clock/CPU times for the phases of the GC
+<span id="L106" class="ln">   106&nbsp;&nbsp;</span>		#-&gt;#-&gt;# MB   heap size at GC start, at GC end, and live heap, or /gc/scan/heap:bytes
+<span id="L107" class="ln">   107&nbsp;&nbsp;</span>		# MB goal    goal heap size, or /gc/heap/goal:bytes
+<span id="L108" class="ln">   108&nbsp;&nbsp;</span>		# MB stacks  estimated scannable stack size, or /gc/scan/stack:bytes
+<span id="L109" class="ln">   109&nbsp;&nbsp;</span>		# MB globals scannable global size, or /gc/scan/globals:bytes
+<span id="L110" class="ln">   110&nbsp;&nbsp;</span>		# P          number of processors used, or /sched/gomaxprocs:threads
+<span id="L111" class="ln">   111&nbsp;&nbsp;</span>	The phases are stop-the-world (STW) sweep termination, concurrent
+<span id="L112" class="ln">   112&nbsp;&nbsp;</span>	mark and scan, and STW mark termination. The CPU times
+<span id="L113" class="ln">   113&nbsp;&nbsp;</span>	for mark/scan are broken down in to assist time (GC performed in
+<span id="L114" class="ln">   114&nbsp;&nbsp;</span>	line with allocation), background GC time, and idle GC time.
+<span id="L115" class="ln">   115&nbsp;&nbsp;</span>	If the line ends with &#34;(forced)&#34;, this GC was forced by a
+<span id="L116" class="ln">   116&nbsp;&nbsp;</span>	runtime.GC() call.
+<span id="L117" class="ln">   117&nbsp;&nbsp;</span>
+<span id="L118" class="ln">   118&nbsp;&nbsp;</span>	harddecommit: setting harddecommit=1 causes memory that is returned to the OS to
+<span id="L119" class="ln">   119&nbsp;&nbsp;</span>	also have protections removed on it. This is the only mode of operation on Windows,
+<span id="L120" class="ln">   120&nbsp;&nbsp;</span>	but is helpful in debugging scavenger-related issues on other platforms. Currently,
+<span id="L121" class="ln">   121&nbsp;&nbsp;</span>	only supported on Linux.
+<span id="L122" class="ln">   122&nbsp;&nbsp;</span>
+<span id="L123" class="ln">   123&nbsp;&nbsp;</span>	inittrace: setting inittrace=1 causes the runtime to emit a single line to standard
+<span id="L124" class="ln">   124&nbsp;&nbsp;</span>	error for each package with init work, summarizing the execution time and memory
+<span id="L125" class="ln">   125&nbsp;&nbsp;</span>	allocation. No information is printed for inits executed as part of plugin loading
+<span id="L126" class="ln">   126&nbsp;&nbsp;</span>	and for packages without both user defined and compiler generated init work.
+<span id="L127" class="ln">   127&nbsp;&nbsp;</span>	The format of this line is subject to change. Currently, it is:
+<span id="L128" class="ln">   128&nbsp;&nbsp;</span>		init # @#ms, # ms clock, # bytes, # allocs
+<span id="L129" class="ln">   129&nbsp;&nbsp;</span>	where the fields are as follows:
+<span id="L130" class="ln">   130&nbsp;&nbsp;</span>		init #      the package name
+<span id="L131" class="ln">   131&nbsp;&nbsp;</span>		@# ms       time in milliseconds when the init started since program start
+<span id="L132" class="ln">   132&nbsp;&nbsp;</span>		# clock     wall-clock time for package initialization work
+<span id="L133" class="ln">   133&nbsp;&nbsp;</span>		# bytes     memory allocated on the heap
+<span id="L134" class="ln">   134&nbsp;&nbsp;</span>		# allocs    number of heap allocations
+<span id="L135" class="ln">   135&nbsp;&nbsp;</span>
+<span id="L136" class="ln">   136&nbsp;&nbsp;</span>	madvdontneed: setting madvdontneed=0 will use MADV_FREE
+<span id="L137" class="ln">   137&nbsp;&nbsp;</span>	instead of MADV_DONTNEED on Linux when returning memory to the
+<span id="L138" class="ln">   138&nbsp;&nbsp;</span>	kernel. This is more efficient, but means RSS numbers will
+<span id="L139" class="ln">   139&nbsp;&nbsp;</span>	drop only when the OS is under memory pressure. On the BSDs and
+<span id="L140" class="ln">   140&nbsp;&nbsp;</span>	Illumos/Solaris, setting madvdontneed=1 will use MADV_DONTNEED instead
+<span id="L141" class="ln">   141&nbsp;&nbsp;</span>	of MADV_FREE. This is less efficient, but causes RSS numbers to drop
+<span id="L142" class="ln">   142&nbsp;&nbsp;</span>	more quickly.
+<span id="L143" class="ln">   143&nbsp;&nbsp;</span>
+<span id="L144" class="ln">   144&nbsp;&nbsp;</span>	memprofilerate: setting memprofilerate=X will update the value of runtime.MemProfileRate.
+<span id="L145" class="ln">   145&nbsp;&nbsp;</span>	When set to 0 memory profiling is disabled.  Refer to the description of
+<span id="L146" class="ln">   146&nbsp;&nbsp;</span>	MemProfileRate for the default value.
+<span id="L147" class="ln">   147&nbsp;&nbsp;</span>
+<span id="L148" class="ln">   148&nbsp;&nbsp;</span>	pagetrace: setting pagetrace=/path/to/file will write out a trace of page events
+<span id="L149" class="ln">   149&nbsp;&nbsp;</span>	that can be viewed, analyzed, and visualized using the x/debug/cmd/pagetrace tool.
+<span id="L150" class="ln">   150&nbsp;&nbsp;</span>	Build your program with GOEXPERIMENT=pagetrace to enable this functionality. Do not
+<span id="L151" class="ln">   151&nbsp;&nbsp;</span>	enable this functionality if your program is a setuid binary as it introduces a security
+<span id="L152" class="ln">   152&nbsp;&nbsp;</span>	risk in that scenario. Currently not supported on Windows, plan9 or js/wasm. Setting this
+<span id="L153" class="ln">   153&nbsp;&nbsp;</span>	option for some applications can produce large traces, so use with care.
+<span id="L154" class="ln">   154&nbsp;&nbsp;</span>
+<span id="L155" class="ln">   155&nbsp;&nbsp;</span>	panicnil: setting panicnil=1 disables the runtime error when calling panic with nil
+<span id="L156" class="ln">   156&nbsp;&nbsp;</span>	interface value or an untyped nil.
+<span id="L157" class="ln">   157&nbsp;&nbsp;</span>
+<span id="L158" class="ln">   158&nbsp;&nbsp;</span>	runtimecontentionstacks: setting runtimecontentionstacks=1 enables inclusion of call stacks
+<span id="L159" class="ln">   159&nbsp;&nbsp;</span>	related to contention on runtime-internal locks in the &#34;mutex&#34; profile, subject to the
+<span id="L160" class="ln">   160&nbsp;&nbsp;</span>	MutexProfileFraction setting. When runtimecontentionstacks=0, contention on
+<span id="L161" class="ln">   161&nbsp;&nbsp;</span>	runtime-internal locks will report as &#34;runtime._LostContendedRuntimeLock&#34;. When
+<span id="L162" class="ln">   162&nbsp;&nbsp;</span>	runtimecontentionstacks=1, the call stacks will correspond to the unlock call that released
+<span id="L163" class="ln">   163&nbsp;&nbsp;</span>	the lock. But instead of the value corresponding to the amount of contention that call
+<span id="L164" class="ln">   164&nbsp;&nbsp;</span>	stack caused, it corresponds to the amount of time the caller of unlock had to wait in its
+<span id="L165" class="ln">   165&nbsp;&nbsp;</span>	original call to lock. A future release is expected to align those and remove this setting.
+<span id="L166" class="ln">   166&nbsp;&nbsp;</span>
+<span id="L167" class="ln">   167&nbsp;&nbsp;</span>	invalidptr: invalidptr=1 (the default) causes the garbage collector and stack
+<span id="L168" class="ln">   168&nbsp;&nbsp;</span>	copier to crash the program if an invalid pointer value (for example, 1)
+<span id="L169" class="ln">   169&nbsp;&nbsp;</span>	is found in a pointer-typed location. Setting invalidptr=0 disables this check.
+<span id="L170" class="ln">   170&nbsp;&nbsp;</span>	This should only be used as a temporary workaround to diagnose buggy code.
+<span id="L171" class="ln">   171&nbsp;&nbsp;</span>	The real fix is to not store integers in pointer-typed locations.
+<span id="L172" class="ln">   172&nbsp;&nbsp;</span>
+<span id="L173" class="ln">   173&nbsp;&nbsp;</span>	sbrk: setting sbrk=1 replaces the memory allocator and garbage collector
+<span id="L174" class="ln">   174&nbsp;&nbsp;</span>	with a trivial allocator that obtains memory from the operating system and
+<span id="L175" class="ln">   175&nbsp;&nbsp;</span>	never reclaims any memory.
+<span id="L176" class="ln">   176&nbsp;&nbsp;</span>
+<span id="L177" class="ln">   177&nbsp;&nbsp;</span>	scavtrace: setting scavtrace=1 causes the runtime to emit a single line to standard
+<span id="L178" class="ln">   178&nbsp;&nbsp;</span>	error, roughly once per GC cycle, summarizing the amount of work done by the
+<span id="L179" class="ln">   179&nbsp;&nbsp;</span>	scavenger as well as the total amount of memory returned to the operating system
+<span id="L180" class="ln">   180&nbsp;&nbsp;</span>	and an estimate of physical memory utilization. The format of this line is subject
+<span id="L181" class="ln">   181&nbsp;&nbsp;</span>	to change, but currently it is:
+<span id="L182" class="ln">   182&nbsp;&nbsp;</span>		scav # KiB work (bg), # KiB work (eager), # KiB total, #% util
+<span id="L183" class="ln">   183&nbsp;&nbsp;</span>	where the fields are as follows:
+<span id="L184" class="ln">   184&nbsp;&nbsp;</span>		# KiB work (bg)    the amount of memory returned to the OS in the background since
+<span id="L185" class="ln">   185&nbsp;&nbsp;</span>		                   the last line
+<span id="L186" class="ln">   186&nbsp;&nbsp;</span>		# KiB work (eager) the amount of memory returned to the OS eagerly since the last line
+<span id="L187" class="ln">   187&nbsp;&nbsp;</span>		# KiB now          the amount of address space currently returned to the OS
+<span id="L188" class="ln">   188&nbsp;&nbsp;</span>		#% util            the fraction of all unscavenged heap memory which is in-use
+<span id="L189" class="ln">   189&nbsp;&nbsp;</span>	If the line ends with &#34;(forced)&#34;, then scavenging was forced by a
+<span id="L190" class="ln">   190&nbsp;&nbsp;</span>	debug.FreeOSMemory() call.
+<span id="L191" class="ln">   191&nbsp;&nbsp;</span>
+<span id="L192" class="ln">   192&nbsp;&nbsp;</span>	scheddetail: setting schedtrace=X and scheddetail=1 causes the scheduler to emit
+<span id="L193" class="ln">   193&nbsp;&nbsp;</span>	detailed multiline info every X milliseconds, describing state of the scheduler,
+<span id="L194" class="ln">   194&nbsp;&nbsp;</span>	processors, threads and goroutines.
+<span id="L195" class="ln">   195&nbsp;&nbsp;</span>
+<span id="L196" class="ln">   196&nbsp;&nbsp;</span>	schedtrace: setting schedtrace=X causes the scheduler to emit a single line to standard
+<span id="L197" class="ln">   197&nbsp;&nbsp;</span>	error every X milliseconds, summarizing the scheduler state.
+<span id="L198" class="ln">   198&nbsp;&nbsp;</span>
+<span id="L199" class="ln">   199&nbsp;&nbsp;</span>	tracebackancestors: setting tracebackancestors=N extends tracebacks with the stacks at
+<span id="L200" class="ln">   200&nbsp;&nbsp;</span>	which goroutines were created, where N limits the number of ancestor goroutines to
+<span id="L201" class="ln">   201&nbsp;&nbsp;</span>	report. This also extends the information returned by runtime.Stack. Ancestor&#39;s goroutine
+<span id="L202" class="ln">   202&nbsp;&nbsp;</span>	IDs will refer to the ID of the goroutine at the time of creation; it&#39;s possible for this
+<span id="L203" class="ln">   203&nbsp;&nbsp;</span>	ID to be reused for another goroutine. Setting N to 0 will report no ancestry information.
+<span id="L204" class="ln">   204&nbsp;&nbsp;</span>
+<span id="L205" class="ln">   205&nbsp;&nbsp;</span>	tracefpunwindoff: setting tracefpunwindoff=1 forces the execution tracer to
+<span id="L206" class="ln">   206&nbsp;&nbsp;</span>	use the runtime&#39;s default stack unwinder instead of frame pointer unwinding.
+<span id="L207" class="ln">   207&nbsp;&nbsp;</span>	This increases tracer overhead, but could be helpful as a workaround or for
+<span id="L208" class="ln">   208&nbsp;&nbsp;</span>	debugging unexpected regressions caused by frame pointer unwinding.
+<span id="L209" class="ln">   209&nbsp;&nbsp;</span>
+<span id="L210" class="ln">   210&nbsp;&nbsp;</span>	traceadvanceperiod: the approximate period in nanoseconds between trace generations. Only
+<span id="L211" class="ln">   211&nbsp;&nbsp;</span>	applies if a program is built with GOEXPERIMENT=exectracer2. Used primarily for testing
+<span id="L212" class="ln">   212&nbsp;&nbsp;</span>	and debugging the execution tracer.
+<span id="L213" class="ln">   213&nbsp;&nbsp;</span>
+<span id="L214" class="ln">   214&nbsp;&nbsp;</span>	asyncpreemptoff: asyncpreemptoff=1 disables signal-based
+<span id="L215" class="ln">   215&nbsp;&nbsp;</span>	asynchronous goroutine preemption. This makes some loops
+<span id="L216" class="ln">   216&nbsp;&nbsp;</span>	non-preemptible for long periods, which may delay GC and
+<span id="L217" class="ln">   217&nbsp;&nbsp;</span>	goroutine scheduling. This is useful for debugging GC issues
+<span id="L218" class="ln">   218&nbsp;&nbsp;</span>	because it also disables the conservative stack scanning used
+<span id="L219" class="ln">   219&nbsp;&nbsp;</span>	for asynchronously preempted goroutines.
+<span id="L220" class="ln">   220&nbsp;&nbsp;</span>
+<span id="L221" class="ln">   221&nbsp;&nbsp;</span>The [net] and [net/http] packages also refer to debugging variables in GODEBUG.
+<span id="L222" class="ln">   222&nbsp;&nbsp;</span>See the documentation for those packages for details.
+<span id="L223" class="ln">   223&nbsp;&nbsp;</span>
+<span id="L224" class="ln">   224&nbsp;&nbsp;</span>The GOMAXPROCS variable limits the number of operating system threads that
+<span id="L225" class="ln">   225&nbsp;&nbsp;</span>can execute user-level Go code simultaneously. There is no limit to the number of threads
+<span id="L226" class="ln">   226&nbsp;&nbsp;</span>that can be blocked in system calls on behalf of Go code; those do not count against
+<span id="L227" class="ln">   227&nbsp;&nbsp;</span>the GOMAXPROCS limit. This package&#39;s [GOMAXPROCS] function queries and changes
+<span id="L228" class="ln">   228&nbsp;&nbsp;</span>the limit.
+<span id="L229" class="ln">   229&nbsp;&nbsp;</span>
+<span id="L230" class="ln">   230&nbsp;&nbsp;</span>The GORACE variable configures the race detector, for programs built using -race.
+<span id="L231" class="ln">   231&nbsp;&nbsp;</span>See the [Race Detector article] for details.
+<span id="L232" class="ln">   232&nbsp;&nbsp;</span>
+<span id="L233" class="ln">   233&nbsp;&nbsp;</span>The GOTRACEBACK variable controls the amount of output generated when a Go
+<span id="L234" class="ln">   234&nbsp;&nbsp;</span>program fails due to an unrecovered panic or an unexpected runtime condition.
+<span id="L235" class="ln">   235&nbsp;&nbsp;</span>By default, a failure prints a stack trace for the current goroutine,
+<span id="L236" class="ln">   236&nbsp;&nbsp;</span>eliding functions internal to the run-time system, and then exits with exit code 2.
+<span id="L237" class="ln">   237&nbsp;&nbsp;</span>The failure prints stack traces for all goroutines if there is no current goroutine
+<span id="L238" class="ln">   238&nbsp;&nbsp;</span>or the failure is internal to the run-time.
+<span id="L239" class="ln">   239&nbsp;&nbsp;</span>GOTRACEBACK=none omits the goroutine stack traces entirely.
+<span id="L240" class="ln">   240&nbsp;&nbsp;</span>GOTRACEBACK=single (the default) behaves as described above.
+<span id="L241" class="ln">   241&nbsp;&nbsp;</span>GOTRACEBACK=all adds stack traces for all user-created goroutines.
+<span id="L242" class="ln">   242&nbsp;&nbsp;</span>GOTRACEBACK=system is like “all” but adds stack frames for run-time functions
+<span id="L243" class="ln">   243&nbsp;&nbsp;</span>and shows goroutines created internally by the run-time.
+<span id="L244" class="ln">   244&nbsp;&nbsp;</span>GOTRACEBACK=crash is like “system” but crashes in an operating system-specific
+<span id="L245" class="ln">   245&nbsp;&nbsp;</span>manner instead of exiting. For example, on Unix systems, the crash raises
+<span id="L246" class="ln">   246&nbsp;&nbsp;</span>SIGABRT to trigger a core dump.
+<span id="L247" class="ln">   247&nbsp;&nbsp;</span>GOTRACEBACK=wer is like “crash” but doesn&#39;t disable Windows Error Reporting (WER).
+<span id="L248" class="ln">   248&nbsp;&nbsp;</span>For historical reasons, the GOTRACEBACK settings 0, 1, and 2 are synonyms for
+<span id="L249" class="ln">   249&nbsp;&nbsp;</span>none, all, and system, respectively.
+<span id="L250" class="ln">   250&nbsp;&nbsp;</span>The [runtime/debug.SetTraceback] function allows increasing the
+<span id="L251" class="ln">   251&nbsp;&nbsp;</span>amount of output at run time, but it cannot reduce the amount below that
+<span id="L252" class="ln">   252&nbsp;&nbsp;</span>specified by the environment variable.
+<span id="L253" class="ln">   253&nbsp;&nbsp;</span>
+<span id="L254" class="ln">   254&nbsp;&nbsp;</span>The GOARCH, GOOS, GOPATH, and GOROOT environment variables complete
+<span id="L255" class="ln">   255&nbsp;&nbsp;</span>the set of Go environment variables. They influence the building of Go programs
+<span id="L256" class="ln">   256&nbsp;&nbsp;</span>(see [cmd/go] and [go/build]).
+<span id="L257" class="ln">   257&nbsp;&nbsp;</span>GOARCH, GOOS, and GOROOT are recorded at compile time and made available by
+<span id="L258" class="ln">   258&nbsp;&nbsp;</span>constants or functions in this package, but they do not influence the execution
+<span id="L259" class="ln">   259&nbsp;&nbsp;</span>of the run-time system.
+<span id="L260" class="ln">   260&nbsp;&nbsp;</span>
+<span id="L261" class="ln">   261&nbsp;&nbsp;</span># Security
+<span id="L262" class="ln">   262&nbsp;&nbsp;</span>
+<span id="L263" class="ln">   263&nbsp;&nbsp;</span>On Unix platforms, Go&#39;s runtime system behaves slightly differently when a
+<span id="L264" class="ln">   264&nbsp;&nbsp;</span>binary is setuid/setgid or executed with setuid/setgid-like properties, in order
+<span id="L265" class="ln">   265&nbsp;&nbsp;</span>to prevent dangerous behaviors. On Linux this is determined by checking for the
+<span id="L266" class="ln">   266&nbsp;&nbsp;</span>AT_SECURE flag in the auxiliary vector, on the BSDs and Solaris/Illumos it is
+<span id="L267" class="ln">   267&nbsp;&nbsp;</span>determined by checking the issetugid syscall, and on AIX it is determined by
+<span id="L268" class="ln">   268&nbsp;&nbsp;</span>checking if the uid/gid match the effective uid/gid.
+<span id="L269" class="ln">   269&nbsp;&nbsp;</span>
+<span id="L270" class="ln">   270&nbsp;&nbsp;</span>When the runtime determines the binary is setuid/setgid-like, it does three main
+<span id="L271" class="ln">   271&nbsp;&nbsp;</span>things:
+<span id="L272" class="ln">   272&nbsp;&nbsp;</span>  - The standard input/output file descriptors (0, 1, 2) are checked to be open.
+<span id="L273" class="ln">   273&nbsp;&nbsp;</span>    If any of them are closed, they are opened pointing at /dev/null.
+<span id="L274" class="ln">   274&nbsp;&nbsp;</span>  - The value of the GOTRACEBACK environment variable is set to &#39;none&#39;.
+<span id="L275" class="ln">   275&nbsp;&nbsp;</span>  - When a signal is received that terminates the program, or the program
+<span id="L276" class="ln">   276&nbsp;&nbsp;</span>    encounters an unrecoverable panic that would otherwise override the value
+<span id="L277" class="ln">   277&nbsp;&nbsp;</span>    of GOTRACEBACK, the goroutine stack, registers, and other memory related
+<span id="L278" class="ln">   278&nbsp;&nbsp;</span>    information are omitted.
+<span id="L279" class="ln">   279&nbsp;&nbsp;</span>
+<span id="L280" class="ln">   280&nbsp;&nbsp;</span>[Race Detector article]: https://go.dev/doc/articles/race_detector
+<span id="L281" class="ln">   281&nbsp;&nbsp;</span>*/</span>
+<span id="L282" class="ln">   282&nbsp;&nbsp;</span>package runtime
+<span id="L283" class="ln">   283&nbsp;&nbsp;</span>
+<span id="L284" class="ln">   284&nbsp;&nbsp;</span>import (
+<span id="L285" class="ln">   285&nbsp;&nbsp;</span>	&#34;internal/goarch&#34;
+<span id="L286" class="ln">   286&nbsp;&nbsp;</span>	&#34;internal/goos&#34;
+<span id="L287" class="ln">   287&nbsp;&nbsp;</span>)
+<span id="L288" class="ln">   288&nbsp;&nbsp;</span>
+<span id="L289" class="ln">   289&nbsp;&nbsp;</span><span class="comment">// Caller reports file and line number information about function invocations on</span>
+<span id="L290" class="ln">   290&nbsp;&nbsp;</span><span class="comment">// the calling goroutine&#39;s stack. The argument skip is the number of stack frames</span>
+<span id="L291" class="ln">   291&nbsp;&nbsp;</span><span class="comment">// to ascend, with 0 identifying the caller of Caller.  (For historical reasons the</span>
+<span id="L292" class="ln">   292&nbsp;&nbsp;</span><span class="comment">// meaning of skip differs between Caller and [Callers].) The return values report the</span>
+<span id="L293" class="ln">   293&nbsp;&nbsp;</span><span class="comment">// program counter, file name, and line number within the file of the corresponding</span>
+<span id="L294" class="ln">   294&nbsp;&nbsp;</span><span class="comment">// call. The boolean ok is false if it was not possible to recover the information.</span>
+<span id="L295" class="ln">   295&nbsp;&nbsp;</span>func Caller(skip int) (pc uintptr, file string, line int, ok bool) {
+<span id="L296" class="ln">   296&nbsp;&nbsp;</span>	rpc := make([]uintptr, 1)
+<span id="L297" class="ln">   297&nbsp;&nbsp;</span>	n := callers(skip+1, rpc[:])
+<span id="L298" class="ln">   298&nbsp;&nbsp;</span>	if n &lt; 1 {
+<span id="L299" class="ln">   299&nbsp;&nbsp;</span>		return
+<span id="L300" class="ln">   300&nbsp;&nbsp;</span>	}
+<span id="L301" class="ln">   301&nbsp;&nbsp;</span>	frame, _ := CallersFrames(rpc).Next()
+<span id="L302" class="ln">   302&nbsp;&nbsp;</span>	return frame.PC, frame.File, frame.Line, frame.PC != 0
+<span id="L303" class="ln">   303&nbsp;&nbsp;</span>}
+<span id="L304" class="ln">   304&nbsp;&nbsp;</span>
+<span id="L305" class="ln">   305&nbsp;&nbsp;</span><span class="comment">// Callers fills the slice pc with the return program counters of function invocations</span>
+<span id="L306" class="ln">   306&nbsp;&nbsp;</span><span class="comment">// on the calling goroutine&#39;s stack. The argument skip is the number of stack frames</span>
+<span id="L307" class="ln">   307&nbsp;&nbsp;</span><span class="comment">// to skip before recording in pc, with 0 identifying the frame for Callers itself and</span>
+<span id="L308" class="ln">   308&nbsp;&nbsp;</span><span class="comment">// 1 identifying the caller of Callers.</span>
+<span id="L309" class="ln">   309&nbsp;&nbsp;</span><span class="comment">// It returns the number of entries written to pc.</span>
+<span id="L310" class="ln">   310&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L311" class="ln">   311&nbsp;&nbsp;</span><span class="comment">// To translate these PCs into symbolic information such as function</span>
+<span id="L312" class="ln">   312&nbsp;&nbsp;</span><span class="comment">// names and line numbers, use [CallersFrames]. CallersFrames accounts</span>
+<span id="L313" class="ln">   313&nbsp;&nbsp;</span><span class="comment">// for inlined functions and adjusts the return program counters into</span>
+<span id="L314" class="ln">   314&nbsp;&nbsp;</span><span class="comment">// call program counters. Iterating over the returned slice of PCs</span>
+<span id="L315" class="ln">   315&nbsp;&nbsp;</span><span class="comment">// directly is discouraged, as is using [FuncForPC] on any of the</span>
+<span id="L316" class="ln">   316&nbsp;&nbsp;</span><span class="comment">// returned PCs, since these cannot account for inlining or return</span>
+<span id="L317" class="ln">   317&nbsp;&nbsp;</span><span class="comment">// program counter adjustment.</span>
+<span id="L318" class="ln">   318&nbsp;&nbsp;</span><span class="selection">func Callers(skip int, pc []uintptr) int</span> {
+<span id="L319" class="ln">   319&nbsp;&nbsp;</span>	<span class="comment">// runtime.callers uses pc.array==nil as a signal</span>
+<span id="L320" class="ln">   320&nbsp;&nbsp;</span>	<span class="comment">// to print a stack trace. Pick off 0-length pc here</span>
+<span id="L321" class="ln">   321&nbsp;&nbsp;</span>	<span class="comment">// so that we don&#39;t let a nil pc slice get to it.</span>
+<span id="L322" class="ln">   322&nbsp;&nbsp;</span>	if len(pc) == 0 {
+<span id="L323" class="ln">   323&nbsp;&nbsp;</span>		return 0
+<span id="L324" class="ln">   324&nbsp;&nbsp;</span>	}
+<span id="L325" class="ln">   325&nbsp;&nbsp;</span>	return callers(skip, pc)
+<span id="L326" class="ln">   326&nbsp;&nbsp;</span>}
+<span id="L327" class="ln">   327&nbsp;&nbsp;</span>
+<span id="L328" class="ln">   328&nbsp;&nbsp;</span>var defaultGOROOT string <span class="comment">// set by cmd/link</span>
+<span id="L329" class="ln">   329&nbsp;&nbsp;</span>
+<span id="L330" class="ln">   330&nbsp;&nbsp;</span><span class="comment">// GOROOT returns the root of the Go tree. It uses the</span>
+<span id="L331" class="ln">   331&nbsp;&nbsp;</span><span class="comment">// GOROOT environment variable, if set at process start,</span>
+<span id="L332" class="ln">   332&nbsp;&nbsp;</span><span class="comment">// or else the root used during the Go build.</span>
+<span id="L333" class="ln">   333&nbsp;&nbsp;</span>func GOROOT() string {
+<span id="L334" class="ln">   334&nbsp;&nbsp;</span>	s := gogetenv(&#34;GOROOT&#34;)
+<span id="L335" class="ln">   335&nbsp;&nbsp;</span>	if s != &#34;&#34; {
+<span id="L336" class="ln">   336&nbsp;&nbsp;</span>		return s
+<span id="L337" class="ln">   337&nbsp;&nbsp;</span>	}
+<span id="L338" class="ln">   338&nbsp;&nbsp;</span>	return defaultGOROOT
+<span id="L339" class="ln">   339&nbsp;&nbsp;</span>}
+<span id="L340" class="ln">   340&nbsp;&nbsp;</span>
+<span id="L341" class="ln">   341&nbsp;&nbsp;</span><span class="comment">// buildVersion is the Go tree&#39;s version string at build time.</span>
+<span id="L342" class="ln">   342&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L343" class="ln">   343&nbsp;&nbsp;</span><span class="comment">// If any GOEXPERIMENTs are set to non-default values, it will include</span>
+<span id="L344" class="ln">   344&nbsp;&nbsp;</span><span class="comment">// &#34;X:&lt;GOEXPERIMENT&gt;&#34;.</span>
+<span id="L345" class="ln">   345&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L346" class="ln">   346&nbsp;&nbsp;</span><span class="comment">// This is set by the linker.</span>
+<span id="L347" class="ln">   347&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L348" class="ln">   348&nbsp;&nbsp;</span><span class="comment">// This is accessed by &#34;go version &lt;binary&gt;&#34;.</span>
+<span id="L349" class="ln">   349&nbsp;&nbsp;</span>var buildVersion string
+<span id="L350" class="ln">   350&nbsp;&nbsp;</span>
+<span id="L351" class="ln">   351&nbsp;&nbsp;</span><span class="comment">// Version returns the Go tree&#39;s version string.</span>
+<span id="L352" class="ln">   352&nbsp;&nbsp;</span><span class="comment">// It is either the commit hash and date at the time of the build or,</span>
+<span id="L353" class="ln">   353&nbsp;&nbsp;</span><span class="comment">// when possible, a release tag like &#34;go1.3&#34;.</span>
+<span id="L354" class="ln">   354&nbsp;&nbsp;</span>func Version() string {
+<span id="L355" class="ln">   355&nbsp;&nbsp;</span>	return buildVersion
+<span id="L356" class="ln">   356&nbsp;&nbsp;</span>}
+<span id="L357" class="ln">   357&nbsp;&nbsp;</span>
+<span id="L358" class="ln">   358&nbsp;&nbsp;</span><span class="comment">// GOOS is the running program&#39;s operating system target:</span>
+<span id="L359" class="ln">   359&nbsp;&nbsp;</span><span class="comment">// one of darwin, freebsd, linux, and so on.</span>
+<span id="L360" class="ln">   360&nbsp;&nbsp;</span><span class="comment">// To view possible combinations of GOOS and GOARCH, run &#34;go tool dist list&#34;.</span>
+<span id="L361" class="ln">   361&nbsp;&nbsp;</span>const GOOS string = goos.GOOS
+<span id="L362" class="ln">   362&nbsp;&nbsp;</span>
+<span id="L363" class="ln">   363&nbsp;&nbsp;</span><span class="comment">// GOARCH is the running program&#39;s architecture target:</span>
+<span id="L364" class="ln">   364&nbsp;&nbsp;</span><span class="comment">// one of 386, amd64, arm, s390x, and so on.</span>
+<span id="L365" class="ln">   365&nbsp;&nbsp;</span>const GOARCH string = goarch.GOARCH
+<span id="L366" class="ln">   366&nbsp;&nbsp;</span>
+</pre><p><a href="extern.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

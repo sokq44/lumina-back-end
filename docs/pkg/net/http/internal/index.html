@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>internal - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package internal
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "net/http/internal"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+			
+				<dd><a href="index.html#pkg-subdirectories">Subdirectories</a></dd>
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>Package internal contains HTTP internals shared by net/http and
+net/http/httputil.
+
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+			
+				<dd><a href="index.html#pkg-variables">Variables</a></dd>
+			
+			
+				
+				<dd><a href="index.html#NewChunkedReader">func NewChunkedReader(r io.Reader) io.Reader</a></dd>
+			
+				
+				<dd><a href="index.html#NewChunkedWriter">func NewChunkedWriter(w io.Writer) io.WriteCloser</a></dd>
+			
+			
+				
+				<dd><a href="index.html#FlushAfterChunkWriter">type FlushAfterChunkWriter</a></dd>
+				
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../../../src/net/http/internal/chunked.go">chunked.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+		
+			<h2 id="pkg-variables">Variables</h2>
+			
+				
+				<pre>var <span id="ErrLineTooLong">ErrLineTooLong</span> = <a href="../../../errors/index.html">errors</a>.<a href="../../../errors/index.html#New">New</a>(&#34;header line too long&#34;)</pre>
+			
+		
+		
+			
+			
+			<h2 id="NewChunkedReader">func <a href="../../../../src/net/http/internal/chunked.go?s=859:903#L19">NewChunkedReader</a>
+				<a class="permalink" href="index.html#NewChunkedReader">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func NewChunkedReader(r <a href="../../../io/index.html">io</a>.<a href="../../../io/index.html#Reader">Reader</a>) <a href="../../../io/index.html">io</a>.<a href="../../../io/index.html#Reader">Reader</a></pre>
+			<p>NewChunkedReader returns a new chunkedReader that translates the data read from r
+out of HTTP &quot;chunked&quot; format before returning it.
+The chunkedReader returns <a href="http://localhost:8080/io#EOF">io.EOF</a> when the final 0-length chunk is read.
+<p>NewChunkedReader is not needed by normal applications. The http package
+automatically decodes chunking when reading response bodies.
+
+			
+			
+
+		
+			
+			
+			<h2 id="NewChunkedWriter">func <a href="../../../../src/net/http/internal/chunked.go?s=5968:6017#L202">NewChunkedWriter</a>
+				<a class="permalink" href="index.html#NewChunkedWriter">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func NewChunkedWriter(w <a href="../../../io/index.html">io</a>.<a href="../../../io/index.html#Writer">Writer</a>) <a href="../../../io/index.html">io</a>.<a href="../../../io/index.html#WriteCloser">WriteCloser</a></pre>
+			<p>NewChunkedWriter returns a new chunkedWriter that translates writes into HTTP
+&quot;chunked&quot; format before writing them to w. Closing the returned chunkedWriter
+sends the final 0-length chunk that marks the end of the stream but does
+not send the final CRLF that appears after trailers; trailers and the last
+CRLF must be written separately.
+<p>NewChunkedWriter is not needed by normal applications. The http
+package adds chunking automatically if handlers don&apos;t set a
+Content-Length header. Using newChunkedWriter inside a handler
+would result in double chunking or chunking with a Content-Length
+length, both of which are wrong.
+
+			
+			
+
+		
+		
+			
+			
+			<h2 id="FlushAfterChunkWriter">type <a href="../../../../src/net/http/internal/chunked.go?s=7413:7465#L251">FlushAfterChunkWriter</a>
+				<a class="permalink" href="index.html#FlushAfterChunkWriter">&#xb6;</a>
+				
+				
+			</h2>
+			<p>FlushAfterChunkWriter signals from the caller of <a href="index.html#NewChunkedWriter">NewChunkedWriter</a>
+that each chunk should be followed by a flush. It is used by the
+<a href="http://localhost:8080/net/http#Transport">net/http.Transport</a> code to keep the buffering behavior for headers and
+trailers, but flush out chunks aggressively in the middle for
+request bodies which may be generated slowly. See Issue 6574.
+
+			<pre>type FlushAfterChunkWriter struct {
+    *<a href="../../../bufio/index.html">bufio</a>.<a href="../../../bufio/index.html#Writer">Writer</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+	
+
+	
+
+
+
+
+
+	
+	
+		<h2 id="pkg-subdirectories">Subdirectories</h2>
+	
+	<div class="pkg-dir">
+		<table>
+			<tr>
+				<th class="pkg-name">Name</th>
+				<th class="pkg-synopsis">Synopsis</th>
+			</tr>
+
+			
+			<tr>
+				<td colspan="2"><a href="../index.html">..</a></td>
+			</tr>
+			
+
+			
+		</table>
+	</div>
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

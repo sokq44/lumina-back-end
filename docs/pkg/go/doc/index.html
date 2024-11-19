@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>doc - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package doc
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "go/doc"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+				<dd><a href="index.html#pkg-examples" class="examplesLink">Examples</a></dd>
+			
+			
+				<dd><a href="index.html#pkg-subdirectories">Subdirectories</a></dd>
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>Package doc extracts source code documentation from a Go AST.
+
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+			
+				<dd><a href="index.html#pkg-variables">Variables</a></dd>
+			
+			
+				
+				<dd><a href="index.html#IsPredeclared">func IsPredeclared(s string) bool</a></dd>
+			
+				
+				<dd><a href="index.html#Synopsis">func Synopsis(text string) string</a></dd>
+			
+				
+				<dd><a href="index.html#ToHTML">func ToHTML(w io.Writer, text string, words map[string]string)</a></dd>
+			
+				
+				<dd><a href="index.html#ToText">func ToText(w io.Writer, text string, prefix, codePrefix string, width int)</a></dd>
+			
+			
+				
+				<dd><a href="index.html#Example">type Example</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Examples">func Examples(testFiles ...*ast.File) []*Example</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#Filter">type Filter</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#Func">type Func</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#Mode">type Mode</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#Note">type Note</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#Package">type Package</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#New">func New(pkg *ast.Package, importPath string, mode Mode) *Package</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewFromFiles">func NewFromFiles(fset *token.FileSet, files []*ast.File, importPath string, opts ...any) (*Package, error)</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Package.Filter">func (p *Package) Filter(f Filter)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Package.HTML">func (p *Package) HTML(text string) []byte</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Package.Markdown">func (p *Package) Markdown(text string) []byte</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Package.Parser">func (p *Package) Parser() *comment.Parser</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Package.Printer">func (p *Package) Printer() *comment.Printer</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Package.Synopsis">func (p *Package) Synopsis(text string) string</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Package.Text">func (p *Package) Text(text string) []byte</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Type">type Type</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#Value">type Value</a></dd>
+				
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+		<div id="pkg-examples">
+			<h3>Examples</h3>
+			<div class="js-expandAll expandAll collapsed">(Expand All)</div>
+			<dl>
+			
+			<dd><a class="exampleLink" href="index.html#example_NewFromFiles">NewFromFiles</a></dd>
+			
+			</dl>
+		</div>
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../../src/go/doc/comment.go">comment.go</a>
+			
+				<a href="../../../src/go/doc/doc.go">doc.go</a>
+			
+				<a href="../../../src/go/doc/example.go">example.go</a>
+			
+				<a href="../../../src/go/doc/exports.go">exports.go</a>
+			
+				<a href="../../../src/go/doc/filter.go">filter.go</a>
+			
+				<a href="../../../src/go/doc/reader.go">reader.go</a>
+			
+				<a href="../../../src/go/doc/synopsis.go">synopsis.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+		
+			<h2 id="pkg-variables">Variables</h2>
+			
+				<p>IllegalPrefixes is a list of lower-case prefixes that identify
+a comment as not being a doc comment.
+This helps to avoid misinterpreting the common mistake
+of a copyright notice immediately before a package statement
+as being a doc comment.
+
+				<pre>var <span id="IllegalPrefixes">IllegalPrefixes</span> = []<a href="../../builtin/index.html#string">string</a>{
+    &#34;copyright&#34;,
+    &#34;all rights&#34;,
+    &#34;author&#34;,
+}</pre>
+			
+		
+		
+			
+			
+			<h2 id="IsPredeclared">func <a href="../../../src/go/doc/reader.go?s=26884:26917#L940">IsPredeclared</a>
+				<a class="permalink" href="index.html#IsPredeclared">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func IsPredeclared(s <a href="../../builtin/index.html#string">string</a>) <a href="../../builtin/index.html#bool">bool</a></pre>
+			<p>IsPredeclared reports whether s is a predeclared identifier.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Synopsis">func <a href="../../../src/go/doc/synopsis.go?s=900:933#L27">Synopsis</a>
+				<a class="permalink" href="index.html#Synopsis">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Synopsis(text <a href="../../builtin/index.html#string">string</a>) <a href="../../builtin/index.html#string">string</a></pre>
+			<p>Synopsis returns a cleaned version of the first sentence in text.
+<p>Deprecated: New programs should use <a href="index.html#Package.Synopsis">Package.Synopsis</a> instead,
+which handles links in text properly.
+
+			
+			
+
+		
+			
+			
+			<h2 id="ToHTML">func <a href="../../../src/go/doc/comment.go?s=822:884#L22">ToHTML</a>
+				<a class="permalink" href="index.html#ToHTML">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func ToHTML(w <a href="../../io/index.html">io</a>.<a href="../../io/index.html#Writer">Writer</a>, text <a href="../../builtin/index.html#string">string</a>, words map[<a href="../../builtin/index.html#string">string</a>]<a href="../../builtin/index.html#string">string</a>)</pre>
+			<p>ToHTML converts comment text to formatted HTML.
+<p>Deprecated: ToHTML cannot identify documentation links
+in the doc comment, because they depend on knowing what
+package the text came from, which is not included in this API.
+<p>Given the *<a href="index.html#Package">doc.Package</a> p where text was found,
+ToHTML(w, text, nil) can be replaced by:
+<pre>w.Write(p.HTML(text))
+</pre>
+<p>which is in turn shorthand for:
+<pre>w.Write(p.Printer().HTML(p.Parser().Parse(text)))
+</pre>
+<p>If words may be non-nil, the longer replacement is:
+<pre>parser := p.Parser()
+parser.Words = words
+w.Write(p.Printer().HTML(parser.Parse(d)))
+</pre>
+
+			
+			
+
+		
+			
+			
+			<h2 id="ToText">func <a href="../../../src/go/doc/comment.go?s=1727:1802#L53">ToText</a>
+				<a class="permalink" href="index.html#ToText">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func ToText(w <a href="../../io/index.html">io</a>.<a href="../../io/index.html#Writer">Writer</a>, text <a href="../../builtin/index.html#string">string</a>, prefix, codePrefix <a href="../../builtin/index.html#string">string</a>, width <a href="../../builtin/index.html#int">int</a>)</pre>
+			<p>ToText converts comment text to formatted text.
+<p>Deprecated: ToText cannot identify documentation links
+in the doc comment, because they depend on knowing what
+package the text came from, which is not included in this API.
+<p>Given the *<a href="index.html#Package">doc.Package</a> p where text was found,
+ToText(w, text, &quot;&quot;, &quot;\t&quot;, 80) can be replaced by:
+<pre>w.Write(p.Text(text))
+</pre>
+<p>In the general case, ToText(w, text, prefix, codePrefix, width)
+can be replaced by:
+<pre>d := p.Parser().Parse(text)
+pr := p.Printer()
+pr.TextPrefix = prefix
+pr.TextCodePrefix = codePrefix
+pr.TextWidth = width
+w.Write(pr.Text(d))
+</pre>
+<p>See the documentation for <a href="index.html#Package.Text">Package.Text</a> and <a href="http://localhost:8080/go/doc/comment#Printer.Text">comment.Printer.Text</a>
+for more details.
+
+			
+			
+
+		
+		
+			
+			
+			<h2 id="Example">type <a href="../../../src/go/doc/example.go?s=415:933#L12">Example</a>
+				<a class="permalink" href="index.html#Example">&#xb6;</a>
+				
+				
+			</h2>
+			<p>An Example represents an example function found in a test source file.
+
+			<pre>type Example struct {
+<span id="Example.Name"></span>    Name        <a href="../../builtin/index.html#string">string</a> <span class="comment">// name of the item being exemplified (including optional suffix)</span>
+<span id="Example.Suffix"></span>    Suffix      <a href="../../builtin/index.html#string">string</a> <span class="comment">// example suffix, without leading &#39;_&#39; (only populated by NewFromFiles)</span>
+<span id="Example.Doc"></span>    Doc         <a href="../../builtin/index.html#string">string</a> <span class="comment">// example function doc string</span>
+<span id="Example.Code"></span>    Code        <a href="../ast/index.html">ast</a>.<a href="../ast/index.html#Node">Node</a>
+<span id="Example.Play"></span>    Play        *<a href="../ast/index.html">ast</a>.<a href="../ast/index.html#File">File</a> <span class="comment">// a whole program version of the example</span>
+<span id="Example.Comments"></span>    Comments    []*<a href="../ast/index.html">ast</a>.<a href="../ast/index.html#CommentGroup">CommentGroup</a>
+<span id="Example.Output"></span>    Output      <a href="../../builtin/index.html#string">string</a> <span class="comment">// expected output</span>
+<span id="Example.Unordered"></span>    Unordered   <a href="../../builtin/index.html#bool">bool</a>
+<span id="Example.EmptyOutput"></span>    EmptyOutput <a href="../../builtin/index.html#bool">bool</a> <span class="comment">// expect empty output</span>
+<span id="Example.Order"></span>    Order       <a href="../../builtin/index.html#int">int</a>  <span class="comment">// original source code order</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="Examples">func <a href="../../../src/go/doc/example.go?s=1890:1938#L40">Examples</a>
+					<a class="permalink" href="index.html#Examples">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func Examples(testFiles ...*<a href="../ast/index.html">ast</a>.<a href="../ast/index.html#File">File</a>) []*<a href="index.html#Example">Example</a></pre>
+				<p>Examples returns the examples found in testFiles, sorted by Name field.
+The Order fields record the order in which the examples were encountered.
+The Suffix field is not populated when Examples is called directly, it is
+only populated by <a href="index.html#NewFromFiles">NewFromFiles</a> for examples it finds in _test.go files.
+<p>Playable Examples must be in a package whose name ends in &quot;_test&quot;.
+An Example is &quot;playable&quot; (the Play field is non-nil) in either of these
+circumstances:
+<ul>
+<li>The example function is self-contained: the function references only
+identifiers from other packages (or predeclared identifiers, such as
+&quot;int&quot;) and the test file does not include a dot import.
+<li>The entire test file is the example: the file contains exactly one
+example function, zero test, fuzz test, or benchmark function, and at
+least one top-level function, type, variable, or constant declaration
+other than the example function.
+</ul>
+
+				
+				
+			
+
+			
+		
+			
+			
+			<h2 id="Filter">type <a href="../../../src/go/doc/filter.go?s=190:219#L1">Filter</a>
+				<a class="permalink" href="index.html#Filter">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type Filter func(<a href="../../builtin/index.html#string">string</a>) <a href="../../builtin/index.html#bool">bool</a></pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="Func">type <a href="../../../src/go/doc/doc.go?s=1830:2356#L62">Func</a>
+				<a class="permalink" href="index.html#Func">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Func is the documentation for a func declaration.
+
+			<pre>type Func struct {
+<span id="Func.Doc"></span>    Doc  <a href="../../builtin/index.html#string">string</a>
+<span id="Func.Name"></span>    Name <a href="../../builtin/index.html#string">string</a>
+<span id="Func.Decl"></span>    Decl *<a href="../ast/index.html">ast</a>.<a href="../ast/index.html#FuncDecl">FuncDecl</a>
+
+    <span class="comment">// methods</span>
+    <span class="comment">// (for functions, these fields have the respective zero value)</span>
+<span id="Func.Recv"></span>    Recv  <a href="../../builtin/index.html#string">string</a> <span class="comment">// actual   receiver &#34;T&#34; or &#34;*T&#34; possibly followed by type parameters [P1, ..., Pn]</span>
+<span id="Func.Orig"></span>    Orig  <a href="../../builtin/index.html#string">string</a> <span class="comment">// original receiver &#34;T&#34; or &#34;*T&#34;</span>
+<span id="Func.Level"></span>    Level <a href="../../builtin/index.html#int">int</a>    <span class="comment">// embedding level; 0 means not embedded</span>
+
+<span id="Func.Examples"></span>    <span class="comment">// Examples is a sorted list of examples associated with this</span>
+    <span class="comment">// function or method. Examples are extracted from _test.go files</span>
+    <span class="comment">// provided to NewFromFiles.</span>
+    Examples []*<a href="index.html#Example">Example</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="Mode">type <a href="../../../src/go/doc/doc.go?s=2920:2933#L90">Mode</a>
+				<a class="permalink" href="index.html#Mode">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Mode values control the operation of <a href="index.html#New">New</a> and <a href="index.html#NewFromFiles">NewFromFiles</a>.
+
+			<pre>type Mode <a href="../../builtin/index.html#int">int</a></pre>
+
+			
+				
+				<pre>const (
+    <span class="comment">// AllDecls says to extract documentation for all package-level</span>
+    <span class="comment">// declarations, not just exported ones.</span>
+    <span id="AllDecls">AllDecls</span> <a href="index.html#Mode">Mode</a> = 1 &lt;&lt; <a href="../../builtin/index.html#iota">iota</a>
+
+    <span class="comment">// AllMethods says to show all embedded methods, not just the ones of</span>
+    <span class="comment">// invisible (unexported) anonymous fields.</span>
+    <span id="AllMethods">AllMethods</span>
+
+    <span class="comment">// PreserveAST says to leave the AST unmodified. Originally, pieces of</span>
+    <span class="comment">// the AST such as function bodies were nil-ed out to save memory in</span>
+    <span class="comment">// godoc, but not all programs want that behavior.</span>
+    <span id="PreserveAST">PreserveAST</span>
+)</pre>
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="Note">type <a href="../../../src/go/doc/doc.go?s=2670:2852#L83">Note</a>
+				<a class="permalink" href="index.html#Note">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A Note represents a marked comment starting with &quot;MARKER(uid): note body&quot;.
+Any note with a marker of 2 or more upper case [A-Z] letters and a uid of
+at least one character is recognized. The &quot;:&quot; following the uid is optional.
+Notes are collected in the Package.Notes map indexed by the notes marker.
+
+			<pre>type Note struct {
+<span id="Note.Pos"></span>    Pos, End <a href="../token/index.html">token</a>.<a href="../token/index.html#Pos">Pos</a> <span class="comment">// position range of the comment containing the marker</span>
+<span id="Note.UID"></span>    UID      <a href="../../builtin/index.html#string">string</a>    <span class="comment">// uid found with the marker</span>
+<span id="Note.Body"></span>    Body     <a href="../../builtin/index.html#string">string</a>    <span class="comment">// note body text</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="Package">type <a href="../../../src/go/doc/doc.go?s=363:964#L7">Package</a>
+				<a class="permalink" href="index.html#Package">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Package is the documentation for an entire package.
+
+			<pre>type Package struct {
+<span id="Package.Doc"></span>    Doc        <a href="../../builtin/index.html#string">string</a>
+<span id="Package.Name"></span>    Name       <a href="../../builtin/index.html#string">string</a>
+<span id="Package.ImportPath"></span>    ImportPath <a href="../../builtin/index.html#string">string</a>
+<span id="Package.Imports"></span>    Imports    []<a href="../../builtin/index.html#string">string</a>
+<span id="Package.Filenames"></span>    Filenames  []<a href="../../builtin/index.html#string">string</a>
+<span id="Package.Notes"></span>    Notes      map[<a href="../../builtin/index.html#string">string</a>][]*<a href="index.html#Note">Note</a>
+
+    <span class="comment">// Deprecated: For backward compatibility Bugs is still populated,</span>
+    <span class="comment">// but all new code should use Notes instead.</span>
+<span id="Package.Bugs"></span>    Bugs []<a href="../../builtin/index.html#string">string</a>
+
+    <span class="comment">// declarations</span>
+<span id="Package.Consts"></span>    Consts []*<a href="index.html#Value">Value</a>
+<span id="Package.Types"></span>    Types  []*<a href="index.html#Type">Type</a>
+<span id="Package.Vars"></span>    Vars   []*<a href="index.html#Value">Value</a>
+<span id="Package.Funcs"></span>    Funcs  []*<a href="index.html#Func">Func</a>
+
+<span id="Package.Examples"></span>    <span class="comment">// Examples is a sorted list of examples associated with</span>
+    <span class="comment">// the package. Examples are extracted from _test.go files</span>
+    <span class="comment">// provided to NewFromFiles.</span>
+    Examples []*<a href="index.html#Example">Example</a>
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="New">func <a href="../../../src/go/doc/doc.go?s=3662:3727#L111">New</a>
+					<a class="permalink" href="index.html#New">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func New(pkg *<a href="../ast/index.html">ast</a>.<a href="../ast/index.html#Package">Package</a>, importPath <a href="../../builtin/index.html#string">string</a>, mode <a href="index.html#Mode">Mode</a>) *<a href="index.html#Package">Package</a></pre>
+				<p>New computes the package documentation for the given package AST.
+New takes ownership of the AST pkg and may edit or overwrite it.
+To have the <a href="index.html#Examples">Examples</a> fields populated, use <a href="index.html#NewFromFiles">NewFromFiles</a> and include
+the package&apos;s _test.go files.
+
+				
+				
+			
+				
+				<h3 id="NewFromFiles">func <a href="../../../src/go/doc/doc.go?s=6280:6387#L198">NewFromFiles</a>
+					<a class="permalink" href="index.html#NewFromFiles">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func NewFromFiles(fset *<a href="../token/index.html">token</a>.<a href="../token/index.html#FileSet">FileSet</a>, files []*<a href="../ast/index.html">ast</a>.<a href="../ast/index.html#File">File</a>, importPath <a href="../../builtin/index.html#string">string</a>, opts ...<a href="../../builtin/index.html#any">any</a>) (*<a href="index.html#Package">Package</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+				<p>NewFromFiles computes documentation for a package.
+<p>The package is specified by a list of *ast.Files and corresponding
+file set, which must not be nil.
+NewFromFiles uses all provided files when computing documentation,
+so it is the caller&apos;s responsibility to provide only the files that
+match the desired build context. &quot;go/build&quot;.Context.MatchFile can
+be used for determining whether a file matches a build context with
+the desired GOOS and GOARCH values, and other build constraints.
+The import path of the package is specified by importPath.
+<p>Examples found in _test.go files are associated with the corresponding
+type, function, method, or the package, based on their name.
+If the example has a suffix in its name, it is set in the
+[Example.Suffix] field. <a href="index.html#Examples">Examples</a> with malformed names are skipped.
+<p>Optionally, a single extra argument of type <a href="index.html#Mode">Mode</a> can be provided to
+control low-level aspects of the documentation extraction behavior.
+<p>NewFromFiles takes ownership of the AST files and may edit them,
+unless the PreserveAST Mode bit is on.
+
+				<div id="example_NewFromFiles" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		<p>This example illustrates how to use NewFromFiles
+to compute package documentation with examples.
+</p>
+		
+		
+			<p>Code:</p>
+			<pre class="code"><span class="comment">// src and test are two source files that make up</span>
+<span class="comment">// a package whose documentation will be computed.</span>
+const src = `
+// This is the package comment.
+package p
+
+import &#34;fmt&#34;
+
+// This comment is associated with the Greet function.
+func Greet(who string) {
+    fmt.Printf(&#34;Hello, %s!\n&#34;, who)
+}
+`
+const test = `
+package p_test
+
+// This comment is associated with the ExampleGreet_world example.
+func ExampleGreet_world() {
+    Greet(&#34;world&#34;)
+}
+`
+
+<span class="comment">// Create the AST by parsing src and test.</span>
+fset := token.NewFileSet()
+files := []*ast.File{
+    mustParse(fset, &#34;src.go&#34;, src),
+    mustParse(fset, &#34;src_test.go&#34;, test),
+}
+
+<span class="comment">// Compute package documentation with examples.</span>
+p, err := doc.NewFromFiles(fset, files, &#34;example.com/p&#34;)
+if err != nil {
+    panic(err)
+}
+
+fmt.Printf(&#34;package %s - %s&#34;, p.Name, p.Doc)
+fmt.Printf(&#34;func %s - %s&#34;, p.Funcs[0].Name, p.Funcs[0].Doc)
+fmt.Printf(&#34; ⤷ example with suffix %q - %s&#34;, p.Funcs[0].Examples[0].Suffix, p.Funcs[0].Examples[0].Doc)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">package p - This is the package comment.
+func Greet - This comment is associated with the Greet function.
+ ⤷ example with suffix &#34;world&#34; - This comment is associated with the ExampleGreet_world example.
+</pre>
+			
+		
+	</div>
+</div>
+
+				
+			
+
+			
+				
+				<h3 id="Package.Filter">func (*Package) <a href="../../../src/go/doc/filter.go?s=2040:2074#L90">Filter</a>
+					<a class="permalink" href="index.html#Package.Filter">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#Package">Package</a>) Filter(f <a href="index.html#Filter">Filter</a>)</pre>
+				<p>Filter eliminates documentation for names that don&apos;t pass through the filter f.
+TODO(gri): Recognize &quot;Type.Method&quot; as a name.
+
+				
+				
+				
+			
+				
+				<h3 id="Package.HTML">func (*Package) <a href="../../../src/go/doc/doc.go?s=10697:10739#L322">HTML</a>
+					<a class="permalink" href="index.html#Package.HTML">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#Package">Package</a>) HTML(text <a href="../../builtin/index.html#string">string</a>) []<a href="../../builtin/index.html#byte">byte</a></pre>
+				<p>HTML returns formatted HTML for the doc comment text.
+<p>To customize details of the HTML, use <a href="index.html#Package.Printer">Package.Printer</a>
+to obtain a <a href="http://localhost:8080/go/doc/comment#Printer">comment.Printer</a>, and configure it
+before calling its HTML method.
+
+				
+				
+				
+			
+				
+				<h3 id="Package.Markdown">func (*Package) <a href="../../../src/go/doc/doc.go?s=11015:11061#L331">Markdown</a>
+					<a class="permalink" href="index.html#Package.Markdown">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#Package">Package</a>) Markdown(text <a href="../../builtin/index.html#string">string</a>) []<a href="../../builtin/index.html#byte">byte</a></pre>
+				<p>Markdown returns formatted Markdown for the doc comment text.
+<p>To customize details of the Markdown, use <a href="index.html#Package.Printer">Package.Printer</a>
+to obtain a <a href="http://localhost:8080/go/doc/comment#Printer">comment.Printer</a>, and configure it
+before calling its Markdown method.
+
+				
+				
+				
+			
+				
+				<h3 id="Package.Parser">func (*Package) <a href="../../../src/go/doc/doc.go?s=9966:10008#L300">Parser</a>
+					<a class="permalink" href="index.html#Package.Parser">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#Package">Package</a>) Parser() *<a href="comment/index.html">comment</a>.<a href="comment/index.html#Parser">Parser</a></pre>
+				<p>Parser returns a doc comment parser configured
+for parsing doc comments from package p.
+Each call returns a new parser, so that the caller may
+customize it before use.
+
+				
+				
+				
+			
+				
+				<h3 id="Package.Printer">func (*Package) <a href="../../../src/go/doc/doc.go?s=10290:10334#L311">Printer</a>
+					<a class="permalink" href="index.html#Package.Printer">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#Package">Package</a>) Printer() *<a href="comment/index.html">comment</a>.<a href="comment/index.html#Printer">Printer</a></pre>
+				<p>Printer returns a doc comment printer configured
+for printing doc comments from package p.
+Each call returns a new printer, so that the caller may
+customize it before use.
+
+				
+				
+				
+			
+				
+				<h3 id="Package.Synopsis">func (*Package) <a href="../../../src/go/doc/synopsis.go?s=1712:1758#L49">Synopsis</a>
+					<a class="permalink" href="index.html#Package.Synopsis">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#Package">Package</a>) Synopsis(text <a href="../../builtin/index.html#string">string</a>) <a href="../../builtin/index.html#string">string</a></pre>
+				<p>Synopsis returns a cleaned version of the first sentence in text.
+That sentence ends after the first period followed by space and not
+preceded by exactly one uppercase letter, or at the first paragraph break.
+The result string has no \n, \r, or \t characters and uses only single
+spaces between words. If text starts with any of the <a href="index.html#IllegalPrefixes">IllegalPrefixes</a>,
+the result is the empty string.
+
+				
+				
+				
+			
+				
+				<h3 id="Package.Text">func (*Package) <a href="../../../src/go/doc/doc.go?s=11414:11456#L342">Text</a>
+					<a class="permalink" href="index.html#Package.Text">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#Package">Package</a>) Text(text <a href="../../builtin/index.html#string">string</a>) []<a href="../../builtin/index.html#byte">byte</a></pre>
+				<p>Text returns formatted text for the doc comment text,
+wrapped to 80 Unicode code points and using tabs for
+code block indentation.
+<p>To customize details of the formatting, use <a href="index.html#Package.Printer">Package.Printer</a>
+to obtain a <a href="http://localhost:8080/go/doc/comment#Printer">comment.Printer</a>, and configure it
+before calling its Text method.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Type">type <a href="../../../src/go/doc/doc.go?s=1228:1775#L44">Type</a>
+				<a class="permalink" href="index.html#Type">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Type is the documentation for a type declaration.
+
+			<pre>type Type struct {
+<span id="Type.Doc"></span>    Doc  <a href="../../builtin/index.html#string">string</a>
+<span id="Type.Name"></span>    Name <a href="../../builtin/index.html#string">string</a>
+<span id="Type.Decl"></span>    Decl *<a href="../ast/index.html">ast</a>.<a href="../ast/index.html#GenDecl">GenDecl</a>
+
+    <span class="comment">// associated declarations</span>
+<span id="Type.Consts"></span>    Consts  []*<a href="index.html#Value">Value</a> <span class="comment">// sorted list of constants of (mostly) this type</span>
+<span id="Type.Vars"></span>    Vars    []*<a href="index.html#Value">Value</a> <span class="comment">// sorted list of variables of (mostly) this type</span>
+<span id="Type.Funcs"></span>    Funcs   []*<a href="index.html#Func">Func</a>  <span class="comment">// sorted list of functions returning this type</span>
+<span id="Type.Methods"></span>    Methods []*<a href="index.html#Func">Func</a>  <span class="comment">// sorted list of methods (including embedded ones) of this type</span>
+
+<span id="Type.Examples"></span>    <span class="comment">// Examples is a sorted list of examples associated with</span>
+    <span class="comment">// this type. Examples are extracted from _test.go files</span>
+    <span class="comment">// provided to NewFromFiles.</span>
+    Examples []*<a href="index.html#Example">Example</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="Value">type <a href="../../../src/go/doc/doc.go?s=1047:1173#L35">Value</a>
+				<a class="permalink" href="index.html#Value">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Value is the documentation for a (possibly grouped) var or const declaration.
+
+			<pre>type Value struct {
+<span id="Value.Doc"></span>    Doc   <a href="../../builtin/index.html#string">string</a>
+<span id="Value.Names"></span>    Names []<a href="../../builtin/index.html#string">string</a> <span class="comment">// var or const names in declaration order</span>
+<span id="Value.Decl"></span>    Decl  *<a href="../ast/index.html">ast</a>.<a href="../ast/index.html#GenDecl">GenDecl</a>
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+	
+
+	
+
+
+
+
+
+	
+	
+		<h2 id="pkg-subdirectories">Subdirectories</h2>
+	
+	<div class="pkg-dir">
+		<table>
+			<tr>
+				<th class="pkg-name">Name</th>
+				<th class="pkg-synopsis">Synopsis</th>
+			</tr>
+
+			
+			<tr>
+				<td colspan="2"><a href="../index.html">..</a></td>
+			</tr>
+			
+
+			
+				<tr>
+				
+					<td class="pkg-name" style="padding-left: 0px;">
+						<a href="comment/index.html">comment</a>
+					</td>
+				
+					<td class="pkg-synopsis">
+						Package comment implements parsing and reformatting of Go doc comments, (documentation comments), which are comments that immediately precede a top-level declaration of a package, const, func, type, or var.
+					</td>
+				</tr>
+			
+		</table>
+	</div>
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

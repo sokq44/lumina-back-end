@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>src/debug/dwarf/open.go - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="open.go#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Source file
+    <a href="http://localhost:8080/src">src</a>/<a href="http://localhost:8080/src/debug">debug</a>/<a href="http://localhost:8080/src/debug/dwarf">dwarf</a>/<span class="text-muted">open.go</span>
+  </h1>
+
+
+
+
+
+  <h2>
+    Documentation: <a href="http://localhost:8080/pkg/debug/dwarf">debug/dwarf</a>
+  </h2>
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1&nbsp;&nbsp;</span><span class="comment">// Copyright 2009 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2&nbsp;&nbsp;</span><span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3&nbsp;&nbsp;</span><span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4&nbsp;&nbsp;</span>
+<span id="L5" class="ln">     5&nbsp;&nbsp;</span><span class="comment">/*
+<span id="L6" class="ln">     6&nbsp;&nbsp;</span>Package dwarf provides access to DWARF debugging information loaded from
+<span id="L7" class="ln">     7&nbsp;&nbsp;</span>executable files, as defined in the DWARF 2.0 Standard at
+<span id="L8" class="ln">     8&nbsp;&nbsp;</span>http://dwarfstd.org/doc/dwarf-2.0.0.pdf.
+<span id="L9" class="ln">     9&nbsp;&nbsp;</span>
+<span id="L10" class="ln">    10&nbsp;&nbsp;</span># Security
+<span id="L11" class="ln">    11&nbsp;&nbsp;</span>
+<span id="L12" class="ln">    12&nbsp;&nbsp;</span>This package is not designed to be hardened against adversarial inputs, and is
+<span id="L13" class="ln">    13&nbsp;&nbsp;</span>outside the scope of https://go.dev/security/policy. In particular, only basic
+<span id="L14" class="ln">    14&nbsp;&nbsp;</span>validation is done when parsing object files. As such, care should be taken when
+<span id="L15" class="ln">    15&nbsp;&nbsp;</span>parsing untrusted inputs, as parsing malformed files may consume significant
+<span id="L16" class="ln">    16&nbsp;&nbsp;</span>resources, or cause panics.
+<span id="L17" class="ln">    17&nbsp;&nbsp;</span>*/</span>
+<span id="L18" class="ln">    18&nbsp;&nbsp;</span>package dwarf
+<span id="L19" class="ln">    19&nbsp;&nbsp;</span>
+<span id="L20" class="ln">    20&nbsp;&nbsp;</span>import (
+<span id="L21" class="ln">    21&nbsp;&nbsp;</span>	&#34;encoding/binary&#34;
+<span id="L22" class="ln">    22&nbsp;&nbsp;</span>	&#34;errors&#34;
+<span id="L23" class="ln">    23&nbsp;&nbsp;</span>)
+<span id="L24" class="ln">    24&nbsp;&nbsp;</span>
+<span id="L25" class="ln">    25&nbsp;&nbsp;</span><span class="comment">// Data represents the DWARF debugging information</span>
+<span id="L26" class="ln">    26&nbsp;&nbsp;</span><span class="comment">// loaded from an executable file (for example, an ELF or Mach-O executable).</span>
+<span id="L27" class="ln">    27&nbsp;&nbsp;</span>type Data struct {
+<span id="L28" class="ln">    28&nbsp;&nbsp;</span>	<span class="comment">// raw data</span>
+<span id="L29" class="ln">    29&nbsp;&nbsp;</span>	abbrev   []byte
+<span id="L30" class="ln">    30&nbsp;&nbsp;</span>	aranges  []byte
+<span id="L31" class="ln">    31&nbsp;&nbsp;</span>	frame    []byte
+<span id="L32" class="ln">    32&nbsp;&nbsp;</span>	info     []byte
+<span id="L33" class="ln">    33&nbsp;&nbsp;</span>	line     []byte
+<span id="L34" class="ln">    34&nbsp;&nbsp;</span>	pubnames []byte
+<span id="L35" class="ln">    35&nbsp;&nbsp;</span>	ranges   []byte
+<span id="L36" class="ln">    36&nbsp;&nbsp;</span>	str      []byte
+<span id="L37" class="ln">    37&nbsp;&nbsp;</span>
+<span id="L38" class="ln">    38&nbsp;&nbsp;</span>	<span class="comment">// New sections added in DWARF 5.</span>
+<span id="L39" class="ln">    39&nbsp;&nbsp;</span>	addr       []byte
+<span id="L40" class="ln">    40&nbsp;&nbsp;</span>	lineStr    []byte
+<span id="L41" class="ln">    41&nbsp;&nbsp;</span>	strOffsets []byte
+<span id="L42" class="ln">    42&nbsp;&nbsp;</span>	rngLists   []byte
+<span id="L43" class="ln">    43&nbsp;&nbsp;</span>
+<span id="L44" class="ln">    44&nbsp;&nbsp;</span>	<span class="comment">// parsed data</span>
+<span id="L45" class="ln">    45&nbsp;&nbsp;</span>	abbrevCache map[uint64]abbrevTable
+<span id="L46" class="ln">    46&nbsp;&nbsp;</span>	bigEndian   bool
+<span id="L47" class="ln">    47&nbsp;&nbsp;</span>	order       binary.ByteOrder
+<span id="L48" class="ln">    48&nbsp;&nbsp;</span>	typeCache   map[Offset]Type
+<span id="L49" class="ln">    49&nbsp;&nbsp;</span>	typeSigs    map[uint64]*typeUnit
+<span id="L50" class="ln">    50&nbsp;&nbsp;</span>	unit        []unit
+<span id="L51" class="ln">    51&nbsp;&nbsp;</span>}
+<span id="L52" class="ln">    52&nbsp;&nbsp;</span>
+<span id="L53" class="ln">    53&nbsp;&nbsp;</span>var errSegmentSelector = errors.New(&#34;non-zero segment_selector size not supported&#34;)
+<span id="L54" class="ln">    54&nbsp;&nbsp;</span>
+<span id="L55" class="ln">    55&nbsp;&nbsp;</span><span class="comment">// New returns a new [Data] object initialized from the given parameters.</span>
+<span id="L56" class="ln">    56&nbsp;&nbsp;</span><span class="comment">// Rather than calling this function directly, clients should typically use</span>
+<span id="L57" class="ln">    57&nbsp;&nbsp;</span><span class="comment">// the DWARF method of the File type of the appropriate package [debug/elf],</span>
+<span id="L58" class="ln">    58&nbsp;&nbsp;</span><span class="comment">// [debug/macho], or [debug/pe].</span>
+<span id="L59" class="ln">    59&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L60" class="ln">    60&nbsp;&nbsp;</span><span class="comment">// The []byte arguments are the data from the corresponding debug section</span>
+<span id="L61" class="ln">    61&nbsp;&nbsp;</span><span class="comment">// in the object file; for example, for an ELF object, abbrev is the contents of</span>
+<span id="L62" class="ln">    62&nbsp;&nbsp;</span><span class="comment">// the &#34;.debug_abbrev&#34; section.</span>
+<span id="L63" class="ln">    63&nbsp;&nbsp;</span>func New(abbrev, aranges, frame, info, line, pubnames, ranges, str []byte) (*Data, error) {
+<span id="L64" class="ln">    64&nbsp;&nbsp;</span>	d := &amp;Data{
+<span id="L65" class="ln">    65&nbsp;&nbsp;</span>		abbrev:      abbrev,
+<span id="L66" class="ln">    66&nbsp;&nbsp;</span>		aranges:     aranges,
+<span id="L67" class="ln">    67&nbsp;&nbsp;</span>		frame:       frame,
+<span id="L68" class="ln">    68&nbsp;&nbsp;</span>		info:        info,
+<span id="L69" class="ln">    69&nbsp;&nbsp;</span>		line:        line,
+<span id="L70" class="ln">    70&nbsp;&nbsp;</span>		pubnames:    pubnames,
+<span id="L71" class="ln">    71&nbsp;&nbsp;</span>		ranges:      ranges,
+<span id="L72" class="ln">    72&nbsp;&nbsp;</span>		str:         str,
+<span id="L73" class="ln">    73&nbsp;&nbsp;</span>		abbrevCache: make(map[uint64]abbrevTable),
+<span id="L74" class="ln">    74&nbsp;&nbsp;</span>		typeCache:   make(map[Offset]Type),
+<span id="L75" class="ln">    75&nbsp;&nbsp;</span>		typeSigs:    make(map[uint64]*typeUnit),
+<span id="L76" class="ln">    76&nbsp;&nbsp;</span>	}
+<span id="L77" class="ln">    77&nbsp;&nbsp;</span>
+<span id="L78" class="ln">    78&nbsp;&nbsp;</span>	<span class="comment">// Sniff .debug_info to figure out byte order.</span>
+<span id="L79" class="ln">    79&nbsp;&nbsp;</span>	<span class="comment">// 32-bit DWARF: 4 byte length, 2 byte version.</span>
+<span id="L80" class="ln">    80&nbsp;&nbsp;</span>	<span class="comment">// 64-bit DWARf: 4 bytes of 0xff, 8 byte length, 2 byte version.</span>
+<span id="L81" class="ln">    81&nbsp;&nbsp;</span>	if len(d.info) &lt; 6 {
+<span id="L82" class="ln">    82&nbsp;&nbsp;</span>		return nil, DecodeError{&#34;info&#34;, Offset(len(d.info)), &#34;too short&#34;}
+<span id="L83" class="ln">    83&nbsp;&nbsp;</span>	}
+<span id="L84" class="ln">    84&nbsp;&nbsp;</span>	offset := 4
+<span id="L85" class="ln">    85&nbsp;&nbsp;</span>	if d.info[0] == 0xff &amp;&amp; d.info[1] == 0xff &amp;&amp; d.info[2] == 0xff &amp;&amp; d.info[3] == 0xff {
+<span id="L86" class="ln">    86&nbsp;&nbsp;</span>		if len(d.info) &lt; 14 {
+<span id="L87" class="ln">    87&nbsp;&nbsp;</span>			return nil, DecodeError{&#34;info&#34;, Offset(len(d.info)), &#34;too short&#34;}
+<span id="L88" class="ln">    88&nbsp;&nbsp;</span>		}
+<span id="L89" class="ln">    89&nbsp;&nbsp;</span>		offset = 12
+<span id="L90" class="ln">    90&nbsp;&nbsp;</span>	}
+<span id="L91" class="ln">    91&nbsp;&nbsp;</span>	<span class="comment">// Fetch the version, a tiny 16-bit number (1, 2, 3, 4, 5).</span>
+<span id="L92" class="ln">    92&nbsp;&nbsp;</span>	x, y := d.info[offset], d.info[offset+1]
+<span id="L93" class="ln">    93&nbsp;&nbsp;</span>	switch {
+<span id="L94" class="ln">    94&nbsp;&nbsp;</span>	case x == 0 &amp;&amp; y == 0:
+<span id="L95" class="ln">    95&nbsp;&nbsp;</span>		return nil, DecodeError{&#34;info&#34;, 4, &#34;unsupported version 0&#34;}
+<span id="L96" class="ln">    96&nbsp;&nbsp;</span>	case x == 0:
+<span id="L97" class="ln">    97&nbsp;&nbsp;</span>		d.bigEndian = true
+<span id="L98" class="ln">    98&nbsp;&nbsp;</span>		d.order = binary.BigEndian
+<span id="L99" class="ln">    99&nbsp;&nbsp;</span>	case y == 0:
+<span id="L100" class="ln">   100&nbsp;&nbsp;</span>		d.bigEndian = false
+<span id="L101" class="ln">   101&nbsp;&nbsp;</span>		d.order = binary.LittleEndian
+<span id="L102" class="ln">   102&nbsp;&nbsp;</span>	default:
+<span id="L103" class="ln">   103&nbsp;&nbsp;</span>		return nil, DecodeError{&#34;info&#34;, 4, &#34;cannot determine byte order&#34;}
+<span id="L104" class="ln">   104&nbsp;&nbsp;</span>	}
+<span id="L105" class="ln">   105&nbsp;&nbsp;</span>
+<span id="L106" class="ln">   106&nbsp;&nbsp;</span>	u, err := d.parseUnits()
+<span id="L107" class="ln">   107&nbsp;&nbsp;</span>	if err != nil {
+<span id="L108" class="ln">   108&nbsp;&nbsp;</span>		return nil, err
+<span id="L109" class="ln">   109&nbsp;&nbsp;</span>	}
+<span id="L110" class="ln">   110&nbsp;&nbsp;</span>	d.unit = u
+<span id="L111" class="ln">   111&nbsp;&nbsp;</span>	return d, nil
+<span id="L112" class="ln">   112&nbsp;&nbsp;</span>}
+<span id="L113" class="ln">   113&nbsp;&nbsp;</span>
+<span id="L114" class="ln">   114&nbsp;&nbsp;</span><span class="comment">// AddTypes will add one .debug_types section to the DWARF data. A</span>
+<span id="L115" class="ln">   115&nbsp;&nbsp;</span><span class="comment">// typical object with DWARF version 4 debug info will have multiple</span>
+<span id="L116" class="ln">   116&nbsp;&nbsp;</span><span class="comment">// .debug_types sections. The name is used for error reporting only,</span>
+<span id="L117" class="ln">   117&nbsp;&nbsp;</span><span class="comment">// and serves to distinguish one .debug_types section from another.</span>
+<span id="L118" class="ln">   118&nbsp;&nbsp;</span>func (d *Data) AddTypes(name string, types []byte) error {
+<span id="L119" class="ln">   119&nbsp;&nbsp;</span>	return d.parseTypes(name, types)
+<span id="L120" class="ln">   120&nbsp;&nbsp;</span>}
+<span id="L121" class="ln">   121&nbsp;&nbsp;</span>
+<span id="L122" class="ln">   122&nbsp;&nbsp;</span><span class="comment">// AddSection adds another DWARF section by name. The name should be a</span>
+<span id="L123" class="ln">   123&nbsp;&nbsp;</span><span class="comment">// DWARF section name such as &#34;.debug_addr&#34;, &#34;.debug_str_offsets&#34;, and</span>
+<span id="L124" class="ln">   124&nbsp;&nbsp;</span><span class="comment">// so forth. This approach is used for new DWARF sections added in</span>
+<span id="L125" class="ln">   125&nbsp;&nbsp;</span><span class="comment">// DWARF 5 and later.</span>
+<span id="L126" class="ln">   126&nbsp;&nbsp;</span>func (d *Data) AddSection(name string, contents []byte) error {
+<span id="L127" class="ln">   127&nbsp;&nbsp;</span>	var err error
+<span id="L128" class="ln">   128&nbsp;&nbsp;</span>	switch name {
+<span id="L129" class="ln">   129&nbsp;&nbsp;</span>	case &#34;.debug_addr&#34;:
+<span id="L130" class="ln">   130&nbsp;&nbsp;</span>		d.addr = contents
+<span id="L131" class="ln">   131&nbsp;&nbsp;</span>	case &#34;.debug_line_str&#34;:
+<span id="L132" class="ln">   132&nbsp;&nbsp;</span>		d.lineStr = contents
+<span id="L133" class="ln">   133&nbsp;&nbsp;</span>	case &#34;.debug_str_offsets&#34;:
+<span id="L134" class="ln">   134&nbsp;&nbsp;</span>		d.strOffsets = contents
+<span id="L135" class="ln">   135&nbsp;&nbsp;</span>	case &#34;.debug_rnglists&#34;:
+<span id="L136" class="ln">   136&nbsp;&nbsp;</span>		d.rngLists = contents
+<span id="L137" class="ln">   137&nbsp;&nbsp;</span>	}
+<span id="L138" class="ln">   138&nbsp;&nbsp;</span>	<span class="comment">// Just ignore names that we don&#39;t yet support.</span>
+<span id="L139" class="ln">   139&nbsp;&nbsp;</span>	return err
+<span id="L140" class="ln">   140&nbsp;&nbsp;</span>}
+<span id="L141" class="ln">   141&nbsp;&nbsp;</span>
+</pre><p><a href="open.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

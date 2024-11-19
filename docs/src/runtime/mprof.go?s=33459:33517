@@ -1,0 +1,1597 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>src/runtime/mprof.go - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../index.html">GoDoc</a></div>
+<a href="./mprof.go?s=33459:33517#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Source file
+    <a href="http://localhost:8080/src">src</a>/<a href="http://localhost:8080/src/runtime">runtime</a>/<span class="text-muted">mprof.go</span>
+  </h1>
+
+
+
+
+
+  <h2>
+    Documentation: <a href="http://localhost:8080/pkg/runtime">runtime</a>
+  </h2>
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1&nbsp;&nbsp;</span><span class="comment">// Copyright 2009 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2&nbsp;&nbsp;</span><span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3&nbsp;&nbsp;</span><span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4&nbsp;&nbsp;</span>
+<span id="L5" class="ln">     5&nbsp;&nbsp;</span><span class="comment">// Malloc profiling.</span>
+<span id="L6" class="ln">     6&nbsp;&nbsp;</span><span class="comment">// Patterned after tcmalloc&#39;s algorithms; shorter code.</span>
+<span id="L7" class="ln">     7&nbsp;&nbsp;</span>
+<span id="L8" class="ln">     8&nbsp;&nbsp;</span>package runtime
+<span id="L9" class="ln">     9&nbsp;&nbsp;</span>
+<span id="L10" class="ln">    10&nbsp;&nbsp;</span>import (
+<span id="L11" class="ln">    11&nbsp;&nbsp;</span>	&#34;internal/abi&#34;
+<span id="L12" class="ln">    12&nbsp;&nbsp;</span>	&#34;runtime/internal/atomic&#34;
+<span id="L13" class="ln">    13&nbsp;&nbsp;</span>	&#34;runtime/internal/sys&#34;
+<span id="L14" class="ln">    14&nbsp;&nbsp;</span>	&#34;unsafe&#34;
+<span id="L15" class="ln">    15&nbsp;&nbsp;</span>)
+<span id="L16" class="ln">    16&nbsp;&nbsp;</span>
+<span id="L17" class="ln">    17&nbsp;&nbsp;</span><span class="comment">// NOTE(rsc): Everything here could use cas if contention became an issue.</span>
+<span id="L18" class="ln">    18&nbsp;&nbsp;</span>var (
+<span id="L19" class="ln">    19&nbsp;&nbsp;</span>	<span class="comment">// profInsertLock protects changes to the start of all *bucket linked lists</span>
+<span id="L20" class="ln">    20&nbsp;&nbsp;</span>	profInsertLock mutex
+<span id="L21" class="ln">    21&nbsp;&nbsp;</span>	<span class="comment">// profBlockLock protects the contents of every blockRecord struct</span>
+<span id="L22" class="ln">    22&nbsp;&nbsp;</span>	profBlockLock mutex
+<span id="L23" class="ln">    23&nbsp;&nbsp;</span>	<span class="comment">// profMemActiveLock protects the active field of every memRecord struct</span>
+<span id="L24" class="ln">    24&nbsp;&nbsp;</span>	profMemActiveLock mutex
+<span id="L25" class="ln">    25&nbsp;&nbsp;</span>	<span class="comment">// profMemFutureLock is a set of locks that protect the respective elements</span>
+<span id="L26" class="ln">    26&nbsp;&nbsp;</span>	<span class="comment">// of the future array of every memRecord struct</span>
+<span id="L27" class="ln">    27&nbsp;&nbsp;</span>	profMemFutureLock [len(memRecord{}.future)]mutex
+<span id="L28" class="ln">    28&nbsp;&nbsp;</span>)
+<span id="L29" class="ln">    29&nbsp;&nbsp;</span>
+<span id="L30" class="ln">    30&nbsp;&nbsp;</span><span class="comment">// All memory allocations are local and do not escape outside of the profiler.</span>
+<span id="L31" class="ln">    31&nbsp;&nbsp;</span><span class="comment">// The profiler is forbidden from referring to garbage-collected memory.</span>
+<span id="L32" class="ln">    32&nbsp;&nbsp;</span>
+<span id="L33" class="ln">    33&nbsp;&nbsp;</span>const (
+<span id="L34" class="ln">    34&nbsp;&nbsp;</span>	<span class="comment">// profile types</span>
+<span id="L35" class="ln">    35&nbsp;&nbsp;</span>	memProfile bucketType = 1 + iota
+<span id="L36" class="ln">    36&nbsp;&nbsp;</span>	blockProfile
+<span id="L37" class="ln">    37&nbsp;&nbsp;</span>	mutexProfile
+<span id="L38" class="ln">    38&nbsp;&nbsp;</span>
+<span id="L39" class="ln">    39&nbsp;&nbsp;</span>	<span class="comment">// size of bucket hash table</span>
+<span id="L40" class="ln">    40&nbsp;&nbsp;</span>	buckHashSize = 179999
+<span id="L41" class="ln">    41&nbsp;&nbsp;</span>
+<span id="L42" class="ln">    42&nbsp;&nbsp;</span>	<span class="comment">// maxStack is the max depth of stack to record in bucket.</span>
+<span id="L43" class="ln">    43&nbsp;&nbsp;</span>	<span class="comment">// Note that it&#39;s only used internally as a guard against</span>
+<span id="L44" class="ln">    44&nbsp;&nbsp;</span>	<span class="comment">// wildly out-of-bounds slicing of the PCs that come after</span>
+<span id="L45" class="ln">    45&nbsp;&nbsp;</span>	<span class="comment">// a bucket struct, and it could increase in the future.</span>
+<span id="L46" class="ln">    46&nbsp;&nbsp;</span>	maxStack = 32
+<span id="L47" class="ln">    47&nbsp;&nbsp;</span>)
+<span id="L48" class="ln">    48&nbsp;&nbsp;</span>
+<span id="L49" class="ln">    49&nbsp;&nbsp;</span>type bucketType int
+<span id="L50" class="ln">    50&nbsp;&nbsp;</span>
+<span id="L51" class="ln">    51&nbsp;&nbsp;</span><span class="comment">// A bucket holds per-call-stack profiling information.</span>
+<span id="L52" class="ln">    52&nbsp;&nbsp;</span><span class="comment">// The representation is a bit sleazy, inherited from C.</span>
+<span id="L53" class="ln">    53&nbsp;&nbsp;</span><span class="comment">// This struct defines the bucket header. It is followed in</span>
+<span id="L54" class="ln">    54&nbsp;&nbsp;</span><span class="comment">// memory by the stack words and then the actual record</span>
+<span id="L55" class="ln">    55&nbsp;&nbsp;</span><span class="comment">// data, either a memRecord or a blockRecord.</span>
+<span id="L56" class="ln">    56&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L57" class="ln">    57&nbsp;&nbsp;</span><span class="comment">// Per-call-stack profiling information.</span>
+<span id="L58" class="ln">    58&nbsp;&nbsp;</span><span class="comment">// Lookup by hashing call stack into a linked-list hash table.</span>
+<span id="L59" class="ln">    59&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L60" class="ln">    60&nbsp;&nbsp;</span><span class="comment">// None of the fields in this bucket header are modified after</span>
+<span id="L61" class="ln">    61&nbsp;&nbsp;</span><span class="comment">// creation, including its next and allnext links.</span>
+<span id="L62" class="ln">    62&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L63" class="ln">    63&nbsp;&nbsp;</span><span class="comment">// No heap pointers.</span>
+<span id="L64" class="ln">    64&nbsp;&nbsp;</span>type bucket struct {
+<span id="L65" class="ln">    65&nbsp;&nbsp;</span>	_       sys.NotInHeap
+<span id="L66" class="ln">    66&nbsp;&nbsp;</span>	next    *bucket
+<span id="L67" class="ln">    67&nbsp;&nbsp;</span>	allnext *bucket
+<span id="L68" class="ln">    68&nbsp;&nbsp;</span>	typ     bucketType <span class="comment">// memBucket or blockBucket (includes mutexProfile)</span>
+<span id="L69" class="ln">    69&nbsp;&nbsp;</span>	hash    uintptr
+<span id="L70" class="ln">    70&nbsp;&nbsp;</span>	size    uintptr
+<span id="L71" class="ln">    71&nbsp;&nbsp;</span>	nstk    uintptr
+<span id="L72" class="ln">    72&nbsp;&nbsp;</span>}
+<span id="L73" class="ln">    73&nbsp;&nbsp;</span>
+<span id="L74" class="ln">    74&nbsp;&nbsp;</span><span class="comment">// A memRecord is the bucket data for a bucket of type memProfile,</span>
+<span id="L75" class="ln">    75&nbsp;&nbsp;</span><span class="comment">// part of the memory profile.</span>
+<span id="L76" class="ln">    76&nbsp;&nbsp;</span>type memRecord struct {
+<span id="L77" class="ln">    77&nbsp;&nbsp;</span>	<span class="comment">// The following complex 3-stage scheme of stats accumulation</span>
+<span id="L78" class="ln">    78&nbsp;&nbsp;</span>	<span class="comment">// is required to obtain a consistent picture of mallocs and frees</span>
+<span id="L79" class="ln">    79&nbsp;&nbsp;</span>	<span class="comment">// for some point in time.</span>
+<span id="L80" class="ln">    80&nbsp;&nbsp;</span>	<span class="comment">// The problem is that mallocs come in real time, while frees</span>
+<span id="L81" class="ln">    81&nbsp;&nbsp;</span>	<span class="comment">// come only after a GC during concurrent sweeping. So if we would</span>
+<span id="L82" class="ln">    82&nbsp;&nbsp;</span>	<span class="comment">// naively count them, we would get a skew toward mallocs.</span>
+<span id="L83" class="ln">    83&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L84" class="ln">    84&nbsp;&nbsp;</span>	<span class="comment">// Hence, we delay information to get consistent snapshots as</span>
+<span id="L85" class="ln">    85&nbsp;&nbsp;</span>	<span class="comment">// of mark termination. Allocations count toward the next mark</span>
+<span id="L86" class="ln">    86&nbsp;&nbsp;</span>	<span class="comment">// termination&#39;s snapshot, while sweep frees count toward the</span>
+<span id="L87" class="ln">    87&nbsp;&nbsp;</span>	<span class="comment">// previous mark termination&#39;s snapshot:</span>
+<span id="L88" class="ln">    88&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L89" class="ln">    89&nbsp;&nbsp;</span>	<span class="comment">//              MT          MT          MT          MT</span>
+<span id="L90" class="ln">    90&nbsp;&nbsp;</span>	<span class="comment">//             .·|         .·|         .·|         .·|</span>
+<span id="L91" class="ln">    91&nbsp;&nbsp;</span>	<span class="comment">//          .·˙  |      .·˙  |      .·˙  |      .·˙  |</span>
+<span id="L92" class="ln">    92&nbsp;&nbsp;</span>	<span class="comment">//       .·˙     |   .·˙     |   .·˙     |   .·˙     |</span>
+<span id="L93" class="ln">    93&nbsp;&nbsp;</span>	<span class="comment">//    .·˙        |.·˙        |.·˙        |.·˙        |</span>
+<span id="L94" class="ln">    94&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L95" class="ln">    95&nbsp;&nbsp;</span>	<span class="comment">//       alloc → ▲ ← free</span>
+<span id="L96" class="ln">    96&nbsp;&nbsp;</span>	<span class="comment">//               ┠┅┅┅┅┅┅┅┅┅┅┅P</span>
+<span id="L97" class="ln">    97&nbsp;&nbsp;</span>	<span class="comment">//       C+2     →    C+1    →  C</span>
+<span id="L98" class="ln">    98&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L99" class="ln">    99&nbsp;&nbsp;</span>	<span class="comment">//                   alloc → ▲ ← free</span>
+<span id="L100" class="ln">   100&nbsp;&nbsp;</span>	<span class="comment">//                           ┠┅┅┅┅┅┅┅┅┅┅┅P</span>
+<span id="L101" class="ln">   101&nbsp;&nbsp;</span>	<span class="comment">//                   C+2     →    C+1    →  C</span>
+<span id="L102" class="ln">   102&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L103" class="ln">   103&nbsp;&nbsp;</span>	<span class="comment">// Since we can&#39;t publish a consistent snapshot until all of</span>
+<span id="L104" class="ln">   104&nbsp;&nbsp;</span>	<span class="comment">// the sweep frees are accounted for, we wait until the next</span>
+<span id="L105" class="ln">   105&nbsp;&nbsp;</span>	<span class="comment">// mark termination (&#34;MT&#34; above) to publish the previous mark</span>
+<span id="L106" class="ln">   106&nbsp;&nbsp;</span>	<span class="comment">// termination&#39;s snapshot (&#34;P&#34; above). To do this, allocation</span>
+<span id="L107" class="ln">   107&nbsp;&nbsp;</span>	<span class="comment">// and free events are accounted to *future* heap profile</span>
+<span id="L108" class="ln">   108&nbsp;&nbsp;</span>	<span class="comment">// cycles (&#34;C+n&#34; above) and we only publish a cycle once all</span>
+<span id="L109" class="ln">   109&nbsp;&nbsp;</span>	<span class="comment">// of the events from that cycle must be done. Specifically:</span>
+<span id="L110" class="ln">   110&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L111" class="ln">   111&nbsp;&nbsp;</span>	<span class="comment">// Mallocs are accounted to cycle C+2.</span>
+<span id="L112" class="ln">   112&nbsp;&nbsp;</span>	<span class="comment">// Explicit frees are accounted to cycle C+2.</span>
+<span id="L113" class="ln">   113&nbsp;&nbsp;</span>	<span class="comment">// GC frees (done during sweeping) are accounted to cycle C+1.</span>
+<span id="L114" class="ln">   114&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L115" class="ln">   115&nbsp;&nbsp;</span>	<span class="comment">// After mark termination, we increment the global heap</span>
+<span id="L116" class="ln">   116&nbsp;&nbsp;</span>	<span class="comment">// profile cycle counter and accumulate the stats from cycle C</span>
+<span id="L117" class="ln">   117&nbsp;&nbsp;</span>	<span class="comment">// into the active profile.</span>
+<span id="L118" class="ln">   118&nbsp;&nbsp;</span>
+<span id="L119" class="ln">   119&nbsp;&nbsp;</span>	<span class="comment">// active is the currently published profile. A profiling</span>
+<span id="L120" class="ln">   120&nbsp;&nbsp;</span>	<span class="comment">// cycle can be accumulated into active once its complete.</span>
+<span id="L121" class="ln">   121&nbsp;&nbsp;</span>	active memRecordCycle
+<span id="L122" class="ln">   122&nbsp;&nbsp;</span>
+<span id="L123" class="ln">   123&nbsp;&nbsp;</span>	<span class="comment">// future records the profile events we&#39;re counting for cycles</span>
+<span id="L124" class="ln">   124&nbsp;&nbsp;</span>	<span class="comment">// that have not yet been published. This is ring buffer</span>
+<span id="L125" class="ln">   125&nbsp;&nbsp;</span>	<span class="comment">// indexed by the global heap profile cycle C and stores</span>
+<span id="L126" class="ln">   126&nbsp;&nbsp;</span>	<span class="comment">// cycles C, C+1, and C+2. Unlike active, these counts are</span>
+<span id="L127" class="ln">   127&nbsp;&nbsp;</span>	<span class="comment">// only for a single cycle; they are not cumulative across</span>
+<span id="L128" class="ln">   128&nbsp;&nbsp;</span>	<span class="comment">// cycles.</span>
+<span id="L129" class="ln">   129&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L130" class="ln">   130&nbsp;&nbsp;</span>	<span class="comment">// We store cycle C here because there&#39;s a window between when</span>
+<span id="L131" class="ln">   131&nbsp;&nbsp;</span>	<span class="comment">// C becomes the active cycle and when we&#39;ve flushed it to</span>
+<span id="L132" class="ln">   132&nbsp;&nbsp;</span>	<span class="comment">// active.</span>
+<span id="L133" class="ln">   133&nbsp;&nbsp;</span>	future [3]memRecordCycle
+<span id="L134" class="ln">   134&nbsp;&nbsp;</span>}
+<span id="L135" class="ln">   135&nbsp;&nbsp;</span>
+<span id="L136" class="ln">   136&nbsp;&nbsp;</span><span class="comment">// memRecordCycle</span>
+<span id="L137" class="ln">   137&nbsp;&nbsp;</span>type memRecordCycle struct {
+<span id="L138" class="ln">   138&nbsp;&nbsp;</span>	allocs, frees           uintptr
+<span id="L139" class="ln">   139&nbsp;&nbsp;</span>	alloc_bytes, free_bytes uintptr
+<span id="L140" class="ln">   140&nbsp;&nbsp;</span>}
+<span id="L141" class="ln">   141&nbsp;&nbsp;</span>
+<span id="L142" class="ln">   142&nbsp;&nbsp;</span><span class="comment">// add accumulates b into a. It does not zero b.</span>
+<span id="L143" class="ln">   143&nbsp;&nbsp;</span>func (a *memRecordCycle) add(b *memRecordCycle) {
+<span id="L144" class="ln">   144&nbsp;&nbsp;</span>	a.allocs += b.allocs
+<span id="L145" class="ln">   145&nbsp;&nbsp;</span>	a.frees += b.frees
+<span id="L146" class="ln">   146&nbsp;&nbsp;</span>	a.alloc_bytes += b.alloc_bytes
+<span id="L147" class="ln">   147&nbsp;&nbsp;</span>	a.free_bytes += b.free_bytes
+<span id="L148" class="ln">   148&nbsp;&nbsp;</span>}
+<span id="L149" class="ln">   149&nbsp;&nbsp;</span>
+<span id="L150" class="ln">   150&nbsp;&nbsp;</span><span class="comment">// A blockRecord is the bucket data for a bucket of type blockProfile,</span>
+<span id="L151" class="ln">   151&nbsp;&nbsp;</span><span class="comment">// which is used in blocking and mutex profiles.</span>
+<span id="L152" class="ln">   152&nbsp;&nbsp;</span>type blockRecord struct {
+<span id="L153" class="ln">   153&nbsp;&nbsp;</span>	count  float64
+<span id="L154" class="ln">   154&nbsp;&nbsp;</span>	cycles int64
+<span id="L155" class="ln">   155&nbsp;&nbsp;</span>}
+<span id="L156" class="ln">   156&nbsp;&nbsp;</span>
+<span id="L157" class="ln">   157&nbsp;&nbsp;</span>var (
+<span id="L158" class="ln">   158&nbsp;&nbsp;</span>	mbuckets atomic.UnsafePointer <span class="comment">// *bucket, memory profile buckets</span>
+<span id="L159" class="ln">   159&nbsp;&nbsp;</span>	bbuckets atomic.UnsafePointer <span class="comment">// *bucket, blocking profile buckets</span>
+<span id="L160" class="ln">   160&nbsp;&nbsp;</span>	xbuckets atomic.UnsafePointer <span class="comment">// *bucket, mutex profile buckets</span>
+<span id="L161" class="ln">   161&nbsp;&nbsp;</span>	buckhash atomic.UnsafePointer <span class="comment">// *buckhashArray</span>
+<span id="L162" class="ln">   162&nbsp;&nbsp;</span>
+<span id="L163" class="ln">   163&nbsp;&nbsp;</span>	mProfCycle mProfCycleHolder
+<span id="L164" class="ln">   164&nbsp;&nbsp;</span>)
+<span id="L165" class="ln">   165&nbsp;&nbsp;</span>
+<span id="L166" class="ln">   166&nbsp;&nbsp;</span>type buckhashArray [buckHashSize]atomic.UnsafePointer <span class="comment">// *bucket</span>
+<span id="L167" class="ln">   167&nbsp;&nbsp;</span>
+<span id="L168" class="ln">   168&nbsp;&nbsp;</span>const mProfCycleWrap = uint32(len(memRecord{}.future)) * (2 &lt;&lt; 24)
+<span id="L169" class="ln">   169&nbsp;&nbsp;</span>
+<span id="L170" class="ln">   170&nbsp;&nbsp;</span><span class="comment">// mProfCycleHolder holds the global heap profile cycle number (wrapped at</span>
+<span id="L171" class="ln">   171&nbsp;&nbsp;</span><span class="comment">// mProfCycleWrap, stored starting at bit 1), and a flag (stored at bit 0) to</span>
+<span id="L172" class="ln">   172&nbsp;&nbsp;</span><span class="comment">// indicate whether future[cycle] in all buckets has been queued to flush into</span>
+<span id="L173" class="ln">   173&nbsp;&nbsp;</span><span class="comment">// the active profile.</span>
+<span id="L174" class="ln">   174&nbsp;&nbsp;</span>type mProfCycleHolder struct {
+<span id="L175" class="ln">   175&nbsp;&nbsp;</span>	value atomic.Uint32
+<span id="L176" class="ln">   176&nbsp;&nbsp;</span>}
+<span id="L177" class="ln">   177&nbsp;&nbsp;</span>
+<span id="L178" class="ln">   178&nbsp;&nbsp;</span><span class="comment">// read returns the current cycle count.</span>
+<span id="L179" class="ln">   179&nbsp;&nbsp;</span>func (c *mProfCycleHolder) read() (cycle uint32) {
+<span id="L180" class="ln">   180&nbsp;&nbsp;</span>	v := c.value.Load()
+<span id="L181" class="ln">   181&nbsp;&nbsp;</span>	cycle = v &gt;&gt; 1
+<span id="L182" class="ln">   182&nbsp;&nbsp;</span>	return cycle
+<span id="L183" class="ln">   183&nbsp;&nbsp;</span>}
+<span id="L184" class="ln">   184&nbsp;&nbsp;</span>
+<span id="L185" class="ln">   185&nbsp;&nbsp;</span><span class="comment">// setFlushed sets the flushed flag. It returns the current cycle count and the</span>
+<span id="L186" class="ln">   186&nbsp;&nbsp;</span><span class="comment">// previous value of the flushed flag.</span>
+<span id="L187" class="ln">   187&nbsp;&nbsp;</span>func (c *mProfCycleHolder) setFlushed() (cycle uint32, alreadyFlushed bool) {
+<span id="L188" class="ln">   188&nbsp;&nbsp;</span>	for {
+<span id="L189" class="ln">   189&nbsp;&nbsp;</span>		prev := c.value.Load()
+<span id="L190" class="ln">   190&nbsp;&nbsp;</span>		cycle = prev &gt;&gt; 1
+<span id="L191" class="ln">   191&nbsp;&nbsp;</span>		alreadyFlushed = (prev &amp; 0x1) != 0
+<span id="L192" class="ln">   192&nbsp;&nbsp;</span>		next := prev | 0x1
+<span id="L193" class="ln">   193&nbsp;&nbsp;</span>		if c.value.CompareAndSwap(prev, next) {
+<span id="L194" class="ln">   194&nbsp;&nbsp;</span>			return cycle, alreadyFlushed
+<span id="L195" class="ln">   195&nbsp;&nbsp;</span>		}
+<span id="L196" class="ln">   196&nbsp;&nbsp;</span>	}
+<span id="L197" class="ln">   197&nbsp;&nbsp;</span>}
+<span id="L198" class="ln">   198&nbsp;&nbsp;</span>
+<span id="L199" class="ln">   199&nbsp;&nbsp;</span><span class="comment">// increment increases the cycle count by one, wrapping the value at</span>
+<span id="L200" class="ln">   200&nbsp;&nbsp;</span><span class="comment">// mProfCycleWrap. It clears the flushed flag.</span>
+<span id="L201" class="ln">   201&nbsp;&nbsp;</span>func (c *mProfCycleHolder) increment() {
+<span id="L202" class="ln">   202&nbsp;&nbsp;</span>	<span class="comment">// We explicitly wrap mProfCycle rather than depending on</span>
+<span id="L203" class="ln">   203&nbsp;&nbsp;</span>	<span class="comment">// uint wraparound because the memRecord.future ring does not</span>
+<span id="L204" class="ln">   204&nbsp;&nbsp;</span>	<span class="comment">// itself wrap at a power of two.</span>
+<span id="L205" class="ln">   205&nbsp;&nbsp;</span>	for {
+<span id="L206" class="ln">   206&nbsp;&nbsp;</span>		prev := c.value.Load()
+<span id="L207" class="ln">   207&nbsp;&nbsp;</span>		cycle := prev &gt;&gt; 1
+<span id="L208" class="ln">   208&nbsp;&nbsp;</span>		cycle = (cycle + 1) % mProfCycleWrap
+<span id="L209" class="ln">   209&nbsp;&nbsp;</span>		next := cycle &lt;&lt; 1
+<span id="L210" class="ln">   210&nbsp;&nbsp;</span>		if c.value.CompareAndSwap(prev, next) {
+<span id="L211" class="ln">   211&nbsp;&nbsp;</span>			break
+<span id="L212" class="ln">   212&nbsp;&nbsp;</span>		}
+<span id="L213" class="ln">   213&nbsp;&nbsp;</span>	}
+<span id="L214" class="ln">   214&nbsp;&nbsp;</span>}
+<span id="L215" class="ln">   215&nbsp;&nbsp;</span>
+<span id="L216" class="ln">   216&nbsp;&nbsp;</span><span class="comment">// newBucket allocates a bucket with the given type and number of stack entries.</span>
+<span id="L217" class="ln">   217&nbsp;&nbsp;</span>func newBucket(typ bucketType, nstk int) *bucket {
+<span id="L218" class="ln">   218&nbsp;&nbsp;</span>	size := unsafe.Sizeof(bucket{}) + uintptr(nstk)*unsafe.Sizeof(uintptr(0))
+<span id="L219" class="ln">   219&nbsp;&nbsp;</span>	switch typ {
+<span id="L220" class="ln">   220&nbsp;&nbsp;</span>	default:
+<span id="L221" class="ln">   221&nbsp;&nbsp;</span>		throw(&#34;invalid profile bucket type&#34;)
+<span id="L222" class="ln">   222&nbsp;&nbsp;</span>	case memProfile:
+<span id="L223" class="ln">   223&nbsp;&nbsp;</span>		size += unsafe.Sizeof(memRecord{})
+<span id="L224" class="ln">   224&nbsp;&nbsp;</span>	case blockProfile, mutexProfile:
+<span id="L225" class="ln">   225&nbsp;&nbsp;</span>		size += unsafe.Sizeof(blockRecord{})
+<span id="L226" class="ln">   226&nbsp;&nbsp;</span>	}
+<span id="L227" class="ln">   227&nbsp;&nbsp;</span>
+<span id="L228" class="ln">   228&nbsp;&nbsp;</span>	b := (*bucket)(persistentalloc(size, 0, &amp;memstats.buckhash_sys))
+<span id="L229" class="ln">   229&nbsp;&nbsp;</span>	b.typ = typ
+<span id="L230" class="ln">   230&nbsp;&nbsp;</span>	b.nstk = uintptr(nstk)
+<span id="L231" class="ln">   231&nbsp;&nbsp;</span>	return b
+<span id="L232" class="ln">   232&nbsp;&nbsp;</span>}
+<span id="L233" class="ln">   233&nbsp;&nbsp;</span>
+<span id="L234" class="ln">   234&nbsp;&nbsp;</span><span class="comment">// stk returns the slice in b holding the stack.</span>
+<span id="L235" class="ln">   235&nbsp;&nbsp;</span>func (b *bucket) stk() []uintptr {
+<span id="L236" class="ln">   236&nbsp;&nbsp;</span>	stk := (*[maxStack]uintptr)(add(unsafe.Pointer(b), unsafe.Sizeof(*b)))
+<span id="L237" class="ln">   237&nbsp;&nbsp;</span>	if b.nstk &gt; maxStack {
+<span id="L238" class="ln">   238&nbsp;&nbsp;</span>		<span class="comment">// prove that slicing works; otherwise a failure requires a P</span>
+<span id="L239" class="ln">   239&nbsp;&nbsp;</span>		throw(&#34;bad profile stack count&#34;)
+<span id="L240" class="ln">   240&nbsp;&nbsp;</span>	}
+<span id="L241" class="ln">   241&nbsp;&nbsp;</span>	return stk[:b.nstk:b.nstk]
+<span id="L242" class="ln">   242&nbsp;&nbsp;</span>}
+<span id="L243" class="ln">   243&nbsp;&nbsp;</span>
+<span id="L244" class="ln">   244&nbsp;&nbsp;</span><span class="comment">// mp returns the memRecord associated with the memProfile bucket b.</span>
+<span id="L245" class="ln">   245&nbsp;&nbsp;</span>func (b *bucket) mp() *memRecord {
+<span id="L246" class="ln">   246&nbsp;&nbsp;</span>	if b.typ != memProfile {
+<span id="L247" class="ln">   247&nbsp;&nbsp;</span>		throw(&#34;bad use of bucket.mp&#34;)
+<span id="L248" class="ln">   248&nbsp;&nbsp;</span>	}
+<span id="L249" class="ln">   249&nbsp;&nbsp;</span>	data := add(unsafe.Pointer(b), unsafe.Sizeof(*b)+b.nstk*unsafe.Sizeof(uintptr(0)))
+<span id="L250" class="ln">   250&nbsp;&nbsp;</span>	return (*memRecord)(data)
+<span id="L251" class="ln">   251&nbsp;&nbsp;</span>}
+<span id="L252" class="ln">   252&nbsp;&nbsp;</span>
+<span id="L253" class="ln">   253&nbsp;&nbsp;</span><span class="comment">// bp returns the blockRecord associated with the blockProfile bucket b.</span>
+<span id="L254" class="ln">   254&nbsp;&nbsp;</span>func (b *bucket) bp() *blockRecord {
+<span id="L255" class="ln">   255&nbsp;&nbsp;</span>	if b.typ != blockProfile &amp;&amp; b.typ != mutexProfile {
+<span id="L256" class="ln">   256&nbsp;&nbsp;</span>		throw(&#34;bad use of bucket.bp&#34;)
+<span id="L257" class="ln">   257&nbsp;&nbsp;</span>	}
+<span id="L258" class="ln">   258&nbsp;&nbsp;</span>	data := add(unsafe.Pointer(b), unsafe.Sizeof(*b)+b.nstk*unsafe.Sizeof(uintptr(0)))
+<span id="L259" class="ln">   259&nbsp;&nbsp;</span>	return (*blockRecord)(data)
+<span id="L260" class="ln">   260&nbsp;&nbsp;</span>}
+<span id="L261" class="ln">   261&nbsp;&nbsp;</span>
+<span id="L262" class="ln">   262&nbsp;&nbsp;</span><span class="comment">// Return the bucket for stk[0:nstk], allocating new bucket if needed.</span>
+<span id="L263" class="ln">   263&nbsp;&nbsp;</span>func stkbucket(typ bucketType, size uintptr, stk []uintptr, alloc bool) *bucket {
+<span id="L264" class="ln">   264&nbsp;&nbsp;</span>	bh := (*buckhashArray)(buckhash.Load())
+<span id="L265" class="ln">   265&nbsp;&nbsp;</span>	if bh == nil {
+<span id="L266" class="ln">   266&nbsp;&nbsp;</span>		lock(&amp;profInsertLock)
+<span id="L267" class="ln">   267&nbsp;&nbsp;</span>		<span class="comment">// check again under the lock</span>
+<span id="L268" class="ln">   268&nbsp;&nbsp;</span>		bh = (*buckhashArray)(buckhash.Load())
+<span id="L269" class="ln">   269&nbsp;&nbsp;</span>		if bh == nil {
+<span id="L270" class="ln">   270&nbsp;&nbsp;</span>			bh = (*buckhashArray)(sysAlloc(unsafe.Sizeof(buckhashArray{}), &amp;memstats.buckhash_sys))
+<span id="L271" class="ln">   271&nbsp;&nbsp;</span>			if bh == nil {
+<span id="L272" class="ln">   272&nbsp;&nbsp;</span>				throw(&#34;runtime: cannot allocate memory&#34;)
+<span id="L273" class="ln">   273&nbsp;&nbsp;</span>			}
+<span id="L274" class="ln">   274&nbsp;&nbsp;</span>			buckhash.StoreNoWB(unsafe.Pointer(bh))
+<span id="L275" class="ln">   275&nbsp;&nbsp;</span>		}
+<span id="L276" class="ln">   276&nbsp;&nbsp;</span>		unlock(&amp;profInsertLock)
+<span id="L277" class="ln">   277&nbsp;&nbsp;</span>	}
+<span id="L278" class="ln">   278&nbsp;&nbsp;</span>
+<span id="L279" class="ln">   279&nbsp;&nbsp;</span>	<span class="comment">// Hash stack.</span>
+<span id="L280" class="ln">   280&nbsp;&nbsp;</span>	var h uintptr
+<span id="L281" class="ln">   281&nbsp;&nbsp;</span>	for _, pc := range stk {
+<span id="L282" class="ln">   282&nbsp;&nbsp;</span>		h += pc
+<span id="L283" class="ln">   283&nbsp;&nbsp;</span>		h += h &lt;&lt; 10
+<span id="L284" class="ln">   284&nbsp;&nbsp;</span>		h ^= h &gt;&gt; 6
+<span id="L285" class="ln">   285&nbsp;&nbsp;</span>	}
+<span id="L286" class="ln">   286&nbsp;&nbsp;</span>	<span class="comment">// hash in size</span>
+<span id="L287" class="ln">   287&nbsp;&nbsp;</span>	h += size
+<span id="L288" class="ln">   288&nbsp;&nbsp;</span>	h += h &lt;&lt; 10
+<span id="L289" class="ln">   289&nbsp;&nbsp;</span>	h ^= h &gt;&gt; 6
+<span id="L290" class="ln">   290&nbsp;&nbsp;</span>	<span class="comment">// finalize</span>
+<span id="L291" class="ln">   291&nbsp;&nbsp;</span>	h += h &lt;&lt; 3
+<span id="L292" class="ln">   292&nbsp;&nbsp;</span>	h ^= h &gt;&gt; 11
+<span id="L293" class="ln">   293&nbsp;&nbsp;</span>
+<span id="L294" class="ln">   294&nbsp;&nbsp;</span>	i := int(h % buckHashSize)
+<span id="L295" class="ln">   295&nbsp;&nbsp;</span>	<span class="comment">// first check optimistically, without the lock</span>
+<span id="L296" class="ln">   296&nbsp;&nbsp;</span>	for b := (*bucket)(bh[i].Load()); b != nil; b = b.next {
+<span id="L297" class="ln">   297&nbsp;&nbsp;</span>		if b.typ == typ &amp;&amp; b.hash == h &amp;&amp; b.size == size &amp;&amp; eqslice(b.stk(), stk) {
+<span id="L298" class="ln">   298&nbsp;&nbsp;</span>			return b
+<span id="L299" class="ln">   299&nbsp;&nbsp;</span>		}
+<span id="L300" class="ln">   300&nbsp;&nbsp;</span>	}
+<span id="L301" class="ln">   301&nbsp;&nbsp;</span>
+<span id="L302" class="ln">   302&nbsp;&nbsp;</span>	if !alloc {
+<span id="L303" class="ln">   303&nbsp;&nbsp;</span>		return nil
+<span id="L304" class="ln">   304&nbsp;&nbsp;</span>	}
+<span id="L305" class="ln">   305&nbsp;&nbsp;</span>
+<span id="L306" class="ln">   306&nbsp;&nbsp;</span>	lock(&amp;profInsertLock)
+<span id="L307" class="ln">   307&nbsp;&nbsp;</span>	<span class="comment">// check again under the insertion lock</span>
+<span id="L308" class="ln">   308&nbsp;&nbsp;</span>	for b := (*bucket)(bh[i].Load()); b != nil; b = b.next {
+<span id="L309" class="ln">   309&nbsp;&nbsp;</span>		if b.typ == typ &amp;&amp; b.hash == h &amp;&amp; b.size == size &amp;&amp; eqslice(b.stk(), stk) {
+<span id="L310" class="ln">   310&nbsp;&nbsp;</span>			unlock(&amp;profInsertLock)
+<span id="L311" class="ln">   311&nbsp;&nbsp;</span>			return b
+<span id="L312" class="ln">   312&nbsp;&nbsp;</span>		}
+<span id="L313" class="ln">   313&nbsp;&nbsp;</span>	}
+<span id="L314" class="ln">   314&nbsp;&nbsp;</span>
+<span id="L315" class="ln">   315&nbsp;&nbsp;</span>	<span class="comment">// Create new bucket.</span>
+<span id="L316" class="ln">   316&nbsp;&nbsp;</span>	b := newBucket(typ, len(stk))
+<span id="L317" class="ln">   317&nbsp;&nbsp;</span>	copy(b.stk(), stk)
+<span id="L318" class="ln">   318&nbsp;&nbsp;</span>	b.hash = h
+<span id="L319" class="ln">   319&nbsp;&nbsp;</span>	b.size = size
+<span id="L320" class="ln">   320&nbsp;&nbsp;</span>
+<span id="L321" class="ln">   321&nbsp;&nbsp;</span>	var allnext *atomic.UnsafePointer
+<span id="L322" class="ln">   322&nbsp;&nbsp;</span>	if typ == memProfile {
+<span id="L323" class="ln">   323&nbsp;&nbsp;</span>		allnext = &amp;mbuckets
+<span id="L324" class="ln">   324&nbsp;&nbsp;</span>	} else if typ == mutexProfile {
+<span id="L325" class="ln">   325&nbsp;&nbsp;</span>		allnext = &amp;xbuckets
+<span id="L326" class="ln">   326&nbsp;&nbsp;</span>	} else {
+<span id="L327" class="ln">   327&nbsp;&nbsp;</span>		allnext = &amp;bbuckets
+<span id="L328" class="ln">   328&nbsp;&nbsp;</span>	}
+<span id="L329" class="ln">   329&nbsp;&nbsp;</span>
+<span id="L330" class="ln">   330&nbsp;&nbsp;</span>	b.next = (*bucket)(bh[i].Load())
+<span id="L331" class="ln">   331&nbsp;&nbsp;</span>	b.allnext = (*bucket)(allnext.Load())
+<span id="L332" class="ln">   332&nbsp;&nbsp;</span>
+<span id="L333" class="ln">   333&nbsp;&nbsp;</span>	bh[i].StoreNoWB(unsafe.Pointer(b))
+<span id="L334" class="ln">   334&nbsp;&nbsp;</span>	allnext.StoreNoWB(unsafe.Pointer(b))
+<span id="L335" class="ln">   335&nbsp;&nbsp;</span>
+<span id="L336" class="ln">   336&nbsp;&nbsp;</span>	unlock(&amp;profInsertLock)
+<span id="L337" class="ln">   337&nbsp;&nbsp;</span>	return b
+<span id="L338" class="ln">   338&nbsp;&nbsp;</span>}
+<span id="L339" class="ln">   339&nbsp;&nbsp;</span>
+<span id="L340" class="ln">   340&nbsp;&nbsp;</span>func eqslice(x, y []uintptr) bool {
+<span id="L341" class="ln">   341&nbsp;&nbsp;</span>	if len(x) != len(y) {
+<span id="L342" class="ln">   342&nbsp;&nbsp;</span>		return false
+<span id="L343" class="ln">   343&nbsp;&nbsp;</span>	}
+<span id="L344" class="ln">   344&nbsp;&nbsp;</span>	for i, xi := range x {
+<span id="L345" class="ln">   345&nbsp;&nbsp;</span>		if xi != y[i] {
+<span id="L346" class="ln">   346&nbsp;&nbsp;</span>			return false
+<span id="L347" class="ln">   347&nbsp;&nbsp;</span>		}
+<span id="L348" class="ln">   348&nbsp;&nbsp;</span>	}
+<span id="L349" class="ln">   349&nbsp;&nbsp;</span>	return true
+<span id="L350" class="ln">   350&nbsp;&nbsp;</span>}
+<span id="L351" class="ln">   351&nbsp;&nbsp;</span>
+<span id="L352" class="ln">   352&nbsp;&nbsp;</span><span class="comment">// mProf_NextCycle publishes the next heap profile cycle and creates a</span>
+<span id="L353" class="ln">   353&nbsp;&nbsp;</span><span class="comment">// fresh heap profile cycle. This operation is fast and can be done</span>
+<span id="L354" class="ln">   354&nbsp;&nbsp;</span><span class="comment">// during STW. The caller must call mProf_Flush before calling</span>
+<span id="L355" class="ln">   355&nbsp;&nbsp;</span><span class="comment">// mProf_NextCycle again.</span>
+<span id="L356" class="ln">   356&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L357" class="ln">   357&nbsp;&nbsp;</span><span class="comment">// This is called by mark termination during STW so allocations and</span>
+<span id="L358" class="ln">   358&nbsp;&nbsp;</span><span class="comment">// frees after the world is started again count towards a new heap</span>
+<span id="L359" class="ln">   359&nbsp;&nbsp;</span><span class="comment">// profiling cycle.</span>
+<span id="L360" class="ln">   360&nbsp;&nbsp;</span>func mProf_NextCycle() {
+<span id="L361" class="ln">   361&nbsp;&nbsp;</span>	mProfCycle.increment()
+<span id="L362" class="ln">   362&nbsp;&nbsp;</span>}
+<span id="L363" class="ln">   363&nbsp;&nbsp;</span>
+<span id="L364" class="ln">   364&nbsp;&nbsp;</span><span class="comment">// mProf_Flush flushes the events from the current heap profiling</span>
+<span id="L365" class="ln">   365&nbsp;&nbsp;</span><span class="comment">// cycle into the active profile. After this it is safe to start a new</span>
+<span id="L366" class="ln">   366&nbsp;&nbsp;</span><span class="comment">// heap profiling cycle with mProf_NextCycle.</span>
+<span id="L367" class="ln">   367&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L368" class="ln">   368&nbsp;&nbsp;</span><span class="comment">// This is called by GC after mark termination starts the world. In</span>
+<span id="L369" class="ln">   369&nbsp;&nbsp;</span><span class="comment">// contrast with mProf_NextCycle, this is somewhat expensive, but safe</span>
+<span id="L370" class="ln">   370&nbsp;&nbsp;</span><span class="comment">// to do concurrently.</span>
+<span id="L371" class="ln">   371&nbsp;&nbsp;</span>func mProf_Flush() {
+<span id="L372" class="ln">   372&nbsp;&nbsp;</span>	cycle, alreadyFlushed := mProfCycle.setFlushed()
+<span id="L373" class="ln">   373&nbsp;&nbsp;</span>	if alreadyFlushed {
+<span id="L374" class="ln">   374&nbsp;&nbsp;</span>		return
+<span id="L375" class="ln">   375&nbsp;&nbsp;</span>	}
+<span id="L376" class="ln">   376&nbsp;&nbsp;</span>
+<span id="L377" class="ln">   377&nbsp;&nbsp;</span>	index := cycle % uint32(len(memRecord{}.future))
+<span id="L378" class="ln">   378&nbsp;&nbsp;</span>	lock(&amp;profMemActiveLock)
+<span id="L379" class="ln">   379&nbsp;&nbsp;</span>	lock(&amp;profMemFutureLock[index])
+<span id="L380" class="ln">   380&nbsp;&nbsp;</span>	mProf_FlushLocked(index)
+<span id="L381" class="ln">   381&nbsp;&nbsp;</span>	unlock(&amp;profMemFutureLock[index])
+<span id="L382" class="ln">   382&nbsp;&nbsp;</span>	unlock(&amp;profMemActiveLock)
+<span id="L383" class="ln">   383&nbsp;&nbsp;</span>}
+<span id="L384" class="ln">   384&nbsp;&nbsp;</span>
+<span id="L385" class="ln">   385&nbsp;&nbsp;</span><span class="comment">// mProf_FlushLocked flushes the events from the heap profiling cycle at index</span>
+<span id="L386" class="ln">   386&nbsp;&nbsp;</span><span class="comment">// into the active profile. The caller must hold the lock for the active profile</span>
+<span id="L387" class="ln">   387&nbsp;&nbsp;</span><span class="comment">// (profMemActiveLock) and for the profiling cycle at index</span>
+<span id="L388" class="ln">   388&nbsp;&nbsp;</span><span class="comment">// (profMemFutureLock[index]).</span>
+<span id="L389" class="ln">   389&nbsp;&nbsp;</span>func mProf_FlushLocked(index uint32) {
+<span id="L390" class="ln">   390&nbsp;&nbsp;</span>	assertLockHeld(&amp;profMemActiveLock)
+<span id="L391" class="ln">   391&nbsp;&nbsp;</span>	assertLockHeld(&amp;profMemFutureLock[index])
+<span id="L392" class="ln">   392&nbsp;&nbsp;</span>	head := (*bucket)(mbuckets.Load())
+<span id="L393" class="ln">   393&nbsp;&nbsp;</span>	for b := head; b != nil; b = b.allnext {
+<span id="L394" class="ln">   394&nbsp;&nbsp;</span>		mp := b.mp()
+<span id="L395" class="ln">   395&nbsp;&nbsp;</span>
+<span id="L396" class="ln">   396&nbsp;&nbsp;</span>		<span class="comment">// Flush cycle C into the published profile and clear</span>
+<span id="L397" class="ln">   397&nbsp;&nbsp;</span>		<span class="comment">// it for reuse.</span>
+<span id="L398" class="ln">   398&nbsp;&nbsp;</span>		mpc := &amp;mp.future[index]
+<span id="L399" class="ln">   399&nbsp;&nbsp;</span>		mp.active.add(mpc)
+<span id="L400" class="ln">   400&nbsp;&nbsp;</span>		*mpc = memRecordCycle{}
+<span id="L401" class="ln">   401&nbsp;&nbsp;</span>	}
+<span id="L402" class="ln">   402&nbsp;&nbsp;</span>}
+<span id="L403" class="ln">   403&nbsp;&nbsp;</span>
+<span id="L404" class="ln">   404&nbsp;&nbsp;</span><span class="comment">// mProf_PostSweep records that all sweep frees for this GC cycle have</span>
+<span id="L405" class="ln">   405&nbsp;&nbsp;</span><span class="comment">// completed. This has the effect of publishing the heap profile</span>
+<span id="L406" class="ln">   406&nbsp;&nbsp;</span><span class="comment">// snapshot as of the last mark termination without advancing the heap</span>
+<span id="L407" class="ln">   407&nbsp;&nbsp;</span><span class="comment">// profile cycle.</span>
+<span id="L408" class="ln">   408&nbsp;&nbsp;</span>func mProf_PostSweep() {
+<span id="L409" class="ln">   409&nbsp;&nbsp;</span>	<span class="comment">// Flush cycle C+1 to the active profile so everything as of</span>
+<span id="L410" class="ln">   410&nbsp;&nbsp;</span>	<span class="comment">// the last mark termination becomes visible. *Don&#39;t* advance</span>
+<span id="L411" class="ln">   411&nbsp;&nbsp;</span>	<span class="comment">// the cycle, since we&#39;re still accumulating allocs in cycle</span>
+<span id="L412" class="ln">   412&nbsp;&nbsp;</span>	<span class="comment">// C+2, which have to become C+1 in the next mark termination</span>
+<span id="L413" class="ln">   413&nbsp;&nbsp;</span>	<span class="comment">// and so on.</span>
+<span id="L414" class="ln">   414&nbsp;&nbsp;</span>	cycle := mProfCycle.read() + 1
+<span id="L415" class="ln">   415&nbsp;&nbsp;</span>
+<span id="L416" class="ln">   416&nbsp;&nbsp;</span>	index := cycle % uint32(len(memRecord{}.future))
+<span id="L417" class="ln">   417&nbsp;&nbsp;</span>	lock(&amp;profMemActiveLock)
+<span id="L418" class="ln">   418&nbsp;&nbsp;</span>	lock(&amp;profMemFutureLock[index])
+<span id="L419" class="ln">   419&nbsp;&nbsp;</span>	mProf_FlushLocked(index)
+<span id="L420" class="ln">   420&nbsp;&nbsp;</span>	unlock(&amp;profMemFutureLock[index])
+<span id="L421" class="ln">   421&nbsp;&nbsp;</span>	unlock(&amp;profMemActiveLock)
+<span id="L422" class="ln">   422&nbsp;&nbsp;</span>}
+<span id="L423" class="ln">   423&nbsp;&nbsp;</span>
+<span id="L424" class="ln">   424&nbsp;&nbsp;</span><span class="comment">// Called by malloc to record a profiled block.</span>
+<span id="L425" class="ln">   425&nbsp;&nbsp;</span>func mProf_Malloc(p unsafe.Pointer, size uintptr) {
+<span id="L426" class="ln">   426&nbsp;&nbsp;</span>	var stk [maxStack]uintptr
+<span id="L427" class="ln">   427&nbsp;&nbsp;</span>	nstk := callers(4, stk[:])
+<span id="L428" class="ln">   428&nbsp;&nbsp;</span>
+<span id="L429" class="ln">   429&nbsp;&nbsp;</span>	index := (mProfCycle.read() + 2) % uint32(len(memRecord{}.future))
+<span id="L430" class="ln">   430&nbsp;&nbsp;</span>
+<span id="L431" class="ln">   431&nbsp;&nbsp;</span>	b := stkbucket(memProfile, size, stk[:nstk], true)
+<span id="L432" class="ln">   432&nbsp;&nbsp;</span>	mp := b.mp()
+<span id="L433" class="ln">   433&nbsp;&nbsp;</span>	mpc := &amp;mp.future[index]
+<span id="L434" class="ln">   434&nbsp;&nbsp;</span>
+<span id="L435" class="ln">   435&nbsp;&nbsp;</span>	lock(&amp;profMemFutureLock[index])
+<span id="L436" class="ln">   436&nbsp;&nbsp;</span>	mpc.allocs++
+<span id="L437" class="ln">   437&nbsp;&nbsp;</span>	mpc.alloc_bytes += size
+<span id="L438" class="ln">   438&nbsp;&nbsp;</span>	unlock(&amp;profMemFutureLock[index])
+<span id="L439" class="ln">   439&nbsp;&nbsp;</span>
+<span id="L440" class="ln">   440&nbsp;&nbsp;</span>	<span class="comment">// Setprofilebucket locks a bunch of other mutexes, so we call it outside of</span>
+<span id="L441" class="ln">   441&nbsp;&nbsp;</span>	<span class="comment">// the profiler locks. This reduces potential contention and chances of</span>
+<span id="L442" class="ln">   442&nbsp;&nbsp;</span>	<span class="comment">// deadlocks. Since the object must be alive during the call to</span>
+<span id="L443" class="ln">   443&nbsp;&nbsp;</span>	<span class="comment">// mProf_Malloc, it&#39;s fine to do this non-atomically.</span>
+<span id="L444" class="ln">   444&nbsp;&nbsp;</span>	systemstack(func() {
+<span id="L445" class="ln">   445&nbsp;&nbsp;</span>		setprofilebucket(p, b)
+<span id="L446" class="ln">   446&nbsp;&nbsp;</span>	})
+<span id="L447" class="ln">   447&nbsp;&nbsp;</span>}
+<span id="L448" class="ln">   448&nbsp;&nbsp;</span>
+<span id="L449" class="ln">   449&nbsp;&nbsp;</span><span class="comment">// Called when freeing a profiled block.</span>
+<span id="L450" class="ln">   450&nbsp;&nbsp;</span>func mProf_Free(b *bucket, size uintptr) {
+<span id="L451" class="ln">   451&nbsp;&nbsp;</span>	index := (mProfCycle.read() + 1) % uint32(len(memRecord{}.future))
+<span id="L452" class="ln">   452&nbsp;&nbsp;</span>
+<span id="L453" class="ln">   453&nbsp;&nbsp;</span>	mp := b.mp()
+<span id="L454" class="ln">   454&nbsp;&nbsp;</span>	mpc := &amp;mp.future[index]
+<span id="L455" class="ln">   455&nbsp;&nbsp;</span>
+<span id="L456" class="ln">   456&nbsp;&nbsp;</span>	lock(&amp;profMemFutureLock[index])
+<span id="L457" class="ln">   457&nbsp;&nbsp;</span>	mpc.frees++
+<span id="L458" class="ln">   458&nbsp;&nbsp;</span>	mpc.free_bytes += size
+<span id="L459" class="ln">   459&nbsp;&nbsp;</span>	unlock(&amp;profMemFutureLock[index])
+<span id="L460" class="ln">   460&nbsp;&nbsp;</span>}
+<span id="L461" class="ln">   461&nbsp;&nbsp;</span>
+<span id="L462" class="ln">   462&nbsp;&nbsp;</span>var blockprofilerate uint64 <span class="comment">// in CPU ticks</span>
+<span id="L463" class="ln">   463&nbsp;&nbsp;</span>
+<span id="L464" class="ln">   464&nbsp;&nbsp;</span><span class="comment">// SetBlockProfileRate controls the fraction of goroutine blocking events</span>
+<span id="L465" class="ln">   465&nbsp;&nbsp;</span><span class="comment">// that are reported in the blocking profile. The profiler aims to sample</span>
+<span id="L466" class="ln">   466&nbsp;&nbsp;</span><span class="comment">// an average of one blocking event per rate nanoseconds spent blocked.</span>
+<span id="L467" class="ln">   467&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L468" class="ln">   468&nbsp;&nbsp;</span><span class="comment">// To include every blocking event in the profile, pass rate = 1.</span>
+<span id="L469" class="ln">   469&nbsp;&nbsp;</span><span class="comment">// To turn off profiling entirely, pass rate &lt;= 0.</span>
+<span id="L470" class="ln">   470&nbsp;&nbsp;</span>func SetBlockProfileRate(rate int) {
+<span id="L471" class="ln">   471&nbsp;&nbsp;</span>	var r int64
+<span id="L472" class="ln">   472&nbsp;&nbsp;</span>	if rate &lt;= 0 {
+<span id="L473" class="ln">   473&nbsp;&nbsp;</span>		r = 0 <span class="comment">// disable profiling</span>
+<span id="L474" class="ln">   474&nbsp;&nbsp;</span>	} else if rate == 1 {
+<span id="L475" class="ln">   475&nbsp;&nbsp;</span>		r = 1 <span class="comment">// profile everything</span>
+<span id="L476" class="ln">   476&nbsp;&nbsp;</span>	} else {
+<span id="L477" class="ln">   477&nbsp;&nbsp;</span>		<span class="comment">// convert ns to cycles, use float64 to prevent overflow during multiplication</span>
+<span id="L478" class="ln">   478&nbsp;&nbsp;</span>		r = int64(float64(rate) * float64(ticksPerSecond()) / (1000 * 1000 * 1000))
+<span id="L479" class="ln">   479&nbsp;&nbsp;</span>		if r == 0 {
+<span id="L480" class="ln">   480&nbsp;&nbsp;</span>			r = 1
+<span id="L481" class="ln">   481&nbsp;&nbsp;</span>		}
+<span id="L482" class="ln">   482&nbsp;&nbsp;</span>	}
+<span id="L483" class="ln">   483&nbsp;&nbsp;</span>
+<span id="L484" class="ln">   484&nbsp;&nbsp;</span>	atomic.Store64(&amp;blockprofilerate, uint64(r))
+<span id="L485" class="ln">   485&nbsp;&nbsp;</span>}
+<span id="L486" class="ln">   486&nbsp;&nbsp;</span>
+<span id="L487" class="ln">   487&nbsp;&nbsp;</span>func blockevent(cycles int64, skip int) {
+<span id="L488" class="ln">   488&nbsp;&nbsp;</span>	if cycles &lt;= 0 {
+<span id="L489" class="ln">   489&nbsp;&nbsp;</span>		cycles = 1
+<span id="L490" class="ln">   490&nbsp;&nbsp;</span>	}
+<span id="L491" class="ln">   491&nbsp;&nbsp;</span>
+<span id="L492" class="ln">   492&nbsp;&nbsp;</span>	rate := int64(atomic.Load64(&amp;blockprofilerate))
+<span id="L493" class="ln">   493&nbsp;&nbsp;</span>	if blocksampled(cycles, rate) {
+<span id="L494" class="ln">   494&nbsp;&nbsp;</span>		saveblockevent(cycles, rate, skip+1, blockProfile)
+<span id="L495" class="ln">   495&nbsp;&nbsp;</span>	}
+<span id="L496" class="ln">   496&nbsp;&nbsp;</span>}
+<span id="L497" class="ln">   497&nbsp;&nbsp;</span>
+<span id="L498" class="ln">   498&nbsp;&nbsp;</span><span class="comment">// blocksampled returns true for all events where cycles &gt;= rate. Shorter</span>
+<span id="L499" class="ln">   499&nbsp;&nbsp;</span><span class="comment">// events have a cycles/rate random chance of returning true.</span>
+<span id="L500" class="ln">   500&nbsp;&nbsp;</span>func blocksampled(cycles, rate int64) bool {
+<span id="L501" class="ln">   501&nbsp;&nbsp;</span>	if rate &lt;= 0 || (rate &gt; cycles &amp;&amp; cheaprand64()%rate &gt; cycles) {
+<span id="L502" class="ln">   502&nbsp;&nbsp;</span>		return false
+<span id="L503" class="ln">   503&nbsp;&nbsp;</span>	}
+<span id="L504" class="ln">   504&nbsp;&nbsp;</span>	return true
+<span id="L505" class="ln">   505&nbsp;&nbsp;</span>}
+<span id="L506" class="ln">   506&nbsp;&nbsp;</span>
+<span id="L507" class="ln">   507&nbsp;&nbsp;</span>func saveblockevent(cycles, rate int64, skip int, which bucketType) {
+<span id="L508" class="ln">   508&nbsp;&nbsp;</span>	gp := getg()
+<span id="L509" class="ln">   509&nbsp;&nbsp;</span>	var nstk int
+<span id="L510" class="ln">   510&nbsp;&nbsp;</span>	var stk [maxStack]uintptr
+<span id="L511" class="ln">   511&nbsp;&nbsp;</span>	if gp.m.curg == nil || gp.m.curg == gp {
+<span id="L512" class="ln">   512&nbsp;&nbsp;</span>		nstk = callers(skip, stk[:])
+<span id="L513" class="ln">   513&nbsp;&nbsp;</span>	} else {
+<span id="L514" class="ln">   514&nbsp;&nbsp;</span>		nstk = gcallers(gp.m.curg, skip, stk[:])
+<span id="L515" class="ln">   515&nbsp;&nbsp;</span>	}
+<span id="L516" class="ln">   516&nbsp;&nbsp;</span>
+<span id="L517" class="ln">   517&nbsp;&nbsp;</span>	saveBlockEventStack(cycles, rate, stk[:nstk], which)
+<span id="L518" class="ln">   518&nbsp;&nbsp;</span>}
+<span id="L519" class="ln">   519&nbsp;&nbsp;</span>
+<span id="L520" class="ln">   520&nbsp;&nbsp;</span><span class="comment">// lockTimer assists with profiling contention on runtime-internal locks.</span>
+<span id="L521" class="ln">   521&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L522" class="ln">   522&nbsp;&nbsp;</span><span class="comment">// There are several steps between the time that an M experiences contention and</span>
+<span id="L523" class="ln">   523&nbsp;&nbsp;</span><span class="comment">// when that contention may be added to the profile. This comes from our</span>
+<span id="L524" class="ln">   524&nbsp;&nbsp;</span><span class="comment">// constraints: We need to keep the critical section of each lock small,</span>
+<span id="L525" class="ln">   525&nbsp;&nbsp;</span><span class="comment">// especially when those locks are contended. The reporting code cannot acquire</span>
+<span id="L526" class="ln">   526&nbsp;&nbsp;</span><span class="comment">// new locks until the M has released all other locks, which means no memory</span>
+<span id="L527" class="ln">   527&nbsp;&nbsp;</span><span class="comment">// allocations and encourages use of (temporary) M-local storage.</span>
+<span id="L528" class="ln">   528&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L529" class="ln">   529&nbsp;&nbsp;</span><span class="comment">// The M will have space for storing one call stack that caused contention, and</span>
+<span id="L530" class="ln">   530&nbsp;&nbsp;</span><span class="comment">// for the magnitude of that contention. It will also have space to store the</span>
+<span id="L531" class="ln">   531&nbsp;&nbsp;</span><span class="comment">// magnitude of additional contention the M caused, since it only has space to</span>
+<span id="L532" class="ln">   532&nbsp;&nbsp;</span><span class="comment">// remember one call stack and might encounter several contention events before</span>
+<span id="L533" class="ln">   533&nbsp;&nbsp;</span><span class="comment">// it releases all of its locks and is thus able to transfer the local buffer</span>
+<span id="L534" class="ln">   534&nbsp;&nbsp;</span><span class="comment">// into the profile.</span>
+<span id="L535" class="ln">   535&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L536" class="ln">   536&nbsp;&nbsp;</span><span class="comment">// The M will collect the call stack when it unlocks the contended lock. That</span>
+<span id="L537" class="ln">   537&nbsp;&nbsp;</span><span class="comment">// minimizes the impact on the critical section of the contended lock, and</span>
+<span id="L538" class="ln">   538&nbsp;&nbsp;</span><span class="comment">// matches the mutex profile&#39;s behavior for contention in sync.Mutex: measured</span>
+<span id="L539" class="ln">   539&nbsp;&nbsp;</span><span class="comment">// at the Unlock method.</span>
+<span id="L540" class="ln">   540&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L541" class="ln">   541&nbsp;&nbsp;</span><span class="comment">// The profile for contention on sync.Mutex blames the caller of Unlock for the</span>
+<span id="L542" class="ln">   542&nbsp;&nbsp;</span><span class="comment">// amount of contention experienced by the callers of Lock which had to wait.</span>
+<span id="L543" class="ln">   543&nbsp;&nbsp;</span><span class="comment">// When there are several critical sections, this allows identifying which of</span>
+<span id="L544" class="ln">   544&nbsp;&nbsp;</span><span class="comment">// them is responsible.</span>
+<span id="L545" class="ln">   545&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L546" class="ln">   546&nbsp;&nbsp;</span><span class="comment">// Matching that behavior for runtime-internal locks will require identifying</span>
+<span id="L547" class="ln">   547&nbsp;&nbsp;</span><span class="comment">// which Ms are blocked on the mutex. The semaphore-based implementation is</span>
+<span id="L548" class="ln">   548&nbsp;&nbsp;</span><span class="comment">// ready to allow that, but the futex-based implementation will require a bit</span>
+<span id="L549" class="ln">   549&nbsp;&nbsp;</span><span class="comment">// more work. Until then, we report contention on runtime-internal locks with a</span>
+<span id="L550" class="ln">   550&nbsp;&nbsp;</span><span class="comment">// call stack taken from the unlock call (like the rest of the user-space</span>
+<span id="L551" class="ln">   551&nbsp;&nbsp;</span><span class="comment">// &#34;mutex&#34; profile), but assign it a duration value based on how long the</span>
+<span id="L552" class="ln">   552&nbsp;&nbsp;</span><span class="comment">// previous lock call took (like the user-space &#34;block&#34; profile).</span>
+<span id="L553" class="ln">   553&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L554" class="ln">   554&nbsp;&nbsp;</span><span class="comment">// Thus, reporting the call stacks of runtime-internal lock contention is</span>
+<span id="L555" class="ln">   555&nbsp;&nbsp;</span><span class="comment">// guarded by GODEBUG for now. Set GODEBUG=runtimecontentionstacks=1 to enable.</span>
+<span id="L556" class="ln">   556&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L557" class="ln">   557&nbsp;&nbsp;</span><span class="comment">// TODO(rhysh): plumb through the delay duration, remove GODEBUG, update comment</span>
+<span id="L558" class="ln">   558&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L559" class="ln">   559&nbsp;&nbsp;</span><span class="comment">// The M will track this by storing a pointer to the lock; lock/unlock pairs for</span>
+<span id="L560" class="ln">   560&nbsp;&nbsp;</span><span class="comment">// runtime-internal locks are always on the same M.</span>
+<span id="L561" class="ln">   561&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L562" class="ln">   562&nbsp;&nbsp;</span><span class="comment">// Together, that demands several steps for recording contention. First, when</span>
+<span id="L563" class="ln">   563&nbsp;&nbsp;</span><span class="comment">// finally acquiring a contended lock, the M decides whether it should plan to</span>
+<span id="L564" class="ln">   564&nbsp;&nbsp;</span><span class="comment">// profile that event by storing a pointer to the lock in its &#34;to be profiled</span>
+<span id="L565" class="ln">   565&nbsp;&nbsp;</span><span class="comment">// upon unlock&#34; field. If that field is already set, it uses the relative</span>
+<span id="L566" class="ln">   566&nbsp;&nbsp;</span><span class="comment">// magnitudes to weight a random choice between itself and the other lock, with</span>
+<span id="L567" class="ln">   567&nbsp;&nbsp;</span><span class="comment">// the loser&#39;s time being added to the &#34;additional contention&#34; field. Otherwise</span>
+<span id="L568" class="ln">   568&nbsp;&nbsp;</span><span class="comment">// if the M&#39;s call stack buffer is occupied, it does the comparison against that</span>
+<span id="L569" class="ln">   569&nbsp;&nbsp;</span><span class="comment">// sample&#39;s magnitude.</span>
+<span id="L570" class="ln">   570&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L571" class="ln">   571&nbsp;&nbsp;</span><span class="comment">// Second, having unlocked a mutex the M checks to see if it should capture the</span>
+<span id="L572" class="ln">   572&nbsp;&nbsp;</span><span class="comment">// call stack into its local buffer. Finally, when the M unlocks its last mutex,</span>
+<span id="L573" class="ln">   573&nbsp;&nbsp;</span><span class="comment">// it transfers the local buffer into the profile. As part of that step, it also</span>
+<span id="L574" class="ln">   574&nbsp;&nbsp;</span><span class="comment">// transfers any &#34;additional contention&#34; time to the profile. Any lock</span>
+<span id="L575" class="ln">   575&nbsp;&nbsp;</span><span class="comment">// contention that it experiences while adding samples to the profile will be</span>
+<span id="L576" class="ln">   576&nbsp;&nbsp;</span><span class="comment">// recorded later as &#34;additional contention&#34; and not include a call stack, to</span>
+<span id="L577" class="ln">   577&nbsp;&nbsp;</span><span class="comment">// avoid an echo.</span>
+<span id="L578" class="ln">   578&nbsp;&nbsp;</span>type lockTimer struct {
+<span id="L579" class="ln">   579&nbsp;&nbsp;</span>	lock      *mutex
+<span id="L580" class="ln">   580&nbsp;&nbsp;</span>	timeRate  int64
+<span id="L581" class="ln">   581&nbsp;&nbsp;</span>	timeStart int64
+<span id="L582" class="ln">   582&nbsp;&nbsp;</span>	tickStart int64
+<span id="L583" class="ln">   583&nbsp;&nbsp;</span>}
+<span id="L584" class="ln">   584&nbsp;&nbsp;</span>
+<span id="L585" class="ln">   585&nbsp;&nbsp;</span>func (lt *lockTimer) begin() {
+<span id="L586" class="ln">   586&nbsp;&nbsp;</span>	rate := int64(atomic.Load64(&amp;mutexprofilerate))
+<span id="L587" class="ln">   587&nbsp;&nbsp;</span>
+<span id="L588" class="ln">   588&nbsp;&nbsp;</span>	lt.timeRate = gTrackingPeriod
+<span id="L589" class="ln">   589&nbsp;&nbsp;</span>	if rate != 0 &amp;&amp; rate &lt; lt.timeRate {
+<span id="L590" class="ln">   590&nbsp;&nbsp;</span>		lt.timeRate = rate
+<span id="L591" class="ln">   591&nbsp;&nbsp;</span>	}
+<span id="L592" class="ln">   592&nbsp;&nbsp;</span>	if int64(cheaprand())%lt.timeRate == 0 {
+<span id="L593" class="ln">   593&nbsp;&nbsp;</span>		lt.timeStart = nanotime()
+<span id="L594" class="ln">   594&nbsp;&nbsp;</span>	}
+<span id="L595" class="ln">   595&nbsp;&nbsp;</span>
+<span id="L596" class="ln">   596&nbsp;&nbsp;</span>	if rate &gt; 0 &amp;&amp; int64(cheaprand())%rate == 0 {
+<span id="L597" class="ln">   597&nbsp;&nbsp;</span>		lt.tickStart = cputicks()
+<span id="L598" class="ln">   598&nbsp;&nbsp;</span>	}
+<span id="L599" class="ln">   599&nbsp;&nbsp;</span>}
+<span id="L600" class="ln">   600&nbsp;&nbsp;</span>
+<span id="L601" class="ln">   601&nbsp;&nbsp;</span>func (lt *lockTimer) end() {
+<span id="L602" class="ln">   602&nbsp;&nbsp;</span>	gp := getg()
+<span id="L603" class="ln">   603&nbsp;&nbsp;</span>
+<span id="L604" class="ln">   604&nbsp;&nbsp;</span>	if lt.timeStart != 0 {
+<span id="L605" class="ln">   605&nbsp;&nbsp;</span>		nowTime := nanotime()
+<span id="L606" class="ln">   606&nbsp;&nbsp;</span>		gp.m.mLockProfile.waitTime.Add((nowTime - lt.timeStart) * lt.timeRate)
+<span id="L607" class="ln">   607&nbsp;&nbsp;</span>	}
+<span id="L608" class="ln">   608&nbsp;&nbsp;</span>
+<span id="L609" class="ln">   609&nbsp;&nbsp;</span>	if lt.tickStart != 0 {
+<span id="L610" class="ln">   610&nbsp;&nbsp;</span>		nowTick := cputicks()
+<span id="L611" class="ln">   611&nbsp;&nbsp;</span>		gp.m.mLockProfile.recordLock(nowTick-lt.tickStart, lt.lock)
+<span id="L612" class="ln">   612&nbsp;&nbsp;</span>	}
+<span id="L613" class="ln">   613&nbsp;&nbsp;</span>}
+<span id="L614" class="ln">   614&nbsp;&nbsp;</span>
+<span id="L615" class="ln">   615&nbsp;&nbsp;</span>type mLockProfile struct {
+<span id="L616" class="ln">   616&nbsp;&nbsp;</span>	waitTime   atomic.Int64      <span class="comment">// total nanoseconds spent waiting in runtime.lockWithRank</span>
+<span id="L617" class="ln">   617&nbsp;&nbsp;</span>	stack      [maxStack]uintptr <span class="comment">// stack that experienced contention in runtime.lockWithRank</span>
+<span id="L618" class="ln">   618&nbsp;&nbsp;</span>	pending    uintptr           <span class="comment">// *mutex that experienced contention (to be traceback-ed)</span>
+<span id="L619" class="ln">   619&nbsp;&nbsp;</span>	cycles     int64             <span class="comment">// cycles attributable to &#34;pending&#34; (if set), otherwise to &#34;stack&#34;</span>
+<span id="L620" class="ln">   620&nbsp;&nbsp;</span>	cyclesLost int64             <span class="comment">// contention for which we weren&#39;t able to record a call stack</span>
+<span id="L621" class="ln">   621&nbsp;&nbsp;</span>	disabled   bool              <span class="comment">// attribute all time to &#34;lost&#34;</span>
+<span id="L622" class="ln">   622&nbsp;&nbsp;</span>}
+<span id="L623" class="ln">   623&nbsp;&nbsp;</span>
+<span id="L624" class="ln">   624&nbsp;&nbsp;</span>func (prof *mLockProfile) recordLock(cycles int64, l *mutex) {
+<span id="L625" class="ln">   625&nbsp;&nbsp;</span>	if cycles &lt;= 0 {
+<span id="L626" class="ln">   626&nbsp;&nbsp;</span>		return
+<span id="L627" class="ln">   627&nbsp;&nbsp;</span>	}
+<span id="L628" class="ln">   628&nbsp;&nbsp;</span>
+<span id="L629" class="ln">   629&nbsp;&nbsp;</span>	if prof.disabled {
+<span id="L630" class="ln">   630&nbsp;&nbsp;</span>		<span class="comment">// We&#39;re experiencing contention while attempting to report contention.</span>
+<span id="L631" class="ln">   631&nbsp;&nbsp;</span>		<span class="comment">// Make a note of its magnitude, but don&#39;t allow it to be the sole cause</span>
+<span id="L632" class="ln">   632&nbsp;&nbsp;</span>		<span class="comment">// of another contention report.</span>
+<span id="L633" class="ln">   633&nbsp;&nbsp;</span>		prof.cyclesLost += cycles
+<span id="L634" class="ln">   634&nbsp;&nbsp;</span>		return
+<span id="L635" class="ln">   635&nbsp;&nbsp;</span>	}
+<span id="L636" class="ln">   636&nbsp;&nbsp;</span>
+<span id="L637" class="ln">   637&nbsp;&nbsp;</span>	if uintptr(unsafe.Pointer(l)) == prof.pending {
+<span id="L638" class="ln">   638&nbsp;&nbsp;</span>		<span class="comment">// Optimization: we&#39;d already planned to profile this same lock (though</span>
+<span id="L639" class="ln">   639&nbsp;&nbsp;</span>		<span class="comment">// possibly from a different unlock site).</span>
+<span id="L640" class="ln">   640&nbsp;&nbsp;</span>		prof.cycles += cycles
+<span id="L641" class="ln">   641&nbsp;&nbsp;</span>		return
+<span id="L642" class="ln">   642&nbsp;&nbsp;</span>	}
+<span id="L643" class="ln">   643&nbsp;&nbsp;</span>
+<span id="L644" class="ln">   644&nbsp;&nbsp;</span>	if prev := prof.cycles; prev &gt; 0 {
+<span id="L645" class="ln">   645&nbsp;&nbsp;</span>		<span class="comment">// We can only store one call stack for runtime-internal lock contention</span>
+<span id="L646" class="ln">   646&nbsp;&nbsp;</span>		<span class="comment">// on this M, and we&#39;ve already got one. Decide which should stay, and</span>
+<span id="L647" class="ln">   647&nbsp;&nbsp;</span>		<span class="comment">// add the other to the report for runtime._LostContendedRuntimeLock.</span>
+<span id="L648" class="ln">   648&nbsp;&nbsp;</span>		prevScore := uint64(cheaprand64()) % uint64(prev)
+<span id="L649" class="ln">   649&nbsp;&nbsp;</span>		thisScore := uint64(cheaprand64()) % uint64(cycles)
+<span id="L650" class="ln">   650&nbsp;&nbsp;</span>		if prevScore &gt; thisScore {
+<span id="L651" class="ln">   651&nbsp;&nbsp;</span>			prof.cyclesLost += cycles
+<span id="L652" class="ln">   652&nbsp;&nbsp;</span>			return
+<span id="L653" class="ln">   653&nbsp;&nbsp;</span>		} else {
+<span id="L654" class="ln">   654&nbsp;&nbsp;</span>			prof.cyclesLost += prev
+<span id="L655" class="ln">   655&nbsp;&nbsp;</span>		}
+<span id="L656" class="ln">   656&nbsp;&nbsp;</span>	}
+<span id="L657" class="ln">   657&nbsp;&nbsp;</span>	<span class="comment">// Saving the *mutex as a uintptr is safe because:</span>
+<span id="L658" class="ln">   658&nbsp;&nbsp;</span>	<span class="comment">//  - lockrank_on.go does this too, which gives it regular exercise</span>
+<span id="L659" class="ln">   659&nbsp;&nbsp;</span>	<span class="comment">//  - the lock would only move if it&#39;s stack allocated, which means it</span>
+<span id="L660" class="ln">   660&nbsp;&nbsp;</span>	<span class="comment">//      cannot experience multi-M contention</span>
+<span id="L661" class="ln">   661&nbsp;&nbsp;</span>	prof.pending = uintptr(unsafe.Pointer(l))
+<span id="L662" class="ln">   662&nbsp;&nbsp;</span>	prof.cycles = cycles
+<span id="L663" class="ln">   663&nbsp;&nbsp;</span>}
+<span id="L664" class="ln">   664&nbsp;&nbsp;</span>
+<span id="L665" class="ln">   665&nbsp;&nbsp;</span><span class="comment">// From unlock2, we might not be holding a p in this code.</span>
+<span id="L666" class="ln">   666&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L667" class="ln">   667&nbsp;&nbsp;</span><span class="comment">//go:nowritebarrierrec</span>
+<span id="L668" class="ln">   668&nbsp;&nbsp;</span>func (prof *mLockProfile) recordUnlock(l *mutex) {
+<span id="L669" class="ln">   669&nbsp;&nbsp;</span>	if uintptr(unsafe.Pointer(l)) == prof.pending {
+<span id="L670" class="ln">   670&nbsp;&nbsp;</span>		prof.captureStack()
+<span id="L671" class="ln">   671&nbsp;&nbsp;</span>	}
+<span id="L672" class="ln">   672&nbsp;&nbsp;</span>	if gp := getg(); gp.m.locks == 1 &amp;&amp; gp.m.mLockProfile.cycles != 0 {
+<span id="L673" class="ln">   673&nbsp;&nbsp;</span>		prof.store()
+<span id="L674" class="ln">   674&nbsp;&nbsp;</span>	}
+<span id="L675" class="ln">   675&nbsp;&nbsp;</span>}
+<span id="L676" class="ln">   676&nbsp;&nbsp;</span>
+<span id="L677" class="ln">   677&nbsp;&nbsp;</span>func (prof *mLockProfile) captureStack() {
+<span id="L678" class="ln">   678&nbsp;&nbsp;</span>	skip := 3 <span class="comment">// runtime.(*mLockProfile).recordUnlock runtime.unlock2 runtime.unlockWithRank</span>
+<span id="L679" class="ln">   679&nbsp;&nbsp;</span>	if staticLockRanking {
+<span id="L680" class="ln">   680&nbsp;&nbsp;</span>		<span class="comment">// When static lock ranking is enabled, we&#39;ll always be on the system</span>
+<span id="L681" class="ln">   681&nbsp;&nbsp;</span>		<span class="comment">// stack at this point. There will be a runtime.unlockWithRank.func1</span>
+<span id="L682" class="ln">   682&nbsp;&nbsp;</span>		<span class="comment">// frame, and if the call to runtime.unlock took place on a user stack</span>
+<span id="L683" class="ln">   683&nbsp;&nbsp;</span>		<span class="comment">// then there&#39;ll also be a runtime.systemstack frame. To keep stack</span>
+<span id="L684" class="ln">   684&nbsp;&nbsp;</span>		<span class="comment">// traces somewhat consistent whether or not static lock ranking is</span>
+<span id="L685" class="ln">   685&nbsp;&nbsp;</span>		<span class="comment">// enabled, we&#39;d like to skip those. But it&#39;s hard to tell how long</span>
+<span id="L686" class="ln">   686&nbsp;&nbsp;</span>		<span class="comment">// we&#39;ve been on the system stack so accept an extra frame in that case,</span>
+<span id="L687" class="ln">   687&nbsp;&nbsp;</span>		<span class="comment">// with a leaf of &#34;runtime.unlockWithRank runtime.unlock&#34; instead of</span>
+<span id="L688" class="ln">   688&nbsp;&nbsp;</span>		<span class="comment">// &#34;runtime.unlock&#34;.</span>
+<span id="L689" class="ln">   689&nbsp;&nbsp;</span>		skip += 1 <span class="comment">// runtime.unlockWithRank.func1</span>
+<span id="L690" class="ln">   690&nbsp;&nbsp;</span>	}
+<span id="L691" class="ln">   691&nbsp;&nbsp;</span>	prof.pending = 0
+<span id="L692" class="ln">   692&nbsp;&nbsp;</span>
+<span id="L693" class="ln">   693&nbsp;&nbsp;</span>	if debug.runtimeContentionStacks.Load() == 0 {
+<span id="L694" class="ln">   694&nbsp;&nbsp;</span>		prof.stack[0] = abi.FuncPCABIInternal(_LostContendedRuntimeLock) + sys.PCQuantum
+<span id="L695" class="ln">   695&nbsp;&nbsp;</span>		prof.stack[1] = 0
+<span id="L696" class="ln">   696&nbsp;&nbsp;</span>		return
+<span id="L697" class="ln">   697&nbsp;&nbsp;</span>	}
+<span id="L698" class="ln">   698&nbsp;&nbsp;</span>
+<span id="L699" class="ln">   699&nbsp;&nbsp;</span>	var nstk int
+<span id="L700" class="ln">   700&nbsp;&nbsp;</span>	gp := getg()
+<span id="L701" class="ln">   701&nbsp;&nbsp;</span>	sp := getcallersp()
+<span id="L702" class="ln">   702&nbsp;&nbsp;</span>	pc := getcallerpc()
+<span id="L703" class="ln">   703&nbsp;&nbsp;</span>	systemstack(func() {
+<span id="L704" class="ln">   704&nbsp;&nbsp;</span>		var u unwinder
+<span id="L705" class="ln">   705&nbsp;&nbsp;</span>		u.initAt(pc, sp, 0, gp, unwindSilentErrors|unwindJumpStack)
+<span id="L706" class="ln">   706&nbsp;&nbsp;</span>		nstk = tracebackPCs(&amp;u, skip, prof.stack[:])
+<span id="L707" class="ln">   707&nbsp;&nbsp;</span>	})
+<span id="L708" class="ln">   708&nbsp;&nbsp;</span>	if nstk &lt; len(prof.stack) {
+<span id="L709" class="ln">   709&nbsp;&nbsp;</span>		prof.stack[nstk] = 0
+<span id="L710" class="ln">   710&nbsp;&nbsp;</span>	}
+<span id="L711" class="ln">   711&nbsp;&nbsp;</span>}
+<span id="L712" class="ln">   712&nbsp;&nbsp;</span>
+<span id="L713" class="ln">   713&nbsp;&nbsp;</span>func (prof *mLockProfile) store() {
+<span id="L714" class="ln">   714&nbsp;&nbsp;</span>	<span class="comment">// Report any contention we experience within this function as &#34;lost&#34;; it&#39;s</span>
+<span id="L715" class="ln">   715&nbsp;&nbsp;</span>	<span class="comment">// important that the act of reporting a contention event not lead to a</span>
+<span id="L716" class="ln">   716&nbsp;&nbsp;</span>	<span class="comment">// reportable contention event. This also means we can use prof.stack</span>
+<span id="L717" class="ln">   717&nbsp;&nbsp;</span>	<span class="comment">// without copying, since it won&#39;t change during this function.</span>
+<span id="L718" class="ln">   718&nbsp;&nbsp;</span>	mp := acquirem()
+<span id="L719" class="ln">   719&nbsp;&nbsp;</span>	prof.disabled = true
+<span id="L720" class="ln">   720&nbsp;&nbsp;</span>
+<span id="L721" class="ln">   721&nbsp;&nbsp;</span>	nstk := maxStack
+<span id="L722" class="ln">   722&nbsp;&nbsp;</span>	for i := 0; i &lt; nstk; i++ {
+<span id="L723" class="ln">   723&nbsp;&nbsp;</span>		if pc := prof.stack[i]; pc == 0 {
+<span id="L724" class="ln">   724&nbsp;&nbsp;</span>			nstk = i
+<span id="L725" class="ln">   725&nbsp;&nbsp;</span>			break
+<span id="L726" class="ln">   726&nbsp;&nbsp;</span>		}
+<span id="L727" class="ln">   727&nbsp;&nbsp;</span>	}
+<span id="L728" class="ln">   728&nbsp;&nbsp;</span>
+<span id="L729" class="ln">   729&nbsp;&nbsp;</span>	cycles, lost := prof.cycles, prof.cyclesLost
+<span id="L730" class="ln">   730&nbsp;&nbsp;</span>	prof.cycles, prof.cyclesLost = 0, 0
+<span id="L731" class="ln">   731&nbsp;&nbsp;</span>
+<span id="L732" class="ln">   732&nbsp;&nbsp;</span>	rate := int64(atomic.Load64(&amp;mutexprofilerate))
+<span id="L733" class="ln">   733&nbsp;&nbsp;</span>	saveBlockEventStack(cycles, rate, prof.stack[:nstk], mutexProfile)
+<span id="L734" class="ln">   734&nbsp;&nbsp;</span>	if lost &gt; 0 {
+<span id="L735" class="ln">   735&nbsp;&nbsp;</span>		lostStk := [...]uintptr{
+<span id="L736" class="ln">   736&nbsp;&nbsp;</span>			abi.FuncPCABIInternal(_LostContendedRuntimeLock) + sys.PCQuantum,
+<span id="L737" class="ln">   737&nbsp;&nbsp;</span>		}
+<span id="L738" class="ln">   738&nbsp;&nbsp;</span>		saveBlockEventStack(lost, rate, lostStk[:], mutexProfile)
+<span id="L739" class="ln">   739&nbsp;&nbsp;</span>	}
+<span id="L740" class="ln">   740&nbsp;&nbsp;</span>
+<span id="L741" class="ln">   741&nbsp;&nbsp;</span>	prof.disabled = false
+<span id="L742" class="ln">   742&nbsp;&nbsp;</span>	releasem(mp)
+<span id="L743" class="ln">   743&nbsp;&nbsp;</span>}
+<span id="L744" class="ln">   744&nbsp;&nbsp;</span>
+<span id="L745" class="ln">   745&nbsp;&nbsp;</span>func saveBlockEventStack(cycles, rate int64, stk []uintptr, which bucketType) {
+<span id="L746" class="ln">   746&nbsp;&nbsp;</span>	b := stkbucket(which, 0, stk, true)
+<span id="L747" class="ln">   747&nbsp;&nbsp;</span>	bp := b.bp()
+<span id="L748" class="ln">   748&nbsp;&nbsp;</span>
+<span id="L749" class="ln">   749&nbsp;&nbsp;</span>	lock(&amp;profBlockLock)
+<span id="L750" class="ln">   750&nbsp;&nbsp;</span>	<span class="comment">// We want to up-scale the count and cycles according to the</span>
+<span id="L751" class="ln">   751&nbsp;&nbsp;</span>	<span class="comment">// probability that the event was sampled. For block profile events,</span>
+<span id="L752" class="ln">   752&nbsp;&nbsp;</span>	<span class="comment">// the sample probability is 1 if cycles &gt;= rate, and cycles / rate</span>
+<span id="L753" class="ln">   753&nbsp;&nbsp;</span>	<span class="comment">// otherwise. For mutex profile events, the sample probability is 1 / rate.</span>
+<span id="L754" class="ln">   754&nbsp;&nbsp;</span>	<span class="comment">// We scale the events by 1 / (probability the event was sampled).</span>
+<span id="L755" class="ln">   755&nbsp;&nbsp;</span>	if which == blockProfile &amp;&amp; cycles &lt; rate {
+<span id="L756" class="ln">   756&nbsp;&nbsp;</span>		<span class="comment">// Remove sampling bias, see discussion on http://golang.org/cl/299991.</span>
+<span id="L757" class="ln">   757&nbsp;&nbsp;</span>		bp.count += float64(rate) / float64(cycles)
+<span id="L758" class="ln">   758&nbsp;&nbsp;</span>		bp.cycles += rate
+<span id="L759" class="ln">   759&nbsp;&nbsp;</span>	} else if which == mutexProfile {
+<span id="L760" class="ln">   760&nbsp;&nbsp;</span>		bp.count += float64(rate)
+<span id="L761" class="ln">   761&nbsp;&nbsp;</span>		bp.cycles += rate * cycles
+<span id="L762" class="ln">   762&nbsp;&nbsp;</span>	} else {
+<span id="L763" class="ln">   763&nbsp;&nbsp;</span>		bp.count++
+<span id="L764" class="ln">   764&nbsp;&nbsp;</span>		bp.cycles += cycles
+<span id="L765" class="ln">   765&nbsp;&nbsp;</span>	}
+<span id="L766" class="ln">   766&nbsp;&nbsp;</span>	unlock(&amp;profBlockLock)
+<span id="L767" class="ln">   767&nbsp;&nbsp;</span>}
+<span id="L768" class="ln">   768&nbsp;&nbsp;</span>
+<span id="L769" class="ln">   769&nbsp;&nbsp;</span>var mutexprofilerate uint64 <span class="comment">// fraction sampled</span>
+<span id="L770" class="ln">   770&nbsp;&nbsp;</span>
+<span id="L771" class="ln">   771&nbsp;&nbsp;</span><span class="comment">// SetMutexProfileFraction controls the fraction of mutex contention events</span>
+<span id="L772" class="ln">   772&nbsp;&nbsp;</span><span class="comment">// that are reported in the mutex profile. On average 1/rate events are</span>
+<span id="L773" class="ln">   773&nbsp;&nbsp;</span><span class="comment">// reported. The previous rate is returned.</span>
+<span id="L774" class="ln">   774&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L775" class="ln">   775&nbsp;&nbsp;</span><span class="comment">// To turn off profiling entirely, pass rate 0.</span>
+<span id="L776" class="ln">   776&nbsp;&nbsp;</span><span class="comment">// To just read the current rate, pass rate &lt; 0.</span>
+<span id="L777" class="ln">   777&nbsp;&nbsp;</span><span class="comment">// (For n&gt;1 the details of sampling may change.)</span>
+<span id="L778" class="ln">   778&nbsp;&nbsp;</span>func SetMutexProfileFraction(rate int) int {
+<span id="L779" class="ln">   779&nbsp;&nbsp;</span>	if rate &lt; 0 {
+<span id="L780" class="ln">   780&nbsp;&nbsp;</span>		return int(mutexprofilerate)
+<span id="L781" class="ln">   781&nbsp;&nbsp;</span>	}
+<span id="L782" class="ln">   782&nbsp;&nbsp;</span>	old := mutexprofilerate
+<span id="L783" class="ln">   783&nbsp;&nbsp;</span>	atomic.Store64(&amp;mutexprofilerate, uint64(rate))
+<span id="L784" class="ln">   784&nbsp;&nbsp;</span>	return int(old)
+<span id="L785" class="ln">   785&nbsp;&nbsp;</span>}
+<span id="L786" class="ln">   786&nbsp;&nbsp;</span>
+<span id="L787" class="ln">   787&nbsp;&nbsp;</span><span class="comment">//go:linkname mutexevent sync.event</span>
+<span id="L788" class="ln">   788&nbsp;&nbsp;</span>func mutexevent(cycles int64, skip int) {
+<span id="L789" class="ln">   789&nbsp;&nbsp;</span>	if cycles &lt; 0 {
+<span id="L790" class="ln">   790&nbsp;&nbsp;</span>		cycles = 0
+<span id="L791" class="ln">   791&nbsp;&nbsp;</span>	}
+<span id="L792" class="ln">   792&nbsp;&nbsp;</span>	rate := int64(atomic.Load64(&amp;mutexprofilerate))
+<span id="L793" class="ln">   793&nbsp;&nbsp;</span>	if rate &gt; 0 &amp;&amp; cheaprand64()%rate == 0 {
+<span id="L794" class="ln">   794&nbsp;&nbsp;</span>		saveblockevent(cycles, rate, skip+1, mutexProfile)
+<span id="L795" class="ln">   795&nbsp;&nbsp;</span>	}
+<span id="L796" class="ln">   796&nbsp;&nbsp;</span>}
+<span id="L797" class="ln">   797&nbsp;&nbsp;</span>
+<span id="L798" class="ln">   798&nbsp;&nbsp;</span><span class="comment">// Go interface to profile data.</span>
+<span id="L799" class="ln">   799&nbsp;&nbsp;</span>
+<span id="L800" class="ln">   800&nbsp;&nbsp;</span><span class="comment">// A StackRecord describes a single execution stack.</span>
+<span id="L801" class="ln">   801&nbsp;&nbsp;</span>type StackRecord struct {
+<span id="L802" class="ln">   802&nbsp;&nbsp;</span>	Stack0 [32]uintptr <span class="comment">// stack trace for this record; ends at first 0 entry</span>
+<span id="L803" class="ln">   803&nbsp;&nbsp;</span>}
+<span id="L804" class="ln">   804&nbsp;&nbsp;</span>
+<span id="L805" class="ln">   805&nbsp;&nbsp;</span><span class="comment">// Stack returns the stack trace associated with the record,</span>
+<span id="L806" class="ln">   806&nbsp;&nbsp;</span><span class="comment">// a prefix of r.Stack0.</span>
+<span id="L807" class="ln">   807&nbsp;&nbsp;</span>func (r *StackRecord) Stack() []uintptr {
+<span id="L808" class="ln">   808&nbsp;&nbsp;</span>	for i, v := range r.Stack0 {
+<span id="L809" class="ln">   809&nbsp;&nbsp;</span>		if v == 0 {
+<span id="L810" class="ln">   810&nbsp;&nbsp;</span>			return r.Stack0[0:i]
+<span id="L811" class="ln">   811&nbsp;&nbsp;</span>		}
+<span id="L812" class="ln">   812&nbsp;&nbsp;</span>	}
+<span id="L813" class="ln">   813&nbsp;&nbsp;</span>	return r.Stack0[0:]
+<span id="L814" class="ln">   814&nbsp;&nbsp;</span>}
+<span id="L815" class="ln">   815&nbsp;&nbsp;</span>
+<span id="L816" class="ln">   816&nbsp;&nbsp;</span><span class="comment">// MemProfileRate controls the fraction of memory allocations</span>
+<span id="L817" class="ln">   817&nbsp;&nbsp;</span><span class="comment">// that are recorded and reported in the memory profile.</span>
+<span id="L818" class="ln">   818&nbsp;&nbsp;</span><span class="comment">// The profiler aims to sample an average of</span>
+<span id="L819" class="ln">   819&nbsp;&nbsp;</span><span class="comment">// one allocation per MemProfileRate bytes allocated.</span>
+<span id="L820" class="ln">   820&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L821" class="ln">   821&nbsp;&nbsp;</span><span class="comment">// To include every allocated block in the profile, set MemProfileRate to 1.</span>
+<span id="L822" class="ln">   822&nbsp;&nbsp;</span><span class="comment">// To turn off profiling entirely, set MemProfileRate to 0.</span>
+<span id="L823" class="ln">   823&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L824" class="ln">   824&nbsp;&nbsp;</span><span class="comment">// The tools that process the memory profiles assume that the</span>
+<span id="L825" class="ln">   825&nbsp;&nbsp;</span><span class="comment">// profile rate is constant across the lifetime of the program</span>
+<span id="L826" class="ln">   826&nbsp;&nbsp;</span><span class="comment">// and equal to the current value. Programs that change the</span>
+<span id="L827" class="ln">   827&nbsp;&nbsp;</span><span class="comment">// memory profiling rate should do so just once, as early as</span>
+<span id="L828" class="ln">   828&nbsp;&nbsp;</span><span class="comment">// possible in the execution of the program (for example,</span>
+<span id="L829" class="ln">   829&nbsp;&nbsp;</span><span class="comment">// at the beginning of main).</span>
+<span id="L830" class="ln">   830&nbsp;&nbsp;</span>var MemProfileRate int = 512 * 1024
+<span id="L831" class="ln">   831&nbsp;&nbsp;</span>
+<span id="L832" class="ln">   832&nbsp;&nbsp;</span><span class="comment">// disableMemoryProfiling is set by the linker if runtime.MemProfile</span>
+<span id="L833" class="ln">   833&nbsp;&nbsp;</span><span class="comment">// is not used and the link type guarantees nobody else could use it</span>
+<span id="L834" class="ln">   834&nbsp;&nbsp;</span><span class="comment">// elsewhere.</span>
+<span id="L835" class="ln">   835&nbsp;&nbsp;</span>var disableMemoryProfiling bool
+<span id="L836" class="ln">   836&nbsp;&nbsp;</span>
+<span id="L837" class="ln">   837&nbsp;&nbsp;</span><span class="comment">// A MemProfileRecord describes the live objects allocated</span>
+<span id="L838" class="ln">   838&nbsp;&nbsp;</span><span class="comment">// by a particular call sequence (stack trace).</span>
+<span id="L839" class="ln">   839&nbsp;&nbsp;</span>type MemProfileRecord struct {
+<span id="L840" class="ln">   840&nbsp;&nbsp;</span>	AllocBytes, FreeBytes     int64       <span class="comment">// number of bytes allocated, freed</span>
+<span id="L841" class="ln">   841&nbsp;&nbsp;</span>	AllocObjects, FreeObjects int64       <span class="comment">// number of objects allocated, freed</span>
+<span id="L842" class="ln">   842&nbsp;&nbsp;</span>	Stack0                    [32]uintptr <span class="comment">// stack trace for this record; ends at first 0 entry</span>
+<span id="L843" class="ln">   843&nbsp;&nbsp;</span>}
+<span id="L844" class="ln">   844&nbsp;&nbsp;</span>
+<span id="L845" class="ln">   845&nbsp;&nbsp;</span><span class="comment">// InUseBytes returns the number of bytes in use (AllocBytes - FreeBytes).</span>
+<span id="L846" class="ln">   846&nbsp;&nbsp;</span>func (r *MemProfileRecord) InUseBytes() int64 { return r.AllocBytes - r.FreeBytes }
+<span id="L847" class="ln">   847&nbsp;&nbsp;</span>
+<span id="L848" class="ln">   848&nbsp;&nbsp;</span><span class="comment">// InUseObjects returns the number of objects in use (AllocObjects - FreeObjects).</span>
+<span id="L849" class="ln">   849&nbsp;&nbsp;</span>func (r *MemProfileRecord) InUseObjects() int64 {
+<span id="L850" class="ln">   850&nbsp;&nbsp;</span>	return r.AllocObjects - r.FreeObjects
+<span id="L851" class="ln">   851&nbsp;&nbsp;</span>}
+<span id="L852" class="ln">   852&nbsp;&nbsp;</span>
+<span id="L853" class="ln">   853&nbsp;&nbsp;</span><span class="comment">// Stack returns the stack trace associated with the record,</span>
+<span id="L854" class="ln">   854&nbsp;&nbsp;</span><span class="comment">// a prefix of r.Stack0.</span>
+<span id="L855" class="ln">   855&nbsp;&nbsp;</span>func (r *MemProfileRecord) Stack() []uintptr {
+<span id="L856" class="ln">   856&nbsp;&nbsp;</span>	for i, v := range r.Stack0 {
+<span id="L857" class="ln">   857&nbsp;&nbsp;</span>		if v == 0 {
+<span id="L858" class="ln">   858&nbsp;&nbsp;</span>			return r.Stack0[0:i]
+<span id="L859" class="ln">   859&nbsp;&nbsp;</span>		}
+<span id="L860" class="ln">   860&nbsp;&nbsp;</span>	}
+<span id="L861" class="ln">   861&nbsp;&nbsp;</span>	return r.Stack0[0:]
+<span id="L862" class="ln">   862&nbsp;&nbsp;</span>}
+<span id="L863" class="ln">   863&nbsp;&nbsp;</span>
+<span id="L864" class="ln">   864&nbsp;&nbsp;</span><span class="comment">// MemProfile returns a profile of memory allocated and freed per allocation</span>
+<span id="L865" class="ln">   865&nbsp;&nbsp;</span><span class="comment">// site.</span>
+<span id="L866" class="ln">   866&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L867" class="ln">   867&nbsp;&nbsp;</span><span class="comment">// MemProfile returns n, the number of records in the current memory profile.</span>
+<span id="L868" class="ln">   868&nbsp;&nbsp;</span><span class="comment">// If len(p) &gt;= n, MemProfile copies the profile into p and returns n, true.</span>
+<span id="L869" class="ln">   869&nbsp;&nbsp;</span><span class="comment">// If len(p) &lt; n, MemProfile does not change p and returns n, false.</span>
+<span id="L870" class="ln">   870&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L871" class="ln">   871&nbsp;&nbsp;</span><span class="comment">// If inuseZero is true, the profile includes allocation records</span>
+<span id="L872" class="ln">   872&nbsp;&nbsp;</span><span class="comment">// where r.AllocBytes &gt; 0 but r.AllocBytes == r.FreeBytes.</span>
+<span id="L873" class="ln">   873&nbsp;&nbsp;</span><span class="comment">// These are sites where memory was allocated, but it has all</span>
+<span id="L874" class="ln">   874&nbsp;&nbsp;</span><span class="comment">// been released back to the runtime.</span>
+<span id="L875" class="ln">   875&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L876" class="ln">   876&nbsp;&nbsp;</span><span class="comment">// The returned profile may be up to two garbage collection cycles old.</span>
+<span id="L877" class="ln">   877&nbsp;&nbsp;</span><span class="comment">// This is to avoid skewing the profile toward allocations; because</span>
+<span id="L878" class="ln">   878&nbsp;&nbsp;</span><span class="comment">// allocations happen in real time but frees are delayed until the garbage</span>
+<span id="L879" class="ln">   879&nbsp;&nbsp;</span><span class="comment">// collector performs sweeping, the profile only accounts for allocations</span>
+<span id="L880" class="ln">   880&nbsp;&nbsp;</span><span class="comment">// that have had a chance to be freed by the garbage collector.</span>
+<span id="L881" class="ln">   881&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L882" class="ln">   882&nbsp;&nbsp;</span><span class="comment">// Most clients should use the runtime/pprof package or</span>
+<span id="L883" class="ln">   883&nbsp;&nbsp;</span><span class="comment">// the testing package&#39;s -test.memprofile flag instead</span>
+<span id="L884" class="ln">   884&nbsp;&nbsp;</span><span class="comment">// of calling MemProfile directly.</span>
+<span id="L885" class="ln">   885&nbsp;&nbsp;</span>func MemProfile(p []MemProfileRecord, inuseZero bool) (n int, ok bool) {
+<span id="L886" class="ln">   886&nbsp;&nbsp;</span>	cycle := mProfCycle.read()
+<span id="L887" class="ln">   887&nbsp;&nbsp;</span>	<span class="comment">// If we&#39;re between mProf_NextCycle and mProf_Flush, take care</span>
+<span id="L888" class="ln">   888&nbsp;&nbsp;</span>	<span class="comment">// of flushing to the active profile so we only have to look</span>
+<span id="L889" class="ln">   889&nbsp;&nbsp;</span>	<span class="comment">// at the active profile below.</span>
+<span id="L890" class="ln">   890&nbsp;&nbsp;</span>	index := cycle % uint32(len(memRecord{}.future))
+<span id="L891" class="ln">   891&nbsp;&nbsp;</span>	lock(&amp;profMemActiveLock)
+<span id="L892" class="ln">   892&nbsp;&nbsp;</span>	lock(&amp;profMemFutureLock[index])
+<span id="L893" class="ln">   893&nbsp;&nbsp;</span>	mProf_FlushLocked(index)
+<span id="L894" class="ln">   894&nbsp;&nbsp;</span>	unlock(&amp;profMemFutureLock[index])
+<span id="L895" class="ln">   895&nbsp;&nbsp;</span>	clear := true
+<span id="L896" class="ln">   896&nbsp;&nbsp;</span>	head := (*bucket)(mbuckets.Load())
+<span id="L897" class="ln">   897&nbsp;&nbsp;</span>	for b := head; b != nil; b = b.allnext {
+<span id="L898" class="ln">   898&nbsp;&nbsp;</span>		mp := b.mp()
+<span id="L899" class="ln">   899&nbsp;&nbsp;</span>		if inuseZero || mp.active.alloc_bytes != mp.active.free_bytes {
+<span id="L900" class="ln">   900&nbsp;&nbsp;</span>			n++
+<span id="L901" class="ln">   901&nbsp;&nbsp;</span>		}
+<span id="L902" class="ln">   902&nbsp;&nbsp;</span>		if mp.active.allocs != 0 || mp.active.frees != 0 {
+<span id="L903" class="ln">   903&nbsp;&nbsp;</span>			clear = false
+<span id="L904" class="ln">   904&nbsp;&nbsp;</span>		}
+<span id="L905" class="ln">   905&nbsp;&nbsp;</span>	}
+<span id="L906" class="ln">   906&nbsp;&nbsp;</span>	if clear {
+<span id="L907" class="ln">   907&nbsp;&nbsp;</span>		<span class="comment">// Absolutely no data, suggesting that a garbage collection</span>
+<span id="L908" class="ln">   908&nbsp;&nbsp;</span>		<span class="comment">// has not yet happened. In order to allow profiling when</span>
+<span id="L909" class="ln">   909&nbsp;&nbsp;</span>		<span class="comment">// garbage collection is disabled from the beginning of execution,</span>
+<span id="L910" class="ln">   910&nbsp;&nbsp;</span>		<span class="comment">// accumulate all of the cycles, and recount buckets.</span>
+<span id="L911" class="ln">   911&nbsp;&nbsp;</span>		n = 0
+<span id="L912" class="ln">   912&nbsp;&nbsp;</span>		for b := head; b != nil; b = b.allnext {
+<span id="L913" class="ln">   913&nbsp;&nbsp;</span>			mp := b.mp()
+<span id="L914" class="ln">   914&nbsp;&nbsp;</span>			for c := range mp.future {
+<span id="L915" class="ln">   915&nbsp;&nbsp;</span>				lock(&amp;profMemFutureLock[c])
+<span id="L916" class="ln">   916&nbsp;&nbsp;</span>				mp.active.add(&amp;mp.future[c])
+<span id="L917" class="ln">   917&nbsp;&nbsp;</span>				mp.future[c] = memRecordCycle{}
+<span id="L918" class="ln">   918&nbsp;&nbsp;</span>				unlock(&amp;profMemFutureLock[c])
+<span id="L919" class="ln">   919&nbsp;&nbsp;</span>			}
+<span id="L920" class="ln">   920&nbsp;&nbsp;</span>			if inuseZero || mp.active.alloc_bytes != mp.active.free_bytes {
+<span id="L921" class="ln">   921&nbsp;&nbsp;</span>				n++
+<span id="L922" class="ln">   922&nbsp;&nbsp;</span>			}
+<span id="L923" class="ln">   923&nbsp;&nbsp;</span>		}
+<span id="L924" class="ln">   924&nbsp;&nbsp;</span>	}
+<span id="L925" class="ln">   925&nbsp;&nbsp;</span>	if n &lt;= len(p) {
+<span id="L926" class="ln">   926&nbsp;&nbsp;</span>		ok = true
+<span id="L927" class="ln">   927&nbsp;&nbsp;</span>		idx := 0
+<span id="L928" class="ln">   928&nbsp;&nbsp;</span>		for b := head; b != nil; b = b.allnext {
+<span id="L929" class="ln">   929&nbsp;&nbsp;</span>			mp := b.mp()
+<span id="L930" class="ln">   930&nbsp;&nbsp;</span>			if inuseZero || mp.active.alloc_bytes != mp.active.free_bytes {
+<span id="L931" class="ln">   931&nbsp;&nbsp;</span>				record(&amp;p[idx], b)
+<span id="L932" class="ln">   932&nbsp;&nbsp;</span>				idx++
+<span id="L933" class="ln">   933&nbsp;&nbsp;</span>			}
+<span id="L934" class="ln">   934&nbsp;&nbsp;</span>		}
+<span id="L935" class="ln">   935&nbsp;&nbsp;</span>	}
+<span id="L936" class="ln">   936&nbsp;&nbsp;</span>	unlock(&amp;profMemActiveLock)
+<span id="L937" class="ln">   937&nbsp;&nbsp;</span>	return
+<span id="L938" class="ln">   938&nbsp;&nbsp;</span>}
+<span id="L939" class="ln">   939&nbsp;&nbsp;</span>
+<span id="L940" class="ln">   940&nbsp;&nbsp;</span><span class="comment">// Write b&#39;s data to r.</span>
+<span id="L941" class="ln">   941&nbsp;&nbsp;</span>func record(r *MemProfileRecord, b *bucket) {
+<span id="L942" class="ln">   942&nbsp;&nbsp;</span>	mp := b.mp()
+<span id="L943" class="ln">   943&nbsp;&nbsp;</span>	r.AllocBytes = int64(mp.active.alloc_bytes)
+<span id="L944" class="ln">   944&nbsp;&nbsp;</span>	r.FreeBytes = int64(mp.active.free_bytes)
+<span id="L945" class="ln">   945&nbsp;&nbsp;</span>	r.AllocObjects = int64(mp.active.allocs)
+<span id="L946" class="ln">   946&nbsp;&nbsp;</span>	r.FreeObjects = int64(mp.active.frees)
+<span id="L947" class="ln">   947&nbsp;&nbsp;</span>	if raceenabled {
+<span id="L948" class="ln">   948&nbsp;&nbsp;</span>		racewriterangepc(unsafe.Pointer(&amp;r.Stack0[0]), unsafe.Sizeof(r.Stack0), getcallerpc(), abi.FuncPCABIInternal(MemProfile))
+<span id="L949" class="ln">   949&nbsp;&nbsp;</span>	}
+<span id="L950" class="ln">   950&nbsp;&nbsp;</span>	if msanenabled {
+<span id="L951" class="ln">   951&nbsp;&nbsp;</span>		msanwrite(unsafe.Pointer(&amp;r.Stack0[0]), unsafe.Sizeof(r.Stack0))
+<span id="L952" class="ln">   952&nbsp;&nbsp;</span>	}
+<span id="L953" class="ln">   953&nbsp;&nbsp;</span>	if asanenabled {
+<span id="L954" class="ln">   954&nbsp;&nbsp;</span>		asanwrite(unsafe.Pointer(&amp;r.Stack0[0]), unsafe.Sizeof(r.Stack0))
+<span id="L955" class="ln">   955&nbsp;&nbsp;</span>	}
+<span id="L956" class="ln">   956&nbsp;&nbsp;</span>	copy(r.Stack0[:], b.stk())
+<span id="L957" class="ln">   957&nbsp;&nbsp;</span>	for i := int(b.nstk); i &lt; len(r.Stack0); i++ {
+<span id="L958" class="ln">   958&nbsp;&nbsp;</span>		r.Stack0[i] = 0
+<span id="L959" class="ln">   959&nbsp;&nbsp;</span>	}
+<span id="L960" class="ln">   960&nbsp;&nbsp;</span>}
+<span id="L961" class="ln">   961&nbsp;&nbsp;</span>
+<span id="L962" class="ln">   962&nbsp;&nbsp;</span>func iterate_memprof(fn func(*bucket, uintptr, *uintptr, uintptr, uintptr, uintptr)) {
+<span id="L963" class="ln">   963&nbsp;&nbsp;</span>	lock(&amp;profMemActiveLock)
+<span id="L964" class="ln">   964&nbsp;&nbsp;</span>	head := (*bucket)(mbuckets.Load())
+<span id="L965" class="ln">   965&nbsp;&nbsp;</span>	for b := head; b != nil; b = b.allnext {
+<span id="L966" class="ln">   966&nbsp;&nbsp;</span>		mp := b.mp()
+<span id="L967" class="ln">   967&nbsp;&nbsp;</span>		fn(b, b.nstk, &amp;b.stk()[0], b.size, mp.active.allocs, mp.active.frees)
+<span id="L968" class="ln">   968&nbsp;&nbsp;</span>	}
+<span id="L969" class="ln">   969&nbsp;&nbsp;</span>	unlock(&amp;profMemActiveLock)
+<span id="L970" class="ln">   970&nbsp;&nbsp;</span>}
+<span id="L971" class="ln">   971&nbsp;&nbsp;</span>
+<span id="L972" class="ln">   972&nbsp;&nbsp;</span><span class="comment">// BlockProfileRecord describes blocking events originated</span>
+<span id="L973" class="ln">   973&nbsp;&nbsp;</span><span class="comment">// at a particular call sequence (stack trace).</span>
+<span id="L974" class="ln">   974&nbsp;&nbsp;</span>type BlockProfileRecord struct {
+<span id="L975" class="ln">   975&nbsp;&nbsp;</span>	Count  int64
+<span id="L976" class="ln">   976&nbsp;&nbsp;</span>	Cycles int64
+<span id="L977" class="ln">   977&nbsp;&nbsp;</span>	StackRecord
+<span id="L978" class="ln">   978&nbsp;&nbsp;</span>}
+<span id="L979" class="ln">   979&nbsp;&nbsp;</span>
+<span id="L980" class="ln">   980&nbsp;&nbsp;</span><span class="comment">// BlockProfile returns n, the number of records in the current blocking profile.</span>
+<span id="L981" class="ln">   981&nbsp;&nbsp;</span><span class="comment">// If len(p) &gt;= n, BlockProfile copies the profile into p and returns n, true.</span>
+<span id="L982" class="ln">   982&nbsp;&nbsp;</span><span class="comment">// If len(p) &lt; n, BlockProfile does not change p and returns n, false.</span>
+<span id="L983" class="ln">   983&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L984" class="ln">   984&nbsp;&nbsp;</span><span class="comment">// Most clients should use the [runtime/pprof] package or</span>
+<span id="L985" class="ln">   985&nbsp;&nbsp;</span><span class="comment">// the [testing] package&#39;s -test.blockprofile flag instead</span>
+<span id="L986" class="ln">   986&nbsp;&nbsp;</span><span class="comment">// of calling BlockProfile directly.</span>
+<span id="L987" class="ln">   987&nbsp;&nbsp;</span>func BlockProfile(p []BlockProfileRecord) (n int, ok bool) {
+<span id="L988" class="ln">   988&nbsp;&nbsp;</span>	lock(&amp;profBlockLock)
+<span id="L989" class="ln">   989&nbsp;&nbsp;</span>	head := (*bucket)(bbuckets.Load())
+<span id="L990" class="ln">   990&nbsp;&nbsp;</span>	for b := head; b != nil; b = b.allnext {
+<span id="L991" class="ln">   991&nbsp;&nbsp;</span>		n++
+<span id="L992" class="ln">   992&nbsp;&nbsp;</span>	}
+<span id="L993" class="ln">   993&nbsp;&nbsp;</span>	if n &lt;= len(p) {
+<span id="L994" class="ln">   994&nbsp;&nbsp;</span>		ok = true
+<span id="L995" class="ln">   995&nbsp;&nbsp;</span>		for b := head; b != nil; b = b.allnext {
+<span id="L996" class="ln">   996&nbsp;&nbsp;</span>			bp := b.bp()
+<span id="L997" class="ln">   997&nbsp;&nbsp;</span>			r := &amp;p[0]
+<span id="L998" class="ln">   998&nbsp;&nbsp;</span>			r.Count = int64(bp.count)
+<span id="L999" class="ln">   999&nbsp;&nbsp;</span>			<span class="comment">// Prevent callers from having to worry about division by zero errors.</span>
+<span id="L1000" class="ln">  1000&nbsp;&nbsp;</span>			<span class="comment">// See discussion on http://golang.org/cl/299991.</span>
+<span id="L1001" class="ln">  1001&nbsp;&nbsp;</span>			if r.Count == 0 {
+<span id="L1002" class="ln">  1002&nbsp;&nbsp;</span>				r.Count = 1
+<span id="L1003" class="ln">  1003&nbsp;&nbsp;</span>			}
+<span id="L1004" class="ln">  1004&nbsp;&nbsp;</span>			r.Cycles = bp.cycles
+<span id="L1005" class="ln">  1005&nbsp;&nbsp;</span>			if raceenabled {
+<span id="L1006" class="ln">  1006&nbsp;&nbsp;</span>				racewriterangepc(unsafe.Pointer(&amp;r.Stack0[0]), unsafe.Sizeof(r.Stack0), getcallerpc(), abi.FuncPCABIInternal(BlockProfile))
+<span id="L1007" class="ln">  1007&nbsp;&nbsp;</span>			}
+<span id="L1008" class="ln">  1008&nbsp;&nbsp;</span>			if msanenabled {
+<span id="L1009" class="ln">  1009&nbsp;&nbsp;</span>				msanwrite(unsafe.Pointer(&amp;r.Stack0[0]), unsafe.Sizeof(r.Stack0))
+<span id="L1010" class="ln">  1010&nbsp;&nbsp;</span>			}
+<span id="L1011" class="ln">  1011&nbsp;&nbsp;</span>			if asanenabled {
+<span id="L1012" class="ln">  1012&nbsp;&nbsp;</span>				asanwrite(unsafe.Pointer(&amp;r.Stack0[0]), unsafe.Sizeof(r.Stack0))
+<span id="L1013" class="ln">  1013&nbsp;&nbsp;</span>			}
+<span id="L1014" class="ln">  1014&nbsp;&nbsp;</span>			i := copy(r.Stack0[:], b.stk())
+<span id="L1015" class="ln">  1015&nbsp;&nbsp;</span>			for ; i &lt; len(r.Stack0); i++ {
+<span id="L1016" class="ln">  1016&nbsp;&nbsp;</span>				r.Stack0[i] = 0
+<span id="L1017" class="ln">  1017&nbsp;&nbsp;</span>			}
+<span id="L1018" class="ln">  1018&nbsp;&nbsp;</span>			p = p[1:]
+<span id="L1019" class="ln">  1019&nbsp;&nbsp;</span>		}
+<span id="L1020" class="ln">  1020&nbsp;&nbsp;</span>	}
+<span id="L1021" class="ln">  1021&nbsp;&nbsp;</span>	unlock(&amp;profBlockLock)
+<span id="L1022" class="ln">  1022&nbsp;&nbsp;</span>	return
+<span id="L1023" class="ln">  1023&nbsp;&nbsp;</span>}
+<span id="L1024" class="ln">  1024&nbsp;&nbsp;</span>
+<span id="L1025" class="ln">  1025&nbsp;&nbsp;</span><span class="comment">// MutexProfile returns n, the number of records in the current mutex profile.</span>
+<span id="L1026" class="ln">  1026&nbsp;&nbsp;</span><span class="comment">// If len(p) &gt;= n, MutexProfile copies the profile into p and returns n, true.</span>
+<span id="L1027" class="ln">  1027&nbsp;&nbsp;</span><span class="comment">// Otherwise, MutexProfile does not change p, and returns n, false.</span>
+<span id="L1028" class="ln">  1028&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L1029" class="ln">  1029&nbsp;&nbsp;</span><span class="comment">// Most clients should use the [runtime/pprof] package</span>
+<span id="L1030" class="ln">  1030&nbsp;&nbsp;</span><span class="comment">// instead of calling MutexProfile directly.</span>
+<span id="L1031" class="ln">  1031&nbsp;&nbsp;</span><span class="selection">func MutexProfile(p []BlockProfileRecord) (n int, ok bool)</span> {
+<span id="L1032" class="ln">  1032&nbsp;&nbsp;</span>	lock(&amp;profBlockLock)
+<span id="L1033" class="ln">  1033&nbsp;&nbsp;</span>	head := (*bucket)(xbuckets.Load())
+<span id="L1034" class="ln">  1034&nbsp;&nbsp;</span>	for b := head; b != nil; b = b.allnext {
+<span id="L1035" class="ln">  1035&nbsp;&nbsp;</span>		n++
+<span id="L1036" class="ln">  1036&nbsp;&nbsp;</span>	}
+<span id="L1037" class="ln">  1037&nbsp;&nbsp;</span>	if n &lt;= len(p) {
+<span id="L1038" class="ln">  1038&nbsp;&nbsp;</span>		ok = true
+<span id="L1039" class="ln">  1039&nbsp;&nbsp;</span>		for b := head; b != nil; b = b.allnext {
+<span id="L1040" class="ln">  1040&nbsp;&nbsp;</span>			bp := b.bp()
+<span id="L1041" class="ln">  1041&nbsp;&nbsp;</span>			r := &amp;p[0]
+<span id="L1042" class="ln">  1042&nbsp;&nbsp;</span>			r.Count = int64(bp.count)
+<span id="L1043" class="ln">  1043&nbsp;&nbsp;</span>			r.Cycles = bp.cycles
+<span id="L1044" class="ln">  1044&nbsp;&nbsp;</span>			i := copy(r.Stack0[:], b.stk())
+<span id="L1045" class="ln">  1045&nbsp;&nbsp;</span>			for ; i &lt; len(r.Stack0); i++ {
+<span id="L1046" class="ln">  1046&nbsp;&nbsp;</span>				r.Stack0[i] = 0
+<span id="L1047" class="ln">  1047&nbsp;&nbsp;</span>			}
+<span id="L1048" class="ln">  1048&nbsp;&nbsp;</span>			p = p[1:]
+<span id="L1049" class="ln">  1049&nbsp;&nbsp;</span>		}
+<span id="L1050" class="ln">  1050&nbsp;&nbsp;</span>	}
+<span id="L1051" class="ln">  1051&nbsp;&nbsp;</span>	unlock(&amp;profBlockLock)
+<span id="L1052" class="ln">  1052&nbsp;&nbsp;</span>	return
+<span id="L1053" class="ln">  1053&nbsp;&nbsp;</span>}
+<span id="L1054" class="ln">  1054&nbsp;&nbsp;</span>
+<span id="L1055" class="ln">  1055&nbsp;&nbsp;</span><span class="comment">// ThreadCreateProfile returns n, the number of records in the thread creation profile.</span>
+<span id="L1056" class="ln">  1056&nbsp;&nbsp;</span><span class="comment">// If len(p) &gt;= n, ThreadCreateProfile copies the profile into p and returns n, true.</span>
+<span id="L1057" class="ln">  1057&nbsp;&nbsp;</span><span class="comment">// If len(p) &lt; n, ThreadCreateProfile does not change p and returns n, false.</span>
+<span id="L1058" class="ln">  1058&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L1059" class="ln">  1059&nbsp;&nbsp;</span><span class="comment">// Most clients should use the runtime/pprof package instead</span>
+<span id="L1060" class="ln">  1060&nbsp;&nbsp;</span><span class="comment">// of calling ThreadCreateProfile directly.</span>
+<span id="L1061" class="ln">  1061&nbsp;&nbsp;</span>func ThreadCreateProfile(p []StackRecord) (n int, ok bool) {
+<span id="L1062" class="ln">  1062&nbsp;&nbsp;</span>	first := (*m)(atomic.Loadp(unsafe.Pointer(&amp;allm)))
+<span id="L1063" class="ln">  1063&nbsp;&nbsp;</span>	for mp := first; mp != nil; mp = mp.alllink {
+<span id="L1064" class="ln">  1064&nbsp;&nbsp;</span>		n++
+<span id="L1065" class="ln">  1065&nbsp;&nbsp;</span>	}
+<span id="L1066" class="ln">  1066&nbsp;&nbsp;</span>	if n &lt;= len(p) {
+<span id="L1067" class="ln">  1067&nbsp;&nbsp;</span>		ok = true
+<span id="L1068" class="ln">  1068&nbsp;&nbsp;</span>		i := 0
+<span id="L1069" class="ln">  1069&nbsp;&nbsp;</span>		for mp := first; mp != nil; mp = mp.alllink {
+<span id="L1070" class="ln">  1070&nbsp;&nbsp;</span>			p[i].Stack0 = mp.createstack
+<span id="L1071" class="ln">  1071&nbsp;&nbsp;</span>			i++
+<span id="L1072" class="ln">  1072&nbsp;&nbsp;</span>		}
+<span id="L1073" class="ln">  1073&nbsp;&nbsp;</span>	}
+<span id="L1074" class="ln">  1074&nbsp;&nbsp;</span>	return
+<span id="L1075" class="ln">  1075&nbsp;&nbsp;</span>}
+<span id="L1076" class="ln">  1076&nbsp;&nbsp;</span>
+<span id="L1077" class="ln">  1077&nbsp;&nbsp;</span><span class="comment">//go:linkname runtime_goroutineProfileWithLabels runtime/pprof.runtime_goroutineProfileWithLabels</span>
+<span id="L1078" class="ln">  1078&nbsp;&nbsp;</span>func runtime_goroutineProfileWithLabels(p []StackRecord, labels []unsafe.Pointer) (n int, ok bool) {
+<span id="L1079" class="ln">  1079&nbsp;&nbsp;</span>	return goroutineProfileWithLabels(p, labels)
+<span id="L1080" class="ln">  1080&nbsp;&nbsp;</span>}
+<span id="L1081" class="ln">  1081&nbsp;&nbsp;</span>
+<span id="L1082" class="ln">  1082&nbsp;&nbsp;</span><span class="comment">// labels may be nil. If labels is non-nil, it must have the same length as p.</span>
+<span id="L1083" class="ln">  1083&nbsp;&nbsp;</span>func goroutineProfileWithLabels(p []StackRecord, labels []unsafe.Pointer) (n int, ok bool) {
+<span id="L1084" class="ln">  1084&nbsp;&nbsp;</span>	if labels != nil &amp;&amp; len(labels) != len(p) {
+<span id="L1085" class="ln">  1085&nbsp;&nbsp;</span>		labels = nil
+<span id="L1086" class="ln">  1086&nbsp;&nbsp;</span>	}
+<span id="L1087" class="ln">  1087&nbsp;&nbsp;</span>
+<span id="L1088" class="ln">  1088&nbsp;&nbsp;</span>	return goroutineProfileWithLabelsConcurrent(p, labels)
+<span id="L1089" class="ln">  1089&nbsp;&nbsp;</span>}
+<span id="L1090" class="ln">  1090&nbsp;&nbsp;</span>
+<span id="L1091" class="ln">  1091&nbsp;&nbsp;</span>var goroutineProfile = struct {
+<span id="L1092" class="ln">  1092&nbsp;&nbsp;</span>	sema    uint32
+<span id="L1093" class="ln">  1093&nbsp;&nbsp;</span>	active  bool
+<span id="L1094" class="ln">  1094&nbsp;&nbsp;</span>	offset  atomic.Int64
+<span id="L1095" class="ln">  1095&nbsp;&nbsp;</span>	records []StackRecord
+<span id="L1096" class="ln">  1096&nbsp;&nbsp;</span>	labels  []unsafe.Pointer
+<span id="L1097" class="ln">  1097&nbsp;&nbsp;</span>}{
+<span id="L1098" class="ln">  1098&nbsp;&nbsp;</span>	sema: 1,
+<span id="L1099" class="ln">  1099&nbsp;&nbsp;</span>}
+<span id="L1100" class="ln">  1100&nbsp;&nbsp;</span>
+<span id="L1101" class="ln">  1101&nbsp;&nbsp;</span><span class="comment">// goroutineProfileState indicates the status of a goroutine&#39;s stack for the</span>
+<span id="L1102" class="ln">  1102&nbsp;&nbsp;</span><span class="comment">// current in-progress goroutine profile. Goroutines&#39; stacks are initially</span>
+<span id="L1103" class="ln">  1103&nbsp;&nbsp;</span><span class="comment">// &#34;Absent&#34; from the profile, and end up &#34;Satisfied&#34; by the time the profile is</span>
+<span id="L1104" class="ln">  1104&nbsp;&nbsp;</span><span class="comment">// complete. While a goroutine&#39;s stack is being captured, its</span>
+<span id="L1105" class="ln">  1105&nbsp;&nbsp;</span><span class="comment">// goroutineProfileState will be &#34;InProgress&#34; and it will not be able to run</span>
+<span id="L1106" class="ln">  1106&nbsp;&nbsp;</span><span class="comment">// until the capture completes and the state moves to &#34;Satisfied&#34;.</span>
+<span id="L1107" class="ln">  1107&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L1108" class="ln">  1108&nbsp;&nbsp;</span><span class="comment">// Some goroutines (the finalizer goroutine, which at various times can be</span>
+<span id="L1109" class="ln">  1109&nbsp;&nbsp;</span><span class="comment">// either a &#34;system&#34; or a &#34;user&#34; goroutine, and the goroutine that is</span>
+<span id="L1110" class="ln">  1110&nbsp;&nbsp;</span><span class="comment">// coordinating the profile, any goroutines created during the profile) move</span>
+<span id="L1111" class="ln">  1111&nbsp;&nbsp;</span><span class="comment">// directly to the &#34;Satisfied&#34; state.</span>
+<span id="L1112" class="ln">  1112&nbsp;&nbsp;</span>type goroutineProfileState uint32
+<span id="L1113" class="ln">  1113&nbsp;&nbsp;</span>
+<span id="L1114" class="ln">  1114&nbsp;&nbsp;</span>const (
+<span id="L1115" class="ln">  1115&nbsp;&nbsp;</span>	goroutineProfileAbsent goroutineProfileState = iota
+<span id="L1116" class="ln">  1116&nbsp;&nbsp;</span>	goroutineProfileInProgress
+<span id="L1117" class="ln">  1117&nbsp;&nbsp;</span>	goroutineProfileSatisfied
+<span id="L1118" class="ln">  1118&nbsp;&nbsp;</span>)
+<span id="L1119" class="ln">  1119&nbsp;&nbsp;</span>
+<span id="L1120" class="ln">  1120&nbsp;&nbsp;</span>type goroutineProfileStateHolder atomic.Uint32
+<span id="L1121" class="ln">  1121&nbsp;&nbsp;</span>
+<span id="L1122" class="ln">  1122&nbsp;&nbsp;</span>func (p *goroutineProfileStateHolder) Load() goroutineProfileState {
+<span id="L1123" class="ln">  1123&nbsp;&nbsp;</span>	return goroutineProfileState((*atomic.Uint32)(p).Load())
+<span id="L1124" class="ln">  1124&nbsp;&nbsp;</span>}
+<span id="L1125" class="ln">  1125&nbsp;&nbsp;</span>
+<span id="L1126" class="ln">  1126&nbsp;&nbsp;</span>func (p *goroutineProfileStateHolder) Store(value goroutineProfileState) {
+<span id="L1127" class="ln">  1127&nbsp;&nbsp;</span>	(*atomic.Uint32)(p).Store(uint32(value))
+<span id="L1128" class="ln">  1128&nbsp;&nbsp;</span>}
+<span id="L1129" class="ln">  1129&nbsp;&nbsp;</span>
+<span id="L1130" class="ln">  1130&nbsp;&nbsp;</span>func (p *goroutineProfileStateHolder) CompareAndSwap(old, new goroutineProfileState) bool {
+<span id="L1131" class="ln">  1131&nbsp;&nbsp;</span>	return (*atomic.Uint32)(p).CompareAndSwap(uint32(old), uint32(new))
+<span id="L1132" class="ln">  1132&nbsp;&nbsp;</span>}
+<span id="L1133" class="ln">  1133&nbsp;&nbsp;</span>
+<span id="L1134" class="ln">  1134&nbsp;&nbsp;</span>func goroutineProfileWithLabelsConcurrent(p []StackRecord, labels []unsafe.Pointer) (n int, ok bool) {
+<span id="L1135" class="ln">  1135&nbsp;&nbsp;</span>	semacquire(&amp;goroutineProfile.sema)
+<span id="L1136" class="ln">  1136&nbsp;&nbsp;</span>
+<span id="L1137" class="ln">  1137&nbsp;&nbsp;</span>	ourg := getg()
+<span id="L1138" class="ln">  1138&nbsp;&nbsp;</span>
+<span id="L1139" class="ln">  1139&nbsp;&nbsp;</span>	stw := stopTheWorld(stwGoroutineProfile)
+<span id="L1140" class="ln">  1140&nbsp;&nbsp;</span>	<span class="comment">// Using gcount while the world is stopped should give us a consistent view</span>
+<span id="L1141" class="ln">  1141&nbsp;&nbsp;</span>	<span class="comment">// of the number of live goroutines, minus the number of goroutines that are</span>
+<span id="L1142" class="ln">  1142&nbsp;&nbsp;</span>	<span class="comment">// alive and permanently marked as &#34;system&#34;. But to make this count agree</span>
+<span id="L1143" class="ln">  1143&nbsp;&nbsp;</span>	<span class="comment">// with what we&#39;d get from isSystemGoroutine, we need special handling for</span>
+<span id="L1144" class="ln">  1144&nbsp;&nbsp;</span>	<span class="comment">// goroutines that can vary between user and system to ensure that the count</span>
+<span id="L1145" class="ln">  1145&nbsp;&nbsp;</span>	<span class="comment">// doesn&#39;t change during the collection. So, check the finalizer goroutine</span>
+<span id="L1146" class="ln">  1146&nbsp;&nbsp;</span>	<span class="comment">// in particular.</span>
+<span id="L1147" class="ln">  1147&nbsp;&nbsp;</span>	n = int(gcount())
+<span id="L1148" class="ln">  1148&nbsp;&nbsp;</span>	if fingStatus.Load()&amp;fingRunningFinalizer != 0 {
+<span id="L1149" class="ln">  1149&nbsp;&nbsp;</span>		n++
+<span id="L1150" class="ln">  1150&nbsp;&nbsp;</span>	}
+<span id="L1151" class="ln">  1151&nbsp;&nbsp;</span>
+<span id="L1152" class="ln">  1152&nbsp;&nbsp;</span>	if n &gt; len(p) {
+<span id="L1153" class="ln">  1153&nbsp;&nbsp;</span>		<span class="comment">// There&#39;s not enough space in p to store the whole profile, so (per the</span>
+<span id="L1154" class="ln">  1154&nbsp;&nbsp;</span>		<span class="comment">// contract of runtime.GoroutineProfile) we&#39;re not allowed to write to p</span>
+<span id="L1155" class="ln">  1155&nbsp;&nbsp;</span>		<span class="comment">// at all and must return n, false.</span>
+<span id="L1156" class="ln">  1156&nbsp;&nbsp;</span>		startTheWorld(stw)
+<span id="L1157" class="ln">  1157&nbsp;&nbsp;</span>		semrelease(&amp;goroutineProfile.sema)
+<span id="L1158" class="ln">  1158&nbsp;&nbsp;</span>		return n, false
+<span id="L1159" class="ln">  1159&nbsp;&nbsp;</span>	}
+<span id="L1160" class="ln">  1160&nbsp;&nbsp;</span>
+<span id="L1161" class="ln">  1161&nbsp;&nbsp;</span>	<span class="comment">// Save current goroutine.</span>
+<span id="L1162" class="ln">  1162&nbsp;&nbsp;</span>	sp := getcallersp()
+<span id="L1163" class="ln">  1163&nbsp;&nbsp;</span>	pc := getcallerpc()
+<span id="L1164" class="ln">  1164&nbsp;&nbsp;</span>	systemstack(func() {
+<span id="L1165" class="ln">  1165&nbsp;&nbsp;</span>		saveg(pc, sp, ourg, &amp;p[0])
+<span id="L1166" class="ln">  1166&nbsp;&nbsp;</span>	})
+<span id="L1167" class="ln">  1167&nbsp;&nbsp;</span>	if labels != nil {
+<span id="L1168" class="ln">  1168&nbsp;&nbsp;</span>		labels[0] = ourg.labels
+<span id="L1169" class="ln">  1169&nbsp;&nbsp;</span>	}
+<span id="L1170" class="ln">  1170&nbsp;&nbsp;</span>	ourg.goroutineProfiled.Store(goroutineProfileSatisfied)
+<span id="L1171" class="ln">  1171&nbsp;&nbsp;</span>	goroutineProfile.offset.Store(1)
+<span id="L1172" class="ln">  1172&nbsp;&nbsp;</span>
+<span id="L1173" class="ln">  1173&nbsp;&nbsp;</span>	<span class="comment">// Prepare for all other goroutines to enter the profile. Aside from ourg,</span>
+<span id="L1174" class="ln">  1174&nbsp;&nbsp;</span>	<span class="comment">// every goroutine struct in the allgs list has its goroutineProfiled field</span>
+<span id="L1175" class="ln">  1175&nbsp;&nbsp;</span>	<span class="comment">// cleared. Any goroutine created from this point on (while</span>
+<span id="L1176" class="ln">  1176&nbsp;&nbsp;</span>	<span class="comment">// goroutineProfile.active is set) will start with its goroutineProfiled</span>
+<span id="L1177" class="ln">  1177&nbsp;&nbsp;</span>	<span class="comment">// field set to goroutineProfileSatisfied.</span>
+<span id="L1178" class="ln">  1178&nbsp;&nbsp;</span>	goroutineProfile.active = true
+<span id="L1179" class="ln">  1179&nbsp;&nbsp;</span>	goroutineProfile.records = p
+<span id="L1180" class="ln">  1180&nbsp;&nbsp;</span>	goroutineProfile.labels = labels
+<span id="L1181" class="ln">  1181&nbsp;&nbsp;</span>	<span class="comment">// The finalizer goroutine needs special handling because it can vary over</span>
+<span id="L1182" class="ln">  1182&nbsp;&nbsp;</span>	<span class="comment">// time between being a user goroutine (eligible for this profile) and a</span>
+<span id="L1183" class="ln">  1183&nbsp;&nbsp;</span>	<span class="comment">// system goroutine (to be excluded). Pick one before restarting the world.</span>
+<span id="L1184" class="ln">  1184&nbsp;&nbsp;</span>	if fing != nil {
+<span id="L1185" class="ln">  1185&nbsp;&nbsp;</span>		fing.goroutineProfiled.Store(goroutineProfileSatisfied)
+<span id="L1186" class="ln">  1186&nbsp;&nbsp;</span>		if readgstatus(fing) != _Gdead &amp;&amp; !isSystemGoroutine(fing, false) {
+<span id="L1187" class="ln">  1187&nbsp;&nbsp;</span>			doRecordGoroutineProfile(fing)
+<span id="L1188" class="ln">  1188&nbsp;&nbsp;</span>		}
+<span id="L1189" class="ln">  1189&nbsp;&nbsp;</span>	}
+<span id="L1190" class="ln">  1190&nbsp;&nbsp;</span>	startTheWorld(stw)
+<span id="L1191" class="ln">  1191&nbsp;&nbsp;</span>
+<span id="L1192" class="ln">  1192&nbsp;&nbsp;</span>	<span class="comment">// Visit each goroutine that existed as of the startTheWorld call above.</span>
+<span id="L1193" class="ln">  1193&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L1194" class="ln">  1194&nbsp;&nbsp;</span>	<span class="comment">// New goroutines may not be in this list, but we didn&#39;t want to know about</span>
+<span id="L1195" class="ln">  1195&nbsp;&nbsp;</span>	<span class="comment">// them anyway. If they do appear in this list (via reusing a dead goroutine</span>
+<span id="L1196" class="ln">  1196&nbsp;&nbsp;</span>	<span class="comment">// struct, or racing to launch between the world restarting and us getting</span>
+<span id="L1197" class="ln">  1197&nbsp;&nbsp;</span>	<span class="comment">// the list), they will already have their goroutineProfiled field set to</span>
+<span id="L1198" class="ln">  1198&nbsp;&nbsp;</span>	<span class="comment">// goroutineProfileSatisfied before their state transitions out of _Gdead.</span>
+<span id="L1199" class="ln">  1199&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L1200" class="ln">  1200&nbsp;&nbsp;</span>	<span class="comment">// Any goroutine that the scheduler tries to execute concurrently with this</span>
+<span id="L1201" class="ln">  1201&nbsp;&nbsp;</span>	<span class="comment">// call will start by adding itself to the profile (before the act of</span>
+<span id="L1202" class="ln">  1202&nbsp;&nbsp;</span>	<span class="comment">// executing can cause any changes in its stack).</span>
+<span id="L1203" class="ln">  1203&nbsp;&nbsp;</span>	forEachGRace(func(gp1 *g) {
+<span id="L1204" class="ln">  1204&nbsp;&nbsp;</span>		tryRecordGoroutineProfile(gp1, Gosched)
+<span id="L1205" class="ln">  1205&nbsp;&nbsp;</span>	})
+<span id="L1206" class="ln">  1206&nbsp;&nbsp;</span>
+<span id="L1207" class="ln">  1207&nbsp;&nbsp;</span>	stw = stopTheWorld(stwGoroutineProfileCleanup)
+<span id="L1208" class="ln">  1208&nbsp;&nbsp;</span>	endOffset := goroutineProfile.offset.Swap(0)
+<span id="L1209" class="ln">  1209&nbsp;&nbsp;</span>	goroutineProfile.active = false
+<span id="L1210" class="ln">  1210&nbsp;&nbsp;</span>	goroutineProfile.records = nil
+<span id="L1211" class="ln">  1211&nbsp;&nbsp;</span>	goroutineProfile.labels = nil
+<span id="L1212" class="ln">  1212&nbsp;&nbsp;</span>	startTheWorld(stw)
+<span id="L1213" class="ln">  1213&nbsp;&nbsp;</span>
+<span id="L1214" class="ln">  1214&nbsp;&nbsp;</span>	<span class="comment">// Restore the invariant that every goroutine struct in allgs has its</span>
+<span id="L1215" class="ln">  1215&nbsp;&nbsp;</span>	<span class="comment">// goroutineProfiled field cleared.</span>
+<span id="L1216" class="ln">  1216&nbsp;&nbsp;</span>	forEachGRace(func(gp1 *g) {
+<span id="L1217" class="ln">  1217&nbsp;&nbsp;</span>		gp1.goroutineProfiled.Store(goroutineProfileAbsent)
+<span id="L1218" class="ln">  1218&nbsp;&nbsp;</span>	})
+<span id="L1219" class="ln">  1219&nbsp;&nbsp;</span>
+<span id="L1220" class="ln">  1220&nbsp;&nbsp;</span>	if raceenabled {
+<span id="L1221" class="ln">  1221&nbsp;&nbsp;</span>		raceacquire(unsafe.Pointer(&amp;labelSync))
+<span id="L1222" class="ln">  1222&nbsp;&nbsp;</span>	}
+<span id="L1223" class="ln">  1223&nbsp;&nbsp;</span>
+<span id="L1224" class="ln">  1224&nbsp;&nbsp;</span>	if n != int(endOffset) {
+<span id="L1225" class="ln">  1225&nbsp;&nbsp;</span>		<span class="comment">// It&#39;s a big surprise that the number of goroutines changed while we</span>
+<span id="L1226" class="ln">  1226&nbsp;&nbsp;</span>		<span class="comment">// were collecting the profile. But probably better to return a</span>
+<span id="L1227" class="ln">  1227&nbsp;&nbsp;</span>		<span class="comment">// truncated profile than to crash the whole process.</span>
+<span id="L1228" class="ln">  1228&nbsp;&nbsp;</span>		<span class="comment">//</span>
+<span id="L1229" class="ln">  1229&nbsp;&nbsp;</span>		<span class="comment">// For instance, needm moves a goroutine out of the _Gdead state and so</span>
+<span id="L1230" class="ln">  1230&nbsp;&nbsp;</span>		<span class="comment">// might be able to change the goroutine count without interacting with</span>
+<span id="L1231" class="ln">  1231&nbsp;&nbsp;</span>		<span class="comment">// the scheduler. For code like that, the race windows are small and the</span>
+<span id="L1232" class="ln">  1232&nbsp;&nbsp;</span>		<span class="comment">// combination of features is uncommon, so it&#39;s hard to be (and remain)</span>
+<span id="L1233" class="ln">  1233&nbsp;&nbsp;</span>		<span class="comment">// sure we&#39;ve caught them all.</span>
+<span id="L1234" class="ln">  1234&nbsp;&nbsp;</span>	}
+<span id="L1235" class="ln">  1235&nbsp;&nbsp;</span>
+<span id="L1236" class="ln">  1236&nbsp;&nbsp;</span>	semrelease(&amp;goroutineProfile.sema)
+<span id="L1237" class="ln">  1237&nbsp;&nbsp;</span>	return n, true
+<span id="L1238" class="ln">  1238&nbsp;&nbsp;</span>}
+<span id="L1239" class="ln">  1239&nbsp;&nbsp;</span>
+<span id="L1240" class="ln">  1240&nbsp;&nbsp;</span><span class="comment">// tryRecordGoroutineProfileWB asserts that write barriers are allowed and calls</span>
+<span id="L1241" class="ln">  1241&nbsp;&nbsp;</span><span class="comment">// tryRecordGoroutineProfile.</span>
+<span id="L1242" class="ln">  1242&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L1243" class="ln">  1243&nbsp;&nbsp;</span><span class="comment">//go:yeswritebarrierrec</span>
+<span id="L1244" class="ln">  1244&nbsp;&nbsp;</span>func tryRecordGoroutineProfileWB(gp1 *g) {
+<span id="L1245" class="ln">  1245&nbsp;&nbsp;</span>	if getg().m.p.ptr() == nil {
+<span id="L1246" class="ln">  1246&nbsp;&nbsp;</span>		throw(&#34;no P available, write barriers are forbidden&#34;)
+<span id="L1247" class="ln">  1247&nbsp;&nbsp;</span>	}
+<span id="L1248" class="ln">  1248&nbsp;&nbsp;</span>	tryRecordGoroutineProfile(gp1, osyield)
+<span id="L1249" class="ln">  1249&nbsp;&nbsp;</span>}
+<span id="L1250" class="ln">  1250&nbsp;&nbsp;</span>
+<span id="L1251" class="ln">  1251&nbsp;&nbsp;</span><span class="comment">// tryRecordGoroutineProfile ensures that gp1 has the appropriate representation</span>
+<span id="L1252" class="ln">  1252&nbsp;&nbsp;</span><span class="comment">// in the current goroutine profile: either that it should not be profiled, or</span>
+<span id="L1253" class="ln">  1253&nbsp;&nbsp;</span><span class="comment">// that a snapshot of its call stack and labels are now in the profile.</span>
+<span id="L1254" class="ln">  1254&nbsp;&nbsp;</span>func tryRecordGoroutineProfile(gp1 *g, yield func()) {
+<span id="L1255" class="ln">  1255&nbsp;&nbsp;</span>	if readgstatus(gp1) == _Gdead {
+<span id="L1256" class="ln">  1256&nbsp;&nbsp;</span>		<span class="comment">// Dead goroutines should not appear in the profile. Goroutines that</span>
+<span id="L1257" class="ln">  1257&nbsp;&nbsp;</span>		<span class="comment">// start while profile collection is active will get goroutineProfiled</span>
+<span id="L1258" class="ln">  1258&nbsp;&nbsp;</span>		<span class="comment">// set to goroutineProfileSatisfied before transitioning out of _Gdead,</span>
+<span id="L1259" class="ln">  1259&nbsp;&nbsp;</span>		<span class="comment">// so here we check _Gdead first.</span>
+<span id="L1260" class="ln">  1260&nbsp;&nbsp;</span>		return
+<span id="L1261" class="ln">  1261&nbsp;&nbsp;</span>	}
+<span id="L1262" class="ln">  1262&nbsp;&nbsp;</span>	if isSystemGoroutine(gp1, true) {
+<span id="L1263" class="ln">  1263&nbsp;&nbsp;</span>		<span class="comment">// System goroutines should not appear in the profile. (The finalizer</span>
+<span id="L1264" class="ln">  1264&nbsp;&nbsp;</span>		<span class="comment">// goroutine is marked as &#34;already profiled&#34;.)</span>
+<span id="L1265" class="ln">  1265&nbsp;&nbsp;</span>		return
+<span id="L1266" class="ln">  1266&nbsp;&nbsp;</span>	}
+<span id="L1267" class="ln">  1267&nbsp;&nbsp;</span>
+<span id="L1268" class="ln">  1268&nbsp;&nbsp;</span>	for {
+<span id="L1269" class="ln">  1269&nbsp;&nbsp;</span>		prev := gp1.goroutineProfiled.Load()
+<span id="L1270" class="ln">  1270&nbsp;&nbsp;</span>		if prev == goroutineProfileSatisfied {
+<span id="L1271" class="ln">  1271&nbsp;&nbsp;</span>			<span class="comment">// This goroutine is already in the profile (or is new since the</span>
+<span id="L1272" class="ln">  1272&nbsp;&nbsp;</span>			<span class="comment">// start of collection, so shouldn&#39;t appear in the profile).</span>
+<span id="L1273" class="ln">  1273&nbsp;&nbsp;</span>			break
+<span id="L1274" class="ln">  1274&nbsp;&nbsp;</span>		}
+<span id="L1275" class="ln">  1275&nbsp;&nbsp;</span>		if prev == goroutineProfileInProgress {
+<span id="L1276" class="ln">  1276&nbsp;&nbsp;</span>			<span class="comment">// Something else is adding gp1 to the goroutine profile right now.</span>
+<span id="L1277" class="ln">  1277&nbsp;&nbsp;</span>			<span class="comment">// Give that a moment to finish.</span>
+<span id="L1278" class="ln">  1278&nbsp;&nbsp;</span>			yield()
+<span id="L1279" class="ln">  1279&nbsp;&nbsp;</span>			continue
+<span id="L1280" class="ln">  1280&nbsp;&nbsp;</span>		}
+<span id="L1281" class="ln">  1281&nbsp;&nbsp;</span>
+<span id="L1282" class="ln">  1282&nbsp;&nbsp;</span>		<span class="comment">// While we have gp1.goroutineProfiled set to</span>
+<span id="L1283" class="ln">  1283&nbsp;&nbsp;</span>		<span class="comment">// goroutineProfileInProgress, gp1 may appear _Grunnable but will not</span>
+<span id="L1284" class="ln">  1284&nbsp;&nbsp;</span>		<span class="comment">// actually be able to run. Disable preemption for ourselves, to make</span>
+<span id="L1285" class="ln">  1285&nbsp;&nbsp;</span>		<span class="comment">// sure we finish profiling gp1 right away instead of leaving it stuck</span>
+<span id="L1286" class="ln">  1286&nbsp;&nbsp;</span>		<span class="comment">// in this limbo.</span>
+<span id="L1287" class="ln">  1287&nbsp;&nbsp;</span>		mp := acquirem()
+<span id="L1288" class="ln">  1288&nbsp;&nbsp;</span>		if gp1.goroutineProfiled.CompareAndSwap(goroutineProfileAbsent, goroutineProfileInProgress) {
+<span id="L1289" class="ln">  1289&nbsp;&nbsp;</span>			doRecordGoroutineProfile(gp1)
+<span id="L1290" class="ln">  1290&nbsp;&nbsp;</span>			gp1.goroutineProfiled.Store(goroutineProfileSatisfied)
+<span id="L1291" class="ln">  1291&nbsp;&nbsp;</span>		}
+<span id="L1292" class="ln">  1292&nbsp;&nbsp;</span>		releasem(mp)
+<span id="L1293" class="ln">  1293&nbsp;&nbsp;</span>	}
+<span id="L1294" class="ln">  1294&nbsp;&nbsp;</span>}
+<span id="L1295" class="ln">  1295&nbsp;&nbsp;</span>
+<span id="L1296" class="ln">  1296&nbsp;&nbsp;</span><span class="comment">// doRecordGoroutineProfile writes gp1&#39;s call stack and labels to an in-progress</span>
+<span id="L1297" class="ln">  1297&nbsp;&nbsp;</span><span class="comment">// goroutine profile. Preemption is disabled.</span>
+<span id="L1298" class="ln">  1298&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L1299" class="ln">  1299&nbsp;&nbsp;</span><span class="comment">// This may be called via tryRecordGoroutineProfile in two ways: by the</span>
+<span id="L1300" class="ln">  1300&nbsp;&nbsp;</span><span class="comment">// goroutine that is coordinating the goroutine profile (running on its own</span>
+<span id="L1301" class="ln">  1301&nbsp;&nbsp;</span><span class="comment">// stack), or from the scheduler in preparation to execute gp1 (running on the</span>
+<span id="L1302" class="ln">  1302&nbsp;&nbsp;</span><span class="comment">// system stack).</span>
+<span id="L1303" class="ln">  1303&nbsp;&nbsp;</span>func doRecordGoroutineProfile(gp1 *g) {
+<span id="L1304" class="ln">  1304&nbsp;&nbsp;</span>	if readgstatus(gp1) == _Grunning {
+<span id="L1305" class="ln">  1305&nbsp;&nbsp;</span>		print(&#34;doRecordGoroutineProfile gp1=&#34;, gp1.goid, &#34;\n&#34;)
+<span id="L1306" class="ln">  1306&nbsp;&nbsp;</span>		throw(&#34;cannot read stack of running goroutine&#34;)
+<span id="L1307" class="ln">  1307&nbsp;&nbsp;</span>	}
+<span id="L1308" class="ln">  1308&nbsp;&nbsp;</span>
+<span id="L1309" class="ln">  1309&nbsp;&nbsp;</span>	offset := int(goroutineProfile.offset.Add(1)) - 1
+<span id="L1310" class="ln">  1310&nbsp;&nbsp;</span>
+<span id="L1311" class="ln">  1311&nbsp;&nbsp;</span>	if offset &gt;= len(goroutineProfile.records) {
+<span id="L1312" class="ln">  1312&nbsp;&nbsp;</span>		<span class="comment">// Should be impossible, but better to return a truncated profile than</span>
+<span id="L1313" class="ln">  1313&nbsp;&nbsp;</span>		<span class="comment">// to crash the entire process at this point. Instead, deal with it in</span>
+<span id="L1314" class="ln">  1314&nbsp;&nbsp;</span>		<span class="comment">// goroutineProfileWithLabelsConcurrent where we have more context.</span>
+<span id="L1315" class="ln">  1315&nbsp;&nbsp;</span>		return
+<span id="L1316" class="ln">  1316&nbsp;&nbsp;</span>	}
+<span id="L1317" class="ln">  1317&nbsp;&nbsp;</span>
+<span id="L1318" class="ln">  1318&nbsp;&nbsp;</span>	<span class="comment">// saveg calls gentraceback, which may call cgo traceback functions. When</span>
+<span id="L1319" class="ln">  1319&nbsp;&nbsp;</span>	<span class="comment">// called from the scheduler, this is on the system stack already so</span>
+<span id="L1320" class="ln">  1320&nbsp;&nbsp;</span>	<span class="comment">// traceback.go:cgoContextPCs will avoid calling back into the scheduler.</span>
+<span id="L1321" class="ln">  1321&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L1322" class="ln">  1322&nbsp;&nbsp;</span>	<span class="comment">// When called from the goroutine coordinating the profile, we still have</span>
+<span id="L1323" class="ln">  1323&nbsp;&nbsp;</span>	<span class="comment">// set gp1.goroutineProfiled to goroutineProfileInProgress and so are still</span>
+<span id="L1324" class="ln">  1324&nbsp;&nbsp;</span>	<span class="comment">// preventing it from being truly _Grunnable. So we&#39;ll use the system stack</span>
+<span id="L1325" class="ln">  1325&nbsp;&nbsp;</span>	<span class="comment">// to avoid schedule delays.</span>
+<span id="L1326" class="ln">  1326&nbsp;&nbsp;</span>	systemstack(func() { saveg(^uintptr(0), ^uintptr(0), gp1, &amp;goroutineProfile.records[offset]) })
+<span id="L1327" class="ln">  1327&nbsp;&nbsp;</span>
+<span id="L1328" class="ln">  1328&nbsp;&nbsp;</span>	if goroutineProfile.labels != nil {
+<span id="L1329" class="ln">  1329&nbsp;&nbsp;</span>		goroutineProfile.labels[offset] = gp1.labels
+<span id="L1330" class="ln">  1330&nbsp;&nbsp;</span>	}
+<span id="L1331" class="ln">  1331&nbsp;&nbsp;</span>}
+<span id="L1332" class="ln">  1332&nbsp;&nbsp;</span>
+<span id="L1333" class="ln">  1333&nbsp;&nbsp;</span>func goroutineProfileWithLabelsSync(p []StackRecord, labels []unsafe.Pointer) (n int, ok bool) {
+<span id="L1334" class="ln">  1334&nbsp;&nbsp;</span>	gp := getg()
+<span id="L1335" class="ln">  1335&nbsp;&nbsp;</span>
+<span id="L1336" class="ln">  1336&nbsp;&nbsp;</span>	isOK := func(gp1 *g) bool {
+<span id="L1337" class="ln">  1337&nbsp;&nbsp;</span>		<span class="comment">// Checking isSystemGoroutine here makes GoroutineProfile</span>
+<span id="L1338" class="ln">  1338&nbsp;&nbsp;</span>		<span class="comment">// consistent with both NumGoroutine and Stack.</span>
+<span id="L1339" class="ln">  1339&nbsp;&nbsp;</span>		return gp1 != gp &amp;&amp; readgstatus(gp1) != _Gdead &amp;&amp; !isSystemGoroutine(gp1, false)
+<span id="L1340" class="ln">  1340&nbsp;&nbsp;</span>	}
+<span id="L1341" class="ln">  1341&nbsp;&nbsp;</span>
+<span id="L1342" class="ln">  1342&nbsp;&nbsp;</span>	stw := stopTheWorld(stwGoroutineProfile)
+<span id="L1343" class="ln">  1343&nbsp;&nbsp;</span>
+<span id="L1344" class="ln">  1344&nbsp;&nbsp;</span>	<span class="comment">// World is stopped, no locking required.</span>
+<span id="L1345" class="ln">  1345&nbsp;&nbsp;</span>	n = 1
+<span id="L1346" class="ln">  1346&nbsp;&nbsp;</span>	forEachGRace(func(gp1 *g) {
+<span id="L1347" class="ln">  1347&nbsp;&nbsp;</span>		if isOK(gp1) {
+<span id="L1348" class="ln">  1348&nbsp;&nbsp;</span>			n++
+<span id="L1349" class="ln">  1349&nbsp;&nbsp;</span>		}
+<span id="L1350" class="ln">  1350&nbsp;&nbsp;</span>	})
+<span id="L1351" class="ln">  1351&nbsp;&nbsp;</span>
+<span id="L1352" class="ln">  1352&nbsp;&nbsp;</span>	if n &lt;= len(p) {
+<span id="L1353" class="ln">  1353&nbsp;&nbsp;</span>		ok = true
+<span id="L1354" class="ln">  1354&nbsp;&nbsp;</span>		r, lbl := p, labels
+<span id="L1355" class="ln">  1355&nbsp;&nbsp;</span>
+<span id="L1356" class="ln">  1356&nbsp;&nbsp;</span>		<span class="comment">// Save current goroutine.</span>
+<span id="L1357" class="ln">  1357&nbsp;&nbsp;</span>		sp := getcallersp()
+<span id="L1358" class="ln">  1358&nbsp;&nbsp;</span>		pc := getcallerpc()
+<span id="L1359" class="ln">  1359&nbsp;&nbsp;</span>		systemstack(func() {
+<span id="L1360" class="ln">  1360&nbsp;&nbsp;</span>			saveg(pc, sp, gp, &amp;r[0])
+<span id="L1361" class="ln">  1361&nbsp;&nbsp;</span>		})
+<span id="L1362" class="ln">  1362&nbsp;&nbsp;</span>		r = r[1:]
+<span id="L1363" class="ln">  1363&nbsp;&nbsp;</span>
+<span id="L1364" class="ln">  1364&nbsp;&nbsp;</span>		<span class="comment">// If we have a place to put our goroutine labelmap, insert it there.</span>
+<span id="L1365" class="ln">  1365&nbsp;&nbsp;</span>		if labels != nil {
+<span id="L1366" class="ln">  1366&nbsp;&nbsp;</span>			lbl[0] = gp.labels
+<span id="L1367" class="ln">  1367&nbsp;&nbsp;</span>			lbl = lbl[1:]
+<span id="L1368" class="ln">  1368&nbsp;&nbsp;</span>		}
+<span id="L1369" class="ln">  1369&nbsp;&nbsp;</span>
+<span id="L1370" class="ln">  1370&nbsp;&nbsp;</span>		<span class="comment">// Save other goroutines.</span>
+<span id="L1371" class="ln">  1371&nbsp;&nbsp;</span>		forEachGRace(func(gp1 *g) {
+<span id="L1372" class="ln">  1372&nbsp;&nbsp;</span>			if !isOK(gp1) {
+<span id="L1373" class="ln">  1373&nbsp;&nbsp;</span>				return
+<span id="L1374" class="ln">  1374&nbsp;&nbsp;</span>			}
+<span id="L1375" class="ln">  1375&nbsp;&nbsp;</span>
+<span id="L1376" class="ln">  1376&nbsp;&nbsp;</span>			if len(r) == 0 {
+<span id="L1377" class="ln">  1377&nbsp;&nbsp;</span>				<span class="comment">// Should be impossible, but better to return a</span>
+<span id="L1378" class="ln">  1378&nbsp;&nbsp;</span>				<span class="comment">// truncated profile than to crash the entire process.</span>
+<span id="L1379" class="ln">  1379&nbsp;&nbsp;</span>				return
+<span id="L1380" class="ln">  1380&nbsp;&nbsp;</span>			}
+<span id="L1381" class="ln">  1381&nbsp;&nbsp;</span>			<span class="comment">// saveg calls gentraceback, which may call cgo traceback functions.</span>
+<span id="L1382" class="ln">  1382&nbsp;&nbsp;</span>			<span class="comment">// The world is stopped, so it cannot use cgocall (which will be</span>
+<span id="L1383" class="ln">  1383&nbsp;&nbsp;</span>			<span class="comment">// blocked at exitsyscall). Do it on the system stack so it won&#39;t</span>
+<span id="L1384" class="ln">  1384&nbsp;&nbsp;</span>			<span class="comment">// call into the schedular (see traceback.go:cgoContextPCs).</span>
+<span id="L1385" class="ln">  1385&nbsp;&nbsp;</span>			systemstack(func() { saveg(^uintptr(0), ^uintptr(0), gp1, &amp;r[0]) })
+<span id="L1386" class="ln">  1386&nbsp;&nbsp;</span>			if labels != nil {
+<span id="L1387" class="ln">  1387&nbsp;&nbsp;</span>				lbl[0] = gp1.labels
+<span id="L1388" class="ln">  1388&nbsp;&nbsp;</span>				lbl = lbl[1:]
+<span id="L1389" class="ln">  1389&nbsp;&nbsp;</span>			}
+<span id="L1390" class="ln">  1390&nbsp;&nbsp;</span>			r = r[1:]
+<span id="L1391" class="ln">  1391&nbsp;&nbsp;</span>		})
+<span id="L1392" class="ln">  1392&nbsp;&nbsp;</span>	}
+<span id="L1393" class="ln">  1393&nbsp;&nbsp;</span>
+<span id="L1394" class="ln">  1394&nbsp;&nbsp;</span>	if raceenabled {
+<span id="L1395" class="ln">  1395&nbsp;&nbsp;</span>		raceacquire(unsafe.Pointer(&amp;labelSync))
+<span id="L1396" class="ln">  1396&nbsp;&nbsp;</span>	}
+<span id="L1397" class="ln">  1397&nbsp;&nbsp;</span>
+<span id="L1398" class="ln">  1398&nbsp;&nbsp;</span>	startTheWorld(stw)
+<span id="L1399" class="ln">  1399&nbsp;&nbsp;</span>	return n, ok
+<span id="L1400" class="ln">  1400&nbsp;&nbsp;</span>}
+<span id="L1401" class="ln">  1401&nbsp;&nbsp;</span>
+<span id="L1402" class="ln">  1402&nbsp;&nbsp;</span><span class="comment">// GoroutineProfile returns n, the number of records in the active goroutine stack profile.</span>
+<span id="L1403" class="ln">  1403&nbsp;&nbsp;</span><span class="comment">// If len(p) &gt;= n, GoroutineProfile copies the profile into p and returns n, true.</span>
+<span id="L1404" class="ln">  1404&nbsp;&nbsp;</span><span class="comment">// If len(p) &lt; n, GoroutineProfile does not change p and returns n, false.</span>
+<span id="L1405" class="ln">  1405&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L1406" class="ln">  1406&nbsp;&nbsp;</span><span class="comment">// Most clients should use the [runtime/pprof] package instead</span>
+<span id="L1407" class="ln">  1407&nbsp;&nbsp;</span><span class="comment">// of calling GoroutineProfile directly.</span>
+<span id="L1408" class="ln">  1408&nbsp;&nbsp;</span>func GoroutineProfile(p []StackRecord) (n int, ok bool) {
+<span id="L1409" class="ln">  1409&nbsp;&nbsp;</span>
+<span id="L1410" class="ln">  1410&nbsp;&nbsp;</span>	return goroutineProfileWithLabels(p, nil)
+<span id="L1411" class="ln">  1411&nbsp;&nbsp;</span>}
+<span id="L1412" class="ln">  1412&nbsp;&nbsp;</span>
+<span id="L1413" class="ln">  1413&nbsp;&nbsp;</span>func saveg(pc, sp uintptr, gp *g, r *StackRecord) {
+<span id="L1414" class="ln">  1414&nbsp;&nbsp;</span>	var u unwinder
+<span id="L1415" class="ln">  1415&nbsp;&nbsp;</span>	u.initAt(pc, sp, 0, gp, unwindSilentErrors)
+<span id="L1416" class="ln">  1416&nbsp;&nbsp;</span>	n := tracebackPCs(&amp;u, 0, r.Stack0[:])
+<span id="L1417" class="ln">  1417&nbsp;&nbsp;</span>	if n &lt; len(r.Stack0) {
+<span id="L1418" class="ln">  1418&nbsp;&nbsp;</span>		r.Stack0[n] = 0
+<span id="L1419" class="ln">  1419&nbsp;&nbsp;</span>	}
+<span id="L1420" class="ln">  1420&nbsp;&nbsp;</span>}
+<span id="L1421" class="ln">  1421&nbsp;&nbsp;</span>
+<span id="L1422" class="ln">  1422&nbsp;&nbsp;</span><span class="comment">// Stack formats a stack trace of the calling goroutine into buf</span>
+<span id="L1423" class="ln">  1423&nbsp;&nbsp;</span><span class="comment">// and returns the number of bytes written to buf.</span>
+<span id="L1424" class="ln">  1424&nbsp;&nbsp;</span><span class="comment">// If all is true, Stack formats stack traces of all other goroutines</span>
+<span id="L1425" class="ln">  1425&nbsp;&nbsp;</span><span class="comment">// into buf after the trace for the current goroutine.</span>
+<span id="L1426" class="ln">  1426&nbsp;&nbsp;</span>func Stack(buf []byte, all bool) int {
+<span id="L1427" class="ln">  1427&nbsp;&nbsp;</span>	var stw worldStop
+<span id="L1428" class="ln">  1428&nbsp;&nbsp;</span>	if all {
+<span id="L1429" class="ln">  1429&nbsp;&nbsp;</span>		stw = stopTheWorld(stwAllGoroutinesStack)
+<span id="L1430" class="ln">  1430&nbsp;&nbsp;</span>	}
+<span id="L1431" class="ln">  1431&nbsp;&nbsp;</span>
+<span id="L1432" class="ln">  1432&nbsp;&nbsp;</span>	n := 0
+<span id="L1433" class="ln">  1433&nbsp;&nbsp;</span>	if len(buf) &gt; 0 {
+<span id="L1434" class="ln">  1434&nbsp;&nbsp;</span>		gp := getg()
+<span id="L1435" class="ln">  1435&nbsp;&nbsp;</span>		sp := getcallersp()
+<span id="L1436" class="ln">  1436&nbsp;&nbsp;</span>		pc := getcallerpc()
+<span id="L1437" class="ln">  1437&nbsp;&nbsp;</span>		systemstack(func() {
+<span id="L1438" class="ln">  1438&nbsp;&nbsp;</span>			g0 := getg()
+<span id="L1439" class="ln">  1439&nbsp;&nbsp;</span>			<span class="comment">// Force traceback=1 to override GOTRACEBACK setting,</span>
+<span id="L1440" class="ln">  1440&nbsp;&nbsp;</span>			<span class="comment">// so that Stack&#39;s results are consistent.</span>
+<span id="L1441" class="ln">  1441&nbsp;&nbsp;</span>			<span class="comment">// GOTRACEBACK is only about crash dumps.</span>
+<span id="L1442" class="ln">  1442&nbsp;&nbsp;</span>			g0.m.traceback = 1
+<span id="L1443" class="ln">  1443&nbsp;&nbsp;</span>			g0.writebuf = buf[0:0:len(buf)]
+<span id="L1444" class="ln">  1444&nbsp;&nbsp;</span>			goroutineheader(gp)
+<span id="L1445" class="ln">  1445&nbsp;&nbsp;</span>			traceback(pc, sp, 0, gp)
+<span id="L1446" class="ln">  1446&nbsp;&nbsp;</span>			if all {
+<span id="L1447" class="ln">  1447&nbsp;&nbsp;</span>				tracebackothers(gp)
+<span id="L1448" class="ln">  1448&nbsp;&nbsp;</span>			}
+<span id="L1449" class="ln">  1449&nbsp;&nbsp;</span>			g0.m.traceback = 0
+<span id="L1450" class="ln">  1450&nbsp;&nbsp;</span>			n = len(g0.writebuf)
+<span id="L1451" class="ln">  1451&nbsp;&nbsp;</span>			g0.writebuf = nil
+<span id="L1452" class="ln">  1452&nbsp;&nbsp;</span>		})
+<span id="L1453" class="ln">  1453&nbsp;&nbsp;</span>	}
+<span id="L1454" class="ln">  1454&nbsp;&nbsp;</span>
+<span id="L1455" class="ln">  1455&nbsp;&nbsp;</span>	if all {
+<span id="L1456" class="ln">  1456&nbsp;&nbsp;</span>		startTheWorld(stw)
+<span id="L1457" class="ln">  1457&nbsp;&nbsp;</span>	}
+<span id="L1458" class="ln">  1458&nbsp;&nbsp;</span>	return n
+<span id="L1459" class="ln">  1459&nbsp;&nbsp;</span>}
+<span id="L1460" class="ln">  1460&nbsp;&nbsp;</span>
+<span id="L1461" class="ln">  1461&nbsp;&nbsp;</span><span class="comment">// Tracing of alloc/free/gc.</span>
+<span id="L1462" class="ln">  1462&nbsp;&nbsp;</span>
+<span id="L1463" class="ln">  1463&nbsp;&nbsp;</span>var tracelock mutex
+<span id="L1464" class="ln">  1464&nbsp;&nbsp;</span>
+<span id="L1465" class="ln">  1465&nbsp;&nbsp;</span>func tracealloc(p unsafe.Pointer, size uintptr, typ *_type) {
+<span id="L1466" class="ln">  1466&nbsp;&nbsp;</span>	lock(&amp;tracelock)
+<span id="L1467" class="ln">  1467&nbsp;&nbsp;</span>	gp := getg()
+<span id="L1468" class="ln">  1468&nbsp;&nbsp;</span>	gp.m.traceback = 2
+<span id="L1469" class="ln">  1469&nbsp;&nbsp;</span>	if typ == nil {
+<span id="L1470" class="ln">  1470&nbsp;&nbsp;</span>		print(&#34;tracealloc(&#34;, p, &#34;, &#34;, hex(size), &#34;)\n&#34;)
+<span id="L1471" class="ln">  1471&nbsp;&nbsp;</span>	} else {
+<span id="L1472" class="ln">  1472&nbsp;&nbsp;</span>		print(&#34;tracealloc(&#34;, p, &#34;, &#34;, hex(size), &#34;, &#34;, toRType(typ).string(), &#34;)\n&#34;)
+<span id="L1473" class="ln">  1473&nbsp;&nbsp;</span>	}
+<span id="L1474" class="ln">  1474&nbsp;&nbsp;</span>	if gp.m.curg == nil || gp == gp.m.curg {
+<span id="L1475" class="ln">  1475&nbsp;&nbsp;</span>		goroutineheader(gp)
+<span id="L1476" class="ln">  1476&nbsp;&nbsp;</span>		pc := getcallerpc()
+<span id="L1477" class="ln">  1477&nbsp;&nbsp;</span>		sp := getcallersp()
+<span id="L1478" class="ln">  1478&nbsp;&nbsp;</span>		systemstack(func() {
+<span id="L1479" class="ln">  1479&nbsp;&nbsp;</span>			traceback(pc, sp, 0, gp)
+<span id="L1480" class="ln">  1480&nbsp;&nbsp;</span>		})
+<span id="L1481" class="ln">  1481&nbsp;&nbsp;</span>	} else {
+<span id="L1482" class="ln">  1482&nbsp;&nbsp;</span>		goroutineheader(gp.m.curg)
+<span id="L1483" class="ln">  1483&nbsp;&nbsp;</span>		traceback(^uintptr(0), ^uintptr(0), 0, gp.m.curg)
+<span id="L1484" class="ln">  1484&nbsp;&nbsp;</span>	}
+<span id="L1485" class="ln">  1485&nbsp;&nbsp;</span>	print(&#34;\n&#34;)
+<span id="L1486" class="ln">  1486&nbsp;&nbsp;</span>	gp.m.traceback = 0
+<span id="L1487" class="ln">  1487&nbsp;&nbsp;</span>	unlock(&amp;tracelock)
+<span id="L1488" class="ln">  1488&nbsp;&nbsp;</span>}
+<span id="L1489" class="ln">  1489&nbsp;&nbsp;</span>
+<span id="L1490" class="ln">  1490&nbsp;&nbsp;</span>func tracefree(p unsafe.Pointer, size uintptr) {
+<span id="L1491" class="ln">  1491&nbsp;&nbsp;</span>	lock(&amp;tracelock)
+<span id="L1492" class="ln">  1492&nbsp;&nbsp;</span>	gp := getg()
+<span id="L1493" class="ln">  1493&nbsp;&nbsp;</span>	gp.m.traceback = 2
+<span id="L1494" class="ln">  1494&nbsp;&nbsp;</span>	print(&#34;tracefree(&#34;, p, &#34;, &#34;, hex(size), &#34;)\n&#34;)
+<span id="L1495" class="ln">  1495&nbsp;&nbsp;</span>	goroutineheader(gp)
+<span id="L1496" class="ln">  1496&nbsp;&nbsp;</span>	pc := getcallerpc()
+<span id="L1497" class="ln">  1497&nbsp;&nbsp;</span>	sp := getcallersp()
+<span id="L1498" class="ln">  1498&nbsp;&nbsp;</span>	systemstack(func() {
+<span id="L1499" class="ln">  1499&nbsp;&nbsp;</span>		traceback(pc, sp, 0, gp)
+<span id="L1500" class="ln">  1500&nbsp;&nbsp;</span>	})
+<span id="L1501" class="ln">  1501&nbsp;&nbsp;</span>	print(&#34;\n&#34;)
+<span id="L1502" class="ln">  1502&nbsp;&nbsp;</span>	gp.m.traceback = 0
+<span id="L1503" class="ln">  1503&nbsp;&nbsp;</span>	unlock(&amp;tracelock)
+<span id="L1504" class="ln">  1504&nbsp;&nbsp;</span>}
+<span id="L1505" class="ln">  1505&nbsp;&nbsp;</span>
+<span id="L1506" class="ln">  1506&nbsp;&nbsp;</span>func tracegc() {
+<span id="L1507" class="ln">  1507&nbsp;&nbsp;</span>	lock(&amp;tracelock)
+<span id="L1508" class="ln">  1508&nbsp;&nbsp;</span>	gp := getg()
+<span id="L1509" class="ln">  1509&nbsp;&nbsp;</span>	gp.m.traceback = 2
+<span id="L1510" class="ln">  1510&nbsp;&nbsp;</span>	print(&#34;tracegc()\n&#34;)
+<span id="L1511" class="ln">  1511&nbsp;&nbsp;</span>	<span class="comment">// running on m-&gt;g0 stack; show all non-g0 goroutines</span>
+<span id="L1512" class="ln">  1512&nbsp;&nbsp;</span>	tracebackothers(gp)
+<span id="L1513" class="ln">  1513&nbsp;&nbsp;</span>	print(&#34;end tracegc\n&#34;)
+<span id="L1514" class="ln">  1514&nbsp;&nbsp;</span>	print(&#34;\n&#34;)
+<span id="L1515" class="ln">  1515&nbsp;&nbsp;</span>	gp.m.traceback = 0
+<span id="L1516" class="ln">  1516&nbsp;&nbsp;</span>	unlock(&amp;tracelock)
+<span id="L1517" class="ln">  1517&nbsp;&nbsp;</span>}
+<span id="L1518" class="ln">  1518&nbsp;&nbsp;</span>
+</pre><p><a href="mprof.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

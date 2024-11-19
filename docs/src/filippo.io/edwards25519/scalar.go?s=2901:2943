@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>src/filippo.io/edwards25519/scalar.go - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="./scalar.go?s=2901:2943#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Source file
+    <a href="http://localhost:8080/src">src</a>/<a href="http://localhost:8080/src/filippo.io">filippo.io</a>/<a href="http://localhost:8080/src/filippo.io/edwards25519">edwards25519</a>/<span class="text-muted">scalar.go</span>
+  </h1>
+
+
+
+
+
+  <h2>
+    Documentation: <a href="http://localhost:8080/pkg/filippo.io/edwards25519">filippo.io/edwards25519</a>
+  </h2>
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1&nbsp;&nbsp;</span><span class="comment">// Copyright (c) 2016 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2&nbsp;&nbsp;</span><span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3&nbsp;&nbsp;</span><span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4&nbsp;&nbsp;</span>
+<span id="L5" class="ln">     5&nbsp;&nbsp;</span>package edwards25519
+<span id="L6" class="ln">     6&nbsp;&nbsp;</span>
+<span id="L7" class="ln">     7&nbsp;&nbsp;</span>import (
+<span id="L8" class="ln">     8&nbsp;&nbsp;</span>	&#34;encoding/binary&#34;
+<span id="L9" class="ln">     9&nbsp;&nbsp;</span>	&#34;errors&#34;
+<span id="L10" class="ln">    10&nbsp;&nbsp;</span>)
+<span id="L11" class="ln">    11&nbsp;&nbsp;</span>
+<span id="L12" class="ln">    12&nbsp;&nbsp;</span><span class="comment">// A Scalar is an integer modulo</span>
+<span id="L13" class="ln">    13&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L14" class="ln">    14&nbsp;&nbsp;</span><span class="comment">//	l = 2^252 + 27742317777372353535851937790883648493</span>
+<span id="L15" class="ln">    15&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L16" class="ln">    16&nbsp;&nbsp;</span><span class="comment">// which is the prime order of the edwards25519 group.</span>
+<span id="L17" class="ln">    17&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L18" class="ln">    18&nbsp;&nbsp;</span><span class="comment">// This type works similarly to math/big.Int, and all arguments and</span>
+<span id="L19" class="ln">    19&nbsp;&nbsp;</span><span class="comment">// receivers are allowed to alias.</span>
+<span id="L20" class="ln">    20&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L21" class="ln">    21&nbsp;&nbsp;</span><span class="comment">// The zero value is a valid zero element.</span>
+<span id="L22" class="ln">    22&nbsp;&nbsp;</span>type Scalar struct {
+<span id="L23" class="ln">    23&nbsp;&nbsp;</span>	<span class="comment">// s is the scalar in the Montgomery domain, in the format of the</span>
+<span id="L24" class="ln">    24&nbsp;&nbsp;</span>	<span class="comment">// fiat-crypto implementation.</span>
+<span id="L25" class="ln">    25&nbsp;&nbsp;</span>	s fiatScalarMontgomeryDomainFieldElement
+<span id="L26" class="ln">    26&nbsp;&nbsp;</span>}
+<span id="L27" class="ln">    27&nbsp;&nbsp;</span>
+<span id="L28" class="ln">    28&nbsp;&nbsp;</span><span class="comment">// The field implementation in scalar_fiat.go is generated by the fiat-crypto</span>
+<span id="L29" class="ln">    29&nbsp;&nbsp;</span><span class="comment">// project (https://github.com/mit-plv/fiat-crypto) at version v0.0.9 (23d2dbc)</span>
+<span id="L30" class="ln">    30&nbsp;&nbsp;</span><span class="comment">// from a formally verified model.</span>
+<span id="L31" class="ln">    31&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L32" class="ln">    32&nbsp;&nbsp;</span><span class="comment">// fiat-crypto code comes under the following license.</span>
+<span id="L33" class="ln">    33&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L34" class="ln">    34&nbsp;&nbsp;</span><span class="comment">//     Copyright (c) 2015-2020 The fiat-crypto Authors. All rights reserved.</span>
+<span id="L35" class="ln">    35&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L36" class="ln">    36&nbsp;&nbsp;</span><span class="comment">//     Redistribution and use in source and binary forms, with or without</span>
+<span id="L37" class="ln">    37&nbsp;&nbsp;</span><span class="comment">//     modification, are permitted provided that the following conditions are</span>
+<span id="L38" class="ln">    38&nbsp;&nbsp;</span><span class="comment">//     met:</span>
+<span id="L39" class="ln">    39&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L40" class="ln">    40&nbsp;&nbsp;</span><span class="comment">//         1. Redistributions of source code must retain the above copyright</span>
+<span id="L41" class="ln">    41&nbsp;&nbsp;</span><span class="comment">//         notice, this list of conditions and the following disclaimer.</span>
+<span id="L42" class="ln">    42&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L43" class="ln">    43&nbsp;&nbsp;</span><span class="comment">//     THIS SOFTWARE IS PROVIDED BY the fiat-crypto authors &#34;AS IS&#34;</span>
+<span id="L44" class="ln">    44&nbsp;&nbsp;</span><span class="comment">//     AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,</span>
+<span id="L45" class="ln">    45&nbsp;&nbsp;</span><span class="comment">//     THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR</span>
+<span id="L46" class="ln">    46&nbsp;&nbsp;</span><span class="comment">//     PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL Berkeley Software Design,</span>
+<span id="L47" class="ln">    47&nbsp;&nbsp;</span><span class="comment">//     Inc. BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,</span>
+<span id="L48" class="ln">    48&nbsp;&nbsp;</span><span class="comment">//     EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,</span>
+<span id="L49" class="ln">    49&nbsp;&nbsp;</span><span class="comment">//     PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR</span>
+<span id="L50" class="ln">    50&nbsp;&nbsp;</span><span class="comment">//     PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF</span>
+<span id="L51" class="ln">    51&nbsp;&nbsp;</span><span class="comment">//     LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING</span>
+<span id="L52" class="ln">    52&nbsp;&nbsp;</span><span class="comment">//     NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS</span>
+<span id="L53" class="ln">    53&nbsp;&nbsp;</span><span class="comment">//     SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</span>
+<span id="L54" class="ln">    54&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L55" class="ln">    55&nbsp;&nbsp;</span>
+<span id="L56" class="ln">    56&nbsp;&nbsp;</span><span class="comment">// NewScalar returns a new zero Scalar.</span>
+<span id="L57" class="ln">    57&nbsp;&nbsp;</span>func NewScalar() *Scalar {
+<span id="L58" class="ln">    58&nbsp;&nbsp;</span>	return &amp;Scalar{}
+<span id="L59" class="ln">    59&nbsp;&nbsp;</span>}
+<span id="L60" class="ln">    60&nbsp;&nbsp;</span>
+<span id="L61" class="ln">    61&nbsp;&nbsp;</span><span class="comment">// MultiplyAdd sets s = x * y + z mod l, and returns s. It is equivalent to</span>
+<span id="L62" class="ln">    62&nbsp;&nbsp;</span><span class="comment">// using Multiply and then Add.</span>
+<span id="L63" class="ln">    63&nbsp;&nbsp;</span>func (s *Scalar) MultiplyAdd(x, y, z *Scalar) *Scalar {
+<span id="L64" class="ln">    64&nbsp;&nbsp;</span>	<span class="comment">// Make a copy of z in case it aliases s.</span>
+<span id="L65" class="ln">    65&nbsp;&nbsp;</span>	zCopy := new(Scalar).Set(z)
+<span id="L66" class="ln">    66&nbsp;&nbsp;</span>	return s.Multiply(x, y).Add(s, zCopy)
+<span id="L67" class="ln">    67&nbsp;&nbsp;</span>}
+<span id="L68" class="ln">    68&nbsp;&nbsp;</span>
+<span id="L69" class="ln">    69&nbsp;&nbsp;</span><span class="comment">// Add sets s = x + y mod l, and returns s.</span>
+<span id="L70" class="ln">    70&nbsp;&nbsp;</span>func (s *Scalar) Add(x, y *Scalar) *Scalar {
+<span id="L71" class="ln">    71&nbsp;&nbsp;</span>	<span class="comment">// s = 1 * x + y mod l</span>
+<span id="L72" class="ln">    72&nbsp;&nbsp;</span>	fiatScalarAdd(&amp;s.s, &amp;x.s, &amp;y.s)
+<span id="L73" class="ln">    73&nbsp;&nbsp;</span>	return s
+<span id="L74" class="ln">    74&nbsp;&nbsp;</span>}
+<span id="L75" class="ln">    75&nbsp;&nbsp;</span>
+<span id="L76" class="ln">    76&nbsp;&nbsp;</span><span class="comment">// Subtract sets s = x - y mod l, and returns s.</span>
+<span id="L77" class="ln">    77&nbsp;&nbsp;</span>func (s *Scalar) Subtract(x, y *Scalar) *Scalar {
+<span id="L78" class="ln">    78&nbsp;&nbsp;</span>	<span class="comment">// s = -1 * y + x mod l</span>
+<span id="L79" class="ln">    79&nbsp;&nbsp;</span>	fiatScalarSub(&amp;s.s, &amp;x.s, &amp;y.s)
+<span id="L80" class="ln">    80&nbsp;&nbsp;</span>	return s
+<span id="L81" class="ln">    81&nbsp;&nbsp;</span>}
+<span id="L82" class="ln">    82&nbsp;&nbsp;</span>
+<span id="L83" class="ln">    83&nbsp;&nbsp;</span><span class="comment">// Negate sets s = -x mod l, and returns s.</span>
+<span id="L84" class="ln">    84&nbsp;&nbsp;</span><span class="selection">func (s *Scalar) Negate(x *Scalar) *Scalar</span> {
+<span id="L85" class="ln">    85&nbsp;&nbsp;</span>	<span class="comment">// s = -1 * x + 0 mod l</span>
+<span id="L86" class="ln">    86&nbsp;&nbsp;</span>	fiatScalarOpp(&amp;s.s, &amp;x.s)
+<span id="L87" class="ln">    87&nbsp;&nbsp;</span>	return s
+<span id="L88" class="ln">    88&nbsp;&nbsp;</span>}
+<span id="L89" class="ln">    89&nbsp;&nbsp;</span>
+<span id="L90" class="ln">    90&nbsp;&nbsp;</span><span class="comment">// Multiply sets s = x * y mod l, and returns s.</span>
+<span id="L91" class="ln">    91&nbsp;&nbsp;</span>func (s *Scalar) Multiply(x, y *Scalar) *Scalar {
+<span id="L92" class="ln">    92&nbsp;&nbsp;</span>	<span class="comment">// s = x * y + 0 mod l</span>
+<span id="L93" class="ln">    93&nbsp;&nbsp;</span>	fiatScalarMul(&amp;s.s, &amp;x.s, &amp;y.s)
+<span id="L94" class="ln">    94&nbsp;&nbsp;</span>	return s
+<span id="L95" class="ln">    95&nbsp;&nbsp;</span>}
+<span id="L96" class="ln">    96&nbsp;&nbsp;</span>
+<span id="L97" class="ln">    97&nbsp;&nbsp;</span><span class="comment">// Set sets s = x, and returns s.</span>
+<span id="L98" class="ln">    98&nbsp;&nbsp;</span>func (s *Scalar) Set(x *Scalar) *Scalar {
+<span id="L99" class="ln">    99&nbsp;&nbsp;</span>	*s = *x
+<span id="L100" class="ln">   100&nbsp;&nbsp;</span>	return s
+<span id="L101" class="ln">   101&nbsp;&nbsp;</span>}
+<span id="L102" class="ln">   102&nbsp;&nbsp;</span>
+<span id="L103" class="ln">   103&nbsp;&nbsp;</span><span class="comment">// SetUniformBytes sets s = x mod l, where x is a 64-byte little-endian integer.</span>
+<span id="L104" class="ln">   104&nbsp;&nbsp;</span><span class="comment">// If x is not of the right length, SetUniformBytes returns nil and an error,</span>
+<span id="L105" class="ln">   105&nbsp;&nbsp;</span><span class="comment">// and the receiver is unchanged.</span>
+<span id="L106" class="ln">   106&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L107" class="ln">   107&nbsp;&nbsp;</span><span class="comment">// SetUniformBytes can be used to set s to a uniformly distributed value given</span>
+<span id="L108" class="ln">   108&nbsp;&nbsp;</span><span class="comment">// 64 uniformly distributed random bytes.</span>
+<span id="L109" class="ln">   109&nbsp;&nbsp;</span>func (s *Scalar) SetUniformBytes(x []byte) (*Scalar, error) {
+<span id="L110" class="ln">   110&nbsp;&nbsp;</span>	if len(x) != 64 {
+<span id="L111" class="ln">   111&nbsp;&nbsp;</span>		return nil, errors.New(&#34;edwards25519: invalid SetUniformBytes input length&#34;)
+<span id="L112" class="ln">   112&nbsp;&nbsp;</span>	}
+<span id="L113" class="ln">   113&nbsp;&nbsp;</span>
+<span id="L114" class="ln">   114&nbsp;&nbsp;</span>	<span class="comment">// We have a value x of 512 bits, but our fiatScalarFromBytes function</span>
+<span id="L115" class="ln">   115&nbsp;&nbsp;</span>	<span class="comment">// expects an input lower than l, which is a little over 252 bits.</span>
+<span id="L116" class="ln">   116&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L117" class="ln">   117&nbsp;&nbsp;</span>	<span class="comment">// Instead of writing a reduction function that operates on wider inputs, we</span>
+<span id="L118" class="ln">   118&nbsp;&nbsp;</span>	<span class="comment">// can interpret x as the sum of three shorter values a, b, and c.</span>
+<span id="L119" class="ln">   119&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L120" class="ln">   120&nbsp;&nbsp;</span>	<span class="comment">//    x = a + b * 2^168 + c * 2^336  mod l</span>
+<span id="L121" class="ln">   121&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L122" class="ln">   122&nbsp;&nbsp;</span>	<span class="comment">// We then precompute 2^168 and 2^336 modulo l, and perform the reduction</span>
+<span id="L123" class="ln">   123&nbsp;&nbsp;</span>	<span class="comment">// with two multiplications and two additions.</span>
+<span id="L124" class="ln">   124&nbsp;&nbsp;</span>
+<span id="L125" class="ln">   125&nbsp;&nbsp;</span>	s.setShortBytes(x[:21])
+<span id="L126" class="ln">   126&nbsp;&nbsp;</span>	t := new(Scalar).setShortBytes(x[21:42])
+<span id="L127" class="ln">   127&nbsp;&nbsp;</span>	s.Add(s, t.Multiply(t, scalarTwo168))
+<span id="L128" class="ln">   128&nbsp;&nbsp;</span>	t.setShortBytes(x[42:])
+<span id="L129" class="ln">   129&nbsp;&nbsp;</span>	s.Add(s, t.Multiply(t, scalarTwo336))
+<span id="L130" class="ln">   130&nbsp;&nbsp;</span>
+<span id="L131" class="ln">   131&nbsp;&nbsp;</span>	return s, nil
+<span id="L132" class="ln">   132&nbsp;&nbsp;</span>}
+<span id="L133" class="ln">   133&nbsp;&nbsp;</span>
+<span id="L134" class="ln">   134&nbsp;&nbsp;</span><span class="comment">// scalarTwo168 and scalarTwo336 are 2^168 and 2^336 modulo l, encoded as a</span>
+<span id="L135" class="ln">   135&nbsp;&nbsp;</span><span class="comment">// fiatScalarMontgomeryDomainFieldElement, which is a little-endian 4-limb value</span>
+<span id="L136" class="ln">   136&nbsp;&nbsp;</span><span class="comment">// in the 2^256 Montgomery domain.</span>
+<span id="L137" class="ln">   137&nbsp;&nbsp;</span>var scalarTwo168 = &amp;Scalar{s: [4]uint64{0x5b8ab432eac74798, 0x38afddd6de59d5d7,
+<span id="L138" class="ln">   138&nbsp;&nbsp;</span>	0xa2c131b399411b7c, 0x6329a7ed9ce5a30}}
+<span id="L139" class="ln">   139&nbsp;&nbsp;</span>var scalarTwo336 = &amp;Scalar{s: [4]uint64{0xbd3d108e2b35ecc5, 0x5c3a3718bdf9c90b,
+<span id="L140" class="ln">   140&nbsp;&nbsp;</span>	0x63aa97a331b4f2ee, 0x3d217f5be65cb5c}}
+<span id="L141" class="ln">   141&nbsp;&nbsp;</span>
+<span id="L142" class="ln">   142&nbsp;&nbsp;</span><span class="comment">// setShortBytes sets s = x mod l, where x is a little-endian integer shorter</span>
+<span id="L143" class="ln">   143&nbsp;&nbsp;</span><span class="comment">// than 32 bytes.</span>
+<span id="L144" class="ln">   144&nbsp;&nbsp;</span>func (s *Scalar) setShortBytes(x []byte) *Scalar {
+<span id="L145" class="ln">   145&nbsp;&nbsp;</span>	if len(x) &gt;= 32 {
+<span id="L146" class="ln">   146&nbsp;&nbsp;</span>		panic(&#34;edwards25519: internal error: setShortBytes called with a long string&#34;)
+<span id="L147" class="ln">   147&nbsp;&nbsp;</span>	}
+<span id="L148" class="ln">   148&nbsp;&nbsp;</span>	var buf [32]byte
+<span id="L149" class="ln">   149&nbsp;&nbsp;</span>	copy(buf[:], x)
+<span id="L150" class="ln">   150&nbsp;&nbsp;</span>	fiatScalarFromBytes((*[4]uint64)(&amp;s.s), &amp;buf)
+<span id="L151" class="ln">   151&nbsp;&nbsp;</span>	fiatScalarToMontgomery(&amp;s.s, (*fiatScalarNonMontgomeryDomainFieldElement)(&amp;s.s))
+<span id="L152" class="ln">   152&nbsp;&nbsp;</span>	return s
+<span id="L153" class="ln">   153&nbsp;&nbsp;</span>}
+<span id="L154" class="ln">   154&nbsp;&nbsp;</span>
+<span id="L155" class="ln">   155&nbsp;&nbsp;</span><span class="comment">// SetCanonicalBytes sets s = x, where x is a 32-byte little-endian encoding of</span>
+<span id="L156" class="ln">   156&nbsp;&nbsp;</span><span class="comment">// s, and returns s. If x is not a canonical encoding of s, SetCanonicalBytes</span>
+<span id="L157" class="ln">   157&nbsp;&nbsp;</span><span class="comment">// returns nil and an error, and the receiver is unchanged.</span>
+<span id="L158" class="ln">   158&nbsp;&nbsp;</span>func (s *Scalar) SetCanonicalBytes(x []byte) (*Scalar, error) {
+<span id="L159" class="ln">   159&nbsp;&nbsp;</span>	if len(x) != 32 {
+<span id="L160" class="ln">   160&nbsp;&nbsp;</span>		return nil, errors.New(&#34;invalid scalar length&#34;)
+<span id="L161" class="ln">   161&nbsp;&nbsp;</span>	}
+<span id="L162" class="ln">   162&nbsp;&nbsp;</span>	if !isReduced(x) {
+<span id="L163" class="ln">   163&nbsp;&nbsp;</span>		return nil, errors.New(&#34;invalid scalar encoding&#34;)
+<span id="L164" class="ln">   164&nbsp;&nbsp;</span>	}
+<span id="L165" class="ln">   165&nbsp;&nbsp;</span>
+<span id="L166" class="ln">   166&nbsp;&nbsp;</span>	fiatScalarFromBytes((*[4]uint64)(&amp;s.s), (*[32]byte)(x))
+<span id="L167" class="ln">   167&nbsp;&nbsp;</span>	fiatScalarToMontgomery(&amp;s.s, (*fiatScalarNonMontgomeryDomainFieldElement)(&amp;s.s))
+<span id="L168" class="ln">   168&nbsp;&nbsp;</span>
+<span id="L169" class="ln">   169&nbsp;&nbsp;</span>	return s, nil
+<span id="L170" class="ln">   170&nbsp;&nbsp;</span>}
+<span id="L171" class="ln">   171&nbsp;&nbsp;</span>
+<span id="L172" class="ln">   172&nbsp;&nbsp;</span><span class="comment">// scalarMinusOneBytes is l - 1 in little endian.</span>
+<span id="L173" class="ln">   173&nbsp;&nbsp;</span>var scalarMinusOneBytes = [32]byte{236, 211, 245, 92, 26, 99, 18, 88, 214, 156, 247, 162, 222, 249, 222, 20, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 16}
+<span id="L174" class="ln">   174&nbsp;&nbsp;</span>
+<span id="L175" class="ln">   175&nbsp;&nbsp;</span><span class="comment">// isReduced returns whether the given scalar in 32-byte little endian encoded</span>
+<span id="L176" class="ln">   176&nbsp;&nbsp;</span><span class="comment">// form is reduced modulo l.</span>
+<span id="L177" class="ln">   177&nbsp;&nbsp;</span>func isReduced(s []byte) bool {
+<span id="L178" class="ln">   178&nbsp;&nbsp;</span>	if len(s) != 32 {
+<span id="L179" class="ln">   179&nbsp;&nbsp;</span>		return false
+<span id="L180" class="ln">   180&nbsp;&nbsp;</span>	}
+<span id="L181" class="ln">   181&nbsp;&nbsp;</span>
+<span id="L182" class="ln">   182&nbsp;&nbsp;</span>	for i := len(s) - 1; i &gt;= 0; i-- {
+<span id="L183" class="ln">   183&nbsp;&nbsp;</span>		switch {
+<span id="L184" class="ln">   184&nbsp;&nbsp;</span>		case s[i] &gt; scalarMinusOneBytes[i]:
+<span id="L185" class="ln">   185&nbsp;&nbsp;</span>			return false
+<span id="L186" class="ln">   186&nbsp;&nbsp;</span>		case s[i] &lt; scalarMinusOneBytes[i]:
+<span id="L187" class="ln">   187&nbsp;&nbsp;</span>			return true
+<span id="L188" class="ln">   188&nbsp;&nbsp;</span>		}
+<span id="L189" class="ln">   189&nbsp;&nbsp;</span>	}
+<span id="L190" class="ln">   190&nbsp;&nbsp;</span>	return true
+<span id="L191" class="ln">   191&nbsp;&nbsp;</span>}
+<span id="L192" class="ln">   192&nbsp;&nbsp;</span>
+<span id="L193" class="ln">   193&nbsp;&nbsp;</span><span class="comment">// SetBytesWithClamping applies the buffer pruning described in RFC 8032,</span>
+<span id="L194" class="ln">   194&nbsp;&nbsp;</span><span class="comment">// Section 5.1.5 (also known as clamping) and sets s to the result. The input</span>
+<span id="L195" class="ln">   195&nbsp;&nbsp;</span><span class="comment">// must be 32 bytes, and it is not modified. If x is not of the right length,</span>
+<span id="L196" class="ln">   196&nbsp;&nbsp;</span><span class="comment">// SetBytesWithClamping returns nil and an error, and the receiver is unchanged.</span>
+<span id="L197" class="ln">   197&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L198" class="ln">   198&nbsp;&nbsp;</span><span class="comment">// Note that since Scalar values are always reduced modulo the prime order of</span>
+<span id="L199" class="ln">   199&nbsp;&nbsp;</span><span class="comment">// the curve, the resulting value will not preserve any of the cofactor-clearing</span>
+<span id="L200" class="ln">   200&nbsp;&nbsp;</span><span class="comment">// properties that clamping is meant to provide. It will however work as</span>
+<span id="L201" class="ln">   201&nbsp;&nbsp;</span><span class="comment">// expected as long as it is applied to points on the prime order subgroup, like</span>
+<span id="L202" class="ln">   202&nbsp;&nbsp;</span><span class="comment">// in Ed25519. In fact, it is lost to history why RFC 8032 adopted the</span>
+<span id="L203" class="ln">   203&nbsp;&nbsp;</span><span class="comment">// irrelevant RFC 7748 clamping, but it is now required for compatibility.</span>
+<span id="L204" class="ln">   204&nbsp;&nbsp;</span>func (s *Scalar) SetBytesWithClamping(x []byte) (*Scalar, error) {
+<span id="L205" class="ln">   205&nbsp;&nbsp;</span>	<span class="comment">// The description above omits the purpose of the high bits of the clamping</span>
+<span id="L206" class="ln">   206&nbsp;&nbsp;</span>	<span class="comment">// for brevity, but those are also lost to reductions, and are also</span>
+<span id="L207" class="ln">   207&nbsp;&nbsp;</span>	<span class="comment">// irrelevant to edwards25519 as they protect against a specific</span>
+<span id="L208" class="ln">   208&nbsp;&nbsp;</span>	<span class="comment">// implementation bug that was once observed in a generic Montgomery ladder.</span>
+<span id="L209" class="ln">   209&nbsp;&nbsp;</span>	if len(x) != 32 {
+<span id="L210" class="ln">   210&nbsp;&nbsp;</span>		return nil, errors.New(&#34;edwards25519: invalid SetBytesWithClamping input length&#34;)
+<span id="L211" class="ln">   211&nbsp;&nbsp;</span>	}
+<span id="L212" class="ln">   212&nbsp;&nbsp;</span>
+<span id="L213" class="ln">   213&nbsp;&nbsp;</span>	<span class="comment">// We need to use the wide reduction from SetUniformBytes, since clamping</span>
+<span id="L214" class="ln">   214&nbsp;&nbsp;</span>	<span class="comment">// sets the 2^254 bit, making the value higher than the order.</span>
+<span id="L215" class="ln">   215&nbsp;&nbsp;</span>	var wideBytes [64]byte
+<span id="L216" class="ln">   216&nbsp;&nbsp;</span>	copy(wideBytes[:], x[:])
+<span id="L217" class="ln">   217&nbsp;&nbsp;</span>	wideBytes[0] &amp;= 248
+<span id="L218" class="ln">   218&nbsp;&nbsp;</span>	wideBytes[31] &amp;= 63
+<span id="L219" class="ln">   219&nbsp;&nbsp;</span>	wideBytes[31] |= 64
+<span id="L220" class="ln">   220&nbsp;&nbsp;</span>	return s.SetUniformBytes(wideBytes[:])
+<span id="L221" class="ln">   221&nbsp;&nbsp;</span>}
+<span id="L222" class="ln">   222&nbsp;&nbsp;</span>
+<span id="L223" class="ln">   223&nbsp;&nbsp;</span><span class="comment">// Bytes returns the canonical 32-byte little-endian encoding of s.</span>
+<span id="L224" class="ln">   224&nbsp;&nbsp;</span>func (s *Scalar) Bytes() []byte {
+<span id="L225" class="ln">   225&nbsp;&nbsp;</span>	<span class="comment">// This function is outlined to make the allocations inline in the caller</span>
+<span id="L226" class="ln">   226&nbsp;&nbsp;</span>	<span class="comment">// rather than happen on the heap.</span>
+<span id="L227" class="ln">   227&nbsp;&nbsp;</span>	var encoded [32]byte
+<span id="L228" class="ln">   228&nbsp;&nbsp;</span>	return s.bytes(&amp;encoded)
+<span id="L229" class="ln">   229&nbsp;&nbsp;</span>}
+<span id="L230" class="ln">   230&nbsp;&nbsp;</span>
+<span id="L231" class="ln">   231&nbsp;&nbsp;</span>func (s *Scalar) bytes(out *[32]byte) []byte {
+<span id="L232" class="ln">   232&nbsp;&nbsp;</span>	var ss fiatScalarNonMontgomeryDomainFieldElement
+<span id="L233" class="ln">   233&nbsp;&nbsp;</span>	fiatScalarFromMontgomery(&amp;ss, &amp;s.s)
+<span id="L234" class="ln">   234&nbsp;&nbsp;</span>	fiatScalarToBytes(out, (*[4]uint64)(&amp;ss))
+<span id="L235" class="ln">   235&nbsp;&nbsp;</span>	return out[:]
+<span id="L236" class="ln">   236&nbsp;&nbsp;</span>}
+<span id="L237" class="ln">   237&nbsp;&nbsp;</span>
+<span id="L238" class="ln">   238&nbsp;&nbsp;</span><span class="comment">// Equal returns 1 if s and t are equal, and 0 otherwise.</span>
+<span id="L239" class="ln">   239&nbsp;&nbsp;</span>func (s *Scalar) Equal(t *Scalar) int {
+<span id="L240" class="ln">   240&nbsp;&nbsp;</span>	var diff fiatScalarMontgomeryDomainFieldElement
+<span id="L241" class="ln">   241&nbsp;&nbsp;</span>	fiatScalarSub(&amp;diff, &amp;s.s, &amp;t.s)
+<span id="L242" class="ln">   242&nbsp;&nbsp;</span>	var nonzero uint64
+<span id="L243" class="ln">   243&nbsp;&nbsp;</span>	fiatScalarNonzero(&amp;nonzero, (*[4]uint64)(&amp;diff))
+<span id="L244" class="ln">   244&nbsp;&nbsp;</span>	nonzero |= nonzero &gt;&gt; 32
+<span id="L245" class="ln">   245&nbsp;&nbsp;</span>	nonzero |= nonzero &gt;&gt; 16
+<span id="L246" class="ln">   246&nbsp;&nbsp;</span>	nonzero |= nonzero &gt;&gt; 8
+<span id="L247" class="ln">   247&nbsp;&nbsp;</span>	nonzero |= nonzero &gt;&gt; 4
+<span id="L248" class="ln">   248&nbsp;&nbsp;</span>	nonzero |= nonzero &gt;&gt; 2
+<span id="L249" class="ln">   249&nbsp;&nbsp;</span>	nonzero |= nonzero &gt;&gt; 1
+<span id="L250" class="ln">   250&nbsp;&nbsp;</span>	return int(^nonzero) &amp; 1
+<span id="L251" class="ln">   251&nbsp;&nbsp;</span>}
+<span id="L252" class="ln">   252&nbsp;&nbsp;</span>
+<span id="L253" class="ln">   253&nbsp;&nbsp;</span><span class="comment">// nonAdjacentForm computes a width-w non-adjacent form for this scalar.</span>
+<span id="L254" class="ln">   254&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L255" class="ln">   255&nbsp;&nbsp;</span><span class="comment">// w must be between 2 and 8, or nonAdjacentForm will panic.</span>
+<span id="L256" class="ln">   256&nbsp;&nbsp;</span>func (s *Scalar) nonAdjacentForm(w uint) [256]int8 {
+<span id="L257" class="ln">   257&nbsp;&nbsp;</span>	<span class="comment">// This implementation is adapted from the one</span>
+<span id="L258" class="ln">   258&nbsp;&nbsp;</span>	<span class="comment">// in curve25519-dalek and is documented there:</span>
+<span id="L259" class="ln">   259&nbsp;&nbsp;</span>	<span class="comment">// https://github.com/dalek-cryptography/curve25519-dalek/blob/f630041af28e9a405255f98a8a93adca18e4315b/src/scalar.rs#L800-L871</span>
+<span id="L260" class="ln">   260&nbsp;&nbsp;</span>	b := s.Bytes()
+<span id="L261" class="ln">   261&nbsp;&nbsp;</span>	if b[31] &gt; 127 {
+<span id="L262" class="ln">   262&nbsp;&nbsp;</span>		panic(&#34;scalar has high bit set illegally&#34;)
+<span id="L263" class="ln">   263&nbsp;&nbsp;</span>	}
+<span id="L264" class="ln">   264&nbsp;&nbsp;</span>	if w &lt; 2 {
+<span id="L265" class="ln">   265&nbsp;&nbsp;</span>		panic(&#34;w must be at least 2 by the definition of NAF&#34;)
+<span id="L266" class="ln">   266&nbsp;&nbsp;</span>	} else if w &gt; 8 {
+<span id="L267" class="ln">   267&nbsp;&nbsp;</span>		panic(&#34;NAF digits must fit in int8&#34;)
+<span id="L268" class="ln">   268&nbsp;&nbsp;</span>	}
+<span id="L269" class="ln">   269&nbsp;&nbsp;</span>
+<span id="L270" class="ln">   270&nbsp;&nbsp;</span>	var naf [256]int8
+<span id="L271" class="ln">   271&nbsp;&nbsp;</span>	var digits [5]uint64
+<span id="L272" class="ln">   272&nbsp;&nbsp;</span>
+<span id="L273" class="ln">   273&nbsp;&nbsp;</span>	for i := 0; i &lt; 4; i++ {
+<span id="L274" class="ln">   274&nbsp;&nbsp;</span>		digits[i] = binary.LittleEndian.Uint64(b[i*8:])
+<span id="L275" class="ln">   275&nbsp;&nbsp;</span>	}
+<span id="L276" class="ln">   276&nbsp;&nbsp;</span>
+<span id="L277" class="ln">   277&nbsp;&nbsp;</span>	width := uint64(1 &lt;&lt; w)
+<span id="L278" class="ln">   278&nbsp;&nbsp;</span>	windowMask := uint64(width - 1)
+<span id="L279" class="ln">   279&nbsp;&nbsp;</span>
+<span id="L280" class="ln">   280&nbsp;&nbsp;</span>	pos := uint(0)
+<span id="L281" class="ln">   281&nbsp;&nbsp;</span>	carry := uint64(0)
+<span id="L282" class="ln">   282&nbsp;&nbsp;</span>	for pos &lt; 256 {
+<span id="L283" class="ln">   283&nbsp;&nbsp;</span>		indexU64 := pos / 64
+<span id="L284" class="ln">   284&nbsp;&nbsp;</span>		indexBit := pos % 64
+<span id="L285" class="ln">   285&nbsp;&nbsp;</span>		var bitBuf uint64
+<span id="L286" class="ln">   286&nbsp;&nbsp;</span>		if indexBit &lt; 64-w {
+<span id="L287" class="ln">   287&nbsp;&nbsp;</span>			<span class="comment">// This window&#39;s bits are contained in a single u64</span>
+<span id="L288" class="ln">   288&nbsp;&nbsp;</span>			bitBuf = digits[indexU64] &gt;&gt; indexBit
+<span id="L289" class="ln">   289&nbsp;&nbsp;</span>		} else {
+<span id="L290" class="ln">   290&nbsp;&nbsp;</span>			<span class="comment">// Combine the current 64 bits with bits from the next 64</span>
+<span id="L291" class="ln">   291&nbsp;&nbsp;</span>			bitBuf = (digits[indexU64] &gt;&gt; indexBit) | (digits[1+indexU64] &lt;&lt; (64 - indexBit))
+<span id="L292" class="ln">   292&nbsp;&nbsp;</span>		}
+<span id="L293" class="ln">   293&nbsp;&nbsp;</span>
+<span id="L294" class="ln">   294&nbsp;&nbsp;</span>		<span class="comment">// Add carry into the current window</span>
+<span id="L295" class="ln">   295&nbsp;&nbsp;</span>		window := carry + (bitBuf &amp; windowMask)
+<span id="L296" class="ln">   296&nbsp;&nbsp;</span>
+<span id="L297" class="ln">   297&nbsp;&nbsp;</span>		if window&amp;1 == 0 {
+<span id="L298" class="ln">   298&nbsp;&nbsp;</span>			<span class="comment">// If the window value is even, preserve the carry and continue.</span>
+<span id="L299" class="ln">   299&nbsp;&nbsp;</span>			<span class="comment">// Why is the carry preserved?</span>
+<span id="L300" class="ln">   300&nbsp;&nbsp;</span>			<span class="comment">// If carry == 0 and window &amp; 1 == 0,</span>
+<span id="L301" class="ln">   301&nbsp;&nbsp;</span>			<span class="comment">//    then the next carry should be 0</span>
+<span id="L302" class="ln">   302&nbsp;&nbsp;</span>			<span class="comment">// If carry == 1 and window &amp; 1 == 0,</span>
+<span id="L303" class="ln">   303&nbsp;&nbsp;</span>			<span class="comment">//    then bit_buf &amp; 1 == 1 so the next carry should be 1</span>
+<span id="L304" class="ln">   304&nbsp;&nbsp;</span>			pos += 1
+<span id="L305" class="ln">   305&nbsp;&nbsp;</span>			continue
+<span id="L306" class="ln">   306&nbsp;&nbsp;</span>		}
+<span id="L307" class="ln">   307&nbsp;&nbsp;</span>
+<span id="L308" class="ln">   308&nbsp;&nbsp;</span>		if window &lt; width/2 {
+<span id="L309" class="ln">   309&nbsp;&nbsp;</span>			carry = 0
+<span id="L310" class="ln">   310&nbsp;&nbsp;</span>			naf[pos] = int8(window)
+<span id="L311" class="ln">   311&nbsp;&nbsp;</span>		} else {
+<span id="L312" class="ln">   312&nbsp;&nbsp;</span>			carry = 1
+<span id="L313" class="ln">   313&nbsp;&nbsp;</span>			naf[pos] = int8(window) - int8(width)
+<span id="L314" class="ln">   314&nbsp;&nbsp;</span>		}
+<span id="L315" class="ln">   315&nbsp;&nbsp;</span>
+<span id="L316" class="ln">   316&nbsp;&nbsp;</span>		pos += w
+<span id="L317" class="ln">   317&nbsp;&nbsp;</span>	}
+<span id="L318" class="ln">   318&nbsp;&nbsp;</span>	return naf
+<span id="L319" class="ln">   319&nbsp;&nbsp;</span>}
+<span id="L320" class="ln">   320&nbsp;&nbsp;</span>
+<span id="L321" class="ln">   321&nbsp;&nbsp;</span>func (s *Scalar) signedRadix16() [64]int8 {
+<span id="L322" class="ln">   322&nbsp;&nbsp;</span>	b := s.Bytes()
+<span id="L323" class="ln">   323&nbsp;&nbsp;</span>	if b[31] &gt; 127 {
+<span id="L324" class="ln">   324&nbsp;&nbsp;</span>		panic(&#34;scalar has high bit set illegally&#34;)
+<span id="L325" class="ln">   325&nbsp;&nbsp;</span>	}
+<span id="L326" class="ln">   326&nbsp;&nbsp;</span>
+<span id="L327" class="ln">   327&nbsp;&nbsp;</span>	var digits [64]int8
+<span id="L328" class="ln">   328&nbsp;&nbsp;</span>
+<span id="L329" class="ln">   329&nbsp;&nbsp;</span>	<span class="comment">// Compute unsigned radix-16 digits:</span>
+<span id="L330" class="ln">   330&nbsp;&nbsp;</span>	for i := 0; i &lt; 32; i++ {
+<span id="L331" class="ln">   331&nbsp;&nbsp;</span>		digits[2*i] = int8(b[i] &amp; 15)
+<span id="L332" class="ln">   332&nbsp;&nbsp;</span>		digits[2*i+1] = int8((b[i] &gt;&gt; 4) &amp; 15)
+<span id="L333" class="ln">   333&nbsp;&nbsp;</span>	}
+<span id="L334" class="ln">   334&nbsp;&nbsp;</span>
+<span id="L335" class="ln">   335&nbsp;&nbsp;</span>	<span class="comment">// Recenter coefficients:</span>
+<span id="L336" class="ln">   336&nbsp;&nbsp;</span>	for i := 0; i &lt; 63; i++ {
+<span id="L337" class="ln">   337&nbsp;&nbsp;</span>		carry := (digits[i] + 8) &gt;&gt; 4
+<span id="L338" class="ln">   338&nbsp;&nbsp;</span>		digits[i] -= carry &lt;&lt; 4
+<span id="L339" class="ln">   339&nbsp;&nbsp;</span>		digits[i+1] += carry
+<span id="L340" class="ln">   340&nbsp;&nbsp;</span>	}
+<span id="L341" class="ln">   341&nbsp;&nbsp;</span>
+<span id="L342" class="ln">   342&nbsp;&nbsp;</span>	return digits
+<span id="L343" class="ln">   343&nbsp;&nbsp;</span>}
+<span id="L344" class="ln">   344&nbsp;&nbsp;</span>
+</pre><p><a href="scalar.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

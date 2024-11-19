@@ -1,0 +1,1747 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>src/time/time.go - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../index.html">GoDoc</a></div>
+<a href="./time.go?s=26762:26809#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Source file
+    <a href="http://localhost:8080/src">src</a>/<a href="http://localhost:8080/src/time">time</a>/<span class="text-muted">time.go</span>
+  </h1>
+
+
+
+
+
+  <h2>
+    Documentation: <a href="http://localhost:8080/pkg/time">time</a>
+  </h2>
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1&nbsp;&nbsp;</span><span class="comment">// Copyright 2009 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2&nbsp;&nbsp;</span><span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3&nbsp;&nbsp;</span><span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4&nbsp;&nbsp;</span>
+<span id="L5" class="ln">     5&nbsp;&nbsp;</span><span class="comment">// Package time provides functionality for measuring and displaying time.</span>
+<span id="L6" class="ln">     6&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L7" class="ln">     7&nbsp;&nbsp;</span><span class="comment">// The calendrical calculations always assume a Gregorian calendar, with</span>
+<span id="L8" class="ln">     8&nbsp;&nbsp;</span><span class="comment">// no leap seconds.</span>
+<span id="L9" class="ln">     9&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L10" class="ln">    10&nbsp;&nbsp;</span><span class="comment">// # Monotonic Clocks</span>
+<span id="L11" class="ln">    11&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L12" class="ln">    12&nbsp;&nbsp;</span><span class="comment">// Operating systems provide both a “wall clock,” which is subject to</span>
+<span id="L13" class="ln">    13&nbsp;&nbsp;</span><span class="comment">// changes for clock synchronization, and a “monotonic clock,” which is</span>
+<span id="L14" class="ln">    14&nbsp;&nbsp;</span><span class="comment">// not. The general rule is that the wall clock is for telling time and</span>
+<span id="L15" class="ln">    15&nbsp;&nbsp;</span><span class="comment">// the monotonic clock is for measuring time. Rather than split the API,</span>
+<span id="L16" class="ln">    16&nbsp;&nbsp;</span><span class="comment">// in this package the Time returned by time.Now contains both a wall</span>
+<span id="L17" class="ln">    17&nbsp;&nbsp;</span><span class="comment">// clock reading and a monotonic clock reading; later time-telling</span>
+<span id="L18" class="ln">    18&nbsp;&nbsp;</span><span class="comment">// operations use the wall clock reading, but later time-measuring</span>
+<span id="L19" class="ln">    19&nbsp;&nbsp;</span><span class="comment">// operations, specifically comparisons and subtractions, use the</span>
+<span id="L20" class="ln">    20&nbsp;&nbsp;</span><span class="comment">// monotonic clock reading.</span>
+<span id="L21" class="ln">    21&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L22" class="ln">    22&nbsp;&nbsp;</span><span class="comment">// For example, this code always computes a positive elapsed time of</span>
+<span id="L23" class="ln">    23&nbsp;&nbsp;</span><span class="comment">// approximately 20 milliseconds, even if the wall clock is changed during</span>
+<span id="L24" class="ln">    24&nbsp;&nbsp;</span><span class="comment">// the operation being timed:</span>
+<span id="L25" class="ln">    25&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L26" class="ln">    26&nbsp;&nbsp;</span><span class="comment">//	start := time.Now()</span>
+<span id="L27" class="ln">    27&nbsp;&nbsp;</span><span class="comment">//	... operation that takes 20 milliseconds ...</span>
+<span id="L28" class="ln">    28&nbsp;&nbsp;</span><span class="comment">//	t := time.Now()</span>
+<span id="L29" class="ln">    29&nbsp;&nbsp;</span><span class="comment">//	elapsed := t.Sub(start)</span>
+<span id="L30" class="ln">    30&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L31" class="ln">    31&nbsp;&nbsp;</span><span class="comment">// Other idioms, such as time.Since(start), time.Until(deadline), and</span>
+<span id="L32" class="ln">    32&nbsp;&nbsp;</span><span class="comment">// time.Now().Before(deadline), are similarly robust against wall clock</span>
+<span id="L33" class="ln">    33&nbsp;&nbsp;</span><span class="comment">// resets.</span>
+<span id="L34" class="ln">    34&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L35" class="ln">    35&nbsp;&nbsp;</span><span class="comment">// The rest of this section gives the precise details of how operations</span>
+<span id="L36" class="ln">    36&nbsp;&nbsp;</span><span class="comment">// use monotonic clocks, but understanding those details is not required</span>
+<span id="L37" class="ln">    37&nbsp;&nbsp;</span><span class="comment">// to use this package.</span>
+<span id="L38" class="ln">    38&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L39" class="ln">    39&nbsp;&nbsp;</span><span class="comment">// The Time returned by time.Now contains a monotonic clock reading.</span>
+<span id="L40" class="ln">    40&nbsp;&nbsp;</span><span class="comment">// If Time t has a monotonic clock reading, t.Add adds the same duration to</span>
+<span id="L41" class="ln">    41&nbsp;&nbsp;</span><span class="comment">// both the wall clock and monotonic clock readings to compute the result.</span>
+<span id="L42" class="ln">    42&nbsp;&nbsp;</span><span class="comment">// Because t.AddDate(y, m, d), t.Round(d), and t.Truncate(d) are wall time</span>
+<span id="L43" class="ln">    43&nbsp;&nbsp;</span><span class="comment">// computations, they always strip any monotonic clock reading from their results.</span>
+<span id="L44" class="ln">    44&nbsp;&nbsp;</span><span class="comment">// Because t.In, t.Local, and t.UTC are used for their effect on the interpretation</span>
+<span id="L45" class="ln">    45&nbsp;&nbsp;</span><span class="comment">// of the wall time, they also strip any monotonic clock reading from their results.</span>
+<span id="L46" class="ln">    46&nbsp;&nbsp;</span><span class="comment">// The canonical way to strip a monotonic clock reading is to use t = t.Round(0).</span>
+<span id="L47" class="ln">    47&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L48" class="ln">    48&nbsp;&nbsp;</span><span class="comment">// If Times t and u both contain monotonic clock readings, the operations</span>
+<span id="L49" class="ln">    49&nbsp;&nbsp;</span><span class="comment">// t.After(u), t.Before(u), t.Equal(u), t.Compare(u), and t.Sub(u) are carried out</span>
+<span id="L50" class="ln">    50&nbsp;&nbsp;</span><span class="comment">// using the monotonic clock readings alone, ignoring the wall clock</span>
+<span id="L51" class="ln">    51&nbsp;&nbsp;</span><span class="comment">// readings. If either t or u contains no monotonic clock reading, these</span>
+<span id="L52" class="ln">    52&nbsp;&nbsp;</span><span class="comment">// operations fall back to using the wall clock readings.</span>
+<span id="L53" class="ln">    53&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L54" class="ln">    54&nbsp;&nbsp;</span><span class="comment">// On some systems the monotonic clock will stop if the computer goes to sleep.</span>
+<span id="L55" class="ln">    55&nbsp;&nbsp;</span><span class="comment">// On such a system, t.Sub(u) may not accurately reflect the actual</span>
+<span id="L56" class="ln">    56&nbsp;&nbsp;</span><span class="comment">// time that passed between t and u.</span>
+<span id="L57" class="ln">    57&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L58" class="ln">    58&nbsp;&nbsp;</span><span class="comment">// Because the monotonic clock reading has no meaning outside</span>
+<span id="L59" class="ln">    59&nbsp;&nbsp;</span><span class="comment">// the current process, the serialized forms generated by t.GobEncode,</span>
+<span id="L60" class="ln">    60&nbsp;&nbsp;</span><span class="comment">// t.MarshalBinary, t.MarshalJSON, and t.MarshalText omit the monotonic</span>
+<span id="L61" class="ln">    61&nbsp;&nbsp;</span><span class="comment">// clock reading, and t.Format provides no format for it. Similarly, the</span>
+<span id="L62" class="ln">    62&nbsp;&nbsp;</span><span class="comment">// constructors time.Date, time.Parse, time.ParseInLocation, and time.Unix,</span>
+<span id="L63" class="ln">    63&nbsp;&nbsp;</span><span class="comment">// as well as the unmarshalers t.GobDecode, t.UnmarshalBinary.</span>
+<span id="L64" class="ln">    64&nbsp;&nbsp;</span><span class="comment">// t.UnmarshalJSON, and t.UnmarshalText always create times with</span>
+<span id="L65" class="ln">    65&nbsp;&nbsp;</span><span class="comment">// no monotonic clock reading.</span>
+<span id="L66" class="ln">    66&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L67" class="ln">    67&nbsp;&nbsp;</span><span class="comment">// The monotonic clock reading exists only in Time values. It is not</span>
+<span id="L68" class="ln">    68&nbsp;&nbsp;</span><span class="comment">// a part of Duration values or the Unix times returned by t.Unix and</span>
+<span id="L69" class="ln">    69&nbsp;&nbsp;</span><span class="comment">// friends.</span>
+<span id="L70" class="ln">    70&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L71" class="ln">    71&nbsp;&nbsp;</span><span class="comment">// Note that the Go == operator compares not just the time instant but</span>
+<span id="L72" class="ln">    72&nbsp;&nbsp;</span><span class="comment">// also the Location and the monotonic clock reading. See the</span>
+<span id="L73" class="ln">    73&nbsp;&nbsp;</span><span class="comment">// documentation for the Time type for a discussion of equality</span>
+<span id="L74" class="ln">    74&nbsp;&nbsp;</span><span class="comment">// testing for Time values.</span>
+<span id="L75" class="ln">    75&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L76" class="ln">    76&nbsp;&nbsp;</span><span class="comment">// For debugging, the result of t.String does include the monotonic</span>
+<span id="L77" class="ln">    77&nbsp;&nbsp;</span><span class="comment">// clock reading if present. If t != u because of different monotonic clock readings,</span>
+<span id="L78" class="ln">    78&nbsp;&nbsp;</span><span class="comment">// that difference will be visible when printing t.String() and u.String().</span>
+<span id="L79" class="ln">    79&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L80" class="ln">    80&nbsp;&nbsp;</span><span class="comment">// # Timer Resolution</span>
+<span id="L81" class="ln">    81&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L82" class="ln">    82&nbsp;&nbsp;</span><span class="comment">// Timer resolution varies depending on the Go runtime, the operating system</span>
+<span id="L83" class="ln">    83&nbsp;&nbsp;</span><span class="comment">// and the underlying hardware.</span>
+<span id="L84" class="ln">    84&nbsp;&nbsp;</span><span class="comment">// On Unix, the resolution is approximately 1ms.</span>
+<span id="L85" class="ln">    85&nbsp;&nbsp;</span><span class="comment">// On Windows, the default resolution is approximately 16ms, but</span>
+<span id="L86" class="ln">    86&nbsp;&nbsp;</span><span class="comment">// a higher resolution may be requested using [golang.org/x/sys/windows.TimeBeginPeriod].</span>
+<span id="L87" class="ln">    87&nbsp;&nbsp;</span>package time
+<span id="L88" class="ln">    88&nbsp;&nbsp;</span>
+<span id="L89" class="ln">    89&nbsp;&nbsp;</span>import (
+<span id="L90" class="ln">    90&nbsp;&nbsp;</span>	&#34;errors&#34;
+<span id="L91" class="ln">    91&nbsp;&nbsp;</span>	_ &#34;unsafe&#34; <span class="comment">// for go:linkname</span>
+<span id="L92" class="ln">    92&nbsp;&nbsp;</span>)
+<span id="L93" class="ln">    93&nbsp;&nbsp;</span>
+<span id="L94" class="ln">    94&nbsp;&nbsp;</span><span class="comment">// A Time represents an instant in time with nanosecond precision.</span>
+<span id="L95" class="ln">    95&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L96" class="ln">    96&nbsp;&nbsp;</span><span class="comment">// Programs using times should typically store and pass them as values,</span>
+<span id="L97" class="ln">    97&nbsp;&nbsp;</span><span class="comment">// not pointers. That is, time variables and struct fields should be of</span>
+<span id="L98" class="ln">    98&nbsp;&nbsp;</span><span class="comment">// type time.Time, not *time.Time.</span>
+<span id="L99" class="ln">    99&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L100" class="ln">   100&nbsp;&nbsp;</span><span class="comment">// A Time value can be used by multiple goroutines simultaneously except</span>
+<span id="L101" class="ln">   101&nbsp;&nbsp;</span><span class="comment">// that the methods GobDecode, UnmarshalBinary, UnmarshalJSON and</span>
+<span id="L102" class="ln">   102&nbsp;&nbsp;</span><span class="comment">// UnmarshalText are not concurrency-safe.</span>
+<span id="L103" class="ln">   103&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L104" class="ln">   104&nbsp;&nbsp;</span><span class="comment">// Time instants can be compared using the Before, After, and Equal methods.</span>
+<span id="L105" class="ln">   105&nbsp;&nbsp;</span><span class="comment">// The Sub method subtracts two instants, producing a Duration.</span>
+<span id="L106" class="ln">   106&nbsp;&nbsp;</span><span class="comment">// The Add method adds a Time and a Duration, producing a Time.</span>
+<span id="L107" class="ln">   107&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L108" class="ln">   108&nbsp;&nbsp;</span><span class="comment">// The zero value of type Time is January 1, year 1, 00:00:00.000000000 UTC.</span>
+<span id="L109" class="ln">   109&nbsp;&nbsp;</span><span class="comment">// As this time is unlikely to come up in practice, the IsZero method gives</span>
+<span id="L110" class="ln">   110&nbsp;&nbsp;</span><span class="comment">// a simple way of detecting a time that has not been initialized explicitly.</span>
+<span id="L111" class="ln">   111&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L112" class="ln">   112&nbsp;&nbsp;</span><span class="comment">// Each time has an associated Location. The methods Local, UTC, and In return a</span>
+<span id="L113" class="ln">   113&nbsp;&nbsp;</span><span class="comment">// Time with a specific Location. Changing the Location of a Time value with</span>
+<span id="L114" class="ln">   114&nbsp;&nbsp;</span><span class="comment">// these methods does not change the actual instant it represents, only the time</span>
+<span id="L115" class="ln">   115&nbsp;&nbsp;</span><span class="comment">// zone in which to interpret it.</span>
+<span id="L116" class="ln">   116&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L117" class="ln">   117&nbsp;&nbsp;</span><span class="comment">// Representations of a Time value saved by the GobEncode, MarshalBinary,</span>
+<span id="L118" class="ln">   118&nbsp;&nbsp;</span><span class="comment">// MarshalJSON, and MarshalText methods store the Time.Location&#39;s offset, but not</span>
+<span id="L119" class="ln">   119&nbsp;&nbsp;</span><span class="comment">// the location name. They therefore lose information about Daylight Saving Time.</span>
+<span id="L120" class="ln">   120&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L121" class="ln">   121&nbsp;&nbsp;</span><span class="comment">// In addition to the required “wall clock” reading, a Time may contain an optional</span>
+<span id="L122" class="ln">   122&nbsp;&nbsp;</span><span class="comment">// reading of the current process&#39;s monotonic clock, to provide additional precision</span>
+<span id="L123" class="ln">   123&nbsp;&nbsp;</span><span class="comment">// for comparison or subtraction.</span>
+<span id="L124" class="ln">   124&nbsp;&nbsp;</span><span class="comment">// See the “Monotonic Clocks” section in the package documentation for details.</span>
+<span id="L125" class="ln">   125&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L126" class="ln">   126&nbsp;&nbsp;</span><span class="comment">// Note that the Go == operator compares not just the time instant but also the</span>
+<span id="L127" class="ln">   127&nbsp;&nbsp;</span><span class="comment">// Location and the monotonic clock reading. Therefore, Time values should not</span>
+<span id="L128" class="ln">   128&nbsp;&nbsp;</span><span class="comment">// be used as map or database keys without first guaranteeing that the</span>
+<span id="L129" class="ln">   129&nbsp;&nbsp;</span><span class="comment">// identical Location has been set for all values, which can be achieved</span>
+<span id="L130" class="ln">   130&nbsp;&nbsp;</span><span class="comment">// through use of the UTC or Local method, and that the monotonic clock reading</span>
+<span id="L131" class="ln">   131&nbsp;&nbsp;</span><span class="comment">// has been stripped by setting t = t.Round(0). In general, prefer t.Equal(u)</span>
+<span id="L132" class="ln">   132&nbsp;&nbsp;</span><span class="comment">// to t == u, since t.Equal uses the most accurate comparison available and</span>
+<span id="L133" class="ln">   133&nbsp;&nbsp;</span><span class="comment">// correctly handles the case when only one of its arguments has a monotonic</span>
+<span id="L134" class="ln">   134&nbsp;&nbsp;</span><span class="comment">// clock reading.</span>
+<span id="L135" class="ln">   135&nbsp;&nbsp;</span>type Time struct {
+<span id="L136" class="ln">   136&nbsp;&nbsp;</span>	<span class="comment">// wall and ext encode the wall time seconds, wall time nanoseconds,</span>
+<span id="L137" class="ln">   137&nbsp;&nbsp;</span>	<span class="comment">// and optional monotonic clock reading in nanoseconds.</span>
+<span id="L138" class="ln">   138&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L139" class="ln">   139&nbsp;&nbsp;</span>	<span class="comment">// From high to low bit position, wall encodes a 1-bit flag (hasMonotonic),</span>
+<span id="L140" class="ln">   140&nbsp;&nbsp;</span>	<span class="comment">// a 33-bit seconds field, and a 30-bit wall time nanoseconds field.</span>
+<span id="L141" class="ln">   141&nbsp;&nbsp;</span>	<span class="comment">// The nanoseconds field is in the range [0, 999999999].</span>
+<span id="L142" class="ln">   142&nbsp;&nbsp;</span>	<span class="comment">// If the hasMonotonic bit is 0, then the 33-bit field must be zero</span>
+<span id="L143" class="ln">   143&nbsp;&nbsp;</span>	<span class="comment">// and the full signed 64-bit wall seconds since Jan 1 year 1 is stored in ext.</span>
+<span id="L144" class="ln">   144&nbsp;&nbsp;</span>	<span class="comment">// If the hasMonotonic bit is 1, then the 33-bit field holds a 33-bit</span>
+<span id="L145" class="ln">   145&nbsp;&nbsp;</span>	<span class="comment">// unsigned wall seconds since Jan 1 year 1885, and ext holds a</span>
+<span id="L146" class="ln">   146&nbsp;&nbsp;</span>	<span class="comment">// signed 64-bit monotonic clock reading, nanoseconds since process start.</span>
+<span id="L147" class="ln">   147&nbsp;&nbsp;</span>	wall uint64
+<span id="L148" class="ln">   148&nbsp;&nbsp;</span>	ext  int64
+<span id="L149" class="ln">   149&nbsp;&nbsp;</span>
+<span id="L150" class="ln">   150&nbsp;&nbsp;</span>	<span class="comment">// loc specifies the Location that should be used to</span>
+<span id="L151" class="ln">   151&nbsp;&nbsp;</span>	<span class="comment">// determine the minute, hour, month, day, and year</span>
+<span id="L152" class="ln">   152&nbsp;&nbsp;</span>	<span class="comment">// that correspond to this Time.</span>
+<span id="L153" class="ln">   153&nbsp;&nbsp;</span>	<span class="comment">// The nil location means UTC.</span>
+<span id="L154" class="ln">   154&nbsp;&nbsp;</span>	<span class="comment">// All UTC times are represented with loc==nil, never loc==&amp;utcLoc.</span>
+<span id="L155" class="ln">   155&nbsp;&nbsp;</span>	loc *Location
+<span id="L156" class="ln">   156&nbsp;&nbsp;</span>}
+<span id="L157" class="ln">   157&nbsp;&nbsp;</span>
+<span id="L158" class="ln">   158&nbsp;&nbsp;</span>const (
+<span id="L159" class="ln">   159&nbsp;&nbsp;</span>	hasMonotonic = 1 &lt;&lt; 63
+<span id="L160" class="ln">   160&nbsp;&nbsp;</span>	maxWall      = wallToInternal + (1&lt;&lt;33 - 1) <span class="comment">// year 2157</span>
+<span id="L161" class="ln">   161&nbsp;&nbsp;</span>	minWall      = wallToInternal               <span class="comment">// year 1885</span>
+<span id="L162" class="ln">   162&nbsp;&nbsp;</span>	nsecMask     = 1&lt;&lt;30 - 1
+<span id="L163" class="ln">   163&nbsp;&nbsp;</span>	nsecShift    = 30
+<span id="L164" class="ln">   164&nbsp;&nbsp;</span>)
+<span id="L165" class="ln">   165&nbsp;&nbsp;</span>
+<span id="L166" class="ln">   166&nbsp;&nbsp;</span><span class="comment">// These helpers for manipulating the wall and monotonic clock readings</span>
+<span id="L167" class="ln">   167&nbsp;&nbsp;</span><span class="comment">// take pointer receivers, even when they don&#39;t modify the time,</span>
+<span id="L168" class="ln">   168&nbsp;&nbsp;</span><span class="comment">// to make them cheaper to call.</span>
+<span id="L169" class="ln">   169&nbsp;&nbsp;</span>
+<span id="L170" class="ln">   170&nbsp;&nbsp;</span><span class="comment">// nsec returns the time&#39;s nanoseconds.</span>
+<span id="L171" class="ln">   171&nbsp;&nbsp;</span>func (t *Time) nsec() int32 {
+<span id="L172" class="ln">   172&nbsp;&nbsp;</span>	return int32(t.wall &amp; nsecMask)
+<span id="L173" class="ln">   173&nbsp;&nbsp;</span>}
+<span id="L174" class="ln">   174&nbsp;&nbsp;</span>
+<span id="L175" class="ln">   175&nbsp;&nbsp;</span><span class="comment">// sec returns the time&#39;s seconds since Jan 1 year 1.</span>
+<span id="L176" class="ln">   176&nbsp;&nbsp;</span>func (t *Time) sec() int64 {
+<span id="L177" class="ln">   177&nbsp;&nbsp;</span>	if t.wall&amp;hasMonotonic != 0 {
+<span id="L178" class="ln">   178&nbsp;&nbsp;</span>		return wallToInternal + int64(t.wall&lt;&lt;1&gt;&gt;(nsecShift+1))
+<span id="L179" class="ln">   179&nbsp;&nbsp;</span>	}
+<span id="L180" class="ln">   180&nbsp;&nbsp;</span>	return t.ext
+<span id="L181" class="ln">   181&nbsp;&nbsp;</span>}
+<span id="L182" class="ln">   182&nbsp;&nbsp;</span>
+<span id="L183" class="ln">   183&nbsp;&nbsp;</span><span class="comment">// unixSec returns the time&#39;s seconds since Jan 1 1970 (Unix time).</span>
+<span id="L184" class="ln">   184&nbsp;&nbsp;</span>func (t *Time) unixSec() int64 { return t.sec() + internalToUnix }
+<span id="L185" class="ln">   185&nbsp;&nbsp;</span>
+<span id="L186" class="ln">   186&nbsp;&nbsp;</span><span class="comment">// addSec adds d seconds to the time.</span>
+<span id="L187" class="ln">   187&nbsp;&nbsp;</span>func (t *Time) addSec(d int64) {
+<span id="L188" class="ln">   188&nbsp;&nbsp;</span>	if t.wall&amp;hasMonotonic != 0 {
+<span id="L189" class="ln">   189&nbsp;&nbsp;</span>		sec := int64(t.wall &lt;&lt; 1 &gt;&gt; (nsecShift + 1))
+<span id="L190" class="ln">   190&nbsp;&nbsp;</span>		dsec := sec + d
+<span id="L191" class="ln">   191&nbsp;&nbsp;</span>		if 0 &lt;= dsec &amp;&amp; dsec &lt;= 1&lt;&lt;33-1 {
+<span id="L192" class="ln">   192&nbsp;&nbsp;</span>			t.wall = t.wall&amp;nsecMask | uint64(dsec)&lt;&lt;nsecShift | hasMonotonic
+<span id="L193" class="ln">   193&nbsp;&nbsp;</span>			return
+<span id="L194" class="ln">   194&nbsp;&nbsp;</span>		}
+<span id="L195" class="ln">   195&nbsp;&nbsp;</span>		<span class="comment">// Wall second now out of range for packed field.</span>
+<span id="L196" class="ln">   196&nbsp;&nbsp;</span>		<span class="comment">// Move to ext.</span>
+<span id="L197" class="ln">   197&nbsp;&nbsp;</span>		t.stripMono()
+<span id="L198" class="ln">   198&nbsp;&nbsp;</span>	}
+<span id="L199" class="ln">   199&nbsp;&nbsp;</span>
+<span id="L200" class="ln">   200&nbsp;&nbsp;</span>	<span class="comment">// Check if the sum of t.ext and d overflows and handle it properly.</span>
+<span id="L201" class="ln">   201&nbsp;&nbsp;</span>	sum := t.ext + d
+<span id="L202" class="ln">   202&nbsp;&nbsp;</span>	if (sum &gt; t.ext) == (d &gt; 0) {
+<span id="L203" class="ln">   203&nbsp;&nbsp;</span>		t.ext = sum
+<span id="L204" class="ln">   204&nbsp;&nbsp;</span>	} else if d &gt; 0 {
+<span id="L205" class="ln">   205&nbsp;&nbsp;</span>		t.ext = 1&lt;&lt;63 - 1
+<span id="L206" class="ln">   206&nbsp;&nbsp;</span>	} else {
+<span id="L207" class="ln">   207&nbsp;&nbsp;</span>		t.ext = -(1&lt;&lt;63 - 1)
+<span id="L208" class="ln">   208&nbsp;&nbsp;</span>	}
+<span id="L209" class="ln">   209&nbsp;&nbsp;</span>}
+<span id="L210" class="ln">   210&nbsp;&nbsp;</span>
+<span id="L211" class="ln">   211&nbsp;&nbsp;</span><span class="comment">// setLoc sets the location associated with the time.</span>
+<span id="L212" class="ln">   212&nbsp;&nbsp;</span>func (t *Time) setLoc(loc *Location) {
+<span id="L213" class="ln">   213&nbsp;&nbsp;</span>	if loc == &amp;utcLoc {
+<span id="L214" class="ln">   214&nbsp;&nbsp;</span>		loc = nil
+<span id="L215" class="ln">   215&nbsp;&nbsp;</span>	}
+<span id="L216" class="ln">   216&nbsp;&nbsp;</span>	t.stripMono()
+<span id="L217" class="ln">   217&nbsp;&nbsp;</span>	t.loc = loc
+<span id="L218" class="ln">   218&nbsp;&nbsp;</span>}
+<span id="L219" class="ln">   219&nbsp;&nbsp;</span>
+<span id="L220" class="ln">   220&nbsp;&nbsp;</span><span class="comment">// stripMono strips the monotonic clock reading in t.</span>
+<span id="L221" class="ln">   221&nbsp;&nbsp;</span>func (t *Time) stripMono() {
+<span id="L222" class="ln">   222&nbsp;&nbsp;</span>	if t.wall&amp;hasMonotonic != 0 {
+<span id="L223" class="ln">   223&nbsp;&nbsp;</span>		t.ext = t.sec()
+<span id="L224" class="ln">   224&nbsp;&nbsp;</span>		t.wall &amp;= nsecMask
+<span id="L225" class="ln">   225&nbsp;&nbsp;</span>	}
+<span id="L226" class="ln">   226&nbsp;&nbsp;</span>}
+<span id="L227" class="ln">   227&nbsp;&nbsp;</span>
+<span id="L228" class="ln">   228&nbsp;&nbsp;</span><span class="comment">// setMono sets the monotonic clock reading in t.</span>
+<span id="L229" class="ln">   229&nbsp;&nbsp;</span><span class="comment">// If t cannot hold a monotonic clock reading,</span>
+<span id="L230" class="ln">   230&nbsp;&nbsp;</span><span class="comment">// because its wall time is too large,</span>
+<span id="L231" class="ln">   231&nbsp;&nbsp;</span><span class="comment">// setMono is a no-op.</span>
+<span id="L232" class="ln">   232&nbsp;&nbsp;</span>func (t *Time) setMono(m int64) {
+<span id="L233" class="ln">   233&nbsp;&nbsp;</span>	if t.wall&amp;hasMonotonic == 0 {
+<span id="L234" class="ln">   234&nbsp;&nbsp;</span>		sec := t.ext
+<span id="L235" class="ln">   235&nbsp;&nbsp;</span>		if sec &lt; minWall || maxWall &lt; sec {
+<span id="L236" class="ln">   236&nbsp;&nbsp;</span>			return
+<span id="L237" class="ln">   237&nbsp;&nbsp;</span>		}
+<span id="L238" class="ln">   238&nbsp;&nbsp;</span>		t.wall |= hasMonotonic | uint64(sec-minWall)&lt;&lt;nsecShift
+<span id="L239" class="ln">   239&nbsp;&nbsp;</span>	}
+<span id="L240" class="ln">   240&nbsp;&nbsp;</span>	t.ext = m
+<span id="L241" class="ln">   241&nbsp;&nbsp;</span>}
+<span id="L242" class="ln">   242&nbsp;&nbsp;</span>
+<span id="L243" class="ln">   243&nbsp;&nbsp;</span><span class="comment">// mono returns t&#39;s monotonic clock reading.</span>
+<span id="L244" class="ln">   244&nbsp;&nbsp;</span><span class="comment">// It returns 0 for a missing reading.</span>
+<span id="L245" class="ln">   245&nbsp;&nbsp;</span><span class="comment">// This function is used only for testing,</span>
+<span id="L246" class="ln">   246&nbsp;&nbsp;</span><span class="comment">// so it&#39;s OK that technically 0 is a valid</span>
+<span id="L247" class="ln">   247&nbsp;&nbsp;</span><span class="comment">// monotonic clock reading as well.</span>
+<span id="L248" class="ln">   248&nbsp;&nbsp;</span>func (t *Time) mono() int64 {
+<span id="L249" class="ln">   249&nbsp;&nbsp;</span>	if t.wall&amp;hasMonotonic == 0 {
+<span id="L250" class="ln">   250&nbsp;&nbsp;</span>		return 0
+<span id="L251" class="ln">   251&nbsp;&nbsp;</span>	}
+<span id="L252" class="ln">   252&nbsp;&nbsp;</span>	return t.ext
+<span id="L253" class="ln">   253&nbsp;&nbsp;</span>}
+<span id="L254" class="ln">   254&nbsp;&nbsp;</span>
+<span id="L255" class="ln">   255&nbsp;&nbsp;</span><span class="comment">// After reports whether the time instant t is after u.</span>
+<span id="L256" class="ln">   256&nbsp;&nbsp;</span>func (t Time) After(u Time) bool {
+<span id="L257" class="ln">   257&nbsp;&nbsp;</span>	if t.wall&amp;u.wall&amp;hasMonotonic != 0 {
+<span id="L258" class="ln">   258&nbsp;&nbsp;</span>		return t.ext &gt; u.ext
+<span id="L259" class="ln">   259&nbsp;&nbsp;</span>	}
+<span id="L260" class="ln">   260&nbsp;&nbsp;</span>	ts := t.sec()
+<span id="L261" class="ln">   261&nbsp;&nbsp;</span>	us := u.sec()
+<span id="L262" class="ln">   262&nbsp;&nbsp;</span>	return ts &gt; us || ts == us &amp;&amp; t.nsec() &gt; u.nsec()
+<span id="L263" class="ln">   263&nbsp;&nbsp;</span>}
+<span id="L264" class="ln">   264&nbsp;&nbsp;</span>
+<span id="L265" class="ln">   265&nbsp;&nbsp;</span><span class="comment">// Before reports whether the time instant t is before u.</span>
+<span id="L266" class="ln">   266&nbsp;&nbsp;</span>func (t Time) Before(u Time) bool {
+<span id="L267" class="ln">   267&nbsp;&nbsp;</span>	if t.wall&amp;u.wall&amp;hasMonotonic != 0 {
+<span id="L268" class="ln">   268&nbsp;&nbsp;</span>		return t.ext &lt; u.ext
+<span id="L269" class="ln">   269&nbsp;&nbsp;</span>	}
+<span id="L270" class="ln">   270&nbsp;&nbsp;</span>	ts := t.sec()
+<span id="L271" class="ln">   271&nbsp;&nbsp;</span>	us := u.sec()
+<span id="L272" class="ln">   272&nbsp;&nbsp;</span>	return ts &lt; us || ts == us &amp;&amp; t.nsec() &lt; u.nsec()
+<span id="L273" class="ln">   273&nbsp;&nbsp;</span>}
+<span id="L274" class="ln">   274&nbsp;&nbsp;</span>
+<span id="L275" class="ln">   275&nbsp;&nbsp;</span><span class="comment">// Compare compares the time instant t with u. If t is before u, it returns -1;</span>
+<span id="L276" class="ln">   276&nbsp;&nbsp;</span><span class="comment">// if t is after u, it returns +1; if they&#39;re the same, it returns 0.</span>
+<span id="L277" class="ln">   277&nbsp;&nbsp;</span>func (t Time) Compare(u Time) int {
+<span id="L278" class="ln">   278&nbsp;&nbsp;</span>	var tc, uc int64
+<span id="L279" class="ln">   279&nbsp;&nbsp;</span>	if t.wall&amp;u.wall&amp;hasMonotonic != 0 {
+<span id="L280" class="ln">   280&nbsp;&nbsp;</span>		tc, uc = t.ext, u.ext
+<span id="L281" class="ln">   281&nbsp;&nbsp;</span>	} else {
+<span id="L282" class="ln">   282&nbsp;&nbsp;</span>		tc, uc = t.sec(), u.sec()
+<span id="L283" class="ln">   283&nbsp;&nbsp;</span>		if tc == uc {
+<span id="L284" class="ln">   284&nbsp;&nbsp;</span>			tc, uc = int64(t.nsec()), int64(u.nsec())
+<span id="L285" class="ln">   285&nbsp;&nbsp;</span>		}
+<span id="L286" class="ln">   286&nbsp;&nbsp;</span>	}
+<span id="L287" class="ln">   287&nbsp;&nbsp;</span>	switch {
+<span id="L288" class="ln">   288&nbsp;&nbsp;</span>	case tc &lt; uc:
+<span id="L289" class="ln">   289&nbsp;&nbsp;</span>		return -1
+<span id="L290" class="ln">   290&nbsp;&nbsp;</span>	case tc &gt; uc:
+<span id="L291" class="ln">   291&nbsp;&nbsp;</span>		return +1
+<span id="L292" class="ln">   292&nbsp;&nbsp;</span>	}
+<span id="L293" class="ln">   293&nbsp;&nbsp;</span>	return 0
+<span id="L294" class="ln">   294&nbsp;&nbsp;</span>}
+<span id="L295" class="ln">   295&nbsp;&nbsp;</span>
+<span id="L296" class="ln">   296&nbsp;&nbsp;</span><span class="comment">// Equal reports whether t and u represent the same time instant.</span>
+<span id="L297" class="ln">   297&nbsp;&nbsp;</span><span class="comment">// Two times can be equal even if they are in different locations.</span>
+<span id="L298" class="ln">   298&nbsp;&nbsp;</span><span class="comment">// For example, 6:00 +0200 and 4:00 UTC are Equal.</span>
+<span id="L299" class="ln">   299&nbsp;&nbsp;</span><span class="comment">// See the documentation on the Time type for the pitfalls of using == with</span>
+<span id="L300" class="ln">   300&nbsp;&nbsp;</span><span class="comment">// Time values; most code should use Equal instead.</span>
+<span id="L301" class="ln">   301&nbsp;&nbsp;</span>func (t Time) Equal(u Time) bool {
+<span id="L302" class="ln">   302&nbsp;&nbsp;</span>	if t.wall&amp;u.wall&amp;hasMonotonic != 0 {
+<span id="L303" class="ln">   303&nbsp;&nbsp;</span>		return t.ext == u.ext
+<span id="L304" class="ln">   304&nbsp;&nbsp;</span>	}
+<span id="L305" class="ln">   305&nbsp;&nbsp;</span>	return t.sec() == u.sec() &amp;&amp; t.nsec() == u.nsec()
+<span id="L306" class="ln">   306&nbsp;&nbsp;</span>}
+<span id="L307" class="ln">   307&nbsp;&nbsp;</span>
+<span id="L308" class="ln">   308&nbsp;&nbsp;</span><span class="comment">// A Month specifies a month of the year (January = 1, ...).</span>
+<span id="L309" class="ln">   309&nbsp;&nbsp;</span>type Month int
+<span id="L310" class="ln">   310&nbsp;&nbsp;</span>
+<span id="L311" class="ln">   311&nbsp;&nbsp;</span>const (
+<span id="L312" class="ln">   312&nbsp;&nbsp;</span>	January Month = 1 + iota
+<span id="L313" class="ln">   313&nbsp;&nbsp;</span>	February
+<span id="L314" class="ln">   314&nbsp;&nbsp;</span>	March
+<span id="L315" class="ln">   315&nbsp;&nbsp;</span>	April
+<span id="L316" class="ln">   316&nbsp;&nbsp;</span>	May
+<span id="L317" class="ln">   317&nbsp;&nbsp;</span>	June
+<span id="L318" class="ln">   318&nbsp;&nbsp;</span>	July
+<span id="L319" class="ln">   319&nbsp;&nbsp;</span>	August
+<span id="L320" class="ln">   320&nbsp;&nbsp;</span>	September
+<span id="L321" class="ln">   321&nbsp;&nbsp;</span>	October
+<span id="L322" class="ln">   322&nbsp;&nbsp;</span>	November
+<span id="L323" class="ln">   323&nbsp;&nbsp;</span>	December
+<span id="L324" class="ln">   324&nbsp;&nbsp;</span>)
+<span id="L325" class="ln">   325&nbsp;&nbsp;</span>
+<span id="L326" class="ln">   326&nbsp;&nbsp;</span><span class="comment">// String returns the English name of the month (&#34;January&#34;, &#34;February&#34;, ...).</span>
+<span id="L327" class="ln">   327&nbsp;&nbsp;</span>func (m Month) String() string {
+<span id="L328" class="ln">   328&nbsp;&nbsp;</span>	if January &lt;= m &amp;&amp; m &lt;= December {
+<span id="L329" class="ln">   329&nbsp;&nbsp;</span>		return longMonthNames[m-1]
+<span id="L330" class="ln">   330&nbsp;&nbsp;</span>	}
+<span id="L331" class="ln">   331&nbsp;&nbsp;</span>	buf := make([]byte, 20)
+<span id="L332" class="ln">   332&nbsp;&nbsp;</span>	n := fmtInt(buf, uint64(m))
+<span id="L333" class="ln">   333&nbsp;&nbsp;</span>	return &#34;%!Month(&#34; + string(buf[n:]) + &#34;)&#34;
+<span id="L334" class="ln">   334&nbsp;&nbsp;</span>}
+<span id="L335" class="ln">   335&nbsp;&nbsp;</span>
+<span id="L336" class="ln">   336&nbsp;&nbsp;</span><span class="comment">// A Weekday specifies a day of the week (Sunday = 0, ...).</span>
+<span id="L337" class="ln">   337&nbsp;&nbsp;</span>type Weekday int
+<span id="L338" class="ln">   338&nbsp;&nbsp;</span>
+<span id="L339" class="ln">   339&nbsp;&nbsp;</span>const (
+<span id="L340" class="ln">   340&nbsp;&nbsp;</span>	Sunday Weekday = iota
+<span id="L341" class="ln">   341&nbsp;&nbsp;</span>	Monday
+<span id="L342" class="ln">   342&nbsp;&nbsp;</span>	Tuesday
+<span id="L343" class="ln">   343&nbsp;&nbsp;</span>	Wednesday
+<span id="L344" class="ln">   344&nbsp;&nbsp;</span>	Thursday
+<span id="L345" class="ln">   345&nbsp;&nbsp;</span>	Friday
+<span id="L346" class="ln">   346&nbsp;&nbsp;</span>	Saturday
+<span id="L347" class="ln">   347&nbsp;&nbsp;</span>)
+<span id="L348" class="ln">   348&nbsp;&nbsp;</span>
+<span id="L349" class="ln">   349&nbsp;&nbsp;</span><span class="comment">// String returns the English name of the day (&#34;Sunday&#34;, &#34;Monday&#34;, ...).</span>
+<span id="L350" class="ln">   350&nbsp;&nbsp;</span>func (d Weekday) String() string {
+<span id="L351" class="ln">   351&nbsp;&nbsp;</span>	if Sunday &lt;= d &amp;&amp; d &lt;= Saturday {
+<span id="L352" class="ln">   352&nbsp;&nbsp;</span>		return longDayNames[d]
+<span id="L353" class="ln">   353&nbsp;&nbsp;</span>	}
+<span id="L354" class="ln">   354&nbsp;&nbsp;</span>	buf := make([]byte, 20)
+<span id="L355" class="ln">   355&nbsp;&nbsp;</span>	n := fmtInt(buf, uint64(d))
+<span id="L356" class="ln">   356&nbsp;&nbsp;</span>	return &#34;%!Weekday(&#34; + string(buf[n:]) + &#34;)&#34;
+<span id="L357" class="ln">   357&nbsp;&nbsp;</span>}
+<span id="L358" class="ln">   358&nbsp;&nbsp;</span>
+<span id="L359" class="ln">   359&nbsp;&nbsp;</span><span class="comment">// Computations on time.</span>
+<span id="L360" class="ln">   360&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L361" class="ln">   361&nbsp;&nbsp;</span><span class="comment">// The zero value for a Time is defined to be</span>
+<span id="L362" class="ln">   362&nbsp;&nbsp;</span><span class="comment">//	January 1, year 1, 00:00:00.000000000 UTC</span>
+<span id="L363" class="ln">   363&nbsp;&nbsp;</span><span class="comment">// which (1) looks like a zero, or as close as you can get in a date</span>
+<span id="L364" class="ln">   364&nbsp;&nbsp;</span><span class="comment">// (1-1-1 00:00:00 UTC), (2) is unlikely enough to arise in practice to</span>
+<span id="L365" class="ln">   365&nbsp;&nbsp;</span><span class="comment">// be a suitable &#34;not set&#34; sentinel, unlike Jan 1 1970, and (3) has a</span>
+<span id="L366" class="ln">   366&nbsp;&nbsp;</span><span class="comment">// non-negative year even in time zones west of UTC, unlike 1-1-0</span>
+<span id="L367" class="ln">   367&nbsp;&nbsp;</span><span class="comment">// 00:00:00 UTC, which would be 12-31-(-1) 19:00:00 in New York.</span>
+<span id="L368" class="ln">   368&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L369" class="ln">   369&nbsp;&nbsp;</span><span class="comment">// The zero Time value does not force a specific epoch for the time</span>
+<span id="L370" class="ln">   370&nbsp;&nbsp;</span><span class="comment">// representation. For example, to use the Unix epoch internally, we</span>
+<span id="L371" class="ln">   371&nbsp;&nbsp;</span><span class="comment">// could define that to distinguish a zero value from Jan 1 1970, that</span>
+<span id="L372" class="ln">   372&nbsp;&nbsp;</span><span class="comment">// time would be represented by sec=-1, nsec=1e9. However, it does</span>
+<span id="L373" class="ln">   373&nbsp;&nbsp;</span><span class="comment">// suggest a representation, namely using 1-1-1 00:00:00 UTC as the</span>
+<span id="L374" class="ln">   374&nbsp;&nbsp;</span><span class="comment">// epoch, and that&#39;s what we do.</span>
+<span id="L375" class="ln">   375&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L376" class="ln">   376&nbsp;&nbsp;</span><span class="comment">// The Add and Sub computations are oblivious to the choice of epoch.</span>
+<span id="L377" class="ln">   377&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L378" class="ln">   378&nbsp;&nbsp;</span><span class="comment">// The presentation computations - year, month, minute, and so on - all</span>
+<span id="L379" class="ln">   379&nbsp;&nbsp;</span><span class="comment">// rely heavily on division and modulus by positive constants. For</span>
+<span id="L380" class="ln">   380&nbsp;&nbsp;</span><span class="comment">// calendrical calculations we want these divisions to round down, even</span>
+<span id="L381" class="ln">   381&nbsp;&nbsp;</span><span class="comment">// for negative values, so that the remainder is always positive, but</span>
+<span id="L382" class="ln">   382&nbsp;&nbsp;</span><span class="comment">// Go&#39;s division (like most hardware division instructions) rounds to</span>
+<span id="L383" class="ln">   383&nbsp;&nbsp;</span><span class="comment">// zero. We can still do those computations and then adjust the result</span>
+<span id="L384" class="ln">   384&nbsp;&nbsp;</span><span class="comment">// for a negative numerator, but it&#39;s annoying to write the adjustment</span>
+<span id="L385" class="ln">   385&nbsp;&nbsp;</span><span class="comment">// over and over. Instead, we can change to a different epoch so long</span>
+<span id="L386" class="ln">   386&nbsp;&nbsp;</span><span class="comment">// ago that all the times we care about will be positive, and then round</span>
+<span id="L387" class="ln">   387&nbsp;&nbsp;</span><span class="comment">// to zero and round down coincide. These presentation routines already</span>
+<span id="L388" class="ln">   388&nbsp;&nbsp;</span><span class="comment">// have to add the zone offset, so adding the translation to the</span>
+<span id="L389" class="ln">   389&nbsp;&nbsp;</span><span class="comment">// alternate epoch is cheap. For example, having a non-negative time t</span>
+<span id="L390" class="ln">   390&nbsp;&nbsp;</span><span class="comment">// means that we can write</span>
+<span id="L391" class="ln">   391&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L392" class="ln">   392&nbsp;&nbsp;</span><span class="comment">//	sec = t % 60</span>
+<span id="L393" class="ln">   393&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L394" class="ln">   394&nbsp;&nbsp;</span><span class="comment">// instead of</span>
+<span id="L395" class="ln">   395&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L396" class="ln">   396&nbsp;&nbsp;</span><span class="comment">//	sec = t % 60</span>
+<span id="L397" class="ln">   397&nbsp;&nbsp;</span><span class="comment">//	if sec &lt; 0 {</span>
+<span id="L398" class="ln">   398&nbsp;&nbsp;</span><span class="comment">//		sec += 60</span>
+<span id="L399" class="ln">   399&nbsp;&nbsp;</span><span class="comment">//	}</span>
+<span id="L400" class="ln">   400&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L401" class="ln">   401&nbsp;&nbsp;</span><span class="comment">// everywhere.</span>
+<span id="L402" class="ln">   402&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L403" class="ln">   403&nbsp;&nbsp;</span><span class="comment">// The calendar runs on an exact 400 year cycle: a 400-year calendar</span>
+<span id="L404" class="ln">   404&nbsp;&nbsp;</span><span class="comment">// printed for 1970-2369 will apply as well to 2370-2769. Even the days</span>
+<span id="L405" class="ln">   405&nbsp;&nbsp;</span><span class="comment">// of the week match up. It simplifies the computations to choose the</span>
+<span id="L406" class="ln">   406&nbsp;&nbsp;</span><span class="comment">// cycle boundaries so that the exceptional years are always delayed as</span>
+<span id="L407" class="ln">   407&nbsp;&nbsp;</span><span class="comment">// long as possible. That means choosing a year equal to 1 mod 400, so</span>
+<span id="L408" class="ln">   408&nbsp;&nbsp;</span><span class="comment">// that the first leap year is the 4th year, the first missed leap year</span>
+<span id="L409" class="ln">   409&nbsp;&nbsp;</span><span class="comment">// is the 100th year, and the missed missed leap year is the 400th year.</span>
+<span id="L410" class="ln">   410&nbsp;&nbsp;</span><span class="comment">// So we&#39;d prefer instead to print a calendar for 2001-2400 and reuse it</span>
+<span id="L411" class="ln">   411&nbsp;&nbsp;</span><span class="comment">// for 2401-2800.</span>
+<span id="L412" class="ln">   412&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L413" class="ln">   413&nbsp;&nbsp;</span><span class="comment">// Finally, it&#39;s convenient if the delta between the Unix epoch and</span>
+<span id="L414" class="ln">   414&nbsp;&nbsp;</span><span class="comment">// long-ago epoch is representable by an int64 constant.</span>
+<span id="L415" class="ln">   415&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L416" class="ln">   416&nbsp;&nbsp;</span><span class="comment">// These three considerations—choose an epoch as early as possible, that</span>
+<span id="L417" class="ln">   417&nbsp;&nbsp;</span><span class="comment">// uses a year equal to 1 mod 400, and that is no more than 2⁶³ seconds</span>
+<span id="L418" class="ln">   418&nbsp;&nbsp;</span><span class="comment">// earlier than 1970—bring us to the year -292277022399. We refer to</span>
+<span id="L419" class="ln">   419&nbsp;&nbsp;</span><span class="comment">// this year as the absolute zero year, and to times measured as a uint64</span>
+<span id="L420" class="ln">   420&nbsp;&nbsp;</span><span class="comment">// seconds since this year as absolute times.</span>
+<span id="L421" class="ln">   421&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L422" class="ln">   422&nbsp;&nbsp;</span><span class="comment">// Times measured as an int64 seconds since the year 1—the representation</span>
+<span id="L423" class="ln">   423&nbsp;&nbsp;</span><span class="comment">// used for Time&#39;s sec field—are called internal times.</span>
+<span id="L424" class="ln">   424&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L425" class="ln">   425&nbsp;&nbsp;</span><span class="comment">// Times measured as an int64 seconds since the year 1970 are called Unix</span>
+<span id="L426" class="ln">   426&nbsp;&nbsp;</span><span class="comment">// times.</span>
+<span id="L427" class="ln">   427&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L428" class="ln">   428&nbsp;&nbsp;</span><span class="comment">// It is tempting to just use the year 1 as the absolute epoch, defining</span>
+<span id="L429" class="ln">   429&nbsp;&nbsp;</span><span class="comment">// that the routines are only valid for years &gt;= 1. However, the</span>
+<span id="L430" class="ln">   430&nbsp;&nbsp;</span><span class="comment">// routines would then be invalid when displaying the epoch in time zones</span>
+<span id="L431" class="ln">   431&nbsp;&nbsp;</span><span class="comment">// west of UTC, since it is year 0. It doesn&#39;t seem tenable to say that</span>
+<span id="L432" class="ln">   432&nbsp;&nbsp;</span><span class="comment">// printing the zero time correctly isn&#39;t supported in half the time</span>
+<span id="L433" class="ln">   433&nbsp;&nbsp;</span><span class="comment">// zones. By comparison, it&#39;s reasonable to mishandle some times in</span>
+<span id="L434" class="ln">   434&nbsp;&nbsp;</span><span class="comment">// the year -292277022399.</span>
+<span id="L435" class="ln">   435&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L436" class="ln">   436&nbsp;&nbsp;</span><span class="comment">// All this is opaque to clients of the API and can be changed if a</span>
+<span id="L437" class="ln">   437&nbsp;&nbsp;</span><span class="comment">// better implementation presents itself.</span>
+<span id="L438" class="ln">   438&nbsp;&nbsp;</span>
+<span id="L439" class="ln">   439&nbsp;&nbsp;</span>const (
+<span id="L440" class="ln">   440&nbsp;&nbsp;</span>	<span class="comment">// The unsigned zero year for internal calculations.</span>
+<span id="L441" class="ln">   441&nbsp;&nbsp;</span>	<span class="comment">// Must be 1 mod 400, and times before it will not compute correctly,</span>
+<span id="L442" class="ln">   442&nbsp;&nbsp;</span>	<span class="comment">// but otherwise can be changed at will.</span>
+<span id="L443" class="ln">   443&nbsp;&nbsp;</span>	absoluteZeroYear = -292277022399
+<span id="L444" class="ln">   444&nbsp;&nbsp;</span>
+<span id="L445" class="ln">   445&nbsp;&nbsp;</span>	<span class="comment">// The year of the zero Time.</span>
+<span id="L446" class="ln">   446&nbsp;&nbsp;</span>	<span class="comment">// Assumed by the unixToInternal computation below.</span>
+<span id="L447" class="ln">   447&nbsp;&nbsp;</span>	internalYear = 1
+<span id="L448" class="ln">   448&nbsp;&nbsp;</span>
+<span id="L449" class="ln">   449&nbsp;&nbsp;</span>	<span class="comment">// Offsets to convert between internal and absolute or Unix times.</span>
+<span id="L450" class="ln">   450&nbsp;&nbsp;</span>	absoluteToInternal int64 = (absoluteZeroYear - internalYear) * 365.2425 * secondsPerDay
+<span id="L451" class="ln">   451&nbsp;&nbsp;</span>	internalToAbsolute       = -absoluteToInternal
+<span id="L452" class="ln">   452&nbsp;&nbsp;</span>
+<span id="L453" class="ln">   453&nbsp;&nbsp;</span>	unixToInternal int64 = (1969*365 + 1969/4 - 1969/100 + 1969/400) * secondsPerDay
+<span id="L454" class="ln">   454&nbsp;&nbsp;</span>	internalToUnix int64 = -unixToInternal
+<span id="L455" class="ln">   455&nbsp;&nbsp;</span>
+<span id="L456" class="ln">   456&nbsp;&nbsp;</span>	wallToInternal int64 = (1884*365 + 1884/4 - 1884/100 + 1884/400) * secondsPerDay
+<span id="L457" class="ln">   457&nbsp;&nbsp;</span>)
+<span id="L458" class="ln">   458&nbsp;&nbsp;</span>
+<span id="L459" class="ln">   459&nbsp;&nbsp;</span><span class="comment">// IsZero reports whether t represents the zero time instant,</span>
+<span id="L460" class="ln">   460&nbsp;&nbsp;</span><span class="comment">// January 1, year 1, 00:00:00 UTC.</span>
+<span id="L461" class="ln">   461&nbsp;&nbsp;</span>func (t Time) IsZero() bool {
+<span id="L462" class="ln">   462&nbsp;&nbsp;</span>	return t.sec() == 0 &amp;&amp; t.nsec() == 0
+<span id="L463" class="ln">   463&nbsp;&nbsp;</span>}
+<span id="L464" class="ln">   464&nbsp;&nbsp;</span>
+<span id="L465" class="ln">   465&nbsp;&nbsp;</span><span class="comment">// abs returns the time t as an absolute time, adjusted by the zone offset.</span>
+<span id="L466" class="ln">   466&nbsp;&nbsp;</span><span class="comment">// It is called when computing a presentation property like Month or Hour.</span>
+<span id="L467" class="ln">   467&nbsp;&nbsp;</span>func (t Time) abs() uint64 {
+<span id="L468" class="ln">   468&nbsp;&nbsp;</span>	l := t.loc
+<span id="L469" class="ln">   469&nbsp;&nbsp;</span>	<span class="comment">// Avoid function calls when possible.</span>
+<span id="L470" class="ln">   470&nbsp;&nbsp;</span>	if l == nil || l == &amp;localLoc {
+<span id="L471" class="ln">   471&nbsp;&nbsp;</span>		l = l.get()
+<span id="L472" class="ln">   472&nbsp;&nbsp;</span>	}
+<span id="L473" class="ln">   473&nbsp;&nbsp;</span>	sec := t.unixSec()
+<span id="L474" class="ln">   474&nbsp;&nbsp;</span>	if l != &amp;utcLoc {
+<span id="L475" class="ln">   475&nbsp;&nbsp;</span>		if l.cacheZone != nil &amp;&amp; l.cacheStart &lt;= sec &amp;&amp; sec &lt; l.cacheEnd {
+<span id="L476" class="ln">   476&nbsp;&nbsp;</span>			sec += int64(l.cacheZone.offset)
+<span id="L477" class="ln">   477&nbsp;&nbsp;</span>		} else {
+<span id="L478" class="ln">   478&nbsp;&nbsp;</span>			_, offset, _, _, _ := l.lookup(sec)
+<span id="L479" class="ln">   479&nbsp;&nbsp;</span>			sec += int64(offset)
+<span id="L480" class="ln">   480&nbsp;&nbsp;</span>		}
+<span id="L481" class="ln">   481&nbsp;&nbsp;</span>	}
+<span id="L482" class="ln">   482&nbsp;&nbsp;</span>	return uint64(sec + (unixToInternal + internalToAbsolute))
+<span id="L483" class="ln">   483&nbsp;&nbsp;</span>}
+<span id="L484" class="ln">   484&nbsp;&nbsp;</span>
+<span id="L485" class="ln">   485&nbsp;&nbsp;</span><span class="comment">// locabs is a combination of the Zone and abs methods,</span>
+<span id="L486" class="ln">   486&nbsp;&nbsp;</span><span class="comment">// extracting both return values from a single zone lookup.</span>
+<span id="L487" class="ln">   487&nbsp;&nbsp;</span>func (t Time) locabs() (name string, offset int, abs uint64) {
+<span id="L488" class="ln">   488&nbsp;&nbsp;</span>	l := t.loc
+<span id="L489" class="ln">   489&nbsp;&nbsp;</span>	if l == nil || l == &amp;localLoc {
+<span id="L490" class="ln">   490&nbsp;&nbsp;</span>		l = l.get()
+<span id="L491" class="ln">   491&nbsp;&nbsp;</span>	}
+<span id="L492" class="ln">   492&nbsp;&nbsp;</span>	<span class="comment">// Avoid function call if we hit the local time cache.</span>
+<span id="L493" class="ln">   493&nbsp;&nbsp;</span>	sec := t.unixSec()
+<span id="L494" class="ln">   494&nbsp;&nbsp;</span>	if l != &amp;utcLoc {
+<span id="L495" class="ln">   495&nbsp;&nbsp;</span>		if l.cacheZone != nil &amp;&amp; l.cacheStart &lt;= sec &amp;&amp; sec &lt; l.cacheEnd {
+<span id="L496" class="ln">   496&nbsp;&nbsp;</span>			name = l.cacheZone.name
+<span id="L497" class="ln">   497&nbsp;&nbsp;</span>			offset = l.cacheZone.offset
+<span id="L498" class="ln">   498&nbsp;&nbsp;</span>		} else {
+<span id="L499" class="ln">   499&nbsp;&nbsp;</span>			name, offset, _, _, _ = l.lookup(sec)
+<span id="L500" class="ln">   500&nbsp;&nbsp;</span>		}
+<span id="L501" class="ln">   501&nbsp;&nbsp;</span>		sec += int64(offset)
+<span id="L502" class="ln">   502&nbsp;&nbsp;</span>	} else {
+<span id="L503" class="ln">   503&nbsp;&nbsp;</span>		name = &#34;UTC&#34;
+<span id="L504" class="ln">   504&nbsp;&nbsp;</span>	}
+<span id="L505" class="ln">   505&nbsp;&nbsp;</span>	abs = uint64(sec + (unixToInternal + internalToAbsolute))
+<span id="L506" class="ln">   506&nbsp;&nbsp;</span>	return
+<span id="L507" class="ln">   507&nbsp;&nbsp;</span>}
+<span id="L508" class="ln">   508&nbsp;&nbsp;</span>
+<span id="L509" class="ln">   509&nbsp;&nbsp;</span><span class="comment">// Date returns the year, month, and day in which t occurs.</span>
+<span id="L510" class="ln">   510&nbsp;&nbsp;</span>func (t Time) Date() (year int, month Month, day int) {
+<span id="L511" class="ln">   511&nbsp;&nbsp;</span>	year, month, day, _ = t.date(true)
+<span id="L512" class="ln">   512&nbsp;&nbsp;</span>	return
+<span id="L513" class="ln">   513&nbsp;&nbsp;</span>}
+<span id="L514" class="ln">   514&nbsp;&nbsp;</span>
+<span id="L515" class="ln">   515&nbsp;&nbsp;</span><span class="comment">// Year returns the year in which t occurs.</span>
+<span id="L516" class="ln">   516&nbsp;&nbsp;</span>func (t Time) Year() int {
+<span id="L517" class="ln">   517&nbsp;&nbsp;</span>	year, _, _, _ := t.date(false)
+<span id="L518" class="ln">   518&nbsp;&nbsp;</span>	return year
+<span id="L519" class="ln">   519&nbsp;&nbsp;</span>}
+<span id="L520" class="ln">   520&nbsp;&nbsp;</span>
+<span id="L521" class="ln">   521&nbsp;&nbsp;</span><span class="comment">// Month returns the month of the year specified by t.</span>
+<span id="L522" class="ln">   522&nbsp;&nbsp;</span>func (t Time) Month() Month {
+<span id="L523" class="ln">   523&nbsp;&nbsp;</span>	_, month, _, _ := t.date(true)
+<span id="L524" class="ln">   524&nbsp;&nbsp;</span>	return month
+<span id="L525" class="ln">   525&nbsp;&nbsp;</span>}
+<span id="L526" class="ln">   526&nbsp;&nbsp;</span>
+<span id="L527" class="ln">   527&nbsp;&nbsp;</span><span class="comment">// Day returns the day of the month specified by t.</span>
+<span id="L528" class="ln">   528&nbsp;&nbsp;</span>func (t Time) Day() int {
+<span id="L529" class="ln">   529&nbsp;&nbsp;</span>	_, _, day, _ := t.date(true)
+<span id="L530" class="ln">   530&nbsp;&nbsp;</span>	return day
+<span id="L531" class="ln">   531&nbsp;&nbsp;</span>}
+<span id="L532" class="ln">   532&nbsp;&nbsp;</span>
+<span id="L533" class="ln">   533&nbsp;&nbsp;</span><span class="comment">// Weekday returns the day of the week specified by t.</span>
+<span id="L534" class="ln">   534&nbsp;&nbsp;</span>func (t Time) Weekday() Weekday {
+<span id="L535" class="ln">   535&nbsp;&nbsp;</span>	return absWeekday(t.abs())
+<span id="L536" class="ln">   536&nbsp;&nbsp;</span>}
+<span id="L537" class="ln">   537&nbsp;&nbsp;</span>
+<span id="L538" class="ln">   538&nbsp;&nbsp;</span><span class="comment">// absWeekday is like Weekday but operates on an absolute time.</span>
+<span id="L539" class="ln">   539&nbsp;&nbsp;</span>func absWeekday(abs uint64) Weekday {
+<span id="L540" class="ln">   540&nbsp;&nbsp;</span>	<span class="comment">// January 1 of the absolute year, like January 1 of 2001, was a Monday.</span>
+<span id="L541" class="ln">   541&nbsp;&nbsp;</span>	sec := (abs + uint64(Monday)*secondsPerDay) % secondsPerWeek
+<span id="L542" class="ln">   542&nbsp;&nbsp;</span>	return Weekday(int(sec) / secondsPerDay)
+<span id="L543" class="ln">   543&nbsp;&nbsp;</span>}
+<span id="L544" class="ln">   544&nbsp;&nbsp;</span>
+<span id="L545" class="ln">   545&nbsp;&nbsp;</span><span class="comment">// ISOWeek returns the ISO 8601 year and week number in which t occurs.</span>
+<span id="L546" class="ln">   546&nbsp;&nbsp;</span><span class="comment">// Week ranges from 1 to 53. Jan 01 to Jan 03 of year n might belong to</span>
+<span id="L547" class="ln">   547&nbsp;&nbsp;</span><span class="comment">// week 52 or 53 of year n-1, and Dec 29 to Dec 31 might belong to week 1</span>
+<span id="L548" class="ln">   548&nbsp;&nbsp;</span><span class="comment">// of year n+1.</span>
+<span id="L549" class="ln">   549&nbsp;&nbsp;</span>func (t Time) ISOWeek() (year, week int) {
+<span id="L550" class="ln">   550&nbsp;&nbsp;</span>	<span class="comment">// According to the rule that the first calendar week of a calendar year is</span>
+<span id="L551" class="ln">   551&nbsp;&nbsp;</span>	<span class="comment">// the week including the first Thursday of that year, and that the last one is</span>
+<span id="L552" class="ln">   552&nbsp;&nbsp;</span>	<span class="comment">// the week immediately preceding the first calendar week of the next calendar year.</span>
+<span id="L553" class="ln">   553&nbsp;&nbsp;</span>	<span class="comment">// See https://www.iso.org/obp/ui#iso:std:iso:8601:-1:ed-1:v1:en:term:3.1.1.23 for details.</span>
+<span id="L554" class="ln">   554&nbsp;&nbsp;</span>
+<span id="L555" class="ln">   555&nbsp;&nbsp;</span>	<span class="comment">// weeks start with Monday</span>
+<span id="L556" class="ln">   556&nbsp;&nbsp;</span>	<span class="comment">// Monday Tuesday Wednesday Thursday Friday Saturday Sunday</span>
+<span id="L557" class="ln">   557&nbsp;&nbsp;</span>	<span class="comment">// 1      2       3         4        5      6        7</span>
+<span id="L558" class="ln">   558&nbsp;&nbsp;</span>	<span class="comment">// +3     +2      +1        0        -1     -2       -3</span>
+<span id="L559" class="ln">   559&nbsp;&nbsp;</span>	<span class="comment">// the offset to Thursday</span>
+<span id="L560" class="ln">   560&nbsp;&nbsp;</span>	abs := t.abs()
+<span id="L561" class="ln">   561&nbsp;&nbsp;</span>	d := Thursday - absWeekday(abs)
+<span id="L562" class="ln">   562&nbsp;&nbsp;</span>	<span class="comment">// handle Sunday</span>
+<span id="L563" class="ln">   563&nbsp;&nbsp;</span>	if d == 4 {
+<span id="L564" class="ln">   564&nbsp;&nbsp;</span>		d = -3
+<span id="L565" class="ln">   565&nbsp;&nbsp;</span>	}
+<span id="L566" class="ln">   566&nbsp;&nbsp;</span>	<span class="comment">// find the Thursday of the calendar week</span>
+<span id="L567" class="ln">   567&nbsp;&nbsp;</span>	abs += uint64(d) * secondsPerDay
+<span id="L568" class="ln">   568&nbsp;&nbsp;</span>	year, _, _, yday := absDate(abs, false)
+<span id="L569" class="ln">   569&nbsp;&nbsp;</span>	return year, yday/7 + 1
+<span id="L570" class="ln">   570&nbsp;&nbsp;</span>}
+<span id="L571" class="ln">   571&nbsp;&nbsp;</span>
+<span id="L572" class="ln">   572&nbsp;&nbsp;</span><span class="comment">// Clock returns the hour, minute, and second within the day specified by t.</span>
+<span id="L573" class="ln">   573&nbsp;&nbsp;</span>func (t Time) Clock() (hour, min, sec int) {
+<span id="L574" class="ln">   574&nbsp;&nbsp;</span>	return absClock(t.abs())
+<span id="L575" class="ln">   575&nbsp;&nbsp;</span>}
+<span id="L576" class="ln">   576&nbsp;&nbsp;</span>
+<span id="L577" class="ln">   577&nbsp;&nbsp;</span><span class="comment">// absClock is like clock but operates on an absolute time.</span>
+<span id="L578" class="ln">   578&nbsp;&nbsp;</span>func absClock(abs uint64) (hour, min, sec int) {
+<span id="L579" class="ln">   579&nbsp;&nbsp;</span>	sec = int(abs % secondsPerDay)
+<span id="L580" class="ln">   580&nbsp;&nbsp;</span>	hour = sec / secondsPerHour
+<span id="L581" class="ln">   581&nbsp;&nbsp;</span>	sec -= hour * secondsPerHour
+<span id="L582" class="ln">   582&nbsp;&nbsp;</span>	min = sec / secondsPerMinute
+<span id="L583" class="ln">   583&nbsp;&nbsp;</span>	sec -= min * secondsPerMinute
+<span id="L584" class="ln">   584&nbsp;&nbsp;</span>	return
+<span id="L585" class="ln">   585&nbsp;&nbsp;</span>}
+<span id="L586" class="ln">   586&nbsp;&nbsp;</span>
+<span id="L587" class="ln">   587&nbsp;&nbsp;</span><span class="comment">// Hour returns the hour within the day specified by t, in the range [0, 23].</span>
+<span id="L588" class="ln">   588&nbsp;&nbsp;</span>func (t Time) Hour() int {
+<span id="L589" class="ln">   589&nbsp;&nbsp;</span>	return int(t.abs()%secondsPerDay) / secondsPerHour
+<span id="L590" class="ln">   590&nbsp;&nbsp;</span>}
+<span id="L591" class="ln">   591&nbsp;&nbsp;</span>
+<span id="L592" class="ln">   592&nbsp;&nbsp;</span><span class="comment">// Minute returns the minute offset within the hour specified by t, in the range [0, 59].</span>
+<span id="L593" class="ln">   593&nbsp;&nbsp;</span>func (t Time) Minute() int {
+<span id="L594" class="ln">   594&nbsp;&nbsp;</span>	return int(t.abs()%secondsPerHour) / secondsPerMinute
+<span id="L595" class="ln">   595&nbsp;&nbsp;</span>}
+<span id="L596" class="ln">   596&nbsp;&nbsp;</span>
+<span id="L597" class="ln">   597&nbsp;&nbsp;</span><span class="comment">// Second returns the second offset within the minute specified by t, in the range [0, 59].</span>
+<span id="L598" class="ln">   598&nbsp;&nbsp;</span>func (t Time) Second() int {
+<span id="L599" class="ln">   599&nbsp;&nbsp;</span>	return int(t.abs() % secondsPerMinute)
+<span id="L600" class="ln">   600&nbsp;&nbsp;</span>}
+<span id="L601" class="ln">   601&nbsp;&nbsp;</span>
+<span id="L602" class="ln">   602&nbsp;&nbsp;</span><span class="comment">// Nanosecond returns the nanosecond offset within the second specified by t,</span>
+<span id="L603" class="ln">   603&nbsp;&nbsp;</span><span class="comment">// in the range [0, 999999999].</span>
+<span id="L604" class="ln">   604&nbsp;&nbsp;</span>func (t Time) Nanosecond() int {
+<span id="L605" class="ln">   605&nbsp;&nbsp;</span>	return int(t.nsec())
+<span id="L606" class="ln">   606&nbsp;&nbsp;</span>}
+<span id="L607" class="ln">   607&nbsp;&nbsp;</span>
+<span id="L608" class="ln">   608&nbsp;&nbsp;</span><span class="comment">// YearDay returns the day of the year specified by t, in the range [1,365] for non-leap years,</span>
+<span id="L609" class="ln">   609&nbsp;&nbsp;</span><span class="comment">// and [1,366] in leap years.</span>
+<span id="L610" class="ln">   610&nbsp;&nbsp;</span>func (t Time) YearDay() int {
+<span id="L611" class="ln">   611&nbsp;&nbsp;</span>	_, _, _, yday := t.date(false)
+<span id="L612" class="ln">   612&nbsp;&nbsp;</span>	return yday + 1
+<span id="L613" class="ln">   613&nbsp;&nbsp;</span>}
+<span id="L614" class="ln">   614&nbsp;&nbsp;</span>
+<span id="L615" class="ln">   615&nbsp;&nbsp;</span><span class="comment">// A Duration represents the elapsed time between two instants</span>
+<span id="L616" class="ln">   616&nbsp;&nbsp;</span><span class="comment">// as an int64 nanosecond count. The representation limits the</span>
+<span id="L617" class="ln">   617&nbsp;&nbsp;</span><span class="comment">// largest representable duration to approximately 290 years.</span>
+<span id="L618" class="ln">   618&nbsp;&nbsp;</span>type Duration int64
+<span id="L619" class="ln">   619&nbsp;&nbsp;</span>
+<span id="L620" class="ln">   620&nbsp;&nbsp;</span>const (
+<span id="L621" class="ln">   621&nbsp;&nbsp;</span>	minDuration Duration = -1 &lt;&lt; 63
+<span id="L622" class="ln">   622&nbsp;&nbsp;</span>	maxDuration Duration = 1&lt;&lt;63 - 1
+<span id="L623" class="ln">   623&nbsp;&nbsp;</span>)
+<span id="L624" class="ln">   624&nbsp;&nbsp;</span>
+<span id="L625" class="ln">   625&nbsp;&nbsp;</span><span class="comment">// Common durations. There is no definition for units of Day or larger</span>
+<span id="L626" class="ln">   626&nbsp;&nbsp;</span><span class="comment">// to avoid confusion across daylight savings time zone transitions.</span>
+<span id="L627" class="ln">   627&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L628" class="ln">   628&nbsp;&nbsp;</span><span class="comment">// To count the number of units in a Duration, divide:</span>
+<span id="L629" class="ln">   629&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L630" class="ln">   630&nbsp;&nbsp;</span><span class="comment">//	second := time.Second</span>
+<span id="L631" class="ln">   631&nbsp;&nbsp;</span><span class="comment">//	fmt.Print(int64(second/time.Millisecond)) // prints 1000</span>
+<span id="L632" class="ln">   632&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L633" class="ln">   633&nbsp;&nbsp;</span><span class="comment">// To convert an integer number of units to a Duration, multiply:</span>
+<span id="L634" class="ln">   634&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L635" class="ln">   635&nbsp;&nbsp;</span><span class="comment">//	seconds := 10</span>
+<span id="L636" class="ln">   636&nbsp;&nbsp;</span><span class="comment">//	fmt.Print(time.Duration(seconds)*time.Second) // prints 10s</span>
+<span id="L637" class="ln">   637&nbsp;&nbsp;</span>const (
+<span id="L638" class="ln">   638&nbsp;&nbsp;</span>	Nanosecond  Duration = 1
+<span id="L639" class="ln">   639&nbsp;&nbsp;</span>	Microsecond          = 1000 * Nanosecond
+<span id="L640" class="ln">   640&nbsp;&nbsp;</span>	Millisecond          = 1000 * Microsecond
+<span id="L641" class="ln">   641&nbsp;&nbsp;</span>	Second               = 1000 * Millisecond
+<span id="L642" class="ln">   642&nbsp;&nbsp;</span>	Minute               = 60 * Second
+<span id="L643" class="ln">   643&nbsp;&nbsp;</span>	Hour                 = 60 * Minute
+<span id="L644" class="ln">   644&nbsp;&nbsp;</span>)
+<span id="L645" class="ln">   645&nbsp;&nbsp;</span>
+<span id="L646" class="ln">   646&nbsp;&nbsp;</span><span class="comment">// String returns a string representing the duration in the form &#34;72h3m0.5s&#34;.</span>
+<span id="L647" class="ln">   647&nbsp;&nbsp;</span><span class="comment">// Leading zero units are omitted. As a special case, durations less than one</span>
+<span id="L648" class="ln">   648&nbsp;&nbsp;</span><span class="comment">// second format use a smaller unit (milli-, micro-, or nanoseconds) to ensure</span>
+<span id="L649" class="ln">   649&nbsp;&nbsp;</span><span class="comment">// that the leading digit is non-zero. The zero duration formats as 0s.</span>
+<span id="L650" class="ln">   650&nbsp;&nbsp;</span>func (d Duration) String() string {
+<span id="L651" class="ln">   651&nbsp;&nbsp;</span>	<span class="comment">// This is inlinable to take advantage of &#34;function outlining&#34;.</span>
+<span id="L652" class="ln">   652&nbsp;&nbsp;</span>	<span class="comment">// Thus, the caller can decide whether a string must be heap allocated.</span>
+<span id="L653" class="ln">   653&nbsp;&nbsp;</span>	var arr [32]byte
+<span id="L654" class="ln">   654&nbsp;&nbsp;</span>	n := d.format(&amp;arr)
+<span id="L655" class="ln">   655&nbsp;&nbsp;</span>	return string(arr[n:])
+<span id="L656" class="ln">   656&nbsp;&nbsp;</span>}
+<span id="L657" class="ln">   657&nbsp;&nbsp;</span>
+<span id="L658" class="ln">   658&nbsp;&nbsp;</span><span class="comment">// format formats the representation of d into the end of buf and</span>
+<span id="L659" class="ln">   659&nbsp;&nbsp;</span><span class="comment">// returns the offset of the first character.</span>
+<span id="L660" class="ln">   660&nbsp;&nbsp;</span>func (d Duration) format(buf *[32]byte) int {
+<span id="L661" class="ln">   661&nbsp;&nbsp;</span>	<span class="comment">// Largest time is 2540400h10m10.000000000s</span>
+<span id="L662" class="ln">   662&nbsp;&nbsp;</span>	w := len(buf)
+<span id="L663" class="ln">   663&nbsp;&nbsp;</span>
+<span id="L664" class="ln">   664&nbsp;&nbsp;</span>	u := uint64(d)
+<span id="L665" class="ln">   665&nbsp;&nbsp;</span>	neg := d &lt; 0
+<span id="L666" class="ln">   666&nbsp;&nbsp;</span>	if neg {
+<span id="L667" class="ln">   667&nbsp;&nbsp;</span>		u = -u
+<span id="L668" class="ln">   668&nbsp;&nbsp;</span>	}
+<span id="L669" class="ln">   669&nbsp;&nbsp;</span>
+<span id="L670" class="ln">   670&nbsp;&nbsp;</span>	if u &lt; uint64(Second) {
+<span id="L671" class="ln">   671&nbsp;&nbsp;</span>		<span class="comment">// Special case: if duration is smaller than a second,</span>
+<span id="L672" class="ln">   672&nbsp;&nbsp;</span>		<span class="comment">// use smaller units, like 1.2ms</span>
+<span id="L673" class="ln">   673&nbsp;&nbsp;</span>		var prec int
+<span id="L674" class="ln">   674&nbsp;&nbsp;</span>		w--
+<span id="L675" class="ln">   675&nbsp;&nbsp;</span>		buf[w] = &#39;s&#39;
+<span id="L676" class="ln">   676&nbsp;&nbsp;</span>		w--
+<span id="L677" class="ln">   677&nbsp;&nbsp;</span>		switch {
+<span id="L678" class="ln">   678&nbsp;&nbsp;</span>		case u == 0:
+<span id="L679" class="ln">   679&nbsp;&nbsp;</span>			buf[w] = &#39;0&#39;
+<span id="L680" class="ln">   680&nbsp;&nbsp;</span>			return w
+<span id="L681" class="ln">   681&nbsp;&nbsp;</span>		case u &lt; uint64(Microsecond):
+<span id="L682" class="ln">   682&nbsp;&nbsp;</span>			<span class="comment">// print nanoseconds</span>
+<span id="L683" class="ln">   683&nbsp;&nbsp;</span>			prec = 0
+<span id="L684" class="ln">   684&nbsp;&nbsp;</span>			buf[w] = &#39;n&#39;
+<span id="L685" class="ln">   685&nbsp;&nbsp;</span>		case u &lt; uint64(Millisecond):
+<span id="L686" class="ln">   686&nbsp;&nbsp;</span>			<span class="comment">// print microseconds</span>
+<span id="L687" class="ln">   687&nbsp;&nbsp;</span>			prec = 3
+<span id="L688" class="ln">   688&nbsp;&nbsp;</span>			<span class="comment">// U+00B5 &#39;µ&#39; micro sign == 0xC2 0xB5</span>
+<span id="L689" class="ln">   689&nbsp;&nbsp;</span>			w-- <span class="comment">// Need room for two bytes.</span>
+<span id="L690" class="ln">   690&nbsp;&nbsp;</span>			copy(buf[w:], &#34;µ&#34;)
+<span id="L691" class="ln">   691&nbsp;&nbsp;</span>		default:
+<span id="L692" class="ln">   692&nbsp;&nbsp;</span>			<span class="comment">// print milliseconds</span>
+<span id="L693" class="ln">   693&nbsp;&nbsp;</span>			prec = 6
+<span id="L694" class="ln">   694&nbsp;&nbsp;</span>			buf[w] = &#39;m&#39;
+<span id="L695" class="ln">   695&nbsp;&nbsp;</span>		}
+<span id="L696" class="ln">   696&nbsp;&nbsp;</span>		w, u = fmtFrac(buf[:w], u, prec)
+<span id="L697" class="ln">   697&nbsp;&nbsp;</span>		w = fmtInt(buf[:w], u)
+<span id="L698" class="ln">   698&nbsp;&nbsp;</span>	} else {
+<span id="L699" class="ln">   699&nbsp;&nbsp;</span>		w--
+<span id="L700" class="ln">   700&nbsp;&nbsp;</span>		buf[w] = &#39;s&#39;
+<span id="L701" class="ln">   701&nbsp;&nbsp;</span>
+<span id="L702" class="ln">   702&nbsp;&nbsp;</span>		w, u = fmtFrac(buf[:w], u, 9)
+<span id="L703" class="ln">   703&nbsp;&nbsp;</span>
+<span id="L704" class="ln">   704&nbsp;&nbsp;</span>		<span class="comment">// u is now integer seconds</span>
+<span id="L705" class="ln">   705&nbsp;&nbsp;</span>		w = fmtInt(buf[:w], u%60)
+<span id="L706" class="ln">   706&nbsp;&nbsp;</span>		u /= 60
+<span id="L707" class="ln">   707&nbsp;&nbsp;</span>
+<span id="L708" class="ln">   708&nbsp;&nbsp;</span>		<span class="comment">// u is now integer minutes</span>
+<span id="L709" class="ln">   709&nbsp;&nbsp;</span>		if u &gt; 0 {
+<span id="L710" class="ln">   710&nbsp;&nbsp;</span>			w--
+<span id="L711" class="ln">   711&nbsp;&nbsp;</span>			buf[w] = &#39;m&#39;
+<span id="L712" class="ln">   712&nbsp;&nbsp;</span>			w = fmtInt(buf[:w], u%60)
+<span id="L713" class="ln">   713&nbsp;&nbsp;</span>			u /= 60
+<span id="L714" class="ln">   714&nbsp;&nbsp;</span>
+<span id="L715" class="ln">   715&nbsp;&nbsp;</span>			<span class="comment">// u is now integer hours</span>
+<span id="L716" class="ln">   716&nbsp;&nbsp;</span>			<span class="comment">// Stop at hours because days can be different lengths.</span>
+<span id="L717" class="ln">   717&nbsp;&nbsp;</span>			if u &gt; 0 {
+<span id="L718" class="ln">   718&nbsp;&nbsp;</span>				w--
+<span id="L719" class="ln">   719&nbsp;&nbsp;</span>				buf[w] = &#39;h&#39;
+<span id="L720" class="ln">   720&nbsp;&nbsp;</span>				w = fmtInt(buf[:w], u)
+<span id="L721" class="ln">   721&nbsp;&nbsp;</span>			}
+<span id="L722" class="ln">   722&nbsp;&nbsp;</span>		}
+<span id="L723" class="ln">   723&nbsp;&nbsp;</span>	}
+<span id="L724" class="ln">   724&nbsp;&nbsp;</span>
+<span id="L725" class="ln">   725&nbsp;&nbsp;</span>	if neg {
+<span id="L726" class="ln">   726&nbsp;&nbsp;</span>		w--
+<span id="L727" class="ln">   727&nbsp;&nbsp;</span>		buf[w] = &#39;-&#39;
+<span id="L728" class="ln">   728&nbsp;&nbsp;</span>	}
+<span id="L729" class="ln">   729&nbsp;&nbsp;</span>
+<span id="L730" class="ln">   730&nbsp;&nbsp;</span>	return w
+<span id="L731" class="ln">   731&nbsp;&nbsp;</span>}
+<span id="L732" class="ln">   732&nbsp;&nbsp;</span>
+<span id="L733" class="ln">   733&nbsp;&nbsp;</span><span class="comment">// fmtFrac formats the fraction of v/10**prec (e.g., &#34;.12345&#34;) into the</span>
+<span id="L734" class="ln">   734&nbsp;&nbsp;</span><span class="comment">// tail of buf, omitting trailing zeros. It omits the decimal</span>
+<span id="L735" class="ln">   735&nbsp;&nbsp;</span><span class="comment">// point too when the fraction is 0. It returns the index where the</span>
+<span id="L736" class="ln">   736&nbsp;&nbsp;</span><span class="comment">// output bytes begin and the value v/10**prec.</span>
+<span id="L737" class="ln">   737&nbsp;&nbsp;</span>func fmtFrac(buf []byte, v uint64, prec int) (nw int, nv uint64) {
+<span id="L738" class="ln">   738&nbsp;&nbsp;</span>	<span class="comment">// Omit trailing zeros up to and including decimal point.</span>
+<span id="L739" class="ln">   739&nbsp;&nbsp;</span>	w := len(buf)
+<span id="L740" class="ln">   740&nbsp;&nbsp;</span>	print := false
+<span id="L741" class="ln">   741&nbsp;&nbsp;</span>	for i := 0; i &lt; prec; i++ {
+<span id="L742" class="ln">   742&nbsp;&nbsp;</span>		digit := v % 10
+<span id="L743" class="ln">   743&nbsp;&nbsp;</span>		print = print || digit != 0
+<span id="L744" class="ln">   744&nbsp;&nbsp;</span>		if print {
+<span id="L745" class="ln">   745&nbsp;&nbsp;</span>			w--
+<span id="L746" class="ln">   746&nbsp;&nbsp;</span>			buf[w] = byte(digit) + &#39;0&#39;
+<span id="L747" class="ln">   747&nbsp;&nbsp;</span>		}
+<span id="L748" class="ln">   748&nbsp;&nbsp;</span>		v /= 10
+<span id="L749" class="ln">   749&nbsp;&nbsp;</span>	}
+<span id="L750" class="ln">   750&nbsp;&nbsp;</span>	if print {
+<span id="L751" class="ln">   751&nbsp;&nbsp;</span>		w--
+<span id="L752" class="ln">   752&nbsp;&nbsp;</span>		buf[w] = &#39;.&#39;
+<span id="L753" class="ln">   753&nbsp;&nbsp;</span>	}
+<span id="L754" class="ln">   754&nbsp;&nbsp;</span>	return w, v
+<span id="L755" class="ln">   755&nbsp;&nbsp;</span>}
+<span id="L756" class="ln">   756&nbsp;&nbsp;</span>
+<span id="L757" class="ln">   757&nbsp;&nbsp;</span><span class="comment">// fmtInt formats v into the tail of buf.</span>
+<span id="L758" class="ln">   758&nbsp;&nbsp;</span><span class="comment">// It returns the index where the output begins.</span>
+<span id="L759" class="ln">   759&nbsp;&nbsp;</span>func fmtInt(buf []byte, v uint64) int {
+<span id="L760" class="ln">   760&nbsp;&nbsp;</span>	w := len(buf)
+<span id="L761" class="ln">   761&nbsp;&nbsp;</span>	if v == 0 {
+<span id="L762" class="ln">   762&nbsp;&nbsp;</span>		w--
+<span id="L763" class="ln">   763&nbsp;&nbsp;</span>		buf[w] = &#39;0&#39;
+<span id="L764" class="ln">   764&nbsp;&nbsp;</span>	} else {
+<span id="L765" class="ln">   765&nbsp;&nbsp;</span>		for v &gt; 0 {
+<span id="L766" class="ln">   766&nbsp;&nbsp;</span>			w--
+<span id="L767" class="ln">   767&nbsp;&nbsp;</span>			buf[w] = byte(v%10) + &#39;0&#39;
+<span id="L768" class="ln">   768&nbsp;&nbsp;</span>			v /= 10
+<span id="L769" class="ln">   769&nbsp;&nbsp;</span>		}
+<span id="L770" class="ln">   770&nbsp;&nbsp;</span>	}
+<span id="L771" class="ln">   771&nbsp;&nbsp;</span>	return w
+<span id="L772" class="ln">   772&nbsp;&nbsp;</span>}
+<span id="L773" class="ln">   773&nbsp;&nbsp;</span>
+<span id="L774" class="ln">   774&nbsp;&nbsp;</span><span class="comment">// Nanoseconds returns the duration as an integer nanosecond count.</span>
+<span id="L775" class="ln">   775&nbsp;&nbsp;</span>func (d Duration) Nanoseconds() int64 { return int64(d) }
+<span id="L776" class="ln">   776&nbsp;&nbsp;</span>
+<span id="L777" class="ln">   777&nbsp;&nbsp;</span><span class="comment">// Microseconds returns the duration as an integer microsecond count.</span>
+<span id="L778" class="ln">   778&nbsp;&nbsp;</span>func (d Duration) Microseconds() int64 { return int64(d) / 1e3 }
+<span id="L779" class="ln">   779&nbsp;&nbsp;</span>
+<span id="L780" class="ln">   780&nbsp;&nbsp;</span><span class="comment">// Milliseconds returns the duration as an integer millisecond count.</span>
+<span id="L781" class="ln">   781&nbsp;&nbsp;</span>func (d Duration) Milliseconds() int64 { return int64(d) / 1e6 }
+<span id="L782" class="ln">   782&nbsp;&nbsp;</span>
+<span id="L783" class="ln">   783&nbsp;&nbsp;</span><span class="comment">// These methods return float64 because the dominant</span>
+<span id="L784" class="ln">   784&nbsp;&nbsp;</span><span class="comment">// use case is for printing a floating point number like 1.5s, and</span>
+<span id="L785" class="ln">   785&nbsp;&nbsp;</span><span class="comment">// a truncation to integer would make them not useful in those cases.</span>
+<span id="L786" class="ln">   786&nbsp;&nbsp;</span><span class="comment">// Splitting the integer and fraction ourselves guarantees that</span>
+<span id="L787" class="ln">   787&nbsp;&nbsp;</span><span class="comment">// converting the returned float64 to an integer rounds the same</span>
+<span id="L788" class="ln">   788&nbsp;&nbsp;</span><span class="comment">// way that a pure integer conversion would have, even in cases</span>
+<span id="L789" class="ln">   789&nbsp;&nbsp;</span><span class="comment">// where, say, float64(d.Nanoseconds())/1e9 would have rounded</span>
+<span id="L790" class="ln">   790&nbsp;&nbsp;</span><span class="comment">// differently.</span>
+<span id="L791" class="ln">   791&nbsp;&nbsp;</span>
+<span id="L792" class="ln">   792&nbsp;&nbsp;</span><span class="comment">// Seconds returns the duration as a floating point number of seconds.</span>
+<span id="L793" class="ln">   793&nbsp;&nbsp;</span>func (d Duration) Seconds() float64 {
+<span id="L794" class="ln">   794&nbsp;&nbsp;</span>	sec := d / Second
+<span id="L795" class="ln">   795&nbsp;&nbsp;</span>	nsec := d % Second
+<span id="L796" class="ln">   796&nbsp;&nbsp;</span>	return float64(sec) + float64(nsec)/1e9
+<span id="L797" class="ln">   797&nbsp;&nbsp;</span>}
+<span id="L798" class="ln">   798&nbsp;&nbsp;</span>
+<span id="L799" class="ln">   799&nbsp;&nbsp;</span><span class="comment">// Minutes returns the duration as a floating point number of minutes.</span>
+<span id="L800" class="ln">   800&nbsp;&nbsp;</span>func (d Duration) Minutes() float64 {
+<span id="L801" class="ln">   801&nbsp;&nbsp;</span>	min := d / Minute
+<span id="L802" class="ln">   802&nbsp;&nbsp;</span>	nsec := d % Minute
+<span id="L803" class="ln">   803&nbsp;&nbsp;</span>	return float64(min) + float64(nsec)/(60*1e9)
+<span id="L804" class="ln">   804&nbsp;&nbsp;</span>}
+<span id="L805" class="ln">   805&nbsp;&nbsp;</span>
+<span id="L806" class="ln">   806&nbsp;&nbsp;</span><span class="comment">// Hours returns the duration as a floating point number of hours.</span>
+<span id="L807" class="ln">   807&nbsp;&nbsp;</span>func (d Duration) Hours() float64 {
+<span id="L808" class="ln">   808&nbsp;&nbsp;</span>	hour := d / Hour
+<span id="L809" class="ln">   809&nbsp;&nbsp;</span>	nsec := d % Hour
+<span id="L810" class="ln">   810&nbsp;&nbsp;</span>	return float64(hour) + float64(nsec)/(60*60*1e9)
+<span id="L811" class="ln">   811&nbsp;&nbsp;</span>}
+<span id="L812" class="ln">   812&nbsp;&nbsp;</span>
+<span id="L813" class="ln">   813&nbsp;&nbsp;</span><span class="comment">// Truncate returns the result of rounding d toward zero to a multiple of m.</span>
+<span id="L814" class="ln">   814&nbsp;&nbsp;</span><span class="comment">// If m &lt;= 0, Truncate returns d unchanged.</span>
+<span id="L815" class="ln">   815&nbsp;&nbsp;</span><span class="selection">func (d Duration) Truncate(m Duration) Duration</span> {
+<span id="L816" class="ln">   816&nbsp;&nbsp;</span>	if m &lt;= 0 {
+<span id="L817" class="ln">   817&nbsp;&nbsp;</span>		return d
+<span id="L818" class="ln">   818&nbsp;&nbsp;</span>	}
+<span id="L819" class="ln">   819&nbsp;&nbsp;</span>	return d - d%m
+<span id="L820" class="ln">   820&nbsp;&nbsp;</span>}
+<span id="L821" class="ln">   821&nbsp;&nbsp;</span>
+<span id="L822" class="ln">   822&nbsp;&nbsp;</span><span class="comment">// lessThanHalf reports whether x+x &lt; y but avoids overflow,</span>
+<span id="L823" class="ln">   823&nbsp;&nbsp;</span><span class="comment">// assuming x and y are both positive (Duration is signed).</span>
+<span id="L824" class="ln">   824&nbsp;&nbsp;</span>func lessThanHalf(x, y Duration) bool {
+<span id="L825" class="ln">   825&nbsp;&nbsp;</span>	return uint64(x)+uint64(x) &lt; uint64(y)
+<span id="L826" class="ln">   826&nbsp;&nbsp;</span>}
+<span id="L827" class="ln">   827&nbsp;&nbsp;</span>
+<span id="L828" class="ln">   828&nbsp;&nbsp;</span><span class="comment">// Round returns the result of rounding d to the nearest multiple of m.</span>
+<span id="L829" class="ln">   829&nbsp;&nbsp;</span><span class="comment">// The rounding behavior for halfway values is to round away from zero.</span>
+<span id="L830" class="ln">   830&nbsp;&nbsp;</span><span class="comment">// If the result exceeds the maximum (or minimum)</span>
+<span id="L831" class="ln">   831&nbsp;&nbsp;</span><span class="comment">// value that can be stored in a Duration,</span>
+<span id="L832" class="ln">   832&nbsp;&nbsp;</span><span class="comment">// Round returns the maximum (or minimum) duration.</span>
+<span id="L833" class="ln">   833&nbsp;&nbsp;</span><span class="comment">// If m &lt;= 0, Round returns d unchanged.</span>
+<span id="L834" class="ln">   834&nbsp;&nbsp;</span>func (d Duration) Round(m Duration) Duration {
+<span id="L835" class="ln">   835&nbsp;&nbsp;</span>	if m &lt;= 0 {
+<span id="L836" class="ln">   836&nbsp;&nbsp;</span>		return d
+<span id="L837" class="ln">   837&nbsp;&nbsp;</span>	}
+<span id="L838" class="ln">   838&nbsp;&nbsp;</span>	r := d % m
+<span id="L839" class="ln">   839&nbsp;&nbsp;</span>	if d &lt; 0 {
+<span id="L840" class="ln">   840&nbsp;&nbsp;</span>		r = -r
+<span id="L841" class="ln">   841&nbsp;&nbsp;</span>		if lessThanHalf(r, m) {
+<span id="L842" class="ln">   842&nbsp;&nbsp;</span>			return d + r
+<span id="L843" class="ln">   843&nbsp;&nbsp;</span>		}
+<span id="L844" class="ln">   844&nbsp;&nbsp;</span>		if d1 := d - m + r; d1 &lt; d {
+<span id="L845" class="ln">   845&nbsp;&nbsp;</span>			return d1
+<span id="L846" class="ln">   846&nbsp;&nbsp;</span>		}
+<span id="L847" class="ln">   847&nbsp;&nbsp;</span>		return minDuration <span class="comment">// overflow</span>
+<span id="L848" class="ln">   848&nbsp;&nbsp;</span>	}
+<span id="L849" class="ln">   849&nbsp;&nbsp;</span>	if lessThanHalf(r, m) {
+<span id="L850" class="ln">   850&nbsp;&nbsp;</span>		return d - r
+<span id="L851" class="ln">   851&nbsp;&nbsp;</span>	}
+<span id="L852" class="ln">   852&nbsp;&nbsp;</span>	if d1 := d + m - r; d1 &gt; d {
+<span id="L853" class="ln">   853&nbsp;&nbsp;</span>		return d1
+<span id="L854" class="ln">   854&nbsp;&nbsp;</span>	}
+<span id="L855" class="ln">   855&nbsp;&nbsp;</span>	return maxDuration <span class="comment">// overflow</span>
+<span id="L856" class="ln">   856&nbsp;&nbsp;</span>}
+<span id="L857" class="ln">   857&nbsp;&nbsp;</span>
+<span id="L858" class="ln">   858&nbsp;&nbsp;</span><span class="comment">// Abs returns the absolute value of d.</span>
+<span id="L859" class="ln">   859&nbsp;&nbsp;</span><span class="comment">// As a special case, math.MinInt64 is converted to math.MaxInt64.</span>
+<span id="L860" class="ln">   860&nbsp;&nbsp;</span>func (d Duration) Abs() Duration {
+<span id="L861" class="ln">   861&nbsp;&nbsp;</span>	switch {
+<span id="L862" class="ln">   862&nbsp;&nbsp;</span>	case d &gt;= 0:
+<span id="L863" class="ln">   863&nbsp;&nbsp;</span>		return d
+<span id="L864" class="ln">   864&nbsp;&nbsp;</span>	case d == minDuration:
+<span id="L865" class="ln">   865&nbsp;&nbsp;</span>		return maxDuration
+<span id="L866" class="ln">   866&nbsp;&nbsp;</span>	default:
+<span id="L867" class="ln">   867&nbsp;&nbsp;</span>		return -d
+<span id="L868" class="ln">   868&nbsp;&nbsp;</span>	}
+<span id="L869" class="ln">   869&nbsp;&nbsp;</span>}
+<span id="L870" class="ln">   870&nbsp;&nbsp;</span>
+<span id="L871" class="ln">   871&nbsp;&nbsp;</span><span class="comment">// Add returns the time t+d.</span>
+<span id="L872" class="ln">   872&nbsp;&nbsp;</span>func (t Time) Add(d Duration) Time {
+<span id="L873" class="ln">   873&nbsp;&nbsp;</span>	dsec := int64(d / 1e9)
+<span id="L874" class="ln">   874&nbsp;&nbsp;</span>	nsec := t.nsec() + int32(d%1e9)
+<span id="L875" class="ln">   875&nbsp;&nbsp;</span>	if nsec &gt;= 1e9 {
+<span id="L876" class="ln">   876&nbsp;&nbsp;</span>		dsec++
+<span id="L877" class="ln">   877&nbsp;&nbsp;</span>		nsec -= 1e9
+<span id="L878" class="ln">   878&nbsp;&nbsp;</span>	} else if nsec &lt; 0 {
+<span id="L879" class="ln">   879&nbsp;&nbsp;</span>		dsec--
+<span id="L880" class="ln">   880&nbsp;&nbsp;</span>		nsec += 1e9
+<span id="L881" class="ln">   881&nbsp;&nbsp;</span>	}
+<span id="L882" class="ln">   882&nbsp;&nbsp;</span>	t.wall = t.wall&amp;^nsecMask | uint64(nsec) <span class="comment">// update nsec</span>
+<span id="L883" class="ln">   883&nbsp;&nbsp;</span>	t.addSec(dsec)
+<span id="L884" class="ln">   884&nbsp;&nbsp;</span>	if t.wall&amp;hasMonotonic != 0 {
+<span id="L885" class="ln">   885&nbsp;&nbsp;</span>		te := t.ext + int64(d)
+<span id="L886" class="ln">   886&nbsp;&nbsp;</span>		if d &lt; 0 &amp;&amp; te &gt; t.ext || d &gt; 0 &amp;&amp; te &lt; t.ext {
+<span id="L887" class="ln">   887&nbsp;&nbsp;</span>			<span class="comment">// Monotonic clock reading now out of range; degrade to wall-only.</span>
+<span id="L888" class="ln">   888&nbsp;&nbsp;</span>			t.stripMono()
+<span id="L889" class="ln">   889&nbsp;&nbsp;</span>		} else {
+<span id="L890" class="ln">   890&nbsp;&nbsp;</span>			t.ext = te
+<span id="L891" class="ln">   891&nbsp;&nbsp;</span>		}
+<span id="L892" class="ln">   892&nbsp;&nbsp;</span>	}
+<span id="L893" class="ln">   893&nbsp;&nbsp;</span>	return t
+<span id="L894" class="ln">   894&nbsp;&nbsp;</span>}
+<span id="L895" class="ln">   895&nbsp;&nbsp;</span>
+<span id="L896" class="ln">   896&nbsp;&nbsp;</span><span class="comment">// Sub returns the duration t-u. If the result exceeds the maximum (or minimum)</span>
+<span id="L897" class="ln">   897&nbsp;&nbsp;</span><span class="comment">// value that can be stored in a Duration, the maximum (or minimum) duration</span>
+<span id="L898" class="ln">   898&nbsp;&nbsp;</span><span class="comment">// will be returned.</span>
+<span id="L899" class="ln">   899&nbsp;&nbsp;</span><span class="comment">// To compute t-d for a duration d, use t.Add(-d).</span>
+<span id="L900" class="ln">   900&nbsp;&nbsp;</span>func (t Time) Sub(u Time) Duration {
+<span id="L901" class="ln">   901&nbsp;&nbsp;</span>	if t.wall&amp;u.wall&amp;hasMonotonic != 0 {
+<span id="L902" class="ln">   902&nbsp;&nbsp;</span>		return subMono(t.ext, u.ext)
+<span id="L903" class="ln">   903&nbsp;&nbsp;</span>	}
+<span id="L904" class="ln">   904&nbsp;&nbsp;</span>	d := Duration(t.sec()-u.sec())*Second + Duration(t.nsec()-u.nsec())
+<span id="L905" class="ln">   905&nbsp;&nbsp;</span>	<span class="comment">// Check for overflow or underflow.</span>
+<span id="L906" class="ln">   906&nbsp;&nbsp;</span>	switch {
+<span id="L907" class="ln">   907&nbsp;&nbsp;</span>	case u.Add(d).Equal(t):
+<span id="L908" class="ln">   908&nbsp;&nbsp;</span>		return d <span class="comment">// d is correct</span>
+<span id="L909" class="ln">   909&nbsp;&nbsp;</span>	case t.Before(u):
+<span id="L910" class="ln">   910&nbsp;&nbsp;</span>		return minDuration <span class="comment">// t - u is negative out of range</span>
+<span id="L911" class="ln">   911&nbsp;&nbsp;</span>	default:
+<span id="L912" class="ln">   912&nbsp;&nbsp;</span>		return maxDuration <span class="comment">// t - u is positive out of range</span>
+<span id="L913" class="ln">   913&nbsp;&nbsp;</span>	}
+<span id="L914" class="ln">   914&nbsp;&nbsp;</span>}
+<span id="L915" class="ln">   915&nbsp;&nbsp;</span>
+<span id="L916" class="ln">   916&nbsp;&nbsp;</span>func subMono(t, u int64) Duration {
+<span id="L917" class="ln">   917&nbsp;&nbsp;</span>	d := Duration(t - u)
+<span id="L918" class="ln">   918&nbsp;&nbsp;</span>	if d &lt; 0 &amp;&amp; t &gt; u {
+<span id="L919" class="ln">   919&nbsp;&nbsp;</span>		return maxDuration <span class="comment">// t - u is positive out of range</span>
+<span id="L920" class="ln">   920&nbsp;&nbsp;</span>	}
+<span id="L921" class="ln">   921&nbsp;&nbsp;</span>	if d &gt; 0 &amp;&amp; t &lt; u {
+<span id="L922" class="ln">   922&nbsp;&nbsp;</span>		return minDuration <span class="comment">// t - u is negative out of range</span>
+<span id="L923" class="ln">   923&nbsp;&nbsp;</span>	}
+<span id="L924" class="ln">   924&nbsp;&nbsp;</span>	return d
+<span id="L925" class="ln">   925&nbsp;&nbsp;</span>}
+<span id="L926" class="ln">   926&nbsp;&nbsp;</span>
+<span id="L927" class="ln">   927&nbsp;&nbsp;</span><span class="comment">// Since returns the time elapsed since t.</span>
+<span id="L928" class="ln">   928&nbsp;&nbsp;</span><span class="comment">// It is shorthand for time.Now().Sub(t).</span>
+<span id="L929" class="ln">   929&nbsp;&nbsp;</span>func Since(t Time) Duration {
+<span id="L930" class="ln">   930&nbsp;&nbsp;</span>	if t.wall&amp;hasMonotonic != 0 {
+<span id="L931" class="ln">   931&nbsp;&nbsp;</span>		<span class="comment">// Common case optimization: if t has monotonic time, then Sub will use only it.</span>
+<span id="L932" class="ln">   932&nbsp;&nbsp;</span>		return subMono(runtimeNano()-startNano, t.ext)
+<span id="L933" class="ln">   933&nbsp;&nbsp;</span>	}
+<span id="L934" class="ln">   934&nbsp;&nbsp;</span>	return Now().Sub(t)
+<span id="L935" class="ln">   935&nbsp;&nbsp;</span>}
+<span id="L936" class="ln">   936&nbsp;&nbsp;</span>
+<span id="L937" class="ln">   937&nbsp;&nbsp;</span><span class="comment">// Until returns the duration until t.</span>
+<span id="L938" class="ln">   938&nbsp;&nbsp;</span><span class="comment">// It is shorthand for t.Sub(time.Now()).</span>
+<span id="L939" class="ln">   939&nbsp;&nbsp;</span>func Until(t Time) Duration {
+<span id="L940" class="ln">   940&nbsp;&nbsp;</span>	if t.wall&amp;hasMonotonic != 0 {
+<span id="L941" class="ln">   941&nbsp;&nbsp;</span>		<span class="comment">// Common case optimization: if t has monotonic time, then Sub will use only it.</span>
+<span id="L942" class="ln">   942&nbsp;&nbsp;</span>		return subMono(t.ext, runtimeNano()-startNano)
+<span id="L943" class="ln">   943&nbsp;&nbsp;</span>	}
+<span id="L944" class="ln">   944&nbsp;&nbsp;</span>	return t.Sub(Now())
+<span id="L945" class="ln">   945&nbsp;&nbsp;</span>}
+<span id="L946" class="ln">   946&nbsp;&nbsp;</span>
+<span id="L947" class="ln">   947&nbsp;&nbsp;</span><span class="comment">// AddDate returns the time corresponding to adding the</span>
+<span id="L948" class="ln">   948&nbsp;&nbsp;</span><span class="comment">// given number of years, months, and days to t.</span>
+<span id="L949" class="ln">   949&nbsp;&nbsp;</span><span class="comment">// For example, AddDate(-1, 2, 3) applied to January 1, 2011</span>
+<span id="L950" class="ln">   950&nbsp;&nbsp;</span><span class="comment">// returns March 4, 2010.</span>
+<span id="L951" class="ln">   951&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L952" class="ln">   952&nbsp;&nbsp;</span><span class="comment">// Note that dates are fundamentally coupled to timezones, and calendrical</span>
+<span id="L953" class="ln">   953&nbsp;&nbsp;</span><span class="comment">// periods like days don&#39;t have fixed durations. AddDate uses the Location of</span>
+<span id="L954" class="ln">   954&nbsp;&nbsp;</span><span class="comment">// the Time value to determine these durations. That means that the same</span>
+<span id="L955" class="ln">   955&nbsp;&nbsp;</span><span class="comment">// AddDate arguments can produce a different shift in absolute time depending on</span>
+<span id="L956" class="ln">   956&nbsp;&nbsp;</span><span class="comment">// the base Time value and its Location. For example, AddDate(0, 0, 1) applied</span>
+<span id="L957" class="ln">   957&nbsp;&nbsp;</span><span class="comment">// to 12:00 on March 27 always returns 12:00 on March 28. At some locations and</span>
+<span id="L958" class="ln">   958&nbsp;&nbsp;</span><span class="comment">// in some years this is a 24 hour shift. In others it&#39;s a 23 hour shift due to</span>
+<span id="L959" class="ln">   959&nbsp;&nbsp;</span><span class="comment">// daylight savings time transitions.</span>
+<span id="L960" class="ln">   960&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L961" class="ln">   961&nbsp;&nbsp;</span><span class="comment">// AddDate normalizes its result in the same way that Date does,</span>
+<span id="L962" class="ln">   962&nbsp;&nbsp;</span><span class="comment">// so, for example, adding one month to October 31 yields</span>
+<span id="L963" class="ln">   963&nbsp;&nbsp;</span><span class="comment">// December 1, the normalized form for November 31.</span>
+<span id="L964" class="ln">   964&nbsp;&nbsp;</span>func (t Time) AddDate(years int, months int, days int) Time {
+<span id="L965" class="ln">   965&nbsp;&nbsp;</span>	year, month, day := t.Date()
+<span id="L966" class="ln">   966&nbsp;&nbsp;</span>	hour, min, sec := t.Clock()
+<span id="L967" class="ln">   967&nbsp;&nbsp;</span>	return Date(year+years, month+Month(months), day+days, hour, min, sec, int(t.nsec()), t.Location())
+<span id="L968" class="ln">   968&nbsp;&nbsp;</span>}
+<span id="L969" class="ln">   969&nbsp;&nbsp;</span>
+<span id="L970" class="ln">   970&nbsp;&nbsp;</span>const (
+<span id="L971" class="ln">   971&nbsp;&nbsp;</span>	secondsPerMinute = 60
+<span id="L972" class="ln">   972&nbsp;&nbsp;</span>	secondsPerHour   = 60 * secondsPerMinute
+<span id="L973" class="ln">   973&nbsp;&nbsp;</span>	secondsPerDay    = 24 * secondsPerHour
+<span id="L974" class="ln">   974&nbsp;&nbsp;</span>	secondsPerWeek   = 7 * secondsPerDay
+<span id="L975" class="ln">   975&nbsp;&nbsp;</span>	daysPer400Years  = 365*400 + 97
+<span id="L976" class="ln">   976&nbsp;&nbsp;</span>	daysPer100Years  = 365*100 + 24
+<span id="L977" class="ln">   977&nbsp;&nbsp;</span>	daysPer4Years    = 365*4 + 1
+<span id="L978" class="ln">   978&nbsp;&nbsp;</span>)
+<span id="L979" class="ln">   979&nbsp;&nbsp;</span>
+<span id="L980" class="ln">   980&nbsp;&nbsp;</span><span class="comment">// date computes the year, day of year, and when full=true,</span>
+<span id="L981" class="ln">   981&nbsp;&nbsp;</span><span class="comment">// the month and day in which t occurs.</span>
+<span id="L982" class="ln">   982&nbsp;&nbsp;</span>func (t Time) date(full bool) (year int, month Month, day int, yday int) {
+<span id="L983" class="ln">   983&nbsp;&nbsp;</span>	return absDate(t.abs(), full)
+<span id="L984" class="ln">   984&nbsp;&nbsp;</span>}
+<span id="L985" class="ln">   985&nbsp;&nbsp;</span>
+<span id="L986" class="ln">   986&nbsp;&nbsp;</span><span class="comment">// absDate is like date but operates on an absolute time.</span>
+<span id="L987" class="ln">   987&nbsp;&nbsp;</span>func absDate(abs uint64, full bool) (year int, month Month, day int, yday int) {
+<span id="L988" class="ln">   988&nbsp;&nbsp;</span>	<span class="comment">// Split into time and day.</span>
+<span id="L989" class="ln">   989&nbsp;&nbsp;</span>	d := abs / secondsPerDay
+<span id="L990" class="ln">   990&nbsp;&nbsp;</span>
+<span id="L991" class="ln">   991&nbsp;&nbsp;</span>	<span class="comment">// Account for 400 year cycles.</span>
+<span id="L992" class="ln">   992&nbsp;&nbsp;</span>	n := d / daysPer400Years
+<span id="L993" class="ln">   993&nbsp;&nbsp;</span>	y := 400 * n
+<span id="L994" class="ln">   994&nbsp;&nbsp;</span>	d -= daysPer400Years * n
+<span id="L995" class="ln">   995&nbsp;&nbsp;</span>
+<span id="L996" class="ln">   996&nbsp;&nbsp;</span>	<span class="comment">// Cut off 100-year cycles.</span>
+<span id="L997" class="ln">   997&nbsp;&nbsp;</span>	<span class="comment">// The last cycle has one extra leap year, so on the last day</span>
+<span id="L998" class="ln">   998&nbsp;&nbsp;</span>	<span class="comment">// of that year, day / daysPer100Years will be 4 instead of 3.</span>
+<span id="L999" class="ln">   999&nbsp;&nbsp;</span>	<span class="comment">// Cut it back down to 3 by subtracting n&gt;&gt;2.</span>
+<span id="L1000" class="ln">  1000&nbsp;&nbsp;</span>	n = d / daysPer100Years
+<span id="L1001" class="ln">  1001&nbsp;&nbsp;</span>	n -= n &gt;&gt; 2
+<span id="L1002" class="ln">  1002&nbsp;&nbsp;</span>	y += 100 * n
+<span id="L1003" class="ln">  1003&nbsp;&nbsp;</span>	d -= daysPer100Years * n
+<span id="L1004" class="ln">  1004&nbsp;&nbsp;</span>
+<span id="L1005" class="ln">  1005&nbsp;&nbsp;</span>	<span class="comment">// Cut off 4-year cycles.</span>
+<span id="L1006" class="ln">  1006&nbsp;&nbsp;</span>	<span class="comment">// The last cycle has a missing leap year, which does not</span>
+<span id="L1007" class="ln">  1007&nbsp;&nbsp;</span>	<span class="comment">// affect the computation.</span>
+<span id="L1008" class="ln">  1008&nbsp;&nbsp;</span>	n = d / daysPer4Years
+<span id="L1009" class="ln">  1009&nbsp;&nbsp;</span>	y += 4 * n
+<span id="L1010" class="ln">  1010&nbsp;&nbsp;</span>	d -= daysPer4Years * n
+<span id="L1011" class="ln">  1011&nbsp;&nbsp;</span>
+<span id="L1012" class="ln">  1012&nbsp;&nbsp;</span>	<span class="comment">// Cut off years within a 4-year cycle.</span>
+<span id="L1013" class="ln">  1013&nbsp;&nbsp;</span>	<span class="comment">// The last year is a leap year, so on the last day of that year,</span>
+<span id="L1014" class="ln">  1014&nbsp;&nbsp;</span>	<span class="comment">// day / 365 will be 4 instead of 3. Cut it back down to 3</span>
+<span id="L1015" class="ln">  1015&nbsp;&nbsp;</span>	<span class="comment">// by subtracting n&gt;&gt;2.</span>
+<span id="L1016" class="ln">  1016&nbsp;&nbsp;</span>	n = d / 365
+<span id="L1017" class="ln">  1017&nbsp;&nbsp;</span>	n -= n &gt;&gt; 2
+<span id="L1018" class="ln">  1018&nbsp;&nbsp;</span>	y += n
+<span id="L1019" class="ln">  1019&nbsp;&nbsp;</span>	d -= 365 * n
+<span id="L1020" class="ln">  1020&nbsp;&nbsp;</span>
+<span id="L1021" class="ln">  1021&nbsp;&nbsp;</span>	year = int(int64(y) + absoluteZeroYear)
+<span id="L1022" class="ln">  1022&nbsp;&nbsp;</span>	yday = int(d)
+<span id="L1023" class="ln">  1023&nbsp;&nbsp;</span>
+<span id="L1024" class="ln">  1024&nbsp;&nbsp;</span>	if !full {
+<span id="L1025" class="ln">  1025&nbsp;&nbsp;</span>		return
+<span id="L1026" class="ln">  1026&nbsp;&nbsp;</span>	}
+<span id="L1027" class="ln">  1027&nbsp;&nbsp;</span>
+<span id="L1028" class="ln">  1028&nbsp;&nbsp;</span>	day = yday
+<span id="L1029" class="ln">  1029&nbsp;&nbsp;</span>	if isLeap(year) {
+<span id="L1030" class="ln">  1030&nbsp;&nbsp;</span>		<span class="comment">// Leap year</span>
+<span id="L1031" class="ln">  1031&nbsp;&nbsp;</span>		switch {
+<span id="L1032" class="ln">  1032&nbsp;&nbsp;</span>		case day &gt; 31+29-1:
+<span id="L1033" class="ln">  1033&nbsp;&nbsp;</span>			<span class="comment">// After leap day; pretend it wasn&#39;t there.</span>
+<span id="L1034" class="ln">  1034&nbsp;&nbsp;</span>			day--
+<span id="L1035" class="ln">  1035&nbsp;&nbsp;</span>		case day == 31+29-1:
+<span id="L1036" class="ln">  1036&nbsp;&nbsp;</span>			<span class="comment">// Leap day.</span>
+<span id="L1037" class="ln">  1037&nbsp;&nbsp;</span>			month = February
+<span id="L1038" class="ln">  1038&nbsp;&nbsp;</span>			day = 29
+<span id="L1039" class="ln">  1039&nbsp;&nbsp;</span>			return
+<span id="L1040" class="ln">  1040&nbsp;&nbsp;</span>		}
+<span id="L1041" class="ln">  1041&nbsp;&nbsp;</span>	}
+<span id="L1042" class="ln">  1042&nbsp;&nbsp;</span>
+<span id="L1043" class="ln">  1043&nbsp;&nbsp;</span>	<span class="comment">// Estimate month on assumption that every month has 31 days.</span>
+<span id="L1044" class="ln">  1044&nbsp;&nbsp;</span>	<span class="comment">// The estimate may be too low by at most one month, so adjust.</span>
+<span id="L1045" class="ln">  1045&nbsp;&nbsp;</span>	month = Month(day / 31)
+<span id="L1046" class="ln">  1046&nbsp;&nbsp;</span>	end := int(daysBefore[month+1])
+<span id="L1047" class="ln">  1047&nbsp;&nbsp;</span>	var begin int
+<span id="L1048" class="ln">  1048&nbsp;&nbsp;</span>	if day &gt;= end {
+<span id="L1049" class="ln">  1049&nbsp;&nbsp;</span>		month++
+<span id="L1050" class="ln">  1050&nbsp;&nbsp;</span>		begin = end
+<span id="L1051" class="ln">  1051&nbsp;&nbsp;</span>	} else {
+<span id="L1052" class="ln">  1052&nbsp;&nbsp;</span>		begin = int(daysBefore[month])
+<span id="L1053" class="ln">  1053&nbsp;&nbsp;</span>	}
+<span id="L1054" class="ln">  1054&nbsp;&nbsp;</span>
+<span id="L1055" class="ln">  1055&nbsp;&nbsp;</span>	month++ <span class="comment">// because January is 1</span>
+<span id="L1056" class="ln">  1056&nbsp;&nbsp;</span>	day = day - begin + 1
+<span id="L1057" class="ln">  1057&nbsp;&nbsp;</span>	return
+<span id="L1058" class="ln">  1058&nbsp;&nbsp;</span>}
+<span id="L1059" class="ln">  1059&nbsp;&nbsp;</span>
+<span id="L1060" class="ln">  1060&nbsp;&nbsp;</span><span class="comment">// daysBefore[m] counts the number of days in a non-leap year</span>
+<span id="L1061" class="ln">  1061&nbsp;&nbsp;</span><span class="comment">// before month m begins. There is an entry for m=12, counting</span>
+<span id="L1062" class="ln">  1062&nbsp;&nbsp;</span><span class="comment">// the number of days before January of next year (365).</span>
+<span id="L1063" class="ln">  1063&nbsp;&nbsp;</span>var daysBefore = [...]int32{
+<span id="L1064" class="ln">  1064&nbsp;&nbsp;</span>	0,
+<span id="L1065" class="ln">  1065&nbsp;&nbsp;</span>	31,
+<span id="L1066" class="ln">  1066&nbsp;&nbsp;</span>	31 + 28,
+<span id="L1067" class="ln">  1067&nbsp;&nbsp;</span>	31 + 28 + 31,
+<span id="L1068" class="ln">  1068&nbsp;&nbsp;</span>	31 + 28 + 31 + 30,
+<span id="L1069" class="ln">  1069&nbsp;&nbsp;</span>	31 + 28 + 31 + 30 + 31,
+<span id="L1070" class="ln">  1070&nbsp;&nbsp;</span>	31 + 28 + 31 + 30 + 31 + 30,
+<span id="L1071" class="ln">  1071&nbsp;&nbsp;</span>	31 + 28 + 31 + 30 + 31 + 30 + 31,
+<span id="L1072" class="ln">  1072&nbsp;&nbsp;</span>	31 + 28 + 31 + 30 + 31 + 30 + 31 + 31,
+<span id="L1073" class="ln">  1073&nbsp;&nbsp;</span>	31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30,
+<span id="L1074" class="ln">  1074&nbsp;&nbsp;</span>	31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31,
+<span id="L1075" class="ln">  1075&nbsp;&nbsp;</span>	31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31 + 30,
+<span id="L1076" class="ln">  1076&nbsp;&nbsp;</span>	31 + 28 + 31 + 30 + 31 + 30 + 31 + 31 + 30 + 31 + 30 + 31,
+<span id="L1077" class="ln">  1077&nbsp;&nbsp;</span>}
+<span id="L1078" class="ln">  1078&nbsp;&nbsp;</span>
+<span id="L1079" class="ln">  1079&nbsp;&nbsp;</span>func daysIn(m Month, year int) int {
+<span id="L1080" class="ln">  1080&nbsp;&nbsp;</span>	if m == February &amp;&amp; isLeap(year) {
+<span id="L1081" class="ln">  1081&nbsp;&nbsp;</span>		return 29
+<span id="L1082" class="ln">  1082&nbsp;&nbsp;</span>	}
+<span id="L1083" class="ln">  1083&nbsp;&nbsp;</span>	return int(daysBefore[m] - daysBefore[m-1])
+<span id="L1084" class="ln">  1084&nbsp;&nbsp;</span>}
+<span id="L1085" class="ln">  1085&nbsp;&nbsp;</span>
+<span id="L1086" class="ln">  1086&nbsp;&nbsp;</span><span class="comment">// daysSinceEpoch takes a year and returns the number of days from</span>
+<span id="L1087" class="ln">  1087&nbsp;&nbsp;</span><span class="comment">// the absolute epoch to the start of that year.</span>
+<span id="L1088" class="ln">  1088&nbsp;&nbsp;</span><span class="comment">// This is basically (year - zeroYear) * 365, but accounting for leap days.</span>
+<span id="L1089" class="ln">  1089&nbsp;&nbsp;</span>func daysSinceEpoch(year int) uint64 {
+<span id="L1090" class="ln">  1090&nbsp;&nbsp;</span>	y := uint64(int64(year) - absoluteZeroYear)
+<span id="L1091" class="ln">  1091&nbsp;&nbsp;</span>
+<span id="L1092" class="ln">  1092&nbsp;&nbsp;</span>	<span class="comment">// Add in days from 400-year cycles.</span>
+<span id="L1093" class="ln">  1093&nbsp;&nbsp;</span>	n := y / 400
+<span id="L1094" class="ln">  1094&nbsp;&nbsp;</span>	y -= 400 * n
+<span id="L1095" class="ln">  1095&nbsp;&nbsp;</span>	d := daysPer400Years * n
+<span id="L1096" class="ln">  1096&nbsp;&nbsp;</span>
+<span id="L1097" class="ln">  1097&nbsp;&nbsp;</span>	<span class="comment">// Add in 100-year cycles.</span>
+<span id="L1098" class="ln">  1098&nbsp;&nbsp;</span>	n = y / 100
+<span id="L1099" class="ln">  1099&nbsp;&nbsp;</span>	y -= 100 * n
+<span id="L1100" class="ln">  1100&nbsp;&nbsp;</span>	d += daysPer100Years * n
+<span id="L1101" class="ln">  1101&nbsp;&nbsp;</span>
+<span id="L1102" class="ln">  1102&nbsp;&nbsp;</span>	<span class="comment">// Add in 4-year cycles.</span>
+<span id="L1103" class="ln">  1103&nbsp;&nbsp;</span>	n = y / 4
+<span id="L1104" class="ln">  1104&nbsp;&nbsp;</span>	y -= 4 * n
+<span id="L1105" class="ln">  1105&nbsp;&nbsp;</span>	d += daysPer4Years * n
+<span id="L1106" class="ln">  1106&nbsp;&nbsp;</span>
+<span id="L1107" class="ln">  1107&nbsp;&nbsp;</span>	<span class="comment">// Add in non-leap years.</span>
+<span id="L1108" class="ln">  1108&nbsp;&nbsp;</span>	n = y
+<span id="L1109" class="ln">  1109&nbsp;&nbsp;</span>	d += 365 * n
+<span id="L1110" class="ln">  1110&nbsp;&nbsp;</span>
+<span id="L1111" class="ln">  1111&nbsp;&nbsp;</span>	return d
+<span id="L1112" class="ln">  1112&nbsp;&nbsp;</span>}
+<span id="L1113" class="ln">  1113&nbsp;&nbsp;</span>
+<span id="L1114" class="ln">  1114&nbsp;&nbsp;</span><span class="comment">// Provided by package runtime.</span>
+<span id="L1115" class="ln">  1115&nbsp;&nbsp;</span>func now() (sec int64, nsec int32, mono int64)
+<span id="L1116" class="ln">  1116&nbsp;&nbsp;</span>
+<span id="L1117" class="ln">  1117&nbsp;&nbsp;</span><span class="comment">// runtimeNano returns the current value of the runtime clock in nanoseconds.</span>
+<span id="L1118" class="ln">  1118&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L1119" class="ln">  1119&nbsp;&nbsp;</span><span class="comment">//go:linkname runtimeNano runtime.nanotime</span>
+<span id="L1120" class="ln">  1120&nbsp;&nbsp;</span>func runtimeNano() int64
+<span id="L1121" class="ln">  1121&nbsp;&nbsp;</span>
+<span id="L1122" class="ln">  1122&nbsp;&nbsp;</span><span class="comment">// Monotonic times are reported as offsets from startNano.</span>
+<span id="L1123" class="ln">  1123&nbsp;&nbsp;</span><span class="comment">// We initialize startNano to runtimeNano() - 1 so that on systems where</span>
+<span id="L1124" class="ln">  1124&nbsp;&nbsp;</span><span class="comment">// monotonic time resolution is fairly low (e.g. Windows 2008</span>
+<span id="L1125" class="ln">  1125&nbsp;&nbsp;</span><span class="comment">// which appears to have a default resolution of 15ms),</span>
+<span id="L1126" class="ln">  1126&nbsp;&nbsp;</span><span class="comment">// we avoid ever reporting a monotonic time of 0.</span>
+<span id="L1127" class="ln">  1127&nbsp;&nbsp;</span><span class="comment">// (Callers may want to use 0 as &#34;time not set&#34;.)</span>
+<span id="L1128" class="ln">  1128&nbsp;&nbsp;</span>var startNano int64 = runtimeNano() - 1
+<span id="L1129" class="ln">  1129&nbsp;&nbsp;</span>
+<span id="L1130" class="ln">  1130&nbsp;&nbsp;</span><span class="comment">// Now returns the current local time.</span>
+<span id="L1131" class="ln">  1131&nbsp;&nbsp;</span>func Now() Time {
+<span id="L1132" class="ln">  1132&nbsp;&nbsp;</span>	sec, nsec, mono := now()
+<span id="L1133" class="ln">  1133&nbsp;&nbsp;</span>	mono -= startNano
+<span id="L1134" class="ln">  1134&nbsp;&nbsp;</span>	sec += unixToInternal - minWall
+<span id="L1135" class="ln">  1135&nbsp;&nbsp;</span>	if uint64(sec)&gt;&gt;33 != 0 {
+<span id="L1136" class="ln">  1136&nbsp;&nbsp;</span>		<span class="comment">// Seconds field overflowed the 33 bits available when</span>
+<span id="L1137" class="ln">  1137&nbsp;&nbsp;</span>		<span class="comment">// storing a monotonic time. This will be true after</span>
+<span id="L1138" class="ln">  1138&nbsp;&nbsp;</span>		<span class="comment">// March 16, 2157.</span>
+<span id="L1139" class="ln">  1139&nbsp;&nbsp;</span>		return Time{uint64(nsec), sec + minWall, Local}
+<span id="L1140" class="ln">  1140&nbsp;&nbsp;</span>	}
+<span id="L1141" class="ln">  1141&nbsp;&nbsp;</span>	return Time{hasMonotonic | uint64(sec)&lt;&lt;nsecShift | uint64(nsec), mono, Local}
+<span id="L1142" class="ln">  1142&nbsp;&nbsp;</span>}
+<span id="L1143" class="ln">  1143&nbsp;&nbsp;</span>
+<span id="L1144" class="ln">  1144&nbsp;&nbsp;</span>func unixTime(sec int64, nsec int32) Time {
+<span id="L1145" class="ln">  1145&nbsp;&nbsp;</span>	return Time{uint64(nsec), sec + unixToInternal, Local}
+<span id="L1146" class="ln">  1146&nbsp;&nbsp;</span>}
+<span id="L1147" class="ln">  1147&nbsp;&nbsp;</span>
+<span id="L1148" class="ln">  1148&nbsp;&nbsp;</span><span class="comment">// UTC returns t with the location set to UTC.</span>
+<span id="L1149" class="ln">  1149&nbsp;&nbsp;</span>func (t Time) UTC() Time {
+<span id="L1150" class="ln">  1150&nbsp;&nbsp;</span>	t.setLoc(&amp;utcLoc)
+<span id="L1151" class="ln">  1151&nbsp;&nbsp;</span>	return t
+<span id="L1152" class="ln">  1152&nbsp;&nbsp;</span>}
+<span id="L1153" class="ln">  1153&nbsp;&nbsp;</span>
+<span id="L1154" class="ln">  1154&nbsp;&nbsp;</span><span class="comment">// Local returns t with the location set to local time.</span>
+<span id="L1155" class="ln">  1155&nbsp;&nbsp;</span>func (t Time) Local() Time {
+<span id="L1156" class="ln">  1156&nbsp;&nbsp;</span>	t.setLoc(Local)
+<span id="L1157" class="ln">  1157&nbsp;&nbsp;</span>	return t
+<span id="L1158" class="ln">  1158&nbsp;&nbsp;</span>}
+<span id="L1159" class="ln">  1159&nbsp;&nbsp;</span>
+<span id="L1160" class="ln">  1160&nbsp;&nbsp;</span><span class="comment">// In returns a copy of t representing the same time instant, but</span>
+<span id="L1161" class="ln">  1161&nbsp;&nbsp;</span><span class="comment">// with the copy&#39;s location information set to loc for display</span>
+<span id="L1162" class="ln">  1162&nbsp;&nbsp;</span><span class="comment">// purposes.</span>
+<span id="L1163" class="ln">  1163&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L1164" class="ln">  1164&nbsp;&nbsp;</span><span class="comment">// In panics if loc is nil.</span>
+<span id="L1165" class="ln">  1165&nbsp;&nbsp;</span>func (t Time) In(loc *Location) Time {
+<span id="L1166" class="ln">  1166&nbsp;&nbsp;</span>	if loc == nil {
+<span id="L1167" class="ln">  1167&nbsp;&nbsp;</span>		panic(&#34;time: missing Location in call to Time.In&#34;)
+<span id="L1168" class="ln">  1168&nbsp;&nbsp;</span>	}
+<span id="L1169" class="ln">  1169&nbsp;&nbsp;</span>	t.setLoc(loc)
+<span id="L1170" class="ln">  1170&nbsp;&nbsp;</span>	return t
+<span id="L1171" class="ln">  1171&nbsp;&nbsp;</span>}
+<span id="L1172" class="ln">  1172&nbsp;&nbsp;</span>
+<span id="L1173" class="ln">  1173&nbsp;&nbsp;</span><span class="comment">// Location returns the time zone information associated with t.</span>
+<span id="L1174" class="ln">  1174&nbsp;&nbsp;</span>func (t Time) Location() *Location {
+<span id="L1175" class="ln">  1175&nbsp;&nbsp;</span>	l := t.loc
+<span id="L1176" class="ln">  1176&nbsp;&nbsp;</span>	if l == nil {
+<span id="L1177" class="ln">  1177&nbsp;&nbsp;</span>		l = UTC
+<span id="L1178" class="ln">  1178&nbsp;&nbsp;</span>	}
+<span id="L1179" class="ln">  1179&nbsp;&nbsp;</span>	return l
+<span id="L1180" class="ln">  1180&nbsp;&nbsp;</span>}
+<span id="L1181" class="ln">  1181&nbsp;&nbsp;</span>
+<span id="L1182" class="ln">  1182&nbsp;&nbsp;</span><span class="comment">// Zone computes the time zone in effect at time t, returning the abbreviated</span>
+<span id="L1183" class="ln">  1183&nbsp;&nbsp;</span><span class="comment">// name of the zone (such as &#34;CET&#34;) and its offset in seconds east of UTC.</span>
+<span id="L1184" class="ln">  1184&nbsp;&nbsp;</span>func (t Time) Zone() (name string, offset int) {
+<span id="L1185" class="ln">  1185&nbsp;&nbsp;</span>	name, offset, _, _, _ = t.loc.lookup(t.unixSec())
+<span id="L1186" class="ln">  1186&nbsp;&nbsp;</span>	return
+<span id="L1187" class="ln">  1187&nbsp;&nbsp;</span>}
+<span id="L1188" class="ln">  1188&nbsp;&nbsp;</span>
+<span id="L1189" class="ln">  1189&nbsp;&nbsp;</span><span class="comment">// ZoneBounds returns the bounds of the time zone in effect at time t.</span>
+<span id="L1190" class="ln">  1190&nbsp;&nbsp;</span><span class="comment">// The zone begins at start and the next zone begins at end.</span>
+<span id="L1191" class="ln">  1191&nbsp;&nbsp;</span><span class="comment">// If the zone begins at the beginning of time, start will be returned as a zero Time.</span>
+<span id="L1192" class="ln">  1192&nbsp;&nbsp;</span><span class="comment">// If the zone goes on forever, end will be returned as a zero Time.</span>
+<span id="L1193" class="ln">  1193&nbsp;&nbsp;</span><span class="comment">// The Location of the returned times will be the same as t.</span>
+<span id="L1194" class="ln">  1194&nbsp;&nbsp;</span>func (t Time) ZoneBounds() (start, end Time) {
+<span id="L1195" class="ln">  1195&nbsp;&nbsp;</span>	_, _, startSec, endSec, _ := t.loc.lookup(t.unixSec())
+<span id="L1196" class="ln">  1196&nbsp;&nbsp;</span>	if startSec != alpha {
+<span id="L1197" class="ln">  1197&nbsp;&nbsp;</span>		start = unixTime(startSec, 0)
+<span id="L1198" class="ln">  1198&nbsp;&nbsp;</span>		start.setLoc(t.loc)
+<span id="L1199" class="ln">  1199&nbsp;&nbsp;</span>	}
+<span id="L1200" class="ln">  1200&nbsp;&nbsp;</span>	if endSec != omega {
+<span id="L1201" class="ln">  1201&nbsp;&nbsp;</span>		end = unixTime(endSec, 0)
+<span id="L1202" class="ln">  1202&nbsp;&nbsp;</span>		end.setLoc(t.loc)
+<span id="L1203" class="ln">  1203&nbsp;&nbsp;</span>	}
+<span id="L1204" class="ln">  1204&nbsp;&nbsp;</span>	return
+<span id="L1205" class="ln">  1205&nbsp;&nbsp;</span>}
+<span id="L1206" class="ln">  1206&nbsp;&nbsp;</span>
+<span id="L1207" class="ln">  1207&nbsp;&nbsp;</span><span class="comment">// Unix returns t as a Unix time, the number of seconds elapsed</span>
+<span id="L1208" class="ln">  1208&nbsp;&nbsp;</span><span class="comment">// since January 1, 1970 UTC. The result does not depend on the</span>
+<span id="L1209" class="ln">  1209&nbsp;&nbsp;</span><span class="comment">// location associated with t.</span>
+<span id="L1210" class="ln">  1210&nbsp;&nbsp;</span><span class="comment">// Unix-like operating systems often record time as a 32-bit</span>
+<span id="L1211" class="ln">  1211&nbsp;&nbsp;</span><span class="comment">// count of seconds, but since the method here returns a 64-bit</span>
+<span id="L1212" class="ln">  1212&nbsp;&nbsp;</span><span class="comment">// value it is valid for billions of years into the past or future.</span>
+<span id="L1213" class="ln">  1213&nbsp;&nbsp;</span>func (t Time) Unix() int64 {
+<span id="L1214" class="ln">  1214&nbsp;&nbsp;</span>	return t.unixSec()
+<span id="L1215" class="ln">  1215&nbsp;&nbsp;</span>}
+<span id="L1216" class="ln">  1216&nbsp;&nbsp;</span>
+<span id="L1217" class="ln">  1217&nbsp;&nbsp;</span><span class="comment">// UnixMilli returns t as a Unix time, the number of milliseconds elapsed since</span>
+<span id="L1218" class="ln">  1218&nbsp;&nbsp;</span><span class="comment">// January 1, 1970 UTC. The result is undefined if the Unix time in</span>
+<span id="L1219" class="ln">  1219&nbsp;&nbsp;</span><span class="comment">// milliseconds cannot be represented by an int64 (a date more than 292 million</span>
+<span id="L1220" class="ln">  1220&nbsp;&nbsp;</span><span class="comment">// years before or after 1970). The result does not depend on the</span>
+<span id="L1221" class="ln">  1221&nbsp;&nbsp;</span><span class="comment">// location associated with t.</span>
+<span id="L1222" class="ln">  1222&nbsp;&nbsp;</span>func (t Time) UnixMilli() int64 {
+<span id="L1223" class="ln">  1223&nbsp;&nbsp;</span>	return t.unixSec()*1e3 + int64(t.nsec())/1e6
+<span id="L1224" class="ln">  1224&nbsp;&nbsp;</span>}
+<span id="L1225" class="ln">  1225&nbsp;&nbsp;</span>
+<span id="L1226" class="ln">  1226&nbsp;&nbsp;</span><span class="comment">// UnixMicro returns t as a Unix time, the number of microseconds elapsed since</span>
+<span id="L1227" class="ln">  1227&nbsp;&nbsp;</span><span class="comment">// January 1, 1970 UTC. The result is undefined if the Unix time in</span>
+<span id="L1228" class="ln">  1228&nbsp;&nbsp;</span><span class="comment">// microseconds cannot be represented by an int64 (a date before year -290307 or</span>
+<span id="L1229" class="ln">  1229&nbsp;&nbsp;</span><span class="comment">// after year 294246). The result does not depend on the location associated</span>
+<span id="L1230" class="ln">  1230&nbsp;&nbsp;</span><span class="comment">// with t.</span>
+<span id="L1231" class="ln">  1231&nbsp;&nbsp;</span>func (t Time) UnixMicro() int64 {
+<span id="L1232" class="ln">  1232&nbsp;&nbsp;</span>	return t.unixSec()*1e6 + int64(t.nsec())/1e3
+<span id="L1233" class="ln">  1233&nbsp;&nbsp;</span>}
+<span id="L1234" class="ln">  1234&nbsp;&nbsp;</span>
+<span id="L1235" class="ln">  1235&nbsp;&nbsp;</span><span class="comment">// UnixNano returns t as a Unix time, the number of nanoseconds elapsed</span>
+<span id="L1236" class="ln">  1236&nbsp;&nbsp;</span><span class="comment">// since January 1, 1970 UTC. The result is undefined if the Unix time</span>
+<span id="L1237" class="ln">  1237&nbsp;&nbsp;</span><span class="comment">// in nanoseconds cannot be represented by an int64 (a date before the year</span>
+<span id="L1238" class="ln">  1238&nbsp;&nbsp;</span><span class="comment">// 1678 or after 2262). Note that this means the result of calling UnixNano</span>
+<span id="L1239" class="ln">  1239&nbsp;&nbsp;</span><span class="comment">// on the zero Time is undefined. The result does not depend on the</span>
+<span id="L1240" class="ln">  1240&nbsp;&nbsp;</span><span class="comment">// location associated with t.</span>
+<span id="L1241" class="ln">  1241&nbsp;&nbsp;</span>func (t Time) UnixNano() int64 {
+<span id="L1242" class="ln">  1242&nbsp;&nbsp;</span>	return (t.unixSec())*1e9 + int64(t.nsec())
+<span id="L1243" class="ln">  1243&nbsp;&nbsp;</span>}
+<span id="L1244" class="ln">  1244&nbsp;&nbsp;</span>
+<span id="L1245" class="ln">  1245&nbsp;&nbsp;</span>const (
+<span id="L1246" class="ln">  1246&nbsp;&nbsp;</span>	timeBinaryVersionV1 byte = iota + 1 <span class="comment">// For general situation</span>
+<span id="L1247" class="ln">  1247&nbsp;&nbsp;</span>	timeBinaryVersionV2                 <span class="comment">// For LMT only</span>
+<span id="L1248" class="ln">  1248&nbsp;&nbsp;</span>)
+<span id="L1249" class="ln">  1249&nbsp;&nbsp;</span>
+<span id="L1250" class="ln">  1250&nbsp;&nbsp;</span><span class="comment">// MarshalBinary implements the encoding.BinaryMarshaler interface.</span>
+<span id="L1251" class="ln">  1251&nbsp;&nbsp;</span>func (t Time) MarshalBinary() ([]byte, error) {
+<span id="L1252" class="ln">  1252&nbsp;&nbsp;</span>	var offsetMin int16 <span class="comment">// minutes east of UTC. -1 is UTC.</span>
+<span id="L1253" class="ln">  1253&nbsp;&nbsp;</span>	var offsetSec int8
+<span id="L1254" class="ln">  1254&nbsp;&nbsp;</span>	version := timeBinaryVersionV1
+<span id="L1255" class="ln">  1255&nbsp;&nbsp;</span>
+<span id="L1256" class="ln">  1256&nbsp;&nbsp;</span>	if t.Location() == UTC {
+<span id="L1257" class="ln">  1257&nbsp;&nbsp;</span>		offsetMin = -1
+<span id="L1258" class="ln">  1258&nbsp;&nbsp;</span>	} else {
+<span id="L1259" class="ln">  1259&nbsp;&nbsp;</span>		_, offset := t.Zone()
+<span id="L1260" class="ln">  1260&nbsp;&nbsp;</span>		if offset%60 != 0 {
+<span id="L1261" class="ln">  1261&nbsp;&nbsp;</span>			version = timeBinaryVersionV2
+<span id="L1262" class="ln">  1262&nbsp;&nbsp;</span>			offsetSec = int8(offset % 60)
+<span id="L1263" class="ln">  1263&nbsp;&nbsp;</span>		}
+<span id="L1264" class="ln">  1264&nbsp;&nbsp;</span>
+<span id="L1265" class="ln">  1265&nbsp;&nbsp;</span>		offset /= 60
+<span id="L1266" class="ln">  1266&nbsp;&nbsp;</span>		if offset &lt; -32768 || offset == -1 || offset &gt; 32767 {
+<span id="L1267" class="ln">  1267&nbsp;&nbsp;</span>			return nil, errors.New(&#34;Time.MarshalBinary: unexpected zone offset&#34;)
+<span id="L1268" class="ln">  1268&nbsp;&nbsp;</span>		}
+<span id="L1269" class="ln">  1269&nbsp;&nbsp;</span>		offsetMin = int16(offset)
+<span id="L1270" class="ln">  1270&nbsp;&nbsp;</span>	}
+<span id="L1271" class="ln">  1271&nbsp;&nbsp;</span>
+<span id="L1272" class="ln">  1272&nbsp;&nbsp;</span>	sec := t.sec()
+<span id="L1273" class="ln">  1273&nbsp;&nbsp;</span>	nsec := t.nsec()
+<span id="L1274" class="ln">  1274&nbsp;&nbsp;</span>	enc := []byte{
+<span id="L1275" class="ln">  1275&nbsp;&nbsp;</span>		version,         <span class="comment">// byte 0 : version</span>
+<span id="L1276" class="ln">  1276&nbsp;&nbsp;</span>		byte(sec &gt;&gt; 56), <span class="comment">// bytes 1-8: seconds</span>
+<span id="L1277" class="ln">  1277&nbsp;&nbsp;</span>		byte(sec &gt;&gt; 48),
+<span id="L1278" class="ln">  1278&nbsp;&nbsp;</span>		byte(sec &gt;&gt; 40),
+<span id="L1279" class="ln">  1279&nbsp;&nbsp;</span>		byte(sec &gt;&gt; 32),
+<span id="L1280" class="ln">  1280&nbsp;&nbsp;</span>		byte(sec &gt;&gt; 24),
+<span id="L1281" class="ln">  1281&nbsp;&nbsp;</span>		byte(sec &gt;&gt; 16),
+<span id="L1282" class="ln">  1282&nbsp;&nbsp;</span>		byte(sec &gt;&gt; 8),
+<span id="L1283" class="ln">  1283&nbsp;&nbsp;</span>		byte(sec),
+<span id="L1284" class="ln">  1284&nbsp;&nbsp;</span>		byte(nsec &gt;&gt; 24), <span class="comment">// bytes 9-12: nanoseconds</span>
+<span id="L1285" class="ln">  1285&nbsp;&nbsp;</span>		byte(nsec &gt;&gt; 16),
+<span id="L1286" class="ln">  1286&nbsp;&nbsp;</span>		byte(nsec &gt;&gt; 8),
+<span id="L1287" class="ln">  1287&nbsp;&nbsp;</span>		byte(nsec),
+<span id="L1288" class="ln">  1288&nbsp;&nbsp;</span>		byte(offsetMin &gt;&gt; 8), <span class="comment">// bytes 13-14: zone offset in minutes</span>
+<span id="L1289" class="ln">  1289&nbsp;&nbsp;</span>		byte(offsetMin),
+<span id="L1290" class="ln">  1290&nbsp;&nbsp;</span>	}
+<span id="L1291" class="ln">  1291&nbsp;&nbsp;</span>	if version == timeBinaryVersionV2 {
+<span id="L1292" class="ln">  1292&nbsp;&nbsp;</span>		enc = append(enc, byte(offsetSec))
+<span id="L1293" class="ln">  1293&nbsp;&nbsp;</span>	}
+<span id="L1294" class="ln">  1294&nbsp;&nbsp;</span>
+<span id="L1295" class="ln">  1295&nbsp;&nbsp;</span>	return enc, nil
+<span id="L1296" class="ln">  1296&nbsp;&nbsp;</span>}
+<span id="L1297" class="ln">  1297&nbsp;&nbsp;</span>
+<span id="L1298" class="ln">  1298&nbsp;&nbsp;</span><span class="comment">// UnmarshalBinary implements the encoding.BinaryUnmarshaler interface.</span>
+<span id="L1299" class="ln">  1299&nbsp;&nbsp;</span>func (t *Time) UnmarshalBinary(data []byte) error {
+<span id="L1300" class="ln">  1300&nbsp;&nbsp;</span>	buf := data
+<span id="L1301" class="ln">  1301&nbsp;&nbsp;</span>	if len(buf) == 0 {
+<span id="L1302" class="ln">  1302&nbsp;&nbsp;</span>		return errors.New(&#34;Time.UnmarshalBinary: no data&#34;)
+<span id="L1303" class="ln">  1303&nbsp;&nbsp;</span>	}
+<span id="L1304" class="ln">  1304&nbsp;&nbsp;</span>
+<span id="L1305" class="ln">  1305&nbsp;&nbsp;</span>	version := buf[0]
+<span id="L1306" class="ln">  1306&nbsp;&nbsp;</span>	if version != timeBinaryVersionV1 &amp;&amp; version != timeBinaryVersionV2 {
+<span id="L1307" class="ln">  1307&nbsp;&nbsp;</span>		return errors.New(&#34;Time.UnmarshalBinary: unsupported version&#34;)
+<span id="L1308" class="ln">  1308&nbsp;&nbsp;</span>	}
+<span id="L1309" class="ln">  1309&nbsp;&nbsp;</span>
+<span id="L1310" class="ln">  1310&nbsp;&nbsp;</span>	wantLen := <span class="comment">/*version*/</span> 1 + <span class="comment">/*sec*/</span> 8 + <span class="comment">/*nsec*/</span> 4 + <span class="comment">/*zone offset*/</span> 2
+<span id="L1311" class="ln">  1311&nbsp;&nbsp;</span>	if version == timeBinaryVersionV2 {
+<span id="L1312" class="ln">  1312&nbsp;&nbsp;</span>		wantLen++
+<span id="L1313" class="ln">  1313&nbsp;&nbsp;</span>	}
+<span id="L1314" class="ln">  1314&nbsp;&nbsp;</span>	if len(buf) != wantLen {
+<span id="L1315" class="ln">  1315&nbsp;&nbsp;</span>		return errors.New(&#34;Time.UnmarshalBinary: invalid length&#34;)
+<span id="L1316" class="ln">  1316&nbsp;&nbsp;</span>	}
+<span id="L1317" class="ln">  1317&nbsp;&nbsp;</span>
+<span id="L1318" class="ln">  1318&nbsp;&nbsp;</span>	buf = buf[1:]
+<span id="L1319" class="ln">  1319&nbsp;&nbsp;</span>	sec := int64(buf[7]) | int64(buf[6])&lt;&lt;8 | int64(buf[5])&lt;&lt;16 | int64(buf[4])&lt;&lt;24 |
+<span id="L1320" class="ln">  1320&nbsp;&nbsp;</span>		int64(buf[3])&lt;&lt;32 | int64(buf[2])&lt;&lt;40 | int64(buf[1])&lt;&lt;48 | int64(buf[0])&lt;&lt;56
+<span id="L1321" class="ln">  1321&nbsp;&nbsp;</span>
+<span id="L1322" class="ln">  1322&nbsp;&nbsp;</span>	buf = buf[8:]
+<span id="L1323" class="ln">  1323&nbsp;&nbsp;</span>	nsec := int32(buf[3]) | int32(buf[2])&lt;&lt;8 | int32(buf[1])&lt;&lt;16 | int32(buf[0])&lt;&lt;24
+<span id="L1324" class="ln">  1324&nbsp;&nbsp;</span>
+<span id="L1325" class="ln">  1325&nbsp;&nbsp;</span>	buf = buf[4:]
+<span id="L1326" class="ln">  1326&nbsp;&nbsp;</span>	offset := int(int16(buf[1])|int16(buf[0])&lt;&lt;8) * 60
+<span id="L1327" class="ln">  1327&nbsp;&nbsp;</span>	if version == timeBinaryVersionV2 {
+<span id="L1328" class="ln">  1328&nbsp;&nbsp;</span>		offset += int(buf[2])
+<span id="L1329" class="ln">  1329&nbsp;&nbsp;</span>	}
+<span id="L1330" class="ln">  1330&nbsp;&nbsp;</span>
+<span id="L1331" class="ln">  1331&nbsp;&nbsp;</span>	*t = Time{}
+<span id="L1332" class="ln">  1332&nbsp;&nbsp;</span>	t.wall = uint64(nsec)
+<span id="L1333" class="ln">  1333&nbsp;&nbsp;</span>	t.ext = sec
+<span id="L1334" class="ln">  1334&nbsp;&nbsp;</span>
+<span id="L1335" class="ln">  1335&nbsp;&nbsp;</span>	if offset == -1*60 {
+<span id="L1336" class="ln">  1336&nbsp;&nbsp;</span>		t.setLoc(&amp;utcLoc)
+<span id="L1337" class="ln">  1337&nbsp;&nbsp;</span>	} else if _, localoff, _, _, _ := Local.lookup(t.unixSec()); offset == localoff {
+<span id="L1338" class="ln">  1338&nbsp;&nbsp;</span>		t.setLoc(Local)
+<span id="L1339" class="ln">  1339&nbsp;&nbsp;</span>	} else {
+<span id="L1340" class="ln">  1340&nbsp;&nbsp;</span>		t.setLoc(FixedZone(&#34;&#34;, offset))
+<span id="L1341" class="ln">  1341&nbsp;&nbsp;</span>	}
+<span id="L1342" class="ln">  1342&nbsp;&nbsp;</span>
+<span id="L1343" class="ln">  1343&nbsp;&nbsp;</span>	return nil
+<span id="L1344" class="ln">  1344&nbsp;&nbsp;</span>}
+<span id="L1345" class="ln">  1345&nbsp;&nbsp;</span>
+<span id="L1346" class="ln">  1346&nbsp;&nbsp;</span><span class="comment">// TODO(rsc): Remove GobEncoder, GobDecoder, MarshalJSON, UnmarshalJSON in Go 2.</span>
+<span id="L1347" class="ln">  1347&nbsp;&nbsp;</span><span class="comment">// The same semantics will be provided by the generic MarshalBinary, MarshalText,</span>
+<span id="L1348" class="ln">  1348&nbsp;&nbsp;</span><span class="comment">// UnmarshalBinary, UnmarshalText.</span>
+<span id="L1349" class="ln">  1349&nbsp;&nbsp;</span>
+<span id="L1350" class="ln">  1350&nbsp;&nbsp;</span><span class="comment">// GobEncode implements the gob.GobEncoder interface.</span>
+<span id="L1351" class="ln">  1351&nbsp;&nbsp;</span>func (t Time) GobEncode() ([]byte, error) {
+<span id="L1352" class="ln">  1352&nbsp;&nbsp;</span>	return t.MarshalBinary()
+<span id="L1353" class="ln">  1353&nbsp;&nbsp;</span>}
+<span id="L1354" class="ln">  1354&nbsp;&nbsp;</span>
+<span id="L1355" class="ln">  1355&nbsp;&nbsp;</span><span class="comment">// GobDecode implements the gob.GobDecoder interface.</span>
+<span id="L1356" class="ln">  1356&nbsp;&nbsp;</span>func (t *Time) GobDecode(data []byte) error {
+<span id="L1357" class="ln">  1357&nbsp;&nbsp;</span>	return t.UnmarshalBinary(data)
+<span id="L1358" class="ln">  1358&nbsp;&nbsp;</span>}
+<span id="L1359" class="ln">  1359&nbsp;&nbsp;</span>
+<span id="L1360" class="ln">  1360&nbsp;&nbsp;</span><span class="comment">// MarshalJSON implements the json.Marshaler interface.</span>
+<span id="L1361" class="ln">  1361&nbsp;&nbsp;</span><span class="comment">// The time is a quoted string in the RFC 3339 format with sub-second precision.</span>
+<span id="L1362" class="ln">  1362&nbsp;&nbsp;</span><span class="comment">// If the timestamp cannot be represented as valid RFC 3339</span>
+<span id="L1363" class="ln">  1363&nbsp;&nbsp;</span><span class="comment">// (e.g., the year is out of range), then an error is reported.</span>
+<span id="L1364" class="ln">  1364&nbsp;&nbsp;</span>func (t Time) MarshalJSON() ([]byte, error) {
+<span id="L1365" class="ln">  1365&nbsp;&nbsp;</span>	b := make([]byte, 0, len(RFC3339Nano)+len(`&#34;&#34;`))
+<span id="L1366" class="ln">  1366&nbsp;&nbsp;</span>	b = append(b, &#39;&#34;&#39;)
+<span id="L1367" class="ln">  1367&nbsp;&nbsp;</span>	b, err := t.appendStrictRFC3339(b)
+<span id="L1368" class="ln">  1368&nbsp;&nbsp;</span>	b = append(b, &#39;&#34;&#39;)
+<span id="L1369" class="ln">  1369&nbsp;&nbsp;</span>	if err != nil {
+<span id="L1370" class="ln">  1370&nbsp;&nbsp;</span>		return nil, errors.New(&#34;Time.MarshalJSON: &#34; + err.Error())
+<span id="L1371" class="ln">  1371&nbsp;&nbsp;</span>	}
+<span id="L1372" class="ln">  1372&nbsp;&nbsp;</span>	return b, nil
+<span id="L1373" class="ln">  1373&nbsp;&nbsp;</span>}
+<span id="L1374" class="ln">  1374&nbsp;&nbsp;</span>
+<span id="L1375" class="ln">  1375&nbsp;&nbsp;</span><span class="comment">// UnmarshalJSON implements the json.Unmarshaler interface.</span>
+<span id="L1376" class="ln">  1376&nbsp;&nbsp;</span><span class="comment">// The time must be a quoted string in the RFC 3339 format.</span>
+<span id="L1377" class="ln">  1377&nbsp;&nbsp;</span>func (t *Time) UnmarshalJSON(data []byte) error {
+<span id="L1378" class="ln">  1378&nbsp;&nbsp;</span>	if string(data) == &#34;null&#34; {
+<span id="L1379" class="ln">  1379&nbsp;&nbsp;</span>		return nil
+<span id="L1380" class="ln">  1380&nbsp;&nbsp;</span>	}
+<span id="L1381" class="ln">  1381&nbsp;&nbsp;</span>	<span class="comment">// TODO(https://go.dev/issue/47353): Properly unescape a JSON string.</span>
+<span id="L1382" class="ln">  1382&nbsp;&nbsp;</span>	if len(data) &lt; 2 || data[0] != &#39;&#34;&#39; || data[len(data)-1] != &#39;&#34;&#39; {
+<span id="L1383" class="ln">  1383&nbsp;&nbsp;</span>		return errors.New(&#34;Time.UnmarshalJSON: input is not a JSON string&#34;)
+<span id="L1384" class="ln">  1384&nbsp;&nbsp;</span>	}
+<span id="L1385" class="ln">  1385&nbsp;&nbsp;</span>	data = data[len(`&#34;`) : len(data)-len(`&#34;`)]
+<span id="L1386" class="ln">  1386&nbsp;&nbsp;</span>	var err error
+<span id="L1387" class="ln">  1387&nbsp;&nbsp;</span>	*t, err = parseStrictRFC3339(data)
+<span id="L1388" class="ln">  1388&nbsp;&nbsp;</span>	return err
+<span id="L1389" class="ln">  1389&nbsp;&nbsp;</span>}
+<span id="L1390" class="ln">  1390&nbsp;&nbsp;</span>
+<span id="L1391" class="ln">  1391&nbsp;&nbsp;</span><span class="comment">// MarshalText implements the encoding.TextMarshaler interface.</span>
+<span id="L1392" class="ln">  1392&nbsp;&nbsp;</span><span class="comment">// The time is formatted in RFC 3339 format with sub-second precision.</span>
+<span id="L1393" class="ln">  1393&nbsp;&nbsp;</span><span class="comment">// If the timestamp cannot be represented as valid RFC 3339</span>
+<span id="L1394" class="ln">  1394&nbsp;&nbsp;</span><span class="comment">// (e.g., the year is out of range), then an error is reported.</span>
+<span id="L1395" class="ln">  1395&nbsp;&nbsp;</span>func (t Time) MarshalText() ([]byte, error) {
+<span id="L1396" class="ln">  1396&nbsp;&nbsp;</span>	b := make([]byte, 0, len(RFC3339Nano))
+<span id="L1397" class="ln">  1397&nbsp;&nbsp;</span>	b, err := t.appendStrictRFC3339(b)
+<span id="L1398" class="ln">  1398&nbsp;&nbsp;</span>	if err != nil {
+<span id="L1399" class="ln">  1399&nbsp;&nbsp;</span>		return nil, errors.New(&#34;Time.MarshalText: &#34; + err.Error())
+<span id="L1400" class="ln">  1400&nbsp;&nbsp;</span>	}
+<span id="L1401" class="ln">  1401&nbsp;&nbsp;</span>	return b, nil
+<span id="L1402" class="ln">  1402&nbsp;&nbsp;</span>}
+<span id="L1403" class="ln">  1403&nbsp;&nbsp;</span>
+<span id="L1404" class="ln">  1404&nbsp;&nbsp;</span><span class="comment">// UnmarshalText implements the encoding.TextUnmarshaler interface.</span>
+<span id="L1405" class="ln">  1405&nbsp;&nbsp;</span><span class="comment">// The time must be in the RFC 3339 format.</span>
+<span id="L1406" class="ln">  1406&nbsp;&nbsp;</span>func (t *Time) UnmarshalText(data []byte) error {
+<span id="L1407" class="ln">  1407&nbsp;&nbsp;</span>	var err error
+<span id="L1408" class="ln">  1408&nbsp;&nbsp;</span>	*t, err = parseStrictRFC3339(data)
+<span id="L1409" class="ln">  1409&nbsp;&nbsp;</span>	return err
+<span id="L1410" class="ln">  1410&nbsp;&nbsp;</span>}
+<span id="L1411" class="ln">  1411&nbsp;&nbsp;</span>
+<span id="L1412" class="ln">  1412&nbsp;&nbsp;</span><span class="comment">// Unix returns the local Time corresponding to the given Unix time,</span>
+<span id="L1413" class="ln">  1413&nbsp;&nbsp;</span><span class="comment">// sec seconds and nsec nanoseconds since January 1, 1970 UTC.</span>
+<span id="L1414" class="ln">  1414&nbsp;&nbsp;</span><span class="comment">// It is valid to pass nsec outside the range [0, 999999999].</span>
+<span id="L1415" class="ln">  1415&nbsp;&nbsp;</span><span class="comment">// Not all sec values have a corresponding time value. One such</span>
+<span id="L1416" class="ln">  1416&nbsp;&nbsp;</span><span class="comment">// value is 1&lt;&lt;63-1 (the largest int64 value).</span>
+<span id="L1417" class="ln">  1417&nbsp;&nbsp;</span>func Unix(sec int64, nsec int64) Time {
+<span id="L1418" class="ln">  1418&nbsp;&nbsp;</span>	if nsec &lt; 0 || nsec &gt;= 1e9 {
+<span id="L1419" class="ln">  1419&nbsp;&nbsp;</span>		n := nsec / 1e9
+<span id="L1420" class="ln">  1420&nbsp;&nbsp;</span>		sec += n
+<span id="L1421" class="ln">  1421&nbsp;&nbsp;</span>		nsec -= n * 1e9
+<span id="L1422" class="ln">  1422&nbsp;&nbsp;</span>		if nsec &lt; 0 {
+<span id="L1423" class="ln">  1423&nbsp;&nbsp;</span>			nsec += 1e9
+<span id="L1424" class="ln">  1424&nbsp;&nbsp;</span>			sec--
+<span id="L1425" class="ln">  1425&nbsp;&nbsp;</span>		}
+<span id="L1426" class="ln">  1426&nbsp;&nbsp;</span>	}
+<span id="L1427" class="ln">  1427&nbsp;&nbsp;</span>	return unixTime(sec, int32(nsec))
+<span id="L1428" class="ln">  1428&nbsp;&nbsp;</span>}
+<span id="L1429" class="ln">  1429&nbsp;&nbsp;</span>
+<span id="L1430" class="ln">  1430&nbsp;&nbsp;</span><span class="comment">// UnixMilli returns the local Time corresponding to the given Unix time,</span>
+<span id="L1431" class="ln">  1431&nbsp;&nbsp;</span><span class="comment">// msec milliseconds since January 1, 1970 UTC.</span>
+<span id="L1432" class="ln">  1432&nbsp;&nbsp;</span>func UnixMilli(msec int64) Time {
+<span id="L1433" class="ln">  1433&nbsp;&nbsp;</span>	return Unix(msec/1e3, (msec%1e3)*1e6)
+<span id="L1434" class="ln">  1434&nbsp;&nbsp;</span>}
+<span id="L1435" class="ln">  1435&nbsp;&nbsp;</span>
+<span id="L1436" class="ln">  1436&nbsp;&nbsp;</span><span class="comment">// UnixMicro returns the local Time corresponding to the given Unix time,</span>
+<span id="L1437" class="ln">  1437&nbsp;&nbsp;</span><span class="comment">// usec microseconds since January 1, 1970 UTC.</span>
+<span id="L1438" class="ln">  1438&nbsp;&nbsp;</span>func UnixMicro(usec int64) Time {
+<span id="L1439" class="ln">  1439&nbsp;&nbsp;</span>	return Unix(usec/1e6, (usec%1e6)*1e3)
+<span id="L1440" class="ln">  1440&nbsp;&nbsp;</span>}
+<span id="L1441" class="ln">  1441&nbsp;&nbsp;</span>
+<span id="L1442" class="ln">  1442&nbsp;&nbsp;</span><span class="comment">// IsDST reports whether the time in the configured location is in Daylight Savings Time.</span>
+<span id="L1443" class="ln">  1443&nbsp;&nbsp;</span>func (t Time) IsDST() bool {
+<span id="L1444" class="ln">  1444&nbsp;&nbsp;</span>	_, _, _, _, isDST := t.loc.lookup(t.Unix())
+<span id="L1445" class="ln">  1445&nbsp;&nbsp;</span>	return isDST
+<span id="L1446" class="ln">  1446&nbsp;&nbsp;</span>}
+<span id="L1447" class="ln">  1447&nbsp;&nbsp;</span>
+<span id="L1448" class="ln">  1448&nbsp;&nbsp;</span>func isLeap(year int) bool {
+<span id="L1449" class="ln">  1449&nbsp;&nbsp;</span>	return year%4 == 0 &amp;&amp; (year%100 != 0 || year%400 == 0)
+<span id="L1450" class="ln">  1450&nbsp;&nbsp;</span>}
+<span id="L1451" class="ln">  1451&nbsp;&nbsp;</span>
+<span id="L1452" class="ln">  1452&nbsp;&nbsp;</span><span class="comment">// norm returns nhi, nlo such that</span>
+<span id="L1453" class="ln">  1453&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L1454" class="ln">  1454&nbsp;&nbsp;</span><span class="comment">//	hi * base + lo == nhi * base + nlo</span>
+<span id="L1455" class="ln">  1455&nbsp;&nbsp;</span><span class="comment">//	0 &lt;= nlo &lt; base</span>
+<span id="L1456" class="ln">  1456&nbsp;&nbsp;</span>func norm(hi, lo, base int) (nhi, nlo int) {
+<span id="L1457" class="ln">  1457&nbsp;&nbsp;</span>	if lo &lt; 0 {
+<span id="L1458" class="ln">  1458&nbsp;&nbsp;</span>		n := (-lo-1)/base + 1
+<span id="L1459" class="ln">  1459&nbsp;&nbsp;</span>		hi -= n
+<span id="L1460" class="ln">  1460&nbsp;&nbsp;</span>		lo += n * base
+<span id="L1461" class="ln">  1461&nbsp;&nbsp;</span>	}
+<span id="L1462" class="ln">  1462&nbsp;&nbsp;</span>	if lo &gt;= base {
+<span id="L1463" class="ln">  1463&nbsp;&nbsp;</span>		n := lo / base
+<span id="L1464" class="ln">  1464&nbsp;&nbsp;</span>		hi += n
+<span id="L1465" class="ln">  1465&nbsp;&nbsp;</span>		lo -= n * base
+<span id="L1466" class="ln">  1466&nbsp;&nbsp;</span>	}
+<span id="L1467" class="ln">  1467&nbsp;&nbsp;</span>	return hi, lo
+<span id="L1468" class="ln">  1468&nbsp;&nbsp;</span>}
+<span id="L1469" class="ln">  1469&nbsp;&nbsp;</span>
+<span id="L1470" class="ln">  1470&nbsp;&nbsp;</span><span class="comment">// Date returns the Time corresponding to</span>
+<span id="L1471" class="ln">  1471&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L1472" class="ln">  1472&nbsp;&nbsp;</span><span class="comment">//	yyyy-mm-dd hh:mm:ss + nsec nanoseconds</span>
+<span id="L1473" class="ln">  1473&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L1474" class="ln">  1474&nbsp;&nbsp;</span><span class="comment">// in the appropriate zone for that time in the given location.</span>
+<span id="L1475" class="ln">  1475&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L1476" class="ln">  1476&nbsp;&nbsp;</span><span class="comment">// The month, day, hour, min, sec, and nsec values may be outside</span>
+<span id="L1477" class="ln">  1477&nbsp;&nbsp;</span><span class="comment">// their usual ranges and will be normalized during the conversion.</span>
+<span id="L1478" class="ln">  1478&nbsp;&nbsp;</span><span class="comment">// For example, October 32 converts to November 1.</span>
+<span id="L1479" class="ln">  1479&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L1480" class="ln">  1480&nbsp;&nbsp;</span><span class="comment">// A daylight savings time transition skips or repeats times.</span>
+<span id="L1481" class="ln">  1481&nbsp;&nbsp;</span><span class="comment">// For example, in the United States, March 13, 2011 2:15am never occurred,</span>
+<span id="L1482" class="ln">  1482&nbsp;&nbsp;</span><span class="comment">// while November 6, 2011 1:15am occurred twice. In such cases, the</span>
+<span id="L1483" class="ln">  1483&nbsp;&nbsp;</span><span class="comment">// choice of time zone, and therefore the time, is not well-defined.</span>
+<span id="L1484" class="ln">  1484&nbsp;&nbsp;</span><span class="comment">// Date returns a time that is correct in one of the two zones involved</span>
+<span id="L1485" class="ln">  1485&nbsp;&nbsp;</span><span class="comment">// in the transition, but it does not guarantee which.</span>
+<span id="L1486" class="ln">  1486&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L1487" class="ln">  1487&nbsp;&nbsp;</span><span class="comment">// Date panics if loc is nil.</span>
+<span id="L1488" class="ln">  1488&nbsp;&nbsp;</span>func Date(year int, month Month, day, hour, min, sec, nsec int, loc *Location) Time {
+<span id="L1489" class="ln">  1489&nbsp;&nbsp;</span>	if loc == nil {
+<span id="L1490" class="ln">  1490&nbsp;&nbsp;</span>		panic(&#34;time: missing Location in call to Date&#34;)
+<span id="L1491" class="ln">  1491&nbsp;&nbsp;</span>	}
+<span id="L1492" class="ln">  1492&nbsp;&nbsp;</span>
+<span id="L1493" class="ln">  1493&nbsp;&nbsp;</span>	<span class="comment">// Normalize month, overflowing into year.</span>
+<span id="L1494" class="ln">  1494&nbsp;&nbsp;</span>	m := int(month) - 1
+<span id="L1495" class="ln">  1495&nbsp;&nbsp;</span>	year, m = norm(year, m, 12)
+<span id="L1496" class="ln">  1496&nbsp;&nbsp;</span>	month = Month(m) + 1
+<span id="L1497" class="ln">  1497&nbsp;&nbsp;</span>
+<span id="L1498" class="ln">  1498&nbsp;&nbsp;</span>	<span class="comment">// Normalize nsec, sec, min, hour, overflowing into day.</span>
+<span id="L1499" class="ln">  1499&nbsp;&nbsp;</span>	sec, nsec = norm(sec, nsec, 1e9)
+<span id="L1500" class="ln">  1500&nbsp;&nbsp;</span>	min, sec = norm(min, sec, 60)
+<span id="L1501" class="ln">  1501&nbsp;&nbsp;</span>	hour, min = norm(hour, min, 60)
+<span id="L1502" class="ln">  1502&nbsp;&nbsp;</span>	day, hour = norm(day, hour, 24)
+<span id="L1503" class="ln">  1503&nbsp;&nbsp;</span>
+<span id="L1504" class="ln">  1504&nbsp;&nbsp;</span>	<span class="comment">// Compute days since the absolute epoch.</span>
+<span id="L1505" class="ln">  1505&nbsp;&nbsp;</span>	d := daysSinceEpoch(year)
+<span id="L1506" class="ln">  1506&nbsp;&nbsp;</span>
+<span id="L1507" class="ln">  1507&nbsp;&nbsp;</span>	<span class="comment">// Add in days before this month.</span>
+<span id="L1508" class="ln">  1508&nbsp;&nbsp;</span>	d += uint64(daysBefore[month-1])
+<span id="L1509" class="ln">  1509&nbsp;&nbsp;</span>	if isLeap(year) &amp;&amp; month &gt;= March {
+<span id="L1510" class="ln">  1510&nbsp;&nbsp;</span>		d++ <span class="comment">// February 29</span>
+<span id="L1511" class="ln">  1511&nbsp;&nbsp;</span>	}
+<span id="L1512" class="ln">  1512&nbsp;&nbsp;</span>
+<span id="L1513" class="ln">  1513&nbsp;&nbsp;</span>	<span class="comment">// Add in days before today.</span>
+<span id="L1514" class="ln">  1514&nbsp;&nbsp;</span>	d += uint64(day - 1)
+<span id="L1515" class="ln">  1515&nbsp;&nbsp;</span>
+<span id="L1516" class="ln">  1516&nbsp;&nbsp;</span>	<span class="comment">// Add in time elapsed today.</span>
+<span id="L1517" class="ln">  1517&nbsp;&nbsp;</span>	abs := d * secondsPerDay
+<span id="L1518" class="ln">  1518&nbsp;&nbsp;</span>	abs += uint64(hour*secondsPerHour + min*secondsPerMinute + sec)
+<span id="L1519" class="ln">  1519&nbsp;&nbsp;</span>
+<span id="L1520" class="ln">  1520&nbsp;&nbsp;</span>	unix := int64(abs) + (absoluteToInternal + internalToUnix)
+<span id="L1521" class="ln">  1521&nbsp;&nbsp;</span>
+<span id="L1522" class="ln">  1522&nbsp;&nbsp;</span>	<span class="comment">// Look for zone offset for expected time, so we can adjust to UTC.</span>
+<span id="L1523" class="ln">  1523&nbsp;&nbsp;</span>	<span class="comment">// The lookup function expects UTC, so first we pass unix in the</span>
+<span id="L1524" class="ln">  1524&nbsp;&nbsp;</span>	<span class="comment">// hope that it will not be too close to a zone transition,</span>
+<span id="L1525" class="ln">  1525&nbsp;&nbsp;</span>	<span class="comment">// and then adjust if it is.</span>
+<span id="L1526" class="ln">  1526&nbsp;&nbsp;</span>	_, offset, start, end, _ := loc.lookup(unix)
+<span id="L1527" class="ln">  1527&nbsp;&nbsp;</span>	if offset != 0 {
+<span id="L1528" class="ln">  1528&nbsp;&nbsp;</span>		utc := unix - int64(offset)
+<span id="L1529" class="ln">  1529&nbsp;&nbsp;</span>		<span class="comment">// If utc is valid for the time zone we found, then we have the right offset.</span>
+<span id="L1530" class="ln">  1530&nbsp;&nbsp;</span>		<span class="comment">// If not, we get the correct offset by looking up utc in the location.</span>
+<span id="L1531" class="ln">  1531&nbsp;&nbsp;</span>		if utc &lt; start || utc &gt;= end {
+<span id="L1532" class="ln">  1532&nbsp;&nbsp;</span>			_, offset, _, _, _ = loc.lookup(utc)
+<span id="L1533" class="ln">  1533&nbsp;&nbsp;</span>		}
+<span id="L1534" class="ln">  1534&nbsp;&nbsp;</span>		unix -= int64(offset)
+<span id="L1535" class="ln">  1535&nbsp;&nbsp;</span>	}
+<span id="L1536" class="ln">  1536&nbsp;&nbsp;</span>
+<span id="L1537" class="ln">  1537&nbsp;&nbsp;</span>	t := unixTime(unix, int32(nsec))
+<span id="L1538" class="ln">  1538&nbsp;&nbsp;</span>	t.setLoc(loc)
+<span id="L1539" class="ln">  1539&nbsp;&nbsp;</span>	return t
+<span id="L1540" class="ln">  1540&nbsp;&nbsp;</span>}
+<span id="L1541" class="ln">  1541&nbsp;&nbsp;</span>
+<span id="L1542" class="ln">  1542&nbsp;&nbsp;</span><span class="comment">// Truncate returns the result of rounding t down to a multiple of d (since the zero time).</span>
+<span id="L1543" class="ln">  1543&nbsp;&nbsp;</span><span class="comment">// If d &lt;= 0, Truncate returns t stripped of any monotonic clock reading but otherwise unchanged.</span>
+<span id="L1544" class="ln">  1544&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L1545" class="ln">  1545&nbsp;&nbsp;</span><span class="comment">// Truncate operates on the time as an absolute duration since the</span>
+<span id="L1546" class="ln">  1546&nbsp;&nbsp;</span><span class="comment">// zero time; it does not operate on the presentation form of the</span>
+<span id="L1547" class="ln">  1547&nbsp;&nbsp;</span><span class="comment">// time. Thus, Truncate(Hour) may return a time with a non-zero</span>
+<span id="L1548" class="ln">  1548&nbsp;&nbsp;</span><span class="comment">// minute, depending on the time&#39;s Location.</span>
+<span id="L1549" class="ln">  1549&nbsp;&nbsp;</span>func (t Time) Truncate(d Duration) Time {
+<span id="L1550" class="ln">  1550&nbsp;&nbsp;</span>	t.stripMono()
+<span id="L1551" class="ln">  1551&nbsp;&nbsp;</span>	if d &lt;= 0 {
+<span id="L1552" class="ln">  1552&nbsp;&nbsp;</span>		return t
+<span id="L1553" class="ln">  1553&nbsp;&nbsp;</span>	}
+<span id="L1554" class="ln">  1554&nbsp;&nbsp;</span>	_, r := div(t, d)
+<span id="L1555" class="ln">  1555&nbsp;&nbsp;</span>	return t.Add(-r)
+<span id="L1556" class="ln">  1556&nbsp;&nbsp;</span>}
+<span id="L1557" class="ln">  1557&nbsp;&nbsp;</span>
+<span id="L1558" class="ln">  1558&nbsp;&nbsp;</span><span class="comment">// Round returns the result of rounding t to the nearest multiple of d (since the zero time).</span>
+<span id="L1559" class="ln">  1559&nbsp;&nbsp;</span><span class="comment">// The rounding behavior for halfway values is to round up.</span>
+<span id="L1560" class="ln">  1560&nbsp;&nbsp;</span><span class="comment">// If d &lt;= 0, Round returns t stripped of any monotonic clock reading but otherwise unchanged.</span>
+<span id="L1561" class="ln">  1561&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L1562" class="ln">  1562&nbsp;&nbsp;</span><span class="comment">// Round operates on the time as an absolute duration since the</span>
+<span id="L1563" class="ln">  1563&nbsp;&nbsp;</span><span class="comment">// zero time; it does not operate on the presentation form of the</span>
+<span id="L1564" class="ln">  1564&nbsp;&nbsp;</span><span class="comment">// time. Thus, Round(Hour) may return a time with a non-zero</span>
+<span id="L1565" class="ln">  1565&nbsp;&nbsp;</span><span class="comment">// minute, depending on the time&#39;s Location.</span>
+<span id="L1566" class="ln">  1566&nbsp;&nbsp;</span>func (t Time) Round(d Duration) Time {
+<span id="L1567" class="ln">  1567&nbsp;&nbsp;</span>	t.stripMono()
+<span id="L1568" class="ln">  1568&nbsp;&nbsp;</span>	if d &lt;= 0 {
+<span id="L1569" class="ln">  1569&nbsp;&nbsp;</span>		return t
+<span id="L1570" class="ln">  1570&nbsp;&nbsp;</span>	}
+<span id="L1571" class="ln">  1571&nbsp;&nbsp;</span>	_, r := div(t, d)
+<span id="L1572" class="ln">  1572&nbsp;&nbsp;</span>	if lessThanHalf(r, d) {
+<span id="L1573" class="ln">  1573&nbsp;&nbsp;</span>		return t.Add(-r)
+<span id="L1574" class="ln">  1574&nbsp;&nbsp;</span>	}
+<span id="L1575" class="ln">  1575&nbsp;&nbsp;</span>	return t.Add(d - r)
+<span id="L1576" class="ln">  1576&nbsp;&nbsp;</span>}
+<span id="L1577" class="ln">  1577&nbsp;&nbsp;</span>
+<span id="L1578" class="ln">  1578&nbsp;&nbsp;</span><span class="comment">// div divides t by d and returns the quotient parity and remainder.</span>
+<span id="L1579" class="ln">  1579&nbsp;&nbsp;</span><span class="comment">// We don&#39;t use the quotient parity anymore (round half up instead of round to even)</span>
+<span id="L1580" class="ln">  1580&nbsp;&nbsp;</span><span class="comment">// but it&#39;s still here in case we change our minds.</span>
+<span id="L1581" class="ln">  1581&nbsp;&nbsp;</span>func div(t Time, d Duration) (qmod2 int, r Duration) {
+<span id="L1582" class="ln">  1582&nbsp;&nbsp;</span>	neg := false
+<span id="L1583" class="ln">  1583&nbsp;&nbsp;</span>	nsec := t.nsec()
+<span id="L1584" class="ln">  1584&nbsp;&nbsp;</span>	sec := t.sec()
+<span id="L1585" class="ln">  1585&nbsp;&nbsp;</span>	if sec &lt; 0 {
+<span id="L1586" class="ln">  1586&nbsp;&nbsp;</span>		<span class="comment">// Operate on absolute value.</span>
+<span id="L1587" class="ln">  1587&nbsp;&nbsp;</span>		neg = true
+<span id="L1588" class="ln">  1588&nbsp;&nbsp;</span>		sec = -sec
+<span id="L1589" class="ln">  1589&nbsp;&nbsp;</span>		nsec = -nsec
+<span id="L1590" class="ln">  1590&nbsp;&nbsp;</span>		if nsec &lt; 0 {
+<span id="L1591" class="ln">  1591&nbsp;&nbsp;</span>			nsec += 1e9
+<span id="L1592" class="ln">  1592&nbsp;&nbsp;</span>			sec-- <span class="comment">// sec &gt;= 1 before the -- so safe</span>
+<span id="L1593" class="ln">  1593&nbsp;&nbsp;</span>		}
+<span id="L1594" class="ln">  1594&nbsp;&nbsp;</span>	}
+<span id="L1595" class="ln">  1595&nbsp;&nbsp;</span>
+<span id="L1596" class="ln">  1596&nbsp;&nbsp;</span>	switch {
+<span id="L1597" class="ln">  1597&nbsp;&nbsp;</span>	<span class="comment">// Special case: 2d divides 1 second.</span>
+<span id="L1598" class="ln">  1598&nbsp;&nbsp;</span>	case d &lt; Second &amp;&amp; Second%(d+d) == 0:
+<span id="L1599" class="ln">  1599&nbsp;&nbsp;</span>		qmod2 = int(nsec/int32(d)) &amp; 1
+<span id="L1600" class="ln">  1600&nbsp;&nbsp;</span>		r = Duration(nsec % int32(d))
+<span id="L1601" class="ln">  1601&nbsp;&nbsp;</span>
+<span id="L1602" class="ln">  1602&nbsp;&nbsp;</span>	<span class="comment">// Special case: d is a multiple of 1 second.</span>
+<span id="L1603" class="ln">  1603&nbsp;&nbsp;</span>	case d%Second == 0:
+<span id="L1604" class="ln">  1604&nbsp;&nbsp;</span>		d1 := int64(d / Second)
+<span id="L1605" class="ln">  1605&nbsp;&nbsp;</span>		qmod2 = int(sec/d1) &amp; 1
+<span id="L1606" class="ln">  1606&nbsp;&nbsp;</span>		r = Duration(sec%d1)*Second + Duration(nsec)
+<span id="L1607" class="ln">  1607&nbsp;&nbsp;</span>
+<span id="L1608" class="ln">  1608&nbsp;&nbsp;</span>	<span class="comment">// General case.</span>
+<span id="L1609" class="ln">  1609&nbsp;&nbsp;</span>	<span class="comment">// This could be faster if more cleverness were applied,</span>
+<span id="L1610" class="ln">  1610&nbsp;&nbsp;</span>	<span class="comment">// but it&#39;s really only here to avoid special case restrictions in the API.</span>
+<span id="L1611" class="ln">  1611&nbsp;&nbsp;</span>	<span class="comment">// No one will care about these cases.</span>
+<span id="L1612" class="ln">  1612&nbsp;&nbsp;</span>	default:
+<span id="L1613" class="ln">  1613&nbsp;&nbsp;</span>		<span class="comment">// Compute nanoseconds as 128-bit number.</span>
+<span id="L1614" class="ln">  1614&nbsp;&nbsp;</span>		sec := uint64(sec)
+<span id="L1615" class="ln">  1615&nbsp;&nbsp;</span>		tmp := (sec &gt;&gt; 32) * 1e9
+<span id="L1616" class="ln">  1616&nbsp;&nbsp;</span>		u1 := tmp &gt;&gt; 32
+<span id="L1617" class="ln">  1617&nbsp;&nbsp;</span>		u0 := tmp &lt;&lt; 32
+<span id="L1618" class="ln">  1618&nbsp;&nbsp;</span>		tmp = (sec &amp; 0xFFFFFFFF) * 1e9
+<span id="L1619" class="ln">  1619&nbsp;&nbsp;</span>		u0x, u0 := u0, u0+tmp
+<span id="L1620" class="ln">  1620&nbsp;&nbsp;</span>		if u0 &lt; u0x {
+<span id="L1621" class="ln">  1621&nbsp;&nbsp;</span>			u1++
+<span id="L1622" class="ln">  1622&nbsp;&nbsp;</span>		}
+<span id="L1623" class="ln">  1623&nbsp;&nbsp;</span>		u0x, u0 = u0, u0+uint64(nsec)
+<span id="L1624" class="ln">  1624&nbsp;&nbsp;</span>		if u0 &lt; u0x {
+<span id="L1625" class="ln">  1625&nbsp;&nbsp;</span>			u1++
+<span id="L1626" class="ln">  1626&nbsp;&nbsp;</span>		}
+<span id="L1627" class="ln">  1627&nbsp;&nbsp;</span>
+<span id="L1628" class="ln">  1628&nbsp;&nbsp;</span>		<span class="comment">// Compute remainder by subtracting r&lt;&lt;k for decreasing k.</span>
+<span id="L1629" class="ln">  1629&nbsp;&nbsp;</span>		<span class="comment">// Quotient parity is whether we subtract on last round.</span>
+<span id="L1630" class="ln">  1630&nbsp;&nbsp;</span>		d1 := uint64(d)
+<span id="L1631" class="ln">  1631&nbsp;&nbsp;</span>		for d1&gt;&gt;63 != 1 {
+<span id="L1632" class="ln">  1632&nbsp;&nbsp;</span>			d1 &lt;&lt;= 1
+<span id="L1633" class="ln">  1633&nbsp;&nbsp;</span>		}
+<span id="L1634" class="ln">  1634&nbsp;&nbsp;</span>		d0 := uint64(0)
+<span id="L1635" class="ln">  1635&nbsp;&nbsp;</span>		for {
+<span id="L1636" class="ln">  1636&nbsp;&nbsp;</span>			qmod2 = 0
+<span id="L1637" class="ln">  1637&nbsp;&nbsp;</span>			if u1 &gt; d1 || u1 == d1 &amp;&amp; u0 &gt;= d0 {
+<span id="L1638" class="ln">  1638&nbsp;&nbsp;</span>				<span class="comment">// subtract</span>
+<span id="L1639" class="ln">  1639&nbsp;&nbsp;</span>				qmod2 = 1
+<span id="L1640" class="ln">  1640&nbsp;&nbsp;</span>				u0x, u0 = u0, u0-d0
+<span id="L1641" class="ln">  1641&nbsp;&nbsp;</span>				if u0 &gt; u0x {
+<span id="L1642" class="ln">  1642&nbsp;&nbsp;</span>					u1--
+<span id="L1643" class="ln">  1643&nbsp;&nbsp;</span>				}
+<span id="L1644" class="ln">  1644&nbsp;&nbsp;</span>				u1 -= d1
+<span id="L1645" class="ln">  1645&nbsp;&nbsp;</span>			}
+<span id="L1646" class="ln">  1646&nbsp;&nbsp;</span>			if d1 == 0 &amp;&amp; d0 == uint64(d) {
+<span id="L1647" class="ln">  1647&nbsp;&nbsp;</span>				break
+<span id="L1648" class="ln">  1648&nbsp;&nbsp;</span>			}
+<span id="L1649" class="ln">  1649&nbsp;&nbsp;</span>			d0 &gt;&gt;= 1
+<span id="L1650" class="ln">  1650&nbsp;&nbsp;</span>			d0 |= (d1 &amp; 1) &lt;&lt; 63
+<span id="L1651" class="ln">  1651&nbsp;&nbsp;</span>			d1 &gt;&gt;= 1
+<span id="L1652" class="ln">  1652&nbsp;&nbsp;</span>		}
+<span id="L1653" class="ln">  1653&nbsp;&nbsp;</span>		r = Duration(u0)
+<span id="L1654" class="ln">  1654&nbsp;&nbsp;</span>	}
+<span id="L1655" class="ln">  1655&nbsp;&nbsp;</span>
+<span id="L1656" class="ln">  1656&nbsp;&nbsp;</span>	if neg &amp;&amp; r != 0 {
+<span id="L1657" class="ln">  1657&nbsp;&nbsp;</span>		<span class="comment">// If input was negative and not an exact multiple of d, we computed q, r such that</span>
+<span id="L1658" class="ln">  1658&nbsp;&nbsp;</span>		<span class="comment">//	q*d + r = -t</span>
+<span id="L1659" class="ln">  1659&nbsp;&nbsp;</span>		<span class="comment">// But the right answers are given by -(q-1), d-r:</span>
+<span id="L1660" class="ln">  1660&nbsp;&nbsp;</span>		<span class="comment">//	q*d + r = -t</span>
+<span id="L1661" class="ln">  1661&nbsp;&nbsp;</span>		<span class="comment">//	-q*d - r = t</span>
+<span id="L1662" class="ln">  1662&nbsp;&nbsp;</span>		<span class="comment">//	-(q-1)*d + (d - r) = t</span>
+<span id="L1663" class="ln">  1663&nbsp;&nbsp;</span>		qmod2 ^= 1
+<span id="L1664" class="ln">  1664&nbsp;&nbsp;</span>		r = d - r
+<span id="L1665" class="ln">  1665&nbsp;&nbsp;</span>	}
+<span id="L1666" class="ln">  1666&nbsp;&nbsp;</span>	return
+<span id="L1667" class="ln">  1667&nbsp;&nbsp;</span>}
+<span id="L1668" class="ln">  1668&nbsp;&nbsp;</span>
+</pre><p><a href="time.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

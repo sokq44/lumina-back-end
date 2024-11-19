@@ -1,0 +1,1709 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>template - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package template
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "text/template"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+				<dd><a href="index.html#pkg-examples" class="examplesLink">Examples</a></dd>
+			
+			
+				<dd><a href="index.html#pkg-subdirectories">Subdirectories</a></dd>
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>Package template implements data-driven templates for generating textual output.
+<p>To generate HTML output, see <a href="http://localhost:8080/html/template">html/template</a>, which has the same interface
+as this package but automatically secures HTML output against certain attacks.
+<p>Templates are executed by applying them to a data structure. Annotations in the
+template refer to elements of the data structure (typically a field of a struct
+or a key in a map) to control execution and derive values to be displayed.
+Execution of the template walks the structure and sets the cursor, represented
+by a period &apos;.&apos; and called &quot;dot&quot;, to the value at the current location in the
+structure as execution proceeds.
+<p>The input text for a template is UTF-8-encoded text in any format.
+&quot;Actions&quot;--data evaluations or control structures--are delimited by
+&quot;{{&quot; and &quot;}}&quot;; all text outside actions is copied to the output unchanged.
+<p>Once parsed, a template may be executed safely in parallel, although if parallel
+executions share a Writer the output may be interleaved.
+<p>Here is a trivial example that prints &quot;17 items are made of wool&quot;.
+<pre>type Inventory struct {
+	Material string
+	Count    uint
+}
+sweaters := Inventory{&quot;wool&quot;, 17}
+tmpl, err := template.New(&quot;test&quot;).Parse(&quot;{{.Count}} items are made of {{.Material}}&quot;)
+if err != nil { panic(err) }
+err = tmpl.Execute(os.Stdout, sweaters)
+if err != nil { panic(err) }
+</pre>
+<p>More intricate examples appear below.
+<h3 id="hdr-Text_and_spaces">Text and spaces</h3>
+<p>By default, all text between actions is copied verbatim when the template is
+executed. For example, the string &quot; items are made of &quot; in the example above
+appears on standard output when the program is run.
+<p>However, to aid in formatting template source code, if an action&apos;s left
+delimiter (by default &quot;{{&quot;) is followed immediately by a minus sign and white
+space, all trailing white space is trimmed from the immediately preceding text.
+Similarly, if the right delimiter (&quot;}}&quot;) is preceded by white space and a minus
+sign, all leading white space is trimmed from the immediately following text.
+In these trim markers, the white space must be present:
+&quot;{{- 3}}&quot; is like &quot;{{3}}&quot; but trims the immediately preceding text, while
+&quot;{{-3}}&quot; parses as an action containing the number -3.
+<p>For instance, when executing the template whose source is
+<pre>&quot;{{23 -}} &lt; {{- 45}}&quot;
+</pre>
+<p>the generated output would be
+<pre>&quot;23&lt;45&quot;
+</pre>
+<p>For this trimming, the definition of white space characters is the same as in Go:
+space, horizontal tab, carriage return, and newline.
+<h3 id="hdr-Actions">Actions</h3>
+<p>Here is the list of actions. &quot;Arguments&quot; and &quot;pipelines&quot; are evaluations of
+data, defined in detail in the corresponding sections that follow.
+<pre>{{/* a comment */}}
+{{- /* a comment with white space trimmed from preceding and following text */ -}}
+	A comment; discarded. May contain newlines.
+	Comments do not nest and must start and end at the
+	delimiters, as shown here.
+
+{{pipeline}}
+	The default textual representation (the same as would be
+	printed by fmt.Print) of the value of the pipeline is copied
+	to the output.
+
+{{if pipeline}} T1 {{end}}
+	If the value of the pipeline is empty, no output is generated;
+	otherwise, T1 is executed. The empty values are false, 0, any
+	nil pointer or interface value, and any array, slice, map, or
+	string of length zero.
+	Dot is unaffected.
+
+{{if pipeline}} T1 {{else}} T0 {{end}}
+	If the value of the pipeline is empty, T0 is executed;
+	otherwise, T1 is executed. Dot is unaffected.
+
+{{if pipeline}} T1 {{else if pipeline}} T0 {{end}}
+	To simplify the appearance of if-else chains, the else action
+	of an if may include another if directly; the effect is exactly
+	the same as writing
+		{{if pipeline}} T1 {{else}}{{if pipeline}} T0 {{end}}{{end}}
+
+{{range pipeline}} T1 {{end}}
+	The value of the pipeline must be an array, slice, map, or channel.
+	If the value of the pipeline has length zero, nothing is output;
+	otherwise, dot is set to the successive elements of the array,
+	slice, or map and T1 is executed. If the value is a map and the
+	keys are of basic type with a defined order, the elements will be
+	visited in sorted key order.
+
+{{range pipeline}} T1 {{else}} T0 {{end}}
+	The value of the pipeline must be an array, slice, map, or channel.
+	If the value of the pipeline has length zero, dot is unaffected and
+	T0 is executed; otherwise, dot is set to the successive elements
+	of the array, slice, or map and T1 is executed.
+
+{{break}}
+	The innermost {{range pipeline}} loop is ended early, stopping the
+	current iteration and bypassing all remaining iterations.
+
+{{continue}}
+	The current iteration of the innermost {{range pipeline}} loop is
+	stopped, and the loop starts the next iteration.
+
+{{template &quot;name&quot;}}
+	The template with the specified name is executed with nil data.
+
+{{template &quot;name&quot; pipeline}}
+	The template with the specified name is executed with dot set
+	to the value of the pipeline.
+
+{{block &quot;name&quot; pipeline}} T1 {{end}}
+	A block is shorthand for defining a template
+		{{define &quot;name&quot;}} T1 {{end}}
+	and then executing it in place
+		{{template &quot;name&quot; pipeline}}
+	The typical use is to define a set of root templates that are
+	then customized by redefining the block templates within.
+
+{{with pipeline}} T1 {{end}}
+	If the value of the pipeline is empty, no output is generated;
+	otherwise, dot is set to the value of the pipeline and T1 is
+	executed.
+
+{{with pipeline}} T1 {{else}} T0 {{end}}
+	If the value of the pipeline is empty, dot is unaffected and T0
+	is executed; otherwise, dot is set to the value of the pipeline
+	and T1 is executed.
+</pre>
+<h3 id="hdr-Arguments">Arguments</h3>
+<p>An argument is a simple value, denoted by one of the following.
+<ul>
+<li>A boolean, string, character, integer, floating-point, imaginary
+or complex constant in Go syntax. These behave like Go&apos;s untyped
+constants. Note that, as in Go, whether a large integer constant
+overflows when assigned or passed to a function can depend on whether
+the host machine&apos;s ints are 32 or 64 bits.
+<li>The keyword nil, representing an untyped Go nil.
+<li>The character &apos;.&apos; (period):
+.
+The result is the value of dot.
+<li>A variable name, which is a (possibly empty) alphanumeric string
+preceded by a dollar sign, such as
+$piOver2
+or
+$
+The result is the value of the variable.
+Variables are described below.
+<li>The name of a field of the data, which must be a struct, preceded
+by a period, such as
+.Field
+The result is the value of the field. Field invocations may be
+chained:
+.Field1.Field2
+Fields can also be evaluated on variables, including chaining:
+$x.Field1.Field2
+<li>The name of a key of the data, which must be a map, preceded
+by a period, such as
+.Key
+The result is the map element value indexed by the key.
+Key invocations may be chained and combined with fields to any
+depth:
+.Field1.Key1.Field2.Key2
+Although the key must be an alphanumeric identifier, unlike with
+field names they do not need to start with an upper case letter.
+Keys can also be evaluated on variables, including chaining:
+$x.key1.key2
+<li>The name of a niladic method of the data, preceded by a period,
+such as
+.Method
+The result is the value of invoking the method with dot as the
+receiver, dot.Method(). Such a method must have one return value (of
+any type) or two return values, the second of which is an error.
+If it has two and the returned error is non-nil, execution terminates
+and an error is returned to the caller as the value of Execute.
+Method invocations may be chained and combined with fields and keys
+to any depth:
+.Field1.Key1.Method1.Field2.Key2.Method2
+Methods can also be evaluated on variables, including chaining:
+$x.Method1.Field
+<li>The name of a niladic function, such as
+fun
+The result is the value of invoking the function, fun(). The return
+types and values behave as in methods. Functions and function
+names are described below.
+<li>A parenthesized instance of one the above, for grouping. The result
+may be accessed by a field or map key invocation.
+print (.F1 arg1) (.F2 arg2)
+(.StructValuedMethod &quot;arg&quot;).Field
+</ul>
+<p>Arguments may evaluate to any type; if they are pointers the implementation
+automatically indirects to the base type when required.
+If an evaluation yields a function value, such as a function-valued
+field of a struct, the function is not invoked automatically, but it
+can be used as a truth value for an if action and the like. To invoke
+it, use the call function, defined below.
+<h3 id="hdr-Pipelines">Pipelines</h3>
+<p>A pipeline is a possibly chained sequence of &quot;commands&quot;. A command is a simple
+value (argument) or a function or method call, possibly with multiple arguments:
+<pre>Argument
+	The result is the value of evaluating the argument.
+.Method [Argument...]
+	The method can be alone or the last element of a chain but,
+	unlike methods in the middle of a chain, it can take arguments.
+	The result is the value of calling the method with the
+	arguments:
+		dot.Method(Argument1, etc.)
+functionName [Argument...]
+	The result is the value of calling the function associated
+	with the name:
+		function(Argument1, etc.)
+	Functions and function names are described below.
+</pre>
+<p>A pipeline may be &quot;chained&quot; by separating a sequence of commands with pipeline
+characters &apos;|&apos;. In a chained pipeline, the result of each command is
+passed as the last argument of the following command. The output of the final
+command in the pipeline is the value of the pipeline.
+<p>The output of a command will be either one value or two values, the second of
+which has type error. If that second value is present and evaluates to
+non-nil, execution terminates and the error is returned to the caller of
+Execute.
+<h3 id="hdr-Variables">Variables</h3>
+<p>A pipeline inside an action may initialize a variable to capture the result.
+The initialization has syntax
+<pre>$variable := pipeline
+</pre>
+<p>where $variable is the name of the variable. An action that declares a
+variable produces no output.
+<p>Variables previously declared can also be assigned, using the syntax
+<pre>$variable = pipeline
+</pre>
+<p>If a &quot;range&quot; action initializes a variable, the variable is set to the
+successive elements of the iteration. Also, a &quot;range&quot; may declare two
+variables, separated by a comma:
+<pre>range $index, $element := pipeline
+</pre>
+<p>in which case $index and $element are set to the successive values of the
+array/slice index or map key and element, respectively. Note that if there is
+only one variable, it is assigned the element; this is opposite to the
+convention in Go range clauses.
+<p>A variable&apos;s scope extends to the &quot;end&quot; action of the control structure (&quot;if&quot;,
+&quot;with&quot;, or &quot;range&quot;) in which it is declared, or to the end of the template if
+there is no such control structure. A template invocation does not inherit
+variables from the point of its invocation.
+<p>When execution begins, $ is set to the data argument passed to Execute, that is,
+to the starting value of dot.
+<h3 id="hdr-Examples">Examples</h3>
+<p>Here are some example one-line templates demonstrating pipelines and variables.
+All produce the quoted word &quot;output&quot;:
+<pre>{{&quot;\&quot;output\&quot;&quot;}}
+	A string constant.
+{{`&quot;output&quot;`}}
+	A raw string constant.
+{{printf &quot;%q&quot; &quot;output&quot;}}
+	A function call.
+{{&quot;output&quot; | printf &quot;%q&quot;}}
+	A function call whose final argument comes from the previous
+	command.
+{{printf &quot;%q&quot; (print &quot;out&quot; &quot;put&quot;)}}
+	A parenthesized argument.
+{{&quot;put&quot; | printf &quot;%s%s&quot; &quot;out&quot; | printf &quot;%q&quot;}}
+	A more elaborate call.
+{{&quot;output&quot; | printf &quot;%s&quot; | printf &quot;%q&quot;}}
+	A longer chain.
+{{with &quot;output&quot;}}{{printf &quot;%q&quot; .}}{{end}}
+	A with action using dot.
+{{with $x := &quot;output&quot; | printf &quot;%q&quot;}}{{$x}}{{end}}
+	A with action that creates and uses a variable.
+{{with $x := &quot;output&quot;}}{{printf &quot;%q&quot; $x}}{{end}}
+	A with action that uses the variable in another action.
+{{with $x := &quot;output&quot;}}{{$x | printf &quot;%q&quot;}}{{end}}
+	The same, but pipelined.
+</pre>
+<h3 id="hdr-Functions">Functions</h3>
+<p>During execution functions are found in two function maps: first in the
+template, then in the global function map. By default, no functions are defined
+in the template but the Funcs method can be used to add them.
+<p>Predefined global functions are named as follows.
+<pre>and
+	Returns the boolean AND of its arguments by returning the
+	first empty argument or the last argument. That is,
+	&quot;and x y&quot; behaves as &quot;if x then y else x.&quot;
+	Evaluation proceeds through the arguments left to right
+	and returns when the result is determined.
+call
+	Returns the result of calling the first argument, which
+	must be a function, with the remaining arguments as parameters.
+	Thus &quot;call .X.Y 1 2&quot; is, in Go notation, dot.X.Y(1, 2) where
+	Y is a func-valued field, map entry, or the like.
+	The first argument must be the result of an evaluation
+	that yields a value of function type (as distinct from
+	a predefined function such as print). The function must
+	return either one or two result values, the second of which
+	is of type error. If the arguments don&apos;t match the function
+	or the returned error value is non-nil, execution stops.
+html
+	Returns the escaped HTML equivalent of the textual
+	representation of its arguments. This function is unavailable
+	in html/template, with a few exceptions.
+index
+	Returns the result of indexing its first argument by the
+	following arguments. Thus &quot;index x 1 2 3&quot; is, in Go syntax,
+	x[1][2][3]. Each indexed item must be a map, slice, or array.
+slice
+	slice returns the result of slicing its first argument by the
+	remaining arguments. Thus &quot;slice x 1 2&quot; is, in Go syntax, x[1:2],
+	while &quot;slice x&quot; is x[:], &quot;slice x 1&quot; is x[1:], and &quot;slice x 1 2 3&quot;
+	is x[1:2:3]. The first argument must be a string, slice, or array.
+js
+	Returns the escaped JavaScript equivalent of the textual
+	representation of its arguments.
+len
+	Returns the integer length of its argument.
+not
+	Returns the boolean negation of its single argument.
+or
+	Returns the boolean OR of its arguments by returning the
+	first non-empty argument or the last argument, that is,
+	&quot;or x y&quot; behaves as &quot;if x then x else y&quot;.
+	Evaluation proceeds through the arguments left to right
+	and returns when the result is determined.
+print
+	An alias for fmt.Sprint
+printf
+	An alias for fmt.Sprintf
+println
+	An alias for fmt.Sprintln
+urlquery
+	Returns the escaped value of the textual representation of
+	its arguments in a form suitable for embedding in a URL query.
+	This function is unavailable in html/template, with a few
+	exceptions.
+</pre>
+<p>The boolean functions take any zero value to be false and a non-zero
+value to be true.
+<p>There is also a set of binary comparison operators defined as
+functions:
+<pre>eq
+	Returns the boolean truth of arg1 == arg2
+ne
+	Returns the boolean truth of arg1 != arg2
+lt
+	Returns the boolean truth of arg1 &lt; arg2
+le
+	Returns the boolean truth of arg1 &lt;= arg2
+gt
+	Returns the boolean truth of arg1 &gt; arg2
+ge
+	Returns the boolean truth of arg1 &gt;= arg2
+</pre>
+<p>For simpler multi-way equality tests, eq (only) accepts two or more
+arguments and compares the second and subsequent to the first,
+returning in effect
+<pre>arg1==arg2 || arg1==arg3 || arg1==arg4 ...
+</pre>
+<p>(Unlike with || in Go, however, eq is a function call and all the
+arguments will be evaluated.)
+<p>The comparison functions work on any values whose type Go defines as
+comparable. For basic types such as integers, the rules are relaxed:
+size and exact type are ignored, so any integer value, signed or unsigned,
+may be compared with any other integer value. (The arithmetic value is compared,
+not the bit pattern, so all negative integers are less than all unsigned integers.)
+However, as usual, one may not compare an int with a float32 and so on.
+<h3 id="hdr-Associated_templates">Associated templates</h3>
+<p>Each template is named by a string specified when it is created. Also, each
+template is associated with zero or more other templates that it may invoke by
+name; such associations are transitive and form a name space of templates.
+<p>A template may use a template invocation to instantiate another associated
+template; see the explanation of the &quot;template&quot; action above. The name must be
+that of a template associated with the template that contains the invocation.
+<h3 id="hdr-Nested_template_definitions">Nested template definitions</h3>
+<p>When parsing a template, another template may be defined and associated with the
+template being parsed. Template definitions must appear at the top level of the
+template, much like global variables in a Go program.
+<p>The syntax of such definitions is to surround each template declaration with a
+&quot;define&quot; and &quot;end&quot; action.
+<p>The define action names the template being created by providing a string
+constant. Here is a simple example:
+<pre>{{define &quot;T1&quot;}}ONE{{end}}
+{{define &quot;T2&quot;}}TWO{{end}}
+{{define &quot;T3&quot;}}{{template &quot;T1&quot;}} {{template &quot;T2&quot;}}{{end}}
+{{template &quot;T3&quot;}}
+</pre>
+<p>This defines two templates, T1 and T2, and a third T3 that invokes the other two
+when it is executed. Finally it invokes T3. If executed this template will
+produce the text
+<pre>ONE TWO
+</pre>
+<p>By construction, a template may reside in only one association. If it&apos;s
+necessary to have a template addressable from multiple associations, the
+template definition must be parsed multiple times to create distinct *Template
+values, or must be copied with <a href="index.html#Template.Clone">Template.Clone</a> or <a href="index.html#Template.AddParseTree">Template.AddParseTree</a>.
+<p>Parse may be called multiple times to assemble the various associated templates;
+see <a href="index.html#ParseFiles">ParseFiles</a>, <a href="index.html#ParseGlob">ParseGlob</a>, <a href="index.html#Template.ParseFiles">Template.ParseFiles</a> and <a href="index.html#Template.ParseGlob">Template.ParseGlob</a>
+for simple ways to parse related templates stored in files.
+<p>A template may be executed directly or through <a href="index.html#Template.ExecuteTemplate">Template.ExecuteTemplate</a>, which executes
+an associated template identified by name. To invoke our example above, we
+might write,
+<pre>err := tmpl.Execute(os.Stdout, &quot;no data needed&quot;)
+if err != nil {
+	log.Fatalf(&quot;execution failed: %s&quot;, err)
+}
+</pre>
+<p>or to invoke a particular template explicitly by name,
+<pre>err := tmpl.ExecuteTemplate(os.Stdout, &quot;T2&quot;, &quot;no data needed&quot;)
+if err != nil {
+	log.Fatalf(&quot;execution failed: %s&quot;, err)
+}
+</pre>
+
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+			
+			
+				
+				<dd><a href="index.html#HTMLEscape">func HTMLEscape(w io.Writer, b []byte)</a></dd>
+			
+				
+				<dd><a href="index.html#HTMLEscapeString">func HTMLEscapeString(s string) string</a></dd>
+			
+				
+				<dd><a href="index.html#HTMLEscaper">func HTMLEscaper(args ...any) string</a></dd>
+			
+				
+				<dd><a href="index.html#IsTrue">func IsTrue(val any) (truth, ok bool)</a></dd>
+			
+				
+				<dd><a href="index.html#JSEscape">func JSEscape(w io.Writer, b []byte)</a></dd>
+			
+				
+				<dd><a href="index.html#JSEscapeString">func JSEscapeString(s string) string</a></dd>
+			
+				
+				<dd><a href="index.html#JSEscaper">func JSEscaper(args ...any) string</a></dd>
+			
+				
+				<dd><a href="index.html#URLQueryEscaper">func URLQueryEscaper(args ...any) string</a></dd>
+			
+			
+				
+				<dd><a href="index.html#ExecError">type ExecError</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ExecError.Error">func (e ExecError) Error() string</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ExecError.Unwrap">func (e ExecError) Unwrap() error</a></dd>
+				
+			
+				
+				<dd><a href="index.html#FuncMap">type FuncMap</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#Template">type Template</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Must">func Must(t *Template, err error) *Template</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#New">func New(name string) *Template</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ParseFS">func ParseFS(fsys fs.FS, patterns ...string) (*Template, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ParseFiles">func ParseFiles(filenames ...string) (*Template, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ParseGlob">func ParseGlob(pattern string) (*Template, error)</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Template.AddParseTree">func (t *Template) AddParseTree(name string, tree *parse.Tree) (*Template, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Template.Clone">func (t *Template) Clone() (*Template, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Template.DefinedTemplates">func (t *Template) DefinedTemplates() string</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Template.Delims">func (t *Template) Delims(left, right string) *Template</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Template.Execute">func (t *Template) Execute(wr io.Writer, data any) error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Template.ExecuteTemplate">func (t *Template) ExecuteTemplate(wr io.Writer, name string, data any) error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Template.Funcs">func (t *Template) Funcs(funcMap FuncMap) *Template</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Template.Lookup">func (t *Template) Lookup(name string) *Template</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Template.Name">func (t *Template) Name() string</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Template.New">func (t *Template) New(name string) *Template</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Template.Option">func (t *Template) Option(opt ...string) *Template</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Template.Parse">func (t *Template) Parse(text string) (*Template, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Template.ParseFS">func (t *Template) ParseFS(fsys fs.FS, patterns ...string) (*Template, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Template.ParseFiles">func (t *Template) ParseFiles(filenames ...string) (*Template, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Template.ParseGlob">func (t *Template) ParseGlob(pattern string) (*Template, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Template.Templates">func (t *Template) Templates() []*Template</a></dd>
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+		<div id="pkg-examples">
+			<h3>Examples</h3>
+			<div class="js-expandAll expandAll collapsed">(Expand All)</div>
+			<dl>
+			
+			<dd><a class="exampleLink" href="index.html#example_Template">Template</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Template_block">Template (Block)</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Template_func">Template (Func)</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Template_glob">Template (Glob)</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Template_helpers">Template (Helpers)</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Template_share">Template (Share)</a></dd>
+			
+			</dl>
+		</div>
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../../src/text/template/doc.go">doc.go</a>
+			
+				<a href="../../../src/text/template/exec.go">exec.go</a>
+			
+				<a href="../../../src/text/template/funcs.go">funcs.go</a>
+			
+				<a href="../../../src/text/template/helper.go">helper.go</a>
+			
+				<a href="../../../src/text/template/option.go">option.go</a>
+			
+				<a href="../../../src/text/template/template.go">template.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+		
+		
+			
+			
+			<h2 id="HTMLEscape">func <a href="../../../src/text/template/funcs.go?s=17417:17455#L601">HTMLEscape</a>
+				<a class="permalink" href="index.html#HTMLEscape">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func HTMLEscape(w <a href="../../io/index.html">io</a>.<a href="../../io/index.html#Writer">Writer</a>, b []<a href="../../builtin/index.html#byte">byte</a>)</pre>
+			<p>HTMLEscape writes to w the escaped HTML equivalent of the plain text data b.
+
+			
+			
+
+		
+			
+			
+			<h2 id="HTMLEscapeString">func <a href="../../../src/text/template/funcs.go?s=17894:17932#L629">HTMLEscapeString</a>
+				<a class="permalink" href="index.html#HTMLEscapeString">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func HTMLEscapeString(s <a href="../../builtin/index.html#string">string</a>) <a href="../../builtin/index.html#string">string</a></pre>
+			<p>HTMLEscapeString returns the escaped HTML equivalent of the plain text data s.
+
+			
+			
+
+		
+			
+			
+			<h2 id="HTMLEscaper">func <a href="../../../src/text/template/funcs.go?s=18199:18235#L641">HTMLEscaper</a>
+				<a class="permalink" href="index.html#HTMLEscaper">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func HTMLEscaper(args ...<a href="../../builtin/index.html#any">any</a>) <a href="../../builtin/index.html#string">string</a></pre>
+			<p>HTMLEscaper returns the escaped HTML equivalent of the textual
+representation of its arguments.
+
+			
+			
+
+		
+			
+			
+			<h2 id="IsTrue">func <a href="../../../src/text/template/exec.go?s=9105:9142#L310">IsTrue</a>
+				<a class="permalink" href="index.html#IsTrue">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func IsTrue(val <a href="../../builtin/index.html#any">any</a>) (truth, ok <a href="../../builtin/index.html#bool">bool</a>)</pre>
+			<p>IsTrue reports whether the value is &apos;true&apos;, in the sense of not the zero of its type,
+and whether the value has a meaningful truth value. This is the definition of
+truth used by if and other such actions.
+
+			
+			
+
+		
+			
+			
+			<h2 id="JSEscape">func <a href="../../../src/text/template/funcs.go?s=18679:18715#L661">JSEscape</a>
+				<a class="permalink" href="index.html#JSEscape">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func JSEscape(w <a href="../../io/index.html">io</a>.<a href="../../io/index.html#Writer">Writer</a>, b []<a href="../../builtin/index.html#byte">byte</a>)</pre>
+			<p>JSEscape writes to w the escaped JavaScript equivalent of the plain text data b.
+
+			
+			
+
+		
+			
+			
+			<h2 id="JSEscapeString">func <a href="../../../src/text/template/funcs.go?s=19677:19713#L712">JSEscapeString</a>
+				<a class="permalink" href="index.html#JSEscapeString">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func JSEscapeString(s <a href="../../builtin/index.html#string">string</a>) <a href="../../builtin/index.html#string">string</a></pre>
+			<p>JSEscapeString returns the escaped JavaScript equivalent of the plain text data s.
+
+			
+			
+
+		
+			
+			
+			<h2 id="JSEscaper">func <a href="../../../src/text/template/funcs.go?s=20127:20161#L732">JSEscaper</a>
+				<a class="permalink" href="index.html#JSEscaper">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func JSEscaper(args ...<a href="../../builtin/index.html#any">any</a>) <a href="../../builtin/index.html#string">string</a></pre>
+			<p>JSEscaper returns the escaped JavaScript equivalent of the textual
+representation of its arguments.
+
+			
+			
+
+		
+			
+			
+			<h2 id="URLQueryEscaper">func <a href="../../../src/text/template/funcs.go?s=20350:20390#L738">URLQueryEscaper</a>
+				<a class="permalink" href="index.html#URLQueryEscaper">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func URLQueryEscaper(args ...<a href="../../builtin/index.html#any">any</a>) <a href="../../builtin/index.html#string">string</a></pre>
+			<p>URLQueryEscaper returns the escaped value of the textual representation of
+its arguments in a form suitable for embedding in a URL query.
+
+			
+			
+
+		
+		
+			
+			
+			<h2 id="ExecError">type <a href="../../../src/text/template/exec.go?s=3273:3369#L111">ExecError</a>
+				<a class="permalink" href="index.html#ExecError">&#xb6;</a>
+				
+				
+			</h2>
+			<p>ExecError is the custom error type returned when Execute has an
+error evaluating its template. (If a write error occurs, the actual
+error is returned; it will not be of type ExecError.)
+
+			<pre>type ExecError struct {
+<span id="ExecError.Name"></span>    Name <a href="../../builtin/index.html#string">string</a> <span class="comment">// Name of template.</span>
+<span id="ExecError.Err"></span>    Err  <a href="../../builtin/index.html#error">error</a>  <span class="comment">// Pre-formatted error.</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="ExecError.Error">func (ExecError) <a href="../../../src/text/template/exec.go?s=3371:3404#L116">Error</a>
+					<a class="permalink" href="index.html#ExecError.Error">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (e <a href="index.html#ExecError">ExecError</a>) Error() <a href="../../builtin/index.html#string">string</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="ExecError.Unwrap">func (ExecError) <a href="../../../src/text/template/exec.go?s=3432:3465#L120">Unwrap</a>
+					<a class="permalink" href="index.html#ExecError.Unwrap">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (e <a href="index.html#ExecError">ExecError</a>) Unwrap() <a href="../../builtin/index.html#error">error</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="FuncMap">type <a href="../../../src/text/template/funcs.go?s=1093:1120#L23">FuncMap</a>
+				<a class="permalink" href="index.html#FuncMap">&#xb6;</a>
+				
+				
+			</h2>
+			<p>FuncMap is the type of the map defining the mapping from names to functions.
+Each function must have either a single return value, or two return values of
+which the second has type error. In that case, if the second (error)
+return value evaluates to non-nil during execution, execution terminates and
+Execute returns that error.
+<p>Errors returned by Execute wrap the underlying error; call errors.As to
+unwrap them.
+<p>When template execution invokes a function with an argument list, that list
+must be assignable to the function&apos;s parameter types. Functions meant to
+apply to arguments of arbitrary type can use parameters of type interface{} or
+of type reflect.Value. Similarly, functions meant to return a result of arbitrary
+type can return interface{} or reflect.Value.
+
+			<pre>type FuncMap map[<a href="../../builtin/index.html#string">string</a>]<a href="../../builtin/index.html#any">any</a></pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="Template">type <a href="../../../src/text/template/template.go?s=905:1002#L19">Template</a>
+				<a class="permalink" href="index.html#Template">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Template is the representation of a parsed template. The *parse.Tree
+field is exported only for use by html/template and should be treated
+as unexported by all other clients.
+
+			<pre>type Template struct {
+    *<a href="parse/index.html">parse</a>.<a href="parse/index.html#Tree">Tree</a>
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			<div id="example_Template" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code"><span class="comment">// Define a template.</span>
+const letter = `
+Dear {{.Name}},
+{{if .Attended}}
+It was a pleasure to see you at the wedding.
+{{- else}}
+It is a shame you couldn&#39;t make it to the wedding.
+{{- end}}
+{{with .Gift -}}
+Thank you for the lovely {{.}}.
+{{end}}
+Best wishes,
+Josie
+`
+
+<span class="comment">// Prepare some data to insert into the template.</span>
+type Recipient struct {
+    Name, Gift string
+    Attended   bool
+}
+var recipients = []Recipient{
+    {&#34;Aunt Mildred&#34;, &#34;bone china tea set&#34;, true},
+    {&#34;Uncle John&#34;, &#34;moleskin pants&#34;, false},
+    {&#34;Cousin Rodney&#34;, &#34;&#34;, false},
+}
+
+<span class="comment">// Create a new template and parse the letter into it.</span>
+t := template.Must(template.New(&#34;letter&#34;).Parse(letter))
+
+<span class="comment">// Execute the template for each recipient.</span>
+for _, r := range recipients {
+    err := t.Execute(os.Stdout, r)
+    if err != nil {
+        log.Println(&#34;executing template:&#34;, err)
+    }
+}
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">Dear Aunt Mildred,
+
+It was a pleasure to see you at the wedding.
+Thank you for the lovely bone china tea set.
+
+Best wishes,
+Josie
+
+Dear Uncle John,
+
+It is a shame you couldn&#39;t make it to the wedding.
+Thank you for the lovely moleskin pants.
+
+Best wishes,
+Josie
+
+Dear Cousin Rodney,
+
+It is a shame you couldn&#39;t make it to the wedding.
+
+Best wishes,
+Josie
+</pre>
+			
+		
+	</div>
+</div>
+<div id="example_Template_block" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example (Block)</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example (Block)</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">const (
+    master  = `Names:{{block &#34;list&#34; .}}{{&#34;\n&#34;}}{{range .}}{{println &#34;-&#34; .}}{{end}}{{end}}`
+    overlay = `{{define &#34;list&#34;}} {{join . &#34;, &#34;}}{{end}} `
+)
+var (
+    funcs     = template.FuncMap{&#34;join&#34;: strings.Join}
+    guardians = []string{&#34;Gamora&#34;, &#34;Groot&#34;, &#34;Nebula&#34;, &#34;Rocket&#34;, &#34;Star-Lord&#34;}
+)
+masterTmpl, err := template.New(&#34;master&#34;).Funcs(funcs).Parse(master)
+if err != nil {
+    log.Fatal(err)
+}
+overlayTmpl, err := template.Must(masterTmpl.Clone()).Parse(overlay)
+if err != nil {
+    log.Fatal(err)
+}
+if err := masterTmpl.Execute(os.Stdout, guardians); err != nil {
+    log.Fatal(err)
+}
+if err := overlayTmpl.Execute(os.Stdout, guardians); err != nil {
+    log.Fatal(err)
+}
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">Names:
+- Gamora
+- Groot
+- Nebula
+- Rocket
+- Star-Lord
+Names: Gamora, Groot, Nebula, Rocket, Star-Lord
+</pre>
+			
+		
+	</div>
+</div>
+<div id="example_Template_func" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example (Func)</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example (Func)</span></p>
+		<p>This example demonstrates a custom function to process template text.
+It installs the strings.Title function and uses it to
+Make Title Text Look Good In Our Template&#39;s Output.
+</p>
+		
+		
+			<p>Code:</p>
+			<pre class="code"><span class="comment">// First we create a FuncMap with which to register the function.</span>
+funcMap := template.FuncMap{
+    <span class="comment">// The name &#34;title&#34; is what the function will be called in the template text.</span>
+    &#34;title&#34;: strings.Title,
+}
+
+<span class="comment">// A simple template definition to test our function.</span>
+<span class="comment">// We print the input text several ways:</span>
+<span class="comment">// - the original</span>
+<span class="comment">// - title-cased</span>
+<span class="comment">// - title-cased and then printed with %q</span>
+<span class="comment">// - printed with %q and then title-cased.</span>
+const templateText = `
+Input: {{printf &#34;%q&#34; .}}
+Output 0: {{title .}}
+Output 1: {{title . | printf &#34;%q&#34;}}
+Output 2: {{printf &#34;%q&#34; . | title}}
+`
+
+<span class="comment">// Create a template, add the function map, and parse the text.</span>
+tmpl, err := template.New(&#34;titleTest&#34;).Funcs(funcMap).Parse(templateText)
+if err != nil {
+    log.Fatalf(&#34;parsing: %s&#34;, err)
+}
+
+<span class="comment">// Run the template to verify the output.</span>
+err = tmpl.Execute(os.Stdout, &#34;the go programming language&#34;)
+if err != nil {
+    log.Fatalf(&#34;execution: %s&#34;, err)
+}
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">Input: &#34;the go programming language&#34;
+Output 0: The Go Programming Language
+Output 1: &#34;The Go Programming Language&#34;
+Output 2: &#34;The Go Programming Language&#34;
+</pre>
+			
+		
+	</div>
+</div>
+<div id="example_Template_glob" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example (Glob)</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example (Glob)</span></p>
+		<p>Here we demonstrate loading a set of templates from a directory.
+</p>
+		
+		
+			<p>Code:</p>
+			<pre class="code"><span class="comment">// Here we create a temporary directory and populate it with our sample</span>
+<span class="comment">// template definition files; usually the template files would already</span>
+<span class="comment">// exist in some location known to the program.</span>
+dir := createTestDir([]templateFile{
+    <span class="comment">// T0.tmpl is a plain template file that just invokes T1.</span>
+    {&#34;T0.tmpl&#34;, `T0 invokes T1: ({{template &#34;T1&#34;}})`},
+    <span class="comment">// T1.tmpl defines a template, T1 that invokes T2.</span>
+    {&#34;T1.tmpl&#34;, `{{define &#34;T1&#34;}}T1 invokes T2: ({{template &#34;T2&#34;}}){{end}}`},
+    <span class="comment">// T2.tmpl defines a template T2.</span>
+    {&#34;T2.tmpl&#34;, `{{define &#34;T2&#34;}}This is T2{{end}}`},
+})
+<span class="comment">// Clean up after the test; another quirk of running as an example.</span>
+defer os.RemoveAll(dir)
+
+<span class="comment">// pattern is the glob pattern used to find all the template files.</span>
+pattern := filepath.Join(dir, &#34;*.tmpl&#34;)
+
+<span class="comment">// Here starts the example proper.</span>
+<span class="comment">// T0.tmpl is the first name matched, so it becomes the starting template,</span>
+<span class="comment">// the value returned by ParseGlob.</span>
+tmpl := template.Must(template.ParseGlob(pattern))
+
+err := tmpl.Execute(os.Stdout, nil)
+if err != nil {
+    log.Fatalf(&#34;template execution: %s&#34;, err)
+}
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">T0 invokes T1: (T1 invokes T2: (This is T2))
+</pre>
+			
+		
+	</div>
+</div>
+<div id="example_Template_helpers" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example (Helpers)</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example (Helpers)</span></p>
+		<p>This example demonstrates one way to share some templates
+and use them in different contexts. In this variant we add multiple driver
+templates by hand to an existing bundle of templates.
+</p>
+		
+		
+			<p>Code:</p>
+			<pre class="code"><span class="comment">// Here we create a temporary directory and populate it with our sample</span>
+<span class="comment">// template definition files; usually the template files would already</span>
+<span class="comment">// exist in some location known to the program.</span>
+dir := createTestDir([]templateFile{
+    <span class="comment">// T1.tmpl defines a template, T1 that invokes T2.</span>
+    {&#34;T1.tmpl&#34;, `{{define &#34;T1&#34;}}T1 invokes T2: ({{template &#34;T2&#34;}}){{end}}`},
+    <span class="comment">// T2.tmpl defines a template T2.</span>
+    {&#34;T2.tmpl&#34;, `{{define &#34;T2&#34;}}This is T2{{end}}`},
+})
+<span class="comment">// Clean up after the test; another quirk of running as an example.</span>
+defer os.RemoveAll(dir)
+
+<span class="comment">// pattern is the glob pattern used to find all the template files.</span>
+pattern := filepath.Join(dir, &#34;*.tmpl&#34;)
+
+<span class="comment">// Here starts the example proper.</span>
+<span class="comment">// Load the helpers.</span>
+templates := template.Must(template.ParseGlob(pattern))
+<span class="comment">// Add one driver template to the bunch; we do this with an explicit template definition.</span>
+_, err := templates.Parse(&#34;{{define `driver1`}}Driver 1 calls T1: ({{template `T1`}})\n{{end}}&#34;)
+if err != nil {
+    log.Fatal(&#34;parsing driver1: &#34;, err)
+}
+<span class="comment">// Add another driver template.</span>
+_, err = templates.Parse(&#34;{{define `driver2`}}Driver 2 calls T2: ({{template `T2`}})\n{{end}}&#34;)
+if err != nil {
+    log.Fatal(&#34;parsing driver2: &#34;, err)
+}
+<span class="comment">// We load all the templates before execution. This package does not require</span>
+<span class="comment">// that behavior but html/template&#39;s escaping does, so it&#39;s a good habit.</span>
+err = templates.ExecuteTemplate(os.Stdout, &#34;driver1&#34;, nil)
+if err != nil {
+    log.Fatalf(&#34;driver1 execution: %s&#34;, err)
+}
+err = templates.ExecuteTemplate(os.Stdout, &#34;driver2&#34;, nil)
+if err != nil {
+    log.Fatalf(&#34;driver2 execution: %s&#34;, err)
+}
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">Driver 1 calls T1: (T1 invokes T2: (This is T2))
+Driver 2 calls T2: (This is T2)
+</pre>
+			
+		
+	</div>
+</div>
+<div id="example_Template_share" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example (Share)</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example (Share)</span></p>
+		<p>This example demonstrates how to use one group of driver
+templates with distinct sets of helper templates.
+</p>
+		
+		
+			<p>Code:</p>
+			<pre class="code"><span class="comment">// Here we create a temporary directory and populate it with our sample</span>
+<span class="comment">// template definition files; usually the template files would already</span>
+<span class="comment">// exist in some location known to the program.</span>
+dir := createTestDir([]templateFile{
+    <span class="comment">// T0.tmpl is a plain template file that just invokes T1.</span>
+    {&#34;T0.tmpl&#34;, &#34;T0 ({{.}} version) invokes T1: ({{template `T1`}})\n&#34;},
+    <span class="comment">// T1.tmpl defines a template, T1 that invokes T2. Note T2 is not defined</span>
+    {&#34;T1.tmpl&#34;, `{{define &#34;T1&#34;}}T1 invokes T2: ({{template &#34;T2&#34;}}){{end}}`},
+})
+<span class="comment">// Clean up after the test; another quirk of running as an example.</span>
+defer os.RemoveAll(dir)
+
+<span class="comment">// pattern is the glob pattern used to find all the template files.</span>
+pattern := filepath.Join(dir, &#34;*.tmpl&#34;)
+
+<span class="comment">// Here starts the example proper.</span>
+<span class="comment">// Load the drivers.</span>
+drivers := template.Must(template.ParseGlob(pattern))
+
+<span class="comment">// We must define an implementation of the T2 template. First we clone</span>
+<span class="comment">// the drivers, then add a definition of T2 to the template name space.</span>
+
+<span class="comment">// 1. Clone the helper set to create a new name space from which to run them.</span>
+first, err := drivers.Clone()
+if err != nil {
+    log.Fatal(&#34;cloning helpers: &#34;, err)
+}
+<span class="comment">// 2. Define T2, version A, and parse it.</span>
+_, err = first.Parse(&#34;{{define `T2`}}T2, version A{{end}}&#34;)
+if err != nil {
+    log.Fatal(&#34;parsing T2: &#34;, err)
+}
+
+<span class="comment">// Now repeat the whole thing, using a different version of T2.</span>
+<span class="comment">// 1. Clone the drivers.</span>
+second, err := drivers.Clone()
+if err != nil {
+    log.Fatal(&#34;cloning drivers: &#34;, err)
+}
+<span class="comment">// 2. Define T2, version B, and parse it.</span>
+_, err = second.Parse(&#34;{{define `T2`}}T2, version B{{end}}&#34;)
+if err != nil {
+    log.Fatal(&#34;parsing T2: &#34;, err)
+}
+
+<span class="comment">// Execute the templates in the reverse order to verify the</span>
+<span class="comment">// first is unaffected by the second.</span>
+err = second.ExecuteTemplate(os.Stdout, &#34;T0.tmpl&#34;, &#34;second&#34;)
+if err != nil {
+    log.Fatalf(&#34;second execution: %s&#34;, err)
+}
+err = first.ExecuteTemplate(os.Stdout, &#34;T0.tmpl&#34;, &#34;first&#34;)
+if err != nil {
+    log.Fatalf(&#34;first: execution: %s&#34;, err)
+}
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">T0 (second version) invokes T1: (T1 invokes T2: (T2, version B))
+T0 (first version) invokes T1: (T1 invokes T2: (T2, version A))
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+			
+
+			
+				
+				<h3 id="Must">func <a href="../../../src/text/template/helper.go?s=589:632#L14">Must</a>
+					<a class="permalink" href="index.html#Must">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func Must(t *<a href="index.html#Template">Template</a>, err <a href="../../builtin/index.html#error">error</a>) *<a href="index.html#Template">Template</a></pre>
+				<p>Must is a helper that wraps a call to a function returning (*Template, error)
+and panics if the error is non-nil. It is intended for use in variable
+initializations such as
+<pre>var t = template.Must(template.New(&quot;name&quot;).Parse(&quot;text&quot;))
+</pre>
+
+				
+				
+			
+				
+				<h3 id="New">func <a href="../../../src/text/template/template.go?s=1068:1099#L28">New</a>
+					<a class="permalink" href="index.html#New">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func New(name <a href="../../builtin/index.html#string">string</a>) *<a href="index.html#Template">Template</a></pre>
+				<p>New allocates a new, undefined template with the given name.
+
+				
+				
+			
+				
+				<h3 id="ParseFS">func <a href="../../../src/text/template/helper.go?s=5169:5232#L128">ParseFS</a>
+					<a class="permalink" href="index.html#ParseFS">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func ParseFS(fsys <a href="../../io/fs/index.html">fs</a>.<a href="../../io/fs/index.html#FS">FS</a>, patterns ...<a href="../../builtin/index.html#string">string</a>) (*<a href="index.html#Template">Template</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+				<p>ParseFS is like ParseFiles or ParseGlob but reads from the file system fsys
+instead of the host operating system&apos;s file system.
+It accepts a list of glob patterns.
+(Note that most file names serve as glob patterns matching only themselves.)
+
+				
+				
+			
+				
+				<h3 id="ParseFiles">func <a href="../../../src/text/template/helper.go?s=1237:1292#L30">ParseFiles</a>
+					<a class="permalink" href="index.html#ParseFiles">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func ParseFiles(filenames ...<a href="../../builtin/index.html#string">string</a>) (*<a href="index.html#Template">Template</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+				<p>ParseFiles creates a new Template and parses the template definitions from
+the named files. The returned template&apos;s name will have the base name and
+parsed contents of the first file. There must be at least one file.
+If an error occurs, parsing stops and the returned *Template is nil.
+<p>When parsing multiple files with the same name in different directories,
+the last one mentioned will be the one that results.
+For instance, ParseFiles(&quot;a/foo&quot;, &quot;b/foo&quot;) stores &quot;b/foo&quot; as the template
+named &quot;foo&quot;, while &quot;a/foo&quot; is unavailable.
+
+				
+				
+			
+				
+				<h3 id="ParseGlob">func <a href="../../../src/text/template/helper.go?s=3858:3907#L95">ParseGlob</a>
+					<a class="permalink" href="index.html#ParseGlob">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func ParseGlob(pattern <a href="../../builtin/index.html#string">string</a>) (*<a href="index.html#Template">Template</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+				<p>ParseGlob creates a new Template and parses the template definitions from
+the files identified by the pattern. The files are matched according to the
+semantics of filepath.Match, and the pattern must match at least one file.
+The returned template will have the (base) name and (parsed) contents of the
+first file matched by the pattern. ParseGlob is equivalent to calling
+ParseFiles with the list of files matched by the pattern.
+<p>When parsing multiple files with the same name in different directories,
+the last one mentioned will be the one that results.
+
+				
+				
+			
+
+			
+				
+				<h3 id="Template.AddParseTree">func (*Template) <a href="../../../src/text/template/template.go?s=3675:3756#L119">AddParseTree</a>
+					<a class="permalink" href="index.html#Template.AddParseTree">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t *<a href="index.html#Template">Template</a>) AddParseTree(name <a href="../../builtin/index.html#string">string</a>, tree *<a href="parse/index.html">parse</a>.<a href="parse/index.html#Tree">Tree</a>) (*<a href="index.html#Template">Template</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+				<p>AddParseTree associates the argument parse tree with the template t, giving
+it the specified name. If the template has not been defined, this tree becomes
+its definition. If it has been defined and already has that name, the existing
+definition is replaced; otherwise a new template is created, defined, and returned.
+
+				
+				
+				
+			
+				
+				<h3 id="Template.Clone">func (*Template) <a href="../../../src/text/template/template.go?s=2543:2588#L76">Clone</a>
+					<a class="permalink" href="index.html#Template.Clone">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t *<a href="index.html#Template">Template</a>) Clone() (*<a href="index.html#Template">Template</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+				<p>Clone returns a duplicate of the template, including all associated
+templates. The actual representation is not copied, but the name space of
+associated templates is, so further calls to Parse in the copy will add
+templates to the copy but not to the original. Clone can be used to prepare
+common templates and use them with variant definitions for other templates
+by adding the variants after the clone is made.
+
+				
+				
+				
+			
+				
+				<h3 id="Template.DefinedTemplates">func (*Template) <a href="../../../src/text/template/exec.go?s=6644:6688#L222">DefinedTemplates</a>
+					<a class="permalink" href="index.html#Template.DefinedTemplates">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t *<a href="index.html#Template">Template</a>) DefinedTemplates() <a href="../../builtin/index.html#string">string</a></pre>
+				<p>DefinedTemplates returns a string listing the defined templates,
+prefixed by the string &quot;; defined templates are: &quot;. If there are none,
+it returns the empty string. For generating an error message here
+and in html/template.
+
+				
+				
+				
+			
+				
+				<h3 id="Template.Delims">func (*Template) <a href="../../../src/text/template/template.go?s=4684:4739#L154">Delims</a>
+					<a class="permalink" href="index.html#Template.Delims">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t *<a href="index.html#Template">Template</a>) Delims(left, right <a href="../../builtin/index.html#string">string</a>) *<a href="index.html#Template">Template</a></pre>
+				<p>Delims sets the action delimiters to the specified strings, to be used in
+subsequent calls to Parse, ParseFiles, or ParseGlob. Nested template
+definitions will inherit the settings. An empty delimiter stands for the
+corresponding default: {{ or }}.
+The return value is the template, so calls can be chained.
+
+				
+				
+				
+			
+				
+				<h3 id="Template.Execute">func (*Template) <a href="../../../src/text/template/exec.go?s=5927:5983#L196">Execute</a>
+					<a class="permalink" href="index.html#Template.Execute">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t *<a href="index.html#Template">Template</a>) Execute(wr <a href="../../io/index.html">io</a>.<a href="../../io/index.html#Writer">Writer</a>, data <a href="../../builtin/index.html#any">any</a>) <a href="../../builtin/index.html#error">error</a></pre>
+				<p>Execute applies a parsed template to the specified data object,
+and writes the output to wr.
+If an error occurs executing the template or writing its output,
+execution stops, but partial results may already have been written to
+the output writer.
+A template may be executed safely in parallel, although if parallel
+executions share a Writer the output may be interleaved.
+<p>If data is a reflect.Value, the template applies to the concrete
+value that the reflect.Value holds, as in fmt.Print.
+
+				
+				
+				
+			
+				
+				<h3 id="Template.ExecuteTemplate">func (*Template) <a href="../../../src/text/template/exec.go?s=5158:5235#L178">ExecuteTemplate</a>
+					<a class="permalink" href="index.html#Template.ExecuteTemplate">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t *<a href="index.html#Template">Template</a>) ExecuteTemplate(wr <a href="../../io/index.html">io</a>.<a href="../../io/index.html#Writer">Writer</a>, name <a href="../../builtin/index.html#string">string</a>, data <a href="../../builtin/index.html#any">any</a>) <a href="../../builtin/index.html#error">error</a></pre>
+				<p>ExecuteTemplate applies the template associated with t that has the given name
+to the specified data object and writes the output to wr.
+If an error occurs executing the template or writing its output,
+execution stops, but partial results may already have been written to
+the output writer.
+A template may be executed safely in parallel, although if parallel
+executions share a Writer the output may be interleaved.
+
+				
+				
+				
+			
+				
+				<h3 id="Template.Funcs">func (*Template) <a href="../../../src/text/template/template.go?s=5207:5258#L167">Funcs</a>
+					<a class="permalink" href="index.html#Template.Funcs">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t *<a href="index.html#Template">Template</a>) Funcs(funcMap <a href="index.html#FuncMap">FuncMap</a>) *<a href="index.html#Template">Template</a></pre>
+				<p>Funcs adds the elements of the argument map to the template&apos;s function map.
+It must be called before the template is parsed.
+It panics if a value in the map is not a function with appropriate return
+type or if the name cannot be used syntactically as a function in a template.
+It is legal to overwrite elements of the map. The return value is the template,
+so calls can be chained.
+
+				
+				
+				
+			
+				
+				<h3 id="Template.Lookup">func (*Template) <a href="../../../src/text/template/template.go?s=5558:5606#L178">Lookup</a>
+					<a class="permalink" href="index.html#Template.Lookup">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t *<a href="index.html#Template">Template</a>) Lookup(name <a href="../../builtin/index.html#string">string</a>) *<a href="index.html#Template">Template</a></pre>
+				<p>Lookup returns the template with the given name that is associated with t.
+It returns nil if there is no such template or the template has no definition.
+
+				
+				
+				
+			
+				
+				<h3 id="Template.Name">func (*Template) <a href="../../../src/text/template/template.go?s=1201:1233#L37">Name</a>
+					<a class="permalink" href="index.html#Template.Name">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t *<a href="index.html#Template">Template</a>) Name() <a href="../../builtin/index.html#string">string</a></pre>
+				<p>Name returns the name of the template.
+
+				
+				
+				
+			
+				
+				<h3 id="Template.New">func (*Template) <a href="../../../src/text/template/template.go?s=1658:1703#L48">New</a>
+					<a class="permalink" href="index.html#Template.New">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t *<a href="index.html#Template">Template</a>) New(name <a href="../../builtin/index.html#string">string</a>) *<a href="index.html#Template">Template</a></pre>
+				<p>New allocates a new, undefined template associated with the given one and with the same
+delimiters. The association, which is transitive, allows one template to
+invoke another with a {{template}} action.
+<p>Because associated templates share underlying data, template construction
+cannot be done safely in parallel. Once the templates are constructed, they
+can be executed in parallel.
+
+				
+				
+				
+			
+				
+				<h3 id="Template.Option">func (*Template) <a href="../../../src/text/template/option.go?s=1400:1450#L32">Option</a>
+					<a class="permalink" href="index.html#Template.Option">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t *<a href="index.html#Template">Template</a>) Option(opt ...<a href="../../builtin/index.html#string">string</a>) *<a href="index.html#Template">Template</a></pre>
+				<p>Option sets options for the template. Options are described by
+strings, either a simple string or &quot;key=value&quot;. There can be at
+most one equals sign in an option string. If the option string
+is unrecognized or otherwise invalid, Option panics.
+<p>Known options:
+<p>missingkey: Control the behavior during execution if a map is
+indexed with a key that is not present in the map.
+<pre>&quot;missingkey=default&quot; or &quot;missingkey=invalid&quot;
+	The default behavior: Do nothing and continue execution.
+	If printed, the result of the index operation is the string
+	&quot;&lt;no value&gt;&quot;.
+&quot;missingkey=zero&quot;
+	The operation returns the zero value for the map type&apos;s element.
+&quot;missingkey=error&quot;
+	Execution stops immediately with an error.
+</pre>
+
+				
+				
+				
+			
+				
+				<h3 id="Template.Parse">func (*Template) <a href="../../../src/text/template/template.go?s=6272:6328#L197">Parse</a>
+					<a class="permalink" href="index.html#Template.Parse">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t *<a href="index.html#Template">Template</a>) Parse(text <a href="../../builtin/index.html#string">string</a>) (*<a href="index.html#Template">Template</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+				<p>Parse parses text as a template body for t.
+Named template definitions ({{define ...}} or {{block ...}} statements) in text
+define additional templates associated with t and are removed from the
+definition of t itself.
+<p>Templates can be redefined in successive calls to Parse.
+A template definition with a body containing only white space and comments
+is considered empty and will not replace an existing template&apos;s body.
+This allows using Parse to add new named template definitions without
+overwriting the main template body.
+
+				
+				
+				
+			
+				
+				<h3 id="Template.ParseFS">func (*Template) <a href="../../../src/text/template/helper.go?s=5528:5605#L136">ParseFS</a>
+					<a class="permalink" href="index.html#Template.ParseFS">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t *<a href="index.html#Template">Template</a>) ParseFS(fsys <a href="../../io/fs/index.html">fs</a>.<a href="../../io/fs/index.html#FS">FS</a>, patterns ...<a href="../../builtin/index.html#string">string</a>) (*<a href="index.html#Template">Template</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+				<p>ParseFS is like ParseFiles or ParseGlob but reads from the file system fsys
+instead of the host operating system&apos;s file system.
+It accepts a list of glob patterns.
+(Note that most file names serve as glob patterns matching only themselves.)
+
+				
+				
+				
+			
+				
+				<h3 id="Template.ParseFiles">func (*Template) <a href="../../../src/text/template/helper.go?s=2026:2095#L45">ParseFiles</a>
+					<a class="permalink" href="index.html#Template.ParseFiles">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t *<a href="index.html#Template">Template</a>) ParseFiles(filenames ...<a href="../../builtin/index.html#string">string</a>) (*<a href="index.html#Template">Template</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+				<p>ParseFiles parses the named files and associates the resulting templates with
+t. If an error occurs, parsing stops and the returned template is nil;
+otherwise it is t. There must be at least one file.
+Since the templates created by ParseFiles are named by the base
+names of the argument files, t should usually have the name of one
+of the (base) names of the files. If it does not, depending on t&apos;s
+contents before calling ParseFiles, t.Execute may fail. In that
+case use t.ExecuteTemplate to execute a valid template.
+<p>When parsing multiple files with the same name in different directories,
+the last one mentioned will be the one that results.
+
+				
+				
+				
+			
+				
+				<h3 id="Template.ParseGlob">func (*Template) <a href="../../../src/text/template/helper.go?s=4432:4495#L107">ParseGlob</a>
+					<a class="permalink" href="index.html#Template.ParseGlob">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t *<a href="index.html#Template">Template</a>) ParseGlob(pattern <a href="../../builtin/index.html#string">string</a>) (*<a href="index.html#Template">Template</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+				<p>ParseGlob parses the template definitions in the files identified by the
+pattern and associates the resulting templates with t. The files are matched
+according to the semantics of filepath.Match, and the pattern must match at
+least one file. ParseGlob is equivalent to calling t.ParseFiles with the
+list of files matched by the pattern.
+<p>When parsing multiple files with the same name in different directories,
+the last one mentioned will be the one that results.
+
+				
+				
+				
+			
+				
+				<h3 id="Template.Templates">func (*Template) <a href="../../../src/text/template/template.go?s=4084:4126#L135">Templates</a>
+					<a class="permalink" href="index.html#Template.Templates">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t *<a href="index.html#Template">Template</a>) Templates() []*<a href="index.html#Template">Template</a></pre>
+				<p>Templates returns a slice of defined templates associated with t.
+
+				
+				
+				
+			
+		
+	
+
+	
+
+
+
+
+
+	
+	
+		<h2 id="pkg-subdirectories">Subdirectories</h2>
+	
+	<div class="pkg-dir">
+		<table>
+			<tr>
+				<th class="pkg-name">Name</th>
+				<th class="pkg-synopsis">Synopsis</th>
+			</tr>
+
+			
+			<tr>
+				<td colspan="2"><a href="../index.html">..</a></td>
+			</tr>
+			
+
+			
+				<tr>
+				
+					<td class="pkg-name" style="padding-left: 0px;">
+						<a href="parse/index.html">parse</a>
+					</td>
+				
+					<td class="pkg-synopsis">
+						Package parse builds parse trees for templates as defined by text/template and html/template.
+					</td>
+				</tr>
+			
+		</table>
+	</div>
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

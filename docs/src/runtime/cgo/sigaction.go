@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>src/runtime/cgo/sigaction.go - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="sigaction.go#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Source file
+    <a href="http://localhost:8080/src">src</a>/<a href="http://localhost:8080/src/runtime">runtime</a>/<a href="http://localhost:8080/src/runtime/cgo">cgo</a>/<span class="text-muted">sigaction.go</span>
+  </h1>
+
+
+
+
+
+  <h2>
+    Documentation: <a href="http://localhost:8080/pkg/runtime/cgo">runtime/cgo</a>
+  </h2>
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1&nbsp;&nbsp;</span><span class="comment">// Copyright 2016 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2&nbsp;&nbsp;</span><span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3&nbsp;&nbsp;</span><span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4&nbsp;&nbsp;</span>
+<span id="L5" class="ln">     5&nbsp;&nbsp;</span><span class="comment">//go:build (linux &amp;&amp; amd64) || (freebsd &amp;&amp; amd64) || (linux &amp;&amp; arm64) || (linux &amp;&amp; ppc64le)</span>
+<span id="L6" class="ln">     6&nbsp;&nbsp;</span>
+<span id="L7" class="ln">     7&nbsp;&nbsp;</span>package cgo
+<span id="L8" class="ln">     8&nbsp;&nbsp;</span>
+<span id="L9" class="ln">     9&nbsp;&nbsp;</span><span class="comment">// Import &#34;unsafe&#34; because we use go:linkname.</span>
+<span id="L10" class="ln">    10&nbsp;&nbsp;</span>import _ &#34;unsafe&#34;
+<span id="L11" class="ln">    11&nbsp;&nbsp;</span>
+<span id="L12" class="ln">    12&nbsp;&nbsp;</span><span class="comment">// When using cgo, call the C library for sigaction, so that we call into</span>
+<span id="L13" class="ln">    13&nbsp;&nbsp;</span><span class="comment">// any sanitizer interceptors. This supports using the sanitizers</span>
+<span id="L14" class="ln">    14&nbsp;&nbsp;</span><span class="comment">// with Go programs. The thread and memory sanitizers only apply to</span>
+<span id="L15" class="ln">    15&nbsp;&nbsp;</span><span class="comment">// C/C++ code; this permits that code to see the Go runtime&#39;s existing signal</span>
+<span id="L16" class="ln">    16&nbsp;&nbsp;</span><span class="comment">// handlers when registering new signal handlers for the process.</span>
+<span id="L17" class="ln">    17&nbsp;&nbsp;</span>
+<span id="L18" class="ln">    18&nbsp;&nbsp;</span><span class="comment">//go:cgo_import_static x_cgo_sigaction</span>
+<span id="L19" class="ln">    19&nbsp;&nbsp;</span><span class="comment">//go:linkname x_cgo_sigaction x_cgo_sigaction</span>
+<span id="L20" class="ln">    20&nbsp;&nbsp;</span><span class="comment">//go:linkname _cgo_sigaction _cgo_sigaction</span>
+<span id="L21" class="ln">    21&nbsp;&nbsp;</span>var x_cgo_sigaction byte
+<span id="L22" class="ln">    22&nbsp;&nbsp;</span>var _cgo_sigaction = &amp;x_cgo_sigaction
+<span id="L23" class="ln">    23&nbsp;&nbsp;</span>
+</pre><p><a href="sigaction.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

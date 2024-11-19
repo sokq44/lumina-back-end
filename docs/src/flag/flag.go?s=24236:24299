@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>src/flag/flag.go - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../index.html">GoDoc</a></div>
+<a href="./flag.go?s=24236:24299#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Source file
+    <a href="http://localhost:8080/src">src</a>/<a href="http://localhost:8080/src/flag">flag</a>/<span class="text-muted">flag.go</span>
+  </h1>
+
+
+
+
+
+  <h2>
+    Documentation: <a href="http://localhost:8080/pkg/flag">flag</a>
+  </h2>
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1&nbsp;&nbsp;</span><span class="comment">// Copyright 2009 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2&nbsp;&nbsp;</span><span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3&nbsp;&nbsp;</span><span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4&nbsp;&nbsp;</span>
+<span id="L5" class="ln">     5&nbsp;&nbsp;</span><span class="comment">/*
+<span id="L6" class="ln">     6&nbsp;&nbsp;</span>Package flag implements command-line flag parsing.
+<span id="L7" class="ln">     7&nbsp;&nbsp;</span>
+<span id="L8" class="ln">     8&nbsp;&nbsp;</span># Usage
+<span id="L9" class="ln">     9&nbsp;&nbsp;</span>
+<span id="L10" class="ln">    10&nbsp;&nbsp;</span>Define flags using [flag.String], [Bool], [Int], etc.
+<span id="L11" class="ln">    11&nbsp;&nbsp;</span>
+<span id="L12" class="ln">    12&nbsp;&nbsp;</span>This declares an integer flag, -n, stored in the pointer nFlag, with type *int:
+<span id="L13" class="ln">    13&nbsp;&nbsp;</span>
+<span id="L14" class="ln">    14&nbsp;&nbsp;</span>	import &#34;flag&#34;
+<span id="L15" class="ln">    15&nbsp;&nbsp;</span>	var nFlag = flag.Int(&#34;n&#34;, 1234, &#34;help message for flag n&#34;)
+<span id="L16" class="ln">    16&nbsp;&nbsp;</span>
+<span id="L17" class="ln">    17&nbsp;&nbsp;</span>If you like, you can bind the flag to a variable using the Var() functions.
+<span id="L18" class="ln">    18&nbsp;&nbsp;</span>
+<span id="L19" class="ln">    19&nbsp;&nbsp;</span>	var flagvar int
+<span id="L20" class="ln">    20&nbsp;&nbsp;</span>	func init() {
+<span id="L21" class="ln">    21&nbsp;&nbsp;</span>		flag.IntVar(&amp;flagvar, &#34;flagname&#34;, 1234, &#34;help message for flagname&#34;)
+<span id="L22" class="ln">    22&nbsp;&nbsp;</span>	}
+<span id="L23" class="ln">    23&nbsp;&nbsp;</span>
+<span id="L24" class="ln">    24&nbsp;&nbsp;</span>Or you can create custom flags that satisfy the Value interface (with
+<span id="L25" class="ln">    25&nbsp;&nbsp;</span>pointer receivers) and couple them to flag parsing by
+<span id="L26" class="ln">    26&nbsp;&nbsp;</span>
+<span id="L27" class="ln">    27&nbsp;&nbsp;</span>	flag.Var(&amp;flagVal, &#34;name&#34;, &#34;help message for flagname&#34;)
+<span id="L28" class="ln">    28&nbsp;&nbsp;</span>
+<span id="L29" class="ln">    29&nbsp;&nbsp;</span>For such flags, the default value is just the initial value of the variable.
+<span id="L30" class="ln">    30&nbsp;&nbsp;</span>
+<span id="L31" class="ln">    31&nbsp;&nbsp;</span>After all flags are defined, call
+<span id="L32" class="ln">    32&nbsp;&nbsp;</span>
+<span id="L33" class="ln">    33&nbsp;&nbsp;</span>	flag.Parse()
+<span id="L34" class="ln">    34&nbsp;&nbsp;</span>
+<span id="L35" class="ln">    35&nbsp;&nbsp;</span>to parse the command line into the defined flags.
+<span id="L36" class="ln">    36&nbsp;&nbsp;</span>
+<span id="L37" class="ln">    37&nbsp;&nbsp;</span>Flags may then be used directly. If you&#39;re using the flags themselves,
+<span id="L38" class="ln">    38&nbsp;&nbsp;</span>they are all pointers; if you bind to variables, they&#39;re values.
+<span id="L39" class="ln">    39&nbsp;&nbsp;</span>
+<span id="L40" class="ln">    40&nbsp;&nbsp;</span>	fmt.Println(&#34;ip has value &#34;, *ip)
+<span id="L41" class="ln">    41&nbsp;&nbsp;</span>	fmt.Println(&#34;flagvar has value &#34;, flagvar)
+<span id="L42" class="ln">    42&nbsp;&nbsp;</span>
+<span id="L43" class="ln">    43&nbsp;&nbsp;</span>After parsing, the arguments following the flags are available as the
+<span id="L44" class="ln">    44&nbsp;&nbsp;</span>slice [flag.Args] or individually as [flag.Arg](i).
+<span id="L45" class="ln">    45&nbsp;&nbsp;</span>The arguments are indexed from 0 through [flag.NArg]-1.
+<span id="L46" class="ln">    46&nbsp;&nbsp;</span>
+<span id="L47" class="ln">    47&nbsp;&nbsp;</span># Command line flag syntax
+<span id="L48" class="ln">    48&nbsp;&nbsp;</span>
+<span id="L49" class="ln">    49&nbsp;&nbsp;</span>The following forms are permitted:
+<span id="L50" class="ln">    50&nbsp;&nbsp;</span>
+<span id="L51" class="ln">    51&nbsp;&nbsp;</span>	-flag
+<span id="L52" class="ln">    52&nbsp;&nbsp;</span>	--flag   // double dashes are also permitted
+<span id="L53" class="ln">    53&nbsp;&nbsp;</span>	-flag=x
+<span id="L54" class="ln">    54&nbsp;&nbsp;</span>	-flag x  // non-boolean flags only
+<span id="L55" class="ln">    55&nbsp;&nbsp;</span>
+<span id="L56" class="ln">    56&nbsp;&nbsp;</span>One or two dashes may be used; they are equivalent.
+<span id="L57" class="ln">    57&nbsp;&nbsp;</span>The last form is not permitted for boolean flags because the
+<span id="L58" class="ln">    58&nbsp;&nbsp;</span>meaning of the command
+<span id="L59" class="ln">    59&nbsp;&nbsp;</span>
+<span id="L60" class="ln">    60&nbsp;&nbsp;</span>	cmd -x *
+<span id="L61" class="ln">    61&nbsp;&nbsp;</span>
+<span id="L62" class="ln">    62&nbsp;&nbsp;</span>where * is a Unix shell wildcard, will change if there is a file
+<span id="L63" class="ln">    63&nbsp;&nbsp;</span>called 0, false, etc. You must use the -flag=false form to turn
+<span id="L64" class="ln">    64&nbsp;&nbsp;</span>off a boolean flag.
+<span id="L65" class="ln">    65&nbsp;&nbsp;</span>
+<span id="L66" class="ln">    66&nbsp;&nbsp;</span>Flag parsing stops just before the first non-flag argument
+<span id="L67" class="ln">    67&nbsp;&nbsp;</span>(&#34;-&#34; is a non-flag argument) or after the terminator &#34;--&#34;.
+<span id="L68" class="ln">    68&nbsp;&nbsp;</span>
+<span id="L69" class="ln">    69&nbsp;&nbsp;</span>Integer flags accept 1234, 0664, 0x1234 and may be negative.
+<span id="L70" class="ln">    70&nbsp;&nbsp;</span>Boolean flags may be:
+<span id="L71" class="ln">    71&nbsp;&nbsp;</span>
+<span id="L72" class="ln">    72&nbsp;&nbsp;</span>	1, 0, t, f, T, F, true, false, TRUE, FALSE, True, False
+<span id="L73" class="ln">    73&nbsp;&nbsp;</span>
+<span id="L74" class="ln">    74&nbsp;&nbsp;</span>Duration flags accept any input valid for time.ParseDuration.
+<span id="L75" class="ln">    75&nbsp;&nbsp;</span>
+<span id="L76" class="ln">    76&nbsp;&nbsp;</span>The default set of command-line flags is controlled by
+<span id="L77" class="ln">    77&nbsp;&nbsp;</span>top-level functions.  The [FlagSet] type allows one to define
+<span id="L78" class="ln">    78&nbsp;&nbsp;</span>independent sets of flags, such as to implement subcommands
+<span id="L79" class="ln">    79&nbsp;&nbsp;</span>in a command-line interface. The methods of [FlagSet] are
+<span id="L80" class="ln">    80&nbsp;&nbsp;</span>analogous to the top-level functions for the command-line
+<span id="L81" class="ln">    81&nbsp;&nbsp;</span>flag set.
+<span id="L82" class="ln">    82&nbsp;&nbsp;</span>*/</span>
+<span id="L83" class="ln">    83&nbsp;&nbsp;</span>package flag
+<span id="L84" class="ln">    84&nbsp;&nbsp;</span>
+<span id="L85" class="ln">    85&nbsp;&nbsp;</span>import (
+<span id="L86" class="ln">    86&nbsp;&nbsp;</span>	&#34;encoding&#34;
+<span id="L87" class="ln">    87&nbsp;&nbsp;</span>	&#34;errors&#34;
+<span id="L88" class="ln">    88&nbsp;&nbsp;</span>	&#34;fmt&#34;
+<span id="L89" class="ln">    89&nbsp;&nbsp;</span>	&#34;io&#34;
+<span id="L90" class="ln">    90&nbsp;&nbsp;</span>	&#34;os&#34;
+<span id="L91" class="ln">    91&nbsp;&nbsp;</span>	&#34;reflect&#34;
+<span id="L92" class="ln">    92&nbsp;&nbsp;</span>	&#34;runtime&#34;
+<span id="L93" class="ln">    93&nbsp;&nbsp;</span>	&#34;sort&#34;
+<span id="L94" class="ln">    94&nbsp;&nbsp;</span>	&#34;strconv&#34;
+<span id="L95" class="ln">    95&nbsp;&nbsp;</span>	&#34;strings&#34;
+<span id="L96" class="ln">    96&nbsp;&nbsp;</span>	&#34;time&#34;
+<span id="L97" class="ln">    97&nbsp;&nbsp;</span>)
+<span id="L98" class="ln">    98&nbsp;&nbsp;</span>
+<span id="L99" class="ln">    99&nbsp;&nbsp;</span><span class="comment">// ErrHelp is the error returned if the -help or -h flag is invoked</span>
+<span id="L100" class="ln">   100&nbsp;&nbsp;</span><span class="comment">// but no such flag is defined.</span>
+<span id="L101" class="ln">   101&nbsp;&nbsp;</span>var ErrHelp = errors.New(&#34;flag: help requested&#34;)
+<span id="L102" class="ln">   102&nbsp;&nbsp;</span>
+<span id="L103" class="ln">   103&nbsp;&nbsp;</span><span class="comment">// errParse is returned by Set if a flag&#39;s value fails to parse, such as with an invalid integer for Int.</span>
+<span id="L104" class="ln">   104&nbsp;&nbsp;</span><span class="comment">// It then gets wrapped through failf to provide more information.</span>
+<span id="L105" class="ln">   105&nbsp;&nbsp;</span>var errParse = errors.New(&#34;parse error&#34;)
+<span id="L106" class="ln">   106&nbsp;&nbsp;</span>
+<span id="L107" class="ln">   107&nbsp;&nbsp;</span><span class="comment">// errRange is returned by Set if a flag&#39;s value is out of range.</span>
+<span id="L108" class="ln">   108&nbsp;&nbsp;</span><span class="comment">// It then gets wrapped through failf to provide more information.</span>
+<span id="L109" class="ln">   109&nbsp;&nbsp;</span>var errRange = errors.New(&#34;value out of range&#34;)
+<span id="L110" class="ln">   110&nbsp;&nbsp;</span>
+<span id="L111" class="ln">   111&nbsp;&nbsp;</span>func numError(err error) error {
+<span id="L112" class="ln">   112&nbsp;&nbsp;</span>	ne, ok := err.(*strconv.NumError)
+<span id="L113" class="ln">   113&nbsp;&nbsp;</span>	if !ok {
+<span id="L114" class="ln">   114&nbsp;&nbsp;</span>		return err
+<span id="L115" class="ln">   115&nbsp;&nbsp;</span>	}
+<span id="L116" class="ln">   116&nbsp;&nbsp;</span>	if ne.Err == strconv.ErrSyntax {
+<span id="L117" class="ln">   117&nbsp;&nbsp;</span>		return errParse
+<span id="L118" class="ln">   118&nbsp;&nbsp;</span>	}
+<span id="L119" class="ln">   119&nbsp;&nbsp;</span>	if ne.Err == strconv.ErrRange {
+<span id="L120" class="ln">   120&nbsp;&nbsp;</span>		return errRange
+<span id="L121" class="ln">   121&nbsp;&nbsp;</span>	}
+<span id="L122" class="ln">   122&nbsp;&nbsp;</span>	return err
+<span id="L123" class="ln">   123&nbsp;&nbsp;</span>}
+<span id="L124" class="ln">   124&nbsp;&nbsp;</span>
+<span id="L125" class="ln">   125&nbsp;&nbsp;</span><span class="comment">// -- bool Value</span>
+<span id="L126" class="ln">   126&nbsp;&nbsp;</span>type boolValue bool
+<span id="L127" class="ln">   127&nbsp;&nbsp;</span>
+<span id="L128" class="ln">   128&nbsp;&nbsp;</span>func newBoolValue(val bool, p *bool) *boolValue {
+<span id="L129" class="ln">   129&nbsp;&nbsp;</span>	*p = val
+<span id="L130" class="ln">   130&nbsp;&nbsp;</span>	return (*boolValue)(p)
+<span id="L131" class="ln">   131&nbsp;&nbsp;</span>}
+<span id="L132" class="ln">   132&nbsp;&nbsp;</span>
+<span id="L133" class="ln">   133&nbsp;&nbsp;</span>func (b *boolValue) Set(s string) error {
+<span id="L134" class="ln">   134&nbsp;&nbsp;</span>	v, err := strconv.ParseBool(s)
+<span id="L135" class="ln">   135&nbsp;&nbsp;</span>	if err != nil {
+<span id="L136" class="ln">   136&nbsp;&nbsp;</span>		err = errParse
+<span id="L137" class="ln">   137&nbsp;&nbsp;</span>	}
+<span id="L138" class="ln">   138&nbsp;&nbsp;</span>	*b = boolValue(v)
+<span id="L139" class="ln">   139&nbsp;&nbsp;</span>	return err
+<span id="L140" class="ln">   140&nbsp;&nbsp;</span>}
+<span id="L141" class="ln">   141&nbsp;&nbsp;</span>
+<span id="L142" class="ln">   142&nbsp;&nbsp;</span>func (b *boolValue) Get() any { return bool(*b) }
+<span id="L143" class="ln">   143&nbsp;&nbsp;</span>
+<span id="L144" class="ln">   144&nbsp;&nbsp;</span>func (b *boolValue) String() string { return strconv.FormatBool(bool(*b)) }
+<span id="L145" class="ln">   145&nbsp;&nbsp;</span>
+<span id="L146" class="ln">   146&nbsp;&nbsp;</span>func (b *boolValue) IsBoolFlag() bool { return true }
+<span id="L147" class="ln">   147&nbsp;&nbsp;</span>
+<span id="L148" class="ln">   148&nbsp;&nbsp;</span><span class="comment">// optional interface to indicate boolean flags that can be</span>
+<span id="L149" class="ln">   149&nbsp;&nbsp;</span><span class="comment">// supplied without &#34;=value&#34; text</span>
+<span id="L150" class="ln">   150&nbsp;&nbsp;</span>type boolFlag interface {
+<span id="L151" class="ln">   151&nbsp;&nbsp;</span>	Value
+<span id="L152" class="ln">   152&nbsp;&nbsp;</span>	IsBoolFlag() bool
+<span id="L153" class="ln">   153&nbsp;&nbsp;</span>}
+<span id="L154" class="ln">   154&nbsp;&nbsp;</span>
+<span id="L155" class="ln">   155&nbsp;&nbsp;</span><span class="comment">// -- int Value</span>
+<span id="L156" class="ln">   156&nbsp;&nbsp;</span>type intValue int
+<span id="L157" class="ln">   157&nbsp;&nbsp;</span>
+<span id="L158" class="ln">   158&nbsp;&nbsp;</span>func newIntValue(val int, p *int) *intValue {
+<span id="L159" class="ln">   159&nbsp;&nbsp;</span>	*p = val
+<span id="L160" class="ln">   160&nbsp;&nbsp;</span>	return (*intValue)(p)
+<span id="L161" class="ln">   161&nbsp;&nbsp;</span>}
+<span id="L162" class="ln">   162&nbsp;&nbsp;</span>
+<span id="L163" class="ln">   163&nbsp;&nbsp;</span>func (i *intValue) Set(s string) error {
+<span id="L164" class="ln">   164&nbsp;&nbsp;</span>	v, err := strconv.ParseInt(s, 0, strconv.IntSize)
+<span id="L165" class="ln">   165&nbsp;&nbsp;</span>	if err != nil {
+<span id="L166" class="ln">   166&nbsp;&nbsp;</span>		err = numError(err)
+<span id="L167" class="ln">   167&nbsp;&nbsp;</span>	}
+<span id="L168" class="ln">   168&nbsp;&nbsp;</span>	*i = intValue(v)
+<span id="L169" class="ln">   169&nbsp;&nbsp;</span>	return err
+<span id="L170" class="ln">   170&nbsp;&nbsp;</span>}
+<span id="L171" class="ln">   171&nbsp;&nbsp;</span>
+<span id="L172" class="ln">   172&nbsp;&nbsp;</span>func (i *intValue) Get() any { return int(*i) }
+<span id="L173" class="ln">   173&nbsp;&nbsp;</span>
+<span id="L174" class="ln">   174&nbsp;&nbsp;</span>func (i *intValue) String() string { return strconv.Itoa(int(*i)) }
+<span id="L175" class="ln">   175&nbsp;&nbsp;</span>
+<span id="L176" class="ln">   176&nbsp;&nbsp;</span><span class="comment">// -- int64 Value</span>
+<span id="L177" class="ln">   177&nbsp;&nbsp;</span>type int64Value int64
+<span id="L178" class="ln">   178&nbsp;&nbsp;</span>
+<span id="L179" class="ln">   179&nbsp;&nbsp;</span>func newInt64Value(val int64, p *int64) *int64Value {
+<span id="L180" class="ln">   180&nbsp;&nbsp;</span>	*p = val
+<span id="L181" class="ln">   181&nbsp;&nbsp;</span>	return (*int64Value)(p)
+<span id="L182" class="ln">   182&nbsp;&nbsp;</span>}
+<span id="L183" class="ln">   183&nbsp;&nbsp;</span>
+<span id="L184" class="ln">   184&nbsp;&nbsp;</span>func (i *int64Value) Set(s string) error {
+<span id="L185" class="ln">   185&nbsp;&nbsp;</span>	v, err := strconv.ParseInt(s, 0, 64)
+<span id="L186" class="ln">   186&nbsp;&nbsp;</span>	if err != nil {
+<span id="L187" class="ln">   187&nbsp;&nbsp;</span>		err = numError(err)
+<span id="L188" class="ln">   188&nbsp;&nbsp;</span>	}
+<span id="L189" class="ln">   189&nbsp;&nbsp;</span>	*i = int64Value(v)
+<span id="L190" class="ln">   190&nbsp;&nbsp;</span>	return err
+<span id="L191" class="ln">   191&nbsp;&nbsp;</span>}
+<span id="L192" class="ln">   192&nbsp;&nbsp;</span>
+<span id="L193" class="ln">   193&nbsp;&nbsp;</span>func (i *int64Value) Get() any { return int64(*i) }
+<span id="L194" class="ln">   194&nbsp;&nbsp;</span>
+<span id="L195" class="ln">   195&nbsp;&nbsp;</span>func (i *int64Value) String() string { return strconv.FormatInt(int64(*i), 10) }
+<span id="L196" class="ln">   196&nbsp;&nbsp;</span>
+<span id="L197" class="ln">   197&nbsp;&nbsp;</span><span class="comment">// -- uint Value</span>
+<span id="L198" class="ln">   198&nbsp;&nbsp;</span>type uintValue uint
+<span id="L199" class="ln">   199&nbsp;&nbsp;</span>
+<span id="L200" class="ln">   200&nbsp;&nbsp;</span>func newUintValue(val uint, p *uint) *uintValue {
+<span id="L201" class="ln">   201&nbsp;&nbsp;</span>	*p = val
+<span id="L202" class="ln">   202&nbsp;&nbsp;</span>	return (*uintValue)(p)
+<span id="L203" class="ln">   203&nbsp;&nbsp;</span>}
+<span id="L204" class="ln">   204&nbsp;&nbsp;</span>
+<span id="L205" class="ln">   205&nbsp;&nbsp;</span>func (i *uintValue) Set(s string) error {
+<span id="L206" class="ln">   206&nbsp;&nbsp;</span>	v, err := strconv.ParseUint(s, 0, strconv.IntSize)
+<span id="L207" class="ln">   207&nbsp;&nbsp;</span>	if err != nil {
+<span id="L208" class="ln">   208&nbsp;&nbsp;</span>		err = numError(err)
+<span id="L209" class="ln">   209&nbsp;&nbsp;</span>	}
+<span id="L210" class="ln">   210&nbsp;&nbsp;</span>	*i = uintValue(v)
+<span id="L211" class="ln">   211&nbsp;&nbsp;</span>	return err
+<span id="L212" class="ln">   212&nbsp;&nbsp;</span>}
+<span id="L213" class="ln">   213&nbsp;&nbsp;</span>
+<span id="L214" class="ln">   214&nbsp;&nbsp;</span>func (i *uintValue) Get() any { return uint(*i) }
+<span id="L215" class="ln">   215&nbsp;&nbsp;</span>
+<span id="L216" class="ln">   216&nbsp;&nbsp;</span>func (i *uintValue) String() string { return strconv.FormatUint(uint64(*i), 10) }
+<span id="L217" class="ln">   217&nbsp;&nbsp;</span>
+<span id="L218" class="ln">   218&nbsp;&nbsp;</span><span class="comment">// -- uint64 Value</span>
+<span id="L219" class="ln">   219&nbsp;&nbsp;</span>type uint64Value uint64
+<span id="L220" class="ln">   220&nbsp;&nbsp;</span>
+<span id="L221" class="ln">   221&nbsp;&nbsp;</span>func newUint64Value(val uint64, p *uint64) *uint64Value {
+<span id="L222" class="ln">   222&nbsp;&nbsp;</span>	*p = val
+<span id="L223" class="ln">   223&nbsp;&nbsp;</span>	return (*uint64Value)(p)
+<span id="L224" class="ln">   224&nbsp;&nbsp;</span>}
+<span id="L225" class="ln">   225&nbsp;&nbsp;</span>
+<span id="L226" class="ln">   226&nbsp;&nbsp;</span>func (i *uint64Value) Set(s string) error {
+<span id="L227" class="ln">   227&nbsp;&nbsp;</span>	v, err := strconv.ParseUint(s, 0, 64)
+<span id="L228" class="ln">   228&nbsp;&nbsp;</span>	if err != nil {
+<span id="L229" class="ln">   229&nbsp;&nbsp;</span>		err = numError(err)
+<span id="L230" class="ln">   230&nbsp;&nbsp;</span>	}
+<span id="L231" class="ln">   231&nbsp;&nbsp;</span>	*i = uint64Value(v)
+<span id="L232" class="ln">   232&nbsp;&nbsp;</span>	return err
+<span id="L233" class="ln">   233&nbsp;&nbsp;</span>}
+<span id="L234" class="ln">   234&nbsp;&nbsp;</span>
+<span id="L235" class="ln">   235&nbsp;&nbsp;</span>func (i *uint64Value) Get() any { return uint64(*i) }
+<span id="L236" class="ln">   236&nbsp;&nbsp;</span>
+<span id="L237" class="ln">   237&nbsp;&nbsp;</span>func (i *uint64Value) String() string { return strconv.FormatUint(uint64(*i), 10) }
+<span id="L238" class="ln">   238&nbsp;&nbsp;</span>
+<span id="L239" class="ln">   239&nbsp;&nbsp;</span><span class="comment">// -- string Value</span>
+<span id="L240" class="ln">   240&nbsp;&nbsp;</span>type stringValue string
+<span id="L241" class="ln">   241&nbsp;&nbsp;</span>
+<span id="L242" class="ln">   242&nbsp;&nbsp;</span>func newStringValue(val string, p *string) *stringValue {
+<span id="L243" class="ln">   243&nbsp;&nbsp;</span>	*p = val
+<span id="L244" class="ln">   244&nbsp;&nbsp;</span>	return (*stringValue)(p)
+<span id="L245" class="ln">   245&nbsp;&nbsp;</span>}
+<span id="L246" class="ln">   246&nbsp;&nbsp;</span>
+<span id="L247" class="ln">   247&nbsp;&nbsp;</span>func (s *stringValue) Set(val string) error {
+<span id="L248" class="ln">   248&nbsp;&nbsp;</span>	*s = stringValue(val)
+<span id="L249" class="ln">   249&nbsp;&nbsp;</span>	return nil
+<span id="L250" class="ln">   250&nbsp;&nbsp;</span>}
+<span id="L251" class="ln">   251&nbsp;&nbsp;</span>
+<span id="L252" class="ln">   252&nbsp;&nbsp;</span>func (s *stringValue) Get() any { return string(*s) }
+<span id="L253" class="ln">   253&nbsp;&nbsp;</span>
+<span id="L254" class="ln">   254&nbsp;&nbsp;</span>func (s *stringValue) String() string { return string(*s) }
+<span id="L255" class="ln">   255&nbsp;&nbsp;</span>
+<span id="L256" class="ln">   256&nbsp;&nbsp;</span><span class="comment">// -- float64 Value</span>
+<span id="L257" class="ln">   257&nbsp;&nbsp;</span>type float64Value float64
+<span id="L258" class="ln">   258&nbsp;&nbsp;</span>
+<span id="L259" class="ln">   259&nbsp;&nbsp;</span>func newFloat64Value(val float64, p *float64) *float64Value {
+<span id="L260" class="ln">   260&nbsp;&nbsp;</span>	*p = val
+<span id="L261" class="ln">   261&nbsp;&nbsp;</span>	return (*float64Value)(p)
+<span id="L262" class="ln">   262&nbsp;&nbsp;</span>}
+<span id="L263" class="ln">   263&nbsp;&nbsp;</span>
+<span id="L264" class="ln">   264&nbsp;&nbsp;</span>func (f *float64Value) Set(s string) error {
+<span id="L265" class="ln">   265&nbsp;&nbsp;</span>	v, err := strconv.ParseFloat(s, 64)
+<span id="L266" class="ln">   266&nbsp;&nbsp;</span>	if err != nil {
+<span id="L267" class="ln">   267&nbsp;&nbsp;</span>		err = numError(err)
+<span id="L268" class="ln">   268&nbsp;&nbsp;</span>	}
+<span id="L269" class="ln">   269&nbsp;&nbsp;</span>	*f = float64Value(v)
+<span id="L270" class="ln">   270&nbsp;&nbsp;</span>	return err
+<span id="L271" class="ln">   271&nbsp;&nbsp;</span>}
+<span id="L272" class="ln">   272&nbsp;&nbsp;</span>
+<span id="L273" class="ln">   273&nbsp;&nbsp;</span>func (f *float64Value) Get() any { return float64(*f) }
+<span id="L274" class="ln">   274&nbsp;&nbsp;</span>
+<span id="L275" class="ln">   275&nbsp;&nbsp;</span>func (f *float64Value) String() string { return strconv.FormatFloat(float64(*f), &#39;g&#39;, -1, 64) }
+<span id="L276" class="ln">   276&nbsp;&nbsp;</span>
+<span id="L277" class="ln">   277&nbsp;&nbsp;</span><span class="comment">// -- time.Duration Value</span>
+<span id="L278" class="ln">   278&nbsp;&nbsp;</span>type durationValue time.Duration
+<span id="L279" class="ln">   279&nbsp;&nbsp;</span>
+<span id="L280" class="ln">   280&nbsp;&nbsp;</span>func newDurationValue(val time.Duration, p *time.Duration) *durationValue {
+<span id="L281" class="ln">   281&nbsp;&nbsp;</span>	*p = val
+<span id="L282" class="ln">   282&nbsp;&nbsp;</span>	return (*durationValue)(p)
+<span id="L283" class="ln">   283&nbsp;&nbsp;</span>}
+<span id="L284" class="ln">   284&nbsp;&nbsp;</span>
+<span id="L285" class="ln">   285&nbsp;&nbsp;</span>func (d *durationValue) Set(s string) error {
+<span id="L286" class="ln">   286&nbsp;&nbsp;</span>	v, err := time.ParseDuration(s)
+<span id="L287" class="ln">   287&nbsp;&nbsp;</span>	if err != nil {
+<span id="L288" class="ln">   288&nbsp;&nbsp;</span>		err = errParse
+<span id="L289" class="ln">   289&nbsp;&nbsp;</span>	}
+<span id="L290" class="ln">   290&nbsp;&nbsp;</span>	*d = durationValue(v)
+<span id="L291" class="ln">   291&nbsp;&nbsp;</span>	return err
+<span id="L292" class="ln">   292&nbsp;&nbsp;</span>}
+<span id="L293" class="ln">   293&nbsp;&nbsp;</span>
+<span id="L294" class="ln">   294&nbsp;&nbsp;</span>func (d *durationValue) Get() any { return time.Duration(*d) }
+<span id="L295" class="ln">   295&nbsp;&nbsp;</span>
+<span id="L296" class="ln">   296&nbsp;&nbsp;</span>func (d *durationValue) String() string { return (*time.Duration)(d).String() }
+<span id="L297" class="ln">   297&nbsp;&nbsp;</span>
+<span id="L298" class="ln">   298&nbsp;&nbsp;</span><span class="comment">// -- encoding.TextUnmarshaler Value</span>
+<span id="L299" class="ln">   299&nbsp;&nbsp;</span>type textValue struct{ p encoding.TextUnmarshaler }
+<span id="L300" class="ln">   300&nbsp;&nbsp;</span>
+<span id="L301" class="ln">   301&nbsp;&nbsp;</span>func newTextValue(val encoding.TextMarshaler, p encoding.TextUnmarshaler) textValue {
+<span id="L302" class="ln">   302&nbsp;&nbsp;</span>	ptrVal := reflect.ValueOf(p)
+<span id="L303" class="ln">   303&nbsp;&nbsp;</span>	if ptrVal.Kind() != reflect.Ptr {
+<span id="L304" class="ln">   304&nbsp;&nbsp;</span>		panic(&#34;variable value type must be a pointer&#34;)
+<span id="L305" class="ln">   305&nbsp;&nbsp;</span>	}
+<span id="L306" class="ln">   306&nbsp;&nbsp;</span>	defVal := reflect.ValueOf(val)
+<span id="L307" class="ln">   307&nbsp;&nbsp;</span>	if defVal.Kind() == reflect.Ptr {
+<span id="L308" class="ln">   308&nbsp;&nbsp;</span>		defVal = defVal.Elem()
+<span id="L309" class="ln">   309&nbsp;&nbsp;</span>	}
+<span id="L310" class="ln">   310&nbsp;&nbsp;</span>	if defVal.Type() != ptrVal.Type().Elem() {
+<span id="L311" class="ln">   311&nbsp;&nbsp;</span>		panic(fmt.Sprintf(&#34;default type does not match variable type: %v != %v&#34;, defVal.Type(), ptrVal.Type().Elem()))
+<span id="L312" class="ln">   312&nbsp;&nbsp;</span>	}
+<span id="L313" class="ln">   313&nbsp;&nbsp;</span>	ptrVal.Elem().Set(defVal)
+<span id="L314" class="ln">   314&nbsp;&nbsp;</span>	return textValue{p}
+<span id="L315" class="ln">   315&nbsp;&nbsp;</span>}
+<span id="L316" class="ln">   316&nbsp;&nbsp;</span>
+<span id="L317" class="ln">   317&nbsp;&nbsp;</span>func (v textValue) Set(s string) error {
+<span id="L318" class="ln">   318&nbsp;&nbsp;</span>	return v.p.UnmarshalText([]byte(s))
+<span id="L319" class="ln">   319&nbsp;&nbsp;</span>}
+<span id="L320" class="ln">   320&nbsp;&nbsp;</span>
+<span id="L321" class="ln">   321&nbsp;&nbsp;</span>func (v textValue) Get() interface{} {
+<span id="L322" class="ln">   322&nbsp;&nbsp;</span>	return v.p
+<span id="L323" class="ln">   323&nbsp;&nbsp;</span>}
+<span id="L324" class="ln">   324&nbsp;&nbsp;</span>
+<span id="L325" class="ln">   325&nbsp;&nbsp;</span>func (v textValue) String() string {
+<span id="L326" class="ln">   326&nbsp;&nbsp;</span>	if m, ok := v.p.(encoding.TextMarshaler); ok {
+<span id="L327" class="ln">   327&nbsp;&nbsp;</span>		if b, err := m.MarshalText(); err == nil {
+<span id="L328" class="ln">   328&nbsp;&nbsp;</span>			return string(b)
+<span id="L329" class="ln">   329&nbsp;&nbsp;</span>		}
+<span id="L330" class="ln">   330&nbsp;&nbsp;</span>	}
+<span id="L331" class="ln">   331&nbsp;&nbsp;</span>	return &#34;&#34;
+<span id="L332" class="ln">   332&nbsp;&nbsp;</span>}
+<span id="L333" class="ln">   333&nbsp;&nbsp;</span>
+<span id="L334" class="ln">   334&nbsp;&nbsp;</span><span class="comment">// -- func Value</span>
+<span id="L335" class="ln">   335&nbsp;&nbsp;</span>type funcValue func(string) error
+<span id="L336" class="ln">   336&nbsp;&nbsp;</span>
+<span id="L337" class="ln">   337&nbsp;&nbsp;</span>func (f funcValue) Set(s string) error { return f(s) }
+<span id="L338" class="ln">   338&nbsp;&nbsp;</span>
+<span id="L339" class="ln">   339&nbsp;&nbsp;</span>func (f funcValue) String() string { return &#34;&#34; }
+<span id="L340" class="ln">   340&nbsp;&nbsp;</span>
+<span id="L341" class="ln">   341&nbsp;&nbsp;</span><span class="comment">// -- boolFunc Value</span>
+<span id="L342" class="ln">   342&nbsp;&nbsp;</span>type boolFuncValue func(string) error
+<span id="L343" class="ln">   343&nbsp;&nbsp;</span>
+<span id="L344" class="ln">   344&nbsp;&nbsp;</span>func (f boolFuncValue) Set(s string) error { return f(s) }
+<span id="L345" class="ln">   345&nbsp;&nbsp;</span>
+<span id="L346" class="ln">   346&nbsp;&nbsp;</span>func (f boolFuncValue) String() string { return &#34;&#34; }
+<span id="L347" class="ln">   347&nbsp;&nbsp;</span>
+<span id="L348" class="ln">   348&nbsp;&nbsp;</span>func (f boolFuncValue) IsBoolFlag() bool { return true }
+<span id="L349" class="ln">   349&nbsp;&nbsp;</span>
+<span id="L350" class="ln">   350&nbsp;&nbsp;</span><span class="comment">// Value is the interface to the dynamic value stored in a flag.</span>
+<span id="L351" class="ln">   351&nbsp;&nbsp;</span><span class="comment">// (The default value is represented as a string.)</span>
+<span id="L352" class="ln">   352&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L353" class="ln">   353&nbsp;&nbsp;</span><span class="comment">// If a Value has an IsBoolFlag() bool method returning true,</span>
+<span id="L354" class="ln">   354&nbsp;&nbsp;</span><span class="comment">// the command-line parser makes -name equivalent to -name=true</span>
+<span id="L355" class="ln">   355&nbsp;&nbsp;</span><span class="comment">// rather than using the next command-line argument.</span>
+<span id="L356" class="ln">   356&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L357" class="ln">   357&nbsp;&nbsp;</span><span class="comment">// Set is called once, in command line order, for each flag present.</span>
+<span id="L358" class="ln">   358&nbsp;&nbsp;</span><span class="comment">// The flag package may call the [String] method with a zero-valued receiver,</span>
+<span id="L359" class="ln">   359&nbsp;&nbsp;</span><span class="comment">// such as a nil pointer.</span>
+<span id="L360" class="ln">   360&nbsp;&nbsp;</span>type Value interface {
+<span id="L361" class="ln">   361&nbsp;&nbsp;</span>	String() string
+<span id="L362" class="ln">   362&nbsp;&nbsp;</span>	Set(string) error
+<span id="L363" class="ln">   363&nbsp;&nbsp;</span>}
+<span id="L364" class="ln">   364&nbsp;&nbsp;</span>
+<span id="L365" class="ln">   365&nbsp;&nbsp;</span><span class="comment">// Getter is an interface that allows the contents of a [Value] to be retrieved.</span>
+<span id="L366" class="ln">   366&nbsp;&nbsp;</span><span class="comment">// It wraps the [Value] interface, rather than being part of it, because it</span>
+<span id="L367" class="ln">   367&nbsp;&nbsp;</span><span class="comment">// appeared after Go 1 and its compatibility rules. All [Value] types provided</span>
+<span id="L368" class="ln">   368&nbsp;&nbsp;</span><span class="comment">// by this package satisfy the [Getter] interface, except the type used by [Func].</span>
+<span id="L369" class="ln">   369&nbsp;&nbsp;</span>type Getter interface {
+<span id="L370" class="ln">   370&nbsp;&nbsp;</span>	Value
+<span id="L371" class="ln">   371&nbsp;&nbsp;</span>	Get() any
+<span id="L372" class="ln">   372&nbsp;&nbsp;</span>}
+<span id="L373" class="ln">   373&nbsp;&nbsp;</span>
+<span id="L374" class="ln">   374&nbsp;&nbsp;</span><span class="comment">// ErrorHandling defines how [FlagSet.Parse] behaves if the parse fails.</span>
+<span id="L375" class="ln">   375&nbsp;&nbsp;</span>type ErrorHandling int
+<span id="L376" class="ln">   376&nbsp;&nbsp;</span>
+<span id="L377" class="ln">   377&nbsp;&nbsp;</span><span class="comment">// These constants cause [FlagSet.Parse] to behave as described if the parse fails.</span>
+<span id="L378" class="ln">   378&nbsp;&nbsp;</span>const (
+<span id="L379" class="ln">   379&nbsp;&nbsp;</span>	ContinueOnError ErrorHandling = iota <span class="comment">// Return a descriptive error.</span>
+<span id="L380" class="ln">   380&nbsp;&nbsp;</span>	ExitOnError                          <span class="comment">// Call os.Exit(2) or for -h/-help Exit(0).</span>
+<span id="L381" class="ln">   381&nbsp;&nbsp;</span>	PanicOnError                         <span class="comment">// Call panic with a descriptive error.</span>
+<span id="L382" class="ln">   382&nbsp;&nbsp;</span>)
+<span id="L383" class="ln">   383&nbsp;&nbsp;</span>
+<span id="L384" class="ln">   384&nbsp;&nbsp;</span><span class="comment">// A FlagSet represents a set of defined flags. The zero value of a FlagSet</span>
+<span id="L385" class="ln">   385&nbsp;&nbsp;</span><span class="comment">// has no name and has [ContinueOnError] error handling.</span>
+<span id="L386" class="ln">   386&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L387" class="ln">   387&nbsp;&nbsp;</span><span class="comment">// [Flag] names must be unique within a FlagSet. An attempt to define a flag whose</span>
+<span id="L388" class="ln">   388&nbsp;&nbsp;</span><span class="comment">// name is already in use will cause a panic.</span>
+<span id="L389" class="ln">   389&nbsp;&nbsp;</span>type FlagSet struct {
+<span id="L390" class="ln">   390&nbsp;&nbsp;</span>	<span class="comment">// Usage is the function called when an error occurs while parsing flags.</span>
+<span id="L391" class="ln">   391&nbsp;&nbsp;</span>	<span class="comment">// The field is a function (not a method) that may be changed to point to</span>
+<span id="L392" class="ln">   392&nbsp;&nbsp;</span>	<span class="comment">// a custom error handler. What happens after Usage is called depends</span>
+<span id="L393" class="ln">   393&nbsp;&nbsp;</span>	<span class="comment">// on the ErrorHandling setting; for the command line, this defaults</span>
+<span id="L394" class="ln">   394&nbsp;&nbsp;</span>	<span class="comment">// to ExitOnError, which exits the program after calling Usage.</span>
+<span id="L395" class="ln">   395&nbsp;&nbsp;</span>	Usage func()
+<span id="L396" class="ln">   396&nbsp;&nbsp;</span>
+<span id="L397" class="ln">   397&nbsp;&nbsp;</span>	name          string
+<span id="L398" class="ln">   398&nbsp;&nbsp;</span>	parsed        bool
+<span id="L399" class="ln">   399&nbsp;&nbsp;</span>	actual        map[string]*Flag
+<span id="L400" class="ln">   400&nbsp;&nbsp;</span>	formal        map[string]*Flag
+<span id="L401" class="ln">   401&nbsp;&nbsp;</span>	args          []string <span class="comment">// arguments after flags</span>
+<span id="L402" class="ln">   402&nbsp;&nbsp;</span>	errorHandling ErrorHandling
+<span id="L403" class="ln">   403&nbsp;&nbsp;</span>	output        io.Writer         <span class="comment">// nil means stderr; use Output() accessor</span>
+<span id="L404" class="ln">   404&nbsp;&nbsp;</span>	undef         map[string]string <span class="comment">// flags which didn&#39;t exist at the time of Set</span>
+<span id="L405" class="ln">   405&nbsp;&nbsp;</span>}
+<span id="L406" class="ln">   406&nbsp;&nbsp;</span>
+<span id="L407" class="ln">   407&nbsp;&nbsp;</span><span class="comment">// A Flag represents the state of a flag.</span>
+<span id="L408" class="ln">   408&nbsp;&nbsp;</span>type Flag struct {
+<span id="L409" class="ln">   409&nbsp;&nbsp;</span>	Name     string <span class="comment">// name as it appears on command line</span>
+<span id="L410" class="ln">   410&nbsp;&nbsp;</span>	Usage    string <span class="comment">// help message</span>
+<span id="L411" class="ln">   411&nbsp;&nbsp;</span>	Value    Value  <span class="comment">// value as set</span>
+<span id="L412" class="ln">   412&nbsp;&nbsp;</span>	DefValue string <span class="comment">// default value (as text); for usage message</span>
+<span id="L413" class="ln">   413&nbsp;&nbsp;</span>}
+<span id="L414" class="ln">   414&nbsp;&nbsp;</span>
+<span id="L415" class="ln">   415&nbsp;&nbsp;</span><span class="comment">// sortFlags returns the flags as a slice in lexicographical sorted order.</span>
+<span id="L416" class="ln">   416&nbsp;&nbsp;</span>func sortFlags(flags map[string]*Flag) []*Flag {
+<span id="L417" class="ln">   417&nbsp;&nbsp;</span>	result := make([]*Flag, len(flags))
+<span id="L418" class="ln">   418&nbsp;&nbsp;</span>	i := 0
+<span id="L419" class="ln">   419&nbsp;&nbsp;</span>	for _, f := range flags {
+<span id="L420" class="ln">   420&nbsp;&nbsp;</span>		result[i] = f
+<span id="L421" class="ln">   421&nbsp;&nbsp;</span>		i++
+<span id="L422" class="ln">   422&nbsp;&nbsp;</span>	}
+<span id="L423" class="ln">   423&nbsp;&nbsp;</span>	sort.Slice(result, func(i, j int) bool {
+<span id="L424" class="ln">   424&nbsp;&nbsp;</span>		return result[i].Name &lt; result[j].Name
+<span id="L425" class="ln">   425&nbsp;&nbsp;</span>	})
+<span id="L426" class="ln">   426&nbsp;&nbsp;</span>	return result
+<span id="L427" class="ln">   427&nbsp;&nbsp;</span>}
+<span id="L428" class="ln">   428&nbsp;&nbsp;</span>
+<span id="L429" class="ln">   429&nbsp;&nbsp;</span><span class="comment">// Output returns the destination for usage and error messages. [os.Stderr] is returned if</span>
+<span id="L430" class="ln">   430&nbsp;&nbsp;</span><span class="comment">// output was not set or was set to nil.</span>
+<span id="L431" class="ln">   431&nbsp;&nbsp;</span>func (f *FlagSet) Output() io.Writer {
+<span id="L432" class="ln">   432&nbsp;&nbsp;</span>	if f.output == nil {
+<span id="L433" class="ln">   433&nbsp;&nbsp;</span>		return os.Stderr
+<span id="L434" class="ln">   434&nbsp;&nbsp;</span>	}
+<span id="L435" class="ln">   435&nbsp;&nbsp;</span>	return f.output
+<span id="L436" class="ln">   436&nbsp;&nbsp;</span>}
+<span id="L437" class="ln">   437&nbsp;&nbsp;</span>
+<span id="L438" class="ln">   438&nbsp;&nbsp;</span><span class="comment">// Name returns the name of the flag set.</span>
+<span id="L439" class="ln">   439&nbsp;&nbsp;</span>func (f *FlagSet) Name() string {
+<span id="L440" class="ln">   440&nbsp;&nbsp;</span>	return f.name
+<span id="L441" class="ln">   441&nbsp;&nbsp;</span>}
+<span id="L442" class="ln">   442&nbsp;&nbsp;</span>
+<span id="L443" class="ln">   443&nbsp;&nbsp;</span><span class="comment">// ErrorHandling returns the error handling behavior of the flag set.</span>
+<span id="L444" class="ln">   444&nbsp;&nbsp;</span>func (f *FlagSet) ErrorHandling() ErrorHandling {
+<span id="L445" class="ln">   445&nbsp;&nbsp;</span>	return f.errorHandling
+<span id="L446" class="ln">   446&nbsp;&nbsp;</span>}
+<span id="L447" class="ln">   447&nbsp;&nbsp;</span>
+<span id="L448" class="ln">   448&nbsp;&nbsp;</span><span class="comment">// SetOutput sets the destination for usage and error messages.</span>
+<span id="L449" class="ln">   449&nbsp;&nbsp;</span><span class="comment">// If output is nil, [os.Stderr] is used.</span>
+<span id="L450" class="ln">   450&nbsp;&nbsp;</span>func (f *FlagSet) SetOutput(output io.Writer) {
+<span id="L451" class="ln">   451&nbsp;&nbsp;</span>	f.output = output
+<span id="L452" class="ln">   452&nbsp;&nbsp;</span>}
+<span id="L453" class="ln">   453&nbsp;&nbsp;</span>
+<span id="L454" class="ln">   454&nbsp;&nbsp;</span><span class="comment">// VisitAll visits the flags in lexicographical order, calling fn for each.</span>
+<span id="L455" class="ln">   455&nbsp;&nbsp;</span><span class="comment">// It visits all flags, even those not set.</span>
+<span id="L456" class="ln">   456&nbsp;&nbsp;</span>func (f *FlagSet) VisitAll(fn func(*Flag)) {
+<span id="L457" class="ln">   457&nbsp;&nbsp;</span>	for _, flag := range sortFlags(f.formal) {
+<span id="L458" class="ln">   458&nbsp;&nbsp;</span>		fn(flag)
+<span id="L459" class="ln">   459&nbsp;&nbsp;</span>	}
+<span id="L460" class="ln">   460&nbsp;&nbsp;</span>}
+<span id="L461" class="ln">   461&nbsp;&nbsp;</span>
+<span id="L462" class="ln">   462&nbsp;&nbsp;</span><span class="comment">// VisitAll visits the command-line flags in lexicographical order, calling</span>
+<span id="L463" class="ln">   463&nbsp;&nbsp;</span><span class="comment">// fn for each. It visits all flags, even those not set.</span>
+<span id="L464" class="ln">   464&nbsp;&nbsp;</span>func VisitAll(fn func(*Flag)) {
+<span id="L465" class="ln">   465&nbsp;&nbsp;</span>	CommandLine.VisitAll(fn)
+<span id="L466" class="ln">   466&nbsp;&nbsp;</span>}
+<span id="L467" class="ln">   467&nbsp;&nbsp;</span>
+<span id="L468" class="ln">   468&nbsp;&nbsp;</span><span class="comment">// Visit visits the flags in lexicographical order, calling fn for each.</span>
+<span id="L469" class="ln">   469&nbsp;&nbsp;</span><span class="comment">// It visits only those flags that have been set.</span>
+<span id="L470" class="ln">   470&nbsp;&nbsp;</span>func (f *FlagSet) Visit(fn func(*Flag)) {
+<span id="L471" class="ln">   471&nbsp;&nbsp;</span>	for _, flag := range sortFlags(f.actual) {
+<span id="L472" class="ln">   472&nbsp;&nbsp;</span>		fn(flag)
+<span id="L473" class="ln">   473&nbsp;&nbsp;</span>	}
+<span id="L474" class="ln">   474&nbsp;&nbsp;</span>}
+<span id="L475" class="ln">   475&nbsp;&nbsp;</span>
+<span id="L476" class="ln">   476&nbsp;&nbsp;</span><span class="comment">// Visit visits the command-line flags in lexicographical order, calling fn</span>
+<span id="L477" class="ln">   477&nbsp;&nbsp;</span><span class="comment">// for each. It visits only those flags that have been set.</span>
+<span id="L478" class="ln">   478&nbsp;&nbsp;</span>func Visit(fn func(*Flag)) {
+<span id="L479" class="ln">   479&nbsp;&nbsp;</span>	CommandLine.Visit(fn)
+<span id="L480" class="ln">   480&nbsp;&nbsp;</span>}
+<span id="L481" class="ln">   481&nbsp;&nbsp;</span>
+<span id="L482" class="ln">   482&nbsp;&nbsp;</span><span class="comment">// Lookup returns the [Flag] structure of the named flag, returning nil if none exists.</span>
+<span id="L483" class="ln">   483&nbsp;&nbsp;</span>func (f *FlagSet) Lookup(name string) *Flag {
+<span id="L484" class="ln">   484&nbsp;&nbsp;</span>	return f.formal[name]
+<span id="L485" class="ln">   485&nbsp;&nbsp;</span>}
+<span id="L486" class="ln">   486&nbsp;&nbsp;</span>
+<span id="L487" class="ln">   487&nbsp;&nbsp;</span><span class="comment">// Lookup returns the [Flag] structure of the named command-line flag,</span>
+<span id="L488" class="ln">   488&nbsp;&nbsp;</span><span class="comment">// returning nil if none exists.</span>
+<span id="L489" class="ln">   489&nbsp;&nbsp;</span>func Lookup(name string) *Flag {
+<span id="L490" class="ln">   490&nbsp;&nbsp;</span>	return CommandLine.formal[name]
+<span id="L491" class="ln">   491&nbsp;&nbsp;</span>}
+<span id="L492" class="ln">   492&nbsp;&nbsp;</span>
+<span id="L493" class="ln">   493&nbsp;&nbsp;</span><span class="comment">// Set sets the value of the named flag.</span>
+<span id="L494" class="ln">   494&nbsp;&nbsp;</span>func (f *FlagSet) Set(name, value string) error {
+<span id="L495" class="ln">   495&nbsp;&nbsp;</span>	return f.set(name, value)
+<span id="L496" class="ln">   496&nbsp;&nbsp;</span>}
+<span id="L497" class="ln">   497&nbsp;&nbsp;</span>func (f *FlagSet) set(name, value string) error {
+<span id="L498" class="ln">   498&nbsp;&nbsp;</span>	flag, ok := f.formal[name]
+<span id="L499" class="ln">   499&nbsp;&nbsp;</span>	if !ok {
+<span id="L500" class="ln">   500&nbsp;&nbsp;</span>		<span class="comment">// Remember that a flag that isn&#39;t defined is being set.</span>
+<span id="L501" class="ln">   501&nbsp;&nbsp;</span>		<span class="comment">// We return an error in this case, but in addition if</span>
+<span id="L502" class="ln">   502&nbsp;&nbsp;</span>		<span class="comment">// subsequently that flag is defined, we want to panic</span>
+<span id="L503" class="ln">   503&nbsp;&nbsp;</span>		<span class="comment">// at the definition point.</span>
+<span id="L504" class="ln">   504&nbsp;&nbsp;</span>		<span class="comment">// This is a problem which occurs if both the definition</span>
+<span id="L505" class="ln">   505&nbsp;&nbsp;</span>		<span class="comment">// and the Set call are in init code and for whatever</span>
+<span id="L506" class="ln">   506&nbsp;&nbsp;</span>		<span class="comment">// reason the init code changes evaluation order.</span>
+<span id="L507" class="ln">   507&nbsp;&nbsp;</span>		<span class="comment">// See issue 57411.</span>
+<span id="L508" class="ln">   508&nbsp;&nbsp;</span>		_, file, line, ok := runtime.Caller(2)
+<span id="L509" class="ln">   509&nbsp;&nbsp;</span>		if !ok {
+<span id="L510" class="ln">   510&nbsp;&nbsp;</span>			file = &#34;?&#34;
+<span id="L511" class="ln">   511&nbsp;&nbsp;</span>			line = 0
+<span id="L512" class="ln">   512&nbsp;&nbsp;</span>		}
+<span id="L513" class="ln">   513&nbsp;&nbsp;</span>		if f.undef == nil {
+<span id="L514" class="ln">   514&nbsp;&nbsp;</span>			f.undef = map[string]string{}
+<span id="L515" class="ln">   515&nbsp;&nbsp;</span>		}
+<span id="L516" class="ln">   516&nbsp;&nbsp;</span>		f.undef[name] = fmt.Sprintf(&#34;%s:%d&#34;, file, line)
+<span id="L517" class="ln">   517&nbsp;&nbsp;</span>
+<span id="L518" class="ln">   518&nbsp;&nbsp;</span>		return fmt.Errorf(&#34;no such flag -%v&#34;, name)
+<span id="L519" class="ln">   519&nbsp;&nbsp;</span>	}
+<span id="L520" class="ln">   520&nbsp;&nbsp;</span>	err := flag.Value.Set(value)
+<span id="L521" class="ln">   521&nbsp;&nbsp;</span>	if err != nil {
+<span id="L522" class="ln">   522&nbsp;&nbsp;</span>		return err
+<span id="L523" class="ln">   523&nbsp;&nbsp;</span>	}
+<span id="L524" class="ln">   524&nbsp;&nbsp;</span>	if f.actual == nil {
+<span id="L525" class="ln">   525&nbsp;&nbsp;</span>		f.actual = make(map[string]*Flag)
+<span id="L526" class="ln">   526&nbsp;&nbsp;</span>	}
+<span id="L527" class="ln">   527&nbsp;&nbsp;</span>	f.actual[name] = flag
+<span id="L528" class="ln">   528&nbsp;&nbsp;</span>	return nil
+<span id="L529" class="ln">   529&nbsp;&nbsp;</span>}
+<span id="L530" class="ln">   530&nbsp;&nbsp;</span>
+<span id="L531" class="ln">   531&nbsp;&nbsp;</span><span class="comment">// Set sets the value of the named command-line flag.</span>
+<span id="L532" class="ln">   532&nbsp;&nbsp;</span>func Set(name, value string) error {
+<span id="L533" class="ln">   533&nbsp;&nbsp;</span>	return CommandLine.set(name, value)
+<span id="L534" class="ln">   534&nbsp;&nbsp;</span>}
+<span id="L535" class="ln">   535&nbsp;&nbsp;</span>
+<span id="L536" class="ln">   536&nbsp;&nbsp;</span><span class="comment">// isZeroValue determines whether the string represents the zero</span>
+<span id="L537" class="ln">   537&nbsp;&nbsp;</span><span class="comment">// value for a flag.</span>
+<span id="L538" class="ln">   538&nbsp;&nbsp;</span>func isZeroValue(flag *Flag, value string) (ok bool, err error) {
+<span id="L539" class="ln">   539&nbsp;&nbsp;</span>	<span class="comment">// Build a zero value of the flag&#39;s Value type, and see if the</span>
+<span id="L540" class="ln">   540&nbsp;&nbsp;</span>	<span class="comment">// result of calling its String method equals the value passed in.</span>
+<span id="L541" class="ln">   541&nbsp;&nbsp;</span>	<span class="comment">// This works unless the Value type is itself an interface type.</span>
+<span id="L542" class="ln">   542&nbsp;&nbsp;</span>	typ := reflect.TypeOf(flag.Value)
+<span id="L543" class="ln">   543&nbsp;&nbsp;</span>	var z reflect.Value
+<span id="L544" class="ln">   544&nbsp;&nbsp;</span>	if typ.Kind() == reflect.Pointer {
+<span id="L545" class="ln">   545&nbsp;&nbsp;</span>		z = reflect.New(typ.Elem())
+<span id="L546" class="ln">   546&nbsp;&nbsp;</span>	} else {
+<span id="L547" class="ln">   547&nbsp;&nbsp;</span>		z = reflect.Zero(typ)
+<span id="L548" class="ln">   548&nbsp;&nbsp;</span>	}
+<span id="L549" class="ln">   549&nbsp;&nbsp;</span>	<span class="comment">// Catch panics calling the String method, which shouldn&#39;t prevent the</span>
+<span id="L550" class="ln">   550&nbsp;&nbsp;</span>	<span class="comment">// usage message from being printed, but that we should report to the</span>
+<span id="L551" class="ln">   551&nbsp;&nbsp;</span>	<span class="comment">// user so that they know to fix their code.</span>
+<span id="L552" class="ln">   552&nbsp;&nbsp;</span>	defer func() {
+<span id="L553" class="ln">   553&nbsp;&nbsp;</span>		if e := recover(); e != nil {
+<span id="L554" class="ln">   554&nbsp;&nbsp;</span>			if typ.Kind() == reflect.Pointer {
+<span id="L555" class="ln">   555&nbsp;&nbsp;</span>				typ = typ.Elem()
+<span id="L556" class="ln">   556&nbsp;&nbsp;</span>			}
+<span id="L557" class="ln">   557&nbsp;&nbsp;</span>			err = fmt.Errorf(&#34;panic calling String method on zero %v for flag %s: %v&#34;, typ, flag.Name, e)
+<span id="L558" class="ln">   558&nbsp;&nbsp;</span>		}
+<span id="L559" class="ln">   559&nbsp;&nbsp;</span>	}()
+<span id="L560" class="ln">   560&nbsp;&nbsp;</span>	return value == z.Interface().(Value).String(), nil
+<span id="L561" class="ln">   561&nbsp;&nbsp;</span>}
+<span id="L562" class="ln">   562&nbsp;&nbsp;</span>
+<span id="L563" class="ln">   563&nbsp;&nbsp;</span><span class="comment">// UnquoteUsage extracts a back-quoted name from the usage</span>
+<span id="L564" class="ln">   564&nbsp;&nbsp;</span><span class="comment">// string for a flag and returns it and the un-quoted usage.</span>
+<span id="L565" class="ln">   565&nbsp;&nbsp;</span><span class="comment">// Given &#34;a `name` to show&#34; it returns (&#34;name&#34;, &#34;a name to show&#34;).</span>
+<span id="L566" class="ln">   566&nbsp;&nbsp;</span><span class="comment">// If there are no back quotes, the name is an educated guess of the</span>
+<span id="L567" class="ln">   567&nbsp;&nbsp;</span><span class="comment">// type of the flag&#39;s value, or the empty string if the flag is boolean.</span>
+<span id="L568" class="ln">   568&nbsp;&nbsp;</span>func UnquoteUsage(flag *Flag) (name string, usage string) {
+<span id="L569" class="ln">   569&nbsp;&nbsp;</span>	<span class="comment">// Look for a back-quoted name, but avoid the strings package.</span>
+<span id="L570" class="ln">   570&nbsp;&nbsp;</span>	usage = flag.Usage
+<span id="L571" class="ln">   571&nbsp;&nbsp;</span>	for i := 0; i &lt; len(usage); i++ {
+<span id="L572" class="ln">   572&nbsp;&nbsp;</span>		if usage[i] == &#39;`&#39; {
+<span id="L573" class="ln">   573&nbsp;&nbsp;</span>			for j := i + 1; j &lt; len(usage); j++ {
+<span id="L574" class="ln">   574&nbsp;&nbsp;</span>				if usage[j] == &#39;`&#39; {
+<span id="L575" class="ln">   575&nbsp;&nbsp;</span>					name = usage[i+1 : j]
+<span id="L576" class="ln">   576&nbsp;&nbsp;</span>					usage = usage[:i] + name + usage[j+1:]
+<span id="L577" class="ln">   577&nbsp;&nbsp;</span>					return name, usage
+<span id="L578" class="ln">   578&nbsp;&nbsp;</span>				}
+<span id="L579" class="ln">   579&nbsp;&nbsp;</span>			}
+<span id="L580" class="ln">   580&nbsp;&nbsp;</span>			break <span class="comment">// Only one back quote; use type name.</span>
+<span id="L581" class="ln">   581&nbsp;&nbsp;</span>		}
+<span id="L582" class="ln">   582&nbsp;&nbsp;</span>	}
+<span id="L583" class="ln">   583&nbsp;&nbsp;</span>	<span class="comment">// No explicit name, so use type if we can find one.</span>
+<span id="L584" class="ln">   584&nbsp;&nbsp;</span>	name = &#34;value&#34;
+<span id="L585" class="ln">   585&nbsp;&nbsp;</span>	switch fv := flag.Value.(type) {
+<span id="L586" class="ln">   586&nbsp;&nbsp;</span>	case boolFlag:
+<span id="L587" class="ln">   587&nbsp;&nbsp;</span>		if fv.IsBoolFlag() {
+<span id="L588" class="ln">   588&nbsp;&nbsp;</span>			name = &#34;&#34;
+<span id="L589" class="ln">   589&nbsp;&nbsp;</span>		}
+<span id="L590" class="ln">   590&nbsp;&nbsp;</span>	case *durationValue:
+<span id="L591" class="ln">   591&nbsp;&nbsp;</span>		name = &#34;duration&#34;
+<span id="L592" class="ln">   592&nbsp;&nbsp;</span>	case *float64Value:
+<span id="L593" class="ln">   593&nbsp;&nbsp;</span>		name = &#34;float&#34;
+<span id="L594" class="ln">   594&nbsp;&nbsp;</span>	case *intValue, *int64Value:
+<span id="L595" class="ln">   595&nbsp;&nbsp;</span>		name = &#34;int&#34;
+<span id="L596" class="ln">   596&nbsp;&nbsp;</span>	case *stringValue:
+<span id="L597" class="ln">   597&nbsp;&nbsp;</span>		name = &#34;string&#34;
+<span id="L598" class="ln">   598&nbsp;&nbsp;</span>	case *uintValue, *uint64Value:
+<span id="L599" class="ln">   599&nbsp;&nbsp;</span>		name = &#34;uint&#34;
+<span id="L600" class="ln">   600&nbsp;&nbsp;</span>	}
+<span id="L601" class="ln">   601&nbsp;&nbsp;</span>	return
+<span id="L602" class="ln">   602&nbsp;&nbsp;</span>}
+<span id="L603" class="ln">   603&nbsp;&nbsp;</span>
+<span id="L604" class="ln">   604&nbsp;&nbsp;</span><span class="comment">// PrintDefaults prints, to standard error unless configured otherwise, the</span>
+<span id="L605" class="ln">   605&nbsp;&nbsp;</span><span class="comment">// default values of all defined command-line flags in the set. See the</span>
+<span id="L606" class="ln">   606&nbsp;&nbsp;</span><span class="comment">// documentation for the global function PrintDefaults for more information.</span>
+<span id="L607" class="ln">   607&nbsp;&nbsp;</span>func (f *FlagSet) PrintDefaults() {
+<span id="L608" class="ln">   608&nbsp;&nbsp;</span>	var isZeroValueErrs []error
+<span id="L609" class="ln">   609&nbsp;&nbsp;</span>	f.VisitAll(func(flag *Flag) {
+<span id="L610" class="ln">   610&nbsp;&nbsp;</span>		var b strings.Builder
+<span id="L611" class="ln">   611&nbsp;&nbsp;</span>		fmt.Fprintf(&amp;b, &#34;  -%s&#34;, flag.Name) <span class="comment">// Two spaces before -; see next two comments.</span>
+<span id="L612" class="ln">   612&nbsp;&nbsp;</span>		name, usage := UnquoteUsage(flag)
+<span id="L613" class="ln">   613&nbsp;&nbsp;</span>		if len(name) &gt; 0 {
+<span id="L614" class="ln">   614&nbsp;&nbsp;</span>			b.WriteString(&#34; &#34;)
+<span id="L615" class="ln">   615&nbsp;&nbsp;</span>			b.WriteString(name)
+<span id="L616" class="ln">   616&nbsp;&nbsp;</span>		}
+<span id="L617" class="ln">   617&nbsp;&nbsp;</span>		<span class="comment">// Boolean flags of one ASCII letter are so common we</span>
+<span id="L618" class="ln">   618&nbsp;&nbsp;</span>		<span class="comment">// treat them specially, putting their usage on the same line.</span>
+<span id="L619" class="ln">   619&nbsp;&nbsp;</span>		if b.Len() &lt;= 4 { <span class="comment">// space, space, &#39;-&#39;, &#39;x&#39;.</span>
+<span id="L620" class="ln">   620&nbsp;&nbsp;</span>			b.WriteString(&#34;\t&#34;)
+<span id="L621" class="ln">   621&nbsp;&nbsp;</span>		} else {
+<span id="L622" class="ln">   622&nbsp;&nbsp;</span>			<span class="comment">// Four spaces before the tab triggers good alignment</span>
+<span id="L623" class="ln">   623&nbsp;&nbsp;</span>			<span class="comment">// for both 4- and 8-space tab stops.</span>
+<span id="L624" class="ln">   624&nbsp;&nbsp;</span>			b.WriteString(&#34;\n    \t&#34;)
+<span id="L625" class="ln">   625&nbsp;&nbsp;</span>		}
+<span id="L626" class="ln">   626&nbsp;&nbsp;</span>		b.WriteString(strings.ReplaceAll(usage, &#34;\n&#34;, &#34;\n    \t&#34;))
+<span id="L627" class="ln">   627&nbsp;&nbsp;</span>
+<span id="L628" class="ln">   628&nbsp;&nbsp;</span>		<span class="comment">// Print the default value only if it differs to the zero value</span>
+<span id="L629" class="ln">   629&nbsp;&nbsp;</span>		<span class="comment">// for this flag type.</span>
+<span id="L630" class="ln">   630&nbsp;&nbsp;</span>		if isZero, err := isZeroValue(flag, flag.DefValue); err != nil {
+<span id="L631" class="ln">   631&nbsp;&nbsp;</span>			isZeroValueErrs = append(isZeroValueErrs, err)
+<span id="L632" class="ln">   632&nbsp;&nbsp;</span>		} else if !isZero {
+<span id="L633" class="ln">   633&nbsp;&nbsp;</span>			if _, ok := flag.Value.(*stringValue); ok {
+<span id="L634" class="ln">   634&nbsp;&nbsp;</span>				<span class="comment">// put quotes on the value</span>
+<span id="L635" class="ln">   635&nbsp;&nbsp;</span>				fmt.Fprintf(&amp;b, &#34; (default %q)&#34;, flag.DefValue)
+<span id="L636" class="ln">   636&nbsp;&nbsp;</span>			} else {
+<span id="L637" class="ln">   637&nbsp;&nbsp;</span>				fmt.Fprintf(&amp;b, &#34; (default %v)&#34;, flag.DefValue)
+<span id="L638" class="ln">   638&nbsp;&nbsp;</span>			}
+<span id="L639" class="ln">   639&nbsp;&nbsp;</span>		}
+<span id="L640" class="ln">   640&nbsp;&nbsp;</span>		fmt.Fprint(f.Output(), b.String(), &#34;\n&#34;)
+<span id="L641" class="ln">   641&nbsp;&nbsp;</span>	})
+<span id="L642" class="ln">   642&nbsp;&nbsp;</span>	<span class="comment">// If calling String on any zero flag.Values triggered a panic, print</span>
+<span id="L643" class="ln">   643&nbsp;&nbsp;</span>	<span class="comment">// the messages after the full set of defaults so that the programmer</span>
+<span id="L644" class="ln">   644&nbsp;&nbsp;</span>	<span class="comment">// knows to fix the panic.</span>
+<span id="L645" class="ln">   645&nbsp;&nbsp;</span>	if errs := isZeroValueErrs; len(errs) &gt; 0 {
+<span id="L646" class="ln">   646&nbsp;&nbsp;</span>		fmt.Fprintln(f.Output())
+<span id="L647" class="ln">   647&nbsp;&nbsp;</span>		for _, err := range errs {
+<span id="L648" class="ln">   648&nbsp;&nbsp;</span>			fmt.Fprintln(f.Output(), err)
+<span id="L649" class="ln">   649&nbsp;&nbsp;</span>		}
+<span id="L650" class="ln">   650&nbsp;&nbsp;</span>	}
+<span id="L651" class="ln">   651&nbsp;&nbsp;</span>}
+<span id="L652" class="ln">   652&nbsp;&nbsp;</span>
+<span id="L653" class="ln">   653&nbsp;&nbsp;</span><span class="comment">// PrintDefaults prints, to standard error unless configured otherwise,</span>
+<span id="L654" class="ln">   654&nbsp;&nbsp;</span><span class="comment">// a usage message showing the default settings of all defined</span>
+<span id="L655" class="ln">   655&nbsp;&nbsp;</span><span class="comment">// command-line flags.</span>
+<span id="L656" class="ln">   656&nbsp;&nbsp;</span><span class="comment">// For an integer valued flag x, the default output has the form</span>
+<span id="L657" class="ln">   657&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L658" class="ln">   658&nbsp;&nbsp;</span><span class="comment">//	-x int</span>
+<span id="L659" class="ln">   659&nbsp;&nbsp;</span><span class="comment">//		usage-message-for-x (default 7)</span>
+<span id="L660" class="ln">   660&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L661" class="ln">   661&nbsp;&nbsp;</span><span class="comment">// The usage message will appear on a separate line for anything but</span>
+<span id="L662" class="ln">   662&nbsp;&nbsp;</span><span class="comment">// a bool flag with a one-byte name. For bool flags, the type is</span>
+<span id="L663" class="ln">   663&nbsp;&nbsp;</span><span class="comment">// omitted and if the flag name is one byte the usage message appears</span>
+<span id="L664" class="ln">   664&nbsp;&nbsp;</span><span class="comment">// on the same line. The parenthetical default is omitted if the</span>
+<span id="L665" class="ln">   665&nbsp;&nbsp;</span><span class="comment">// default is the zero value for the type. The listed type, here int,</span>
+<span id="L666" class="ln">   666&nbsp;&nbsp;</span><span class="comment">// can be changed by placing a back-quoted name in the flag&#39;s usage</span>
+<span id="L667" class="ln">   667&nbsp;&nbsp;</span><span class="comment">// string; the first such item in the message is taken to be a parameter</span>
+<span id="L668" class="ln">   668&nbsp;&nbsp;</span><span class="comment">// name to show in the message and the back quotes are stripped from</span>
+<span id="L669" class="ln">   669&nbsp;&nbsp;</span><span class="comment">// the message when displayed. For instance, given</span>
+<span id="L670" class="ln">   670&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L671" class="ln">   671&nbsp;&nbsp;</span><span class="comment">//	flag.String(&#34;I&#34;, &#34;&#34;, &#34;search `directory` for include files&#34;)</span>
+<span id="L672" class="ln">   672&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L673" class="ln">   673&nbsp;&nbsp;</span><span class="comment">// the output will be</span>
+<span id="L674" class="ln">   674&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L675" class="ln">   675&nbsp;&nbsp;</span><span class="comment">//	-I directory</span>
+<span id="L676" class="ln">   676&nbsp;&nbsp;</span><span class="comment">//		search directory for include files.</span>
+<span id="L677" class="ln">   677&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L678" class="ln">   678&nbsp;&nbsp;</span><span class="comment">// To change the destination for flag messages, call [CommandLine].SetOutput.</span>
+<span id="L679" class="ln">   679&nbsp;&nbsp;</span>func PrintDefaults() {
+<span id="L680" class="ln">   680&nbsp;&nbsp;</span>	CommandLine.PrintDefaults()
+<span id="L681" class="ln">   681&nbsp;&nbsp;</span>}
+<span id="L682" class="ln">   682&nbsp;&nbsp;</span>
+<span id="L683" class="ln">   683&nbsp;&nbsp;</span><span class="comment">// defaultUsage is the default function to print a usage message.</span>
+<span id="L684" class="ln">   684&nbsp;&nbsp;</span>func (f *FlagSet) defaultUsage() {
+<span id="L685" class="ln">   685&nbsp;&nbsp;</span>	if f.name == &#34;&#34; {
+<span id="L686" class="ln">   686&nbsp;&nbsp;</span>		fmt.Fprintf(f.Output(), &#34;Usage:\n&#34;)
+<span id="L687" class="ln">   687&nbsp;&nbsp;</span>	} else {
+<span id="L688" class="ln">   688&nbsp;&nbsp;</span>		fmt.Fprintf(f.Output(), &#34;Usage of %s:\n&#34;, f.name)
+<span id="L689" class="ln">   689&nbsp;&nbsp;</span>	}
+<span id="L690" class="ln">   690&nbsp;&nbsp;</span>	f.PrintDefaults()
+<span id="L691" class="ln">   691&nbsp;&nbsp;</span>}
+<span id="L692" class="ln">   692&nbsp;&nbsp;</span>
+<span id="L693" class="ln">   693&nbsp;&nbsp;</span><span class="comment">// NOTE: Usage is not just defaultUsage(CommandLine)</span>
+<span id="L694" class="ln">   694&nbsp;&nbsp;</span><span class="comment">// because it serves (via godoc flag Usage) as the example</span>
+<span id="L695" class="ln">   695&nbsp;&nbsp;</span><span class="comment">// for how to write your own usage function.</span>
+<span id="L696" class="ln">   696&nbsp;&nbsp;</span>
+<span id="L697" class="ln">   697&nbsp;&nbsp;</span><span class="comment">// Usage prints a usage message documenting all defined command-line flags</span>
+<span id="L698" class="ln">   698&nbsp;&nbsp;</span><span class="comment">// to [CommandLine]&#39;s output, which by default is [os.Stderr].</span>
+<span id="L699" class="ln">   699&nbsp;&nbsp;</span><span class="comment">// It is called when an error occurs while parsing flags.</span>
+<span id="L700" class="ln">   700&nbsp;&nbsp;</span><span class="comment">// The function is a variable that may be changed to point to a custom function.</span>
+<span id="L701" class="ln">   701&nbsp;&nbsp;</span><span class="comment">// By default it prints a simple header and calls [PrintDefaults]; for details about the</span>
+<span id="L702" class="ln">   702&nbsp;&nbsp;</span><span class="comment">// format of the output and how to control it, see the documentation for [PrintDefaults].</span>
+<span id="L703" class="ln">   703&nbsp;&nbsp;</span><span class="comment">// Custom usage functions may choose to exit the program; by default exiting</span>
+<span id="L704" class="ln">   704&nbsp;&nbsp;</span><span class="comment">// happens anyway as the command line&#39;s error handling strategy is set to</span>
+<span id="L705" class="ln">   705&nbsp;&nbsp;</span><span class="comment">// [ExitOnError].</span>
+<span id="L706" class="ln">   706&nbsp;&nbsp;</span>var Usage = func() {
+<span id="L707" class="ln">   707&nbsp;&nbsp;</span>	fmt.Fprintf(CommandLine.Output(), &#34;Usage of %s:\n&#34;, os.Args[0])
+<span id="L708" class="ln">   708&nbsp;&nbsp;</span>	PrintDefaults()
+<span id="L709" class="ln">   709&nbsp;&nbsp;</span>}
+<span id="L710" class="ln">   710&nbsp;&nbsp;</span>
+<span id="L711" class="ln">   711&nbsp;&nbsp;</span><span class="comment">// NFlag returns the number of flags that have been set.</span>
+<span id="L712" class="ln">   712&nbsp;&nbsp;</span>func (f *FlagSet) NFlag() int { return len(f.actual) }
+<span id="L713" class="ln">   713&nbsp;&nbsp;</span>
+<span id="L714" class="ln">   714&nbsp;&nbsp;</span><span class="comment">// NFlag returns the number of command-line flags that have been set.</span>
+<span id="L715" class="ln">   715&nbsp;&nbsp;</span>func NFlag() int { return len(CommandLine.actual) }
+<span id="L716" class="ln">   716&nbsp;&nbsp;</span>
+<span id="L717" class="ln">   717&nbsp;&nbsp;</span><span class="comment">// Arg returns the i&#39;th argument. Arg(0) is the first remaining argument</span>
+<span id="L718" class="ln">   718&nbsp;&nbsp;</span><span class="comment">// after flags have been processed. Arg returns an empty string if the</span>
+<span id="L719" class="ln">   719&nbsp;&nbsp;</span><span class="comment">// requested element does not exist.</span>
+<span id="L720" class="ln">   720&nbsp;&nbsp;</span>func (f *FlagSet) Arg(i int) string {
+<span id="L721" class="ln">   721&nbsp;&nbsp;</span>	if i &lt; 0 || i &gt;= len(f.args) {
+<span id="L722" class="ln">   722&nbsp;&nbsp;</span>		return &#34;&#34;
+<span id="L723" class="ln">   723&nbsp;&nbsp;</span>	}
+<span id="L724" class="ln">   724&nbsp;&nbsp;</span>	return f.args[i]
+<span id="L725" class="ln">   725&nbsp;&nbsp;</span>}
+<span id="L726" class="ln">   726&nbsp;&nbsp;</span>
+<span id="L727" class="ln">   727&nbsp;&nbsp;</span><span class="comment">// Arg returns the i&#39;th command-line argument. Arg(0) is the first remaining argument</span>
+<span id="L728" class="ln">   728&nbsp;&nbsp;</span><span class="comment">// after flags have been processed. Arg returns an empty string if the</span>
+<span id="L729" class="ln">   729&nbsp;&nbsp;</span><span class="comment">// requested element does not exist.</span>
+<span id="L730" class="ln">   730&nbsp;&nbsp;</span>func Arg(i int) string {
+<span id="L731" class="ln">   731&nbsp;&nbsp;</span>	return CommandLine.Arg(i)
+<span id="L732" class="ln">   732&nbsp;&nbsp;</span>}
+<span id="L733" class="ln">   733&nbsp;&nbsp;</span>
+<span id="L734" class="ln">   734&nbsp;&nbsp;</span><span class="comment">// NArg is the number of arguments remaining after flags have been processed.</span>
+<span id="L735" class="ln">   735&nbsp;&nbsp;</span>func (f *FlagSet) NArg() int { return len(f.args) }
+<span id="L736" class="ln">   736&nbsp;&nbsp;</span>
+<span id="L737" class="ln">   737&nbsp;&nbsp;</span><span class="comment">// NArg is the number of arguments remaining after flags have been processed.</span>
+<span id="L738" class="ln">   738&nbsp;&nbsp;</span>func NArg() int { return len(CommandLine.args) }
+<span id="L739" class="ln">   739&nbsp;&nbsp;</span>
+<span id="L740" class="ln">   740&nbsp;&nbsp;</span><span class="comment">// Args returns the non-flag arguments.</span>
+<span id="L741" class="ln">   741&nbsp;&nbsp;</span>func (f *FlagSet) Args() []string { return f.args }
+<span id="L742" class="ln">   742&nbsp;&nbsp;</span>
+<span id="L743" class="ln">   743&nbsp;&nbsp;</span><span class="comment">// Args returns the non-flag command-line arguments.</span>
+<span id="L744" class="ln">   744&nbsp;&nbsp;</span>func Args() []string { return CommandLine.args }
+<span id="L745" class="ln">   745&nbsp;&nbsp;</span>
+<span id="L746" class="ln">   746&nbsp;&nbsp;</span><span class="comment">// BoolVar defines a bool flag with specified name, default value, and usage string.</span>
+<span id="L747" class="ln">   747&nbsp;&nbsp;</span><span class="comment">// The argument p points to a bool variable in which to store the value of the flag.</span>
+<span id="L748" class="ln">   748&nbsp;&nbsp;</span>func (f *FlagSet) BoolVar(p *bool, name string, value bool, usage string) {
+<span id="L749" class="ln">   749&nbsp;&nbsp;</span>	f.Var(newBoolValue(value, p), name, usage)
+<span id="L750" class="ln">   750&nbsp;&nbsp;</span>}
+<span id="L751" class="ln">   751&nbsp;&nbsp;</span>
+<span id="L752" class="ln">   752&nbsp;&nbsp;</span><span class="comment">// BoolVar defines a bool flag with specified name, default value, and usage string.</span>
+<span id="L753" class="ln">   753&nbsp;&nbsp;</span><span class="comment">// The argument p points to a bool variable in which to store the value of the flag.</span>
+<span id="L754" class="ln">   754&nbsp;&nbsp;</span>func BoolVar(p *bool, name string, value bool, usage string) {
+<span id="L755" class="ln">   755&nbsp;&nbsp;</span>	CommandLine.Var(newBoolValue(value, p), name, usage)
+<span id="L756" class="ln">   756&nbsp;&nbsp;</span>}
+<span id="L757" class="ln">   757&nbsp;&nbsp;</span>
+<span id="L758" class="ln">   758&nbsp;&nbsp;</span><span class="comment">// Bool defines a bool flag with specified name, default value, and usage string.</span>
+<span id="L759" class="ln">   759&nbsp;&nbsp;</span><span class="comment">// The return value is the address of a bool variable that stores the value of the flag.</span>
+<span id="L760" class="ln">   760&nbsp;&nbsp;</span>func (f *FlagSet) Bool(name string, value bool, usage string) *bool {
+<span id="L761" class="ln">   761&nbsp;&nbsp;</span>	p := new(bool)
+<span id="L762" class="ln">   762&nbsp;&nbsp;</span>	f.BoolVar(p, name, value, usage)
+<span id="L763" class="ln">   763&nbsp;&nbsp;</span>	return p
+<span id="L764" class="ln">   764&nbsp;&nbsp;</span>}
+<span id="L765" class="ln">   765&nbsp;&nbsp;</span>
+<span id="L766" class="ln">   766&nbsp;&nbsp;</span><span class="comment">// Bool defines a bool flag with specified name, default value, and usage string.</span>
+<span id="L767" class="ln">   767&nbsp;&nbsp;</span><span class="comment">// The return value is the address of a bool variable that stores the value of the flag.</span>
+<span id="L768" class="ln">   768&nbsp;&nbsp;</span>func Bool(name string, value bool, usage string) *bool {
+<span id="L769" class="ln">   769&nbsp;&nbsp;</span>	return CommandLine.Bool(name, value, usage)
+<span id="L770" class="ln">   770&nbsp;&nbsp;</span>}
+<span id="L771" class="ln">   771&nbsp;&nbsp;</span>
+<span id="L772" class="ln">   772&nbsp;&nbsp;</span><span class="comment">// IntVar defines an int flag with specified name, default value, and usage string.</span>
+<span id="L773" class="ln">   773&nbsp;&nbsp;</span><span class="comment">// The argument p points to an int variable in which to store the value of the flag.</span>
+<span id="L774" class="ln">   774&nbsp;&nbsp;</span>func (f *FlagSet) IntVar(p *int, name string, value int, usage string) {
+<span id="L775" class="ln">   775&nbsp;&nbsp;</span>	f.Var(newIntValue(value, p), name, usage)
+<span id="L776" class="ln">   776&nbsp;&nbsp;</span>}
+<span id="L777" class="ln">   777&nbsp;&nbsp;</span>
+<span id="L778" class="ln">   778&nbsp;&nbsp;</span><span class="comment">// IntVar defines an int flag with specified name, default value, and usage string.</span>
+<span id="L779" class="ln">   779&nbsp;&nbsp;</span><span class="comment">// The argument p points to an int variable in which to store the value of the flag.</span>
+<span id="L780" class="ln">   780&nbsp;&nbsp;</span>func IntVar(p *int, name string, value int, usage string) {
+<span id="L781" class="ln">   781&nbsp;&nbsp;</span>	CommandLine.Var(newIntValue(value, p), name, usage)
+<span id="L782" class="ln">   782&nbsp;&nbsp;</span>}
+<span id="L783" class="ln">   783&nbsp;&nbsp;</span>
+<span id="L784" class="ln">   784&nbsp;&nbsp;</span><span class="comment">// Int defines an int flag with specified name, default value, and usage string.</span>
+<span id="L785" class="ln">   785&nbsp;&nbsp;</span><span class="comment">// The return value is the address of an int variable that stores the value of the flag.</span>
+<span id="L786" class="ln">   786&nbsp;&nbsp;</span>func (f *FlagSet) Int(name string, value int, usage string) *int {
+<span id="L787" class="ln">   787&nbsp;&nbsp;</span>	p := new(int)
+<span id="L788" class="ln">   788&nbsp;&nbsp;</span>	f.IntVar(p, name, value, usage)
+<span id="L789" class="ln">   789&nbsp;&nbsp;</span>	return p
+<span id="L790" class="ln">   790&nbsp;&nbsp;</span>}
+<span id="L791" class="ln">   791&nbsp;&nbsp;</span>
+<span id="L792" class="ln">   792&nbsp;&nbsp;</span><span class="comment">// Int defines an int flag with specified name, default value, and usage string.</span>
+<span id="L793" class="ln">   793&nbsp;&nbsp;</span><span class="comment">// The return value is the address of an int variable that stores the value of the flag.</span>
+<span id="L794" class="ln">   794&nbsp;&nbsp;</span>func Int(name string, value int, usage string) *int {
+<span id="L795" class="ln">   795&nbsp;&nbsp;</span>	return CommandLine.Int(name, value, usage)
+<span id="L796" class="ln">   796&nbsp;&nbsp;</span>}
+<span id="L797" class="ln">   797&nbsp;&nbsp;</span>
+<span id="L798" class="ln">   798&nbsp;&nbsp;</span><span class="comment">// Int64Var defines an int64 flag with specified name, default value, and usage string.</span>
+<span id="L799" class="ln">   799&nbsp;&nbsp;</span><span class="comment">// The argument p points to an int64 variable in which to store the value of the flag.</span>
+<span id="L800" class="ln">   800&nbsp;&nbsp;</span>func (f *FlagSet) Int64Var(p *int64, name string, value int64, usage string) {
+<span id="L801" class="ln">   801&nbsp;&nbsp;</span>	f.Var(newInt64Value(value, p), name, usage)
+<span id="L802" class="ln">   802&nbsp;&nbsp;</span>}
+<span id="L803" class="ln">   803&nbsp;&nbsp;</span>
+<span id="L804" class="ln">   804&nbsp;&nbsp;</span><span class="comment">// Int64Var defines an int64 flag with specified name, default value, and usage string.</span>
+<span id="L805" class="ln">   805&nbsp;&nbsp;</span><span class="comment">// The argument p points to an int64 variable in which to store the value of the flag.</span>
+<span id="L806" class="ln">   806&nbsp;&nbsp;</span><span class="selection">func Int64Var(p *int64, name string, value int64, usage string)</span> {
+<span id="L807" class="ln">   807&nbsp;&nbsp;</span>	CommandLine.Var(newInt64Value(value, p), name, usage)
+<span id="L808" class="ln">   808&nbsp;&nbsp;</span>}
+<span id="L809" class="ln">   809&nbsp;&nbsp;</span>
+<span id="L810" class="ln">   810&nbsp;&nbsp;</span><span class="comment">// Int64 defines an int64 flag with specified name, default value, and usage string.</span>
+<span id="L811" class="ln">   811&nbsp;&nbsp;</span><span class="comment">// The return value is the address of an int64 variable that stores the value of the flag.</span>
+<span id="L812" class="ln">   812&nbsp;&nbsp;</span>func (f *FlagSet) Int64(name string, value int64, usage string) *int64 {
+<span id="L813" class="ln">   813&nbsp;&nbsp;</span>	p := new(int64)
+<span id="L814" class="ln">   814&nbsp;&nbsp;</span>	f.Int64Var(p, name, value, usage)
+<span id="L815" class="ln">   815&nbsp;&nbsp;</span>	return p
+<span id="L816" class="ln">   816&nbsp;&nbsp;</span>}
+<span id="L817" class="ln">   817&nbsp;&nbsp;</span>
+<span id="L818" class="ln">   818&nbsp;&nbsp;</span><span class="comment">// Int64 defines an int64 flag with specified name, default value, and usage string.</span>
+<span id="L819" class="ln">   819&nbsp;&nbsp;</span><span class="comment">// The return value is the address of an int64 variable that stores the value of the flag.</span>
+<span id="L820" class="ln">   820&nbsp;&nbsp;</span>func Int64(name string, value int64, usage string) *int64 {
+<span id="L821" class="ln">   821&nbsp;&nbsp;</span>	return CommandLine.Int64(name, value, usage)
+<span id="L822" class="ln">   822&nbsp;&nbsp;</span>}
+<span id="L823" class="ln">   823&nbsp;&nbsp;</span>
+<span id="L824" class="ln">   824&nbsp;&nbsp;</span><span class="comment">// UintVar defines a uint flag with specified name, default value, and usage string.</span>
+<span id="L825" class="ln">   825&nbsp;&nbsp;</span><span class="comment">// The argument p points to a uint variable in which to store the value of the flag.</span>
+<span id="L826" class="ln">   826&nbsp;&nbsp;</span>func (f *FlagSet) UintVar(p *uint, name string, value uint, usage string) {
+<span id="L827" class="ln">   827&nbsp;&nbsp;</span>	f.Var(newUintValue(value, p), name, usage)
+<span id="L828" class="ln">   828&nbsp;&nbsp;</span>}
+<span id="L829" class="ln">   829&nbsp;&nbsp;</span>
+<span id="L830" class="ln">   830&nbsp;&nbsp;</span><span class="comment">// UintVar defines a uint flag with specified name, default value, and usage string.</span>
+<span id="L831" class="ln">   831&nbsp;&nbsp;</span><span class="comment">// The argument p points to a uint variable in which to store the value of the flag.</span>
+<span id="L832" class="ln">   832&nbsp;&nbsp;</span>func UintVar(p *uint, name string, value uint, usage string) {
+<span id="L833" class="ln">   833&nbsp;&nbsp;</span>	CommandLine.Var(newUintValue(value, p), name, usage)
+<span id="L834" class="ln">   834&nbsp;&nbsp;</span>}
+<span id="L835" class="ln">   835&nbsp;&nbsp;</span>
+<span id="L836" class="ln">   836&nbsp;&nbsp;</span><span class="comment">// Uint defines a uint flag with specified name, default value, and usage string.</span>
+<span id="L837" class="ln">   837&nbsp;&nbsp;</span><span class="comment">// The return value is the address of a uint variable that stores the value of the flag.</span>
+<span id="L838" class="ln">   838&nbsp;&nbsp;</span>func (f *FlagSet) Uint(name string, value uint, usage string) *uint {
+<span id="L839" class="ln">   839&nbsp;&nbsp;</span>	p := new(uint)
+<span id="L840" class="ln">   840&nbsp;&nbsp;</span>	f.UintVar(p, name, value, usage)
+<span id="L841" class="ln">   841&nbsp;&nbsp;</span>	return p
+<span id="L842" class="ln">   842&nbsp;&nbsp;</span>}
+<span id="L843" class="ln">   843&nbsp;&nbsp;</span>
+<span id="L844" class="ln">   844&nbsp;&nbsp;</span><span class="comment">// Uint defines a uint flag with specified name, default value, and usage string.</span>
+<span id="L845" class="ln">   845&nbsp;&nbsp;</span><span class="comment">// The return value is the address of a uint variable that stores the value of the flag.</span>
+<span id="L846" class="ln">   846&nbsp;&nbsp;</span>func Uint(name string, value uint, usage string) *uint {
+<span id="L847" class="ln">   847&nbsp;&nbsp;</span>	return CommandLine.Uint(name, value, usage)
+<span id="L848" class="ln">   848&nbsp;&nbsp;</span>}
+<span id="L849" class="ln">   849&nbsp;&nbsp;</span>
+<span id="L850" class="ln">   850&nbsp;&nbsp;</span><span class="comment">// Uint64Var defines a uint64 flag with specified name, default value, and usage string.</span>
+<span id="L851" class="ln">   851&nbsp;&nbsp;</span><span class="comment">// The argument p points to a uint64 variable in which to store the value of the flag.</span>
+<span id="L852" class="ln">   852&nbsp;&nbsp;</span>func (f *FlagSet) Uint64Var(p *uint64, name string, value uint64, usage string) {
+<span id="L853" class="ln">   853&nbsp;&nbsp;</span>	f.Var(newUint64Value(value, p), name, usage)
+<span id="L854" class="ln">   854&nbsp;&nbsp;</span>}
+<span id="L855" class="ln">   855&nbsp;&nbsp;</span>
+<span id="L856" class="ln">   856&nbsp;&nbsp;</span><span class="comment">// Uint64Var defines a uint64 flag with specified name, default value, and usage string.</span>
+<span id="L857" class="ln">   857&nbsp;&nbsp;</span><span class="comment">// The argument p points to a uint64 variable in which to store the value of the flag.</span>
+<span id="L858" class="ln">   858&nbsp;&nbsp;</span>func Uint64Var(p *uint64, name string, value uint64, usage string) {
+<span id="L859" class="ln">   859&nbsp;&nbsp;</span>	CommandLine.Var(newUint64Value(value, p), name, usage)
+<span id="L860" class="ln">   860&nbsp;&nbsp;</span>}
+<span id="L861" class="ln">   861&nbsp;&nbsp;</span>
+<span id="L862" class="ln">   862&nbsp;&nbsp;</span><span class="comment">// Uint64 defines a uint64 flag with specified name, default value, and usage string.</span>
+<span id="L863" class="ln">   863&nbsp;&nbsp;</span><span class="comment">// The return value is the address of a uint64 variable that stores the value of the flag.</span>
+<span id="L864" class="ln">   864&nbsp;&nbsp;</span>func (f *FlagSet) Uint64(name string, value uint64, usage string) *uint64 {
+<span id="L865" class="ln">   865&nbsp;&nbsp;</span>	p := new(uint64)
+<span id="L866" class="ln">   866&nbsp;&nbsp;</span>	f.Uint64Var(p, name, value, usage)
+<span id="L867" class="ln">   867&nbsp;&nbsp;</span>	return p
+<span id="L868" class="ln">   868&nbsp;&nbsp;</span>}
+<span id="L869" class="ln">   869&nbsp;&nbsp;</span>
+<span id="L870" class="ln">   870&nbsp;&nbsp;</span><span class="comment">// Uint64 defines a uint64 flag with specified name, default value, and usage string.</span>
+<span id="L871" class="ln">   871&nbsp;&nbsp;</span><span class="comment">// The return value is the address of a uint64 variable that stores the value of the flag.</span>
+<span id="L872" class="ln">   872&nbsp;&nbsp;</span>func Uint64(name string, value uint64, usage string) *uint64 {
+<span id="L873" class="ln">   873&nbsp;&nbsp;</span>	return CommandLine.Uint64(name, value, usage)
+<span id="L874" class="ln">   874&nbsp;&nbsp;</span>}
+<span id="L875" class="ln">   875&nbsp;&nbsp;</span>
+<span id="L876" class="ln">   876&nbsp;&nbsp;</span><span class="comment">// StringVar defines a string flag with specified name, default value, and usage string.</span>
+<span id="L877" class="ln">   877&nbsp;&nbsp;</span><span class="comment">// The argument p points to a string variable in which to store the value of the flag.</span>
+<span id="L878" class="ln">   878&nbsp;&nbsp;</span>func (f *FlagSet) StringVar(p *string, name string, value string, usage string) {
+<span id="L879" class="ln">   879&nbsp;&nbsp;</span>	f.Var(newStringValue(value, p), name, usage)
+<span id="L880" class="ln">   880&nbsp;&nbsp;</span>}
+<span id="L881" class="ln">   881&nbsp;&nbsp;</span>
+<span id="L882" class="ln">   882&nbsp;&nbsp;</span><span class="comment">// StringVar defines a string flag with specified name, default value, and usage string.</span>
+<span id="L883" class="ln">   883&nbsp;&nbsp;</span><span class="comment">// The argument p points to a string variable in which to store the value of the flag.</span>
+<span id="L884" class="ln">   884&nbsp;&nbsp;</span>func StringVar(p *string, name string, value string, usage string) {
+<span id="L885" class="ln">   885&nbsp;&nbsp;</span>	CommandLine.Var(newStringValue(value, p), name, usage)
+<span id="L886" class="ln">   886&nbsp;&nbsp;</span>}
+<span id="L887" class="ln">   887&nbsp;&nbsp;</span>
+<span id="L888" class="ln">   888&nbsp;&nbsp;</span><span class="comment">// String defines a string flag with specified name, default value, and usage string.</span>
+<span id="L889" class="ln">   889&nbsp;&nbsp;</span><span class="comment">// The return value is the address of a string variable that stores the value of the flag.</span>
+<span id="L890" class="ln">   890&nbsp;&nbsp;</span>func (f *FlagSet) String(name string, value string, usage string) *string {
+<span id="L891" class="ln">   891&nbsp;&nbsp;</span>	p := new(string)
+<span id="L892" class="ln">   892&nbsp;&nbsp;</span>	f.StringVar(p, name, value, usage)
+<span id="L893" class="ln">   893&nbsp;&nbsp;</span>	return p
+<span id="L894" class="ln">   894&nbsp;&nbsp;</span>}
+<span id="L895" class="ln">   895&nbsp;&nbsp;</span>
+<span id="L896" class="ln">   896&nbsp;&nbsp;</span><span class="comment">// String defines a string flag with specified name, default value, and usage string.</span>
+<span id="L897" class="ln">   897&nbsp;&nbsp;</span><span class="comment">// The return value is the address of a string variable that stores the value of the flag.</span>
+<span id="L898" class="ln">   898&nbsp;&nbsp;</span>func String(name string, value string, usage string) *string {
+<span id="L899" class="ln">   899&nbsp;&nbsp;</span>	return CommandLine.String(name, value, usage)
+<span id="L900" class="ln">   900&nbsp;&nbsp;</span>}
+<span id="L901" class="ln">   901&nbsp;&nbsp;</span>
+<span id="L902" class="ln">   902&nbsp;&nbsp;</span><span class="comment">// Float64Var defines a float64 flag with specified name, default value, and usage string.</span>
+<span id="L903" class="ln">   903&nbsp;&nbsp;</span><span class="comment">// The argument p points to a float64 variable in which to store the value of the flag.</span>
+<span id="L904" class="ln">   904&nbsp;&nbsp;</span>func (f *FlagSet) Float64Var(p *float64, name string, value float64, usage string) {
+<span id="L905" class="ln">   905&nbsp;&nbsp;</span>	f.Var(newFloat64Value(value, p), name, usage)
+<span id="L906" class="ln">   906&nbsp;&nbsp;</span>}
+<span id="L907" class="ln">   907&nbsp;&nbsp;</span>
+<span id="L908" class="ln">   908&nbsp;&nbsp;</span><span class="comment">// Float64Var defines a float64 flag with specified name, default value, and usage string.</span>
+<span id="L909" class="ln">   909&nbsp;&nbsp;</span><span class="comment">// The argument p points to a float64 variable in which to store the value of the flag.</span>
+<span id="L910" class="ln">   910&nbsp;&nbsp;</span>func Float64Var(p *float64, name string, value float64, usage string) {
+<span id="L911" class="ln">   911&nbsp;&nbsp;</span>	CommandLine.Var(newFloat64Value(value, p), name, usage)
+<span id="L912" class="ln">   912&nbsp;&nbsp;</span>}
+<span id="L913" class="ln">   913&nbsp;&nbsp;</span>
+<span id="L914" class="ln">   914&nbsp;&nbsp;</span><span class="comment">// Float64 defines a float64 flag with specified name, default value, and usage string.</span>
+<span id="L915" class="ln">   915&nbsp;&nbsp;</span><span class="comment">// The return value is the address of a float64 variable that stores the value of the flag.</span>
+<span id="L916" class="ln">   916&nbsp;&nbsp;</span>func (f *FlagSet) Float64(name string, value float64, usage string) *float64 {
+<span id="L917" class="ln">   917&nbsp;&nbsp;</span>	p := new(float64)
+<span id="L918" class="ln">   918&nbsp;&nbsp;</span>	f.Float64Var(p, name, value, usage)
+<span id="L919" class="ln">   919&nbsp;&nbsp;</span>	return p
+<span id="L920" class="ln">   920&nbsp;&nbsp;</span>}
+<span id="L921" class="ln">   921&nbsp;&nbsp;</span>
+<span id="L922" class="ln">   922&nbsp;&nbsp;</span><span class="comment">// Float64 defines a float64 flag with specified name, default value, and usage string.</span>
+<span id="L923" class="ln">   923&nbsp;&nbsp;</span><span class="comment">// The return value is the address of a float64 variable that stores the value of the flag.</span>
+<span id="L924" class="ln">   924&nbsp;&nbsp;</span>func Float64(name string, value float64, usage string) *float64 {
+<span id="L925" class="ln">   925&nbsp;&nbsp;</span>	return CommandLine.Float64(name, value, usage)
+<span id="L926" class="ln">   926&nbsp;&nbsp;</span>}
+<span id="L927" class="ln">   927&nbsp;&nbsp;</span>
+<span id="L928" class="ln">   928&nbsp;&nbsp;</span><span class="comment">// DurationVar defines a time.Duration flag with specified name, default value, and usage string.</span>
+<span id="L929" class="ln">   929&nbsp;&nbsp;</span><span class="comment">// The argument p points to a time.Duration variable in which to store the value of the flag.</span>
+<span id="L930" class="ln">   930&nbsp;&nbsp;</span><span class="comment">// The flag accepts a value acceptable to time.ParseDuration.</span>
+<span id="L931" class="ln">   931&nbsp;&nbsp;</span>func (f *FlagSet) DurationVar(p *time.Duration, name string, value time.Duration, usage string) {
+<span id="L932" class="ln">   932&nbsp;&nbsp;</span>	f.Var(newDurationValue(value, p), name, usage)
+<span id="L933" class="ln">   933&nbsp;&nbsp;</span>}
+<span id="L934" class="ln">   934&nbsp;&nbsp;</span>
+<span id="L935" class="ln">   935&nbsp;&nbsp;</span><span class="comment">// DurationVar defines a time.Duration flag with specified name, default value, and usage string.</span>
+<span id="L936" class="ln">   936&nbsp;&nbsp;</span><span class="comment">// The argument p points to a time.Duration variable in which to store the value of the flag.</span>
+<span id="L937" class="ln">   937&nbsp;&nbsp;</span><span class="comment">// The flag accepts a value acceptable to time.ParseDuration.</span>
+<span id="L938" class="ln">   938&nbsp;&nbsp;</span>func DurationVar(p *time.Duration, name string, value time.Duration, usage string) {
+<span id="L939" class="ln">   939&nbsp;&nbsp;</span>	CommandLine.Var(newDurationValue(value, p), name, usage)
+<span id="L940" class="ln">   940&nbsp;&nbsp;</span>}
+<span id="L941" class="ln">   941&nbsp;&nbsp;</span>
+<span id="L942" class="ln">   942&nbsp;&nbsp;</span><span class="comment">// Duration defines a time.Duration flag with specified name, default value, and usage string.</span>
+<span id="L943" class="ln">   943&nbsp;&nbsp;</span><span class="comment">// The return value is the address of a time.Duration variable that stores the value of the flag.</span>
+<span id="L944" class="ln">   944&nbsp;&nbsp;</span><span class="comment">// The flag accepts a value acceptable to time.ParseDuration.</span>
+<span id="L945" class="ln">   945&nbsp;&nbsp;</span>func (f *FlagSet) Duration(name string, value time.Duration, usage string) *time.Duration {
+<span id="L946" class="ln">   946&nbsp;&nbsp;</span>	p := new(time.Duration)
+<span id="L947" class="ln">   947&nbsp;&nbsp;</span>	f.DurationVar(p, name, value, usage)
+<span id="L948" class="ln">   948&nbsp;&nbsp;</span>	return p
+<span id="L949" class="ln">   949&nbsp;&nbsp;</span>}
+<span id="L950" class="ln">   950&nbsp;&nbsp;</span>
+<span id="L951" class="ln">   951&nbsp;&nbsp;</span><span class="comment">// Duration defines a time.Duration flag with specified name, default value, and usage string.</span>
+<span id="L952" class="ln">   952&nbsp;&nbsp;</span><span class="comment">// The return value is the address of a time.Duration variable that stores the value of the flag.</span>
+<span id="L953" class="ln">   953&nbsp;&nbsp;</span><span class="comment">// The flag accepts a value acceptable to time.ParseDuration.</span>
+<span id="L954" class="ln">   954&nbsp;&nbsp;</span>func Duration(name string, value time.Duration, usage string) *time.Duration {
+<span id="L955" class="ln">   955&nbsp;&nbsp;</span>	return CommandLine.Duration(name, value, usage)
+<span id="L956" class="ln">   956&nbsp;&nbsp;</span>}
+<span id="L957" class="ln">   957&nbsp;&nbsp;</span>
+<span id="L958" class="ln">   958&nbsp;&nbsp;</span><span class="comment">// TextVar defines a flag with a specified name, default value, and usage string.</span>
+<span id="L959" class="ln">   959&nbsp;&nbsp;</span><span class="comment">// The argument p must be a pointer to a variable that will hold the value</span>
+<span id="L960" class="ln">   960&nbsp;&nbsp;</span><span class="comment">// of the flag, and p must implement encoding.TextUnmarshaler.</span>
+<span id="L961" class="ln">   961&nbsp;&nbsp;</span><span class="comment">// If the flag is used, the flag value will be passed to p&#39;s UnmarshalText method.</span>
+<span id="L962" class="ln">   962&nbsp;&nbsp;</span><span class="comment">// The type of the default value must be the same as the type of p.</span>
+<span id="L963" class="ln">   963&nbsp;&nbsp;</span>func (f *FlagSet) TextVar(p encoding.TextUnmarshaler, name string, value encoding.TextMarshaler, usage string) {
+<span id="L964" class="ln">   964&nbsp;&nbsp;</span>	f.Var(newTextValue(value, p), name, usage)
+<span id="L965" class="ln">   965&nbsp;&nbsp;</span>}
+<span id="L966" class="ln">   966&nbsp;&nbsp;</span>
+<span id="L967" class="ln">   967&nbsp;&nbsp;</span><span class="comment">// TextVar defines a flag with a specified name, default value, and usage string.</span>
+<span id="L968" class="ln">   968&nbsp;&nbsp;</span><span class="comment">// The argument p must be a pointer to a variable that will hold the value</span>
+<span id="L969" class="ln">   969&nbsp;&nbsp;</span><span class="comment">// of the flag, and p must implement encoding.TextUnmarshaler.</span>
+<span id="L970" class="ln">   970&nbsp;&nbsp;</span><span class="comment">// If the flag is used, the flag value will be passed to p&#39;s UnmarshalText method.</span>
+<span id="L971" class="ln">   971&nbsp;&nbsp;</span><span class="comment">// The type of the default value must be the same as the type of p.</span>
+<span id="L972" class="ln">   972&nbsp;&nbsp;</span>func TextVar(p encoding.TextUnmarshaler, name string, value encoding.TextMarshaler, usage string) {
+<span id="L973" class="ln">   973&nbsp;&nbsp;</span>	CommandLine.Var(newTextValue(value, p), name, usage)
+<span id="L974" class="ln">   974&nbsp;&nbsp;</span>}
+<span id="L975" class="ln">   975&nbsp;&nbsp;</span>
+<span id="L976" class="ln">   976&nbsp;&nbsp;</span><span class="comment">// Func defines a flag with the specified name and usage string.</span>
+<span id="L977" class="ln">   977&nbsp;&nbsp;</span><span class="comment">// Each time the flag is seen, fn is called with the value of the flag.</span>
+<span id="L978" class="ln">   978&nbsp;&nbsp;</span><span class="comment">// If fn returns a non-nil error, it will be treated as a flag value parsing error.</span>
+<span id="L979" class="ln">   979&nbsp;&nbsp;</span>func (f *FlagSet) Func(name, usage string, fn func(string) error) {
+<span id="L980" class="ln">   980&nbsp;&nbsp;</span>	f.Var(funcValue(fn), name, usage)
+<span id="L981" class="ln">   981&nbsp;&nbsp;</span>}
+<span id="L982" class="ln">   982&nbsp;&nbsp;</span>
+<span id="L983" class="ln">   983&nbsp;&nbsp;</span><span class="comment">// Func defines a flag with the specified name and usage string.</span>
+<span id="L984" class="ln">   984&nbsp;&nbsp;</span><span class="comment">// Each time the flag is seen, fn is called with the value of the flag.</span>
+<span id="L985" class="ln">   985&nbsp;&nbsp;</span><span class="comment">// If fn returns a non-nil error, it will be treated as a flag value parsing error.</span>
+<span id="L986" class="ln">   986&nbsp;&nbsp;</span>func Func(name, usage string, fn func(string) error) {
+<span id="L987" class="ln">   987&nbsp;&nbsp;</span>	CommandLine.Func(name, usage, fn)
+<span id="L988" class="ln">   988&nbsp;&nbsp;</span>}
+<span id="L989" class="ln">   989&nbsp;&nbsp;</span>
+<span id="L990" class="ln">   990&nbsp;&nbsp;</span><span class="comment">// BoolFunc defines a flag with the specified name and usage string without requiring values.</span>
+<span id="L991" class="ln">   991&nbsp;&nbsp;</span><span class="comment">// Each time the flag is seen, fn is called with the value of the flag.</span>
+<span id="L992" class="ln">   992&nbsp;&nbsp;</span><span class="comment">// If fn returns a non-nil error, it will be treated as a flag value parsing error.</span>
+<span id="L993" class="ln">   993&nbsp;&nbsp;</span>func (f *FlagSet) BoolFunc(name, usage string, fn func(string) error) {
+<span id="L994" class="ln">   994&nbsp;&nbsp;</span>	f.Var(boolFuncValue(fn), name, usage)
+<span id="L995" class="ln">   995&nbsp;&nbsp;</span>}
+<span id="L996" class="ln">   996&nbsp;&nbsp;</span>
+<span id="L997" class="ln">   997&nbsp;&nbsp;</span><span class="comment">// BoolFunc defines a flag with the specified name and usage string without requiring values.</span>
+<span id="L998" class="ln">   998&nbsp;&nbsp;</span><span class="comment">// Each time the flag is seen, fn is called with the value of the flag.</span>
+<span id="L999" class="ln">   999&nbsp;&nbsp;</span><span class="comment">// If fn returns a non-nil error, it will be treated as a flag value parsing error.</span>
+<span id="L1000" class="ln">  1000&nbsp;&nbsp;</span>func BoolFunc(name, usage string, fn func(string) error) {
+<span id="L1001" class="ln">  1001&nbsp;&nbsp;</span>	CommandLine.BoolFunc(name, usage, fn)
+<span id="L1002" class="ln">  1002&nbsp;&nbsp;</span>}
+<span id="L1003" class="ln">  1003&nbsp;&nbsp;</span>
+<span id="L1004" class="ln">  1004&nbsp;&nbsp;</span><span class="comment">// Var defines a flag with the specified name and usage string. The type and</span>
+<span id="L1005" class="ln">  1005&nbsp;&nbsp;</span><span class="comment">// value of the flag are represented by the first argument, of type [Value], which</span>
+<span id="L1006" class="ln">  1006&nbsp;&nbsp;</span><span class="comment">// typically holds a user-defined implementation of [Value]. For instance, the</span>
+<span id="L1007" class="ln">  1007&nbsp;&nbsp;</span><span class="comment">// caller could create a flag that turns a comma-separated string into a slice</span>
+<span id="L1008" class="ln">  1008&nbsp;&nbsp;</span><span class="comment">// of strings by giving the slice the methods of [Value]; in particular, [Set] would</span>
+<span id="L1009" class="ln">  1009&nbsp;&nbsp;</span><span class="comment">// decompose the comma-separated string into the slice.</span>
+<span id="L1010" class="ln">  1010&nbsp;&nbsp;</span>func (f *FlagSet) Var(value Value, name string, usage string) {
+<span id="L1011" class="ln">  1011&nbsp;&nbsp;</span>	<span class="comment">// Flag must not begin &#34;-&#34; or contain &#34;=&#34;.</span>
+<span id="L1012" class="ln">  1012&nbsp;&nbsp;</span>	if strings.HasPrefix(name, &#34;-&#34;) {
+<span id="L1013" class="ln">  1013&nbsp;&nbsp;</span>		panic(f.sprintf(&#34;flag %q begins with -&#34;, name))
+<span id="L1014" class="ln">  1014&nbsp;&nbsp;</span>	} else if strings.Contains(name, &#34;=&#34;) {
+<span id="L1015" class="ln">  1015&nbsp;&nbsp;</span>		panic(f.sprintf(&#34;flag %q contains =&#34;, name))
+<span id="L1016" class="ln">  1016&nbsp;&nbsp;</span>	}
+<span id="L1017" class="ln">  1017&nbsp;&nbsp;</span>
+<span id="L1018" class="ln">  1018&nbsp;&nbsp;</span>	<span class="comment">// Remember the default value as a string; it won&#39;t change.</span>
+<span id="L1019" class="ln">  1019&nbsp;&nbsp;</span>	flag := &amp;Flag{name, usage, value, value.String()}
+<span id="L1020" class="ln">  1020&nbsp;&nbsp;</span>	_, alreadythere := f.formal[name]
+<span id="L1021" class="ln">  1021&nbsp;&nbsp;</span>	if alreadythere {
+<span id="L1022" class="ln">  1022&nbsp;&nbsp;</span>		var msg string
+<span id="L1023" class="ln">  1023&nbsp;&nbsp;</span>		if f.name == &#34;&#34; {
+<span id="L1024" class="ln">  1024&nbsp;&nbsp;</span>			msg = f.sprintf(&#34;flag redefined: %s&#34;, name)
+<span id="L1025" class="ln">  1025&nbsp;&nbsp;</span>		} else {
+<span id="L1026" class="ln">  1026&nbsp;&nbsp;</span>			msg = f.sprintf(&#34;%s flag redefined: %s&#34;, f.name, name)
+<span id="L1027" class="ln">  1027&nbsp;&nbsp;</span>		}
+<span id="L1028" class="ln">  1028&nbsp;&nbsp;</span>		panic(msg) <span class="comment">// Happens only if flags are declared with identical names</span>
+<span id="L1029" class="ln">  1029&nbsp;&nbsp;</span>	}
+<span id="L1030" class="ln">  1030&nbsp;&nbsp;</span>	if pos := f.undef[name]; pos != &#34;&#34; {
+<span id="L1031" class="ln">  1031&nbsp;&nbsp;</span>		panic(fmt.Sprintf(&#34;flag %s set at %s before being defined&#34;, name, pos))
+<span id="L1032" class="ln">  1032&nbsp;&nbsp;</span>	}
+<span id="L1033" class="ln">  1033&nbsp;&nbsp;</span>	if f.formal == nil {
+<span id="L1034" class="ln">  1034&nbsp;&nbsp;</span>		f.formal = make(map[string]*Flag)
+<span id="L1035" class="ln">  1035&nbsp;&nbsp;</span>	}
+<span id="L1036" class="ln">  1036&nbsp;&nbsp;</span>	f.formal[name] = flag
+<span id="L1037" class="ln">  1037&nbsp;&nbsp;</span>}
+<span id="L1038" class="ln">  1038&nbsp;&nbsp;</span>
+<span id="L1039" class="ln">  1039&nbsp;&nbsp;</span><span class="comment">// Var defines a flag with the specified name and usage string. The type and</span>
+<span id="L1040" class="ln">  1040&nbsp;&nbsp;</span><span class="comment">// value of the flag are represented by the first argument, of type [Value], which</span>
+<span id="L1041" class="ln">  1041&nbsp;&nbsp;</span><span class="comment">// typically holds a user-defined implementation of [Value]. For instance, the</span>
+<span id="L1042" class="ln">  1042&nbsp;&nbsp;</span><span class="comment">// caller could create a flag that turns a comma-separated string into a slice</span>
+<span id="L1043" class="ln">  1043&nbsp;&nbsp;</span><span class="comment">// of strings by giving the slice the methods of [Value]; in particular, [Set] would</span>
+<span id="L1044" class="ln">  1044&nbsp;&nbsp;</span><span class="comment">// decompose the comma-separated string into the slice.</span>
+<span id="L1045" class="ln">  1045&nbsp;&nbsp;</span>func Var(value Value, name string, usage string) {
+<span id="L1046" class="ln">  1046&nbsp;&nbsp;</span>	CommandLine.Var(value, name, usage)
+<span id="L1047" class="ln">  1047&nbsp;&nbsp;</span>}
+<span id="L1048" class="ln">  1048&nbsp;&nbsp;</span>
+<span id="L1049" class="ln">  1049&nbsp;&nbsp;</span><span class="comment">// sprintf formats the message, prints it to output, and returns it.</span>
+<span id="L1050" class="ln">  1050&nbsp;&nbsp;</span>func (f *FlagSet) sprintf(format string, a ...any) string {
+<span id="L1051" class="ln">  1051&nbsp;&nbsp;</span>	msg := fmt.Sprintf(format, a...)
+<span id="L1052" class="ln">  1052&nbsp;&nbsp;</span>	fmt.Fprintln(f.Output(), msg)
+<span id="L1053" class="ln">  1053&nbsp;&nbsp;</span>	return msg
+<span id="L1054" class="ln">  1054&nbsp;&nbsp;</span>}
+<span id="L1055" class="ln">  1055&nbsp;&nbsp;</span>
+<span id="L1056" class="ln">  1056&nbsp;&nbsp;</span><span class="comment">// failf prints to standard error a formatted error and usage message and</span>
+<span id="L1057" class="ln">  1057&nbsp;&nbsp;</span><span class="comment">// returns the error.</span>
+<span id="L1058" class="ln">  1058&nbsp;&nbsp;</span>func (f *FlagSet) failf(format string, a ...any) error {
+<span id="L1059" class="ln">  1059&nbsp;&nbsp;</span>	msg := f.sprintf(format, a...)
+<span id="L1060" class="ln">  1060&nbsp;&nbsp;</span>	f.usage()
+<span id="L1061" class="ln">  1061&nbsp;&nbsp;</span>	return errors.New(msg)
+<span id="L1062" class="ln">  1062&nbsp;&nbsp;</span>}
+<span id="L1063" class="ln">  1063&nbsp;&nbsp;</span>
+<span id="L1064" class="ln">  1064&nbsp;&nbsp;</span><span class="comment">// usage calls the Usage method for the flag set if one is specified,</span>
+<span id="L1065" class="ln">  1065&nbsp;&nbsp;</span><span class="comment">// or the appropriate default usage function otherwise.</span>
+<span id="L1066" class="ln">  1066&nbsp;&nbsp;</span>func (f *FlagSet) usage() {
+<span id="L1067" class="ln">  1067&nbsp;&nbsp;</span>	if f.Usage == nil {
+<span id="L1068" class="ln">  1068&nbsp;&nbsp;</span>		f.defaultUsage()
+<span id="L1069" class="ln">  1069&nbsp;&nbsp;</span>	} else {
+<span id="L1070" class="ln">  1070&nbsp;&nbsp;</span>		f.Usage()
+<span id="L1071" class="ln">  1071&nbsp;&nbsp;</span>	}
+<span id="L1072" class="ln">  1072&nbsp;&nbsp;</span>}
+<span id="L1073" class="ln">  1073&nbsp;&nbsp;</span>
+<span id="L1074" class="ln">  1074&nbsp;&nbsp;</span><span class="comment">// parseOne parses one flag. It reports whether a flag was seen.</span>
+<span id="L1075" class="ln">  1075&nbsp;&nbsp;</span>func (f *FlagSet) parseOne() (bool, error) {
+<span id="L1076" class="ln">  1076&nbsp;&nbsp;</span>	if len(f.args) == 0 {
+<span id="L1077" class="ln">  1077&nbsp;&nbsp;</span>		return false, nil
+<span id="L1078" class="ln">  1078&nbsp;&nbsp;</span>	}
+<span id="L1079" class="ln">  1079&nbsp;&nbsp;</span>	s := f.args[0]
+<span id="L1080" class="ln">  1080&nbsp;&nbsp;</span>	if len(s) &lt; 2 || s[0] != &#39;-&#39; {
+<span id="L1081" class="ln">  1081&nbsp;&nbsp;</span>		return false, nil
+<span id="L1082" class="ln">  1082&nbsp;&nbsp;</span>	}
+<span id="L1083" class="ln">  1083&nbsp;&nbsp;</span>	numMinuses := 1
+<span id="L1084" class="ln">  1084&nbsp;&nbsp;</span>	if s[1] == &#39;-&#39; {
+<span id="L1085" class="ln">  1085&nbsp;&nbsp;</span>		numMinuses++
+<span id="L1086" class="ln">  1086&nbsp;&nbsp;</span>		if len(s) == 2 { <span class="comment">// &#34;--&#34; terminates the flags</span>
+<span id="L1087" class="ln">  1087&nbsp;&nbsp;</span>			f.args = f.args[1:]
+<span id="L1088" class="ln">  1088&nbsp;&nbsp;</span>			return false, nil
+<span id="L1089" class="ln">  1089&nbsp;&nbsp;</span>		}
+<span id="L1090" class="ln">  1090&nbsp;&nbsp;</span>	}
+<span id="L1091" class="ln">  1091&nbsp;&nbsp;</span>	name := s[numMinuses:]
+<span id="L1092" class="ln">  1092&nbsp;&nbsp;</span>	if len(name) == 0 || name[0] == &#39;-&#39; || name[0] == &#39;=&#39; {
+<span id="L1093" class="ln">  1093&nbsp;&nbsp;</span>		return false, f.failf(&#34;bad flag syntax: %s&#34;, s)
+<span id="L1094" class="ln">  1094&nbsp;&nbsp;</span>	}
+<span id="L1095" class="ln">  1095&nbsp;&nbsp;</span>
+<span id="L1096" class="ln">  1096&nbsp;&nbsp;</span>	<span class="comment">// it&#39;s a flag. does it have an argument?</span>
+<span id="L1097" class="ln">  1097&nbsp;&nbsp;</span>	f.args = f.args[1:]
+<span id="L1098" class="ln">  1098&nbsp;&nbsp;</span>	hasValue := false
+<span id="L1099" class="ln">  1099&nbsp;&nbsp;</span>	value := &#34;&#34;
+<span id="L1100" class="ln">  1100&nbsp;&nbsp;</span>	for i := 1; i &lt; len(name); i++ { <span class="comment">// equals cannot be first</span>
+<span id="L1101" class="ln">  1101&nbsp;&nbsp;</span>		if name[i] == &#39;=&#39; {
+<span id="L1102" class="ln">  1102&nbsp;&nbsp;</span>			value = name[i+1:]
+<span id="L1103" class="ln">  1103&nbsp;&nbsp;</span>			hasValue = true
+<span id="L1104" class="ln">  1104&nbsp;&nbsp;</span>			name = name[0:i]
+<span id="L1105" class="ln">  1105&nbsp;&nbsp;</span>			break
+<span id="L1106" class="ln">  1106&nbsp;&nbsp;</span>		}
+<span id="L1107" class="ln">  1107&nbsp;&nbsp;</span>	}
+<span id="L1108" class="ln">  1108&nbsp;&nbsp;</span>
+<span id="L1109" class="ln">  1109&nbsp;&nbsp;</span>	flag, ok := f.formal[name]
+<span id="L1110" class="ln">  1110&nbsp;&nbsp;</span>	if !ok {
+<span id="L1111" class="ln">  1111&nbsp;&nbsp;</span>		if name == &#34;help&#34; || name == &#34;h&#34; { <span class="comment">// special case for nice help message.</span>
+<span id="L1112" class="ln">  1112&nbsp;&nbsp;</span>			f.usage()
+<span id="L1113" class="ln">  1113&nbsp;&nbsp;</span>			return false, ErrHelp
+<span id="L1114" class="ln">  1114&nbsp;&nbsp;</span>		}
+<span id="L1115" class="ln">  1115&nbsp;&nbsp;</span>		return false, f.failf(&#34;flag provided but not defined: -%s&#34;, name)
+<span id="L1116" class="ln">  1116&nbsp;&nbsp;</span>	}
+<span id="L1117" class="ln">  1117&nbsp;&nbsp;</span>
+<span id="L1118" class="ln">  1118&nbsp;&nbsp;</span>	if fv, ok := flag.Value.(boolFlag); ok &amp;&amp; fv.IsBoolFlag() { <span class="comment">// special case: doesn&#39;t need an arg</span>
+<span id="L1119" class="ln">  1119&nbsp;&nbsp;</span>		if hasValue {
+<span id="L1120" class="ln">  1120&nbsp;&nbsp;</span>			if err := fv.Set(value); err != nil {
+<span id="L1121" class="ln">  1121&nbsp;&nbsp;</span>				return false, f.failf(&#34;invalid boolean value %q for -%s: %v&#34;, value, name, err)
+<span id="L1122" class="ln">  1122&nbsp;&nbsp;</span>			}
+<span id="L1123" class="ln">  1123&nbsp;&nbsp;</span>		} else {
+<span id="L1124" class="ln">  1124&nbsp;&nbsp;</span>			if err := fv.Set(&#34;true&#34;); err != nil {
+<span id="L1125" class="ln">  1125&nbsp;&nbsp;</span>				return false, f.failf(&#34;invalid boolean flag %s: %v&#34;, name, err)
+<span id="L1126" class="ln">  1126&nbsp;&nbsp;</span>			}
+<span id="L1127" class="ln">  1127&nbsp;&nbsp;</span>		}
+<span id="L1128" class="ln">  1128&nbsp;&nbsp;</span>	} else {
+<span id="L1129" class="ln">  1129&nbsp;&nbsp;</span>		<span class="comment">// It must have a value, which might be the next argument.</span>
+<span id="L1130" class="ln">  1130&nbsp;&nbsp;</span>		if !hasValue &amp;&amp; len(f.args) &gt; 0 {
+<span id="L1131" class="ln">  1131&nbsp;&nbsp;</span>			<span class="comment">// value is the next arg</span>
+<span id="L1132" class="ln">  1132&nbsp;&nbsp;</span>			hasValue = true
+<span id="L1133" class="ln">  1133&nbsp;&nbsp;</span>			value, f.args = f.args[0], f.args[1:]
+<span id="L1134" class="ln">  1134&nbsp;&nbsp;</span>		}
+<span id="L1135" class="ln">  1135&nbsp;&nbsp;</span>		if !hasValue {
+<span id="L1136" class="ln">  1136&nbsp;&nbsp;</span>			return false, f.failf(&#34;flag needs an argument: -%s&#34;, name)
+<span id="L1137" class="ln">  1137&nbsp;&nbsp;</span>		}
+<span id="L1138" class="ln">  1138&nbsp;&nbsp;</span>		if err := flag.Value.Set(value); err != nil {
+<span id="L1139" class="ln">  1139&nbsp;&nbsp;</span>			return false, f.failf(&#34;invalid value %q for flag -%s: %v&#34;, value, name, err)
+<span id="L1140" class="ln">  1140&nbsp;&nbsp;</span>		}
+<span id="L1141" class="ln">  1141&nbsp;&nbsp;</span>	}
+<span id="L1142" class="ln">  1142&nbsp;&nbsp;</span>	if f.actual == nil {
+<span id="L1143" class="ln">  1143&nbsp;&nbsp;</span>		f.actual = make(map[string]*Flag)
+<span id="L1144" class="ln">  1144&nbsp;&nbsp;</span>	}
+<span id="L1145" class="ln">  1145&nbsp;&nbsp;</span>	f.actual[name] = flag
+<span id="L1146" class="ln">  1146&nbsp;&nbsp;</span>	return true, nil
+<span id="L1147" class="ln">  1147&nbsp;&nbsp;</span>}
+<span id="L1148" class="ln">  1148&nbsp;&nbsp;</span>
+<span id="L1149" class="ln">  1149&nbsp;&nbsp;</span><span class="comment">// Parse parses flag definitions from the argument list, which should not</span>
+<span id="L1150" class="ln">  1150&nbsp;&nbsp;</span><span class="comment">// include the command name. Must be called after all flags in the [FlagSet]</span>
+<span id="L1151" class="ln">  1151&nbsp;&nbsp;</span><span class="comment">// are defined and before flags are accessed by the program.</span>
+<span id="L1152" class="ln">  1152&nbsp;&nbsp;</span><span class="comment">// The return value will be [ErrHelp] if -help or -h were set but not defined.</span>
+<span id="L1153" class="ln">  1153&nbsp;&nbsp;</span>func (f *FlagSet) Parse(arguments []string) error {
+<span id="L1154" class="ln">  1154&nbsp;&nbsp;</span>	f.parsed = true
+<span id="L1155" class="ln">  1155&nbsp;&nbsp;</span>	f.args = arguments
+<span id="L1156" class="ln">  1156&nbsp;&nbsp;</span>	for {
+<span id="L1157" class="ln">  1157&nbsp;&nbsp;</span>		seen, err := f.parseOne()
+<span id="L1158" class="ln">  1158&nbsp;&nbsp;</span>		if seen {
+<span id="L1159" class="ln">  1159&nbsp;&nbsp;</span>			continue
+<span id="L1160" class="ln">  1160&nbsp;&nbsp;</span>		}
+<span id="L1161" class="ln">  1161&nbsp;&nbsp;</span>		if err == nil {
+<span id="L1162" class="ln">  1162&nbsp;&nbsp;</span>			break
+<span id="L1163" class="ln">  1163&nbsp;&nbsp;</span>		}
+<span id="L1164" class="ln">  1164&nbsp;&nbsp;</span>		switch f.errorHandling {
+<span id="L1165" class="ln">  1165&nbsp;&nbsp;</span>		case ContinueOnError:
+<span id="L1166" class="ln">  1166&nbsp;&nbsp;</span>			return err
+<span id="L1167" class="ln">  1167&nbsp;&nbsp;</span>		case ExitOnError:
+<span id="L1168" class="ln">  1168&nbsp;&nbsp;</span>			if err == ErrHelp {
+<span id="L1169" class="ln">  1169&nbsp;&nbsp;</span>				os.Exit(0)
+<span id="L1170" class="ln">  1170&nbsp;&nbsp;</span>			}
+<span id="L1171" class="ln">  1171&nbsp;&nbsp;</span>			os.Exit(2)
+<span id="L1172" class="ln">  1172&nbsp;&nbsp;</span>		case PanicOnError:
+<span id="L1173" class="ln">  1173&nbsp;&nbsp;</span>			panic(err)
+<span id="L1174" class="ln">  1174&nbsp;&nbsp;</span>		}
+<span id="L1175" class="ln">  1175&nbsp;&nbsp;</span>	}
+<span id="L1176" class="ln">  1176&nbsp;&nbsp;</span>	return nil
+<span id="L1177" class="ln">  1177&nbsp;&nbsp;</span>}
+<span id="L1178" class="ln">  1178&nbsp;&nbsp;</span>
+<span id="L1179" class="ln">  1179&nbsp;&nbsp;</span><span class="comment">// Parsed reports whether f.Parse has been called.</span>
+<span id="L1180" class="ln">  1180&nbsp;&nbsp;</span>func (f *FlagSet) Parsed() bool {
+<span id="L1181" class="ln">  1181&nbsp;&nbsp;</span>	return f.parsed
+<span id="L1182" class="ln">  1182&nbsp;&nbsp;</span>}
+<span id="L1183" class="ln">  1183&nbsp;&nbsp;</span>
+<span id="L1184" class="ln">  1184&nbsp;&nbsp;</span><span class="comment">// Parse parses the command-line flags from [os.Args][1:]. Must be called</span>
+<span id="L1185" class="ln">  1185&nbsp;&nbsp;</span><span class="comment">// after all flags are defined and before flags are accessed by the program.</span>
+<span id="L1186" class="ln">  1186&nbsp;&nbsp;</span>func Parse() {
+<span id="L1187" class="ln">  1187&nbsp;&nbsp;</span>	<span class="comment">// Ignore errors; CommandLine is set for ExitOnError.</span>
+<span id="L1188" class="ln">  1188&nbsp;&nbsp;</span>	CommandLine.Parse(os.Args[1:])
+<span id="L1189" class="ln">  1189&nbsp;&nbsp;</span>}
+<span id="L1190" class="ln">  1190&nbsp;&nbsp;</span>
+<span id="L1191" class="ln">  1191&nbsp;&nbsp;</span><span class="comment">// Parsed reports whether the command-line flags have been parsed.</span>
+<span id="L1192" class="ln">  1192&nbsp;&nbsp;</span>func Parsed() bool {
+<span id="L1193" class="ln">  1193&nbsp;&nbsp;</span>	return CommandLine.Parsed()
+<span id="L1194" class="ln">  1194&nbsp;&nbsp;</span>}
+<span id="L1195" class="ln">  1195&nbsp;&nbsp;</span>
+<span id="L1196" class="ln">  1196&nbsp;&nbsp;</span><span class="comment">// CommandLine is the default set of command-line flags, parsed from [os.Args].</span>
+<span id="L1197" class="ln">  1197&nbsp;&nbsp;</span><span class="comment">// The top-level functions such as [BoolVar], [Arg], and so on are wrappers for the</span>
+<span id="L1198" class="ln">  1198&nbsp;&nbsp;</span><span class="comment">// methods of CommandLine.</span>
+<span id="L1199" class="ln">  1199&nbsp;&nbsp;</span>var CommandLine = NewFlagSet(os.Args[0], ExitOnError)
+<span id="L1200" class="ln">  1200&nbsp;&nbsp;</span>
+<span id="L1201" class="ln">  1201&nbsp;&nbsp;</span>func init() {
+<span id="L1202" class="ln">  1202&nbsp;&nbsp;</span>	<span class="comment">// Override generic FlagSet default Usage with call to global Usage.</span>
+<span id="L1203" class="ln">  1203&nbsp;&nbsp;</span>	<span class="comment">// Note: This is not CommandLine.Usage = Usage,</span>
+<span id="L1204" class="ln">  1204&nbsp;&nbsp;</span>	<span class="comment">// because we want any eventual call to use any updated value of Usage,</span>
+<span id="L1205" class="ln">  1205&nbsp;&nbsp;</span>	<span class="comment">// not the value it has when this line is run.</span>
+<span id="L1206" class="ln">  1206&nbsp;&nbsp;</span>	CommandLine.Usage = commandLineUsage
+<span id="L1207" class="ln">  1207&nbsp;&nbsp;</span>}
+<span id="L1208" class="ln">  1208&nbsp;&nbsp;</span>
+<span id="L1209" class="ln">  1209&nbsp;&nbsp;</span>func commandLineUsage() {
+<span id="L1210" class="ln">  1210&nbsp;&nbsp;</span>	Usage()
+<span id="L1211" class="ln">  1211&nbsp;&nbsp;</span>}
+<span id="L1212" class="ln">  1212&nbsp;&nbsp;</span>
+<span id="L1213" class="ln">  1213&nbsp;&nbsp;</span><span class="comment">// NewFlagSet returns a new, empty flag set with the specified name and</span>
+<span id="L1214" class="ln">  1214&nbsp;&nbsp;</span><span class="comment">// error handling property. If the name is not empty, it will be printed</span>
+<span id="L1215" class="ln">  1215&nbsp;&nbsp;</span><span class="comment">// in the default usage message and in error messages.</span>
+<span id="L1216" class="ln">  1216&nbsp;&nbsp;</span>func NewFlagSet(name string, errorHandling ErrorHandling) *FlagSet {
+<span id="L1217" class="ln">  1217&nbsp;&nbsp;</span>	f := &amp;FlagSet{
+<span id="L1218" class="ln">  1218&nbsp;&nbsp;</span>		name:          name,
+<span id="L1219" class="ln">  1219&nbsp;&nbsp;</span>		errorHandling: errorHandling,
+<span id="L1220" class="ln">  1220&nbsp;&nbsp;</span>	}
+<span id="L1221" class="ln">  1221&nbsp;&nbsp;</span>	f.Usage = f.defaultUsage
+<span id="L1222" class="ln">  1222&nbsp;&nbsp;</span>	return f
+<span id="L1223" class="ln">  1223&nbsp;&nbsp;</span>}
+<span id="L1224" class="ln">  1224&nbsp;&nbsp;</span>
+<span id="L1225" class="ln">  1225&nbsp;&nbsp;</span><span class="comment">// Init sets the name and error handling property for a flag set.</span>
+<span id="L1226" class="ln">  1226&nbsp;&nbsp;</span><span class="comment">// By default, the zero [FlagSet] uses an empty name and the</span>
+<span id="L1227" class="ln">  1227&nbsp;&nbsp;</span><span class="comment">// [ContinueOnError] error handling policy.</span>
+<span id="L1228" class="ln">  1228&nbsp;&nbsp;</span>func (f *FlagSet) Init(name string, errorHandling ErrorHandling) {
+<span id="L1229" class="ln">  1229&nbsp;&nbsp;</span>	f.name = name
+<span id="L1230" class="ln">  1230&nbsp;&nbsp;</span>	f.errorHandling = errorHandling
+<span id="L1231" class="ln">  1231&nbsp;&nbsp;</span>}
+<span id="L1232" class="ln">  1232&nbsp;&nbsp;</span>
+</pre><p><a href="flag.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

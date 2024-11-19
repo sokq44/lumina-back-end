@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>goarch - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package goarch
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "internal/goarch"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>package goarch contains GOARCH-specific constants.
+
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+				<dd><a href="index.html#pkg-constants">Constants</a></dd>
+			
+			
+			
+			
+				
+				<dd><a href="index.html#ArchFamilyType">type ArchFamilyType</a></dd>
+				
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../../src/internal/goarch/goarch.go">goarch.go</a>
+			
+				<a href="../../../src/internal/goarch/goarch_amd64.go">goarch_amd64.go</a>
+			
+				<a href="../../../src/internal/goarch/zgoarch_amd64.go">zgoarch_amd64.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+			<h2 id="pkg-constants">Constants</h2>
+			
+				<p>BigEndian reports whether the architecture is big-endian.
+
+				<pre>const <span id="BigEndian">BigEndian</span> = <a href="index.html#IsArmbe">IsArmbe</a>|<a href="index.html#IsArm64be">IsArm64be</a>|<a href="index.html#IsMips">IsMips</a>|<a href="index.html#IsMips64">IsMips64</a>|<a href="index.html#IsPpc">IsPpc</a>|<a href="index.html#IsPpc64">IsPpc64</a>|<a href="index.html#IsS390">IsS390</a>|<a href="index.html#IsS390x">IsS390x</a>|<a href="index.html#IsSparc">IsSparc</a>|<a href="index.html#IsSparc64">IsSparc64</a> == 1</pre>
+			
+				<p>DefaultPhysPageSize is the default physical page size.
+
+				<pre>const <span id="DefaultPhysPageSize">DefaultPhysPageSize</span> = _DefaultPhysPageSize</pre>
+			
+				
+				<pre>const <span id="GOARCH">GOARCH</span> = `amd64`</pre>
+			
+				<p>Int64Align is the required alignment for a 64-bit integer (4 on 32-bit systems, 8 on 64-bit).
+
+				<pre>const <span id="Int64Align">Int64Align</span> = <a href="index.html#PtrSize">PtrSize</a></pre>
+			
+				
+				<pre>const <span id="Is386">Is386</span> = 0</pre>
+			
+				
+				<pre>const <span id="IsAmd64">IsAmd64</span> = 1</pre>
+			
+				
+				<pre>const <span id="IsAmd64p32">IsAmd64p32</span> = 0</pre>
+			
+				
+				<pre>const <span id="IsArm">IsArm</span> = 0</pre>
+			
+				
+				<pre>const <span id="IsArm64">IsArm64</span> = 0</pre>
+			
+				
+				<pre>const <span id="IsArm64be">IsArm64be</span> = 0</pre>
+			
+				
+				<pre>const <span id="IsArmbe">IsArmbe</span> = 0</pre>
+			
+				
+				<pre>const <span id="IsLoong64">IsLoong64</span> = 0</pre>
+			
+				
+				<pre>const <span id="IsMips">IsMips</span> = 0</pre>
+			
+				
+				<pre>const <span id="IsMips64">IsMips64</span> = 0</pre>
+			
+				
+				<pre>const <span id="IsMips64le">IsMips64le</span> = 0</pre>
+			
+				
+				<pre>const <span id="IsMips64p32">IsMips64p32</span> = 0</pre>
+			
+				
+				<pre>const <span id="IsMips64p32le">IsMips64p32le</span> = 0</pre>
+			
+				
+				<pre>const <span id="IsMipsle">IsMipsle</span> = 0</pre>
+			
+				
+				<pre>const <span id="IsPpc">IsPpc</span> = 0</pre>
+			
+				
+				<pre>const <span id="IsPpc64">IsPpc64</span> = 0</pre>
+			
+				
+				<pre>const <span id="IsPpc64le">IsPpc64le</span> = 0</pre>
+			
+				
+				<pre>const <span id="IsRiscv">IsRiscv</span> = 0</pre>
+			
+				
+				<pre>const <span id="IsRiscv64">IsRiscv64</span> = 0</pre>
+			
+				
+				<pre>const <span id="IsS390">IsS390</span> = 0</pre>
+			
+				
+				<pre>const <span id="IsS390x">IsS390x</span> = 0</pre>
+			
+				
+				<pre>const <span id="IsSparc">IsSparc</span> = 0</pre>
+			
+				
+				<pre>const <span id="IsSparc64">IsSparc64</span> = 0</pre>
+			
+				
+				<pre>const <span id="IsWasm">IsWasm</span> = 0</pre>
+			
+				<p>MinFrameSize is the size of the system-reserved words at the bottom
+of a frame (just above the architectural stack pointer).
+It is zero on x86 and PtrSize on most non-x86 (LR-based) systems.
+On PowerPC it is larger, to cover three more reserved words:
+the compiler word, the link editor word, and the TOC save word.
+
+				<pre>const <span id="MinFrameSize">MinFrameSize</span> = _MinFrameSize</pre>
+			
+				<p>PCQuantum is the minimal unit for a program counter (1 on x86, 4 on most other systems).
+The various PC tables record PC deltas pre-divided by PCQuantum.
+
+				<pre>const <span id="PCQuantum">PCQuantum</span> = _PCQuantum</pre>
+			
+				<p>PtrSize is the size of a pointer in bytes - unsafe.Sizeof(uintptr(0)) but as an ideal constant.
+It is also the size of the machine&apos;s native word size (that is, 4 on 32-bit systems, 8 on 64-bit).
+
+				<pre>const <span id="PtrSize">PtrSize</span> = 4 &lt;&lt; (^<a href="../../builtin/index.html#uintptr">uintptr</a>(0) &gt;&gt; 63)</pre>
+			
+				<p>StackAlign is the required alignment of the SP register.
+The stack must be at least word aligned, but some architectures require more.
+
+				<pre>const <span id="StackAlign">StackAlign</span> = _StackAlign</pre>
+			
+		
+		
+		
+		
+			
+			
+			<h2 id="ArchFamilyType">type <a href="../../../src/internal/goarch/goarch.go?s=545:568#L5">ArchFamilyType</a>
+				<a class="permalink" href="index.html#ArchFamilyType">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type ArchFamilyType <a href="../../builtin/index.html#int">int</a></pre>
+
+			
+				
+				<pre>const (
+    <span id="AMD64">AMD64</span> <a href="index.html#ArchFamilyType">ArchFamilyType</a> = <a href="../../builtin/index.html#iota">iota</a>
+    <span id="ARM">ARM</span>
+    <span id="ARM64">ARM64</span>
+    <span id="I386">I386</span>
+    <span id="LOONG64">LOONG64</span>
+    <span id="MIPS">MIPS</span>
+    <span id="MIPS64">MIPS64</span>
+    <span id="PPC64">PPC64</span>
+    <span id="RISCV64">RISCV64</span>
+    <span id="S390X">S390X</span>
+    <span id="WASM">WASM</span>
+)</pre>
+			
+				<p>ArchFamily is the architecture family (AMD64, ARM, ...)
+
+				<pre>const <span id="ArchFamily">ArchFamily</span> <a href="index.html#ArchFamilyType">ArchFamilyType</a> = _ArchFamily</pre>
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+	
+
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

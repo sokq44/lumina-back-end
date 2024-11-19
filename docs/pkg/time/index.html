@@ -1,0 +1,3668 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>time - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package time
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "time"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+				<dd><a href="index.html#pkg-examples" class="examplesLink">Examples</a></dd>
+			
+			
+				<dd><a href="index.html#pkg-subdirectories">Subdirectories</a></dd>
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>Package time provides functionality for measuring and displaying time.
+<p>The calendrical calculations always assume a Gregorian calendar, with
+no leap seconds.
+<h3 id="hdr-Monotonic_Clocks">Monotonic Clocks</h3>
+<p>Operating systems provide both a “wall clock,” which is subject to
+changes for clock synchronization, and a “monotonic clock,” which is
+not. The general rule is that the wall clock is for telling time and
+the monotonic clock is for measuring time. Rather than split the API,
+in this package the Time returned by time.Now contains both a wall
+clock reading and a monotonic clock reading; later time-telling
+operations use the wall clock reading, but later time-measuring
+operations, specifically comparisons and subtractions, use the
+monotonic clock reading.
+<p>For example, this code always computes a positive elapsed time of
+approximately 20 milliseconds, even if the wall clock is changed during
+the operation being timed:
+<pre>start := time.Now()
+... operation that takes 20 milliseconds ...
+t := time.Now()
+elapsed := t.Sub(start)
+</pre>
+<p>Other idioms, such as time.Since(start), time.Until(deadline), and
+time.Now().Before(deadline), are similarly robust against wall clock
+resets.
+<p>The rest of this section gives the precise details of how operations
+use monotonic clocks, but understanding those details is not required
+to use this package.
+<p>The Time returned by time.Now contains a monotonic clock reading.
+If Time t has a monotonic clock reading, t.Add adds the same duration to
+both the wall clock and monotonic clock readings to compute the result.
+Because t.AddDate(y, m, d), t.Round(d), and t.Truncate(d) are wall time
+computations, they always strip any monotonic clock reading from their results.
+Because t.In, t.Local, and t.UTC are used for their effect on the interpretation
+of the wall time, they also strip any monotonic clock reading from their results.
+The canonical way to strip a monotonic clock reading is to use t = t.Round(0).
+<p>If Times t and u both contain monotonic clock readings, the operations
+t.After(u), t.Before(u), t.Equal(u), t.Compare(u), and t.Sub(u) are carried out
+using the monotonic clock readings alone, ignoring the wall clock
+readings. If either t or u contains no monotonic clock reading, these
+operations fall back to using the wall clock readings.
+<p>On some systems the monotonic clock will stop if the computer goes to sleep.
+On such a system, t.Sub(u) may not accurately reflect the actual
+time that passed between t and u.
+<p>Because the monotonic clock reading has no meaning outside
+the current process, the serialized forms generated by t.GobEncode,
+t.MarshalBinary, t.MarshalJSON, and t.MarshalText omit the monotonic
+clock reading, and t.Format provides no format for it. Similarly, the
+constructors time.Date, time.Parse, time.ParseInLocation, and time.Unix,
+as well as the unmarshalers t.GobDecode, t.UnmarshalBinary.
+t.UnmarshalJSON, and t.UnmarshalText always create times with
+no monotonic clock reading.
+<p>The monotonic clock reading exists only in Time values. It is not
+a part of Duration values or the Unix times returned by t.Unix and
+friends.
+<p>Note that the Go == operator compares not just the time instant but
+also the Location and the monotonic clock reading. See the
+documentation for the Time type for a discussion of equality
+testing for Time values.
+<p>For debugging, the result of t.String does include the monotonic
+clock reading if present. If t != u because of different monotonic clock readings,
+that difference will be visible when printing t.String() and u.String().
+<h3 id="hdr-Timer_Resolution">Timer Resolution</h3>
+<p>Timer resolution varies depending on the Go runtime, the operating system
+and the underlying hardware.
+On Unix, the resolution is approximately 1ms.
+On Windows, the default resolution is approximately 16ms, but
+a higher resolution may be requested using <a href="http://localhost:8080/golang.org/x/sys/windows#TimeBeginPeriod">golang.org/x/sys/windows.TimeBeginPeriod</a>.
+
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+				<dd><a href="index.html#pkg-constants">Constants</a></dd>
+			
+			
+			
+				
+				<dd><a href="index.html#After">func After(d Duration) &lt;-chan Time</a></dd>
+			
+				
+				<dd><a href="index.html#Sleep">func Sleep(d Duration)</a></dd>
+			
+				
+				<dd><a href="index.html#Tick">func Tick(d Duration) &lt;-chan Time</a></dd>
+			
+			
+				
+				<dd><a href="index.html#Duration">type Duration</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ParseDuration">func ParseDuration(s string) (Duration, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Since">func Since(t Time) Duration</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Until">func Until(t Time) Duration</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Duration.Abs">func (d Duration) Abs() Duration</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Duration.Hours">func (d Duration) Hours() float64</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Duration.Microseconds">func (d Duration) Microseconds() int64</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Duration.Milliseconds">func (d Duration) Milliseconds() int64</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Duration.Minutes">func (d Duration) Minutes() float64</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Duration.Nanoseconds">func (d Duration) Nanoseconds() int64</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Duration.Round">func (d Duration) Round(m Duration) Duration</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Duration.Seconds">func (d Duration) Seconds() float64</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Duration.String">func (d Duration) String() string</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Duration.Truncate">func (d Duration) Truncate(m Duration) Duration</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Location">type Location</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#FixedZone">func FixedZone(name string, offset int) *Location</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#LoadLocation">func LoadLocation(name string) (*Location, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#LoadLocationFromTZData">func LoadLocationFromTZData(name string, data []byte) (*Location, error)</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Location.String">func (l *Location) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Month">type Month</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Month.String">func (m Month) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#ParseError">type ParseError</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ParseError.Error">func (e *ParseError) Error() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Ticker">type Ticker</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewTicker">func NewTicker(d Duration) *Ticker</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Ticker.Reset">func (t *Ticker) Reset(d Duration)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Ticker.Stop">func (t *Ticker) Stop()</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Time">type Time</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Date">func Date(year int, month Month, day, hour, min, sec, nsec int, loc *Location) Time</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Now">func Now() Time</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Parse">func Parse(layout, value string) (Time, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ParseInLocation">func ParseInLocation(layout, value string, loc *Location) (Time, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Unix">func Unix(sec int64, nsec int64) Time</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#UnixMicro">func UnixMicro(usec int64) Time</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#UnixMilli">func UnixMilli(msec int64) Time</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Time.Add">func (t Time) Add(d Duration) Time</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Time.AddDate">func (t Time) AddDate(years int, months int, days int) Time</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Time.After">func (t Time) After(u Time) bool</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Time.AppendFormat">func (t Time) AppendFormat(b []byte, layout string) []byte</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Time.Before">func (t Time) Before(u Time) bool</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Time.Clock">func (t Time) Clock() (hour, min, sec int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Time.Compare">func (t Time) Compare(u Time) int</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Time.Date">func (t Time) Date() (year int, month Month, day int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Time.Day">func (t Time) Day() int</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Time.Equal">func (t Time) Equal(u Time) bool</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Time.Format">func (t Time) Format(layout string) string</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Time.GoString">func (t Time) GoString() string</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Time.GobDecode">func (t *Time) GobDecode(data []byte) error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Time.GobEncode">func (t Time) GobEncode() ([]byte, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Time.Hour">func (t Time) Hour() int</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Time.ISOWeek">func (t Time) ISOWeek() (year, week int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Time.In">func (t Time) In(loc *Location) Time</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Time.IsDST">func (t Time) IsDST() bool</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Time.IsZero">func (t Time) IsZero() bool</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Time.Local">func (t Time) Local() Time</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Time.Location">func (t Time) Location() *Location</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Time.MarshalBinary">func (t Time) MarshalBinary() ([]byte, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Time.MarshalJSON">func (t Time) MarshalJSON() ([]byte, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Time.MarshalText">func (t Time) MarshalText() ([]byte, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Time.Minute">func (t Time) Minute() int</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Time.Month">func (t Time) Month() Month</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Time.Nanosecond">func (t Time) Nanosecond() int</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Time.Round">func (t Time) Round(d Duration) Time</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Time.Second">func (t Time) Second() int</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Time.String">func (t Time) String() string</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Time.Sub">func (t Time) Sub(u Time) Duration</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Time.Truncate">func (t Time) Truncate(d Duration) Time</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Time.UTC">func (t Time) UTC() Time</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Time.Unix">func (t Time) Unix() int64</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Time.UnixMicro">func (t Time) UnixMicro() int64</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Time.UnixMilli">func (t Time) UnixMilli() int64</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Time.UnixNano">func (t Time) UnixNano() int64</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Time.UnmarshalBinary">func (t *Time) UnmarshalBinary(data []byte) error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Time.UnmarshalJSON">func (t *Time) UnmarshalJSON(data []byte) error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Time.UnmarshalText">func (t *Time) UnmarshalText(data []byte) error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Time.Weekday">func (t Time) Weekday() Weekday</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Time.Year">func (t Time) Year() int</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Time.YearDay">func (t Time) YearDay() int</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Time.Zone">func (t Time) Zone() (name string, offset int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Time.ZoneBounds">func (t Time) ZoneBounds() (start, end Time)</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Timer">type Timer</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#AfterFunc">func AfterFunc(d Duration, f func()) *Timer</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewTimer">func NewTimer(d Duration) *Timer</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Timer.Reset">func (t *Timer) Reset(d Duration) bool</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Timer.Stop">func (t *Timer) Stop() bool</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Weekday">type Weekday</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Weekday.String">func (d Weekday) String() string</a></dd>
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+		<div id="pkg-examples">
+			<h3>Examples</h3>
+			<div class="js-expandAll expandAll collapsed">(Expand All)</div>
+			<dl>
+			
+			<dd><a class="exampleLink" href="index.html#example_After">After</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Date">Date</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Duration">Duration</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Duration_Hours">Duration.Hours</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Duration_Microseconds">Duration.Microseconds</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Duration_Milliseconds">Duration.Milliseconds</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Duration_Minutes">Duration.Minutes</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Duration_Nanoseconds">Duration.Nanoseconds</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Duration_Round">Duration.Round</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Duration_Seconds">Duration.Seconds</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Duration_String">Duration.String</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Duration_Truncate">Duration.Truncate</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_FixedZone">FixedZone</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_LoadLocation">LoadLocation</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Location">Location</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Month">Month</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_NewTicker">NewTicker</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Parse">Parse</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_ParseDuration">ParseDuration</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_ParseInLocation">ParseInLocation</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Sleep">Sleep</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Tick">Tick</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Time_Add">Time.Add</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Time_AddDate">Time.AddDate</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Time_After">Time.After</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Time_AppendFormat">Time.AppendFormat</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Time_Before">Time.Before</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Time_Date">Time.Date</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Time_Day">Time.Day</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Time_Equal">Time.Equal</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Time_Format">Time.Format</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Time_Format_pad">Time.Format (Pad)</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Time_GoString">Time.GoString</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Time_Round">Time.Round</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Time_String">Time.String</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Time_Sub">Time.Sub</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Time_Truncate">Time.Truncate</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Time_Unix">Time.Unix</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Unix">Unix</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_UnixMicro">UnixMicro</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_UnixMilli">UnixMilli</a></dd>
+			
+			</dl>
+		</div>
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../src/time/format.go">format.go</a>
+			
+				<a href="../../src/time/format_rfc3339.go">format_rfc3339.go</a>
+			
+				<a href="../../src/time/sleep.go">sleep.go</a>
+			
+				<a href="../../src/time/sys_unix.go">sys_unix.go</a>
+			
+				<a href="../../src/time/tick.go">tick.go</a>
+			
+				<a href="../../src/time/time.go">time.go</a>
+			
+				<a href="../../src/time/zoneinfo.go">zoneinfo.go</a>
+			
+				<a href="../../src/time/zoneinfo_goroot.go">zoneinfo_goroot.go</a>
+			
+				<a href="../../src/time/zoneinfo_read.go">zoneinfo_read.go</a>
+			
+				<a href="../../src/time/zoneinfo_unix.go">zoneinfo_unix.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+			<h2 id="pkg-constants">Constants</h2>
+			
+				<p>These are predefined layouts for use in Time.Format and time.Parse.
+The reference time used in these layouts is the specific time stamp:
+<pre>01/02 03:04:05PM &apos;06 -0700
+</pre>
+<p>(January 2, 15:04:05, 2006, in time zone seven hours west of GMT).
+That value is recorded as the constant named Layout, listed below. As a Unix
+time, this is 1136239445. Since MST is GMT-0700, the reference would be
+printed by the Unix date command as:
+<pre>Mon Jan 2 15:04:05 MST 2006
+</pre>
+<p>It is a regrettable historic error that the date uses the American convention
+of putting the numerical month before the day.
+<p>The example for Time.Format demonstrates the working of the layout string
+in detail and is a good reference.
+<p>Note that the RFC822, RFC850, and RFC1123 formats should be applied
+only to local times. Applying them to UTC times will use &quot;UTC&quot; as the
+time zone abbreviation, while strictly speaking those RFCs require the
+use of &quot;GMT&quot; in that case.
+In general RFC1123Z should be used instead of RFC1123 for servers
+that insist on that format, and RFC3339 should be preferred for new protocols.
+RFC3339, RFC822, RFC822Z, RFC1123, and RFC1123Z are useful for formatting;
+when used with time.Parse they do not accept all the time formats
+permitted by the RFCs and they do accept time formats not formally defined.
+The RFC3339Nano format removes trailing zeros from the seconds field
+and thus may not sort correctly once formatted.
+<p>Most programs can use one of the defined constants as the layout passed to
+Format or Parse. The rest of this comment can be ignored unless you are
+creating a custom layout string.
+<p>To define your own format, write down what the reference time would look like
+formatted your way; see the values of constants like ANSIC, StampMicro or
+Kitchen for examples. The model is to demonstrate what the reference time
+looks like so that the Format and Parse methods can apply the same
+transformation to a general time value.
+<p>Here is a summary of the components of a layout string. Each element shows by
+example the formatting of an element of the reference time. Only these values
+are recognized. Text in the layout string that is not recognized as part of
+the reference time is echoed verbatim during Format and expected to appear
+verbatim in the input to Parse.
+<pre>Year: &quot;2006&quot; &quot;06&quot;
+Month: &quot;Jan&quot; &quot;January&quot; &quot;01&quot; &quot;1&quot;
+Day of the week: &quot;Mon&quot; &quot;Monday&quot;
+Day of the month: &quot;2&quot; &quot;_2&quot; &quot;02&quot;
+Day of the year: &quot;__2&quot; &quot;002&quot;
+Hour: &quot;15&quot; &quot;3&quot; &quot;03&quot; (PM or AM)
+Minute: &quot;4&quot; &quot;04&quot;
+Second: &quot;5&quot; &quot;05&quot;
+AM/PM mark: &quot;PM&quot;
+</pre>
+<p>Numeric time zone offsets format as follows:
+<pre>&quot;-0700&quot;     ±hhmm
+&quot;-07:00&quot;    ±hh:mm
+&quot;-07&quot;       ±hh
+&quot;-070000&quot;   ±hhmmss
+&quot;-07:00:00&quot; ±hh:mm:ss
+</pre>
+<p>Replacing the sign in the format with a Z triggers
+the ISO 8601 behavior of printing Z instead of an
+offset for the UTC zone. Thus:
+<pre>&quot;Z0700&quot;      Z or ±hhmm
+&quot;Z07:00&quot;     Z or ±hh:mm
+&quot;Z07&quot;        Z or ±hh
+&quot;Z070000&quot;    Z or ±hhmmss
+&quot;Z07:00:00&quot;  Z or ±hh:mm:ss
+</pre>
+<p>Within the format string, the underscores in &quot;_2&quot; and &quot;__2&quot; represent spaces
+that may be replaced by digits if the following number has multiple digits,
+for compatibility with fixed-width Unix time formats. A leading zero represents
+a zero-padded value.
+<p>The formats __2 and 002 are space-padded and zero-padded
+three-character day of year; there is no unpadded day of year format.
+<p>A comma or decimal point followed by one or more zeros represents
+a fractional second, printed to the given number of decimal places.
+A comma or decimal point followed by one or more nines represents
+a fractional second, printed to the given number of decimal places, with
+trailing zeros removed.
+For example &quot;15:04:05,000&quot; or &quot;15:04:05.000&quot; formats or parses with
+millisecond precision.
+<p>Some valid layouts are invalid time values for time.Parse, due to formats
+such as _ for space padding and Z for zone information.
+
+				<pre>const (
+    <span id="Layout">Layout</span>      = &#34;01/02 03:04:05PM &#39;06 -0700&#34; <span class="comment">// The reference time, in numerical order.</span>
+    <span id="ANSIC">ANSIC</span>       = &#34;Mon Jan _2 15:04:05 2006&#34;
+    <span id="UnixDate">UnixDate</span>    = &#34;Mon Jan _2 15:04:05 MST 2006&#34;
+    <span id="RubyDate">RubyDate</span>    = &#34;Mon Jan 02 15:04:05 -0700 2006&#34;
+    <span id="RFC822">RFC822</span>      = &#34;02 Jan 06 15:04 MST&#34;
+    <span id="RFC822Z">RFC822Z</span>     = &#34;02 Jan 06 15:04 -0700&#34; <span class="comment">// RFC822 with numeric zone</span>
+    <span id="RFC850">RFC850</span>      = &#34;Monday, 02-Jan-06 15:04:05 MST&#34;
+    <span id="RFC1123">RFC1123</span>     = &#34;Mon, 02 Jan 2006 15:04:05 MST&#34;
+    <span id="RFC1123Z">RFC1123Z</span>    = &#34;Mon, 02 Jan 2006 15:04:05 -0700&#34; <span class="comment">// RFC1123 with numeric zone</span>
+    <span id="RFC3339">RFC3339</span>     = &#34;2006-01-02T15:04:05Z07:00&#34;
+    <span id="RFC3339Nano">RFC3339Nano</span> = &#34;2006-01-02T15:04:05.999999999Z07:00&#34;
+    <span id="Kitchen">Kitchen</span>     = &#34;3:04PM&#34;
+    <span class="comment">// Handy time stamps.</span>
+    <span id="Stamp">Stamp</span>      = &#34;Jan _2 15:04:05&#34;
+    <span id="StampMilli">StampMilli</span> = &#34;Jan _2 15:04:05.000&#34;
+    <span id="StampMicro">StampMicro</span> = &#34;Jan _2 15:04:05.000000&#34;
+    <span id="StampNano">StampNano</span>  = &#34;Jan _2 15:04:05.000000000&#34;
+    <span id="DateTime">DateTime</span>   = &#34;2006-01-02 15:04:05&#34;
+    <span id="DateOnly">DateOnly</span>   = &#34;2006-01-02&#34;
+    <span id="TimeOnly">TimeOnly</span>   = &#34;15:04:05&#34;
+)</pre>
+			
+				<p>Common durations. There is no definition for units of Day or larger
+to avoid confusion across daylight savings time zone transitions.
+<p>To count the number of units in a Duration, divide:
+<pre>second := time.Second
+fmt.Print(int64(second/time.Millisecond)) // prints 1000
+</pre>
+<p>To convert an integer number of units to a Duration, multiply:
+<pre>seconds := 10
+fmt.Print(time.Duration(seconds)*time.Second) // prints 10s
+</pre>
+
+				<pre>const (
+    <span id="Nanosecond">Nanosecond</span>  <a href="index.html#Duration">Duration</a> = 1
+    <span id="Microsecond">Microsecond</span>          = 1000 * <a href="index.html#Nanosecond">Nanosecond</a>
+    <span id="Millisecond">Millisecond</span>          = 1000 * <a href="index.html#Microsecond">Microsecond</a>
+    <span id="Second">Second</span>               = 1000 * <a href="index.html#Millisecond">Millisecond</a>
+    <span id="Minute">Minute</span>               = 60 * <a href="index.html#Second">Second</a>
+    <span id="Hour">Hour</span>                 = 60 * <a href="index.html#Minute">Minute</a>
+)</pre>
+			
+		
+		
+		
+			
+			
+			<h2 id="After">func <a href="../../src/time/sleep.go?s=5285:5319#L146">After</a>
+				<a class="permalink" href="index.html#After">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func After(d <a href="index.html#Duration">Duration</a>) &lt;-chan <a href="index.html#Time">Time</a></pre>
+			<p>After waits for the duration to elapse and then sends the current time
+on the returned channel.
+It is equivalent to NewTimer(d).C.
+The underlying Timer is not recovered by the garbage collector
+until the timer fires. If efficiency is a concern, use NewTimer
+instead and call Timer.Stop if the timer is no longer needed.
+
+			<div id="example_After" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">
+select {
+case m := &lt;-c:
+    handle(m)
+case &lt;-time.After(10 * time.Second):
+    fmt.Println(&#34;timed out&#34;)
+}
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Sleep">func <a href="../../src/time/sleep.go?s=308:330#L1">Sleep</a>
+				<a class="permalink" href="index.html#Sleep">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Sleep(d <a href="index.html#Duration">Duration</a>)</pre>
+			<p>Sleep pauses the current goroutine for at least the duration d.
+A negative or zero duration causes Sleep to return immediately.
+
+			<div id="example_Sleep" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">
+time.Sleep(100 * time.Millisecond)
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Tick">func <a href="../../src/time/tick.go?s=2243:2276#L56">Tick</a>
+				<a class="permalink" href="index.html#Tick">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Tick(d <a href="index.html#Duration">Duration</a>) &lt;-chan <a href="index.html#Time">Time</a></pre>
+			<p>Tick is a convenience wrapper for NewTicker providing access to the ticking
+channel only. While Tick is useful for clients that have no need to shut down
+the Ticker, be aware that without a way to shut it down the underlying
+Ticker cannot be recovered by the garbage collector; it &quot;leaks&quot;.
+Unlike NewTicker, Tick will return nil if d &lt;= 0.
+
+			<div id="example_Tick" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">
+c := time.Tick(5 * time.Second)
+for next := range c {
+    fmt.Printf(&#34;%v %s\n&#34;, next, statusUpdate())
+}
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+		
+			
+			
+			<h2 id="Duration">type <a href="../../src/time/time.go?s=21681:21700#L608">Duration</a>
+				<a class="permalink" href="index.html#Duration">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A Duration represents the elapsed time between two instants
+as an int64 nanosecond count. The representation limits the
+largest representable duration to approximately 290 years.
+
+			<pre>type Duration <a href="../builtin/index.html#int64">int64</a></pre>
+
+			
+
+			
+
+			<div id="example_Duration" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">
+t0 := time.Now()
+expensiveCall()
+t1 := time.Now()
+fmt.Printf(&#34;The call took %v to run.\n&#34;, t1.Sub(t0))
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+			
+
+			
+				
+				<h3 id="ParseDuration">func <a href="../../src/time/format.go?s=47318:47364#L1579">ParseDuration</a>
+					<a class="permalink" href="index.html#ParseDuration">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func ParseDuration(s <a href="../builtin/index.html#string">string</a>) (<a href="index.html#Duration">Duration</a>, <a href="../builtin/index.html#error">error</a>)</pre>
+				<p>ParseDuration parses a duration string.
+A duration string is a possibly signed sequence of
+decimal numbers, each with optional fraction and a unit suffix,
+such as &quot;300ms&quot;, &quot;-1.5h&quot; or &quot;2h45m&quot;.
+Valid time units are &quot;ns&quot;, &quot;us&quot; (or &quot;µs&quot;), &quot;ms&quot;, &quot;s&quot;, &quot;m&quot;, &quot;h&quot;.
+
+				<div id="example_ParseDuration" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">hours, _ := time.ParseDuration(&#34;10h&#34;)
+complex, _ := time.ParseDuration(&#34;1h10m10s&#34;)
+micro, _ := time.ParseDuration(&#34;1µs&#34;)
+<span class="comment">// The package also accepts the incorrect but common prefix u for micro.</span>
+micro2, _ := time.ParseDuration(&#34;1us&#34;)
+
+fmt.Println(hours)
+fmt.Println(complex)
+fmt.Printf(&#34;There are %.0f seconds in %v.\n&#34;, complex.Seconds(), complex)
+fmt.Printf(&#34;There are %d nanoseconds in %v.\n&#34;, micro.Nanoseconds(), micro)
+fmt.Printf(&#34;There are %6.2e seconds in %v.\n&#34;, micro2.Seconds(), micro)
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">10h0m0s
+1h10m10s
+There are 4210 seconds in 1h10m10s.
+There are 1000 nanoseconds in 1µs.
+There are 1.00e-06 seconds in 1µs.
+</pre>
+			
+		
+	</div>
+</div>
+
+				
+			
+				
+				<h3 id="Since">func <a href="../../src/time/time.go?s=29490:29517#L919">Since</a>
+					<a class="permalink" href="index.html#Since">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func Since(t <a href="index.html#Time">Time</a>) <a href="index.html#Duration">Duration</a></pre>
+				<p>Since returns the time elapsed since t.
+It is shorthand for time.Now().Sub(t).
+
+				
+				
+			
+				
+				<h3 id="Until">func <a href="../../src/time/time.go?s=29791:29818#L929">Until</a>
+					<a class="permalink" href="index.html#Until">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func Until(t <a href="index.html#Time">Time</a>) <a href="index.html#Duration">Duration</a></pre>
+				<p>Until returns the duration until t.
+It is shorthand for t.Sub(time.Now()).
+
+				
+				
+			
+
+			
+				
+				<h3 id="Duration.Abs">func (Duration) <a href="../../src/time/time.go?s=27859:27891#L850">Abs</a>
+					<a class="permalink" href="index.html#Duration.Abs">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (d <a href="index.html#Duration">Duration</a>) Abs() <a href="index.html#Duration">Duration</a></pre>
+				<p>Abs returns the absolute value of d.
+As a special case, math.MinInt64 is converted to math.MaxInt64.
+
+				
+				
+				
+			
+				
+				<h3 id="Duration.Hours">func (Duration) <a href="../../src/time/time.go?s=26516:26549#L797">Hours</a>
+					<a class="permalink" href="index.html#Duration.Hours">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (d <a href="index.html#Duration">Duration</a>) Hours() <a href="../builtin/index.html#float64">float64</a></pre>
+				<p>Hours returns the duration as a floating point number of hours.
+
+				
+				<div id="example_Duration_Hours" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">h, _ := time.ParseDuration(&#34;4h30m&#34;)
+fmt.Printf(&#34;I&#39;ve got %.1f hours of work left.&#34;, h.Hours())
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">I&#39;ve got 4.5 hours of work left.
+</pre>
+			
+		
+	</div>
+</div>
+
+				
+			
+				
+				<h3 id="Duration.Microseconds">func (Duration) <a href="../../src/time/time.go?s=25395:25433#L768">Microseconds</a>
+					<a class="permalink" href="index.html#Duration.Microseconds">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (d <a href="index.html#Duration">Duration</a>) Microseconds() <a href="../builtin/index.html#int64">int64</a></pre>
+				<p>Microseconds returns the duration as an integer microsecond count.
+
+				
+				<div id="example_Duration_Microseconds" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">u, _ := time.ParseDuration(&#34;1s&#34;)
+fmt.Printf(&#34;One second is %d microseconds.\n&#34;, u.Microseconds())
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">One second is 1000000 microseconds.
+</pre>
+			
+		
+	</div>
+</div>
+
+				
+			
+				
+				<h3 id="Duration.Milliseconds">func (Duration) <a href="../../src/time/time.go?s=25531:25569#L771">Milliseconds</a>
+					<a class="permalink" href="index.html#Duration.Milliseconds">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (d <a href="index.html#Duration">Duration</a>) Milliseconds() <a href="../builtin/index.html#int64">int64</a></pre>
+				<p>Milliseconds returns the duration as an integer millisecond count.
+
+				
+				<div id="example_Duration_Milliseconds" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">u, _ := time.ParseDuration(&#34;1s&#34;)
+fmt.Printf(&#34;One second is %d milliseconds.\n&#34;, u.Milliseconds())
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">One second is 1000 milliseconds.
+</pre>
+			
+		
+	</div>
+</div>
+
+				
+			
+				
+				<h3 id="Duration.Minutes">func (Duration) <a href="../../src/time/time.go?s=26323:26358#L790">Minutes</a>
+					<a class="permalink" href="index.html#Duration.Minutes">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (d <a href="index.html#Duration">Duration</a>) Minutes() <a href="../builtin/index.html#float64">float64</a></pre>
+				<p>Minutes returns the duration as a floating point number of minutes.
+
+				
+				<div id="example_Duration_Minutes" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">m, _ := time.ParseDuration(&#34;1h30m&#34;)
+fmt.Printf(&#34;The movie is %.0f minutes long.&#34;, m.Minutes())
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">The movie is 90 minutes long.
+</pre>
+			
+		
+	</div>
+</div>
+
+				
+			
+				
+				<h3 id="Duration.Nanoseconds">func (Duration) <a href="../../src/time/time.go?s=25266:25303#L765">Nanoseconds</a>
+					<a class="permalink" href="index.html#Duration.Nanoseconds">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (d <a href="index.html#Duration">Duration</a>) Nanoseconds() <a href="../builtin/index.html#int64">int64</a></pre>
+				<p>Nanoseconds returns the duration as an integer nanosecond count.
+
+				
+				<div id="example_Duration_Nanoseconds" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">u, _ := time.ParseDuration(&#34;1µs&#34;)
+fmt.Printf(&#34;One microsecond is %d nanoseconds.\n&#34;, u.Nanoseconds())
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">One microsecond is 1000 nanoseconds.
+</pre>
+			
+		
+	</div>
+</div>
+
+				
+			
+				
+				<h3 id="Duration.Round">func (Duration) <a href="../../src/time/time.go?s=27392:27436#L824">Round</a>
+					<a class="permalink" href="index.html#Duration.Round">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (d <a href="index.html#Duration">Duration</a>) Round(m <a href="index.html#Duration">Duration</a>) <a href="index.html#Duration">Duration</a></pre>
+				<p>Round returns the result of rounding d to the nearest multiple of m.
+The rounding behavior for halfway values is to round away from zero.
+If the result exceeds the maximum (or minimum)
+value that can be stored in a Duration,
+Round returns the maximum (or minimum) duration.
+If m &lt;= 0, Round returns d unchanged.
+
+				
+				<div id="example_Duration_Round" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">d, err := time.ParseDuration(&#34;1h15m30.918273645s&#34;)
+if err != nil {
+    panic(err)
+}
+
+round := []time.Duration{
+    time.Nanosecond,
+    time.Microsecond,
+    time.Millisecond,
+    time.Second,
+    2 * time.Second,
+    time.Minute,
+    10 * time.Minute,
+    time.Hour,
+}
+
+for _, r := range round {
+    fmt.Printf(&#34;d.Round(%6s) = %s\n&#34;, r, d.Round(r).String())
+}
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">d.Round(   1ns) = 1h15m30.918273645s
+d.Round(   1µs) = 1h15m30.918274s
+d.Round(   1ms) = 1h15m30.918s
+d.Round(    1s) = 1h15m31s
+d.Round(    2s) = 1h15m30s
+d.Round(  1m0s) = 1h16m0s
+d.Round( 10m0s) = 1h20m0s
+d.Round(1h0m0s) = 1h0m0s
+</pre>
+			
+		
+	</div>
+</div>
+
+				
+			
+				
+				<h3 id="Duration.Seconds">func (Duration) <a href="../../src/time/time.go?s=26131:26166#L783">Seconds</a>
+					<a class="permalink" href="index.html#Duration.Seconds">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (d <a href="index.html#Duration">Duration</a>) Seconds() <a href="../builtin/index.html#float64">float64</a></pre>
+				<p>Seconds returns the duration as a floating point number of seconds.
+
+				
+				<div id="example_Duration_Seconds" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">m, _ := time.ParseDuration(&#34;1m30s&#34;)
+fmt.Printf(&#34;Take off in t-%.0f seconds.&#34;, m.Seconds())
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">Take off in t-90 seconds.
+</pre>
+			
+		
+	</div>
+</div>
+
+				
+			
+				
+				<h3 id="Duration.String">func (Duration) <a href="../../src/time/time.go?s=22762:22795#L640">String</a>
+					<a class="permalink" href="index.html#Duration.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (d <a href="index.html#Duration">Duration</a>) String() <a href="../builtin/index.html#string">string</a></pre>
+				<p>String returns a string representing the duration in the form &quot;72h3m0.5s&quot;.
+Leading zero units are omitted. As a special case, durations less than one
+second format use a smaller unit (milli-, micro-, or nanoseconds) to ensure
+that the leading digit is non-zero. The zero duration formats as 0s.
+
+				
+				<div id="example_Duration_String" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">fmt.Println(1*time.Hour + 2*time.Minute + 300*time.Millisecond)
+fmt.Println(300 * time.Millisecond)
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">1h2m0.3s
+300ms
+</pre>
+			
+		
+	</div>
+</div>
+
+				
+			
+				
+				<h3 id="Duration.Truncate">func (Duration) <a href="../../src/time/time.go?s=26762:26809#L805">Truncate</a>
+					<a class="permalink" href="index.html#Duration.Truncate">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (d <a href="index.html#Duration">Duration</a>) Truncate(m <a href="index.html#Duration">Duration</a>) <a href="index.html#Duration">Duration</a></pre>
+				<p>Truncate returns the result of rounding d toward zero to a multiple of m.
+If m &lt;= 0, Truncate returns d unchanged.
+
+				
+				<div id="example_Duration_Truncate" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">d, err := time.ParseDuration(&#34;1h15m30.918273645s&#34;)
+if err != nil {
+    panic(err)
+}
+
+trunc := []time.Duration{
+    time.Nanosecond,
+    time.Microsecond,
+    time.Millisecond,
+    time.Second,
+    2 * time.Second,
+    time.Minute,
+    10 * time.Minute,
+    time.Hour,
+}
+
+for _, t := range trunc {
+    fmt.Printf(&#34;d.Truncate(%6s) = %s\n&#34;, t, d.Truncate(t).String())
+}
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">d.Truncate(   1ns) = 1h15m30.918273645s
+d.Truncate(   1µs) = 1h15m30.918273s
+d.Truncate(   1ms) = 1h15m30.918s
+d.Truncate(    1s) = 1h15m30s
+d.Truncate(    2s) = 1h15m30s
+d.Truncate(  1m0s) = 1h15m0s
+d.Truncate( 10m0s) = 1h10m0s
+d.Truncate(1h0m0s) = 1h0m0s
+</pre>
+			
+		
+	</div>
+</div>
+
+				
+			
+		
+			
+			
+			<h2 id="Location">type <a href="../../src/time/zoneinfo.go?s=781:1656#L13">Location</a>
+				<a class="permalink" href="index.html#Location">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A Location maps time instants to the zone in use at that time.
+Typically, the Location represents the collection of time offsets
+in use in a geographical area. For many Locations the time offset varies
+depending on whether daylight savings time is in use at the time instant.
+<p>Location is used to provide a time zone in a printed Time value and for
+calculations involving intervals that may cross daylight savings time
+boundaries.
+
+			<pre>type Location struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+				<p>Local represents the system&apos;s local time zone.
+On Unix systems, Local consults the TZ environment
+variable to find the time zone to use. No TZ means
+use the system default /etc/localtime.
+TZ=&quot;&quot; means use UTC.
+TZ=&quot;foo&quot; means use file foo in the system timezone directory.
+
+				<pre>var <span id="Local">Local</span> *<a href="index.html#Location">Location</a> = &amp;localLoc</pre>
+			
+				<p>UTC represents Universal Coordinated Time (UTC).
+
+				<pre>var <span id="UTC">UTC</span> *<a href="index.html#Location">Location</a> = &amp;utcLoc</pre>
+			
+
+			<div id="example_Location" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code"><span class="comment">// China doesn&#39;t have daylight saving. It uses a fixed 8 hour offset from UTC.</span>
+secondsEastOfUTC := int((8 * time.Hour).Seconds())
+beijing := time.FixedZone(&#34;Beijing Time&#34;, secondsEastOfUTC)
+
+<span class="comment">// If the system has a timezone database present, it&#39;s possible to load a location</span>
+<span class="comment">// from that, e.g.:</span>
+<span class="comment">//    newYork, err := time.LoadLocation(&#34;America/New_York&#34;)</span>
+
+<span class="comment">// Creating a time requires a location. Common locations are time.Local and time.UTC.</span>
+timeInUTC := time.Date(2009, 1, 1, 12, 0, 0, 0, time.UTC)
+sameTimeInBeijing := time.Date(2009, 1, 1, 20, 0, 0, 0, beijing)
+
+<span class="comment">// Although the UTC clock time is 1200 and the Beijing clock time is 2000, Beijing is</span>
+<span class="comment">// 8 hours ahead so the two dates actually represent the same instant.</span>
+timesAreEqual := timeInUTC.Equal(sameTimeInBeijing)
+fmt.Println(timesAreEqual)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">true
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+			
+
+			
+				
+				<h3 id="FixedZone">func <a href="../../src/time/zoneinfo.go?s=3568:3617#L102">FixedZone</a>
+					<a class="permalink" href="index.html#FixedZone">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func FixedZone(name <a href="../builtin/index.html#string">string</a>, offset <a href="../builtin/index.html#int">int</a>) *<a href="index.html#Location">Location</a></pre>
+				<p>FixedZone returns a Location that always uses
+the given zone name and offset (seconds east of UTC).
+
+				<div id="example_FixedZone" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">loc := time.FixedZone(&#34;UTC-8&#34;, -8*60*60)
+t := time.Date(2009, time.November, 10, 23, 0, 0, 0, loc)
+fmt.Println(&#34;The time is:&#34;, t.Format(time.RFC822))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">The time is: 10 Nov 09 23:00 UTC-8
+</pre>
+			
+		
+	</div>
+</div>
+
+				
+			
+				
+				<h3 id="LoadLocation">func <a href="../../src/time/zoneinfo.go?s=17457:17506#L656">LoadLocation</a>
+					<a class="permalink" href="index.html#LoadLocation">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func LoadLocation(name <a href="../builtin/index.html#string">string</a>) (*<a href="index.html#Location">Location</a>, <a href="../builtin/index.html#error">error</a>)</pre>
+				<p>LoadLocation returns the Location with the given name.
+<p>If the name is &quot;&quot; or &quot;UTC&quot;, LoadLocation returns UTC.
+If the name is &quot;Local&quot;, LoadLocation returns Local.
+<p>Otherwise, the name is taken to be a location name corresponding to a file
+in the IANA Time Zone database, such as &quot;America/New_York&quot;.
+<p>LoadLocation looks for the IANA Time Zone database in the following
+locations in order:
+<ul>
+<li>the directory or uncompressed zip file named by the ZONEINFO environment variable
+<li>on a Unix system, the system standard installation location
+<li>$GOROOT/lib/time/zoneinfo.zip
+<li>the time/tzdata package, if it was imported
+</ul>
+
+				<div id="example_LoadLocation" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">location, err := time.LoadLocation(&#34;America/Los_Angeles&#34;)
+if err != nil {
+    panic(err)
+}
+
+timeInUTC := time.Date(2018, 8, 30, 12, 0, 0, 0, time.UTC)
+fmt.Println(timeInUTC.In(location))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">2018-08-30 05:00:00 -0700 PDT
+</pre>
+			
+		
+	</div>
+</div>
+
+				
+			
+				
+				<h3 id="LoadLocationFromTZData">func <a href="../../src/time/zoneinfo_read.go?s=2747:2819#L106">LoadLocationFromTZData</a>
+					<a class="permalink" href="index.html#LoadLocationFromTZData">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func LoadLocationFromTZData(name <a href="../builtin/index.html#string">string</a>, data []<a href="../builtin/index.html#byte">byte</a>) (*<a href="index.html#Location">Location</a>, <a href="../builtin/index.html#error">error</a>)</pre>
+				<p>LoadLocationFromTZData returns a Location with the given name
+initialized from the IANA Time Zone database-formatted data.
+The data should be in the format of a standard IANA time zone file
+(for example, the content of /etc/localtime on Unix systems).
+
+				
+				
+			
+
+			
+				
+				<h3 id="Location.String">func (*Location) <a href="../../src/time/zoneinfo.go?s=3330:3364#L93">String</a>
+					<a class="permalink" href="index.html#Location.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (l *<a href="index.html#Location">Location</a>) String() <a href="../builtin/index.html#string">string</a></pre>
+				<p>String returns a descriptive name for the time zone information,
+corresponding to the name argument to LoadLocation or FixedZone.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Month">type <a href="../../src/time/time.go?s=11452:11466#L299">Month</a>
+				<a class="permalink" href="index.html#Month">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A Month specifies a month of the year (January = 1, ...).
+
+			<pre>type Month <a href="../builtin/index.html#int">int</a></pre>
+
+			
+				
+				<pre>const (
+    <span id="January">January</span> <a href="index.html#Month">Month</a> = 1 + <a href="../builtin/index.html#iota">iota</a>
+    <span id="February">February</span>
+    <span id="March">March</span>
+    <span id="April">April</span>
+    <span id="May">May</span>
+    <span id="June">June</span>
+    <span id="July">July</span>
+    <span id="August">August</span>
+    <span id="September">September</span>
+    <span id="October">October</span>
+    <span id="November">November</span>
+    <span id="December">December</span>
+)</pre>
+			
+
+			
+
+			<div id="example_Month" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">
+_, month, day := time.Now().Date()
+if month == time.November &amp;&amp; day == 10 {
+    fmt.Println(&#34;Happy Go day!&#34;)
+}
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+			
+
+			
+
+			
+				
+				<h3 id="Month.String">func (Month) <a href="../../src/time/time.go?s=11672:11702#L317">String</a>
+					<a class="permalink" href="index.html#Month.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (m <a href="index.html#Month">Month</a>) String() <a href="../builtin/index.html#string">string</a></pre>
+				<p>String returns the English name of the month (&quot;January&quot;, &quot;February&quot;, ...).
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="ParseError">type <a href="../../src/time/format.go?s=24942:25063#L809">ParseError</a>
+				<a class="permalink" href="index.html#ParseError">&#xb6;</a>
+				
+				
+			</h2>
+			<p>ParseError describes a problem parsing a time string.
+
+			<pre>type ParseError struct {
+<span id="ParseError.Layout"></span>    Layout     <a href="../builtin/index.html#string">string</a>
+<span id="ParseError.Value"></span>    Value      <a href="../builtin/index.html#string">string</a>
+<span id="ParseError.LayoutElem"></span>    LayoutElem <a href="../builtin/index.html#string">string</a>
+<span id="ParseError.ValueElem"></span>    ValueElem  <a href="../builtin/index.html#string">string</a>
+<span id="ParseError.Message"></span>    Message    <a href="../builtin/index.html#string">string</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="ParseError.Error">func (*ParseError) <a href="../../src/time/format.go?s=26911:26946#L876">Error</a>
+					<a class="permalink" href="index.html#ParseError.Error">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (e *<a href="index.html#ParseError">ParseError</a>) Error() <a href="../builtin/index.html#string">string</a></pre>
+				<p>Error returns the string representation of a ParseError.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Ticker">type <a href="../../src/time/tick.go?s=256:358#L1">Ticker</a>
+				<a class="permalink" href="index.html#Ticker">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A Ticker holds a channel that delivers “ticks” of a clock
+at intervals.
+
+			<pre>type Ticker struct {
+<span id="Ticker.C"></span>    C &lt;-chan <a href="index.html#Time">Time</a> <span class="comment">// The channel on which the ticks are delivered.</span>
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="NewTicker">func <a href="../../src/time/tick.go?s=764:798#L10">NewTicker</a>
+					<a class="permalink" href="index.html#NewTicker">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func NewTicker(d <a href="index.html#Duration">Duration</a>) *<a href="index.html#Ticker">Ticker</a></pre>
+				<p>NewTicker returns a new Ticker containing a channel that will send
+the current time on the channel after each tick. The period of the
+ticks is specified by the duration argument. The ticker will adjust
+the time interval or drop ticks to make up for slow receivers.
+The duration d must be greater than zero; if not, NewTicker will
+panic. Stop the ticker to release associated resources.
+
+				<div id="example_NewTicker" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">
+ticker := time.NewTicker(time.Second)
+defer ticker.Stop()
+done := make(chan bool)
+go func() {
+    time.Sleep(10 * time.Second)
+    done &lt;- true
+}()
+for {
+    select {
+    case &lt;-done:
+        fmt.Println(&#34;Done!&#34;)
+        return
+    case t := &lt;-ticker.C:
+        fmt.Println(&#34;Current time: &#34;, t)
+    }
+}
+</pre>
+			
+		
+	</div>
+</div>
+
+				
+			
+
+			
+				
+				<h3 id="Ticker.Reset">func (*Ticker) <a href="../../src/time/tick.go?s=1646:1680#L41">Reset</a>
+					<a class="permalink" href="index.html#Ticker.Reset">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t *<a href="index.html#Ticker">Ticker</a>) Reset(d <a href="index.html#Duration">Duration</a>)</pre>
+				<p>Reset stops a ticker and resets its period to the specified duration.
+The next tick will arrive after the new period elapses. The duration d
+must be greater than zero; if not, Reset will panic.
+
+				
+				
+				
+			
+				
+				<h3 id="Ticker.Stop">func (*Ticker) <a href="../../src/time/tick.go?s=1397:1420#L34">Stop</a>
+					<a class="permalink" href="index.html#Ticker.Stop">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t *<a href="index.html#Ticker">Ticker</a>) Stop()</pre>
+				<p>Stop turns off a ticker. After Stop, no more ticks will be sent.
+Stop does not close the channel, to prevent a concurrent goroutine
+reading from the channel from seeing an erroneous &quot;tick&quot;.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Time">type <a href="../../src/time/time.go?s=6617:7618#L125">Time</a>
+				<a class="permalink" href="index.html#Time">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A Time represents an instant in time with nanosecond precision.
+<p>Programs using times should typically store and pass them as values,
+not pointers. That is, time variables and struct fields should be of
+type time.Time, not *time.Time.
+<p>A Time value can be used by multiple goroutines simultaneously except
+that the methods GobDecode, UnmarshalBinary, UnmarshalJSON and
+UnmarshalText are not concurrency-safe.
+<p>Time instants can be compared using the Before, After, and Equal methods.
+The Sub method subtracts two instants, producing a Duration.
+The Add method adds a Time and a Duration, producing a Time.
+<p>The zero value of type Time is January 1, year 1, 00:00:00.000000000 UTC.
+As this time is unlikely to come up in practice, the IsZero method gives
+a simple way of detecting a time that has not been initialized explicitly.
+<p>Each time has an associated Location. The methods Local, UTC, and In return a
+Time with a specific Location. Changing the Location of a Time value with
+these methods does not change the actual instant it represents, only the time
+zone in which to interpret it.
+<p>Representations of a Time value saved by the GobEncode, MarshalBinary,
+MarshalJSON, and MarshalText methods store the Time.Location&apos;s offset, but not
+the location name. They therefore lose information about Daylight Saving Time.
+<p>In addition to the required “wall clock” reading, a Time may contain an optional
+reading of the current process&apos;s monotonic clock, to provide additional precision
+for comparison or subtraction.
+See the “Monotonic Clocks” section in the package documentation for details.
+<p>Note that the Go == operator compares not just the time instant but also the
+Location and the monotonic clock reading. Therefore, Time values should not
+be used as map or database keys without first guaranteeing that the
+identical Location has been set for all values, which can be achieved
+through use of the UTC or Local method, and that the monotonic clock reading
+has been stripped by setting t = t.Round(0). In general, prefer t.Equal(u)
+to t == u, since t.Equal uses the most accurate comparison available and
+correctly handles the case when only one of its arguments has a monotonic
+clock reading.
+
+			<pre>type Time struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="Date">func <a href="../../src/time/time.go?s=46018:46101#L1478">Date</a>
+					<a class="permalink" href="index.html#Date">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func Date(year <a href="../builtin/index.html#int">int</a>, month <a href="index.html#Month">Month</a>, day, hour, min, sec, nsec <a href="../builtin/index.html#int">int</a>, loc *<a href="index.html#Location">Location</a>) <a href="index.html#Time">Time</a></pre>
+				<p>Date returns the Time corresponding to
+<pre>yyyy-mm-dd hh:mm:ss + nsec nanoseconds
+</pre>
+<p>in the appropriate zone for that time in the given location.
+<p>The month, day, hour, min, sec, and nsec values may be outside
+their usual ranges and will be normalized during the conversion.
+For example, October 32 converts to November 1.
+<p>A daylight savings time transition skips or repeats times.
+For example, in the United States, March 13, 2011 2:15am never occurred,
+while November 6, 2011 1:15am occurred twice. In such cases, the
+choice of time zone, and therefore the time, is not well-defined.
+Date returns a time that is correct in one of the two zones involved
+in the transition, but it does not guarantee which.
+<p>Date panics if loc is nil.
+
+				<div id="example_Date" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">t := time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC)
+fmt.Printf(&#34;Go launched at %s\n&#34;, t.Local())
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">Go launched at 2009-11-10 15:00:00 -0800 PST
+</pre>
+			
+		
+	</div>
+</div>
+
+				
+			
+				
+				<h3 id="Now">func <a href="../../src/time/time.go?s=35299:35314#L1121">Now</a>
+					<a class="permalink" href="index.html#Now">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func Now() <a href="index.html#Time">Time</a></pre>
+				<p>Now returns the current local time.
+
+				
+				
+			
+				
+				<h3 id="Parse">func <a href="../../src/time/format.go?s=31153:31199#L997">Parse</a>
+					<a class="permalink" href="index.html#Parse">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func Parse(layout, value <a href="../builtin/index.html#string">string</a>) (<a href="index.html#Time">Time</a>, <a href="../builtin/index.html#error">error</a>)</pre>
+				<p>Parse parses a formatted string and returns the time value it represents.
+See the documentation for the constant called Layout to see how to
+represent the format. The second argument must be parseable using
+the format string (layout) provided as the first argument.
+<p>The example for Time.Format demonstrates the working of the layout string
+in detail and is a good reference.
+<p>When parsing (only), the input may contain a fractional second
+field immediately after the seconds field, even if the layout does not
+signify its presence. In that case either a comma or a decimal point
+followed by a maximal series of digits is parsed as a fractional second.
+Fractional seconds are truncated to nanosecond precision.
+<p>Elements omitted from the layout are assumed to be zero or, when
+zero is impossible, one, so parsing &quot;3:04pm&quot; returns the time
+corresponding to Jan 1, year 0, 15:04:00 UTC (note that because the year is
+0, this time is before the zero Time).
+Years must be in the range 0000..9999. The day of the week is checked
+for syntax but it is otherwise ignored.
+<p>For layouts specifying the two-digit year 06, a value NN &gt;= 69 will be treated
+as 19NN and a value NN &lt; 69 will be treated as 20NN.
+<p>The remainder of this comment describes the handling of time zones.
+<p>In the absence of a time zone indicator, Parse returns a time in UTC.
+<p>When parsing a time with a zone offset like -0700, if the offset corresponds
+to a time zone used by the current location (Local), then Parse uses that
+location and zone in the returned time. Otherwise it records the time as
+being in a fabricated location with time fixed at the given zone offset.
+<p>When parsing a time with a zone abbreviation like MST, if the zone abbreviation
+has a defined offset in the current location, then that offset is used.
+The zone abbreviation &quot;UTC&quot; is recognized as UTC regardless of location.
+If the zone abbreviation is unknown, Parse records the time as being
+in a fabricated location with the given zone abbreviation and a zero offset.
+This choice means that such a time can be parsed and reformatted with the
+same layout losslessly, but the exact instant used in the representation will
+differ by the actual zone offset. To avoid such problems, prefer time layouts
+that use a numeric zone offset, or use ParseInLocation.
+
+				<div id="example_Parse" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code"><span class="comment">// See the example for Time.Format for a thorough description of how</span>
+<span class="comment">// to define the layout string to parse a time.Time value; Parse and</span>
+<span class="comment">// Format use the same model to describe their input and output.</span>
+
+<span class="comment">// longForm shows by example how the reference time would be represented in</span>
+<span class="comment">// the desired layout.</span>
+const longForm = &#34;Jan 2, 2006 at 3:04pm (MST)&#34;
+t, _ := time.Parse(longForm, &#34;Feb 3, 2013 at 7:54pm (PST)&#34;)
+fmt.Println(t)
+
+<span class="comment">// shortForm is another way the reference time would be represented</span>
+<span class="comment">// in the desired layout; it has no time zone present.</span>
+<span class="comment">// Note: without explicit zone, returns time in UTC.</span>
+const shortForm = &#34;2006-Jan-02&#34;
+t, _ = time.Parse(shortForm, &#34;2013-Feb-03&#34;)
+fmt.Println(t)
+
+<span class="comment">// Some valid layouts are invalid time values, due to format specifiers</span>
+<span class="comment">// such as _ for space padding and Z for zone information.</span>
+<span class="comment">// For example the RFC3339 layout 2006-01-02T15:04:05Z07:00</span>
+<span class="comment">// contains both Z and a time zone offset in order to handle both valid options:</span>
+<span class="comment">// 2006-01-02T15:04:05Z</span>
+<span class="comment">// 2006-01-02T15:04:05+07:00</span>
+t, _ = time.Parse(time.RFC3339, &#34;2006-01-02T15:04:05Z&#34;)
+fmt.Println(t)
+t, _ = time.Parse(time.RFC3339, &#34;2006-01-02T15:04:05+07:00&#34;)
+fmt.Println(t)
+_, err := time.Parse(time.RFC3339, time.RFC3339)
+fmt.Println(&#34;error&#34;, err) <span class="comment">// Returns an error as the layout is not a valid time value</span>
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">2013-02-03 19:54:00 -0800 PST
+2013-02-03 00:00:00 +0000 UTC
+2006-01-02 15:04:05 +0000 UTC
+2006-01-02 15:04:05 +0700 +0700
+error parsing time &#34;2006-01-02T15:04:05Z07:00&#34;: extra text: &#34;07:00&#34;
+</pre>
+			
+		
+	</div>
+</div>
+
+				
+			
+				
+				<h3 id="ParseInLocation">func <a href="../../src/time/format.go?s=31809:31880#L1012">ParseInLocation</a>
+					<a class="permalink" href="index.html#ParseInLocation">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func ParseInLocation(layout, value <a href="../builtin/index.html#string">string</a>, loc *<a href="index.html#Location">Location</a>) (<a href="index.html#Time">Time</a>, <a href="../builtin/index.html#error">error</a>)</pre>
+				<p>ParseInLocation is like Parse but differs in two important ways.
+First, in the absence of time zone information, Parse interprets a time as UTC;
+ParseInLocation interprets the time as in the given location.
+Second, when given a zone offset or abbreviation, Parse tries to match it
+against the Local location; ParseInLocation uses the given location.
+
+				<div id="example_ParseInLocation" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">loc, _ := time.LoadLocation(&#34;Europe/Berlin&#34;)
+
+<span class="comment">// This will look for the name CEST in the Europe/Berlin time zone.</span>
+const longForm = &#34;Jan 2, 2006 at 3:04pm (MST)&#34;
+t, _ := time.ParseInLocation(longForm, &#34;Jul 9, 2012 at 5:02am (CEST)&#34;, loc)
+fmt.Println(t)
+
+<span class="comment">// Note: without explicit zone, returns time in given location.</span>
+const shortForm = &#34;2006-Jan-02&#34;
+t, _ = time.ParseInLocation(shortForm, &#34;2012-Jul-09&#34;, loc)
+fmt.Println(t)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">2012-07-09 05:02:00 +0200 CEST
+2012-07-09 00:00:00 +0200 CEST
+</pre>
+			
+		
+	</div>
+</div>
+
+				
+			
+				
+				<h3 id="Unix">func <a href="../../src/time/time.go?s=44082:44119#L1407">Unix</a>
+					<a class="permalink" href="index.html#Unix">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func Unix(sec <a href="../builtin/index.html#int64">int64</a>, nsec <a href="../builtin/index.html#int64">int64</a>) <a href="index.html#Time">Time</a></pre>
+				<p>Unix returns the local Time corresponding to the given Unix time,
+sec seconds and nsec nanoseconds since January 1, 1970 UTC.
+It is valid to pass nsec outside the range [0, 999999999].
+Not all sec values have a corresponding time value. One such
+value is 1&lt;&lt;63-1 (the largest int64 value).
+
+				<div id="example_Unix" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">unixTime := time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC)
+fmt.Println(unixTime.Unix())
+t := time.Unix(unixTime.Unix(), 0).UTC()
+fmt.Println(t)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">1257894000
+2009-11-10 23:00:00 +0000 UTC
+</pre>
+			
+		
+	</div>
+</div>
+
+				
+			
+				
+				<h3 id="UnixMicro">func <a href="../../src/time/time.go?s=44604:44635#L1428">UnixMicro</a>
+					<a class="permalink" href="index.html#UnixMicro">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func UnixMicro(usec <a href="../builtin/index.html#int64">int64</a>) <a href="index.html#Time">Time</a></pre>
+				<p>UnixMicro returns the local Time corresponding to the given Unix time,
+usec microseconds since January 1, 1970 UTC.
+
+				<div id="example_UnixMicro" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">umt := time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC)
+fmt.Println(umt.UnixMicro())
+t := time.UnixMicro(umt.UnixMicro()).UTC()
+fmt.Println(t)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">1257894000000000
+2009-11-10 23:00:00 +0000 UTC
+</pre>
+			
+		
+	</div>
+</div>
+
+				
+			
+				
+				<h3 id="UnixMilli">func <a href="../../src/time/time.go?s=44406:44437#L1422">UnixMilli</a>
+					<a class="permalink" href="index.html#UnixMilli">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func UnixMilli(msec <a href="../builtin/index.html#int64">int64</a>) <a href="index.html#Time">Time</a></pre>
+				<p>UnixMilli returns the local Time corresponding to the given Unix time,
+msec milliseconds since January 1, 1970 UTC.
+
+				<div id="example_UnixMilli" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">umt := time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC)
+fmt.Println(umt.UnixMilli())
+t := time.UnixMilli(umt.UnixMilli()).UTC()
+fmt.Println(t)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">1257894000000
+2009-11-10 23:00:00 +0000 UTC
+</pre>
+			
+		
+	</div>
+</div>
+
+				
+			
+
+			
+				
+				<h3 id="Time.Add">func (Time) <a href="../../src/time/time.go?s=28031:28065#L862">Add</a>
+					<a class="permalink" href="index.html#Time.Add">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t <a href="index.html#Time">Time</a>) Add(d <a href="index.html#Duration">Duration</a>) <a href="index.html#Time">Time</a></pre>
+				<p>Add returns the time t+d.
+
+				
+				<div id="example_Time_Add" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">start := time.Date(2009, 1, 1, 12, 0, 0, 0, time.UTC)
+afterTenSeconds := start.Add(time.Second * 10)
+afterTenMinutes := start.Add(time.Minute * 10)
+afterTenHours := start.Add(time.Hour * 10)
+afterTenDays := start.Add(time.Hour * 24 * 10)
+
+fmt.Printf(&#34;start = %v\n&#34;, start)
+fmt.Printf(&#34;start.Add(time.Second * 10) = %v\n&#34;, afterTenSeconds)
+fmt.Printf(&#34;start.Add(time.Minute * 10) = %v\n&#34;, afterTenMinutes)
+fmt.Printf(&#34;start.Add(time.Hour * 10) = %v\n&#34;, afterTenHours)
+fmt.Printf(&#34;start.Add(time.Hour * 24 * 10) = %v\n&#34;, afterTenDays)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">start = 2009-01-01 12:00:00 +0000 UTC
+start.Add(time.Second * 10) = 2009-01-01 12:00:10 +0000 UTC
+start.Add(time.Minute * 10) = 2009-01-01 12:10:00 +0000 UTC
+start.Add(time.Hour * 10) = 2009-01-01 22:00:00 +0000 UTC
+start.Add(time.Hour * 24 * 10) = 2009-01-11 12:00:00 +0000 UTC
+</pre>
+			
+		
+	</div>
+</div>
+
+				
+			
+				
+				<h3 id="Time.AddDate">func (Time) <a href="../../src/time/time.go?s=30968:31027#L954">AddDate</a>
+					<a class="permalink" href="index.html#Time.AddDate">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t <a href="index.html#Time">Time</a>) AddDate(years <a href="../builtin/index.html#int">int</a>, months <a href="../builtin/index.html#int">int</a>, days <a href="../builtin/index.html#int">int</a>) <a href="index.html#Time">Time</a></pre>
+				<p>AddDate returns the time corresponding to adding the
+given number of years, months, and days to t.
+For example, AddDate(-1, 2, 3) applied to January 1, 2011
+returns March 4, 2010.
+<p>Note that dates are fundamentally coupled to timezones, and calendrical
+periods like days don&apos;t have fixed durations. AddDate uses the Location of
+the Time value to determine these durations. That means that the same
+AddDate arguments can produce a different shift in absolute time depending on
+the base Time value and its Location. For example, AddDate(0, 0, 1) applied
+to 12:00 on March 27 always returns 12:00 on March 28. At some locations and
+in some years this is a 24 hour shift. In others it&apos;s a 23 hour shift due to
+daylight savings time transitions.
+<p>AddDate normalizes its result in the same way that Date does,
+so, for example, adding one month to October 31 yields
+December 1, the normalized form for November 31.
+
+				
+				<div id="example_Time_AddDate" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">start := time.Date(2023, 03, 25, 12, 0, 0, 0, time.UTC)
+oneDayLater := start.AddDate(0, 0, 1)
+dayDuration := oneDayLater.Sub(start)
+oneMonthLater := start.AddDate(0, 1, 0)
+oneYearLater := start.AddDate(1, 0, 0)
+
+zurich, err := time.LoadLocation(&#34;Europe/Zurich&#34;)
+if err != nil {
+    panic(err)
+}
+<span class="comment">// This was the day before a daylight saving time transition in Zürich.</span>
+startZurich := time.Date(2023, 03, 25, 12, 0, 0, 0, zurich)
+oneDayLaterZurich := startZurich.AddDate(0, 0, 1)
+dayDurationZurich := oneDayLaterZurich.Sub(startZurich)
+
+fmt.Printf(&#34;oneDayLater: start.AddDate(0, 0, 1) = %v\n&#34;, oneDayLater)
+fmt.Printf(&#34;oneMonthLater: start.AddDate(0, 1, 0) = %v\n&#34;, oneMonthLater)
+fmt.Printf(&#34;oneYearLater: start.AddDate(1, 0, 0) = %v\n&#34;, oneYearLater)
+fmt.Printf(&#34;oneDayLaterZurich: startZurich.AddDate(0, 0, 1) = %v\n&#34;, oneDayLaterZurich)
+fmt.Printf(&#34;Day duration in UTC: %v | Day duration in Zürich: %v\n&#34;, dayDuration, dayDurationZurich)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">oneDayLater: start.AddDate(0, 0, 1) = 2023-03-26 12:00:00 +0000 UTC
+oneMonthLater: start.AddDate(0, 1, 0) = 2023-04-25 12:00:00 +0000 UTC
+oneYearLater: start.AddDate(1, 0, 0) = 2024-03-25 12:00:00 +0000 UTC
+oneDayLaterZurich: startZurich.AddDate(0, 0, 1) = 2023-03-26 12:00:00 +0200 CEST
+Day duration in UTC: 24h0m0s | Day duration in Zürich: 23h0m0s
+</pre>
+			
+		
+	</div>
+</div>
+
+				
+			
+				
+				<h3 id="Time.After">func (Time) <a href="../../src/time/time.go?s=10048:10080#L246">After</a>
+					<a class="permalink" href="index.html#Time.After">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t <a href="index.html#Time">Time</a>) After(u <a href="index.html#Time">Time</a>) <a href="../builtin/index.html#bool">bool</a></pre>
+				<p>After reports whether the time instant t is after u.
+
+				
+				<div id="example_Time_After" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">year2000 := time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC)
+year3000 := time.Date(3000, 1, 1, 0, 0, 0, 0, time.UTC)
+
+isYear3000AfterYear2000 := year3000.After(year2000) <span class="comment">// True</span>
+isYear2000AfterYear3000 := year2000.After(year3000) <span class="comment">// False</span>
+
+fmt.Printf(&#34;year3000.After(year2000) = %v\n&#34;, isYear3000AfterYear2000)
+fmt.Printf(&#34;year2000.After(year3000) = %v\n&#34;, isYear2000AfterYear3000)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">year3000.After(year2000) = true
+year2000.After(year3000) = false
+</pre>
+			
+		
+	</div>
+</div>
+
+				
+			
+				
+				<h3 id="Time.AppendFormat">func (Time) <a href="../../src/time/format.go?s=20393:20451#L626">AppendFormat</a>
+					<a class="permalink" href="index.html#Time.AppendFormat">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t <a href="index.html#Time">Time</a>) AppendFormat(b []<a href="../builtin/index.html#byte">byte</a>, layout <a href="../builtin/index.html#string">string</a>) []<a href="../builtin/index.html#byte">byte</a></pre>
+				<p>AppendFormat is like Format but appends the textual
+representation to b and returns the extended buffer.
+
+				
+				<div id="example_Time_AppendFormat" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">t := time.Date(2017, time.November, 4, 11, 0, 0, 0, time.UTC)
+text := []byte(&#34;Time: &#34;)
+
+text = t.AppendFormat(text, time.Kitchen)
+fmt.Println(string(text))
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">Time: 11:00AM
+</pre>
+			
+		
+	</div>
+</div>
+
+				
+			
+				
+				<h3 id="Time.Before">func (Time) <a href="../../src/time/time.go?s=10289:10322#L256">Before</a>
+					<a class="permalink" href="index.html#Time.Before">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t <a href="index.html#Time">Time</a>) Before(u <a href="index.html#Time">Time</a>) <a href="../builtin/index.html#bool">bool</a></pre>
+				<p>Before reports whether the time instant t is before u.
+
+				
+				<div id="example_Time_Before" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">year2000 := time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC)
+year3000 := time.Date(3000, 1, 1, 0, 0, 0, 0, time.UTC)
+
+isYear2000BeforeYear3000 := year2000.Before(year3000) <span class="comment">// True</span>
+isYear3000BeforeYear2000 := year3000.Before(year2000) <span class="comment">// False</span>
+
+fmt.Printf(&#34;year2000.Before(year3000) = %v\n&#34;, isYear2000BeforeYear3000)
+fmt.Printf(&#34;year3000.Before(year2000) = %v\n&#34;, isYear3000BeforeYear2000)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">year2000.Before(year3000) = true
+year3000.Before(year2000) = false
+</pre>
+			
+		
+	</div>
+</div>
+
+				
+			
+				
+				<h3 id="Time.Clock">func (Time) <a href="../../src/time/time.go?s=20270:20312#L563">Clock</a>
+					<a class="permalink" href="index.html#Time.Clock">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t <a href="index.html#Time">Time</a>) Clock() (hour, min, sec <a href="../builtin/index.html#int">int</a>)</pre>
+				<p>Clock returns the hour, minute, and second within the day specified by t.
+
+				
+				
+				
+			
+				
+				<h3 id="Time.Compare">func (Time) <a href="../../src/time/time.go?s=10623:10656#L267">Compare</a>
+					<a class="permalink" href="index.html#Time.Compare">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t <a href="index.html#Time">Time</a>) Compare(u <a href="index.html#Time">Time</a>) <a href="../builtin/index.html#int">int</a></pre>
+				<p>Compare compares the time instant t with u. If t is before u, it returns -1;
+if t is after u, it returns +1; if they&apos;re the same, it returns 0.
+
+				
+				
+				
+			
+				
+				<h3 id="Time.Date">func (Time) <a href="../../src/time/time.go?s=18229:18282#L500">Date</a>
+					<a class="permalink" href="index.html#Time.Date">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t <a href="index.html#Time">Time</a>) Date() (year <a href="../builtin/index.html#int">int</a>, month <a href="index.html#Month">Month</a>, day <a href="../builtin/index.html#int">int</a>)</pre>
+				<p>Date returns the year, month, and day in which t occurs.
+
+				
+				<div id="example_Time_Date" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">d := time.Date(2000, 2, 1, 12, 30, 0, 0, time.UTC)
+year, month, day := d.Date()
+
+fmt.Printf(&#34;year = %v\n&#34;, year)
+fmt.Printf(&#34;month = %v\n&#34;, month)
+fmt.Printf(&#34;day = %v\n&#34;, day)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">year = 2000
+month = February
+day = 1
+</pre>
+			
+		
+	</div>
+</div>
+
+				
+			
+				
+				<h3 id="Time.Day">func (Time) <a href="../../src/time/time.go?s=18637:18660#L518">Day</a>
+					<a class="permalink" href="index.html#Time.Day">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t <a href="index.html#Time">Time</a>) Day() <a href="../builtin/index.html#int">int</a></pre>
+				<p>Day returns the day of the month specified by t.
+
+				
+				<div id="example_Time_Day" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">d := time.Date(2000, 2, 1, 12, 30, 0, 0, time.UTC)
+day := d.Day()
+
+fmt.Printf(&#34;day = %v\n&#34;, day)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">day = 1
+</pre>
+			
+		
+	</div>
+</div>
+
+				
+			
+				
+				<h3 id="Time.Equal">func (Time) <a href="../../src/time/time.go?s=11237:11269#L291">Equal</a>
+					<a class="permalink" href="index.html#Time.Equal">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t <a href="index.html#Time">Time</a>) Equal(u <a href="index.html#Time">Time</a>) <a href="../builtin/index.html#bool">bool</a></pre>
+				<p>Equal reports whether t and u represent the same time instant.
+Two times can be equal even if they are in different locations.
+For example, 6:00 +0200 and 4:00 UTC are Equal.
+See the documentation on the Time type for the pitfalls of using == with
+Time values; most code should use Equal instead.
+
+				
+				<div id="example_Time_Equal" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">secondsEastOfUTC := int((8 * time.Hour).Seconds())
+beijing := time.FixedZone(&#34;Beijing Time&#34;, secondsEastOfUTC)
+
+<span class="comment">// Unlike the equal operator, Equal is aware that d1 and d2 are the</span>
+<span class="comment">// same instant but in different time zones.</span>
+d1 := time.Date(2000, 2, 1, 12, 30, 0, 0, time.UTC)
+d2 := time.Date(2000, 2, 1, 20, 30, 0, 0, beijing)
+
+datesEqualUsingEqualOperator := d1 == d2
+datesEqualUsingFunction := d1.Equal(d2)
+
+fmt.Printf(&#34;datesEqualUsingEqualOperator = %v\n&#34;, datesEqualUsingEqualOperator)
+fmt.Printf(&#34;datesEqualUsingFunction = %v\n&#34;, datesEqualUsingFunction)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">datesEqualUsingEqualOperator = false
+datesEqualUsingFunction = true
+</pre>
+			
+		
+	</div>
+</div>
+
+				
+			
+				
+				<h3 id="Time.Format">func (Time) <a href="../../src/time/format.go?s=20028:20070#L610">Format</a>
+					<a class="permalink" href="index.html#Time.Format">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t <a href="index.html#Time">Time</a>) Format(layout <a href="../builtin/index.html#string">string</a>) <a href="../builtin/index.html#string">string</a></pre>
+				<p>Format returns a textual representation of the time value formatted according
+to the layout defined by the argument. See the documentation for the
+constant called Layout to see how to represent the layout format.
+<p>The executable example for Time.Format demonstrates the working
+of the layout string in detail and is a good reference.
+
+				
+				<div id="example_Time_Format" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code"><span class="comment">// Parse a time value from a string in the standard Unix format.</span>
+t, err := time.Parse(time.UnixDate, &#34;Wed Feb 25 11:06:39 PST 2015&#34;)
+if err != nil { <span class="comment">// Always check errors even if they should not happen.</span>
+    panic(err)
+}
+
+tz, err := time.LoadLocation(&#34;Asia/Shanghai&#34;)
+if err != nil { <span class="comment">// Always check errors even if they should not happen.</span>
+    panic(err)
+}
+
+<span class="comment">// time.Time&#39;s Stringer method is useful without any format.</span>
+fmt.Println(&#34;default format:&#34;, t)
+
+<span class="comment">// Predefined constants in the package implement common layouts.</span>
+fmt.Println(&#34;Unix format:&#34;, t.Format(time.UnixDate))
+
+<span class="comment">// The time zone attached to the time value affects its output.</span>
+fmt.Println(&#34;Same, in UTC:&#34;, t.UTC().Format(time.UnixDate))
+
+fmt.Println(&#34;in Shanghai with seconds:&#34;, t.In(tz).Format(&#34;2006-01-02T15:04:05 -070000&#34;))
+
+fmt.Println(&#34;in Shanghai with colon seconds:&#34;, t.In(tz).Format(&#34;2006-01-02T15:04:05 -07:00:00&#34;))
+
+<span class="comment">// The rest of this function demonstrates the properties of the</span>
+<span class="comment">// layout string used in the format.</span>
+
+<span class="comment">// The layout string used by the Parse function and Format method</span>
+<span class="comment">// shows by example how the reference time should be represented.</span>
+<span class="comment">// We stress that one must show how the reference time is formatted,</span>
+<span class="comment">// not a time of the user&#39;s choosing. Thus each layout string is a</span>
+<span class="comment">// representation of the time stamp,</span>
+<span class="comment">//	Jan 2 15:04:05 2006 MST</span>
+<span class="comment">// An easy way to remember this value is that it holds, when presented</span>
+<span class="comment">// in this order, the values (lined up with the elements above):</span>
+<span class="comment">//	  1 2  3  4  5    6  -7</span>
+<span class="comment">// There are some wrinkles illustrated below.</span>
+
+<span class="comment">// Most uses of Format and Parse use constant layout strings such as</span>
+<span class="comment">// the ones defined in this package, but the interface is flexible,</span>
+<span class="comment">// as these examples show.</span>
+
+<span class="comment">// Define a helper function to make the examples&#39; output look nice.</span>
+do := func(name, layout, want string) {
+    got := t.Format(layout)
+    if want != got {
+        fmt.Printf(&#34;error: for %q got %q; expected %q\n&#34;, layout, got, want)
+        return
+    }
+    fmt.Printf(&#34;%-16s %q gives %q\n&#34;, name, layout, got)
+}
+
+<span class="comment">// Print a header in our output.</span>
+fmt.Printf(&#34;\nFormats:\n\n&#34;)
+
+<span class="comment">// Simple starter examples.</span>
+do(&#34;Basic full date&#34;, &#34;Mon Jan 2 15:04:05 MST 2006&#34;, &#34;Wed Feb 25 11:06:39 PST 2015&#34;)
+do(&#34;Basic short date&#34;, &#34;2006/01/02&#34;, &#34;2015/02/25&#34;)
+
+<span class="comment">// The hour of the reference time is 15, or 3PM. The layout can express</span>
+<span class="comment">// it either way, and since our value is the morning we should see it as</span>
+<span class="comment">// an AM time. We show both in one format string. Lower case too.</span>
+do(&#34;AM/PM&#34;, &#34;3PM==3pm==15h&#34;, &#34;11AM==11am==11h&#34;)
+
+<span class="comment">// When parsing, if the seconds value is followed by a decimal point</span>
+<span class="comment">// and some digits, that is taken as a fraction of a second even if</span>
+<span class="comment">// the layout string does not represent the fractional second.</span>
+<span class="comment">// Here we add a fractional second to our time value used above.</span>
+t, err = time.Parse(time.UnixDate, &#34;Wed Feb 25 11:06:39.1234 PST 2015&#34;)
+if err != nil {
+    panic(err)
+}
+<span class="comment">// It does not appear in the output if the layout string does not contain</span>
+<span class="comment">// a representation of the fractional second.</span>
+do(&#34;No fraction&#34;, time.UnixDate, &#34;Wed Feb 25 11:06:39 PST 2015&#34;)
+
+<span class="comment">// Fractional seconds can be printed by adding a run of 0s or 9s after</span>
+<span class="comment">// a decimal point in the seconds value in the layout string.</span>
+<span class="comment">// If the layout digits are 0s, the fractional second is of the specified</span>
+<span class="comment">// width. Note that the output has a trailing zero.</span>
+do(&#34;0s for fraction&#34;, &#34;15:04:05.00000&#34;, &#34;11:06:39.12340&#34;)
+
+<span class="comment">// If the fraction in the layout is 9s, trailing zeros are dropped.</span>
+do(&#34;9s for fraction&#34;, &#34;15:04:05.99999999&#34;, &#34;11:06:39.1234&#34;)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">default format: 2015-02-25 11:06:39 -0800 PST
+Unix format: Wed Feb 25 11:06:39 PST 2015
+Same, in UTC: Wed Feb 25 19:06:39 UTC 2015
+in Shanghai with seconds: 2015-02-26T03:06:39 +080000
+in Shanghai with colon seconds: 2015-02-26T03:06:39 +08:00:00
+
+Formats:
+
+Basic full date  &#34;Mon Jan 2 15:04:05 MST 2006&#34; gives &#34;Wed Feb 25 11:06:39 PST 2015&#34;
+Basic short date &#34;2006/01/02&#34; gives &#34;2015/02/25&#34;
+AM/PM            &#34;3PM==3pm==15h&#34; gives &#34;11AM==11am==11h&#34;
+No fraction      &#34;Mon Jan _2 15:04:05 MST 2006&#34; gives &#34;Wed Feb 25 11:06:39 PST 2015&#34;
+0s for fraction  &#34;15:04:05.00000&#34; gives &#34;11:06:39.12340&#34;
+9s for fraction  &#34;15:04:05.99999999&#34; gives &#34;11:06:39.1234&#34;
+</pre>
+			
+		
+	</div>
+</div>
+<div id="example_Time_Format_pad" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example (Pad)</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example (Pad)</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code"><span class="comment">// Parse a time value from a string in the standard Unix format.</span>
+t, err := time.Parse(time.UnixDate, &#34;Sat Mar 7 11:06:39 PST 2015&#34;)
+if err != nil { <span class="comment">// Always check errors even if they should not happen.</span>
+    panic(err)
+}
+
+<span class="comment">// Define a helper function to make the examples&#39; output look nice.</span>
+do := func(name, layout, want string) {
+    got := t.Format(layout)
+    if want != got {
+        fmt.Printf(&#34;error: for %q got %q; expected %q\n&#34;, layout, got, want)
+        return
+    }
+    fmt.Printf(&#34;%-16s %q gives %q\n&#34;, name, layout, got)
+}
+
+<span class="comment">// The predefined constant Unix uses an underscore to pad the day.</span>
+do(&#34;Unix&#34;, time.UnixDate, &#34;Sat Mar  7 11:06:39 PST 2015&#34;)
+
+<span class="comment">// For fixed-width printing of values, such as the date, that may be one or</span>
+<span class="comment">// two characters (7 vs. 07), use an _ instead of a space in the layout string.</span>
+<span class="comment">// Here we print just the day, which is 2 in our layout string and 7 in our</span>
+<span class="comment">// value.</span>
+do(&#34;No pad&#34;, &#34;&lt;2&gt;&#34;, &#34;&lt;7&gt;&#34;)
+
+<span class="comment">// An underscore represents a space pad, if the date only has one digit.</span>
+do(&#34;Spaces&#34;, &#34;&lt;_2&gt;&#34;, &#34;&lt; 7&gt;&#34;)
+
+<span class="comment">// A &#34;0&#34; indicates zero padding for single-digit values.</span>
+do(&#34;Zeros&#34;, &#34;&lt;02&gt;&#34;, &#34;&lt;07&gt;&#34;)
+
+<span class="comment">// If the value is already the right width, padding is not used.</span>
+<span class="comment">// For instance, the second (05 in the reference time) in our value is 39,</span>
+<span class="comment">// so it doesn&#39;t need padding, but the minutes (04, 06) does.</span>
+do(&#34;Suppressed pad&#34;, &#34;04:05&#34;, &#34;06:39&#34;)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">Unix             &#34;Mon Jan _2 15:04:05 MST 2006&#34; gives &#34;Sat Mar  7 11:06:39 PST 2015&#34;
+No pad           &#34;&lt;2&gt;&#34; gives &#34;&lt;7&gt;&#34;
+Spaces           &#34;&lt;_2&gt;&#34; gives &#34;&lt; 7&gt;&#34;
+Zeros            &#34;&lt;02&gt;&#34; gives &#34;&lt;07&gt;&#34;
+Suppressed pad   &#34;04:05&#34; gives &#34;06:39&#34;
+</pre>
+			
+		
+	</div>
+</div>
+
+				
+			
+				
+				<h3 id="Time.GoString">func (Time) <a href="../../src/time/format.go?s=17686:17717#L548">GoString</a>
+					<a class="permalink" href="index.html#Time.GoString">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t <a href="index.html#Time">Time</a>) GoString() <a href="../builtin/index.html#string">string</a></pre>
+				<p>GoString implements fmt.GoStringer and formats t to be printed in Go source
+code.
+
+				
+				<div id="example_Time_GoString" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">t := time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC)
+fmt.Println(t.GoString())
+t = t.Add(1 * time.Minute)
+fmt.Println(t.GoString())
+t = t.AddDate(0, 1, 0)
+fmt.Println(t.GoString())
+t, _ = time.Parse(&#34;Jan 2, 2006 at 3:04pm (MST)&#34;, &#34;Feb 3, 2013 at 7:54pm (UTC)&#34;)
+fmt.Println(t.GoString())
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">time.Date(2009, time.November, 10, 23, 0, 0, 0, time.UTC)
+time.Date(2009, time.November, 10, 23, 1, 0, 0, time.UTC)
+time.Date(2009, time.December, 10, 23, 1, 0, 0, time.UTC)
+time.Date(2013, time.February, 3, 19, 54, 0, 0, time.UTC)
+</pre>
+			
+		
+	</div>
+</div>
+
+				
+			
+				
+				<h3 id="Time.GobDecode">func (*Time) <a href="../../src/time/time.go?s=41921:41964#L1346">GobDecode</a>
+					<a class="permalink" href="index.html#Time.GobDecode">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t *<a href="index.html#Time">Time</a>) GobDecode(data []<a href="../builtin/index.html#byte">byte</a>) <a href="../builtin/index.html#error">error</a></pre>
+				<p>GobDecode implements the gob.GobDecoder interface.
+
+				
+				
+				
+			
+				
+				<h3 id="Time.GobEncode">func (Time) <a href="../../src/time/time.go?s=41794:41835#L1341">GobEncode</a>
+					<a class="permalink" href="index.html#Time.GobEncode">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t <a href="index.html#Time">Time</a>) GobEncode() ([]<a href="../builtin/index.html#byte">byte</a>, <a href="../builtin/index.html#error">error</a>)</pre>
+				<p>GobEncode implements the gob.GobEncoder interface.
+
+				
+				
+				
+			
+				
+				<h3 id="Time.Hour">func (Time) <a href="../../src/time/time.go?s=20694:20718#L578">Hour</a>
+					<a class="permalink" href="index.html#Time.Hour">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t <a href="index.html#Time">Time</a>) Hour() <a href="../builtin/index.html#int">int</a></pre>
+				<p>Hour returns the hour within the day specified by t, in the range [0, 23].
+
+				
+				
+				
+			
+				
+				<h3 id="Time.ISOWeek">func (Time) <a href="../../src/time/time.go?s=19345:19385#L539">ISOWeek</a>
+					<a class="permalink" href="index.html#Time.ISOWeek">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t <a href="index.html#Time">Time</a>) ISOWeek() (year, week <a href="../builtin/index.html#int">int</a>)</pre>
+				<p>ISOWeek returns the ISO 8601 year and week number in which t occurs.
+Week ranges from 1 to 53. Jan 01 to Jan 03 of year n might belong to
+week 52 or 53 of year n-1, and Dec 29 to Dec 31 might belong to week 1
+of year n+1.
+
+				
+				
+				
+			
+				
+				<h3 id="Time.In">func (Time) <a href="../../src/time/time.go?s=36188:36224#L1155">In</a>
+					<a class="permalink" href="index.html#Time.In">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t <a href="index.html#Time">Time</a>) In(loc *<a href="index.html#Location">Location</a>) <a href="index.html#Time">Time</a></pre>
+				<p>In returns a copy of t representing the same time instant, but
+with the copy&apos;s location information set to loc for display
+purposes.
+<p>In panics if loc is nil.
+
+				
+				
+				
+			
+				
+				<h3 id="Time.IsDST">func (Time) <a href="../../src/time/time.go?s=44770:44796#L1433">IsDST</a>
+					<a class="permalink" href="index.html#Time.IsDST">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t <a href="index.html#Time">Time</a>) IsDST() <a href="../builtin/index.html#bool">bool</a></pre>
+				<p>IsDST reports whether the time in the configured location is in Daylight Savings Time.
+
+				
+				
+				
+			
+				
+				<h3 id="Time.IsZero">func (Time) <a href="../../src/time/time.go?s=16888:16915#L451">IsZero</a>
+					<a class="permalink" href="index.html#Time.IsZero">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t <a href="index.html#Time">Time</a>) IsZero() <a href="../builtin/index.html#bool">bool</a></pre>
+				<p>IsZero reports whether t represents the zero time instant,
+January 1, year 1, 00:00:00 UTC.
+
+				
+				
+				
+			
+				
+				<h3 id="Time.Local">func (Time) <a href="../../src/time/time.go?s=35956:35982#L1145">Local</a>
+					<a class="permalink" href="index.html#Time.Local">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t <a href="index.html#Time">Time</a>) Local() <a href="index.html#Time">Time</a></pre>
+				<p>Local returns t with the location set to local time.
+
+				
+				
+				
+			
+				
+				<h3 id="Time.Location">func (Time) <a href="../../src/time/time.go?s=36393:36427#L1164">Location</a>
+					<a class="permalink" href="index.html#Time.Location">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t <a href="index.html#Time">Time</a>) Location() *<a href="index.html#Location">Location</a></pre>
+				<p>Location returns the time zone information associated with t.
+
+				
+				
+				
+			
+				
+				<h3 id="Time.MarshalBinary">func (Time) <a href="../../src/time/time.go?s=39244:39289#L1241">MarshalBinary</a>
+					<a class="permalink" href="index.html#Time.MarshalBinary">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t <a href="index.html#Time">Time</a>) MarshalBinary() ([]<a href="../builtin/index.html#byte">byte</a>, <a href="../builtin/index.html#error">error</a>)</pre>
+				<p>MarshalBinary implements the encoding.BinaryMarshaler interface.
+
+				
+				
+				
+			
+				
+				<h3 id="Time.MarshalJSON">func (Time) <a href="../../src/time/time.go?s=42263:42306#L1354">MarshalJSON</a>
+					<a class="permalink" href="index.html#Time.MarshalJSON">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t <a href="index.html#Time">Time</a>) MarshalJSON() ([]<a href="../builtin/index.html#byte">byte</a>, <a href="../builtin/index.html#error">error</a>)</pre>
+				<p>MarshalJSON implements the json.Marshaler interface.
+The time is a quoted string in the RFC 3339 format with sub-second precision.
+If the timestamp cannot be represented as valid RFC 3339
+(e.g., the year is out of range), then an error is reported.
+
+				
+				
+				
+			
+				
+				<h3 id="Time.MarshalText">func (Time) <a href="../../src/time/time.go?s=43328:43371#L1385">MarshalText</a>
+					<a class="permalink" href="index.html#Time.MarshalText">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t <a href="index.html#Time">Time</a>) MarshalText() ([]<a href="../builtin/index.html#byte">byte</a>, <a href="../builtin/index.html#error">error</a>)</pre>
+				<p>MarshalText implements the encoding.TextMarshaler interface.
+The time is formatted in RFC 3339 format with sub-second precision.
+If the timestamp cannot be represented as valid RFC 3339
+(e.g., the year is out of range), then an error is reported.
+
+				
+				
+				
+			
+				
+				<h3 id="Time.Minute">func (Time) <a href="../../src/time/time.go?s=20866:20892#L583">Minute</a>
+					<a class="permalink" href="index.html#Time.Minute">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t <a href="index.html#Time">Time</a>) Minute() <a href="../builtin/index.html#int">int</a></pre>
+				<p>Minute returns the minute offset within the hour specified by t, in the range [0, 59].
+
+				
+				
+				
+			
+				
+				<h3 id="Time.Month">func (Time) <a href="../../src/time/time.go?s=18506:18533#L512">Month</a>
+					<a class="permalink" href="index.html#Time.Month">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t <a href="index.html#Time">Time</a>) Month() <a href="index.html#Month">Month</a></pre>
+				<p>Month returns the month of the year specified by t.
+
+				
+				
+				
+			
+				
+				<h3 id="Time.Nanosecond">func (Time) <a href="../../src/time/time.go?s=21227:21257#L594">Nanosecond</a>
+					<a class="permalink" href="index.html#Time.Nanosecond">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t <a href="index.html#Time">Time</a>) Nanosecond() <a href="../builtin/index.html#int">int</a></pre>
+				<p>Nanosecond returns the nanosecond offset within the second specified by t,
+in the range [0, 999999999].
+
+				
+				
+				
+			
+				
+				<h3 id="Time.Round">func (Time) <a href="../../src/time/time.go?s=48609:48645#L1556">Round</a>
+					<a class="permalink" href="index.html#Time.Round">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t <a href="index.html#Time">Time</a>) Round(d <a href="index.html#Duration">Duration</a>) <a href="index.html#Time">Time</a></pre>
+				<p>Round returns the result of rounding t to the nearest multiple of d (since the zero time).
+The rounding behavior for halfway values is to round up.
+If d &lt;= 0, Round returns t stripped of any monotonic clock reading but otherwise unchanged.
+<p>Round operates on the time as an absolute duration since the
+zero time; it does not operate on the presentation form of the
+time. Thus, Round(Hour) may return a time with a non-zero
+minute, depending on the time&apos;s Location.
+
+				
+				<div id="example_Time_Round" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">t := time.Date(0, 0, 0, 12, 15, 30, 918273645, time.UTC)
+round := []time.Duration{
+    time.Nanosecond,
+    time.Microsecond,
+    time.Millisecond,
+    time.Second,
+    2 * time.Second,
+    time.Minute,
+    10 * time.Minute,
+    time.Hour,
+}
+
+for _, d := range round {
+    fmt.Printf(&#34;t.Round(%6s) = %s\n&#34;, d, t.Round(d).Format(&#34;15:04:05.999999999&#34;))
+}
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">t.Round(   1ns) = 12:15:30.918273645
+t.Round(   1µs) = 12:15:30.918274
+t.Round(   1ms) = 12:15:30.918
+t.Round(    1s) = 12:15:31
+t.Round(    2s) = 12:15:30
+t.Round(  1m0s) = 12:16:00
+t.Round( 10m0s) = 12:20:00
+t.Round(1h0m0s) = 12:00:00
+</pre>
+			
+		
+	</div>
+</div>
+
+				
+			
+				
+				<h3 id="Time.Second">func (Time) <a href="../../src/time/time.go?s=21045:21071#L588">Second</a>
+					<a class="permalink" href="index.html#Time.Second">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t <a href="index.html#Time">Time</a>) Second() <a href="../builtin/index.html#int">int</a></pre>
+				<p>Second returns the second offset within the minute specified by t, in the range [0, 59].
+
+				
+				
+				
+			
+				
+				<h3 id="Time.String">func (Time) <a href="../../src/time/format.go?s=16982:17011#L517">String</a>
+					<a class="permalink" href="index.html#Time.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t <a href="index.html#Time">Time</a>) String() <a href="../builtin/index.html#string">string</a></pre>
+				<p>String returns the time formatted using the format string
+<pre>&quot;2006-01-02 15:04:05.999999999 -0700 MST&quot;
+</pre>
+<p>If the time has a monotonic clock reading, the returned string
+includes a final field &quot;m=±&lt;value&gt;&quot;, where value is the monotonic
+clock reading formatted as a decimal number of seconds.
+<p>The returned string is meant for debugging; for a stable serialized
+representation, use t.MarshalText, t.MarshalBinary, or t.Format
+with an explicit format string.
+
+				
+				<div id="example_Time_String" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">timeWithNanoseconds := time.Date(2000, 2, 1, 12, 13, 14, 15, time.UTC)
+withNanoseconds := timeWithNanoseconds.String()
+
+timeWithoutNanoseconds := time.Date(2000, 2, 1, 12, 13, 14, 0, time.UTC)
+withoutNanoseconds := timeWithoutNanoseconds.String()
+
+fmt.Printf(&#34;withNanoseconds = %v\n&#34;, string(withNanoseconds))
+fmt.Printf(&#34;withoutNanoseconds = %v\n&#34;, string(withoutNanoseconds))
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">withNanoseconds = 2000-02-01 12:13:14.000000015 +0000 UTC
+withoutNanoseconds = 2000-02-01 12:13:14 +0000 UTC
+</pre>
+			
+		
+	</div>
+</div>
+
+				
+			
+				
+				<h3 id="Time.Sub">func (Time) <a href="../../src/time/time.go?s=28754:28788#L890">Sub</a>
+					<a class="permalink" href="index.html#Time.Sub">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t <a href="index.html#Time">Time</a>) Sub(u <a href="index.html#Time">Time</a>) <a href="index.html#Duration">Duration</a></pre>
+				<p>Sub returns the duration t-u. If the result exceeds the maximum (or minimum)
+value that can be stored in a Duration, the maximum (or minimum) duration
+will be returned.
+To compute t-d for a duration d, use t.Add(-d).
+
+				
+				<div id="example_Time_Sub" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">start := time.Date(2000, 1, 1, 0, 0, 0, 0, time.UTC)
+end := time.Date(2000, 1, 1, 12, 0, 0, 0, time.UTC)
+
+difference := end.Sub(start)
+fmt.Printf(&#34;difference = %v\n&#34;, difference)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">difference = 12h0m0s
+</pre>
+			
+		
+	</div>
+</div>
+
+				
+			
+				
+				<h3 id="Time.Truncate">func (Time) <a href="../../src/time/time.go?s=47997:48036#L1539">Truncate</a>
+					<a class="permalink" href="index.html#Time.Truncate">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t <a href="index.html#Time">Time</a>) Truncate(d <a href="index.html#Duration">Duration</a>) <a href="index.html#Time">Time</a></pre>
+				<p>Truncate returns the result of rounding t down to a multiple of d (since the zero time).
+If d &lt;= 0, Truncate returns t stripped of any monotonic clock reading but otherwise unchanged.
+<p>Truncate operates on the time as an absolute duration since the
+zero time; it does not operate on the presentation form of the
+time. Thus, Truncate(Hour) may return a time with a non-zero
+minute, depending on the time&apos;s Location.
+
+				
+				<div id="example_Time_Truncate" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">t, _ := time.Parse(&#34;2006 Jan 02 15:04:05&#34;, &#34;2012 Dec 07 12:15:30.918273645&#34;)
+trunc := []time.Duration{
+    time.Nanosecond,
+    time.Microsecond,
+    time.Millisecond,
+    time.Second,
+    2 * time.Second,
+    time.Minute,
+    10 * time.Minute,
+}
+
+for _, d := range trunc {
+    fmt.Printf(&#34;t.Truncate(%5s) = %s\n&#34;, d, t.Truncate(d).Format(&#34;15:04:05.999999999&#34;))
+}
+<span class="comment">// To round to the last midnight in the local timezone, create a new Date.</span>
+midnight := time.Date(t.Year(), t.Month(), t.Day(), 0, 0, 0, 0, time.Local)
+_ = midnight
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">t.Truncate(  1ns) = 12:15:30.918273645
+t.Truncate(  1µs) = 12:15:30.918273
+t.Truncate(  1ms) = 12:15:30.918
+t.Truncate(   1s) = 12:15:30
+t.Truncate(   2s) = 12:15:30
+t.Truncate( 1m0s) = 12:15:00
+t.Truncate(10m0s) = 12:10:00
+</pre>
+			
+		
+	</div>
+</div>
+
+				
+			
+				
+				<h3 id="Time.UTC">func (Time) <a href="../../src/time/time.go?s=35841:35865#L1139">UTC</a>
+					<a class="permalink" href="index.html#Time.UTC">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t <a href="index.html#Time">Time</a>) UTC() <a href="index.html#Time">Time</a></pre>
+				<p>UTC returns t with the location set to UTC.
+
+				
+				
+				
+			
+				
+				<h3 id="Time.Unix">func (Time) <a href="../../src/time/time.go?s=37716:37742#L1203">Unix</a>
+					<a class="permalink" href="index.html#Time.Unix">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t <a href="index.html#Time">Time</a>) Unix() <a href="../builtin/index.html#int64">int64</a></pre>
+				<p>Unix returns t as a Unix time, the number of seconds elapsed
+since January 1, 1970 UTC. The result does not depend on the
+location associated with t.
+Unix-like operating systems often record time as a 32-bit
+count of seconds, but since the method here returns a 64-bit
+value it is valid for billions of years into the past or future.
+
+				
+				<div id="example_Time_Unix" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code"><span class="comment">// 1 billion seconds of Unix, three ways.</span>
+fmt.Println(time.Unix(1e9, 0).UTC())     <span class="comment">// 1e9 seconds</span>
+fmt.Println(time.Unix(0, 1e18).UTC())    <span class="comment">// 1e18 nanoseconds</span>
+fmt.Println(time.Unix(2e9, -1e18).UTC()) <span class="comment">// 2e9 seconds - 1e18 nanoseconds</span>
+
+t := time.Date(2001, time.September, 9, 1, 46, 40, 0, time.UTC)
+fmt.Println(t.Unix())     <span class="comment">// seconds since 1970</span>
+fmt.Println(t.UnixNano()) <span class="comment">// nanoseconds since 1970</span>
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">2001-09-09 01:46:40 +0000 UTC
+2001-09-09 01:46:40 +0000 UTC
+2001-09-09 01:46:40 +0000 UTC
+1000000000
+1000000000000000000
+</pre>
+			
+		
+	</div>
+</div>
+
+				
+			
+				
+				<h3 id="Time.UnixMicro">func (Time) <a href="../../src/time/time.go?s=38493:38524#L1221">UnixMicro</a>
+					<a class="permalink" href="index.html#Time.UnixMicro">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t <a href="index.html#Time">Time</a>) UnixMicro() <a href="../builtin/index.html#int64">int64</a></pre>
+				<p>UnixMicro returns t as a Unix time, the number of microseconds elapsed since
+January 1, 1970 UTC. The result is undefined if the Unix time in
+microseconds cannot be represented by an int64 (a date before year -290307 or
+after year 294246). The result does not depend on the location associated
+with t.
+
+				
+				
+				
+			
+				
+				<h3 id="Time.UnixMilli">func (Time) <a href="../../src/time/time.go?s=38093:38124#L1212">UnixMilli</a>
+					<a class="permalink" href="index.html#Time.UnixMilli">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t <a href="index.html#Time">Time</a>) UnixMilli() <a href="../builtin/index.html#int64">int64</a></pre>
+				<p>UnixMilli returns t as a Unix time, the number of milliseconds elapsed since
+January 1, 1970 UTC. The result is undefined if the Unix time in
+milliseconds cannot be represented by an int64 (a date more than 292 million
+years before or after 1970). The result does not depend on the
+location associated with t.
+
+				
+				
+				
+			
+				
+				<h3 id="Time.UnixNano">func (Time) <a href="../../src/time/time.go?s=38970:39000#L1231">UnixNano</a>
+					<a class="permalink" href="index.html#Time.UnixNano">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t <a href="index.html#Time">Time</a>) UnixNano() <a href="../builtin/index.html#int64">int64</a></pre>
+				<p>UnixNano returns t as a Unix time, the number of nanoseconds elapsed
+since January 1, 1970 UTC. The result is undefined if the Unix time
+in nanoseconds cannot be represented by an int64 (a date before the year
+1678 or after 2262). Note that this means the result of calling UnixNano
+on the zero Time is undefined. The result does not depend on the
+location associated with t.
+
+				
+				
+				
+			
+				
+				<h3 id="Time.UnmarshalBinary">func (*Time) <a href="../../src/time/time.go?s=40362:40411#L1289">UnmarshalBinary</a>
+					<a class="permalink" href="index.html#Time.UnmarshalBinary">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t *<a href="index.html#Time">Time</a>) UnmarshalBinary(data []<a href="../builtin/index.html#byte">byte</a>) <a href="../builtin/index.html#error">error</a></pre>
+				<p>UnmarshalBinary implements the encoding.BinaryUnmarshaler interface.
+
+				
+				
+				
+			
+				
+				<h3 id="Time.UnmarshalJSON">func (*Time) <a href="../../src/time/time.go?s=42654:42701#L1367">UnmarshalJSON</a>
+					<a class="permalink" href="index.html#Time.UnmarshalJSON">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t *<a href="index.html#Time">Time</a>) UnmarshalJSON(data []<a href="../builtin/index.html#byte">byte</a>) <a href="../builtin/index.html#error">error</a></pre>
+				<p>UnmarshalJSON implements the json.Unmarshaler interface.
+The time must be a quoted string in the RFC 3339 format.
+
+				
+				
+				
+			
+				
+				<h3 id="Time.UnmarshalText">func (*Time) <a href="../../src/time/time.go?s=43661:43708#L1396">UnmarshalText</a>
+					<a class="permalink" href="index.html#Time.UnmarshalText">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t *<a href="index.html#Time">Time</a>) UnmarshalText(data []<a href="../builtin/index.html#byte">byte</a>) <a href="../builtin/index.html#error">error</a></pre>
+				<p>UnmarshalText implements the encoding.TextUnmarshaler interface.
+The time must be in the RFC 3339 format.
+
+				
+				
+				
+			
+				
+				<h3 id="Time.Weekday">func (Time) <a href="../../src/time/time.go?s=18763:18794#L524">Weekday</a>
+					<a class="permalink" href="index.html#Time.Weekday">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t <a href="index.html#Time">Time</a>) Weekday() <a href="index.html#Weekday">Weekday</a></pre>
+				<p>Weekday returns the day of the week specified by t.
+
+				
+				
+				
+			
+				
+				<h3 id="Time.Year">func (Time) <a href="../../src/time/time.go?s=18376:18400#L506">Year</a>
+					<a class="permalink" href="index.html#Time.Year">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t <a href="index.html#Time">Time</a>) Year() <a href="../builtin/index.html#int">int</a></pre>
+				<p>Year returns the year in which t occurs.
+
+				
+				
+				
+			
+				
+				<h3 id="Time.YearDay">func (Time) <a href="../../src/time/time.go?s=21411:21438#L600">YearDay</a>
+					<a class="permalink" href="index.html#Time.YearDay">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t <a href="index.html#Time">Time</a>) YearDay() <a href="../builtin/index.html#int">int</a></pre>
+				<p>YearDay returns the day of the year specified by t, in the range [1,365] for non-leap years,
+and [1,366] in leap years.
+
+				
+				
+				
+			
+				
+				<h3 id="Time.Zone">func (Time) <a href="../../src/time/time.go?s=36636:36682#L1174">Zone</a>
+					<a class="permalink" href="index.html#Time.Zone">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t <a href="index.html#Time">Time</a>) Zone() (name <a href="../builtin/index.html#string">string</a>, offset <a href="../builtin/index.html#int">int</a>)</pre>
+				<p>Zone computes the time zone in effect at time t, returning the abbreviated
+name of the zone (such as &quot;CET&quot;) and its offset in seconds east of UTC.
+
+				
+				
+				
+			
+				
+				<h3 id="Time.ZoneBounds">func (Time) <a href="../../src/time/time.go?s=37096:37140#L1184">ZoneBounds</a>
+					<a class="permalink" href="index.html#Time.ZoneBounds">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t <a href="index.html#Time">Time</a>) ZoneBounds() (start, end <a href="index.html#Time">Time</a>)</pre>
+				<p>ZoneBounds returns the bounds of the time zone in effect at time t.
+The zone begins at start and the next zone begins at end.
+If the zone begins at the beginning of time, start will be returned as a zero Time.
+If the zone goes on forever, end will be returned as a zero Time.
+The Location of the returned times will be the same as t.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Timer">type <a href="../../src/time/sleep.go?s=1626:1678#L40">Timer</a>
+				<a class="permalink" href="index.html#Timer">&#xb6;</a>
+				
+				
+			</h2>
+			<p>The Timer type represents a single event.
+When the Timer expires, the current time will be sent on C,
+unless the Timer was created by AfterFunc.
+A Timer must be created with NewTimer or AfterFunc.
+
+			<pre>type Timer struct {
+<span id="Timer.C"></span>    C &lt;-chan <a href="index.html#Time">Time</a>
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="AfterFunc">func <a href="../../src/time/sleep.go?s=5577:5620#L154">AfterFunc</a>
+					<a class="permalink" href="index.html#AfterFunc">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func AfterFunc(d <a href="index.html#Duration">Duration</a>, f func()) *<a href="index.html#Timer">Timer</a></pre>
+				<p>AfterFunc waits for the duration to elapse and then calls f
+in its own goroutine. It returns a Timer that can
+be used to cancel the call using its Stop method.
+The returned Timer&apos;s C field is not used and will be nil.
+
+				
+				
+			
+				
+				<h3 id="NewTimer">func <a href="../../src/time/sleep.go?s=2830:2862#L76">NewTimer</a>
+					<a class="permalink" href="index.html#NewTimer">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func NewTimer(d <a href="index.html#Duration">Duration</a>) *<a href="index.html#Timer">Timer</a></pre>
+				<p>NewTimer creates a new Timer that will send
+the current time on its channel after at least duration d.
+
+				
+				
+			
+
+			
+				
+				<h3 id="Timer.Reset">func (*Timer) <a href="../../src/time/sleep.go?s=4631:4669#L124">Reset</a>
+					<a class="permalink" href="index.html#Timer.Reset">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t *<a href="index.html#Timer">Timer</a>) Reset(d <a href="index.html#Duration">Duration</a>) <a href="../builtin/index.html#bool">bool</a></pre>
+				<p>Reset changes the timer to expire after duration d.
+It returns true if the timer had been active, false if the timer had
+expired or been stopped.
+<p>For a Timer created with NewTimer, Reset should be invoked only on
+stopped or expired timers with drained channels.
+<p>If a program has already received a value from t.C, the timer is known
+to have expired and the channel drained, so t.Reset can be used directly.
+If a program has not yet received a value from t.C, however,
+the timer must be stopped and—if Stop reports that the timer expired
+before being stopped—the channel explicitly drained:
+<pre>if !t.Stop() {
+	&lt;-t.C
+}
+t.Reset(d)
+</pre>
+<p>This should not be done concurrent to other receives from the Timer&apos;s
+channel.
+<p>Note that it is not possible to use Reset&apos;s return value correctly, as there
+is a race condition between draining the channel and the new timer expiring.
+Reset should always be invoked on stopped or expired channels, as described above.
+The return value exists to preserve compatibility with existing programs.
+<p>For a Timer created with AfterFunc(d, f), Reset either reschedules
+when f will run, in which case Reset returns true, or schedules f
+to run again, in which case it returns false.
+When Reset returns false, Reset neither waits for the prior f to
+complete before returning nor does it guarantee that the subsequent
+goroutine running f does not run concurrently with the prior
+one. If the caller needs to know whether the prior execution of
+f is completed, it must coordinate with f explicitly.
+
+				
+				
+				
+			
+				
+				<h3 id="Timer.Stop">func (*Timer) <a href="../../src/time/sleep.go?s=2590:2617#L67">Stop</a>
+					<a class="permalink" href="index.html#Timer.Stop">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t *<a href="index.html#Timer">Timer</a>) Stop() <a href="../builtin/index.html#bool">bool</a></pre>
+				<p>Stop prevents the Timer from firing.
+It returns true if the call stops the timer, false if the timer has already
+expired or been stopped.
+Stop does not close the channel, to prevent a read from the channel succeeding
+incorrectly.
+<p>To ensure the channel is empty after a call to Stop, check the
+return value and drain the channel.
+For example, assuming the program has not received from t.C already:
+<pre>if !t.Stop() {
+	&lt;-t.C
+}
+</pre>
+<p>This cannot be done concurrent to other receives from the Timer&apos;s
+channel or other calls to the Timer&apos;s Stop method.
+<p>For a timer created with AfterFunc(d, f), if t.Stop returns false, then the timer
+has already expired and the function f has been started in its own goroutine;
+Stop does not wait for f to complete before returning.
+If the caller needs to know whether f is completed, it must coordinate
+with f explicitly.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Weekday">type <a href="../../src/time/time.go?s=11933:11949#L327">Weekday</a>
+				<a class="permalink" href="index.html#Weekday">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A Weekday specifies a day of the week (Sunday = 0, ...).
+
+			<pre>type Weekday <a href="../builtin/index.html#int">int</a></pre>
+
+			
+				
+				<pre>const (
+    <span id="Sunday">Sunday</span> <a href="index.html#Weekday">Weekday</a> = <a href="../builtin/index.html#iota">iota</a>
+    <span id="Monday">Monday</span>
+    <span id="Tuesday">Tuesday</span>
+    <span id="Wednesday">Wednesday</span>
+    <span id="Thursday">Thursday</span>
+    <span id="Friday">Friday</span>
+    <span id="Saturday">Saturday</span>
+)</pre>
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="Weekday.String">func (Weekday) <a href="../../src/time/time.go?s=12114:12146#L340">String</a>
+					<a class="permalink" href="index.html#Weekday.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (d <a href="index.html#Weekday">Weekday</a>) String() <a href="../builtin/index.html#string">string</a></pre>
+				<p>String returns the English name of the day (&quot;Sunday&quot;, &quot;Monday&quot;, ...).
+
+				
+				
+				
+			
+		
+	
+
+	
+
+
+
+
+
+	
+	
+		<h2 id="pkg-subdirectories">Subdirectories</h2>
+	
+	<div class="pkg-dir">
+		<table>
+			<tr>
+				<th class="pkg-name">Name</th>
+				<th class="pkg-synopsis">Synopsis</th>
+			</tr>
+
+			
+			<tr>
+				<td colspan="2"><a href="../../index.html">..</a></td>
+			</tr>
+			
+
+			
+				<tr>
+				
+					<td class="pkg-name" style="padding-left: 0px;">
+						<a href="tzdata/index.html">tzdata</a>
+					</td>
+				
+					<td class="pkg-synopsis">
+						Package tzdata provides an embedded copy of the timezone database.
+					</td>
+				</tr>
+			
+		</table>
+	</div>
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

@@ -1,0 +1,1136 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>filepath - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package filepath
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "path/filepath"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+				<dd><a href="index.html#pkg-examples" class="examplesLink">Examples</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>Package filepath implements utility routines for manipulating filename paths
+in a way compatible with the target operating system-defined file paths.
+<p>The filepath package uses either forward slashes or backslashes,
+depending on the operating system. To process paths such as URLs
+that always use forward slashes regardless of the operating
+system, see the <a href="http://localhost:8080/path">path</a> package.
+
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+				<dd><a href="index.html#pkg-constants">Constants</a></dd>
+			
+			
+				<dd><a href="index.html#pkg-variables">Variables</a></dd>
+			
+			
+				
+				<dd><a href="index.html#Abs">func Abs(path string) (string, error)</a></dd>
+			
+				
+				<dd><a href="index.html#Base">func Base(path string) string</a></dd>
+			
+				
+				<dd><a href="index.html#Clean">func Clean(path string) string</a></dd>
+			
+				
+				<dd><a href="index.html#Dir">func Dir(path string) string</a></dd>
+			
+				
+				<dd><a href="index.html#EvalSymlinks">func EvalSymlinks(path string) (string, error)</a></dd>
+			
+				
+				<dd><a href="index.html#Ext">func Ext(path string) string</a></dd>
+			
+				
+				<dd><a href="index.html#FromSlash">func FromSlash(path string) string</a></dd>
+			
+				
+				<dd><a href="index.html#Glob">func Glob(pattern string) (matches []string, err error)</a></dd>
+			
+				
+				<dd><a href="index.html#HasPrefix">func HasPrefix(p, prefix string) bool</a></dd>
+			
+				
+				<dd><a href="index.html#IsAbs">func IsAbs(path string) bool</a></dd>
+			
+				
+				<dd><a href="index.html#IsLocal">func IsLocal(path string) bool</a></dd>
+			
+				
+				<dd><a href="index.html#Join">func Join(elem ...string) string</a></dd>
+			
+				
+				<dd><a href="index.html#Match">func Match(pattern, name string) (matched bool, err error)</a></dd>
+			
+				
+				<dd><a href="index.html#Rel">func Rel(basepath, targpath string) (string, error)</a></dd>
+			
+				
+				<dd><a href="index.html#Split">func Split(path string) (dir, file string)</a></dd>
+			
+				
+				<dd><a href="index.html#SplitList">func SplitList(path string) []string</a></dd>
+			
+				
+				<dd><a href="index.html#ToSlash">func ToSlash(path string) string</a></dd>
+			
+				
+				<dd><a href="index.html#VolumeName">func VolumeName(path string) string</a></dd>
+			
+				
+				<dd><a href="index.html#Walk">func Walk(root string, fn WalkFunc) error</a></dd>
+			
+				
+				<dd><a href="index.html#WalkDir">func WalkDir(root string, fn fs.WalkDirFunc) error</a></dd>
+			
+			
+				
+				<dd><a href="index.html#WalkFunc">type WalkFunc</a></dd>
+				
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+		<div id="pkg-examples">
+			<h3>Examples</h3>
+			<div class="js-expandAll expandAll collapsed">(Expand All)</div>
+			<dl>
+			
+			<dd><a class="exampleLink" href="index.html#example_Base">Base</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Dir">Dir</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Ext">Ext</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_IsAbs">IsAbs</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Join">Join</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Match">Match</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Rel">Rel</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Split">Split</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_SplitList">SplitList</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Walk">Walk</a></dd>
+			
+			</dl>
+		</div>
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../../src/path/filepath/match.go">match.go</a>
+			
+				<a href="../../../src/path/filepath/path.go">path.go</a>
+			
+				<a href="../../../src/path/filepath/path_nonwindows.go">path_nonwindows.go</a>
+			
+				<a href="../../../src/path/filepath/path_unix.go">path_unix.go</a>
+			
+				<a href="../../../src/path/filepath/symlink.go">symlink.go</a>
+			
+				<a href="../../../src/path/filepath/symlink_unix.go">symlink_unix.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+			<h2 id="pkg-constants">Constants</h2>
+			
+				
+				<pre>const (
+    <span id="Separator">Separator</span>     = <a href="../../os/index.html">os</a>.<a href="../../os/index.html#PathSeparator">PathSeparator</a>
+    <span id="ListSeparator">ListSeparator</span> = <a href="../../os/index.html">os</a>.<a href="../../os/index.html#PathListSeparator">PathListSeparator</a>
+)</pre>
+			
+		
+		
+			<h2 id="pkg-variables">Variables</h2>
+			
+				<p>ErrBadPattern indicates a pattern was malformed.
+
+				<pre>var <span id="ErrBadPattern">ErrBadPattern</span> = <a href="../../errors/index.html">errors</a>.<a href="../../errors/index.html#New">New</a>(&#34;syntax error in pattern&#34;)</pre>
+			
+				<p>SkipAll is used as a return value from <a href="index.html#WalkFunc">WalkFunc</a> to indicate that
+all remaining files and directories are to be skipped. It is not returned
+as an error by any function.
+
+				<pre>var <span id="SkipAll">SkipAll</span> <a href="../../builtin/index.html#error">error</a> = <a href="../../io/fs/index.html">fs</a>.<a href="../../io/fs/index.html#SkipAll">SkipAll</a></pre>
+			
+				<p>SkipDir is used as a return value from <a href="index.html#WalkFunc">WalkFunc</a> to indicate that
+the directory named in the call is to be skipped. It is not returned
+as an error by any function.
+
+				<pre>var <span id="SkipDir">SkipDir</span> <a href="../../builtin/index.html#error">error</a> = <a href="../../io/fs/index.html">fs</a>.<a href="../../io/fs/index.html#SkipDir">SkipDir</a></pre>
+			
+		
+		
+			
+			
+			<h2 id="Abs">func <a href="../../../src/path/filepath/path.go?s=8531:8568#L284">Abs</a>
+				<a class="permalink" href="index.html#Abs">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Abs(path <a href="../../builtin/index.html#string">string</a>) (<a href="../../builtin/index.html#string">string</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+			<p>Abs returns an absolute representation of path.
+If the path is not absolute it will be joined with the current
+working directory to turn it into an absolute path. The absolute
+path name for a given file is not guaranteed to be unique.
+Abs calls <a href="index.html#Clean">Clean</a> on the result.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Base">func <a href="../../../src/path/filepath/path.go?s=17683:17712#L578">Base</a>
+				<a class="permalink" href="index.html#Base">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Base(path <a href="../../builtin/index.html#string">string</a>) <a href="../../builtin/index.html#string">string</a></pre>
+			<p>Base returns the last element of path.
+Trailing path separators are removed before extracting the last element.
+If the path is empty, Base returns &quot;.&quot;.
+If the path consists entirely of separators, Base returns a single separator.
+
+			<div id="example_Base" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">fmt.Println(&#34;On Unix:&#34;)
+fmt.Println(filepath.Base(&#34;/foo/bar/baz.js&#34;))
+fmt.Println(filepath.Base(&#34;/foo/bar/baz&#34;))
+fmt.Println(filepath.Base(&#34;/foo/bar/baz/&#34;))
+fmt.Println(filepath.Base(&#34;dev.txt&#34;))
+fmt.Println(filepath.Base(&#34;../todo.txt&#34;))
+fmt.Println(filepath.Base(&#34;..&#34;))
+fmt.Println(filepath.Base(&#34;.&#34;))
+fmt.Println(filepath.Base(&#34;/&#34;))
+fmt.Println(filepath.Base(&#34;&#34;))
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">On Unix:
+baz.js
+baz
+baz
+dev.txt
+todo.txt
+..
+.
+/
+.
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Clean">func <a href="../../../src/path/filepath/path.go?s=2823:2853#L89">Clean</a>
+				<a class="permalink" href="index.html#Clean">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Clean(path <a href="../../builtin/index.html#string">string</a>) <a href="../../builtin/index.html#string">string</a></pre>
+			<p>Clean returns the shortest path name equivalent to path
+by purely lexical processing. It applies the following rules
+iteratively until no further processing can be done:
+<ol>
+<li>Replace multiple <a href="index.html#Separator">Separator</a> elements with a single one.
+<li>Eliminate each . path name element (the current directory).
+<li>Eliminate each inner .. path name element (the parent directory)
+along with the non-.. element that precedes it.
+<li>Eliminate .. elements that begin a rooted path:
+that is, replace &quot;/..&quot; by &quot;/&quot; at the beginning of a path,
+assuming Separator is &apos;/&apos;.
+</ol>
+<p>The returned path ends in a slash only if it represents a root directory,
+such as &quot;/&quot; on Unix or `C:\` on Windows.
+<p>Finally, any occurrences of slash are replaced by Separator.
+<p>If the result of this process is an empty string, Clean
+returns the string &quot;.&quot;.
+<p>On Windows, Clean does not modify the volume name other than to replace
+occurrences of &quot;/&quot; with `\`.
+For example, Clean(&quot;//host/share/../x&quot;) returns `\\host\share\x`.
+<p>See also Rob Pike, “Lexical File Names in Plan 9 or
+Getting Dot-Dot Right,”
+<a href="https://9p.io/sys/doc/lexnames.html">https://9p.io/sys/doc/lexnames.html</a>
+
+			
+			
+
+		
+			
+			
+			<h2 id="Dir">func <a href="../../../src/path/filepath/path.go?s=18564:18592#L609">Dir</a>
+				<a class="permalink" href="index.html#Dir">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Dir(path <a href="../../builtin/index.html#string">string</a>) <a href="../../builtin/index.html#string">string</a></pre>
+			<p>Dir returns all but the last element of path, typically the path&apos;s directory.
+After dropping the final element, Dir calls <a href="index.html#Clean">Clean</a> on the path and trailing
+slashes are removed.
+If the path is empty, Dir returns &quot;.&quot;.
+If the path consists entirely of separators, Dir returns a single separator.
+The returned path does not end in a separator unless it is the root directory.
+
+			<div id="example_Dir" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">fmt.Println(&#34;On Unix:&#34;)
+fmt.Println(filepath.Dir(&#34;/foo/bar/baz.js&#34;))
+fmt.Println(filepath.Dir(&#34;/foo/bar/baz&#34;))
+fmt.Println(filepath.Dir(&#34;/foo/bar/baz/&#34;))
+fmt.Println(filepath.Dir(&#34;/dirty//path///&#34;))
+fmt.Println(filepath.Dir(&#34;dev.txt&#34;))
+fmt.Println(filepath.Dir(&#34;../todo.txt&#34;))
+fmt.Println(filepath.Dir(&#34;..&#34;))
+fmt.Println(filepath.Dir(&#34;.&#34;))
+fmt.Println(filepath.Dir(&#34;/&#34;))
+fmt.Println(filepath.Dir(&#34;&#34;))
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">On Unix:
+/foo/bar
+/foo/bar
+/foo/bar/baz
+/dirty/path
+.
+..
+.
+.
+/
+.
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="EvalSymlinks">func <a href="../../../src/path/filepath/path.go?s=8169:8215#L275">EvalSymlinks</a>
+				<a class="permalink" href="index.html#EvalSymlinks">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func EvalSymlinks(path <a href="../../builtin/index.html#string">string</a>) (<a href="../../builtin/index.html#string">string</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+			<p>EvalSymlinks returns the path name after the evaluation of any symbolic
+links.
+If path is relative the result will be relative to the current directory,
+unless one of the components is an absolute symbolic link.
+EvalSymlinks calls <a href="index.html#Clean">Clean</a> on the result.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Ext">func <a href="../../../src/path/filepath/path.go?s=7736:7764#L261">Ext</a>
+				<a class="permalink" href="index.html#Ext">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Ext(path <a href="../../builtin/index.html#string">string</a>) <a href="../../builtin/index.html#string">string</a></pre>
+			<p>Ext returns the file name extension used by path.
+The extension is the suffix beginning at the final dot
+in the final element of path; it is empty if there is
+no dot.
+
+			<div id="example_Ext" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">fmt.Printf(&#34;No dots: %q\n&#34;, filepath.Ext(&#34;index&#34;))
+fmt.Printf(&#34;One dot: %q\n&#34;, filepath.Ext(&#34;index.js&#34;))
+fmt.Printf(&#34;Two dots: %q\n&#34;, filepath.Ext(&#34;main.test.js&#34;))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">No dots: &#34;&#34;
+One dot: &#34;.js&#34;
+Two dots: &#34;.js&#34;
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="FromSlash">func <a href="../../../src/path/filepath/path.go?s=6234:6268#L217">FromSlash</a>
+				<a class="permalink" href="index.html#FromSlash">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func FromSlash(path <a href="../../builtin/index.html#string">string</a>) <a href="../../builtin/index.html#string">string</a></pre>
+			<p>FromSlash returns the result of replacing each slash (&apos;/&apos;) character
+in path with a separator character. Multiple slashes are replaced
+by multiple separators.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Glob">func <a href="../../../src/path/filepath/match.go?s=5882:5937#L232">Glob</a>
+				<a class="permalink" href="index.html#Glob">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Glob(pattern <a href="../../builtin/index.html#string">string</a>) (matches []<a href="../../builtin/index.html#string">string</a>, err <a href="../../builtin/index.html#error">error</a>)</pre>
+			<p>Glob returns the names of all files matching pattern or nil
+if there is no matching file. The syntax of patterns is the same
+as in <a href="index.html#Match">Match</a>. The pattern may describe hierarchical names such as
+/usr/*/bin/ed (assuming the <a href="index.html#Separator">Separator</a> is &apos;/&apos;).
+<p>Glob ignores file system errors such as I/O errors reading directories.
+The only possible returned error is <a href="index.html#ErrBadPattern">ErrBadPattern</a>, when pattern
+is malformed.
+
+			
+			
+
+		
+			
+			
+			<h2 id="HasPrefix">func <a href="../../../src/path/filepath/path_unix.go?s=745:782#L20">HasPrefix</a>
+				<a class="permalink" href="index.html#HasPrefix">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func HasPrefix(p, prefix <a href="../../builtin/index.html#string">string</a>) <a href="../../builtin/index.html#bool">bool</a></pre>
+			<p>HasPrefix exists for historical compatibility and should not be used.
+<p>Deprecated: HasPrefix does not respect path boundaries and
+does not ignore case when required.
+
+			
+			
+
+		
+			
+			
+			<h2 id="IsAbs">func <a href="../../../src/path/filepath/path_unix.go?s=348:376#L6">IsAbs</a>
+				<a class="permalink" href="index.html#IsAbs">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func IsAbs(path <a href="../../builtin/index.html#string">string</a>) <a href="../../builtin/index.html#bool">bool</a></pre>
+			<p>IsAbs reports whether the path is absolute.
+
+			<div id="example_IsAbs" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">fmt.Println(&#34;On Unix:&#34;)
+fmt.Println(filepath.IsAbs(&#34;/home/gopher&#34;))
+fmt.Println(filepath.IsAbs(&#34;.bashrc&#34;))
+fmt.Println(filepath.IsAbs(&#34;..&#34;))
+fmt.Println(filepath.IsAbs(&#34;.&#34;))
+fmt.Println(filepath.IsAbs(&#34;/&#34;))
+fmt.Println(filepath.IsAbs(&#34;&#34;))
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">On Unix:
+true
+false
+false
+false
+true
+false
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="IsLocal">func <a href="../../../src/path/filepath/path.go?s=5328:5358#L178">IsLocal</a>
+				<a class="permalink" href="index.html#IsLocal">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func IsLocal(path <a href="../../builtin/index.html#string">string</a>) <a href="../../builtin/index.html#bool">bool</a></pre>
+			<p>IsLocal reports whether path, using lexical analysis only, has all of these properties:
+<ul>
+<li>is within the subtree rooted at the directory in which path is evaluated
+<li>is not an absolute path
+<li>is not empty
+<li>on Windows, is not a reserved name such as &quot;NUL&quot;
+</ul>
+<p>If IsLocal(path) returns true, then
+Join(base, path) will always produce a path contained within base and
+Clean(path) will always produce an unrooted path with no &quot;..&quot; path elements.
+<p>IsLocal is a purely lexical operation.
+In particular, it does not account for the effect of any symbolic links
+that may exist in the filesystem.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Join">func <a href="../../../src/path/filepath/path.go?s=7500:7532#L253">Join</a>
+				<a class="permalink" href="index.html#Join">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Join(elem ...<a href="../../builtin/index.html#string">string</a>) <a href="../../builtin/index.html#string">string</a></pre>
+			<p>Join joins any number of path elements into a single path,
+separating them with an OS specific <a href="index.html#Separator">Separator</a>. Empty elements
+are ignored. The result is Cleaned. However, if the argument
+list is empty or all its elements are empty, Join returns
+an empty string.
+On Windows, the result will only be a UNC path if the first
+non-empty element is a UNC path.
+
+			<div id="example_Join" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">fmt.Println(&#34;On Unix:&#34;)
+fmt.Println(filepath.Join(&#34;a&#34;, &#34;b&#34;, &#34;c&#34;))
+fmt.Println(filepath.Join(&#34;a&#34;, &#34;b/c&#34;))
+fmt.Println(filepath.Join(&#34;a/b&#34;, &#34;c&#34;))
+fmt.Println(filepath.Join(&#34;a/b&#34;, &#34;/c&#34;))
+
+fmt.Println(filepath.Join(&#34;a/b&#34;, &#34;../../../xyz&#34;))
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">On Unix:
+a/b/c
+a/b/c
+a/b/c
+a/b/c
+../xyz
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Match">func <a href="../../../src/path/filepath/match.go?s=1225:1283#L33">Match</a>
+				<a class="permalink" href="index.html#Match">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Match(pattern, name <a href="../../builtin/index.html#string">string</a>) (matched <a href="../../builtin/index.html#bool">bool</a>, err <a href="../../builtin/index.html#error">error</a>)</pre>
+			<p>Match reports whether name matches the shell file name pattern.
+The pattern syntax is:
+<pre>pattern:
+	{ term }
+term:
+	&apos;*&apos;         matches any sequence of non-Separator characters
+	&apos;?&apos;         matches any single non-Separator character
+	&apos;[&apos; [ &apos;^&apos; ] { character-range } &apos;]&apos;
+	            character class (must be non-empty)
+	c           matches character c (c != &apos;*&apos;, &apos;?&apos;, &apos;\\&apos;, &apos;[&apos;)
+	&apos;\\&apos; c      matches character c
+
+character-range:
+	c           matches character c (c != &apos;\\&apos;, &apos;-&apos;, &apos;]&apos;)
+	&apos;\\&apos; c      matches character c
+	lo &apos;-&apos; hi   matches character c for lo &lt;= c &lt;= hi
+</pre>
+<p>Match requires pattern to match all of name, not just a substring.
+The only possible returned error is <a href="index.html#ErrBadPattern">ErrBadPattern</a>, when pattern
+is malformed.
+<p>On Windows, escaping is disabled. Instead, &apos;\\&apos; is treated as
+path separator.
+
+			<div id="example_Match" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">fmt.Println(&#34;On Unix:&#34;)
+fmt.Println(filepath.Match(&#34;/home/catch/*&#34;, &#34;/home/catch/foo&#34;))
+fmt.Println(filepath.Match(&#34;/home/catch/*&#34;, &#34;/home/catch/foo/bar&#34;))
+fmt.Println(filepath.Match(&#34;/home/?opher&#34;, &#34;/home/gopher&#34;))
+fmt.Println(filepath.Match(&#34;/home/\\*&#34;, &#34;/home/*&#34;))
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">On Unix:
+true &lt;nil&gt;
+false &lt;nil&gt;
+true &lt;nil&gt;
+true &lt;nil&gt;
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Rel">func <a href="../../../src/path/filepath/path.go?s=9302:9353#L307">Rel</a>
+				<a class="permalink" href="index.html#Rel">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Rel(basepath, targpath <a href="../../builtin/index.html#string">string</a>) (<a href="../../builtin/index.html#string">string</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+			<p>Rel returns a relative path that is lexically equivalent to targpath when
+joined to basepath with an intervening separator. That is,
+<a href="index.html#Join">Join</a>(basepath, Rel(basepath, targpath)) is equivalent to targpath itself.
+On success, the returned path will always be relative to basepath,
+even if basepath and targpath share no elements.
+An error is returned if targpath can&apos;t be made relative to basepath or if
+knowing the current working directory would be necessary to compute it.
+Rel calls <a href="index.html#Clean">Clean</a> on the result.
+
+			<div id="example_Rel" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">paths := []string{
+    &#34;/a/b/c&#34;,
+    &#34;/b/c&#34;,
+    &#34;./b/c&#34;,
+}
+base := &#34;/a&#34;
+
+fmt.Println(&#34;On Unix:&#34;)
+for _, p := range paths {
+    rel, err := filepath.Rel(base, p)
+    fmt.Printf(&#34;%q: %q %v\n&#34;, p, rel, err)
+}
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">On Unix:
+&#34;/a/b/c&#34;: &#34;b/c&#34; &lt;nil&gt;
+&#34;/b/c&#34;: &#34;../b/c&#34; &lt;nil&gt;
+&#34;./b/c&#34;: &#34;&#34; Rel: can&#39;t make ./b/c relative to /a
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Split">func <a href="../../../src/path/filepath/path.go?s=6941:6983#L237">Split</a>
+				<a class="permalink" href="index.html#Split">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Split(path <a href="../../builtin/index.html#string">string</a>) (dir, file <a href="../../builtin/index.html#string">string</a>)</pre>
+			<p>Split splits path immediately following the final <a href="index.html#Separator">Separator</a>,
+separating it into a directory and file name component.
+If there is no Separator in path, Split returns an empty dir
+and file set to path.
+The returned values have the property that path = dir+file.
+
+			<div id="example_Split" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">paths := []string{
+    &#34;/home/arnie/amelia.jpg&#34;,
+    &#34;/mnt/photos/&#34;,
+    &#34;rabbit.jpg&#34;,
+    &#34;/usr/local//go&#34;,
+}
+fmt.Println(&#34;On Unix:&#34;)
+for _, p := range paths {
+    dir, file := filepath.Split(p)
+    fmt.Printf(&#34;input: %q\n\tdir: %q\n\tfile: %q\n&#34;, p, dir, file)
+}
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">On Unix:
+input: &#34;/home/arnie/amelia.jpg&#34;
+	dir: &#34;/home/arnie/&#34;
+	file: &#34;amelia.jpg&#34;
+input: &#34;/mnt/photos/&#34;
+	dir: &#34;/mnt/photos/&#34;
+	file: &#34;&#34;
+input: &#34;rabbit.jpg&#34;
+	dir: &#34;&#34;
+	file: &#34;rabbit.jpg&#34;
+input: &#34;/usr/local//go&#34;
+	dir: &#34;/usr/local//&#34;
+	file: &#34;go&#34;
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="SplitList">func <a href="../../../src/path/filepath/path.go?s=6598:6634#L228">SplitList</a>
+				<a class="permalink" href="index.html#SplitList">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func SplitList(path <a href="../../builtin/index.html#string">string</a>) []<a href="../../builtin/index.html#string">string</a></pre>
+			<p>SplitList splits a list of paths joined by the OS-specific <a href="index.html#ListSeparator">ListSeparator</a>,
+usually found in PATH or GOPATH environment variables.
+Unlike strings.Split, SplitList returns an empty slice when passed an empty
+string.
+
+			<div id="example_SplitList" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">fmt.Println(&#34;On Unix:&#34;, filepath.SplitList(&#34;/a/b/c:/usr/bin&#34;))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">On Unix: [/a/b/c /usr/bin]
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="ToSlash">func <a href="../../../src/path/filepath/path.go?s=5931:5963#L207">ToSlash</a>
+				<a class="permalink" href="index.html#ToSlash">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func ToSlash(path <a href="../../builtin/index.html#string">string</a>) <a href="../../builtin/index.html#string">string</a></pre>
+			<p>ToSlash returns the result of replacing each separator character
+in path with a slash (&apos;/&apos;) character. Multiple separators are
+replaced by multiple slashes.
+
+			
+			
+
+		
+			
+			
+			<h2 id="VolumeName">func <a href="../../../src/path/filepath/path.go?s=19010:19045#L627">VolumeName</a>
+				<a class="permalink" href="index.html#VolumeName">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func VolumeName(path <a href="../../builtin/index.html#string">string</a>) <a href="../../builtin/index.html#string">string</a></pre>
+			<p>VolumeName returns leading volume name.
+Given &quot;C:\foo\bar&quot; it returns &quot;C:&quot; on Windows.
+Given &quot;\\host\share\foo&quot; it returns &quot;\\host\share&quot;.
+On other platforms it returns &quot;&quot;.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Walk">func <a href="../../../src/path/filepath/path.go?s=16858:16899#L545">Walk</a>
+				<a class="permalink" href="index.html#Walk">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Walk(root <a href="../../builtin/index.html#string">string</a>, fn <a href="index.html#WalkFunc">WalkFunc</a>) <a href="../../builtin/index.html#error">error</a></pre>
+			<p>Walk walks the file tree rooted at root, calling fn for each file or
+directory in the tree, including root.
+<p>All errors that arise visiting files and directories are filtered by fn:
+see the <a href="index.html#WalkFunc">WalkFunc</a> documentation for details.
+<p>The files are walked in lexical order, which makes the output deterministic
+but requires Walk to read an entire directory into memory before proceeding
+to walk that directory.
+<p>Walk does not follow symbolic links.
+<p>Walk is less efficient than <a href="index.html#WalkDir">WalkDir</a>, introduced in Go 1.16,
+which avoids calling os.Lstat on every visited file or directory.
+
+			<div id="example_Walk" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">package filepath_test
+
+import (
+    &#34;fmt&#34;
+    &#34;io/fs&#34;
+    &#34;os&#34;
+    &#34;path/filepath&#34;
+)
+
+func prepareTestDirTree(tree string) (string, error) {
+    tmpDir, err := os.MkdirTemp(&#34;&#34;, &#34;&#34;)
+    if err != nil {
+        return &#34;&#34;, fmt.Errorf(&#34;error creating temp directory: %v\n&#34;, err)
+    }
+
+    err = os.MkdirAll(filepath.Join(tmpDir, tree), 0755)
+    if err != nil {
+        os.RemoveAll(tmpDir)
+        return &#34;&#34;, err
+    }
+
+    return tmpDir, nil
+}
+
+func ExampleWalk() {
+    tmpDir, err := prepareTestDirTree(&#34;dir/to/walk/skip&#34;)
+    if err != nil {
+        fmt.Printf(&#34;unable to create test dir tree: %v\n&#34;, err)
+        return
+    }
+    defer os.RemoveAll(tmpDir)
+    os.Chdir(tmpDir)
+
+    subDirToSkip := &#34;skip&#34;
+
+    fmt.Println(&#34;On Unix:&#34;)
+    err = filepath.Walk(&#34;.&#34;, func(path string, info fs.FileInfo, err error) error {
+        if err != nil {
+            fmt.Printf(&#34;prevent panic by handling failure accessing a path %q: %v\n&#34;, path, err)
+            return err
+        }
+        if info.IsDir() &amp;&amp; info.Name() == subDirToSkip {
+            fmt.Printf(&#34;skipping a dir without errors: %+v \n&#34;, info.Name())
+            return filepath.SkipDir
+        }
+        fmt.Printf(&#34;visited file or dir: %q\n&#34;, path)
+        return nil
+    })
+    if err != nil {
+        fmt.Printf(&#34;error walking the path %q: %v\n&#34;, tmpDir, err)
+        return
+    }
+    <span class="comment">// Output:</span>
+    <span class="comment">// On Unix:</span>
+    <span class="comment">// visited file or dir: &#34;.&#34;</span>
+    <span class="comment">// visited file or dir: &#34;dir&#34;</span>
+    <span class="comment">// visited file or dir: &#34;dir/to&#34;</span>
+    <span class="comment">// visited file or dir: &#34;dir/to/walk&#34;</span>
+    <span class="comment">// skipping a dir without errors: skip</span>
+}
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="WalkDir">func <a href="../../../src/path/filepath/path.go?s=15984:16034#L518">WalkDir</a>
+				<a class="permalink" href="index.html#WalkDir">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func WalkDir(root <a href="../../builtin/index.html#string">string</a>, fn <a href="../../io/fs/index.html">fs</a>.<a href="../../io/fs/index.html#WalkDirFunc">WalkDirFunc</a>) <a href="../../builtin/index.html#error">error</a></pre>
+			<p>WalkDir walks the file tree rooted at root, calling fn for each file or
+directory in the tree, including root.
+<p>All errors that arise visiting files and directories are filtered by fn:
+see the <a href="http://localhost:8080/io/fs#WalkDirFunc">fs.WalkDirFunc</a> documentation for details.
+<p>The files are walked in lexical order, which makes the output deterministic
+but requires WalkDir to read an entire directory into memory before proceeding
+to walk that directory.
+<p>WalkDir does not follow symbolic links.
+<p>WalkDir calls fn with paths that use the separator character appropriate
+for the operating system. This is unlike <a href="http://localhost:8080/io/fs#WalkDir">io/fs.WalkDir</a>, which always
+uses slash separated paths.
+
+			
+			
+
+		
+		
+			
+			
+			<h2 id="WalkFunc">type <a href="../../../src/path/filepath/path.go?s=13365:13431#L427">WalkFunc</a>
+				<a class="permalink" href="index.html#WalkFunc">&#xb6;</a>
+				
+				
+			</h2>
+			<p>WalkFunc is the type of the function called by <a href="index.html#Walk">Walk</a> to visit each
+file or directory.
+<p>The path argument contains the argument to Walk as a prefix.
+That is, if Walk is called with root argument &quot;dir&quot; and finds a file
+named &quot;a&quot; in that directory, the walk function will be called with
+argument &quot;dir/a&quot;.
+<p>The directory and file are joined with Join, which may clean the
+directory name: if Walk is called with the root argument &quot;x/../dir&quot;
+and finds a file named &quot;a&quot; in that directory, the walk function will
+be called with argument &quot;dir/a&quot;, not &quot;x/../dir/a&quot;.
+<p>The info argument is the fs.FileInfo for the named path.
+<p>The error result returned by the function controls how Walk continues.
+If the function returns the special value <a href="index.html#SkipDir">SkipDir</a>, Walk skips the
+current directory (path if info.IsDir() is true, otherwise path&apos;s
+parent directory). If the function returns the special value <a href="index.html#SkipAll">SkipAll</a>,
+Walk skips all remaining files and directories. Otherwise, if the function
+returns a non-nil error, Walk stops entirely and returns that error.
+<p>The err argument reports an error related to path, signaling that Walk
+will not walk into that directory. The function can decide how to
+handle that error; as described earlier, returning the error will
+cause Walk to stop walking the entire tree.
+<p>Walk calls the function with a non-nil err argument in two cases.
+<p>First, if an <a href="http://localhost:8080/os#Lstat">os.Lstat</a> on the root directory or any directory or file
+in the tree fails, Walk calls the function with path set to that
+directory or file&apos;s path, info set to nil, and err set to the error
+from os.Lstat.
+<p>Second, if a directory&apos;s Readdirnames method fails, Walk calls the
+function with path set to the directory&apos;s path, info, set to an
+<a href="http://localhost:8080/io/fs#FileInfo">fs.FileInfo</a> describing the directory, and err set to the error from
+Readdirnames.
+
+			<pre>type WalkFunc func(path <a href="../../builtin/index.html#string">string</a>, info <a href="../../io/fs/index.html">fs</a>.<a href="../../io/fs/index.html#FileInfo">FileInfo</a>, err <a href="../../builtin/index.html#error">error</a>) <a href="../../builtin/index.html#error">error</a></pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+	
+
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

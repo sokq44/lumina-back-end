@@ -1,0 +1,1084 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>src/html/template/escape.go - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="escape.go#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Source file
+    <a href="http://localhost:8080/src">src</a>/<a href="http://localhost:8080/src/html">html</a>/<a href="http://localhost:8080/src/html/template">template</a>/<span class="text-muted">escape.go</span>
+  </h1>
+
+
+
+
+
+  <h2>
+    Documentation: <a href="http://localhost:8080/pkg/html/template">html/template</a>
+  </h2>
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1&nbsp;&nbsp;</span><span class="comment">// Copyright 2011 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2&nbsp;&nbsp;</span><span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3&nbsp;&nbsp;</span><span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4&nbsp;&nbsp;</span>
+<span id="L5" class="ln">     5&nbsp;&nbsp;</span>package template
+<span id="L6" class="ln">     6&nbsp;&nbsp;</span>
+<span id="L7" class="ln">     7&nbsp;&nbsp;</span>import (
+<span id="L8" class="ln">     8&nbsp;&nbsp;</span>	&#34;bytes&#34;
+<span id="L9" class="ln">     9&nbsp;&nbsp;</span>	&#34;fmt&#34;
+<span id="L10" class="ln">    10&nbsp;&nbsp;</span>	&#34;html&#34;
+<span id="L11" class="ln">    11&nbsp;&nbsp;</span>	&#34;internal/godebug&#34;
+<span id="L12" class="ln">    12&nbsp;&nbsp;</span>	&#34;io&#34;
+<span id="L13" class="ln">    13&nbsp;&nbsp;</span>	&#34;regexp&#34;
+<span id="L14" class="ln">    14&nbsp;&nbsp;</span>	&#34;text/template&#34;
+<span id="L15" class="ln">    15&nbsp;&nbsp;</span>	&#34;text/template/parse&#34;
+<span id="L16" class="ln">    16&nbsp;&nbsp;</span>)
+<span id="L17" class="ln">    17&nbsp;&nbsp;</span>
+<span id="L18" class="ln">    18&nbsp;&nbsp;</span><span class="comment">// escapeTemplate rewrites the named template, which must be</span>
+<span id="L19" class="ln">    19&nbsp;&nbsp;</span><span class="comment">// associated with t, to guarantee that the output of any of the named</span>
+<span id="L20" class="ln">    20&nbsp;&nbsp;</span><span class="comment">// templates is properly escaped. If no error is returned, then the named templates have</span>
+<span id="L21" class="ln">    21&nbsp;&nbsp;</span><span class="comment">// been modified. Otherwise the named templates have been rendered</span>
+<span id="L22" class="ln">    22&nbsp;&nbsp;</span><span class="comment">// unusable.</span>
+<span id="L23" class="ln">    23&nbsp;&nbsp;</span>func escapeTemplate(tmpl *Template, node parse.Node, name string) error {
+<span id="L24" class="ln">    24&nbsp;&nbsp;</span>	c, _ := tmpl.esc.escapeTree(context{}, node, name, 0)
+<span id="L25" class="ln">    25&nbsp;&nbsp;</span>	var err error
+<span id="L26" class="ln">    26&nbsp;&nbsp;</span>	if c.err != nil {
+<span id="L27" class="ln">    27&nbsp;&nbsp;</span>		err, c.err.Name = c.err, name
+<span id="L28" class="ln">    28&nbsp;&nbsp;</span>	} else if c.state != stateText {
+<span id="L29" class="ln">    29&nbsp;&nbsp;</span>		err = &amp;Error{ErrEndContext, nil, name, 0, fmt.Sprintf(&#34;ends in a non-text context: %v&#34;, c)}
+<span id="L30" class="ln">    30&nbsp;&nbsp;</span>	}
+<span id="L31" class="ln">    31&nbsp;&nbsp;</span>	if err != nil {
+<span id="L32" class="ln">    32&nbsp;&nbsp;</span>		<span class="comment">// Prevent execution of unsafe templates.</span>
+<span id="L33" class="ln">    33&nbsp;&nbsp;</span>		if t := tmpl.set[name]; t != nil {
+<span id="L34" class="ln">    34&nbsp;&nbsp;</span>			t.escapeErr = err
+<span id="L35" class="ln">    35&nbsp;&nbsp;</span>			t.text.Tree = nil
+<span id="L36" class="ln">    36&nbsp;&nbsp;</span>			t.Tree = nil
+<span id="L37" class="ln">    37&nbsp;&nbsp;</span>		}
+<span id="L38" class="ln">    38&nbsp;&nbsp;</span>		return err
+<span id="L39" class="ln">    39&nbsp;&nbsp;</span>	}
+<span id="L40" class="ln">    40&nbsp;&nbsp;</span>	tmpl.esc.commit()
+<span id="L41" class="ln">    41&nbsp;&nbsp;</span>	if t := tmpl.set[name]; t != nil {
+<span id="L42" class="ln">    42&nbsp;&nbsp;</span>		t.escapeErr = escapeOK
+<span id="L43" class="ln">    43&nbsp;&nbsp;</span>		t.Tree = t.text.Tree
+<span id="L44" class="ln">    44&nbsp;&nbsp;</span>	}
+<span id="L45" class="ln">    45&nbsp;&nbsp;</span>	return nil
+<span id="L46" class="ln">    46&nbsp;&nbsp;</span>}
+<span id="L47" class="ln">    47&nbsp;&nbsp;</span>
+<span id="L48" class="ln">    48&nbsp;&nbsp;</span><span class="comment">// evalArgs formats the list of arguments into a string. It is equivalent to</span>
+<span id="L49" class="ln">    49&nbsp;&nbsp;</span><span class="comment">// fmt.Sprint(args...), except that it dereferences all pointers.</span>
+<span id="L50" class="ln">    50&nbsp;&nbsp;</span>func evalArgs(args ...any) string {
+<span id="L51" class="ln">    51&nbsp;&nbsp;</span>	<span class="comment">// Optimization for simple common case of a single string argument.</span>
+<span id="L52" class="ln">    52&nbsp;&nbsp;</span>	if len(args) == 1 {
+<span id="L53" class="ln">    53&nbsp;&nbsp;</span>		if s, ok := args[0].(string); ok {
+<span id="L54" class="ln">    54&nbsp;&nbsp;</span>			return s
+<span id="L55" class="ln">    55&nbsp;&nbsp;</span>		}
+<span id="L56" class="ln">    56&nbsp;&nbsp;</span>	}
+<span id="L57" class="ln">    57&nbsp;&nbsp;</span>	for i, arg := range args {
+<span id="L58" class="ln">    58&nbsp;&nbsp;</span>		args[i] = indirectToStringerOrError(arg)
+<span id="L59" class="ln">    59&nbsp;&nbsp;</span>	}
+<span id="L60" class="ln">    60&nbsp;&nbsp;</span>	return fmt.Sprint(args...)
+<span id="L61" class="ln">    61&nbsp;&nbsp;</span>}
+<span id="L62" class="ln">    62&nbsp;&nbsp;</span>
+<span id="L63" class="ln">    63&nbsp;&nbsp;</span><span class="comment">// funcMap maps command names to functions that render their inputs safe.</span>
+<span id="L64" class="ln">    64&nbsp;&nbsp;</span>var funcMap = template.FuncMap{
+<span id="L65" class="ln">    65&nbsp;&nbsp;</span>	&#34;_html_template_attrescaper&#34;:      attrEscaper,
+<span id="L66" class="ln">    66&nbsp;&nbsp;</span>	&#34;_html_template_commentescaper&#34;:   commentEscaper,
+<span id="L67" class="ln">    67&nbsp;&nbsp;</span>	&#34;_html_template_cssescaper&#34;:       cssEscaper,
+<span id="L68" class="ln">    68&nbsp;&nbsp;</span>	&#34;_html_template_cssvaluefilter&#34;:   cssValueFilter,
+<span id="L69" class="ln">    69&nbsp;&nbsp;</span>	&#34;_html_template_htmlnamefilter&#34;:   htmlNameFilter,
+<span id="L70" class="ln">    70&nbsp;&nbsp;</span>	&#34;_html_template_htmlescaper&#34;:      htmlEscaper,
+<span id="L71" class="ln">    71&nbsp;&nbsp;</span>	&#34;_html_template_jsregexpescaper&#34;:  jsRegexpEscaper,
+<span id="L72" class="ln">    72&nbsp;&nbsp;</span>	&#34;_html_template_jsstrescaper&#34;:     jsStrEscaper,
+<span id="L73" class="ln">    73&nbsp;&nbsp;</span>	&#34;_html_template_jstmpllitescaper&#34;: jsTmplLitEscaper,
+<span id="L74" class="ln">    74&nbsp;&nbsp;</span>	&#34;_html_template_jsvalescaper&#34;:     jsValEscaper,
+<span id="L75" class="ln">    75&nbsp;&nbsp;</span>	&#34;_html_template_nospaceescaper&#34;:   htmlNospaceEscaper,
+<span id="L76" class="ln">    76&nbsp;&nbsp;</span>	&#34;_html_template_rcdataescaper&#34;:    rcdataEscaper,
+<span id="L77" class="ln">    77&nbsp;&nbsp;</span>	&#34;_html_template_srcsetescaper&#34;:    srcsetFilterAndEscaper,
+<span id="L78" class="ln">    78&nbsp;&nbsp;</span>	&#34;_html_template_urlescaper&#34;:       urlEscaper,
+<span id="L79" class="ln">    79&nbsp;&nbsp;</span>	&#34;_html_template_urlfilter&#34;:        urlFilter,
+<span id="L80" class="ln">    80&nbsp;&nbsp;</span>	&#34;_html_template_urlnormalizer&#34;:    urlNormalizer,
+<span id="L81" class="ln">    81&nbsp;&nbsp;</span>	&#34;_eval_args_&#34;:                     evalArgs,
+<span id="L82" class="ln">    82&nbsp;&nbsp;</span>}
+<span id="L83" class="ln">    83&nbsp;&nbsp;</span>
+<span id="L84" class="ln">    84&nbsp;&nbsp;</span><span class="comment">// escaper collects type inferences about templates and changes needed to make</span>
+<span id="L85" class="ln">    85&nbsp;&nbsp;</span><span class="comment">// templates injection safe.</span>
+<span id="L86" class="ln">    86&nbsp;&nbsp;</span>type escaper struct {
+<span id="L87" class="ln">    87&nbsp;&nbsp;</span>	<span class="comment">// ns is the nameSpace that this escaper is associated with.</span>
+<span id="L88" class="ln">    88&nbsp;&nbsp;</span>	ns *nameSpace
+<span id="L89" class="ln">    89&nbsp;&nbsp;</span>	<span class="comment">// output[templateName] is the output context for a templateName that</span>
+<span id="L90" class="ln">    90&nbsp;&nbsp;</span>	<span class="comment">// has been mangled to include its input context.</span>
+<span id="L91" class="ln">    91&nbsp;&nbsp;</span>	output map[string]context
+<span id="L92" class="ln">    92&nbsp;&nbsp;</span>	<span class="comment">// derived[c.mangle(name)] maps to a template derived from the template</span>
+<span id="L93" class="ln">    93&nbsp;&nbsp;</span>	<span class="comment">// named name templateName for the start context c.</span>
+<span id="L94" class="ln">    94&nbsp;&nbsp;</span>	derived map[string]*template.Template
+<span id="L95" class="ln">    95&nbsp;&nbsp;</span>	<span class="comment">// called[templateName] is a set of called mangled template names.</span>
+<span id="L96" class="ln">    96&nbsp;&nbsp;</span>	called map[string]bool
+<span id="L97" class="ln">    97&nbsp;&nbsp;</span>	<span class="comment">// xxxNodeEdits are the accumulated edits to apply during commit.</span>
+<span id="L98" class="ln">    98&nbsp;&nbsp;</span>	<span class="comment">// Such edits are not applied immediately in case a template set</span>
+<span id="L99" class="ln">    99&nbsp;&nbsp;</span>	<span class="comment">// executes a given template in different escaping contexts.</span>
+<span id="L100" class="ln">   100&nbsp;&nbsp;</span>	actionNodeEdits   map[*parse.ActionNode][]string
+<span id="L101" class="ln">   101&nbsp;&nbsp;</span>	templateNodeEdits map[*parse.TemplateNode]string
+<span id="L102" class="ln">   102&nbsp;&nbsp;</span>	textNodeEdits     map[*parse.TextNode][]byte
+<span id="L103" class="ln">   103&nbsp;&nbsp;</span>	<span class="comment">// rangeContext holds context about the current range loop.</span>
+<span id="L104" class="ln">   104&nbsp;&nbsp;</span>	rangeContext *rangeContext
+<span id="L105" class="ln">   105&nbsp;&nbsp;</span>}
+<span id="L106" class="ln">   106&nbsp;&nbsp;</span>
+<span id="L107" class="ln">   107&nbsp;&nbsp;</span><span class="comment">// rangeContext holds information about the current range loop.</span>
+<span id="L108" class="ln">   108&nbsp;&nbsp;</span>type rangeContext struct {
+<span id="L109" class="ln">   109&nbsp;&nbsp;</span>	outer     *rangeContext <span class="comment">// outer loop</span>
+<span id="L110" class="ln">   110&nbsp;&nbsp;</span>	breaks    []context     <span class="comment">// context at each break action</span>
+<span id="L111" class="ln">   111&nbsp;&nbsp;</span>	continues []context     <span class="comment">// context at each continue action</span>
+<span id="L112" class="ln">   112&nbsp;&nbsp;</span>}
+<span id="L113" class="ln">   113&nbsp;&nbsp;</span>
+<span id="L114" class="ln">   114&nbsp;&nbsp;</span><span class="comment">// makeEscaper creates a blank escaper for the given set.</span>
+<span id="L115" class="ln">   115&nbsp;&nbsp;</span>func makeEscaper(n *nameSpace) escaper {
+<span id="L116" class="ln">   116&nbsp;&nbsp;</span>	return escaper{
+<span id="L117" class="ln">   117&nbsp;&nbsp;</span>		n,
+<span id="L118" class="ln">   118&nbsp;&nbsp;</span>		map[string]context{},
+<span id="L119" class="ln">   119&nbsp;&nbsp;</span>		map[string]*template.Template{},
+<span id="L120" class="ln">   120&nbsp;&nbsp;</span>		map[string]bool{},
+<span id="L121" class="ln">   121&nbsp;&nbsp;</span>		map[*parse.ActionNode][]string{},
+<span id="L122" class="ln">   122&nbsp;&nbsp;</span>		map[*parse.TemplateNode]string{},
+<span id="L123" class="ln">   123&nbsp;&nbsp;</span>		map[*parse.TextNode][]byte{},
+<span id="L124" class="ln">   124&nbsp;&nbsp;</span>		nil,
+<span id="L125" class="ln">   125&nbsp;&nbsp;</span>	}
+<span id="L126" class="ln">   126&nbsp;&nbsp;</span>}
+<span id="L127" class="ln">   127&nbsp;&nbsp;</span>
+<span id="L128" class="ln">   128&nbsp;&nbsp;</span><span class="comment">// filterFailsafe is an innocuous word that is emitted in place of unsafe values</span>
+<span id="L129" class="ln">   129&nbsp;&nbsp;</span><span class="comment">// by sanitizer functions. It is not a keyword in any programming language,</span>
+<span id="L130" class="ln">   130&nbsp;&nbsp;</span><span class="comment">// contains no special characters, is not empty, and when it appears in output</span>
+<span id="L131" class="ln">   131&nbsp;&nbsp;</span><span class="comment">// it is distinct enough that a developer can find the source of the problem</span>
+<span id="L132" class="ln">   132&nbsp;&nbsp;</span><span class="comment">// via a search engine.</span>
+<span id="L133" class="ln">   133&nbsp;&nbsp;</span>const filterFailsafe = &#34;ZgotmplZ&#34;
+<span id="L134" class="ln">   134&nbsp;&nbsp;</span>
+<span id="L135" class="ln">   135&nbsp;&nbsp;</span><span class="comment">// escape escapes a template node.</span>
+<span id="L136" class="ln">   136&nbsp;&nbsp;</span>func (e *escaper) escape(c context, n parse.Node) context {
+<span id="L137" class="ln">   137&nbsp;&nbsp;</span>	switch n := n.(type) {
+<span id="L138" class="ln">   138&nbsp;&nbsp;</span>	case *parse.ActionNode:
+<span id="L139" class="ln">   139&nbsp;&nbsp;</span>		return e.escapeAction(c, n)
+<span id="L140" class="ln">   140&nbsp;&nbsp;</span>	case *parse.BreakNode:
+<span id="L141" class="ln">   141&nbsp;&nbsp;</span>		c.n = n
+<span id="L142" class="ln">   142&nbsp;&nbsp;</span>		e.rangeContext.breaks = append(e.rangeContext.breaks, c)
+<span id="L143" class="ln">   143&nbsp;&nbsp;</span>		return context{state: stateDead}
+<span id="L144" class="ln">   144&nbsp;&nbsp;</span>	case *parse.CommentNode:
+<span id="L145" class="ln">   145&nbsp;&nbsp;</span>		return c
+<span id="L146" class="ln">   146&nbsp;&nbsp;</span>	case *parse.ContinueNode:
+<span id="L147" class="ln">   147&nbsp;&nbsp;</span>		c.n = n
+<span id="L148" class="ln">   148&nbsp;&nbsp;</span>		e.rangeContext.continues = append(e.rangeContext.breaks, c)
+<span id="L149" class="ln">   149&nbsp;&nbsp;</span>		return context{state: stateDead}
+<span id="L150" class="ln">   150&nbsp;&nbsp;</span>	case *parse.IfNode:
+<span id="L151" class="ln">   151&nbsp;&nbsp;</span>		return e.escapeBranch(c, &amp;n.BranchNode, &#34;if&#34;)
+<span id="L152" class="ln">   152&nbsp;&nbsp;</span>	case *parse.ListNode:
+<span id="L153" class="ln">   153&nbsp;&nbsp;</span>		return e.escapeList(c, n)
+<span id="L154" class="ln">   154&nbsp;&nbsp;</span>	case *parse.RangeNode:
+<span id="L155" class="ln">   155&nbsp;&nbsp;</span>		return e.escapeBranch(c, &amp;n.BranchNode, &#34;range&#34;)
+<span id="L156" class="ln">   156&nbsp;&nbsp;</span>	case *parse.TemplateNode:
+<span id="L157" class="ln">   157&nbsp;&nbsp;</span>		return e.escapeTemplate(c, n)
+<span id="L158" class="ln">   158&nbsp;&nbsp;</span>	case *parse.TextNode:
+<span id="L159" class="ln">   159&nbsp;&nbsp;</span>		return e.escapeText(c, n)
+<span id="L160" class="ln">   160&nbsp;&nbsp;</span>	case *parse.WithNode:
+<span id="L161" class="ln">   161&nbsp;&nbsp;</span>		return e.escapeBranch(c, &amp;n.BranchNode, &#34;with&#34;)
+<span id="L162" class="ln">   162&nbsp;&nbsp;</span>	}
+<span id="L163" class="ln">   163&nbsp;&nbsp;</span>	panic(&#34;escaping &#34; + n.String() + &#34; is unimplemented&#34;)
+<span id="L164" class="ln">   164&nbsp;&nbsp;</span>}
+<span id="L165" class="ln">   165&nbsp;&nbsp;</span>
+<span id="L166" class="ln">   166&nbsp;&nbsp;</span>var debugAllowActionJSTmpl = godebug.New(&#34;jstmpllitinterp&#34;)
+<span id="L167" class="ln">   167&nbsp;&nbsp;</span>
+<span id="L168" class="ln">   168&nbsp;&nbsp;</span><span class="comment">// escapeAction escapes an action template node.</span>
+<span id="L169" class="ln">   169&nbsp;&nbsp;</span>func (e *escaper) escapeAction(c context, n *parse.ActionNode) context {
+<span id="L170" class="ln">   170&nbsp;&nbsp;</span>	if len(n.Pipe.Decl) != 0 {
+<span id="L171" class="ln">   171&nbsp;&nbsp;</span>		<span class="comment">// A local variable assignment, not an interpolation.</span>
+<span id="L172" class="ln">   172&nbsp;&nbsp;</span>		return c
+<span id="L173" class="ln">   173&nbsp;&nbsp;</span>	}
+<span id="L174" class="ln">   174&nbsp;&nbsp;</span>	c = nudge(c)
+<span id="L175" class="ln">   175&nbsp;&nbsp;</span>	<span class="comment">// Check for disallowed use of predefined escapers in the pipeline.</span>
+<span id="L176" class="ln">   176&nbsp;&nbsp;</span>	for pos, idNode := range n.Pipe.Cmds {
+<span id="L177" class="ln">   177&nbsp;&nbsp;</span>		node, ok := idNode.Args[0].(*parse.IdentifierNode)
+<span id="L178" class="ln">   178&nbsp;&nbsp;</span>		if !ok {
+<span id="L179" class="ln">   179&nbsp;&nbsp;</span>			<span class="comment">// A predefined escaper &#34;esc&#34; will never be found as an identifier in a</span>
+<span id="L180" class="ln">   180&nbsp;&nbsp;</span>			<span class="comment">// Chain or Field node, since:</span>
+<span id="L181" class="ln">   181&nbsp;&nbsp;</span>			<span class="comment">// - &#34;esc.x ...&#34; is invalid, since predefined escapers return strings, and</span>
+<span id="L182" class="ln">   182&nbsp;&nbsp;</span>			<span class="comment">//   strings do not have methods, keys or fields.</span>
+<span id="L183" class="ln">   183&nbsp;&nbsp;</span>			<span class="comment">// - &#34;... .esc&#34; is invalid, since predefined escapers are global functions,</span>
+<span id="L184" class="ln">   184&nbsp;&nbsp;</span>			<span class="comment">//   not methods or fields of any types.</span>
+<span id="L185" class="ln">   185&nbsp;&nbsp;</span>			<span class="comment">// Therefore, it is safe to ignore these two node types.</span>
+<span id="L186" class="ln">   186&nbsp;&nbsp;</span>			continue
+<span id="L187" class="ln">   187&nbsp;&nbsp;</span>		}
+<span id="L188" class="ln">   188&nbsp;&nbsp;</span>		ident := node.Ident
+<span id="L189" class="ln">   189&nbsp;&nbsp;</span>		if _, ok := predefinedEscapers[ident]; ok {
+<span id="L190" class="ln">   190&nbsp;&nbsp;</span>			if pos &lt; len(n.Pipe.Cmds)-1 ||
+<span id="L191" class="ln">   191&nbsp;&nbsp;</span>				c.state == stateAttr &amp;&amp; c.delim == delimSpaceOrTagEnd &amp;&amp; ident == &#34;html&#34; {
+<span id="L192" class="ln">   192&nbsp;&nbsp;</span>				return context{
+<span id="L193" class="ln">   193&nbsp;&nbsp;</span>					state: stateError,
+<span id="L194" class="ln">   194&nbsp;&nbsp;</span>					err:   errorf(ErrPredefinedEscaper, n, n.Line, &#34;predefined escaper %q disallowed in template&#34;, ident),
+<span id="L195" class="ln">   195&nbsp;&nbsp;</span>				}
+<span id="L196" class="ln">   196&nbsp;&nbsp;</span>			}
+<span id="L197" class="ln">   197&nbsp;&nbsp;</span>		}
+<span id="L198" class="ln">   198&nbsp;&nbsp;</span>	}
+<span id="L199" class="ln">   199&nbsp;&nbsp;</span>	s := make([]string, 0, 3)
+<span id="L200" class="ln">   200&nbsp;&nbsp;</span>	switch c.state {
+<span id="L201" class="ln">   201&nbsp;&nbsp;</span>	case stateError:
+<span id="L202" class="ln">   202&nbsp;&nbsp;</span>		return c
+<span id="L203" class="ln">   203&nbsp;&nbsp;</span>	case stateURL, stateCSSDqStr, stateCSSSqStr, stateCSSDqURL, stateCSSSqURL, stateCSSURL:
+<span id="L204" class="ln">   204&nbsp;&nbsp;</span>		switch c.urlPart {
+<span id="L205" class="ln">   205&nbsp;&nbsp;</span>		case urlPartNone:
+<span id="L206" class="ln">   206&nbsp;&nbsp;</span>			s = append(s, &#34;_html_template_urlfilter&#34;)
+<span id="L207" class="ln">   207&nbsp;&nbsp;</span>			fallthrough
+<span id="L208" class="ln">   208&nbsp;&nbsp;</span>		case urlPartPreQuery:
+<span id="L209" class="ln">   209&nbsp;&nbsp;</span>			switch c.state {
+<span id="L210" class="ln">   210&nbsp;&nbsp;</span>			case stateCSSDqStr, stateCSSSqStr:
+<span id="L211" class="ln">   211&nbsp;&nbsp;</span>				s = append(s, &#34;_html_template_cssescaper&#34;)
+<span id="L212" class="ln">   212&nbsp;&nbsp;</span>			default:
+<span id="L213" class="ln">   213&nbsp;&nbsp;</span>				s = append(s, &#34;_html_template_urlnormalizer&#34;)
+<span id="L214" class="ln">   214&nbsp;&nbsp;</span>			}
+<span id="L215" class="ln">   215&nbsp;&nbsp;</span>		case urlPartQueryOrFrag:
+<span id="L216" class="ln">   216&nbsp;&nbsp;</span>			s = append(s, &#34;_html_template_urlescaper&#34;)
+<span id="L217" class="ln">   217&nbsp;&nbsp;</span>		case urlPartUnknown:
+<span id="L218" class="ln">   218&nbsp;&nbsp;</span>			return context{
+<span id="L219" class="ln">   219&nbsp;&nbsp;</span>				state: stateError,
+<span id="L220" class="ln">   220&nbsp;&nbsp;</span>				err:   errorf(ErrAmbigContext, n, n.Line, &#34;%s appears in an ambiguous context within a URL&#34;, n),
+<span id="L221" class="ln">   221&nbsp;&nbsp;</span>			}
+<span id="L222" class="ln">   222&nbsp;&nbsp;</span>		default:
+<span id="L223" class="ln">   223&nbsp;&nbsp;</span>			panic(c.urlPart.String())
+<span id="L224" class="ln">   224&nbsp;&nbsp;</span>		}
+<span id="L225" class="ln">   225&nbsp;&nbsp;</span>	case stateJS:
+<span id="L226" class="ln">   226&nbsp;&nbsp;</span>		s = append(s, &#34;_html_template_jsvalescaper&#34;)
+<span id="L227" class="ln">   227&nbsp;&nbsp;</span>		<span class="comment">// A slash after a value starts a div operator.</span>
+<span id="L228" class="ln">   228&nbsp;&nbsp;</span>		c.jsCtx = jsCtxDivOp
+<span id="L229" class="ln">   229&nbsp;&nbsp;</span>	case stateJSDqStr, stateJSSqStr:
+<span id="L230" class="ln">   230&nbsp;&nbsp;</span>		s = append(s, &#34;_html_template_jsstrescaper&#34;)
+<span id="L231" class="ln">   231&nbsp;&nbsp;</span>	case stateJSTmplLit:
+<span id="L232" class="ln">   232&nbsp;&nbsp;</span>		s = append(s, &#34;_html_template_jstmpllitescaper&#34;)
+<span id="L233" class="ln">   233&nbsp;&nbsp;</span>	case stateJSRegexp:
+<span id="L234" class="ln">   234&nbsp;&nbsp;</span>		s = append(s, &#34;_html_template_jsregexpescaper&#34;)
+<span id="L235" class="ln">   235&nbsp;&nbsp;</span>	case stateCSS:
+<span id="L236" class="ln">   236&nbsp;&nbsp;</span>		s = append(s, &#34;_html_template_cssvaluefilter&#34;)
+<span id="L237" class="ln">   237&nbsp;&nbsp;</span>	case stateText:
+<span id="L238" class="ln">   238&nbsp;&nbsp;</span>		s = append(s, &#34;_html_template_htmlescaper&#34;)
+<span id="L239" class="ln">   239&nbsp;&nbsp;</span>	case stateRCDATA:
+<span id="L240" class="ln">   240&nbsp;&nbsp;</span>		s = append(s, &#34;_html_template_rcdataescaper&#34;)
+<span id="L241" class="ln">   241&nbsp;&nbsp;</span>	case stateAttr:
+<span id="L242" class="ln">   242&nbsp;&nbsp;</span>		<span class="comment">// Handled below in delim check.</span>
+<span id="L243" class="ln">   243&nbsp;&nbsp;</span>	case stateAttrName, stateTag:
+<span id="L244" class="ln">   244&nbsp;&nbsp;</span>		c.state = stateAttrName
+<span id="L245" class="ln">   245&nbsp;&nbsp;</span>		s = append(s, &#34;_html_template_htmlnamefilter&#34;)
+<span id="L246" class="ln">   246&nbsp;&nbsp;</span>	case stateSrcset:
+<span id="L247" class="ln">   247&nbsp;&nbsp;</span>		s = append(s, &#34;_html_template_srcsetescaper&#34;)
+<span id="L248" class="ln">   248&nbsp;&nbsp;</span>	default:
+<span id="L249" class="ln">   249&nbsp;&nbsp;</span>		if isComment(c.state) {
+<span id="L250" class="ln">   250&nbsp;&nbsp;</span>			s = append(s, &#34;_html_template_commentescaper&#34;)
+<span id="L251" class="ln">   251&nbsp;&nbsp;</span>		} else {
+<span id="L252" class="ln">   252&nbsp;&nbsp;</span>			panic(&#34;unexpected state &#34; + c.state.String())
+<span id="L253" class="ln">   253&nbsp;&nbsp;</span>		}
+<span id="L254" class="ln">   254&nbsp;&nbsp;</span>	}
+<span id="L255" class="ln">   255&nbsp;&nbsp;</span>	switch c.delim {
+<span id="L256" class="ln">   256&nbsp;&nbsp;</span>	case delimNone:
+<span id="L257" class="ln">   257&nbsp;&nbsp;</span>		<span class="comment">// No extra-escaping needed for raw text content.</span>
+<span id="L258" class="ln">   258&nbsp;&nbsp;</span>	case delimSpaceOrTagEnd:
+<span id="L259" class="ln">   259&nbsp;&nbsp;</span>		s = append(s, &#34;_html_template_nospaceescaper&#34;)
+<span id="L260" class="ln">   260&nbsp;&nbsp;</span>	default:
+<span id="L261" class="ln">   261&nbsp;&nbsp;</span>		s = append(s, &#34;_html_template_attrescaper&#34;)
+<span id="L262" class="ln">   262&nbsp;&nbsp;</span>	}
+<span id="L263" class="ln">   263&nbsp;&nbsp;</span>	e.editActionNode(n, s)
+<span id="L264" class="ln">   264&nbsp;&nbsp;</span>	return c
+<span id="L265" class="ln">   265&nbsp;&nbsp;</span>}
+<span id="L266" class="ln">   266&nbsp;&nbsp;</span>
+<span id="L267" class="ln">   267&nbsp;&nbsp;</span><span class="comment">// ensurePipelineContains ensures that the pipeline ends with the commands with</span>
+<span id="L268" class="ln">   268&nbsp;&nbsp;</span><span class="comment">// the identifiers in s in order. If the pipeline ends with a predefined escaper</span>
+<span id="L269" class="ln">   269&nbsp;&nbsp;</span><span class="comment">// (i.e. &#34;html&#34; or &#34;urlquery&#34;), merge it with the identifiers in s.</span>
+<span id="L270" class="ln">   270&nbsp;&nbsp;</span>func ensurePipelineContains(p *parse.PipeNode, s []string) {
+<span id="L271" class="ln">   271&nbsp;&nbsp;</span>	if len(s) == 0 {
+<span id="L272" class="ln">   272&nbsp;&nbsp;</span>		<span class="comment">// Do not rewrite pipeline if we have no escapers to insert.</span>
+<span id="L273" class="ln">   273&nbsp;&nbsp;</span>		return
+<span id="L274" class="ln">   274&nbsp;&nbsp;</span>	}
+<span id="L275" class="ln">   275&nbsp;&nbsp;</span>	<span class="comment">// Precondition: p.Cmds contains at most one predefined escaper and the</span>
+<span id="L276" class="ln">   276&nbsp;&nbsp;</span>	<span class="comment">// escaper will be present at p.Cmds[len(p.Cmds)-1]. This precondition is</span>
+<span id="L277" class="ln">   277&nbsp;&nbsp;</span>	<span class="comment">// always true because of the checks in escapeAction.</span>
+<span id="L278" class="ln">   278&nbsp;&nbsp;</span>	pipelineLen := len(p.Cmds)
+<span id="L279" class="ln">   279&nbsp;&nbsp;</span>	if pipelineLen &gt; 0 {
+<span id="L280" class="ln">   280&nbsp;&nbsp;</span>		lastCmd := p.Cmds[pipelineLen-1]
+<span id="L281" class="ln">   281&nbsp;&nbsp;</span>		if idNode, ok := lastCmd.Args[0].(*parse.IdentifierNode); ok {
+<span id="L282" class="ln">   282&nbsp;&nbsp;</span>			if esc := idNode.Ident; predefinedEscapers[esc] {
+<span id="L283" class="ln">   283&nbsp;&nbsp;</span>				<span class="comment">// Pipeline ends with a predefined escaper.</span>
+<span id="L284" class="ln">   284&nbsp;&nbsp;</span>				if len(p.Cmds) == 1 &amp;&amp; len(lastCmd.Args) &gt; 1 {
+<span id="L285" class="ln">   285&nbsp;&nbsp;</span>					<span class="comment">// Special case: pipeline is of the form {{ esc arg1 arg2 ... argN }},</span>
+<span id="L286" class="ln">   286&nbsp;&nbsp;</span>					<span class="comment">// where esc is the predefined escaper, and arg1...argN are its arguments.</span>
+<span id="L287" class="ln">   287&nbsp;&nbsp;</span>					<span class="comment">// Convert this into the equivalent form</span>
+<span id="L288" class="ln">   288&nbsp;&nbsp;</span>					<span class="comment">// {{ _eval_args_ arg1 arg2 ... argN | esc }}, so that esc can be easily</span>
+<span id="L289" class="ln">   289&nbsp;&nbsp;</span>					<span class="comment">// merged with the escapers in s.</span>
+<span id="L290" class="ln">   290&nbsp;&nbsp;</span>					lastCmd.Args[0] = parse.NewIdentifier(&#34;_eval_args_&#34;).SetTree(nil).SetPos(lastCmd.Args[0].Position())
+<span id="L291" class="ln">   291&nbsp;&nbsp;</span>					p.Cmds = appendCmd(p.Cmds, newIdentCmd(esc, p.Position()))
+<span id="L292" class="ln">   292&nbsp;&nbsp;</span>					pipelineLen++
+<span id="L293" class="ln">   293&nbsp;&nbsp;</span>				}
+<span id="L294" class="ln">   294&nbsp;&nbsp;</span>				<span class="comment">// If any of the commands in s that we are about to insert is equivalent</span>
+<span id="L295" class="ln">   295&nbsp;&nbsp;</span>				<span class="comment">// to the predefined escaper, use the predefined escaper instead.</span>
+<span id="L296" class="ln">   296&nbsp;&nbsp;</span>				dup := false
+<span id="L297" class="ln">   297&nbsp;&nbsp;</span>				for i, escaper := range s {
+<span id="L298" class="ln">   298&nbsp;&nbsp;</span>					if escFnsEq(esc, escaper) {
+<span id="L299" class="ln">   299&nbsp;&nbsp;</span>						s[i] = idNode.Ident
+<span id="L300" class="ln">   300&nbsp;&nbsp;</span>						dup = true
+<span id="L301" class="ln">   301&nbsp;&nbsp;</span>					}
+<span id="L302" class="ln">   302&nbsp;&nbsp;</span>				}
+<span id="L303" class="ln">   303&nbsp;&nbsp;</span>				if dup {
+<span id="L304" class="ln">   304&nbsp;&nbsp;</span>					<span class="comment">// The predefined escaper will already be inserted along with the</span>
+<span id="L305" class="ln">   305&nbsp;&nbsp;</span>					<span class="comment">// escapers in s, so do not copy it to the rewritten pipeline.</span>
+<span id="L306" class="ln">   306&nbsp;&nbsp;</span>					pipelineLen--
+<span id="L307" class="ln">   307&nbsp;&nbsp;</span>				}
+<span id="L308" class="ln">   308&nbsp;&nbsp;</span>			}
+<span id="L309" class="ln">   309&nbsp;&nbsp;</span>		}
+<span id="L310" class="ln">   310&nbsp;&nbsp;</span>	}
+<span id="L311" class="ln">   311&nbsp;&nbsp;</span>	<span class="comment">// Rewrite the pipeline, creating the escapers in s at the end of the pipeline.</span>
+<span id="L312" class="ln">   312&nbsp;&nbsp;</span>	newCmds := make([]*parse.CommandNode, pipelineLen, pipelineLen+len(s))
+<span id="L313" class="ln">   313&nbsp;&nbsp;</span>	insertedIdents := make(map[string]bool)
+<span id="L314" class="ln">   314&nbsp;&nbsp;</span>	for i := 0; i &lt; pipelineLen; i++ {
+<span id="L315" class="ln">   315&nbsp;&nbsp;</span>		cmd := p.Cmds[i]
+<span id="L316" class="ln">   316&nbsp;&nbsp;</span>		newCmds[i] = cmd
+<span id="L317" class="ln">   317&nbsp;&nbsp;</span>		if idNode, ok := cmd.Args[0].(*parse.IdentifierNode); ok {
+<span id="L318" class="ln">   318&nbsp;&nbsp;</span>			insertedIdents[normalizeEscFn(idNode.Ident)] = true
+<span id="L319" class="ln">   319&nbsp;&nbsp;</span>		}
+<span id="L320" class="ln">   320&nbsp;&nbsp;</span>	}
+<span id="L321" class="ln">   321&nbsp;&nbsp;</span>	for _, name := range s {
+<span id="L322" class="ln">   322&nbsp;&nbsp;</span>		if !insertedIdents[normalizeEscFn(name)] {
+<span id="L323" class="ln">   323&nbsp;&nbsp;</span>			<span class="comment">// When two templates share an underlying parse tree via the use of</span>
+<span id="L324" class="ln">   324&nbsp;&nbsp;</span>			<span class="comment">// AddParseTree and one template is executed after the other, this check</span>
+<span id="L325" class="ln">   325&nbsp;&nbsp;</span>			<span class="comment">// ensures that escapers that were already inserted into the pipeline on</span>
+<span id="L326" class="ln">   326&nbsp;&nbsp;</span>			<span class="comment">// the first escaping pass do not get inserted again.</span>
+<span id="L327" class="ln">   327&nbsp;&nbsp;</span>			newCmds = appendCmd(newCmds, newIdentCmd(name, p.Position()))
+<span id="L328" class="ln">   328&nbsp;&nbsp;</span>		}
+<span id="L329" class="ln">   329&nbsp;&nbsp;</span>	}
+<span id="L330" class="ln">   330&nbsp;&nbsp;</span>	p.Cmds = newCmds
+<span id="L331" class="ln">   331&nbsp;&nbsp;</span>}
+<span id="L332" class="ln">   332&nbsp;&nbsp;</span>
+<span id="L333" class="ln">   333&nbsp;&nbsp;</span><span class="comment">// predefinedEscapers contains template predefined escapers that are equivalent</span>
+<span id="L334" class="ln">   334&nbsp;&nbsp;</span><span class="comment">// to some contextual escapers. Keep in sync with equivEscapers.</span>
+<span id="L335" class="ln">   335&nbsp;&nbsp;</span>var predefinedEscapers = map[string]bool{
+<span id="L336" class="ln">   336&nbsp;&nbsp;</span>	&#34;html&#34;:     true,
+<span id="L337" class="ln">   337&nbsp;&nbsp;</span>	&#34;urlquery&#34;: true,
+<span id="L338" class="ln">   338&nbsp;&nbsp;</span>}
+<span id="L339" class="ln">   339&nbsp;&nbsp;</span>
+<span id="L340" class="ln">   340&nbsp;&nbsp;</span><span class="comment">// equivEscapers matches contextual escapers to equivalent predefined</span>
+<span id="L341" class="ln">   341&nbsp;&nbsp;</span><span class="comment">// template escapers.</span>
+<span id="L342" class="ln">   342&nbsp;&nbsp;</span>var equivEscapers = map[string]string{
+<span id="L343" class="ln">   343&nbsp;&nbsp;</span>	<span class="comment">// The following pairs of HTML escapers provide equivalent security</span>
+<span id="L344" class="ln">   344&nbsp;&nbsp;</span>	<span class="comment">// guarantees, since they all escape &#39;\000&#39;, &#39;\&#39;&#39;, &#39;&#34;&#39;, &#39;&amp;&#39;, &#39;&lt;&#39;, and &#39;&gt;&#39;.</span>
+<span id="L345" class="ln">   345&nbsp;&nbsp;</span>	&#34;_html_template_attrescaper&#34;:   &#34;html&#34;,
+<span id="L346" class="ln">   346&nbsp;&nbsp;</span>	&#34;_html_template_htmlescaper&#34;:   &#34;html&#34;,
+<span id="L347" class="ln">   347&nbsp;&nbsp;</span>	&#34;_html_template_rcdataescaper&#34;: &#34;html&#34;,
+<span id="L348" class="ln">   348&nbsp;&nbsp;</span>	<span class="comment">// These two URL escapers produce URLs safe for embedding in a URL query by</span>
+<span id="L349" class="ln">   349&nbsp;&nbsp;</span>	<span class="comment">// percent-encoding all the reserved characters specified in RFC 3986 Section</span>
+<span id="L350" class="ln">   350&nbsp;&nbsp;</span>	<span class="comment">// 2.2</span>
+<span id="L351" class="ln">   351&nbsp;&nbsp;</span>	&#34;_html_template_urlescaper&#34;: &#34;urlquery&#34;,
+<span id="L352" class="ln">   352&nbsp;&nbsp;</span>	<span class="comment">// These two functions are not actually equivalent; urlquery is stricter as it</span>
+<span id="L353" class="ln">   353&nbsp;&nbsp;</span>	<span class="comment">// escapes reserved characters (e.g. &#39;#&#39;), while _html_template_urlnormalizer</span>
+<span id="L354" class="ln">   354&nbsp;&nbsp;</span>	<span class="comment">// does not. It is therefore only safe to replace _html_template_urlnormalizer</span>
+<span id="L355" class="ln">   355&nbsp;&nbsp;</span>	<span class="comment">// with urlquery (this happens in ensurePipelineContains), but not the otherI&#39;ve</span>
+<span id="L356" class="ln">   356&nbsp;&nbsp;</span>	<span class="comment">// way around. We keep this entry around to preserve the behavior of templates</span>
+<span id="L357" class="ln">   357&nbsp;&nbsp;</span>	<span class="comment">// written before Go 1.9, which might depend on this substitution taking place.</span>
+<span id="L358" class="ln">   358&nbsp;&nbsp;</span>	&#34;_html_template_urlnormalizer&#34;: &#34;urlquery&#34;,
+<span id="L359" class="ln">   359&nbsp;&nbsp;</span>}
+<span id="L360" class="ln">   360&nbsp;&nbsp;</span>
+<span id="L361" class="ln">   361&nbsp;&nbsp;</span><span class="comment">// escFnsEq reports whether the two escaping functions are equivalent.</span>
+<span id="L362" class="ln">   362&nbsp;&nbsp;</span>func escFnsEq(a, b string) bool {
+<span id="L363" class="ln">   363&nbsp;&nbsp;</span>	return normalizeEscFn(a) == normalizeEscFn(b)
+<span id="L364" class="ln">   364&nbsp;&nbsp;</span>}
+<span id="L365" class="ln">   365&nbsp;&nbsp;</span>
+<span id="L366" class="ln">   366&nbsp;&nbsp;</span><span class="comment">// normalizeEscFn(a) is equal to normalizeEscFn(b) for any pair of names of</span>
+<span id="L367" class="ln">   367&nbsp;&nbsp;</span><span class="comment">// escaper functions a and b that are equivalent.</span>
+<span id="L368" class="ln">   368&nbsp;&nbsp;</span>func normalizeEscFn(e string) string {
+<span id="L369" class="ln">   369&nbsp;&nbsp;</span>	if norm := equivEscapers[e]; norm != &#34;&#34; {
+<span id="L370" class="ln">   370&nbsp;&nbsp;</span>		return norm
+<span id="L371" class="ln">   371&nbsp;&nbsp;</span>	}
+<span id="L372" class="ln">   372&nbsp;&nbsp;</span>	return e
+<span id="L373" class="ln">   373&nbsp;&nbsp;</span>}
+<span id="L374" class="ln">   374&nbsp;&nbsp;</span>
+<span id="L375" class="ln">   375&nbsp;&nbsp;</span><span class="comment">// redundantFuncs[a][b] implies that funcMap[b](funcMap[a](x)) == funcMap[a](x)</span>
+<span id="L376" class="ln">   376&nbsp;&nbsp;</span><span class="comment">// for all x.</span>
+<span id="L377" class="ln">   377&nbsp;&nbsp;</span>var redundantFuncs = map[string]map[string]bool{
+<span id="L378" class="ln">   378&nbsp;&nbsp;</span>	&#34;_html_template_commentescaper&#34;: {
+<span id="L379" class="ln">   379&nbsp;&nbsp;</span>		&#34;_html_template_attrescaper&#34;: true,
+<span id="L380" class="ln">   380&nbsp;&nbsp;</span>		&#34;_html_template_htmlescaper&#34;: true,
+<span id="L381" class="ln">   381&nbsp;&nbsp;</span>	},
+<span id="L382" class="ln">   382&nbsp;&nbsp;</span>	&#34;_html_template_cssescaper&#34;: {
+<span id="L383" class="ln">   383&nbsp;&nbsp;</span>		&#34;_html_template_attrescaper&#34;: true,
+<span id="L384" class="ln">   384&nbsp;&nbsp;</span>	},
+<span id="L385" class="ln">   385&nbsp;&nbsp;</span>	&#34;_html_template_jsregexpescaper&#34;: {
+<span id="L386" class="ln">   386&nbsp;&nbsp;</span>		&#34;_html_template_attrescaper&#34;: true,
+<span id="L387" class="ln">   387&nbsp;&nbsp;</span>	},
+<span id="L388" class="ln">   388&nbsp;&nbsp;</span>	&#34;_html_template_jsstrescaper&#34;: {
+<span id="L389" class="ln">   389&nbsp;&nbsp;</span>		&#34;_html_template_attrescaper&#34;: true,
+<span id="L390" class="ln">   390&nbsp;&nbsp;</span>	},
+<span id="L391" class="ln">   391&nbsp;&nbsp;</span>	&#34;_html_template_jstmpllitescaper&#34;: {
+<span id="L392" class="ln">   392&nbsp;&nbsp;</span>		&#34;_html_template_attrescaper&#34;: true,
+<span id="L393" class="ln">   393&nbsp;&nbsp;</span>	},
+<span id="L394" class="ln">   394&nbsp;&nbsp;</span>	&#34;_html_template_urlescaper&#34;: {
+<span id="L395" class="ln">   395&nbsp;&nbsp;</span>		&#34;_html_template_urlnormalizer&#34;: true,
+<span id="L396" class="ln">   396&nbsp;&nbsp;</span>	},
+<span id="L397" class="ln">   397&nbsp;&nbsp;</span>}
+<span id="L398" class="ln">   398&nbsp;&nbsp;</span>
+<span id="L399" class="ln">   399&nbsp;&nbsp;</span><span class="comment">// appendCmd appends the given command to the end of the command pipeline</span>
+<span id="L400" class="ln">   400&nbsp;&nbsp;</span><span class="comment">// unless it is redundant with the last command.</span>
+<span id="L401" class="ln">   401&nbsp;&nbsp;</span>func appendCmd(cmds []*parse.CommandNode, cmd *parse.CommandNode) []*parse.CommandNode {
+<span id="L402" class="ln">   402&nbsp;&nbsp;</span>	if n := len(cmds); n != 0 {
+<span id="L403" class="ln">   403&nbsp;&nbsp;</span>		last, okLast := cmds[n-1].Args[0].(*parse.IdentifierNode)
+<span id="L404" class="ln">   404&nbsp;&nbsp;</span>		next, okNext := cmd.Args[0].(*parse.IdentifierNode)
+<span id="L405" class="ln">   405&nbsp;&nbsp;</span>		if okLast &amp;&amp; okNext &amp;&amp; redundantFuncs[last.Ident][next.Ident] {
+<span id="L406" class="ln">   406&nbsp;&nbsp;</span>			return cmds
+<span id="L407" class="ln">   407&nbsp;&nbsp;</span>		}
+<span id="L408" class="ln">   408&nbsp;&nbsp;</span>	}
+<span id="L409" class="ln">   409&nbsp;&nbsp;</span>	return append(cmds, cmd)
+<span id="L410" class="ln">   410&nbsp;&nbsp;</span>}
+<span id="L411" class="ln">   411&nbsp;&nbsp;</span>
+<span id="L412" class="ln">   412&nbsp;&nbsp;</span><span class="comment">// newIdentCmd produces a command containing a single identifier node.</span>
+<span id="L413" class="ln">   413&nbsp;&nbsp;</span>func newIdentCmd(identifier string, pos parse.Pos) *parse.CommandNode {
+<span id="L414" class="ln">   414&nbsp;&nbsp;</span>	return &amp;parse.CommandNode{
+<span id="L415" class="ln">   415&nbsp;&nbsp;</span>		NodeType: parse.NodeCommand,
+<span id="L416" class="ln">   416&nbsp;&nbsp;</span>		Args:     []parse.Node{parse.NewIdentifier(identifier).SetTree(nil).SetPos(pos)}, <span class="comment">// TODO: SetTree.</span>
+<span id="L417" class="ln">   417&nbsp;&nbsp;</span>	}
+<span id="L418" class="ln">   418&nbsp;&nbsp;</span>}
+<span id="L419" class="ln">   419&nbsp;&nbsp;</span>
+<span id="L420" class="ln">   420&nbsp;&nbsp;</span><span class="comment">// nudge returns the context that would result from following empty string</span>
+<span id="L421" class="ln">   421&nbsp;&nbsp;</span><span class="comment">// transitions from the input context.</span>
+<span id="L422" class="ln">   422&nbsp;&nbsp;</span><span class="comment">// For example, parsing:</span>
+<span id="L423" class="ln">   423&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L424" class="ln">   424&nbsp;&nbsp;</span><span class="comment">//	`&lt;a href=`</span>
+<span id="L425" class="ln">   425&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L426" class="ln">   426&nbsp;&nbsp;</span><span class="comment">// will end in context{stateBeforeValue, attrURL}, but parsing one extra rune:</span>
+<span id="L427" class="ln">   427&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L428" class="ln">   428&nbsp;&nbsp;</span><span class="comment">//	`&lt;a href=x`</span>
+<span id="L429" class="ln">   429&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L430" class="ln">   430&nbsp;&nbsp;</span><span class="comment">// will end in context{stateURL, delimSpaceOrTagEnd, ...}.</span>
+<span id="L431" class="ln">   431&nbsp;&nbsp;</span><span class="comment">// There are two transitions that happen when the &#39;x&#39; is seen:</span>
+<span id="L432" class="ln">   432&nbsp;&nbsp;</span><span class="comment">// (1) Transition from a before-value state to a start-of-value state without</span>
+<span id="L433" class="ln">   433&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L434" class="ln">   434&nbsp;&nbsp;</span><span class="comment">//	consuming any character.</span>
+<span id="L435" class="ln">   435&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L436" class="ln">   436&nbsp;&nbsp;</span><span class="comment">// (2) Consume &#39;x&#39; and transition past the first value character.</span>
+<span id="L437" class="ln">   437&nbsp;&nbsp;</span><span class="comment">// In this case, nudging produces the context after (1) happens.</span>
+<span id="L438" class="ln">   438&nbsp;&nbsp;</span>func nudge(c context) context {
+<span id="L439" class="ln">   439&nbsp;&nbsp;</span>	switch c.state {
+<span id="L440" class="ln">   440&nbsp;&nbsp;</span>	case stateTag:
+<span id="L441" class="ln">   441&nbsp;&nbsp;</span>		<span class="comment">// In `&lt;foo {{.}}`, the action should emit an attribute.</span>
+<span id="L442" class="ln">   442&nbsp;&nbsp;</span>		c.state = stateAttrName
+<span id="L443" class="ln">   443&nbsp;&nbsp;</span>	case stateBeforeValue:
+<span id="L444" class="ln">   444&nbsp;&nbsp;</span>		<span class="comment">// In `&lt;foo bar={{.}}`, the action is an undelimited value.</span>
+<span id="L445" class="ln">   445&nbsp;&nbsp;</span>		c.state, c.delim, c.attr = attrStartStates[c.attr], delimSpaceOrTagEnd, attrNone
+<span id="L446" class="ln">   446&nbsp;&nbsp;</span>	case stateAfterName:
+<span id="L447" class="ln">   447&nbsp;&nbsp;</span>		<span class="comment">// In `&lt;foo bar {{.}}`, the action is an attribute name.</span>
+<span id="L448" class="ln">   448&nbsp;&nbsp;</span>		c.state, c.attr = stateAttrName, attrNone
+<span id="L449" class="ln">   449&nbsp;&nbsp;</span>	}
+<span id="L450" class="ln">   450&nbsp;&nbsp;</span>	return c
+<span id="L451" class="ln">   451&nbsp;&nbsp;</span>}
+<span id="L452" class="ln">   452&nbsp;&nbsp;</span>
+<span id="L453" class="ln">   453&nbsp;&nbsp;</span><span class="comment">// join joins the two contexts of a branch template node. The result is an</span>
+<span id="L454" class="ln">   454&nbsp;&nbsp;</span><span class="comment">// error context if either of the input contexts are error contexts, or if the</span>
+<span id="L455" class="ln">   455&nbsp;&nbsp;</span><span class="comment">// input contexts differ.</span>
+<span id="L456" class="ln">   456&nbsp;&nbsp;</span>func join(a, b context, node parse.Node, nodeName string) context {
+<span id="L457" class="ln">   457&nbsp;&nbsp;</span>	if a.state == stateError {
+<span id="L458" class="ln">   458&nbsp;&nbsp;</span>		return a
+<span id="L459" class="ln">   459&nbsp;&nbsp;</span>	}
+<span id="L460" class="ln">   460&nbsp;&nbsp;</span>	if b.state == stateError {
+<span id="L461" class="ln">   461&nbsp;&nbsp;</span>		return b
+<span id="L462" class="ln">   462&nbsp;&nbsp;</span>	}
+<span id="L463" class="ln">   463&nbsp;&nbsp;</span>	if a.state == stateDead {
+<span id="L464" class="ln">   464&nbsp;&nbsp;</span>		return b
+<span id="L465" class="ln">   465&nbsp;&nbsp;</span>	}
+<span id="L466" class="ln">   466&nbsp;&nbsp;</span>	if b.state == stateDead {
+<span id="L467" class="ln">   467&nbsp;&nbsp;</span>		return a
+<span id="L468" class="ln">   468&nbsp;&nbsp;</span>	}
+<span id="L469" class="ln">   469&nbsp;&nbsp;</span>	if a.eq(b) {
+<span id="L470" class="ln">   470&nbsp;&nbsp;</span>		return a
+<span id="L471" class="ln">   471&nbsp;&nbsp;</span>	}
+<span id="L472" class="ln">   472&nbsp;&nbsp;</span>
+<span id="L473" class="ln">   473&nbsp;&nbsp;</span>	c := a
+<span id="L474" class="ln">   474&nbsp;&nbsp;</span>	c.urlPart = b.urlPart
+<span id="L475" class="ln">   475&nbsp;&nbsp;</span>	if c.eq(b) {
+<span id="L476" class="ln">   476&nbsp;&nbsp;</span>		<span class="comment">// The contexts differ only by urlPart.</span>
+<span id="L477" class="ln">   477&nbsp;&nbsp;</span>		c.urlPart = urlPartUnknown
+<span id="L478" class="ln">   478&nbsp;&nbsp;</span>		return c
+<span id="L479" class="ln">   479&nbsp;&nbsp;</span>	}
+<span id="L480" class="ln">   480&nbsp;&nbsp;</span>
+<span id="L481" class="ln">   481&nbsp;&nbsp;</span>	c = a
+<span id="L482" class="ln">   482&nbsp;&nbsp;</span>	c.jsCtx = b.jsCtx
+<span id="L483" class="ln">   483&nbsp;&nbsp;</span>	if c.eq(b) {
+<span id="L484" class="ln">   484&nbsp;&nbsp;</span>		<span class="comment">// The contexts differ only by jsCtx.</span>
+<span id="L485" class="ln">   485&nbsp;&nbsp;</span>		c.jsCtx = jsCtxUnknown
+<span id="L486" class="ln">   486&nbsp;&nbsp;</span>		return c
+<span id="L487" class="ln">   487&nbsp;&nbsp;</span>	}
+<span id="L488" class="ln">   488&nbsp;&nbsp;</span>
+<span id="L489" class="ln">   489&nbsp;&nbsp;</span>	<span class="comment">// Allow a nudged context to join with an unnudged one.</span>
+<span id="L490" class="ln">   490&nbsp;&nbsp;</span>	<span class="comment">// This means that</span>
+<span id="L491" class="ln">   491&nbsp;&nbsp;</span>	<span class="comment">//   &lt;p title={{if .C}}{{.}}{{end}}</span>
+<span id="L492" class="ln">   492&nbsp;&nbsp;</span>	<span class="comment">// ends in an unquoted value state even though the else branch</span>
+<span id="L493" class="ln">   493&nbsp;&nbsp;</span>	<span class="comment">// ends in stateBeforeValue.</span>
+<span id="L494" class="ln">   494&nbsp;&nbsp;</span>	if c, d := nudge(a), nudge(b); !(c.eq(a) &amp;&amp; d.eq(b)) {
+<span id="L495" class="ln">   495&nbsp;&nbsp;</span>		if e := join(c, d, node, nodeName); e.state != stateError {
+<span id="L496" class="ln">   496&nbsp;&nbsp;</span>			return e
+<span id="L497" class="ln">   497&nbsp;&nbsp;</span>		}
+<span id="L498" class="ln">   498&nbsp;&nbsp;</span>	}
+<span id="L499" class="ln">   499&nbsp;&nbsp;</span>
+<span id="L500" class="ln">   500&nbsp;&nbsp;</span>	return context{
+<span id="L501" class="ln">   501&nbsp;&nbsp;</span>		state: stateError,
+<span id="L502" class="ln">   502&nbsp;&nbsp;</span>		err:   errorf(ErrBranchEnd, node, 0, &#34;{{%s}} branches end in different contexts: %v, %v&#34;, nodeName, a, b),
+<span id="L503" class="ln">   503&nbsp;&nbsp;</span>	}
+<span id="L504" class="ln">   504&nbsp;&nbsp;</span>}
+<span id="L505" class="ln">   505&nbsp;&nbsp;</span>
+<span id="L506" class="ln">   506&nbsp;&nbsp;</span><span class="comment">// escapeBranch escapes a branch template node: &#34;if&#34;, &#34;range&#34; and &#34;with&#34;.</span>
+<span id="L507" class="ln">   507&nbsp;&nbsp;</span>func (e *escaper) escapeBranch(c context, n *parse.BranchNode, nodeName string) context {
+<span id="L508" class="ln">   508&nbsp;&nbsp;</span>	if nodeName == &#34;range&#34; {
+<span id="L509" class="ln">   509&nbsp;&nbsp;</span>		e.rangeContext = &amp;rangeContext{outer: e.rangeContext}
+<span id="L510" class="ln">   510&nbsp;&nbsp;</span>	}
+<span id="L511" class="ln">   511&nbsp;&nbsp;</span>	c0 := e.escapeList(c, n.List)
+<span id="L512" class="ln">   512&nbsp;&nbsp;</span>	if nodeName == &#34;range&#34; {
+<span id="L513" class="ln">   513&nbsp;&nbsp;</span>		if c0.state != stateError {
+<span id="L514" class="ln">   514&nbsp;&nbsp;</span>			c0 = joinRange(c0, e.rangeContext)
+<span id="L515" class="ln">   515&nbsp;&nbsp;</span>		}
+<span id="L516" class="ln">   516&nbsp;&nbsp;</span>		e.rangeContext = e.rangeContext.outer
+<span id="L517" class="ln">   517&nbsp;&nbsp;</span>		if c0.state == stateError {
+<span id="L518" class="ln">   518&nbsp;&nbsp;</span>			return c0
+<span id="L519" class="ln">   519&nbsp;&nbsp;</span>		}
+<span id="L520" class="ln">   520&nbsp;&nbsp;</span>
+<span id="L521" class="ln">   521&nbsp;&nbsp;</span>		<span class="comment">// The &#34;true&#34; branch of a &#34;range&#34; node can execute multiple times.</span>
+<span id="L522" class="ln">   522&nbsp;&nbsp;</span>		<span class="comment">// We check that executing n.List once results in the same context</span>
+<span id="L523" class="ln">   523&nbsp;&nbsp;</span>		<span class="comment">// as executing n.List twice.</span>
+<span id="L524" class="ln">   524&nbsp;&nbsp;</span>		e.rangeContext = &amp;rangeContext{outer: e.rangeContext}
+<span id="L525" class="ln">   525&nbsp;&nbsp;</span>		c1, _ := e.escapeListConditionally(c0, n.List, nil)
+<span id="L526" class="ln">   526&nbsp;&nbsp;</span>		c0 = join(c0, c1, n, nodeName)
+<span id="L527" class="ln">   527&nbsp;&nbsp;</span>		if c0.state == stateError {
+<span id="L528" class="ln">   528&nbsp;&nbsp;</span>			e.rangeContext = e.rangeContext.outer
+<span id="L529" class="ln">   529&nbsp;&nbsp;</span>			<span class="comment">// Make clear that this is a problem on loop re-entry</span>
+<span id="L530" class="ln">   530&nbsp;&nbsp;</span>			<span class="comment">// since developers tend to overlook that branch when</span>
+<span id="L531" class="ln">   531&nbsp;&nbsp;</span>			<span class="comment">// debugging templates.</span>
+<span id="L532" class="ln">   532&nbsp;&nbsp;</span>			c0.err.Line = n.Line
+<span id="L533" class="ln">   533&nbsp;&nbsp;</span>			c0.err.Description = &#34;on range loop re-entry: &#34; + c0.err.Description
+<span id="L534" class="ln">   534&nbsp;&nbsp;</span>			return c0
+<span id="L535" class="ln">   535&nbsp;&nbsp;</span>		}
+<span id="L536" class="ln">   536&nbsp;&nbsp;</span>		c0 = joinRange(c0, e.rangeContext)
+<span id="L537" class="ln">   537&nbsp;&nbsp;</span>		e.rangeContext = e.rangeContext.outer
+<span id="L538" class="ln">   538&nbsp;&nbsp;</span>		if c0.state == stateError {
+<span id="L539" class="ln">   539&nbsp;&nbsp;</span>			return c0
+<span id="L540" class="ln">   540&nbsp;&nbsp;</span>		}
+<span id="L541" class="ln">   541&nbsp;&nbsp;</span>	}
+<span id="L542" class="ln">   542&nbsp;&nbsp;</span>	c1 := e.escapeList(c, n.ElseList)
+<span id="L543" class="ln">   543&nbsp;&nbsp;</span>	return join(c0, c1, n, nodeName)
+<span id="L544" class="ln">   544&nbsp;&nbsp;</span>}
+<span id="L545" class="ln">   545&nbsp;&nbsp;</span>
+<span id="L546" class="ln">   546&nbsp;&nbsp;</span>func joinRange(c0 context, rc *rangeContext) context {
+<span id="L547" class="ln">   547&nbsp;&nbsp;</span>	<span class="comment">// Merge contexts at break and continue statements into overall body context.</span>
+<span id="L548" class="ln">   548&nbsp;&nbsp;</span>	<span class="comment">// In theory we could treat breaks differently from continues, but for now it is</span>
+<span id="L549" class="ln">   549&nbsp;&nbsp;</span>	<span class="comment">// enough to treat them both as going back to the start of the loop (which may then stop).</span>
+<span id="L550" class="ln">   550&nbsp;&nbsp;</span>	for _, c := range rc.breaks {
+<span id="L551" class="ln">   551&nbsp;&nbsp;</span>		c0 = join(c0, c, c.n, &#34;range&#34;)
+<span id="L552" class="ln">   552&nbsp;&nbsp;</span>		if c0.state == stateError {
+<span id="L553" class="ln">   553&nbsp;&nbsp;</span>			c0.err.Line = c.n.(*parse.BreakNode).Line
+<span id="L554" class="ln">   554&nbsp;&nbsp;</span>			c0.err.Description = &#34;at range loop break: &#34; + c0.err.Description
+<span id="L555" class="ln">   555&nbsp;&nbsp;</span>			return c0
+<span id="L556" class="ln">   556&nbsp;&nbsp;</span>		}
+<span id="L557" class="ln">   557&nbsp;&nbsp;</span>	}
+<span id="L558" class="ln">   558&nbsp;&nbsp;</span>	for _, c := range rc.continues {
+<span id="L559" class="ln">   559&nbsp;&nbsp;</span>		c0 = join(c0, c, c.n, &#34;range&#34;)
+<span id="L560" class="ln">   560&nbsp;&nbsp;</span>		if c0.state == stateError {
+<span id="L561" class="ln">   561&nbsp;&nbsp;</span>			c0.err.Line = c.n.(*parse.ContinueNode).Line
+<span id="L562" class="ln">   562&nbsp;&nbsp;</span>			c0.err.Description = &#34;at range loop continue: &#34; + c0.err.Description
+<span id="L563" class="ln">   563&nbsp;&nbsp;</span>			return c0
+<span id="L564" class="ln">   564&nbsp;&nbsp;</span>		}
+<span id="L565" class="ln">   565&nbsp;&nbsp;</span>	}
+<span id="L566" class="ln">   566&nbsp;&nbsp;</span>	return c0
+<span id="L567" class="ln">   567&nbsp;&nbsp;</span>}
+<span id="L568" class="ln">   568&nbsp;&nbsp;</span>
+<span id="L569" class="ln">   569&nbsp;&nbsp;</span><span class="comment">// escapeList escapes a list template node.</span>
+<span id="L570" class="ln">   570&nbsp;&nbsp;</span>func (e *escaper) escapeList(c context, n *parse.ListNode) context {
+<span id="L571" class="ln">   571&nbsp;&nbsp;</span>	if n == nil {
+<span id="L572" class="ln">   572&nbsp;&nbsp;</span>		return c
+<span id="L573" class="ln">   573&nbsp;&nbsp;</span>	}
+<span id="L574" class="ln">   574&nbsp;&nbsp;</span>	for _, m := range n.Nodes {
+<span id="L575" class="ln">   575&nbsp;&nbsp;</span>		c = e.escape(c, m)
+<span id="L576" class="ln">   576&nbsp;&nbsp;</span>		if c.state == stateDead {
+<span id="L577" class="ln">   577&nbsp;&nbsp;</span>			break
+<span id="L578" class="ln">   578&nbsp;&nbsp;</span>		}
+<span id="L579" class="ln">   579&nbsp;&nbsp;</span>	}
+<span id="L580" class="ln">   580&nbsp;&nbsp;</span>	return c
+<span id="L581" class="ln">   581&nbsp;&nbsp;</span>}
+<span id="L582" class="ln">   582&nbsp;&nbsp;</span>
+<span id="L583" class="ln">   583&nbsp;&nbsp;</span><span class="comment">// escapeListConditionally escapes a list node but only preserves edits and</span>
+<span id="L584" class="ln">   584&nbsp;&nbsp;</span><span class="comment">// inferences in e if the inferences and output context satisfy filter.</span>
+<span id="L585" class="ln">   585&nbsp;&nbsp;</span><span class="comment">// It returns the best guess at an output context, and the result of the filter</span>
+<span id="L586" class="ln">   586&nbsp;&nbsp;</span><span class="comment">// which is the same as whether e was updated.</span>
+<span id="L587" class="ln">   587&nbsp;&nbsp;</span>func (e *escaper) escapeListConditionally(c context, n *parse.ListNode, filter func(*escaper, context) bool) (context, bool) {
+<span id="L588" class="ln">   588&nbsp;&nbsp;</span>	e1 := makeEscaper(e.ns)
+<span id="L589" class="ln">   589&nbsp;&nbsp;</span>	e1.rangeContext = e.rangeContext
+<span id="L590" class="ln">   590&nbsp;&nbsp;</span>	<span class="comment">// Make type inferences available to f.</span>
+<span id="L591" class="ln">   591&nbsp;&nbsp;</span>	for k, v := range e.output {
+<span id="L592" class="ln">   592&nbsp;&nbsp;</span>		e1.output[k] = v
+<span id="L593" class="ln">   593&nbsp;&nbsp;</span>	}
+<span id="L594" class="ln">   594&nbsp;&nbsp;</span>	c = e1.escapeList(c, n)
+<span id="L595" class="ln">   595&nbsp;&nbsp;</span>	ok := filter != nil &amp;&amp; filter(&amp;e1, c)
+<span id="L596" class="ln">   596&nbsp;&nbsp;</span>	if ok {
+<span id="L597" class="ln">   597&nbsp;&nbsp;</span>		<span class="comment">// Copy inferences and edits from e1 back into e.</span>
+<span id="L598" class="ln">   598&nbsp;&nbsp;</span>		for k, v := range e1.output {
+<span id="L599" class="ln">   599&nbsp;&nbsp;</span>			e.output[k] = v
+<span id="L600" class="ln">   600&nbsp;&nbsp;</span>		}
+<span id="L601" class="ln">   601&nbsp;&nbsp;</span>		for k, v := range e1.derived {
+<span id="L602" class="ln">   602&nbsp;&nbsp;</span>			e.derived[k] = v
+<span id="L603" class="ln">   603&nbsp;&nbsp;</span>		}
+<span id="L604" class="ln">   604&nbsp;&nbsp;</span>		for k, v := range e1.called {
+<span id="L605" class="ln">   605&nbsp;&nbsp;</span>			e.called[k] = v
+<span id="L606" class="ln">   606&nbsp;&nbsp;</span>		}
+<span id="L607" class="ln">   607&nbsp;&nbsp;</span>		for k, v := range e1.actionNodeEdits {
+<span id="L608" class="ln">   608&nbsp;&nbsp;</span>			e.editActionNode(k, v)
+<span id="L609" class="ln">   609&nbsp;&nbsp;</span>		}
+<span id="L610" class="ln">   610&nbsp;&nbsp;</span>		for k, v := range e1.templateNodeEdits {
+<span id="L611" class="ln">   611&nbsp;&nbsp;</span>			e.editTemplateNode(k, v)
+<span id="L612" class="ln">   612&nbsp;&nbsp;</span>		}
+<span id="L613" class="ln">   613&nbsp;&nbsp;</span>		for k, v := range e1.textNodeEdits {
+<span id="L614" class="ln">   614&nbsp;&nbsp;</span>			e.editTextNode(k, v)
+<span id="L615" class="ln">   615&nbsp;&nbsp;</span>		}
+<span id="L616" class="ln">   616&nbsp;&nbsp;</span>	}
+<span id="L617" class="ln">   617&nbsp;&nbsp;</span>	return c, ok
+<span id="L618" class="ln">   618&nbsp;&nbsp;</span>}
+<span id="L619" class="ln">   619&nbsp;&nbsp;</span>
+<span id="L620" class="ln">   620&nbsp;&nbsp;</span><span class="comment">// escapeTemplate escapes a {{template}} call node.</span>
+<span id="L621" class="ln">   621&nbsp;&nbsp;</span>func (e *escaper) escapeTemplate(c context, n *parse.TemplateNode) context {
+<span id="L622" class="ln">   622&nbsp;&nbsp;</span>	c, name := e.escapeTree(c, n, n.Name, n.Line)
+<span id="L623" class="ln">   623&nbsp;&nbsp;</span>	if name != n.Name {
+<span id="L624" class="ln">   624&nbsp;&nbsp;</span>		e.editTemplateNode(n, name)
+<span id="L625" class="ln">   625&nbsp;&nbsp;</span>	}
+<span id="L626" class="ln">   626&nbsp;&nbsp;</span>	return c
+<span id="L627" class="ln">   627&nbsp;&nbsp;</span>}
+<span id="L628" class="ln">   628&nbsp;&nbsp;</span>
+<span id="L629" class="ln">   629&nbsp;&nbsp;</span><span class="comment">// escapeTree escapes the named template starting in the given context as</span>
+<span id="L630" class="ln">   630&nbsp;&nbsp;</span><span class="comment">// necessary and returns its output context.</span>
+<span id="L631" class="ln">   631&nbsp;&nbsp;</span>func (e *escaper) escapeTree(c context, node parse.Node, name string, line int) (context, string) {
+<span id="L632" class="ln">   632&nbsp;&nbsp;</span>	<span class="comment">// Mangle the template name with the input context to produce a reliable</span>
+<span id="L633" class="ln">   633&nbsp;&nbsp;</span>	<span class="comment">// identifier.</span>
+<span id="L634" class="ln">   634&nbsp;&nbsp;</span>	dname := c.mangle(name)
+<span id="L635" class="ln">   635&nbsp;&nbsp;</span>	e.called[dname] = true
+<span id="L636" class="ln">   636&nbsp;&nbsp;</span>	if out, ok := e.output[dname]; ok {
+<span id="L637" class="ln">   637&nbsp;&nbsp;</span>		<span class="comment">// Already escaped.</span>
+<span id="L638" class="ln">   638&nbsp;&nbsp;</span>		return out, dname
+<span id="L639" class="ln">   639&nbsp;&nbsp;</span>	}
+<span id="L640" class="ln">   640&nbsp;&nbsp;</span>	t := e.template(name)
+<span id="L641" class="ln">   641&nbsp;&nbsp;</span>	if t == nil {
+<span id="L642" class="ln">   642&nbsp;&nbsp;</span>		<span class="comment">// Two cases: The template exists but is empty, or has never been mentioned at</span>
+<span id="L643" class="ln">   643&nbsp;&nbsp;</span>		<span class="comment">// all. Distinguish the cases in the error messages.</span>
+<span id="L644" class="ln">   644&nbsp;&nbsp;</span>		if e.ns.set[name] != nil {
+<span id="L645" class="ln">   645&nbsp;&nbsp;</span>			return context{
+<span id="L646" class="ln">   646&nbsp;&nbsp;</span>				state: stateError,
+<span id="L647" class="ln">   647&nbsp;&nbsp;</span>				err:   errorf(ErrNoSuchTemplate, node, line, &#34;%q is an incomplete or empty template&#34;, name),
+<span id="L648" class="ln">   648&nbsp;&nbsp;</span>			}, dname
+<span id="L649" class="ln">   649&nbsp;&nbsp;</span>		}
+<span id="L650" class="ln">   650&nbsp;&nbsp;</span>		return context{
+<span id="L651" class="ln">   651&nbsp;&nbsp;</span>			state: stateError,
+<span id="L652" class="ln">   652&nbsp;&nbsp;</span>			err:   errorf(ErrNoSuchTemplate, node, line, &#34;no such template %q&#34;, name),
+<span id="L653" class="ln">   653&nbsp;&nbsp;</span>		}, dname
+<span id="L654" class="ln">   654&nbsp;&nbsp;</span>	}
+<span id="L655" class="ln">   655&nbsp;&nbsp;</span>	if dname != name {
+<span id="L656" class="ln">   656&nbsp;&nbsp;</span>		<span class="comment">// Use any template derived during an earlier call to escapeTemplate</span>
+<span id="L657" class="ln">   657&nbsp;&nbsp;</span>		<span class="comment">// with different top level templates, or clone if necessary.</span>
+<span id="L658" class="ln">   658&nbsp;&nbsp;</span>		dt := e.template(dname)
+<span id="L659" class="ln">   659&nbsp;&nbsp;</span>		if dt == nil {
+<span id="L660" class="ln">   660&nbsp;&nbsp;</span>			dt = template.New(dname)
+<span id="L661" class="ln">   661&nbsp;&nbsp;</span>			dt.Tree = &amp;parse.Tree{Name: dname, Root: t.Root.CopyList()}
+<span id="L662" class="ln">   662&nbsp;&nbsp;</span>			e.derived[dname] = dt
+<span id="L663" class="ln">   663&nbsp;&nbsp;</span>		}
+<span id="L664" class="ln">   664&nbsp;&nbsp;</span>		t = dt
+<span id="L665" class="ln">   665&nbsp;&nbsp;</span>	}
+<span id="L666" class="ln">   666&nbsp;&nbsp;</span>	return e.computeOutCtx(c, t), dname
+<span id="L667" class="ln">   667&nbsp;&nbsp;</span>}
+<span id="L668" class="ln">   668&nbsp;&nbsp;</span>
+<span id="L669" class="ln">   669&nbsp;&nbsp;</span><span class="comment">// computeOutCtx takes a template and its start context and computes the output</span>
+<span id="L670" class="ln">   670&nbsp;&nbsp;</span><span class="comment">// context while storing any inferences in e.</span>
+<span id="L671" class="ln">   671&nbsp;&nbsp;</span>func (e *escaper) computeOutCtx(c context, t *template.Template) context {
+<span id="L672" class="ln">   672&nbsp;&nbsp;</span>	<span class="comment">// Propagate context over the body.</span>
+<span id="L673" class="ln">   673&nbsp;&nbsp;</span>	c1, ok := e.escapeTemplateBody(c, t)
+<span id="L674" class="ln">   674&nbsp;&nbsp;</span>	if !ok {
+<span id="L675" class="ln">   675&nbsp;&nbsp;</span>		<span class="comment">// Look for a fixed point by assuming c1 as the output context.</span>
+<span id="L676" class="ln">   676&nbsp;&nbsp;</span>		if c2, ok2 := e.escapeTemplateBody(c1, t); ok2 {
+<span id="L677" class="ln">   677&nbsp;&nbsp;</span>			c1, ok = c2, true
+<span id="L678" class="ln">   678&nbsp;&nbsp;</span>		}
+<span id="L679" class="ln">   679&nbsp;&nbsp;</span>		<span class="comment">// Use c1 as the error context if neither assumption worked.</span>
+<span id="L680" class="ln">   680&nbsp;&nbsp;</span>	}
+<span id="L681" class="ln">   681&nbsp;&nbsp;</span>	if !ok &amp;&amp; c1.state != stateError {
+<span id="L682" class="ln">   682&nbsp;&nbsp;</span>		return context{
+<span id="L683" class="ln">   683&nbsp;&nbsp;</span>			state: stateError,
+<span id="L684" class="ln">   684&nbsp;&nbsp;</span>			err:   errorf(ErrOutputContext, t.Tree.Root, 0, &#34;cannot compute output context for template %s&#34;, t.Name()),
+<span id="L685" class="ln">   685&nbsp;&nbsp;</span>		}
+<span id="L686" class="ln">   686&nbsp;&nbsp;</span>	}
+<span id="L687" class="ln">   687&nbsp;&nbsp;</span>	return c1
+<span id="L688" class="ln">   688&nbsp;&nbsp;</span>}
+<span id="L689" class="ln">   689&nbsp;&nbsp;</span>
+<span id="L690" class="ln">   690&nbsp;&nbsp;</span><span class="comment">// escapeTemplateBody escapes the given template assuming the given output</span>
+<span id="L691" class="ln">   691&nbsp;&nbsp;</span><span class="comment">// context, and returns the best guess at the output context and whether the</span>
+<span id="L692" class="ln">   692&nbsp;&nbsp;</span><span class="comment">// assumption was correct.</span>
+<span id="L693" class="ln">   693&nbsp;&nbsp;</span>func (e *escaper) escapeTemplateBody(c context, t *template.Template) (context, bool) {
+<span id="L694" class="ln">   694&nbsp;&nbsp;</span>	filter := func(e1 *escaper, c1 context) bool {
+<span id="L695" class="ln">   695&nbsp;&nbsp;</span>		if c1.state == stateError {
+<span id="L696" class="ln">   696&nbsp;&nbsp;</span>			<span class="comment">// Do not update the input escaper, e.</span>
+<span id="L697" class="ln">   697&nbsp;&nbsp;</span>			return false
+<span id="L698" class="ln">   698&nbsp;&nbsp;</span>		}
+<span id="L699" class="ln">   699&nbsp;&nbsp;</span>		if !e1.called[t.Name()] {
+<span id="L700" class="ln">   700&nbsp;&nbsp;</span>			<span class="comment">// If t is not recursively called, then c1 is an</span>
+<span id="L701" class="ln">   701&nbsp;&nbsp;</span>			<span class="comment">// accurate output context.</span>
+<span id="L702" class="ln">   702&nbsp;&nbsp;</span>			return true
+<span id="L703" class="ln">   703&nbsp;&nbsp;</span>		}
+<span id="L704" class="ln">   704&nbsp;&nbsp;</span>		<span class="comment">// c1 is accurate if it matches our assumed output context.</span>
+<span id="L705" class="ln">   705&nbsp;&nbsp;</span>		return c.eq(c1)
+<span id="L706" class="ln">   706&nbsp;&nbsp;</span>	}
+<span id="L707" class="ln">   707&nbsp;&nbsp;</span>	<span class="comment">// We need to assume an output context so that recursive template calls</span>
+<span id="L708" class="ln">   708&nbsp;&nbsp;</span>	<span class="comment">// take the fast path out of escapeTree instead of infinitely recurring.</span>
+<span id="L709" class="ln">   709&nbsp;&nbsp;</span>	<span class="comment">// Naively assuming that the input context is the same as the output</span>
+<span id="L710" class="ln">   710&nbsp;&nbsp;</span>	<span class="comment">// works &gt;90% of the time.</span>
+<span id="L711" class="ln">   711&nbsp;&nbsp;</span>	e.output[t.Name()] = c
+<span id="L712" class="ln">   712&nbsp;&nbsp;</span>	return e.escapeListConditionally(c, t.Tree.Root, filter)
+<span id="L713" class="ln">   713&nbsp;&nbsp;</span>}
+<span id="L714" class="ln">   714&nbsp;&nbsp;</span>
+<span id="L715" class="ln">   715&nbsp;&nbsp;</span><span class="comment">// delimEnds maps each delim to a string of characters that terminate it.</span>
+<span id="L716" class="ln">   716&nbsp;&nbsp;</span>var delimEnds = [...]string{
+<span id="L717" class="ln">   717&nbsp;&nbsp;</span>	delimDoubleQuote: `&#34;`,
+<span id="L718" class="ln">   718&nbsp;&nbsp;</span>	delimSingleQuote: &#34;&#39;&#34;,
+<span id="L719" class="ln">   719&nbsp;&nbsp;</span>	<span class="comment">// Determined empirically by running the below in various browsers.</span>
+<span id="L720" class="ln">   720&nbsp;&nbsp;</span>	<span class="comment">// var div = document.createElement(&#34;DIV&#34;);</span>
+<span id="L721" class="ln">   721&nbsp;&nbsp;</span>	<span class="comment">// for (var i = 0; i &lt; 0x10000; ++i) {</span>
+<span id="L722" class="ln">   722&nbsp;&nbsp;</span>	<span class="comment">//   div.innerHTML = &#34;&lt;span title=x&#34; + String.fromCharCode(i) + &#34;-bar&gt;&#34;;</span>
+<span id="L723" class="ln">   723&nbsp;&nbsp;</span>	<span class="comment">//   if (div.getElementsByTagName(&#34;SPAN&#34;)[0].title.indexOf(&#34;bar&#34;) &lt; 0)</span>
+<span id="L724" class="ln">   724&nbsp;&nbsp;</span>	<span class="comment">//     document.write(&#34;&lt;p&gt;U+&#34; + i.toString(16));</span>
+<span id="L725" class="ln">   725&nbsp;&nbsp;</span>	<span class="comment">// }</span>
+<span id="L726" class="ln">   726&nbsp;&nbsp;</span>	delimSpaceOrTagEnd: &#34; \t\n\f\r&gt;&#34;,
+<span id="L727" class="ln">   727&nbsp;&nbsp;</span>}
+<span id="L728" class="ln">   728&nbsp;&nbsp;</span>
+<span id="L729" class="ln">   729&nbsp;&nbsp;</span>var (
+<span id="L730" class="ln">   730&nbsp;&nbsp;</span>	<span class="comment">// Per WHATWG HTML specification, section 4.12.1.3, there are extremely</span>
+<span id="L731" class="ln">   731&nbsp;&nbsp;</span>	<span class="comment">// complicated rules for how to handle the set of opening tags &lt;!--,</span>
+<span id="L732" class="ln">   732&nbsp;&nbsp;</span>	<span class="comment">// &lt;script, and &lt;/script when they appear in JS literals (i.e. strings,</span>
+<span id="L733" class="ln">   733&nbsp;&nbsp;</span>	<span class="comment">// regexs, and comments). The specification suggests a simple solution,</span>
+<span id="L734" class="ln">   734&nbsp;&nbsp;</span>	<span class="comment">// rather than implementing the arcane ABNF, which involves simply escaping</span>
+<span id="L735" class="ln">   735&nbsp;&nbsp;</span>	<span class="comment">// the opening bracket with \x3C. We use the below regex for this, since it</span>
+<span id="L736" class="ln">   736&nbsp;&nbsp;</span>	<span class="comment">// makes doing the case-insensitive find-replace much simpler.</span>
+<span id="L737" class="ln">   737&nbsp;&nbsp;</span>	specialScriptTagRE          = regexp.MustCompile(&#34;(?i)&lt;(script|/script|!--)&#34;)
+<span id="L738" class="ln">   738&nbsp;&nbsp;</span>	specialScriptTagReplacement = []byte(&#34;\\x3C$1&#34;)
+<span id="L739" class="ln">   739&nbsp;&nbsp;</span>)
+<span id="L740" class="ln">   740&nbsp;&nbsp;</span>
+<span id="L741" class="ln">   741&nbsp;&nbsp;</span>func containsSpecialScriptTag(s []byte) bool {
+<span id="L742" class="ln">   742&nbsp;&nbsp;</span>	return specialScriptTagRE.Match(s)
+<span id="L743" class="ln">   743&nbsp;&nbsp;</span>}
+<span id="L744" class="ln">   744&nbsp;&nbsp;</span>
+<span id="L745" class="ln">   745&nbsp;&nbsp;</span>func escapeSpecialScriptTags(s []byte) []byte {
+<span id="L746" class="ln">   746&nbsp;&nbsp;</span>	return specialScriptTagRE.ReplaceAll(s, specialScriptTagReplacement)
+<span id="L747" class="ln">   747&nbsp;&nbsp;</span>}
+<span id="L748" class="ln">   748&nbsp;&nbsp;</span>
+<span id="L749" class="ln">   749&nbsp;&nbsp;</span>var doctypeBytes = []byte(&#34;&lt;!DOCTYPE&#34;)
+<span id="L750" class="ln">   750&nbsp;&nbsp;</span>
+<span id="L751" class="ln">   751&nbsp;&nbsp;</span><span class="comment">// escapeText escapes a text template node.</span>
+<span id="L752" class="ln">   752&nbsp;&nbsp;</span>func (e *escaper) escapeText(c context, n *parse.TextNode) context {
+<span id="L753" class="ln">   753&nbsp;&nbsp;</span>	s, written, i, b := n.Text, 0, 0, new(bytes.Buffer)
+<span id="L754" class="ln">   754&nbsp;&nbsp;</span>	for i != len(s) {
+<span id="L755" class="ln">   755&nbsp;&nbsp;</span>		c1, nread := contextAfterText(c, s[i:])
+<span id="L756" class="ln">   756&nbsp;&nbsp;</span>		i1 := i + nread
+<span id="L757" class="ln">   757&nbsp;&nbsp;</span>		if c.state == stateText || c.state == stateRCDATA {
+<span id="L758" class="ln">   758&nbsp;&nbsp;</span>			end := i1
+<span id="L759" class="ln">   759&nbsp;&nbsp;</span>			if c1.state != c.state {
+<span id="L760" class="ln">   760&nbsp;&nbsp;</span>				for j := end - 1; j &gt;= i; j-- {
+<span id="L761" class="ln">   761&nbsp;&nbsp;</span>					if s[j] == &#39;&lt;&#39; {
+<span id="L762" class="ln">   762&nbsp;&nbsp;</span>						end = j
+<span id="L763" class="ln">   763&nbsp;&nbsp;</span>						break
+<span id="L764" class="ln">   764&nbsp;&nbsp;</span>					}
+<span id="L765" class="ln">   765&nbsp;&nbsp;</span>				}
+<span id="L766" class="ln">   766&nbsp;&nbsp;</span>			}
+<span id="L767" class="ln">   767&nbsp;&nbsp;</span>			for j := i; j &lt; end; j++ {
+<span id="L768" class="ln">   768&nbsp;&nbsp;</span>				if s[j] == &#39;&lt;&#39; &amp;&amp; !bytes.HasPrefix(bytes.ToUpper(s[j:]), doctypeBytes) {
+<span id="L769" class="ln">   769&nbsp;&nbsp;</span>					b.Write(s[written:j])
+<span id="L770" class="ln">   770&nbsp;&nbsp;</span>					b.WriteString(&#34;&amp;lt;&#34;)
+<span id="L771" class="ln">   771&nbsp;&nbsp;</span>					written = j + 1
+<span id="L772" class="ln">   772&nbsp;&nbsp;</span>				}
+<span id="L773" class="ln">   773&nbsp;&nbsp;</span>			}
+<span id="L774" class="ln">   774&nbsp;&nbsp;</span>		} else if isComment(c.state) &amp;&amp; c.delim == delimNone {
+<span id="L775" class="ln">   775&nbsp;&nbsp;</span>			switch c.state {
+<span id="L776" class="ln">   776&nbsp;&nbsp;</span>			case stateJSBlockCmt:
+<span id="L777" class="ln">   777&nbsp;&nbsp;</span>				<span class="comment">// https://es5.github.io/#x7.4:</span>
+<span id="L778" class="ln">   778&nbsp;&nbsp;</span>				<span class="comment">// &#34;Comments behave like white space and are</span>
+<span id="L779" class="ln">   779&nbsp;&nbsp;</span>				<span class="comment">// discarded except that, if a MultiLineComment</span>
+<span id="L780" class="ln">   780&nbsp;&nbsp;</span>				<span class="comment">// contains a line terminator character, then</span>
+<span id="L781" class="ln">   781&nbsp;&nbsp;</span>				<span class="comment">// the entire comment is considered to be a</span>
+<span id="L782" class="ln">   782&nbsp;&nbsp;</span>				<span class="comment">// LineTerminator for purposes of parsing by</span>
+<span id="L783" class="ln">   783&nbsp;&nbsp;</span>				<span class="comment">// the syntactic grammar.&#34;</span>
+<span id="L784" class="ln">   784&nbsp;&nbsp;</span>				if bytes.ContainsAny(s[written:i1], &#34;\n\r\u2028\u2029&#34;) {
+<span id="L785" class="ln">   785&nbsp;&nbsp;</span>					b.WriteByte(&#39;\n&#39;)
+<span id="L786" class="ln">   786&nbsp;&nbsp;</span>				} else {
+<span id="L787" class="ln">   787&nbsp;&nbsp;</span>					b.WriteByte(&#39; &#39;)
+<span id="L788" class="ln">   788&nbsp;&nbsp;</span>				}
+<span id="L789" class="ln">   789&nbsp;&nbsp;</span>			case stateCSSBlockCmt:
+<span id="L790" class="ln">   790&nbsp;&nbsp;</span>				b.WriteByte(&#39; &#39;)
+<span id="L791" class="ln">   791&nbsp;&nbsp;</span>			}
+<span id="L792" class="ln">   792&nbsp;&nbsp;</span>			written = i1
+<span id="L793" class="ln">   793&nbsp;&nbsp;</span>		}
+<span id="L794" class="ln">   794&nbsp;&nbsp;</span>		if c.state != c1.state &amp;&amp; isComment(c1.state) &amp;&amp; c1.delim == delimNone {
+<span id="L795" class="ln">   795&nbsp;&nbsp;</span>			<span class="comment">// Preserve the portion between written and the comment start.</span>
+<span id="L796" class="ln">   796&nbsp;&nbsp;</span>			cs := i1 - 2
+<span id="L797" class="ln">   797&nbsp;&nbsp;</span>			if c1.state == stateHTMLCmt || c1.state == stateJSHTMLOpenCmt {
+<span id="L798" class="ln">   798&nbsp;&nbsp;</span>				<span class="comment">// &#34;&lt;!--&#34; instead of &#34;/*&#34; or &#34;//&#34;</span>
+<span id="L799" class="ln">   799&nbsp;&nbsp;</span>				cs -= 2
+<span id="L800" class="ln">   800&nbsp;&nbsp;</span>			} else if c1.state == stateJSHTMLCloseCmt {
+<span id="L801" class="ln">   801&nbsp;&nbsp;</span>				<span class="comment">// &#34;--&gt;&#34; instead of &#34;/*&#34; or &#34;//&#34;</span>
+<span id="L802" class="ln">   802&nbsp;&nbsp;</span>				cs -= 1
+<span id="L803" class="ln">   803&nbsp;&nbsp;</span>			}
+<span id="L804" class="ln">   804&nbsp;&nbsp;</span>			b.Write(s[written:cs])
+<span id="L805" class="ln">   805&nbsp;&nbsp;</span>			written = i1
+<span id="L806" class="ln">   806&nbsp;&nbsp;</span>		}
+<span id="L807" class="ln">   807&nbsp;&nbsp;</span>		if isInScriptLiteral(c.state) &amp;&amp; containsSpecialScriptTag(s[i:i1]) {
+<span id="L808" class="ln">   808&nbsp;&nbsp;</span>			b.Write(s[written:i])
+<span id="L809" class="ln">   809&nbsp;&nbsp;</span>			b.Write(escapeSpecialScriptTags(s[i:i1]))
+<span id="L810" class="ln">   810&nbsp;&nbsp;</span>			written = i1
+<span id="L811" class="ln">   811&nbsp;&nbsp;</span>		}
+<span id="L812" class="ln">   812&nbsp;&nbsp;</span>		if i == i1 &amp;&amp; c.state == c1.state {
+<span id="L813" class="ln">   813&nbsp;&nbsp;</span>			panic(fmt.Sprintf(&#34;infinite loop from %v to %v on %q..%q&#34;, c, c1, s[:i], s[i:]))
+<span id="L814" class="ln">   814&nbsp;&nbsp;</span>		}
+<span id="L815" class="ln">   815&nbsp;&nbsp;</span>		c, i = c1, i1
+<span id="L816" class="ln">   816&nbsp;&nbsp;</span>	}
+<span id="L817" class="ln">   817&nbsp;&nbsp;</span>
+<span id="L818" class="ln">   818&nbsp;&nbsp;</span>	if written != 0 &amp;&amp; c.state != stateError {
+<span id="L819" class="ln">   819&nbsp;&nbsp;</span>		if !isComment(c.state) || c.delim != delimNone {
+<span id="L820" class="ln">   820&nbsp;&nbsp;</span>			b.Write(n.Text[written:])
+<span id="L821" class="ln">   821&nbsp;&nbsp;</span>		}
+<span id="L822" class="ln">   822&nbsp;&nbsp;</span>		e.editTextNode(n, b.Bytes())
+<span id="L823" class="ln">   823&nbsp;&nbsp;</span>	}
+<span id="L824" class="ln">   824&nbsp;&nbsp;</span>	return c
+<span id="L825" class="ln">   825&nbsp;&nbsp;</span>}
+<span id="L826" class="ln">   826&nbsp;&nbsp;</span>
+<span id="L827" class="ln">   827&nbsp;&nbsp;</span><span class="comment">// contextAfterText starts in context c, consumes some tokens from the front of</span>
+<span id="L828" class="ln">   828&nbsp;&nbsp;</span><span class="comment">// s, then returns the context after those tokens and the unprocessed suffix.</span>
+<span id="L829" class="ln">   829&nbsp;&nbsp;</span>func contextAfterText(c context, s []byte) (context, int) {
+<span id="L830" class="ln">   830&nbsp;&nbsp;</span>	if c.delim == delimNone {
+<span id="L831" class="ln">   831&nbsp;&nbsp;</span>		c1, i := tSpecialTagEnd(c, s)
+<span id="L832" class="ln">   832&nbsp;&nbsp;</span>		if i == 0 {
+<span id="L833" class="ln">   833&nbsp;&nbsp;</span>			<span class="comment">// A special end tag (`&lt;/script&gt;`) has been seen and</span>
+<span id="L834" class="ln">   834&nbsp;&nbsp;</span>			<span class="comment">// all content preceding it has been consumed.</span>
+<span id="L835" class="ln">   835&nbsp;&nbsp;</span>			return c1, 0
+<span id="L836" class="ln">   836&nbsp;&nbsp;</span>		}
+<span id="L837" class="ln">   837&nbsp;&nbsp;</span>		<span class="comment">// Consider all content up to any end tag.</span>
+<span id="L838" class="ln">   838&nbsp;&nbsp;</span>		return transitionFunc[c.state](c, s[:i])
+<span id="L839" class="ln">   839&nbsp;&nbsp;</span>	}
+<span id="L840" class="ln">   840&nbsp;&nbsp;</span>
+<span id="L841" class="ln">   841&nbsp;&nbsp;</span>	<span class="comment">// We are at the beginning of an attribute value.</span>
+<span id="L842" class="ln">   842&nbsp;&nbsp;</span>
+<span id="L843" class="ln">   843&nbsp;&nbsp;</span>	i := bytes.IndexAny(s, delimEnds[c.delim])
+<span id="L844" class="ln">   844&nbsp;&nbsp;</span>	if i == -1 {
+<span id="L845" class="ln">   845&nbsp;&nbsp;</span>		i = len(s)
+<span id="L846" class="ln">   846&nbsp;&nbsp;</span>	}
+<span id="L847" class="ln">   847&nbsp;&nbsp;</span>	if c.delim == delimSpaceOrTagEnd {
+<span id="L848" class="ln">   848&nbsp;&nbsp;</span>		<span class="comment">// https://www.w3.org/TR/html5/syntax.html#attribute-value-(unquoted)-state</span>
+<span id="L849" class="ln">   849&nbsp;&nbsp;</span>		<span class="comment">// lists the runes below as error characters.</span>
+<span id="L850" class="ln">   850&nbsp;&nbsp;</span>		<span class="comment">// Error out because HTML parsers may differ on whether</span>
+<span id="L851" class="ln">   851&nbsp;&nbsp;</span>		<span class="comment">// &#34;&lt;a id= onclick=f(&#34;     ends inside id&#39;s or onclick&#39;s value,</span>
+<span id="L852" class="ln">   852&nbsp;&nbsp;</span>		<span class="comment">// &#34;&lt;a class=`foo &#34;        ends inside a value,</span>
+<span id="L853" class="ln">   853&nbsp;&nbsp;</span>		<span class="comment">// &#34;&lt;a style=font:&#39;Arial&#39;&#34; needs open-quote fixup.</span>
+<span id="L854" class="ln">   854&nbsp;&nbsp;</span>		<span class="comment">// IE treats &#39;`&#39; as a quotation character.</span>
+<span id="L855" class="ln">   855&nbsp;&nbsp;</span>		if j := bytes.IndexAny(s[:i], &#34;\&#34;&#39;&lt;=`&#34;); j &gt;= 0 {
+<span id="L856" class="ln">   856&nbsp;&nbsp;</span>			return context{
+<span id="L857" class="ln">   857&nbsp;&nbsp;</span>				state: stateError,
+<span id="L858" class="ln">   858&nbsp;&nbsp;</span>				err:   errorf(ErrBadHTML, nil, 0, &#34;%q in unquoted attr: %q&#34;, s[j:j+1], s[:i]),
+<span id="L859" class="ln">   859&nbsp;&nbsp;</span>			}, len(s)
+<span id="L860" class="ln">   860&nbsp;&nbsp;</span>		}
+<span id="L861" class="ln">   861&nbsp;&nbsp;</span>	}
+<span id="L862" class="ln">   862&nbsp;&nbsp;</span>	if i == len(s) {
+<span id="L863" class="ln">   863&nbsp;&nbsp;</span>		<span class="comment">// Remain inside the attribute.</span>
+<span id="L864" class="ln">   864&nbsp;&nbsp;</span>		<span class="comment">// Decode the value so non-HTML rules can easily handle</span>
+<span id="L865" class="ln">   865&nbsp;&nbsp;</span>		<span class="comment">//     &lt;button onclick=&#34;alert(&amp;quot;Hi!&amp;quot;)&#34;&gt;</span>
+<span id="L866" class="ln">   866&nbsp;&nbsp;</span>		<span class="comment">// without having to entity decode token boundaries.</span>
+<span id="L867" class="ln">   867&nbsp;&nbsp;</span>		for u := []byte(html.UnescapeString(string(s))); len(u) != 0; {
+<span id="L868" class="ln">   868&nbsp;&nbsp;</span>			c1, i1 := transitionFunc[c.state](c, u)
+<span id="L869" class="ln">   869&nbsp;&nbsp;</span>			c, u = c1, u[i1:]
+<span id="L870" class="ln">   870&nbsp;&nbsp;</span>		}
+<span id="L871" class="ln">   871&nbsp;&nbsp;</span>		return c, len(s)
+<span id="L872" class="ln">   872&nbsp;&nbsp;</span>	}
+<span id="L873" class="ln">   873&nbsp;&nbsp;</span>
+<span id="L874" class="ln">   874&nbsp;&nbsp;</span>	element := c.element
+<span id="L875" class="ln">   875&nbsp;&nbsp;</span>
+<span id="L876" class="ln">   876&nbsp;&nbsp;</span>	<span class="comment">// If this is a non-JS &#34;type&#34; attribute inside &#34;script&#34; tag, do not treat the contents as JS.</span>
+<span id="L877" class="ln">   877&nbsp;&nbsp;</span>	if c.state == stateAttr &amp;&amp; c.element == elementScript &amp;&amp; c.attr == attrScriptType &amp;&amp; !isJSType(string(s[:i])) {
+<span id="L878" class="ln">   878&nbsp;&nbsp;</span>		element = elementNone
+<span id="L879" class="ln">   879&nbsp;&nbsp;</span>	}
+<span id="L880" class="ln">   880&nbsp;&nbsp;</span>
+<span id="L881" class="ln">   881&nbsp;&nbsp;</span>	if c.delim != delimSpaceOrTagEnd {
+<span id="L882" class="ln">   882&nbsp;&nbsp;</span>		<span class="comment">// Consume any quote.</span>
+<span id="L883" class="ln">   883&nbsp;&nbsp;</span>		i++
+<span id="L884" class="ln">   884&nbsp;&nbsp;</span>	}
+<span id="L885" class="ln">   885&nbsp;&nbsp;</span>	<span class="comment">// On exiting an attribute, we discard all state information</span>
+<span id="L886" class="ln">   886&nbsp;&nbsp;</span>	<span class="comment">// except the state and element.</span>
+<span id="L887" class="ln">   887&nbsp;&nbsp;</span>	return context{state: stateTag, element: element}, i
+<span id="L888" class="ln">   888&nbsp;&nbsp;</span>}
+<span id="L889" class="ln">   889&nbsp;&nbsp;</span>
+<span id="L890" class="ln">   890&nbsp;&nbsp;</span><span class="comment">// editActionNode records a change to an action pipeline for later commit.</span>
+<span id="L891" class="ln">   891&nbsp;&nbsp;</span>func (e *escaper) editActionNode(n *parse.ActionNode, cmds []string) {
+<span id="L892" class="ln">   892&nbsp;&nbsp;</span>	if _, ok := e.actionNodeEdits[n]; ok {
+<span id="L893" class="ln">   893&nbsp;&nbsp;</span>		panic(fmt.Sprintf(&#34;node %s shared between templates&#34;, n))
+<span id="L894" class="ln">   894&nbsp;&nbsp;</span>	}
+<span id="L895" class="ln">   895&nbsp;&nbsp;</span>	e.actionNodeEdits[n] = cmds
+<span id="L896" class="ln">   896&nbsp;&nbsp;</span>}
+<span id="L897" class="ln">   897&nbsp;&nbsp;</span>
+<span id="L898" class="ln">   898&nbsp;&nbsp;</span><span class="comment">// editTemplateNode records a change to a {{template}} callee for later commit.</span>
+<span id="L899" class="ln">   899&nbsp;&nbsp;</span>func (e *escaper) editTemplateNode(n *parse.TemplateNode, callee string) {
+<span id="L900" class="ln">   900&nbsp;&nbsp;</span>	if _, ok := e.templateNodeEdits[n]; ok {
+<span id="L901" class="ln">   901&nbsp;&nbsp;</span>		panic(fmt.Sprintf(&#34;node %s shared between templates&#34;, n))
+<span id="L902" class="ln">   902&nbsp;&nbsp;</span>	}
+<span id="L903" class="ln">   903&nbsp;&nbsp;</span>	e.templateNodeEdits[n] = callee
+<span id="L904" class="ln">   904&nbsp;&nbsp;</span>}
+<span id="L905" class="ln">   905&nbsp;&nbsp;</span>
+<span id="L906" class="ln">   906&nbsp;&nbsp;</span><span class="comment">// editTextNode records a change to a text node for later commit.</span>
+<span id="L907" class="ln">   907&nbsp;&nbsp;</span>func (e *escaper) editTextNode(n *parse.TextNode, text []byte) {
+<span id="L908" class="ln">   908&nbsp;&nbsp;</span>	if _, ok := e.textNodeEdits[n]; ok {
+<span id="L909" class="ln">   909&nbsp;&nbsp;</span>		panic(fmt.Sprintf(&#34;node %s shared between templates&#34;, n))
+<span id="L910" class="ln">   910&nbsp;&nbsp;</span>	}
+<span id="L911" class="ln">   911&nbsp;&nbsp;</span>	e.textNodeEdits[n] = text
+<span id="L912" class="ln">   912&nbsp;&nbsp;</span>}
+<span id="L913" class="ln">   913&nbsp;&nbsp;</span>
+<span id="L914" class="ln">   914&nbsp;&nbsp;</span><span class="comment">// commit applies changes to actions and template calls needed to contextually</span>
+<span id="L915" class="ln">   915&nbsp;&nbsp;</span><span class="comment">// autoescape content and adds any derived templates to the set.</span>
+<span id="L916" class="ln">   916&nbsp;&nbsp;</span>func (e *escaper) commit() {
+<span id="L917" class="ln">   917&nbsp;&nbsp;</span>	for name := range e.output {
+<span id="L918" class="ln">   918&nbsp;&nbsp;</span>		e.template(name).Funcs(funcMap)
+<span id="L919" class="ln">   919&nbsp;&nbsp;</span>	}
+<span id="L920" class="ln">   920&nbsp;&nbsp;</span>	<span class="comment">// Any template from the name space associated with this escaper can be used</span>
+<span id="L921" class="ln">   921&nbsp;&nbsp;</span>	<span class="comment">// to add derived templates to the underlying text/template name space.</span>
+<span id="L922" class="ln">   922&nbsp;&nbsp;</span>	tmpl := e.arbitraryTemplate()
+<span id="L923" class="ln">   923&nbsp;&nbsp;</span>	for _, t := range e.derived {
+<span id="L924" class="ln">   924&nbsp;&nbsp;</span>		if _, err := tmpl.text.AddParseTree(t.Name(), t.Tree); err != nil {
+<span id="L925" class="ln">   925&nbsp;&nbsp;</span>			panic(&#34;error adding derived template&#34;)
+<span id="L926" class="ln">   926&nbsp;&nbsp;</span>		}
+<span id="L927" class="ln">   927&nbsp;&nbsp;</span>	}
+<span id="L928" class="ln">   928&nbsp;&nbsp;</span>	for n, s := range e.actionNodeEdits {
+<span id="L929" class="ln">   929&nbsp;&nbsp;</span>		ensurePipelineContains(n.Pipe, s)
+<span id="L930" class="ln">   930&nbsp;&nbsp;</span>	}
+<span id="L931" class="ln">   931&nbsp;&nbsp;</span>	for n, name := range e.templateNodeEdits {
+<span id="L932" class="ln">   932&nbsp;&nbsp;</span>		n.Name = name
+<span id="L933" class="ln">   933&nbsp;&nbsp;</span>	}
+<span id="L934" class="ln">   934&nbsp;&nbsp;</span>	for n, s := range e.textNodeEdits {
+<span id="L935" class="ln">   935&nbsp;&nbsp;</span>		n.Text = s
+<span id="L936" class="ln">   936&nbsp;&nbsp;</span>	}
+<span id="L937" class="ln">   937&nbsp;&nbsp;</span>	<span class="comment">// Reset state that is specific to this commit so that the same changes are</span>
+<span id="L938" class="ln">   938&nbsp;&nbsp;</span>	<span class="comment">// not re-applied to the template on subsequent calls to commit.</span>
+<span id="L939" class="ln">   939&nbsp;&nbsp;</span>	e.called = make(map[string]bool)
+<span id="L940" class="ln">   940&nbsp;&nbsp;</span>	e.actionNodeEdits = make(map[*parse.ActionNode][]string)
+<span id="L941" class="ln">   941&nbsp;&nbsp;</span>	e.templateNodeEdits = make(map[*parse.TemplateNode]string)
+<span id="L942" class="ln">   942&nbsp;&nbsp;</span>	e.textNodeEdits = make(map[*parse.TextNode][]byte)
+<span id="L943" class="ln">   943&nbsp;&nbsp;</span>}
+<span id="L944" class="ln">   944&nbsp;&nbsp;</span>
+<span id="L945" class="ln">   945&nbsp;&nbsp;</span><span class="comment">// template returns the named template given a mangled template name.</span>
+<span id="L946" class="ln">   946&nbsp;&nbsp;</span>func (e *escaper) template(name string) *template.Template {
+<span id="L947" class="ln">   947&nbsp;&nbsp;</span>	<span class="comment">// Any template from the name space associated with this escaper can be used</span>
+<span id="L948" class="ln">   948&nbsp;&nbsp;</span>	<span class="comment">// to look up templates in the underlying text/template name space.</span>
+<span id="L949" class="ln">   949&nbsp;&nbsp;</span>	t := e.arbitraryTemplate().text.Lookup(name)
+<span id="L950" class="ln">   950&nbsp;&nbsp;</span>	if t == nil {
+<span id="L951" class="ln">   951&nbsp;&nbsp;</span>		t = e.derived[name]
+<span id="L952" class="ln">   952&nbsp;&nbsp;</span>	}
+<span id="L953" class="ln">   953&nbsp;&nbsp;</span>	return t
+<span id="L954" class="ln">   954&nbsp;&nbsp;</span>}
+<span id="L955" class="ln">   955&nbsp;&nbsp;</span>
+<span id="L956" class="ln">   956&nbsp;&nbsp;</span><span class="comment">// arbitraryTemplate returns an arbitrary template from the name space</span>
+<span id="L957" class="ln">   957&nbsp;&nbsp;</span><span class="comment">// associated with e and panics if no templates are found.</span>
+<span id="L958" class="ln">   958&nbsp;&nbsp;</span>func (e *escaper) arbitraryTemplate() *Template {
+<span id="L959" class="ln">   959&nbsp;&nbsp;</span>	for _, t := range e.ns.set {
+<span id="L960" class="ln">   960&nbsp;&nbsp;</span>		return t
+<span id="L961" class="ln">   961&nbsp;&nbsp;</span>	}
+<span id="L962" class="ln">   962&nbsp;&nbsp;</span>	panic(&#34;no templates in name space&#34;)
+<span id="L963" class="ln">   963&nbsp;&nbsp;</span>}
+<span id="L964" class="ln">   964&nbsp;&nbsp;</span>
+<span id="L965" class="ln">   965&nbsp;&nbsp;</span><span class="comment">// Forwarding functions so that clients need only import this package</span>
+<span id="L966" class="ln">   966&nbsp;&nbsp;</span><span class="comment">// to reach the general escaping functions of text/template.</span>
+<span id="L967" class="ln">   967&nbsp;&nbsp;</span>
+<span id="L968" class="ln">   968&nbsp;&nbsp;</span><span class="comment">// HTMLEscape writes to w the escaped HTML equivalent of the plain text data b.</span>
+<span id="L969" class="ln">   969&nbsp;&nbsp;</span>func HTMLEscape(w io.Writer, b []byte) {
+<span id="L970" class="ln">   970&nbsp;&nbsp;</span>	template.HTMLEscape(w, b)
+<span id="L971" class="ln">   971&nbsp;&nbsp;</span>}
+<span id="L972" class="ln">   972&nbsp;&nbsp;</span>
+<span id="L973" class="ln">   973&nbsp;&nbsp;</span><span class="comment">// HTMLEscapeString returns the escaped HTML equivalent of the plain text data s.</span>
+<span id="L974" class="ln">   974&nbsp;&nbsp;</span>func HTMLEscapeString(s string) string {
+<span id="L975" class="ln">   975&nbsp;&nbsp;</span>	return template.HTMLEscapeString(s)
+<span id="L976" class="ln">   976&nbsp;&nbsp;</span>}
+<span id="L977" class="ln">   977&nbsp;&nbsp;</span>
+<span id="L978" class="ln">   978&nbsp;&nbsp;</span><span class="comment">// HTMLEscaper returns the escaped HTML equivalent of the textual</span>
+<span id="L979" class="ln">   979&nbsp;&nbsp;</span><span class="comment">// representation of its arguments.</span>
+<span id="L980" class="ln">   980&nbsp;&nbsp;</span>func HTMLEscaper(args ...any) string {
+<span id="L981" class="ln">   981&nbsp;&nbsp;</span>	return template.HTMLEscaper(args...)
+<span id="L982" class="ln">   982&nbsp;&nbsp;</span>}
+<span id="L983" class="ln">   983&nbsp;&nbsp;</span>
+<span id="L984" class="ln">   984&nbsp;&nbsp;</span><span class="comment">// JSEscape writes to w the escaped JavaScript equivalent of the plain text data b.</span>
+<span id="L985" class="ln">   985&nbsp;&nbsp;</span>func JSEscape(w io.Writer, b []byte) {
+<span id="L986" class="ln">   986&nbsp;&nbsp;</span>	template.JSEscape(w, b)
+<span id="L987" class="ln">   987&nbsp;&nbsp;</span>}
+<span id="L988" class="ln">   988&nbsp;&nbsp;</span>
+<span id="L989" class="ln">   989&nbsp;&nbsp;</span><span class="comment">// JSEscapeString returns the escaped JavaScript equivalent of the plain text data s.</span>
+<span id="L990" class="ln">   990&nbsp;&nbsp;</span>func JSEscapeString(s string) string {
+<span id="L991" class="ln">   991&nbsp;&nbsp;</span>	return template.JSEscapeString(s)
+<span id="L992" class="ln">   992&nbsp;&nbsp;</span>}
+<span id="L993" class="ln">   993&nbsp;&nbsp;</span>
+<span id="L994" class="ln">   994&nbsp;&nbsp;</span><span class="comment">// JSEscaper returns the escaped JavaScript equivalent of the textual</span>
+<span id="L995" class="ln">   995&nbsp;&nbsp;</span><span class="comment">// representation of its arguments.</span>
+<span id="L996" class="ln">   996&nbsp;&nbsp;</span>func JSEscaper(args ...any) string {
+<span id="L997" class="ln">   997&nbsp;&nbsp;</span>	return template.JSEscaper(args...)
+<span id="L998" class="ln">   998&nbsp;&nbsp;</span>}
+<span id="L999" class="ln">   999&nbsp;&nbsp;</span>
+<span id="L1000" class="ln">  1000&nbsp;&nbsp;</span><span class="comment">// URLQueryEscaper returns the escaped value of the textual representation of</span>
+<span id="L1001" class="ln">  1001&nbsp;&nbsp;</span><span class="comment">// its arguments in a form suitable for embedding in a URL query.</span>
+<span id="L1002" class="ln">  1002&nbsp;&nbsp;</span>func URLQueryEscaper(args ...any) string {
+<span id="L1003" class="ln">  1003&nbsp;&nbsp;</span>	return template.URLQueryEscaper(args...)
+<span id="L1004" class="ln">  1004&nbsp;&nbsp;</span>}
+<span id="L1005" class="ln">  1005&nbsp;&nbsp;</span>
+</pre><p><a href="escape.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

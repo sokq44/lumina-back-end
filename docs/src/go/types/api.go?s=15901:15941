@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>src/go/types/api.go - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="./api.go?s=15901:15941#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Source file
+    <a href="http://localhost:8080/src">src</a>/<a href="http://localhost:8080/src/go">go</a>/<a href="http://localhost:8080/src/go/types">types</a>/<span class="text-muted">api.go</span>
+  </h1>
+
+
+
+
+
+  <h2>
+    Documentation: <a href="http://localhost:8080/pkg/go/types">go/types</a>
+  </h2>
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1&nbsp;&nbsp;</span><span class="comment">// Copyright 2012 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2&nbsp;&nbsp;</span><span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3&nbsp;&nbsp;</span><span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4&nbsp;&nbsp;</span>
+<span id="L5" class="ln">     5&nbsp;&nbsp;</span><span class="comment">// Package types declares the data types and implements</span>
+<span id="L6" class="ln">     6&nbsp;&nbsp;</span><span class="comment">// the algorithms for type-checking of Go packages. Use</span>
+<span id="L7" class="ln">     7&nbsp;&nbsp;</span><span class="comment">// [Config.Check] to invoke the type checker for a package.</span>
+<span id="L8" class="ln">     8&nbsp;&nbsp;</span><span class="comment">// Alternatively, create a new type checker with [NewChecker]</span>
+<span id="L9" class="ln">     9&nbsp;&nbsp;</span><span class="comment">// and invoke it incrementally by calling [Checker.Files].</span>
+<span id="L10" class="ln">    10&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L11" class="ln">    11&nbsp;&nbsp;</span><span class="comment">// Type-checking consists of several interdependent phases:</span>
+<span id="L12" class="ln">    12&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L13" class="ln">    13&nbsp;&nbsp;</span><span class="comment">// Name resolution maps each identifier (ast.Ident) in the program to the</span>
+<span id="L14" class="ln">    14&nbsp;&nbsp;</span><span class="comment">// language object ([Object]) it denotes.</span>
+<span id="L15" class="ln">    15&nbsp;&nbsp;</span><span class="comment">// Use [Info].{Defs,Uses,Implicits} for the results of name resolution.</span>
+<span id="L16" class="ln">    16&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L17" class="ln">    17&nbsp;&nbsp;</span><span class="comment">// Constant folding computes the exact constant value (constant.Value)</span>
+<span id="L18" class="ln">    18&nbsp;&nbsp;</span><span class="comment">// for every expression (ast.Expr) that is a compile-time constant.</span>
+<span id="L19" class="ln">    19&nbsp;&nbsp;</span><span class="comment">// Use Info.Types[expr].Value for the results of constant folding.</span>
+<span id="L20" class="ln">    20&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L21" class="ln">    21&nbsp;&nbsp;</span><span class="comment">// [Type] inference computes the type ([Type]) of every expression ([ast.Expr])</span>
+<span id="L22" class="ln">    22&nbsp;&nbsp;</span><span class="comment">// and checks for compliance with the language specification.</span>
+<span id="L23" class="ln">    23&nbsp;&nbsp;</span><span class="comment">// Use [Info.Types][expr].Type for the results of type inference.</span>
+<span id="L24" class="ln">    24&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L25" class="ln">    25&nbsp;&nbsp;</span><span class="comment">// For a tutorial, see https://golang.org/s/types-tutorial.</span>
+<span id="L26" class="ln">    26&nbsp;&nbsp;</span>package types
+<span id="L27" class="ln">    27&nbsp;&nbsp;</span>
+<span id="L28" class="ln">    28&nbsp;&nbsp;</span>import (
+<span id="L29" class="ln">    29&nbsp;&nbsp;</span>	&#34;bytes&#34;
+<span id="L30" class="ln">    30&nbsp;&nbsp;</span>	&#34;fmt&#34;
+<span id="L31" class="ln">    31&nbsp;&nbsp;</span>	&#34;go/ast&#34;
+<span id="L32" class="ln">    32&nbsp;&nbsp;</span>	&#34;go/constant&#34;
+<span id="L33" class="ln">    33&nbsp;&nbsp;</span>	&#34;go/token&#34;
+<span id="L34" class="ln">    34&nbsp;&nbsp;</span>	. &#34;internal/types/errors&#34;
+<span id="L35" class="ln">    35&nbsp;&nbsp;</span>)
+<span id="L36" class="ln">    36&nbsp;&nbsp;</span>
+<span id="L37" class="ln">    37&nbsp;&nbsp;</span><span class="comment">// An Error describes a type-checking error; it implements the error interface.</span>
+<span id="L38" class="ln">    38&nbsp;&nbsp;</span><span class="comment">// A &#34;soft&#34; error is an error that still permits a valid interpretation of a</span>
+<span id="L39" class="ln">    39&nbsp;&nbsp;</span><span class="comment">// package (such as &#34;unused variable&#34;); &#34;hard&#34; errors may lead to unpredictable</span>
+<span id="L40" class="ln">    40&nbsp;&nbsp;</span><span class="comment">// behavior if ignored.</span>
+<span id="L41" class="ln">    41&nbsp;&nbsp;</span>type Error struct {
+<span id="L42" class="ln">    42&nbsp;&nbsp;</span>	Fset *token.FileSet <span class="comment">// file set for interpretation of Pos</span>
+<span id="L43" class="ln">    43&nbsp;&nbsp;</span>	Pos  token.Pos      <span class="comment">// error position</span>
+<span id="L44" class="ln">    44&nbsp;&nbsp;</span>	Msg  string         <span class="comment">// error message</span>
+<span id="L45" class="ln">    45&nbsp;&nbsp;</span>	Soft bool           <span class="comment">// if set, error is &#34;soft&#34;</span>
+<span id="L46" class="ln">    46&nbsp;&nbsp;</span>
+<span id="L47" class="ln">    47&nbsp;&nbsp;</span>	<span class="comment">// go116code is a future API, unexported as the set of error codes is large</span>
+<span id="L48" class="ln">    48&nbsp;&nbsp;</span>	<span class="comment">// and likely to change significantly during experimentation. Tools wishing</span>
+<span id="L49" class="ln">    49&nbsp;&nbsp;</span>	<span class="comment">// to preview this feature may read go116code using reflection (see</span>
+<span id="L50" class="ln">    50&nbsp;&nbsp;</span>	<span class="comment">// errorcodes_test.go), but beware that there is no guarantee of future</span>
+<span id="L51" class="ln">    51&nbsp;&nbsp;</span>	<span class="comment">// compatibility.</span>
+<span id="L52" class="ln">    52&nbsp;&nbsp;</span>	go116code  Code
+<span id="L53" class="ln">    53&nbsp;&nbsp;</span>	go116start token.Pos
+<span id="L54" class="ln">    54&nbsp;&nbsp;</span>	go116end   token.Pos
+<span id="L55" class="ln">    55&nbsp;&nbsp;</span>}
+<span id="L56" class="ln">    56&nbsp;&nbsp;</span>
+<span id="L57" class="ln">    57&nbsp;&nbsp;</span><span class="comment">// Error returns an error string formatted as follows:</span>
+<span id="L58" class="ln">    58&nbsp;&nbsp;</span><span class="comment">// filename:line:column: message</span>
+<span id="L59" class="ln">    59&nbsp;&nbsp;</span>func (err Error) Error() string {
+<span id="L60" class="ln">    60&nbsp;&nbsp;</span>	return fmt.Sprintf(&#34;%s: %s&#34;, err.Fset.Position(err.Pos), err.Msg)
+<span id="L61" class="ln">    61&nbsp;&nbsp;</span>}
+<span id="L62" class="ln">    62&nbsp;&nbsp;</span>
+<span id="L63" class="ln">    63&nbsp;&nbsp;</span><span class="comment">// An ArgumentError holds an error associated with an argument index.</span>
+<span id="L64" class="ln">    64&nbsp;&nbsp;</span>type ArgumentError struct {
+<span id="L65" class="ln">    65&nbsp;&nbsp;</span>	Index int
+<span id="L66" class="ln">    66&nbsp;&nbsp;</span>	Err   error
+<span id="L67" class="ln">    67&nbsp;&nbsp;</span>}
+<span id="L68" class="ln">    68&nbsp;&nbsp;</span>
+<span id="L69" class="ln">    69&nbsp;&nbsp;</span>func (e *ArgumentError) Error() string { return e.Err.Error() }
+<span id="L70" class="ln">    70&nbsp;&nbsp;</span>func (e *ArgumentError) Unwrap() error { return e.Err }
+<span id="L71" class="ln">    71&nbsp;&nbsp;</span>
+<span id="L72" class="ln">    72&nbsp;&nbsp;</span><span class="comment">// An Importer resolves import paths to Packages.</span>
+<span id="L73" class="ln">    73&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L74" class="ln">    74&nbsp;&nbsp;</span><span class="comment">// CAUTION: This interface does not support the import of locally</span>
+<span id="L75" class="ln">    75&nbsp;&nbsp;</span><span class="comment">// vendored packages. See https://golang.org/s/go15vendor.</span>
+<span id="L76" class="ln">    76&nbsp;&nbsp;</span><span class="comment">// If possible, external implementations should implement [ImporterFrom].</span>
+<span id="L77" class="ln">    77&nbsp;&nbsp;</span>type Importer interface {
+<span id="L78" class="ln">    78&nbsp;&nbsp;</span>	<span class="comment">// Import returns the imported package for the given import path.</span>
+<span id="L79" class="ln">    79&nbsp;&nbsp;</span>	<span class="comment">// The semantics is like for ImporterFrom.ImportFrom except that</span>
+<span id="L80" class="ln">    80&nbsp;&nbsp;</span>	<span class="comment">// dir and mode are ignored (since they are not present).</span>
+<span id="L81" class="ln">    81&nbsp;&nbsp;</span>	Import(path string) (*Package, error)
+<span id="L82" class="ln">    82&nbsp;&nbsp;</span>}
+<span id="L83" class="ln">    83&nbsp;&nbsp;</span>
+<span id="L84" class="ln">    84&nbsp;&nbsp;</span><span class="comment">// ImportMode is reserved for future use.</span>
+<span id="L85" class="ln">    85&nbsp;&nbsp;</span>type ImportMode int
+<span id="L86" class="ln">    86&nbsp;&nbsp;</span>
+<span id="L87" class="ln">    87&nbsp;&nbsp;</span><span class="comment">// An ImporterFrom resolves import paths to packages; it</span>
+<span id="L88" class="ln">    88&nbsp;&nbsp;</span><span class="comment">// supports vendoring per https://golang.org/s/go15vendor.</span>
+<span id="L89" class="ln">    89&nbsp;&nbsp;</span><span class="comment">// Use go/importer to obtain an ImporterFrom implementation.</span>
+<span id="L90" class="ln">    90&nbsp;&nbsp;</span>type ImporterFrom interface {
+<span id="L91" class="ln">    91&nbsp;&nbsp;</span>	<span class="comment">// Importer is present for backward-compatibility. Calling</span>
+<span id="L92" class="ln">    92&nbsp;&nbsp;</span>	<span class="comment">// Import(path) is the same as calling ImportFrom(path, &#34;&#34;, 0);</span>
+<span id="L93" class="ln">    93&nbsp;&nbsp;</span>	<span class="comment">// i.e., locally vendored packages may not be found.</span>
+<span id="L94" class="ln">    94&nbsp;&nbsp;</span>	<span class="comment">// The types package does not call Import if an ImporterFrom</span>
+<span id="L95" class="ln">    95&nbsp;&nbsp;</span>	<span class="comment">// is present.</span>
+<span id="L96" class="ln">    96&nbsp;&nbsp;</span>	Importer
+<span id="L97" class="ln">    97&nbsp;&nbsp;</span>
+<span id="L98" class="ln">    98&nbsp;&nbsp;</span>	<span class="comment">// ImportFrom returns the imported package for the given import</span>
+<span id="L99" class="ln">    99&nbsp;&nbsp;</span>	<span class="comment">// path when imported by a package file located in dir.</span>
+<span id="L100" class="ln">   100&nbsp;&nbsp;</span>	<span class="comment">// If the import failed, besides returning an error, ImportFrom</span>
+<span id="L101" class="ln">   101&nbsp;&nbsp;</span>	<span class="comment">// is encouraged to cache and return a package anyway, if one</span>
+<span id="L102" class="ln">   102&nbsp;&nbsp;</span>	<span class="comment">// was created. This will reduce package inconsistencies and</span>
+<span id="L103" class="ln">   103&nbsp;&nbsp;</span>	<span class="comment">// follow-on type checker errors due to the missing package.</span>
+<span id="L104" class="ln">   104&nbsp;&nbsp;</span>	<span class="comment">// The mode value must be 0; it is reserved for future use.</span>
+<span id="L105" class="ln">   105&nbsp;&nbsp;</span>	<span class="comment">// Two calls to ImportFrom with the same path and dir must</span>
+<span id="L106" class="ln">   106&nbsp;&nbsp;</span>	<span class="comment">// return the same package.</span>
+<span id="L107" class="ln">   107&nbsp;&nbsp;</span>	ImportFrom(path, dir string, mode ImportMode) (*Package, error)
+<span id="L108" class="ln">   108&nbsp;&nbsp;</span>}
+<span id="L109" class="ln">   109&nbsp;&nbsp;</span>
+<span id="L110" class="ln">   110&nbsp;&nbsp;</span><span class="comment">// A Config specifies the configuration for type checking.</span>
+<span id="L111" class="ln">   111&nbsp;&nbsp;</span><span class="comment">// The zero value for Config is a ready-to-use default configuration.</span>
+<span id="L112" class="ln">   112&nbsp;&nbsp;</span>type Config struct {
+<span id="L113" class="ln">   113&nbsp;&nbsp;</span>	<span class="comment">// Context is the context used for resolving global identifiers. If nil, the</span>
+<span id="L114" class="ln">   114&nbsp;&nbsp;</span>	<span class="comment">// type checker will initialize this field with a newly created context.</span>
+<span id="L115" class="ln">   115&nbsp;&nbsp;</span>	Context *Context
+<span id="L116" class="ln">   116&nbsp;&nbsp;</span>
+<span id="L117" class="ln">   117&nbsp;&nbsp;</span>	<span class="comment">// GoVersion describes the accepted Go language version. The string must</span>
+<span id="L118" class="ln">   118&nbsp;&nbsp;</span>	<span class="comment">// start with a prefix of the form &#34;go%d.%d&#34; (e.g. &#34;go1.20&#34;, &#34;go1.21rc1&#34;, or</span>
+<span id="L119" class="ln">   119&nbsp;&nbsp;</span>	<span class="comment">// &#34;go1.21.0&#34;) or it must be empty; an empty string disables Go language</span>
+<span id="L120" class="ln">   120&nbsp;&nbsp;</span>	<span class="comment">// version checks. If the format is invalid, invoking the type checker will</span>
+<span id="L121" class="ln">   121&nbsp;&nbsp;</span>	<span class="comment">// result in an error.</span>
+<span id="L122" class="ln">   122&nbsp;&nbsp;</span>	GoVersion string
+<span id="L123" class="ln">   123&nbsp;&nbsp;</span>
+<span id="L124" class="ln">   124&nbsp;&nbsp;</span>	<span class="comment">// If IgnoreFuncBodies is set, function bodies are not</span>
+<span id="L125" class="ln">   125&nbsp;&nbsp;</span>	<span class="comment">// type-checked.</span>
+<span id="L126" class="ln">   126&nbsp;&nbsp;</span>	IgnoreFuncBodies bool
+<span id="L127" class="ln">   127&nbsp;&nbsp;</span>
+<span id="L128" class="ln">   128&nbsp;&nbsp;</span>	<span class="comment">// If FakeImportC is set, `import &#34;C&#34;` (for packages requiring Cgo)</span>
+<span id="L129" class="ln">   129&nbsp;&nbsp;</span>	<span class="comment">// declares an empty &#34;C&#34; package and errors are omitted for qualified</span>
+<span id="L130" class="ln">   130&nbsp;&nbsp;</span>	<span class="comment">// identifiers referring to package C (which won&#39;t find an object).</span>
+<span id="L131" class="ln">   131&nbsp;&nbsp;</span>	<span class="comment">// This feature is intended for the standard library cmd/api tool.</span>
+<span id="L132" class="ln">   132&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L133" class="ln">   133&nbsp;&nbsp;</span>	<span class="comment">// Caution: Effects may be unpredictable due to follow-on errors.</span>
+<span id="L134" class="ln">   134&nbsp;&nbsp;</span>	<span class="comment">//          Do not use casually!</span>
+<span id="L135" class="ln">   135&nbsp;&nbsp;</span>	FakeImportC bool
+<span id="L136" class="ln">   136&nbsp;&nbsp;</span>
+<span id="L137" class="ln">   137&nbsp;&nbsp;</span>	<span class="comment">// If go115UsesCgo is set, the type checker expects the</span>
+<span id="L138" class="ln">   138&nbsp;&nbsp;</span>	<span class="comment">// _cgo_gotypes.go file generated by running cmd/cgo to be</span>
+<span id="L139" class="ln">   139&nbsp;&nbsp;</span>	<span class="comment">// provided as a package source file. Qualified identifiers</span>
+<span id="L140" class="ln">   140&nbsp;&nbsp;</span>	<span class="comment">// referring to package C will be resolved to cgo-provided</span>
+<span id="L141" class="ln">   141&nbsp;&nbsp;</span>	<span class="comment">// declarations within _cgo_gotypes.go.</span>
+<span id="L142" class="ln">   142&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L143" class="ln">   143&nbsp;&nbsp;</span>	<span class="comment">// It is an error to set both FakeImportC and go115UsesCgo.</span>
+<span id="L144" class="ln">   144&nbsp;&nbsp;</span>	go115UsesCgo bool
+<span id="L145" class="ln">   145&nbsp;&nbsp;</span>
+<span id="L146" class="ln">   146&nbsp;&nbsp;</span>	<span class="comment">// If _Trace is set, a debug trace is printed to stdout.</span>
+<span id="L147" class="ln">   147&nbsp;&nbsp;</span>	_Trace bool
+<span id="L148" class="ln">   148&nbsp;&nbsp;</span>
+<span id="L149" class="ln">   149&nbsp;&nbsp;</span>	<span class="comment">// If Error != nil, it is called with each error found</span>
+<span id="L150" class="ln">   150&nbsp;&nbsp;</span>	<span class="comment">// during type checking; err has dynamic type Error.</span>
+<span id="L151" class="ln">   151&nbsp;&nbsp;</span>	<span class="comment">// Secondary errors (for instance, to enumerate all types</span>
+<span id="L152" class="ln">   152&nbsp;&nbsp;</span>	<span class="comment">// involved in an invalid recursive type declaration) have</span>
+<span id="L153" class="ln">   153&nbsp;&nbsp;</span>	<span class="comment">// error strings that start with a &#39;\t&#39; character.</span>
+<span id="L154" class="ln">   154&nbsp;&nbsp;</span>	<span class="comment">// If Error == nil, type-checking stops with the first</span>
+<span id="L155" class="ln">   155&nbsp;&nbsp;</span>	<span class="comment">// error found.</span>
+<span id="L156" class="ln">   156&nbsp;&nbsp;</span>	Error func(err error)
+<span id="L157" class="ln">   157&nbsp;&nbsp;</span>
+<span id="L158" class="ln">   158&nbsp;&nbsp;</span>	<span class="comment">// An importer is used to import packages referred to from</span>
+<span id="L159" class="ln">   159&nbsp;&nbsp;</span>	<span class="comment">// import declarations.</span>
+<span id="L160" class="ln">   160&nbsp;&nbsp;</span>	<span class="comment">// If the installed importer implements ImporterFrom, the type</span>
+<span id="L161" class="ln">   161&nbsp;&nbsp;</span>	<span class="comment">// checker calls ImportFrom instead of Import.</span>
+<span id="L162" class="ln">   162&nbsp;&nbsp;</span>	<span class="comment">// The type checker reports an error if an importer is needed</span>
+<span id="L163" class="ln">   163&nbsp;&nbsp;</span>	<span class="comment">// but none was installed.</span>
+<span id="L164" class="ln">   164&nbsp;&nbsp;</span>	Importer Importer
+<span id="L165" class="ln">   165&nbsp;&nbsp;</span>
+<span id="L166" class="ln">   166&nbsp;&nbsp;</span>	<span class="comment">// If Sizes != nil, it provides the sizing functions for package unsafe.</span>
+<span id="L167" class="ln">   167&nbsp;&nbsp;</span>	<span class="comment">// Otherwise SizesFor(&#34;gc&#34;, &#34;amd64&#34;) is used instead.</span>
+<span id="L168" class="ln">   168&nbsp;&nbsp;</span>	Sizes Sizes
+<span id="L169" class="ln">   169&nbsp;&nbsp;</span>
+<span id="L170" class="ln">   170&nbsp;&nbsp;</span>	<span class="comment">// If DisableUnusedImportCheck is set, packages are not checked</span>
+<span id="L171" class="ln">   171&nbsp;&nbsp;</span>	<span class="comment">// for unused imports.</span>
+<span id="L172" class="ln">   172&nbsp;&nbsp;</span>	DisableUnusedImportCheck bool
+<span id="L173" class="ln">   173&nbsp;&nbsp;</span>
+<span id="L174" class="ln">   174&nbsp;&nbsp;</span>	<span class="comment">// If a non-empty _ErrorURL format string is provided, it is used</span>
+<span id="L175" class="ln">   175&nbsp;&nbsp;</span>	<span class="comment">// to format an error URL link that is appended to the first line</span>
+<span id="L176" class="ln">   176&nbsp;&nbsp;</span>	<span class="comment">// of an error message. ErrorURL must be a format string containing</span>
+<span id="L177" class="ln">   177&nbsp;&nbsp;</span>	<span class="comment">// exactly one &#34;%s&#34; format, e.g. &#34;[go.dev/e/%s]&#34;.</span>
+<span id="L178" class="ln">   178&nbsp;&nbsp;</span>	_ErrorURL string
+<span id="L179" class="ln">   179&nbsp;&nbsp;</span>}
+<span id="L180" class="ln">   180&nbsp;&nbsp;</span>
+<span id="L181" class="ln">   181&nbsp;&nbsp;</span>func srcimporter_setUsesCgo(conf *Config) {
+<span id="L182" class="ln">   182&nbsp;&nbsp;</span>	conf.go115UsesCgo = true
+<span id="L183" class="ln">   183&nbsp;&nbsp;</span>}
+<span id="L184" class="ln">   184&nbsp;&nbsp;</span>
+<span id="L185" class="ln">   185&nbsp;&nbsp;</span><span class="comment">// Info holds result type information for a type-checked package.</span>
+<span id="L186" class="ln">   186&nbsp;&nbsp;</span><span class="comment">// Only the information for which a map is provided is collected.</span>
+<span id="L187" class="ln">   187&nbsp;&nbsp;</span><span class="comment">// If the package has type errors, the collected information may</span>
+<span id="L188" class="ln">   188&nbsp;&nbsp;</span><span class="comment">// be incomplete.</span>
+<span id="L189" class="ln">   189&nbsp;&nbsp;</span>type Info struct {
+<span id="L190" class="ln">   190&nbsp;&nbsp;</span>	<span class="comment">// Types maps expressions to their types, and for constant</span>
+<span id="L191" class="ln">   191&nbsp;&nbsp;</span>	<span class="comment">// expressions, also their values. Invalid expressions are</span>
+<span id="L192" class="ln">   192&nbsp;&nbsp;</span>	<span class="comment">// omitted.</span>
+<span id="L193" class="ln">   193&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L194" class="ln">   194&nbsp;&nbsp;</span>	<span class="comment">// For (possibly parenthesized) identifiers denoting built-in</span>
+<span id="L195" class="ln">   195&nbsp;&nbsp;</span>	<span class="comment">// functions, the recorded signatures are call-site specific:</span>
+<span id="L196" class="ln">   196&nbsp;&nbsp;</span>	<span class="comment">// if the call result is not a constant, the recorded type is</span>
+<span id="L197" class="ln">   197&nbsp;&nbsp;</span>	<span class="comment">// an argument-specific signature. Otherwise, the recorded type</span>
+<span id="L198" class="ln">   198&nbsp;&nbsp;</span>	<span class="comment">// is invalid.</span>
+<span id="L199" class="ln">   199&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L200" class="ln">   200&nbsp;&nbsp;</span>	<span class="comment">// The Types map does not record the type of every identifier,</span>
+<span id="L201" class="ln">   201&nbsp;&nbsp;</span>	<span class="comment">// only those that appear where an arbitrary expression is</span>
+<span id="L202" class="ln">   202&nbsp;&nbsp;</span>	<span class="comment">// permitted. For instance, the identifier f in a selector</span>
+<span id="L203" class="ln">   203&nbsp;&nbsp;</span>	<span class="comment">// expression x.f is found only in the Selections map, the</span>
+<span id="L204" class="ln">   204&nbsp;&nbsp;</span>	<span class="comment">// identifier z in a variable declaration &#39;var z int&#39; is found</span>
+<span id="L205" class="ln">   205&nbsp;&nbsp;</span>	<span class="comment">// only in the Defs map, and identifiers denoting packages in</span>
+<span id="L206" class="ln">   206&nbsp;&nbsp;</span>	<span class="comment">// qualified identifiers are collected in the Uses map.</span>
+<span id="L207" class="ln">   207&nbsp;&nbsp;</span>	Types map[ast.Expr]TypeAndValue
+<span id="L208" class="ln">   208&nbsp;&nbsp;</span>
+<span id="L209" class="ln">   209&nbsp;&nbsp;</span>	<span class="comment">// Instances maps identifiers denoting generic types or functions to their</span>
+<span id="L210" class="ln">   210&nbsp;&nbsp;</span>	<span class="comment">// type arguments and instantiated type.</span>
+<span id="L211" class="ln">   211&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L212" class="ln">   212&nbsp;&nbsp;</span>	<span class="comment">// For example, Instances will map the identifier for &#39;T&#39; in the type</span>
+<span id="L213" class="ln">   213&nbsp;&nbsp;</span>	<span class="comment">// instantiation T[int, string] to the type arguments [int, string] and</span>
+<span id="L214" class="ln">   214&nbsp;&nbsp;</span>	<span class="comment">// resulting instantiated *Named type. Given a generic function</span>
+<span id="L215" class="ln">   215&nbsp;&nbsp;</span>	<span class="comment">// func F[A any](A), Instances will map the identifier for &#39;F&#39; in the call</span>
+<span id="L216" class="ln">   216&nbsp;&nbsp;</span>	<span class="comment">// expression F(int(1)) to the inferred type arguments [int], and resulting</span>
+<span id="L217" class="ln">   217&nbsp;&nbsp;</span>	<span class="comment">// instantiated *Signature.</span>
+<span id="L218" class="ln">   218&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L219" class="ln">   219&nbsp;&nbsp;</span>	<span class="comment">// Invariant: Instantiating Uses[id].Type() with Instances[id].TypeArgs</span>
+<span id="L220" class="ln">   220&nbsp;&nbsp;</span>	<span class="comment">// results in an equivalent of Instances[id].Type.</span>
+<span id="L221" class="ln">   221&nbsp;&nbsp;</span>	Instances map[*ast.Ident]Instance
+<span id="L222" class="ln">   222&nbsp;&nbsp;</span>
+<span id="L223" class="ln">   223&nbsp;&nbsp;</span>	<span class="comment">// Defs maps identifiers to the objects they define (including</span>
+<span id="L224" class="ln">   224&nbsp;&nbsp;</span>	<span class="comment">// package names, dots &#34;.&#34; of dot-imports, and blank &#34;_&#34; identifiers).</span>
+<span id="L225" class="ln">   225&nbsp;&nbsp;</span>	<span class="comment">// For identifiers that do not denote objects (e.g., the package name</span>
+<span id="L226" class="ln">   226&nbsp;&nbsp;</span>	<span class="comment">// in package clauses, or symbolic variables t in t := x.(type) of</span>
+<span id="L227" class="ln">   227&nbsp;&nbsp;</span>	<span class="comment">// type switch headers), the corresponding objects are nil.</span>
+<span id="L228" class="ln">   228&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L229" class="ln">   229&nbsp;&nbsp;</span>	<span class="comment">// For an embedded field, Defs returns the field *Var it defines.</span>
+<span id="L230" class="ln">   230&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L231" class="ln">   231&nbsp;&nbsp;</span>	<span class="comment">// Invariant: Defs[id] == nil || Defs[id].Pos() == id.Pos()</span>
+<span id="L232" class="ln">   232&nbsp;&nbsp;</span>	Defs map[*ast.Ident]Object
+<span id="L233" class="ln">   233&nbsp;&nbsp;</span>
+<span id="L234" class="ln">   234&nbsp;&nbsp;</span>	<span class="comment">// Uses maps identifiers to the objects they denote.</span>
+<span id="L235" class="ln">   235&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L236" class="ln">   236&nbsp;&nbsp;</span>	<span class="comment">// For an embedded field, Uses returns the *TypeName it denotes.</span>
+<span id="L237" class="ln">   237&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L238" class="ln">   238&nbsp;&nbsp;</span>	<span class="comment">// Invariant: Uses[id].Pos() != id.Pos()</span>
+<span id="L239" class="ln">   239&nbsp;&nbsp;</span>	Uses map[*ast.Ident]Object
+<span id="L240" class="ln">   240&nbsp;&nbsp;</span>
+<span id="L241" class="ln">   241&nbsp;&nbsp;</span>	<span class="comment">// Implicits maps nodes to their implicitly declared objects, if any.</span>
+<span id="L242" class="ln">   242&nbsp;&nbsp;</span>	<span class="comment">// The following node and object types may appear:</span>
+<span id="L243" class="ln">   243&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L244" class="ln">   244&nbsp;&nbsp;</span>	<span class="comment">//     node               declared object</span>
+<span id="L245" class="ln">   245&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L246" class="ln">   246&nbsp;&nbsp;</span>	<span class="comment">//     *ast.ImportSpec    *PkgName for imports without renames</span>
+<span id="L247" class="ln">   247&nbsp;&nbsp;</span>	<span class="comment">//     *ast.CaseClause    type-specific *Var for each type switch case clause (incl. default)</span>
+<span id="L248" class="ln">   248&nbsp;&nbsp;</span>	<span class="comment">//     *ast.Field         anonymous parameter *Var (incl. unnamed results)</span>
+<span id="L249" class="ln">   249&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L250" class="ln">   250&nbsp;&nbsp;</span>	Implicits map[ast.Node]Object
+<span id="L251" class="ln">   251&nbsp;&nbsp;</span>
+<span id="L252" class="ln">   252&nbsp;&nbsp;</span>	<span class="comment">// Selections maps selector expressions (excluding qualified identifiers)</span>
+<span id="L253" class="ln">   253&nbsp;&nbsp;</span>	<span class="comment">// to their corresponding selections.</span>
+<span id="L254" class="ln">   254&nbsp;&nbsp;</span>	Selections map[*ast.SelectorExpr]*Selection
+<span id="L255" class="ln">   255&nbsp;&nbsp;</span>
+<span id="L256" class="ln">   256&nbsp;&nbsp;</span>	<span class="comment">// Scopes maps ast.Nodes to the scopes they define. Package scopes are not</span>
+<span id="L257" class="ln">   257&nbsp;&nbsp;</span>	<span class="comment">// associated with a specific node but with all files belonging to a package.</span>
+<span id="L258" class="ln">   258&nbsp;&nbsp;</span>	<span class="comment">// Thus, the package scope can be found in the type-checked Package object.</span>
+<span id="L259" class="ln">   259&nbsp;&nbsp;</span>	<span class="comment">// Scopes nest, with the Universe scope being the outermost scope, enclosing</span>
+<span id="L260" class="ln">   260&nbsp;&nbsp;</span>	<span class="comment">// the package scope, which contains (one or more) files scopes, which enclose</span>
+<span id="L261" class="ln">   261&nbsp;&nbsp;</span>	<span class="comment">// function scopes which in turn enclose statement and function literal scopes.</span>
+<span id="L262" class="ln">   262&nbsp;&nbsp;</span>	<span class="comment">// Note that even though package-level functions are declared in the package</span>
+<span id="L263" class="ln">   263&nbsp;&nbsp;</span>	<span class="comment">// scope, the function scopes are embedded in the file scope of the file</span>
+<span id="L264" class="ln">   264&nbsp;&nbsp;</span>	<span class="comment">// containing the function declaration.</span>
+<span id="L265" class="ln">   265&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L266" class="ln">   266&nbsp;&nbsp;</span>	<span class="comment">// The Scope of a function contains the declarations of any</span>
+<span id="L267" class="ln">   267&nbsp;&nbsp;</span>	<span class="comment">// type parameters, parameters, and named results, plus any</span>
+<span id="L268" class="ln">   268&nbsp;&nbsp;</span>	<span class="comment">// local declarations in the body block.</span>
+<span id="L269" class="ln">   269&nbsp;&nbsp;</span>	<span class="comment">// It is coextensive with the complete extent of the</span>
+<span id="L270" class="ln">   270&nbsp;&nbsp;</span>	<span class="comment">// function&#39;s syntax ([*ast.FuncDecl] or [*ast.FuncLit]).</span>
+<span id="L271" class="ln">   271&nbsp;&nbsp;</span>	<span class="comment">// The Scopes mapping does not contain an entry for the</span>
+<span id="L272" class="ln">   272&nbsp;&nbsp;</span>	<span class="comment">// function body ([*ast.BlockStmt]); the function&#39;s scope is</span>
+<span id="L273" class="ln">   273&nbsp;&nbsp;</span>	<span class="comment">// associated with the [*ast.FuncType].</span>
+<span id="L274" class="ln">   274&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L275" class="ln">   275&nbsp;&nbsp;</span>	<span class="comment">// The following node types may appear in Scopes:</span>
+<span id="L276" class="ln">   276&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L277" class="ln">   277&nbsp;&nbsp;</span>	<span class="comment">//     *ast.File</span>
+<span id="L278" class="ln">   278&nbsp;&nbsp;</span>	<span class="comment">//     *ast.FuncType</span>
+<span id="L279" class="ln">   279&nbsp;&nbsp;</span>	<span class="comment">//     *ast.TypeSpec</span>
+<span id="L280" class="ln">   280&nbsp;&nbsp;</span>	<span class="comment">//     *ast.BlockStmt</span>
+<span id="L281" class="ln">   281&nbsp;&nbsp;</span>	<span class="comment">//     *ast.IfStmt</span>
+<span id="L282" class="ln">   282&nbsp;&nbsp;</span>	<span class="comment">//     *ast.SwitchStmt</span>
+<span id="L283" class="ln">   283&nbsp;&nbsp;</span>	<span class="comment">//     *ast.TypeSwitchStmt</span>
+<span id="L284" class="ln">   284&nbsp;&nbsp;</span>	<span class="comment">//     *ast.CaseClause</span>
+<span id="L285" class="ln">   285&nbsp;&nbsp;</span>	<span class="comment">//     *ast.CommClause</span>
+<span id="L286" class="ln">   286&nbsp;&nbsp;</span>	<span class="comment">//     *ast.ForStmt</span>
+<span id="L287" class="ln">   287&nbsp;&nbsp;</span>	<span class="comment">//     *ast.RangeStmt</span>
+<span id="L288" class="ln">   288&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L289" class="ln">   289&nbsp;&nbsp;</span>	Scopes map[ast.Node]*Scope
+<span id="L290" class="ln">   290&nbsp;&nbsp;</span>
+<span id="L291" class="ln">   291&nbsp;&nbsp;</span>	<span class="comment">// InitOrder is the list of package-level initializers in the order in which</span>
+<span id="L292" class="ln">   292&nbsp;&nbsp;</span>	<span class="comment">// they must be executed. Initializers referring to variables related by an</span>
+<span id="L293" class="ln">   293&nbsp;&nbsp;</span>	<span class="comment">// initialization dependency appear in topological order, the others appear</span>
+<span id="L294" class="ln">   294&nbsp;&nbsp;</span>	<span class="comment">// in source order. Variables without an initialization expression do not</span>
+<span id="L295" class="ln">   295&nbsp;&nbsp;</span>	<span class="comment">// appear in this list.</span>
+<span id="L296" class="ln">   296&nbsp;&nbsp;</span>	InitOrder []*Initializer
+<span id="L297" class="ln">   297&nbsp;&nbsp;</span>
+<span id="L298" class="ln">   298&nbsp;&nbsp;</span>	<span class="comment">// FileVersions maps a file to its Go version string.</span>
+<span id="L299" class="ln">   299&nbsp;&nbsp;</span>	<span class="comment">// If the file doesn&#39;t specify a version, the reported</span>
+<span id="L300" class="ln">   300&nbsp;&nbsp;</span>	<span class="comment">// string is Config.GoVersion.</span>
+<span id="L301" class="ln">   301&nbsp;&nbsp;</span>	<span class="comment">// Version strings begin with “go”, like “go1.21”, and</span>
+<span id="L302" class="ln">   302&nbsp;&nbsp;</span>	<span class="comment">// are suitable for use with the [go/version] package.</span>
+<span id="L303" class="ln">   303&nbsp;&nbsp;</span>	FileVersions map[*ast.File]string
+<span id="L304" class="ln">   304&nbsp;&nbsp;</span>}
+<span id="L305" class="ln">   305&nbsp;&nbsp;</span>
+<span id="L306" class="ln">   306&nbsp;&nbsp;</span>func (info *Info) recordTypes() bool {
+<span id="L307" class="ln">   307&nbsp;&nbsp;</span>	return info.Types != nil
+<span id="L308" class="ln">   308&nbsp;&nbsp;</span>}
+<span id="L309" class="ln">   309&nbsp;&nbsp;</span>
+<span id="L310" class="ln">   310&nbsp;&nbsp;</span><span class="comment">// TypeOf returns the type of expression e, or nil if not found.</span>
+<span id="L311" class="ln">   311&nbsp;&nbsp;</span><span class="comment">// Precondition: the Types, Uses and Defs maps are populated.</span>
+<span id="L312" class="ln">   312&nbsp;&nbsp;</span>func (info *Info) TypeOf(e ast.Expr) Type {
+<span id="L313" class="ln">   313&nbsp;&nbsp;</span>	if t, ok := info.Types[e]; ok {
+<span id="L314" class="ln">   314&nbsp;&nbsp;</span>		return t.Type
+<span id="L315" class="ln">   315&nbsp;&nbsp;</span>	}
+<span id="L316" class="ln">   316&nbsp;&nbsp;</span>	if id, _ := e.(*ast.Ident); id != nil {
+<span id="L317" class="ln">   317&nbsp;&nbsp;</span>		if obj := info.ObjectOf(id); obj != nil {
+<span id="L318" class="ln">   318&nbsp;&nbsp;</span>			return obj.Type()
+<span id="L319" class="ln">   319&nbsp;&nbsp;</span>		}
+<span id="L320" class="ln">   320&nbsp;&nbsp;</span>	}
+<span id="L321" class="ln">   321&nbsp;&nbsp;</span>	return nil
+<span id="L322" class="ln">   322&nbsp;&nbsp;</span>}
+<span id="L323" class="ln">   323&nbsp;&nbsp;</span>
+<span id="L324" class="ln">   324&nbsp;&nbsp;</span><span class="comment">// ObjectOf returns the object denoted by the specified id,</span>
+<span id="L325" class="ln">   325&nbsp;&nbsp;</span><span class="comment">// or nil if not found.</span>
+<span id="L326" class="ln">   326&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L327" class="ln">   327&nbsp;&nbsp;</span><span class="comment">// If id is an embedded struct field, [Info.ObjectOf] returns the field (*[Var])</span>
+<span id="L328" class="ln">   328&nbsp;&nbsp;</span><span class="comment">// it defines, not the type (*[TypeName]) it uses.</span>
+<span id="L329" class="ln">   329&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L330" class="ln">   330&nbsp;&nbsp;</span><span class="comment">// Precondition: the Uses and Defs maps are populated.</span>
+<span id="L331" class="ln">   331&nbsp;&nbsp;</span>func (info *Info) ObjectOf(id *ast.Ident) Object {
+<span id="L332" class="ln">   332&nbsp;&nbsp;</span>	if obj := info.Defs[id]; obj != nil {
+<span id="L333" class="ln">   333&nbsp;&nbsp;</span>		return obj
+<span id="L334" class="ln">   334&nbsp;&nbsp;</span>	}
+<span id="L335" class="ln">   335&nbsp;&nbsp;</span>	return info.Uses[id]
+<span id="L336" class="ln">   336&nbsp;&nbsp;</span>}
+<span id="L337" class="ln">   337&nbsp;&nbsp;</span>
+<span id="L338" class="ln">   338&nbsp;&nbsp;</span><span class="comment">// PkgNameOf returns the local package name defined by the import,</span>
+<span id="L339" class="ln">   339&nbsp;&nbsp;</span><span class="comment">// or nil if not found.</span>
+<span id="L340" class="ln">   340&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L341" class="ln">   341&nbsp;&nbsp;</span><span class="comment">// For dot-imports, the package name is &#34;.&#34;.</span>
+<span id="L342" class="ln">   342&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L343" class="ln">   343&nbsp;&nbsp;</span><span class="comment">// Precondition: the Defs and Implicts maps are populated.</span>
+<span id="L344" class="ln">   344&nbsp;&nbsp;</span>func (info *Info) PkgNameOf(imp *ast.ImportSpec) *PkgName {
+<span id="L345" class="ln">   345&nbsp;&nbsp;</span>	var obj Object
+<span id="L346" class="ln">   346&nbsp;&nbsp;</span>	if imp.Name != nil {
+<span id="L347" class="ln">   347&nbsp;&nbsp;</span>		obj = info.Defs[imp.Name]
+<span id="L348" class="ln">   348&nbsp;&nbsp;</span>	} else {
+<span id="L349" class="ln">   349&nbsp;&nbsp;</span>		obj = info.Implicits[imp]
+<span id="L350" class="ln">   350&nbsp;&nbsp;</span>	}
+<span id="L351" class="ln">   351&nbsp;&nbsp;</span>	pkgname, _ := obj.(*PkgName)
+<span id="L352" class="ln">   352&nbsp;&nbsp;</span>	return pkgname
+<span id="L353" class="ln">   353&nbsp;&nbsp;</span>}
+<span id="L354" class="ln">   354&nbsp;&nbsp;</span>
+<span id="L355" class="ln">   355&nbsp;&nbsp;</span><span class="comment">// TypeAndValue reports the type and value (for constants)</span>
+<span id="L356" class="ln">   356&nbsp;&nbsp;</span><span class="comment">// of the corresponding expression.</span>
+<span id="L357" class="ln">   357&nbsp;&nbsp;</span>type TypeAndValue struct {
+<span id="L358" class="ln">   358&nbsp;&nbsp;</span>	mode  operandMode
+<span id="L359" class="ln">   359&nbsp;&nbsp;</span>	Type  Type
+<span id="L360" class="ln">   360&nbsp;&nbsp;</span>	Value constant.Value
+<span id="L361" class="ln">   361&nbsp;&nbsp;</span>}
+<span id="L362" class="ln">   362&nbsp;&nbsp;</span>
+<span id="L363" class="ln">   363&nbsp;&nbsp;</span><span class="comment">// IsVoid reports whether the corresponding expression</span>
+<span id="L364" class="ln">   364&nbsp;&nbsp;</span><span class="comment">// is a function call without results.</span>
+<span id="L365" class="ln">   365&nbsp;&nbsp;</span>func (tv TypeAndValue) IsVoid() bool {
+<span id="L366" class="ln">   366&nbsp;&nbsp;</span>	return tv.mode == novalue
+<span id="L367" class="ln">   367&nbsp;&nbsp;</span>}
+<span id="L368" class="ln">   368&nbsp;&nbsp;</span>
+<span id="L369" class="ln">   369&nbsp;&nbsp;</span><span class="comment">// IsType reports whether the corresponding expression specifies a type.</span>
+<span id="L370" class="ln">   370&nbsp;&nbsp;</span>func (tv TypeAndValue) IsType() bool {
+<span id="L371" class="ln">   371&nbsp;&nbsp;</span>	return tv.mode == typexpr
+<span id="L372" class="ln">   372&nbsp;&nbsp;</span>}
+<span id="L373" class="ln">   373&nbsp;&nbsp;</span>
+<span id="L374" class="ln">   374&nbsp;&nbsp;</span><span class="comment">// IsBuiltin reports whether the corresponding expression denotes</span>
+<span id="L375" class="ln">   375&nbsp;&nbsp;</span><span class="comment">// a (possibly parenthesized) built-in function.</span>
+<span id="L376" class="ln">   376&nbsp;&nbsp;</span>func (tv TypeAndValue) IsBuiltin() bool {
+<span id="L377" class="ln">   377&nbsp;&nbsp;</span>	return tv.mode == builtin
+<span id="L378" class="ln">   378&nbsp;&nbsp;</span>}
+<span id="L379" class="ln">   379&nbsp;&nbsp;</span>
+<span id="L380" class="ln">   380&nbsp;&nbsp;</span><span class="comment">// IsValue reports whether the corresponding expression is a value.</span>
+<span id="L381" class="ln">   381&nbsp;&nbsp;</span><span class="comment">// Builtins are not considered values. Constant values have a non-</span>
+<span id="L382" class="ln">   382&nbsp;&nbsp;</span><span class="comment">// nil Value.</span>
+<span id="L383" class="ln">   383&nbsp;&nbsp;</span>func (tv TypeAndValue) IsValue() bool {
+<span id="L384" class="ln">   384&nbsp;&nbsp;</span>	switch tv.mode {
+<span id="L385" class="ln">   385&nbsp;&nbsp;</span>	case constant_, variable, mapindex, value, commaok, commaerr:
+<span id="L386" class="ln">   386&nbsp;&nbsp;</span>		return true
+<span id="L387" class="ln">   387&nbsp;&nbsp;</span>	}
+<span id="L388" class="ln">   388&nbsp;&nbsp;</span>	return false
+<span id="L389" class="ln">   389&nbsp;&nbsp;</span>}
+<span id="L390" class="ln">   390&nbsp;&nbsp;</span>
+<span id="L391" class="ln">   391&nbsp;&nbsp;</span><span class="comment">// IsNil reports whether the corresponding expression denotes the</span>
+<span id="L392" class="ln">   392&nbsp;&nbsp;</span><span class="comment">// predeclared value nil.</span>
+<span id="L393" class="ln">   393&nbsp;&nbsp;</span>func (tv TypeAndValue) IsNil() bool {
+<span id="L394" class="ln">   394&nbsp;&nbsp;</span>	return tv.mode == value &amp;&amp; tv.Type == Typ[UntypedNil]
+<span id="L395" class="ln">   395&nbsp;&nbsp;</span>}
+<span id="L396" class="ln">   396&nbsp;&nbsp;</span>
+<span id="L397" class="ln">   397&nbsp;&nbsp;</span><span class="comment">// Addressable reports whether the corresponding expression</span>
+<span id="L398" class="ln">   398&nbsp;&nbsp;</span><span class="comment">// is addressable (https://golang.org/ref/spec#Address_operators).</span>
+<span id="L399" class="ln">   399&nbsp;&nbsp;</span>func (tv TypeAndValue) Addressable() bool {
+<span id="L400" class="ln">   400&nbsp;&nbsp;</span>	return tv.mode == variable
+<span id="L401" class="ln">   401&nbsp;&nbsp;</span>}
+<span id="L402" class="ln">   402&nbsp;&nbsp;</span>
+<span id="L403" class="ln">   403&nbsp;&nbsp;</span><span class="comment">// Assignable reports whether the corresponding expression</span>
+<span id="L404" class="ln">   404&nbsp;&nbsp;</span><span class="comment">// is assignable to (provided a value of the right type).</span>
+<span id="L405" class="ln">   405&nbsp;&nbsp;</span>func (tv TypeAndValue) Assignable() bool {
+<span id="L406" class="ln">   406&nbsp;&nbsp;</span>	return tv.mode == variable || tv.mode == mapindex
+<span id="L407" class="ln">   407&nbsp;&nbsp;</span>}
+<span id="L408" class="ln">   408&nbsp;&nbsp;</span>
+<span id="L409" class="ln">   409&nbsp;&nbsp;</span><span class="comment">// HasOk reports whether the corresponding expression may be</span>
+<span id="L410" class="ln">   410&nbsp;&nbsp;</span><span class="comment">// used on the rhs of a comma-ok assignment.</span>
+<span id="L411" class="ln">   411&nbsp;&nbsp;</span>func (tv TypeAndValue) HasOk() bool {
+<span id="L412" class="ln">   412&nbsp;&nbsp;</span>	return tv.mode == commaok || tv.mode == mapindex
+<span id="L413" class="ln">   413&nbsp;&nbsp;</span>}
+<span id="L414" class="ln">   414&nbsp;&nbsp;</span>
+<span id="L415" class="ln">   415&nbsp;&nbsp;</span><span class="comment">// Instance reports the type arguments and instantiated type for type and</span>
+<span id="L416" class="ln">   416&nbsp;&nbsp;</span><span class="comment">// function instantiations. For type instantiations, [Type] will be of dynamic</span>
+<span id="L417" class="ln">   417&nbsp;&nbsp;</span><span class="comment">// type *[Named]. For function instantiations, [Type] will be of dynamic type</span>
+<span id="L418" class="ln">   418&nbsp;&nbsp;</span><span class="comment">// *Signature.</span>
+<span id="L419" class="ln">   419&nbsp;&nbsp;</span>type Instance struct {
+<span id="L420" class="ln">   420&nbsp;&nbsp;</span>	TypeArgs *TypeList
+<span id="L421" class="ln">   421&nbsp;&nbsp;</span>	Type     Type
+<span id="L422" class="ln">   422&nbsp;&nbsp;</span>}
+<span id="L423" class="ln">   423&nbsp;&nbsp;</span>
+<span id="L424" class="ln">   424&nbsp;&nbsp;</span><span class="comment">// An Initializer describes a package-level variable, or a list of variables in case</span>
+<span id="L425" class="ln">   425&nbsp;&nbsp;</span><span class="comment">// of a multi-valued initialization expression, and the corresponding initialization</span>
+<span id="L426" class="ln">   426&nbsp;&nbsp;</span><span class="comment">// expression.</span>
+<span id="L427" class="ln">   427&nbsp;&nbsp;</span>type Initializer struct {
+<span id="L428" class="ln">   428&nbsp;&nbsp;</span>	Lhs []*Var <span class="comment">// var Lhs = Rhs</span>
+<span id="L429" class="ln">   429&nbsp;&nbsp;</span>	Rhs ast.Expr
+<span id="L430" class="ln">   430&nbsp;&nbsp;</span>}
+<span id="L431" class="ln">   431&nbsp;&nbsp;</span>
+<span id="L432" class="ln">   432&nbsp;&nbsp;</span><span class="selection">func (init *Initializer) String() string</span> {
+<span id="L433" class="ln">   433&nbsp;&nbsp;</span>	var buf bytes.Buffer
+<span id="L434" class="ln">   434&nbsp;&nbsp;</span>	for i, lhs := range init.Lhs {
+<span id="L435" class="ln">   435&nbsp;&nbsp;</span>		if i &gt; 0 {
+<span id="L436" class="ln">   436&nbsp;&nbsp;</span>			buf.WriteString(&#34;, &#34;)
+<span id="L437" class="ln">   437&nbsp;&nbsp;</span>		}
+<span id="L438" class="ln">   438&nbsp;&nbsp;</span>		buf.WriteString(lhs.Name())
+<span id="L439" class="ln">   439&nbsp;&nbsp;</span>	}
+<span id="L440" class="ln">   440&nbsp;&nbsp;</span>	buf.WriteString(&#34; = &#34;)
+<span id="L441" class="ln">   441&nbsp;&nbsp;</span>	WriteExpr(&amp;buf, init.Rhs)
+<span id="L442" class="ln">   442&nbsp;&nbsp;</span>	return buf.String()
+<span id="L443" class="ln">   443&nbsp;&nbsp;</span>}
+<span id="L444" class="ln">   444&nbsp;&nbsp;</span>
+<span id="L445" class="ln">   445&nbsp;&nbsp;</span><span class="comment">// Check type-checks a package and returns the resulting package object and</span>
+<span id="L446" class="ln">   446&nbsp;&nbsp;</span><span class="comment">// the first error if any. Additionally, if info != nil, Check populates each</span>
+<span id="L447" class="ln">   447&nbsp;&nbsp;</span><span class="comment">// of the non-nil maps in the [Info] struct.</span>
+<span id="L448" class="ln">   448&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L449" class="ln">   449&nbsp;&nbsp;</span><span class="comment">// The package is marked as complete if no errors occurred, otherwise it is</span>
+<span id="L450" class="ln">   450&nbsp;&nbsp;</span><span class="comment">// incomplete. See [Config.Error] for controlling behavior in the presence of</span>
+<span id="L451" class="ln">   451&nbsp;&nbsp;</span><span class="comment">// errors.</span>
+<span id="L452" class="ln">   452&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L453" class="ln">   453&nbsp;&nbsp;</span><span class="comment">// The package is specified by a list of *ast.Files and corresponding</span>
+<span id="L454" class="ln">   454&nbsp;&nbsp;</span><span class="comment">// file set, and the package path the package is identified with.</span>
+<span id="L455" class="ln">   455&nbsp;&nbsp;</span><span class="comment">// The clean path must not be empty or dot (&#34;.&#34;).</span>
+<span id="L456" class="ln">   456&nbsp;&nbsp;</span>func (conf *Config) Check(path string, fset *token.FileSet, files []*ast.File, info *Info) (*Package, error) {
+<span id="L457" class="ln">   457&nbsp;&nbsp;</span>	pkg := NewPackage(path, &#34;&#34;)
+<span id="L458" class="ln">   458&nbsp;&nbsp;</span>	return pkg, NewChecker(conf, fset, pkg, info).Files(files)
+<span id="L459" class="ln">   459&nbsp;&nbsp;</span>}
+<span id="L460" class="ln">   460&nbsp;&nbsp;</span>
+</pre><p><a href="api.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

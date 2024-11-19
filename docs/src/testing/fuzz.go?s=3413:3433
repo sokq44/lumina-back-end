@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>src/testing/fuzz.go - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../index.html">GoDoc</a></div>
+<a href="./fuzz.go?s=3413:3433#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Source file
+    <a href="http://localhost:8080/src">src</a>/<a href="http://localhost:8080/src/testing">testing</a>/<span class="text-muted">fuzz.go</span>
+  </h1>
+
+
+
+
+
+  <h2>
+    Documentation: <a href="http://localhost:8080/pkg/testing">testing</a>
+  </h2>
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1&nbsp;&nbsp;</span><span class="comment">// Copyright 2020 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2&nbsp;&nbsp;</span><span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3&nbsp;&nbsp;</span><span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4&nbsp;&nbsp;</span>
+<span id="L5" class="ln">     5&nbsp;&nbsp;</span>package testing
+<span id="L6" class="ln">     6&nbsp;&nbsp;</span>
+<span id="L7" class="ln">     7&nbsp;&nbsp;</span>import (
+<span id="L8" class="ln">     8&nbsp;&nbsp;</span>	&#34;errors&#34;
+<span id="L9" class="ln">     9&nbsp;&nbsp;</span>	&#34;flag&#34;
+<span id="L10" class="ln">    10&nbsp;&nbsp;</span>	&#34;fmt&#34;
+<span id="L11" class="ln">    11&nbsp;&nbsp;</span>	&#34;io&#34;
+<span id="L12" class="ln">    12&nbsp;&nbsp;</span>	&#34;os&#34;
+<span id="L13" class="ln">    13&nbsp;&nbsp;</span>	&#34;path/filepath&#34;
+<span id="L14" class="ln">    14&nbsp;&nbsp;</span>	&#34;reflect&#34;
+<span id="L15" class="ln">    15&nbsp;&nbsp;</span>	&#34;runtime&#34;
+<span id="L16" class="ln">    16&nbsp;&nbsp;</span>	&#34;strings&#34;
+<span id="L17" class="ln">    17&nbsp;&nbsp;</span>	&#34;time&#34;
+<span id="L18" class="ln">    18&nbsp;&nbsp;</span>)
+<span id="L19" class="ln">    19&nbsp;&nbsp;</span>
+<span id="L20" class="ln">    20&nbsp;&nbsp;</span>func initFuzzFlags() {
+<span id="L21" class="ln">    21&nbsp;&nbsp;</span>	matchFuzz = flag.String(&#34;test.fuzz&#34;, &#34;&#34;, &#34;run the fuzz test matching `regexp`&#34;)
+<span id="L22" class="ln">    22&nbsp;&nbsp;</span>	flag.Var(&amp;fuzzDuration, &#34;test.fuzztime&#34;, &#34;time to spend fuzzing; default is to run indefinitely&#34;)
+<span id="L23" class="ln">    23&nbsp;&nbsp;</span>	flag.Var(&amp;minimizeDuration, &#34;test.fuzzminimizetime&#34;, &#34;time to spend minimizing a value after finding a failing input&#34;)
+<span id="L24" class="ln">    24&nbsp;&nbsp;</span>
+<span id="L25" class="ln">    25&nbsp;&nbsp;</span>	fuzzCacheDir = flag.String(&#34;test.fuzzcachedir&#34;, &#34;&#34;, &#34;directory where interesting fuzzing inputs are stored (for use only by cmd/go)&#34;)
+<span id="L26" class="ln">    26&nbsp;&nbsp;</span>	isFuzzWorker = flag.Bool(&#34;test.fuzzworker&#34;, false, &#34;coordinate with the parent process to fuzz random values (for use only by cmd/go)&#34;)
+<span id="L27" class="ln">    27&nbsp;&nbsp;</span>}
+<span id="L28" class="ln">    28&nbsp;&nbsp;</span>
+<span id="L29" class="ln">    29&nbsp;&nbsp;</span>var (
+<span id="L30" class="ln">    30&nbsp;&nbsp;</span>	matchFuzz        *string
+<span id="L31" class="ln">    31&nbsp;&nbsp;</span>	fuzzDuration     durationOrCountFlag
+<span id="L32" class="ln">    32&nbsp;&nbsp;</span>	minimizeDuration = durationOrCountFlag{d: 60 * time.Second, allowZero: true}
+<span id="L33" class="ln">    33&nbsp;&nbsp;</span>	fuzzCacheDir     *string
+<span id="L34" class="ln">    34&nbsp;&nbsp;</span>	isFuzzWorker     *bool
+<span id="L35" class="ln">    35&nbsp;&nbsp;</span>
+<span id="L36" class="ln">    36&nbsp;&nbsp;</span>	<span class="comment">// corpusDir is the parent directory of the fuzz test&#39;s seed corpus within</span>
+<span id="L37" class="ln">    37&nbsp;&nbsp;</span>	<span class="comment">// the package.</span>
+<span id="L38" class="ln">    38&nbsp;&nbsp;</span>	corpusDir = &#34;testdata/fuzz&#34;
+<span id="L39" class="ln">    39&nbsp;&nbsp;</span>)
+<span id="L40" class="ln">    40&nbsp;&nbsp;</span>
+<span id="L41" class="ln">    41&nbsp;&nbsp;</span><span class="comment">// fuzzWorkerExitCode is used as an exit code by fuzz worker processes after an</span>
+<span id="L42" class="ln">    42&nbsp;&nbsp;</span><span class="comment">// internal error. This distinguishes internal errors from uncontrolled panics</span>
+<span id="L43" class="ln">    43&nbsp;&nbsp;</span><span class="comment">// and other failures. Keep in sync with internal/fuzz.workerExitCode.</span>
+<span id="L44" class="ln">    44&nbsp;&nbsp;</span>const fuzzWorkerExitCode = 70
+<span id="L45" class="ln">    45&nbsp;&nbsp;</span>
+<span id="L46" class="ln">    46&nbsp;&nbsp;</span><span class="comment">// InternalFuzzTarget is an internal type but exported because it is</span>
+<span id="L47" class="ln">    47&nbsp;&nbsp;</span><span class="comment">// cross-package; it is part of the implementation of the &#34;go test&#34; command.</span>
+<span id="L48" class="ln">    48&nbsp;&nbsp;</span>type InternalFuzzTarget struct {
+<span id="L49" class="ln">    49&nbsp;&nbsp;</span>	Name string
+<span id="L50" class="ln">    50&nbsp;&nbsp;</span>	Fn   func(f *F)
+<span id="L51" class="ln">    51&nbsp;&nbsp;</span>}
+<span id="L52" class="ln">    52&nbsp;&nbsp;</span>
+<span id="L53" class="ln">    53&nbsp;&nbsp;</span><span class="comment">// F is a type passed to fuzz tests.</span>
+<span id="L54" class="ln">    54&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L55" class="ln">    55&nbsp;&nbsp;</span><span class="comment">// Fuzz tests run generated inputs against a provided fuzz target, which can</span>
+<span id="L56" class="ln">    56&nbsp;&nbsp;</span><span class="comment">// find and report potential bugs in the code being tested.</span>
+<span id="L57" class="ln">    57&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L58" class="ln">    58&nbsp;&nbsp;</span><span class="comment">// A fuzz test runs the seed corpus by default, which includes entries provided</span>
+<span id="L59" class="ln">    59&nbsp;&nbsp;</span><span class="comment">// by (*F).Add and entries in the testdata/fuzz/&lt;FuzzTestName&gt; directory. After</span>
+<span id="L60" class="ln">    60&nbsp;&nbsp;</span><span class="comment">// any necessary setup and calls to (*F).Add, the fuzz test must then call</span>
+<span id="L61" class="ln">    61&nbsp;&nbsp;</span><span class="comment">// (*F).Fuzz to provide the fuzz target. See the testing package documentation</span>
+<span id="L62" class="ln">    62&nbsp;&nbsp;</span><span class="comment">// for an example, and see the [F.Fuzz] and [F.Add] method documentation for</span>
+<span id="L63" class="ln">    63&nbsp;&nbsp;</span><span class="comment">// details.</span>
+<span id="L64" class="ln">    64&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L65" class="ln">    65&nbsp;&nbsp;</span><span class="comment">// *F methods can only be called before (*F).Fuzz. Once the test is</span>
+<span id="L66" class="ln">    66&nbsp;&nbsp;</span><span class="comment">// executing the fuzz target, only (*T) methods can be used. The only *F methods</span>
+<span id="L67" class="ln">    67&nbsp;&nbsp;</span><span class="comment">// that are allowed in the (*F).Fuzz function are (*F).Failed and (*F).Name.</span>
+<span id="L68" class="ln">    68&nbsp;&nbsp;</span>type F struct {
+<span id="L69" class="ln">    69&nbsp;&nbsp;</span>	common
+<span id="L70" class="ln">    70&nbsp;&nbsp;</span>	fuzzContext *fuzzContext
+<span id="L71" class="ln">    71&nbsp;&nbsp;</span>	testContext *testContext
+<span id="L72" class="ln">    72&nbsp;&nbsp;</span>
+<span id="L73" class="ln">    73&nbsp;&nbsp;</span>	<span class="comment">// inFuzzFn is true when the fuzz function is running. Most F methods cannot</span>
+<span id="L74" class="ln">    74&nbsp;&nbsp;</span>	<span class="comment">// be called when inFuzzFn is true.</span>
+<span id="L75" class="ln">    75&nbsp;&nbsp;</span>	inFuzzFn bool
+<span id="L76" class="ln">    76&nbsp;&nbsp;</span>
+<span id="L77" class="ln">    77&nbsp;&nbsp;</span>	<span class="comment">// corpus is a set of seed corpus entries, added with F.Add and loaded</span>
+<span id="L78" class="ln">    78&nbsp;&nbsp;</span>	<span class="comment">// from testdata.</span>
+<span id="L79" class="ln">    79&nbsp;&nbsp;</span>	corpus []corpusEntry
+<span id="L80" class="ln">    80&nbsp;&nbsp;</span>
+<span id="L81" class="ln">    81&nbsp;&nbsp;</span>	result     fuzzResult
+<span id="L82" class="ln">    82&nbsp;&nbsp;</span>	fuzzCalled bool
+<span id="L83" class="ln">    83&nbsp;&nbsp;</span>}
+<span id="L84" class="ln">    84&nbsp;&nbsp;</span>
+<span id="L85" class="ln">    85&nbsp;&nbsp;</span>var _ TB = (*F)(nil)
+<span id="L86" class="ln">    86&nbsp;&nbsp;</span>
+<span id="L87" class="ln">    87&nbsp;&nbsp;</span><span class="comment">// corpusEntry is an alias to the same type as internal/fuzz.CorpusEntry.</span>
+<span id="L88" class="ln">    88&nbsp;&nbsp;</span><span class="comment">// We use a type alias because we don&#39;t want to export this type, and we can&#39;t</span>
+<span id="L89" class="ln">    89&nbsp;&nbsp;</span><span class="comment">// import internal/fuzz from testing.</span>
+<span id="L90" class="ln">    90&nbsp;&nbsp;</span>type corpusEntry = struct {
+<span id="L91" class="ln">    91&nbsp;&nbsp;</span>	Parent     string
+<span id="L92" class="ln">    92&nbsp;&nbsp;</span>	Path       string
+<span id="L93" class="ln">    93&nbsp;&nbsp;</span>	Data       []byte
+<span id="L94" class="ln">    94&nbsp;&nbsp;</span>	Values     []any
+<span id="L95" class="ln">    95&nbsp;&nbsp;</span>	Generation int
+<span id="L96" class="ln">    96&nbsp;&nbsp;</span>	IsSeed     bool
+<span id="L97" class="ln">    97&nbsp;&nbsp;</span>}
+<span id="L98" class="ln">    98&nbsp;&nbsp;</span>
+<span id="L99" class="ln">    99&nbsp;&nbsp;</span><span class="comment">// Helper marks the calling function as a test helper function.</span>
+<span id="L100" class="ln">   100&nbsp;&nbsp;</span><span class="comment">// When printing file and line information, that function will be skipped.</span>
+<span id="L101" class="ln">   101&nbsp;&nbsp;</span><span class="comment">// Helper may be called simultaneously from multiple goroutines.</span>
+<span id="L102" class="ln">   102&nbsp;&nbsp;</span><span class="selection">func (f *F) Helper()</span> {
+<span id="L103" class="ln">   103&nbsp;&nbsp;</span>	if f.inFuzzFn {
+<span id="L104" class="ln">   104&nbsp;&nbsp;</span>		panic(&#34;testing: f.Helper was called inside the fuzz target, use t.Helper instead&#34;)
+<span id="L105" class="ln">   105&nbsp;&nbsp;</span>	}
+<span id="L106" class="ln">   106&nbsp;&nbsp;</span>
+<span id="L107" class="ln">   107&nbsp;&nbsp;</span>	<span class="comment">// common.Helper is inlined here.</span>
+<span id="L108" class="ln">   108&nbsp;&nbsp;</span>	<span class="comment">// If we called it, it would mark F.Helper as the helper</span>
+<span id="L109" class="ln">   109&nbsp;&nbsp;</span>	<span class="comment">// instead of the caller.</span>
+<span id="L110" class="ln">   110&nbsp;&nbsp;</span>	f.mu.Lock()
+<span id="L111" class="ln">   111&nbsp;&nbsp;</span>	defer f.mu.Unlock()
+<span id="L112" class="ln">   112&nbsp;&nbsp;</span>	if f.helperPCs == nil {
+<span id="L113" class="ln">   113&nbsp;&nbsp;</span>		f.helperPCs = make(map[uintptr]struct{})
+<span id="L114" class="ln">   114&nbsp;&nbsp;</span>	}
+<span id="L115" class="ln">   115&nbsp;&nbsp;</span>	<span class="comment">// repeating code from callerName here to save walking a stack frame</span>
+<span id="L116" class="ln">   116&nbsp;&nbsp;</span>	var pc [1]uintptr
+<span id="L117" class="ln">   117&nbsp;&nbsp;</span>	n := runtime.Callers(2, pc[:]) <span class="comment">// skip runtime.Callers + Helper</span>
+<span id="L118" class="ln">   118&nbsp;&nbsp;</span>	if n == 0 {
+<span id="L119" class="ln">   119&nbsp;&nbsp;</span>		panic(&#34;testing: zero callers found&#34;)
+<span id="L120" class="ln">   120&nbsp;&nbsp;</span>	}
+<span id="L121" class="ln">   121&nbsp;&nbsp;</span>	if _, found := f.helperPCs[pc[0]]; !found {
+<span id="L122" class="ln">   122&nbsp;&nbsp;</span>		f.helperPCs[pc[0]] = struct{}{}
+<span id="L123" class="ln">   123&nbsp;&nbsp;</span>		f.helperNames = nil <span class="comment">// map will be recreated next time it is needed</span>
+<span id="L124" class="ln">   124&nbsp;&nbsp;</span>	}
+<span id="L125" class="ln">   125&nbsp;&nbsp;</span>}
+<span id="L126" class="ln">   126&nbsp;&nbsp;</span>
+<span id="L127" class="ln">   127&nbsp;&nbsp;</span><span class="comment">// Fail marks the function as having failed but continues execution.</span>
+<span id="L128" class="ln">   128&nbsp;&nbsp;</span>func (f *F) Fail() {
+<span id="L129" class="ln">   129&nbsp;&nbsp;</span>	<span class="comment">// (*F).Fail may be called by (*T).Fail, which we should allow. However, we</span>
+<span id="L130" class="ln">   130&nbsp;&nbsp;</span>	<span class="comment">// shouldn&#39;t allow direct (*F).Fail calls from inside the (*F).Fuzz function.</span>
+<span id="L131" class="ln">   131&nbsp;&nbsp;</span>	if f.inFuzzFn {
+<span id="L132" class="ln">   132&nbsp;&nbsp;</span>		panic(&#34;testing: f.Fail was called inside the fuzz target, use t.Fail instead&#34;)
+<span id="L133" class="ln">   133&nbsp;&nbsp;</span>	}
+<span id="L134" class="ln">   134&nbsp;&nbsp;</span>	f.common.Helper()
+<span id="L135" class="ln">   135&nbsp;&nbsp;</span>	f.common.Fail()
+<span id="L136" class="ln">   136&nbsp;&nbsp;</span>}
+<span id="L137" class="ln">   137&nbsp;&nbsp;</span>
+<span id="L138" class="ln">   138&nbsp;&nbsp;</span><span class="comment">// Skipped reports whether the test was skipped.</span>
+<span id="L139" class="ln">   139&nbsp;&nbsp;</span>func (f *F) Skipped() bool {
+<span id="L140" class="ln">   140&nbsp;&nbsp;</span>	<span class="comment">// (*F).Skipped may be called by tRunner, which we should allow. However, we</span>
+<span id="L141" class="ln">   141&nbsp;&nbsp;</span>	<span class="comment">// shouldn&#39;t allow direct (*F).Skipped calls from inside the (*F).Fuzz function.</span>
+<span id="L142" class="ln">   142&nbsp;&nbsp;</span>	if f.inFuzzFn {
+<span id="L143" class="ln">   143&nbsp;&nbsp;</span>		panic(&#34;testing: f.Skipped was called inside the fuzz target, use t.Skipped instead&#34;)
+<span id="L144" class="ln">   144&nbsp;&nbsp;</span>	}
+<span id="L145" class="ln">   145&nbsp;&nbsp;</span>	f.common.Helper()
+<span id="L146" class="ln">   146&nbsp;&nbsp;</span>	return f.common.Skipped()
+<span id="L147" class="ln">   147&nbsp;&nbsp;</span>}
+<span id="L148" class="ln">   148&nbsp;&nbsp;</span>
+<span id="L149" class="ln">   149&nbsp;&nbsp;</span><span class="comment">// Add will add the arguments to the seed corpus for the fuzz test. This will be</span>
+<span id="L150" class="ln">   150&nbsp;&nbsp;</span><span class="comment">// a no-op if called after or within the fuzz target, and args must match the</span>
+<span id="L151" class="ln">   151&nbsp;&nbsp;</span><span class="comment">// arguments for the fuzz target.</span>
+<span id="L152" class="ln">   152&nbsp;&nbsp;</span>func (f *F) Add(args ...any) {
+<span id="L153" class="ln">   153&nbsp;&nbsp;</span>	var values []any
+<span id="L154" class="ln">   154&nbsp;&nbsp;</span>	for i := range args {
+<span id="L155" class="ln">   155&nbsp;&nbsp;</span>		if t := reflect.TypeOf(args[i]); !supportedTypes[t] {
+<span id="L156" class="ln">   156&nbsp;&nbsp;</span>			panic(fmt.Sprintf(&#34;testing: unsupported type to Add %v&#34;, t))
+<span id="L157" class="ln">   157&nbsp;&nbsp;</span>		}
+<span id="L158" class="ln">   158&nbsp;&nbsp;</span>		values = append(values, args[i])
+<span id="L159" class="ln">   159&nbsp;&nbsp;</span>	}
+<span id="L160" class="ln">   160&nbsp;&nbsp;</span>	f.corpus = append(f.corpus, corpusEntry{Values: values, IsSeed: true, Path: fmt.Sprintf(&#34;seed#%d&#34;, len(f.corpus))})
+<span id="L161" class="ln">   161&nbsp;&nbsp;</span>}
+<span id="L162" class="ln">   162&nbsp;&nbsp;</span>
+<span id="L163" class="ln">   163&nbsp;&nbsp;</span><span class="comment">// supportedTypes represents all of the supported types which can be fuzzed.</span>
+<span id="L164" class="ln">   164&nbsp;&nbsp;</span>var supportedTypes = map[reflect.Type]bool{
+<span id="L165" class="ln">   165&nbsp;&nbsp;</span>	reflect.TypeOf(([]byte)(&#34;&#34;)):  true,
+<span id="L166" class="ln">   166&nbsp;&nbsp;</span>	reflect.TypeOf((string)(&#34;&#34;)):  true,
+<span id="L167" class="ln">   167&nbsp;&nbsp;</span>	reflect.TypeOf((bool)(false)): true,
+<span id="L168" class="ln">   168&nbsp;&nbsp;</span>	reflect.TypeOf((byte)(0)):     true,
+<span id="L169" class="ln">   169&nbsp;&nbsp;</span>	reflect.TypeOf((rune)(0)):     true,
+<span id="L170" class="ln">   170&nbsp;&nbsp;</span>	reflect.TypeOf((float32)(0)):  true,
+<span id="L171" class="ln">   171&nbsp;&nbsp;</span>	reflect.TypeOf((float64)(0)):  true,
+<span id="L172" class="ln">   172&nbsp;&nbsp;</span>	reflect.TypeOf((int)(0)):      true,
+<span id="L173" class="ln">   173&nbsp;&nbsp;</span>	reflect.TypeOf((int8)(0)):     true,
+<span id="L174" class="ln">   174&nbsp;&nbsp;</span>	reflect.TypeOf((int16)(0)):    true,
+<span id="L175" class="ln">   175&nbsp;&nbsp;</span>	reflect.TypeOf((int32)(0)):    true,
+<span id="L176" class="ln">   176&nbsp;&nbsp;</span>	reflect.TypeOf((int64)(0)):    true,
+<span id="L177" class="ln">   177&nbsp;&nbsp;</span>	reflect.TypeOf((uint)(0)):     true,
+<span id="L178" class="ln">   178&nbsp;&nbsp;</span>	reflect.TypeOf((uint8)(0)):    true,
+<span id="L179" class="ln">   179&nbsp;&nbsp;</span>	reflect.TypeOf((uint16)(0)):   true,
+<span id="L180" class="ln">   180&nbsp;&nbsp;</span>	reflect.TypeOf((uint32)(0)):   true,
+<span id="L181" class="ln">   181&nbsp;&nbsp;</span>	reflect.TypeOf((uint64)(0)):   true,
+<span id="L182" class="ln">   182&nbsp;&nbsp;</span>}
+<span id="L183" class="ln">   183&nbsp;&nbsp;</span>
+<span id="L184" class="ln">   184&nbsp;&nbsp;</span><span class="comment">// Fuzz runs the fuzz function, ff, for fuzz testing. If ff fails for a set of</span>
+<span id="L185" class="ln">   185&nbsp;&nbsp;</span><span class="comment">// arguments, those arguments will be added to the seed corpus.</span>
+<span id="L186" class="ln">   186&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L187" class="ln">   187&nbsp;&nbsp;</span><span class="comment">// ff must be a function with no return value whose first argument is *T and</span>
+<span id="L188" class="ln">   188&nbsp;&nbsp;</span><span class="comment">// whose remaining arguments are the types to be fuzzed.</span>
+<span id="L189" class="ln">   189&nbsp;&nbsp;</span><span class="comment">// For example:</span>
+<span id="L190" class="ln">   190&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L191" class="ln">   191&nbsp;&nbsp;</span><span class="comment">//	f.Fuzz(func(t *testing.T, b []byte, i int) { ... })</span>
+<span id="L192" class="ln">   192&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L193" class="ln">   193&nbsp;&nbsp;</span><span class="comment">// The following types are allowed: []byte, string, bool, byte, rune, float32,</span>
+<span id="L194" class="ln">   194&nbsp;&nbsp;</span><span class="comment">// float64, int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64.</span>
+<span id="L195" class="ln">   195&nbsp;&nbsp;</span><span class="comment">// More types may be supported in the future.</span>
+<span id="L196" class="ln">   196&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L197" class="ln">   197&nbsp;&nbsp;</span><span class="comment">// ff must not call any *F methods, e.g. (*F).Log, (*F).Error, (*F).Skip. Use</span>
+<span id="L198" class="ln">   198&nbsp;&nbsp;</span><span class="comment">// the corresponding *T method instead. The only *F methods that are allowed in</span>
+<span id="L199" class="ln">   199&nbsp;&nbsp;</span><span class="comment">// the (*F).Fuzz function are (*F).Failed and (*F).Name.</span>
+<span id="L200" class="ln">   200&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L201" class="ln">   201&nbsp;&nbsp;</span><span class="comment">// This function should be fast and deterministic, and its behavior should not</span>
+<span id="L202" class="ln">   202&nbsp;&nbsp;</span><span class="comment">// depend on shared state. No mutatable input arguments, or pointers to them,</span>
+<span id="L203" class="ln">   203&nbsp;&nbsp;</span><span class="comment">// should be retained between executions of the fuzz function, as the memory</span>
+<span id="L204" class="ln">   204&nbsp;&nbsp;</span><span class="comment">// backing them may be mutated during a subsequent invocation. ff must not</span>
+<span id="L205" class="ln">   205&nbsp;&nbsp;</span><span class="comment">// modify the underlying data of the arguments provided by the fuzzing engine.</span>
+<span id="L206" class="ln">   206&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L207" class="ln">   207&nbsp;&nbsp;</span><span class="comment">// When fuzzing, F.Fuzz does not return until a problem is found, time runs out</span>
+<span id="L208" class="ln">   208&nbsp;&nbsp;</span><span class="comment">// (set with -fuzztime), or the test process is interrupted by a signal. F.Fuzz</span>
+<span id="L209" class="ln">   209&nbsp;&nbsp;</span><span class="comment">// should be called exactly once, unless F.Skip or [F.Fail] is called beforehand.</span>
+<span id="L210" class="ln">   210&nbsp;&nbsp;</span>func (f *F) Fuzz(ff any) {
+<span id="L211" class="ln">   211&nbsp;&nbsp;</span>	if f.fuzzCalled {
+<span id="L212" class="ln">   212&nbsp;&nbsp;</span>		panic(&#34;testing: F.Fuzz called more than once&#34;)
+<span id="L213" class="ln">   213&nbsp;&nbsp;</span>	}
+<span id="L214" class="ln">   214&nbsp;&nbsp;</span>	f.fuzzCalled = true
+<span id="L215" class="ln">   215&nbsp;&nbsp;</span>	if f.failed {
+<span id="L216" class="ln">   216&nbsp;&nbsp;</span>		return
+<span id="L217" class="ln">   217&nbsp;&nbsp;</span>	}
+<span id="L218" class="ln">   218&nbsp;&nbsp;</span>	f.Helper()
+<span id="L219" class="ln">   219&nbsp;&nbsp;</span>
+<span id="L220" class="ln">   220&nbsp;&nbsp;</span>	<span class="comment">// ff should be in the form func(*testing.T, ...interface{})</span>
+<span id="L221" class="ln">   221&nbsp;&nbsp;</span>	fn := reflect.ValueOf(ff)
+<span id="L222" class="ln">   222&nbsp;&nbsp;</span>	fnType := fn.Type()
+<span id="L223" class="ln">   223&nbsp;&nbsp;</span>	if fnType.Kind() != reflect.Func {
+<span id="L224" class="ln">   224&nbsp;&nbsp;</span>		panic(&#34;testing: F.Fuzz must receive a function&#34;)
+<span id="L225" class="ln">   225&nbsp;&nbsp;</span>	}
+<span id="L226" class="ln">   226&nbsp;&nbsp;</span>	if fnType.NumIn() &lt; 2 || fnType.In(0) != reflect.TypeOf((*T)(nil)) {
+<span id="L227" class="ln">   227&nbsp;&nbsp;</span>		panic(&#34;testing: fuzz target must receive at least two arguments, where the first argument is a *T&#34;)
+<span id="L228" class="ln">   228&nbsp;&nbsp;</span>	}
+<span id="L229" class="ln">   229&nbsp;&nbsp;</span>	if fnType.NumOut() != 0 {
+<span id="L230" class="ln">   230&nbsp;&nbsp;</span>		panic(&#34;testing: fuzz target must not return a value&#34;)
+<span id="L231" class="ln">   231&nbsp;&nbsp;</span>	}
+<span id="L232" class="ln">   232&nbsp;&nbsp;</span>
+<span id="L233" class="ln">   233&nbsp;&nbsp;</span>	<span class="comment">// Save the types of the function to compare against the corpus.</span>
+<span id="L234" class="ln">   234&nbsp;&nbsp;</span>	var types []reflect.Type
+<span id="L235" class="ln">   235&nbsp;&nbsp;</span>	for i := 1; i &lt; fnType.NumIn(); i++ {
+<span id="L236" class="ln">   236&nbsp;&nbsp;</span>		t := fnType.In(i)
+<span id="L237" class="ln">   237&nbsp;&nbsp;</span>		if !supportedTypes[t] {
+<span id="L238" class="ln">   238&nbsp;&nbsp;</span>			panic(fmt.Sprintf(&#34;testing: unsupported type for fuzzing %v&#34;, t))
+<span id="L239" class="ln">   239&nbsp;&nbsp;</span>		}
+<span id="L240" class="ln">   240&nbsp;&nbsp;</span>		types = append(types, t)
+<span id="L241" class="ln">   241&nbsp;&nbsp;</span>	}
+<span id="L242" class="ln">   242&nbsp;&nbsp;</span>
+<span id="L243" class="ln">   243&nbsp;&nbsp;</span>	<span class="comment">// Load the testdata seed corpus. Check types of entries in the testdata</span>
+<span id="L244" class="ln">   244&nbsp;&nbsp;</span>	<span class="comment">// corpus and entries declared with F.Add.</span>
+<span id="L245" class="ln">   245&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L246" class="ln">   246&nbsp;&nbsp;</span>	<span class="comment">// Don&#39;t load the seed corpus if this is a worker process; we won&#39;t use it.</span>
+<span id="L247" class="ln">   247&nbsp;&nbsp;</span>	if f.fuzzContext.mode != fuzzWorker {
+<span id="L248" class="ln">   248&nbsp;&nbsp;</span>		for _, c := range f.corpus {
+<span id="L249" class="ln">   249&nbsp;&nbsp;</span>			if err := f.fuzzContext.deps.CheckCorpus(c.Values, types); err != nil {
+<span id="L250" class="ln">   250&nbsp;&nbsp;</span>				<span class="comment">// TODO(#48302): Report the source location of the F.Add call.</span>
+<span id="L251" class="ln">   251&nbsp;&nbsp;</span>				f.Fatal(err)
+<span id="L252" class="ln">   252&nbsp;&nbsp;</span>			}
+<span id="L253" class="ln">   253&nbsp;&nbsp;</span>		}
+<span id="L254" class="ln">   254&nbsp;&nbsp;</span>
+<span id="L255" class="ln">   255&nbsp;&nbsp;</span>		<span class="comment">// Load seed corpus</span>
+<span id="L256" class="ln">   256&nbsp;&nbsp;</span>		c, err := f.fuzzContext.deps.ReadCorpus(filepath.Join(corpusDir, f.name), types)
+<span id="L257" class="ln">   257&nbsp;&nbsp;</span>		if err != nil {
+<span id="L258" class="ln">   258&nbsp;&nbsp;</span>			f.Fatal(err)
+<span id="L259" class="ln">   259&nbsp;&nbsp;</span>		}
+<span id="L260" class="ln">   260&nbsp;&nbsp;</span>		for i := range c {
+<span id="L261" class="ln">   261&nbsp;&nbsp;</span>			c[i].IsSeed = true <span class="comment">// these are all seed corpus values</span>
+<span id="L262" class="ln">   262&nbsp;&nbsp;</span>			if f.fuzzContext.mode == fuzzCoordinator {
+<span id="L263" class="ln">   263&nbsp;&nbsp;</span>				<span class="comment">// If this is the coordinator process, zero the values, since we don&#39;t need</span>
+<span id="L264" class="ln">   264&nbsp;&nbsp;</span>				<span class="comment">// to hold onto them.</span>
+<span id="L265" class="ln">   265&nbsp;&nbsp;</span>				c[i].Values = nil
+<span id="L266" class="ln">   266&nbsp;&nbsp;</span>			}
+<span id="L267" class="ln">   267&nbsp;&nbsp;</span>		}
+<span id="L268" class="ln">   268&nbsp;&nbsp;</span>
+<span id="L269" class="ln">   269&nbsp;&nbsp;</span>		f.corpus = append(f.corpus, c...)
+<span id="L270" class="ln">   270&nbsp;&nbsp;</span>	}
+<span id="L271" class="ln">   271&nbsp;&nbsp;</span>
+<span id="L272" class="ln">   272&nbsp;&nbsp;</span>	<span class="comment">// run calls fn on a given input, as a subtest with its own T.</span>
+<span id="L273" class="ln">   273&nbsp;&nbsp;</span>	<span class="comment">// run is analogous to T.Run. The test filtering and cleanup works similarly.</span>
+<span id="L274" class="ln">   274&nbsp;&nbsp;</span>	<span class="comment">// fn is called in its own goroutine.</span>
+<span id="L275" class="ln">   275&nbsp;&nbsp;</span>	run := func(captureOut io.Writer, e corpusEntry) (ok bool) {
+<span id="L276" class="ln">   276&nbsp;&nbsp;</span>		if e.Values == nil {
+<span id="L277" class="ln">   277&nbsp;&nbsp;</span>			<span class="comment">// The corpusEntry must have non-nil Values in order to run the</span>
+<span id="L278" class="ln">   278&nbsp;&nbsp;</span>			<span class="comment">// test. If Values is nil, it is a bug in our code.</span>
+<span id="L279" class="ln">   279&nbsp;&nbsp;</span>			panic(fmt.Sprintf(&#34;corpus file %q was not unmarshaled&#34;, e.Path))
+<span id="L280" class="ln">   280&nbsp;&nbsp;</span>		}
+<span id="L281" class="ln">   281&nbsp;&nbsp;</span>		if shouldFailFast() {
+<span id="L282" class="ln">   282&nbsp;&nbsp;</span>			return true
+<span id="L283" class="ln">   283&nbsp;&nbsp;</span>		}
+<span id="L284" class="ln">   284&nbsp;&nbsp;</span>		testName := f.name
+<span id="L285" class="ln">   285&nbsp;&nbsp;</span>		if e.Path != &#34;&#34; {
+<span id="L286" class="ln">   286&nbsp;&nbsp;</span>			testName = fmt.Sprintf(&#34;%s/%s&#34;, testName, filepath.Base(e.Path))
+<span id="L287" class="ln">   287&nbsp;&nbsp;</span>		}
+<span id="L288" class="ln">   288&nbsp;&nbsp;</span>		if f.testContext.isFuzzing {
+<span id="L289" class="ln">   289&nbsp;&nbsp;</span>			<span class="comment">// Don&#39;t preserve subtest names while fuzzing. If fn calls T.Run,</span>
+<span id="L290" class="ln">   290&nbsp;&nbsp;</span>			<span class="comment">// there will be a very large number of subtests with duplicate names,</span>
+<span id="L291" class="ln">   291&nbsp;&nbsp;</span>			<span class="comment">// which will use a large amount of memory. The subtest names aren&#39;t</span>
+<span id="L292" class="ln">   292&nbsp;&nbsp;</span>			<span class="comment">// useful since there&#39;s no way to re-run them deterministically.</span>
+<span id="L293" class="ln">   293&nbsp;&nbsp;</span>			f.testContext.match.clearSubNames()
+<span id="L294" class="ln">   294&nbsp;&nbsp;</span>		}
+<span id="L295" class="ln">   295&nbsp;&nbsp;</span>
+<span id="L296" class="ln">   296&nbsp;&nbsp;</span>		<span class="comment">// Record the stack trace at the point of this call so that if the subtest</span>
+<span id="L297" class="ln">   297&nbsp;&nbsp;</span>		<span class="comment">// function - which runs in a separate stack - is marked as a helper, we can</span>
+<span id="L298" class="ln">   298&nbsp;&nbsp;</span>		<span class="comment">// continue walking the stack into the parent test.</span>
+<span id="L299" class="ln">   299&nbsp;&nbsp;</span>		var pc [maxStackLen]uintptr
+<span id="L300" class="ln">   300&nbsp;&nbsp;</span>		n := runtime.Callers(2, pc[:])
+<span id="L301" class="ln">   301&nbsp;&nbsp;</span>		t := &amp;T{
+<span id="L302" class="ln">   302&nbsp;&nbsp;</span>			common: common{
+<span id="L303" class="ln">   303&nbsp;&nbsp;</span>				barrier: make(chan bool),
+<span id="L304" class="ln">   304&nbsp;&nbsp;</span>				signal:  make(chan bool),
+<span id="L305" class="ln">   305&nbsp;&nbsp;</span>				name:    testName,
+<span id="L306" class="ln">   306&nbsp;&nbsp;</span>				parent:  &amp;f.common,
+<span id="L307" class="ln">   307&nbsp;&nbsp;</span>				level:   f.level + 1,
+<span id="L308" class="ln">   308&nbsp;&nbsp;</span>				creator: pc[:n],
+<span id="L309" class="ln">   309&nbsp;&nbsp;</span>				chatty:  f.chatty,
+<span id="L310" class="ln">   310&nbsp;&nbsp;</span>			},
+<span id="L311" class="ln">   311&nbsp;&nbsp;</span>			context: f.testContext,
+<span id="L312" class="ln">   312&nbsp;&nbsp;</span>		}
+<span id="L313" class="ln">   313&nbsp;&nbsp;</span>		if captureOut != nil {
+<span id="L314" class="ln">   314&nbsp;&nbsp;</span>			<span class="comment">// t.parent aliases f.common.</span>
+<span id="L315" class="ln">   315&nbsp;&nbsp;</span>			t.parent.w = captureOut
+<span id="L316" class="ln">   316&nbsp;&nbsp;</span>		}
+<span id="L317" class="ln">   317&nbsp;&nbsp;</span>		t.w = indenter{&amp;t.common}
+<span id="L318" class="ln">   318&nbsp;&nbsp;</span>		if t.chatty != nil {
+<span id="L319" class="ln">   319&nbsp;&nbsp;</span>			t.chatty.Updatef(t.name, &#34;=== RUN   %s\n&#34;, t.name)
+<span id="L320" class="ln">   320&nbsp;&nbsp;</span>		}
+<span id="L321" class="ln">   321&nbsp;&nbsp;</span>		f.common.inFuzzFn, f.inFuzzFn = true, true
+<span id="L322" class="ln">   322&nbsp;&nbsp;</span>		go tRunner(t, func(t *T) {
+<span id="L323" class="ln">   323&nbsp;&nbsp;</span>			args := []reflect.Value{reflect.ValueOf(t)}
+<span id="L324" class="ln">   324&nbsp;&nbsp;</span>			for _, v := range e.Values {
+<span id="L325" class="ln">   325&nbsp;&nbsp;</span>				args = append(args, reflect.ValueOf(v))
+<span id="L326" class="ln">   326&nbsp;&nbsp;</span>			}
+<span id="L327" class="ln">   327&nbsp;&nbsp;</span>			<span class="comment">// Before resetting the current coverage, defer the snapshot so that</span>
+<span id="L328" class="ln">   328&nbsp;&nbsp;</span>			<span class="comment">// we make sure it is called right before the tRunner function</span>
+<span id="L329" class="ln">   329&nbsp;&nbsp;</span>			<span class="comment">// exits, regardless of whether it was executed cleanly, panicked,</span>
+<span id="L330" class="ln">   330&nbsp;&nbsp;</span>			<span class="comment">// or if the fuzzFn called t.Fatal.</span>
+<span id="L331" class="ln">   331&nbsp;&nbsp;</span>			if f.testContext.isFuzzing {
+<span id="L332" class="ln">   332&nbsp;&nbsp;</span>				defer f.fuzzContext.deps.SnapshotCoverage()
+<span id="L333" class="ln">   333&nbsp;&nbsp;</span>				f.fuzzContext.deps.ResetCoverage()
+<span id="L334" class="ln">   334&nbsp;&nbsp;</span>			}
+<span id="L335" class="ln">   335&nbsp;&nbsp;</span>			fn.Call(args)
+<span id="L336" class="ln">   336&nbsp;&nbsp;</span>		})
+<span id="L337" class="ln">   337&nbsp;&nbsp;</span>		&lt;-t.signal
+<span id="L338" class="ln">   338&nbsp;&nbsp;</span>		if t.chatty != nil &amp;&amp; t.chatty.json {
+<span id="L339" class="ln">   339&nbsp;&nbsp;</span>			t.chatty.Updatef(t.parent.name, &#34;=== NAME  %s\n&#34;, t.parent.name)
+<span id="L340" class="ln">   340&nbsp;&nbsp;</span>		}
+<span id="L341" class="ln">   341&nbsp;&nbsp;</span>		f.common.inFuzzFn, f.inFuzzFn = false, false
+<span id="L342" class="ln">   342&nbsp;&nbsp;</span>		return !t.Failed()
+<span id="L343" class="ln">   343&nbsp;&nbsp;</span>	}
+<span id="L344" class="ln">   344&nbsp;&nbsp;</span>
+<span id="L345" class="ln">   345&nbsp;&nbsp;</span>	switch f.fuzzContext.mode {
+<span id="L346" class="ln">   346&nbsp;&nbsp;</span>	case fuzzCoordinator:
+<span id="L347" class="ln">   347&nbsp;&nbsp;</span>		<span class="comment">// Fuzzing is enabled, and this is the test process started by &#39;go test&#39;.</span>
+<span id="L348" class="ln">   348&nbsp;&nbsp;</span>		<span class="comment">// Act as the coordinator process, and coordinate workers to perform the</span>
+<span id="L349" class="ln">   349&nbsp;&nbsp;</span>		<span class="comment">// actual fuzzing.</span>
+<span id="L350" class="ln">   350&nbsp;&nbsp;</span>		corpusTargetDir := filepath.Join(corpusDir, f.name)
+<span id="L351" class="ln">   351&nbsp;&nbsp;</span>		cacheTargetDir := filepath.Join(*fuzzCacheDir, f.name)
+<span id="L352" class="ln">   352&nbsp;&nbsp;</span>		err := f.fuzzContext.deps.CoordinateFuzzing(
+<span id="L353" class="ln">   353&nbsp;&nbsp;</span>			fuzzDuration.d,
+<span id="L354" class="ln">   354&nbsp;&nbsp;</span>			int64(fuzzDuration.n),
+<span id="L355" class="ln">   355&nbsp;&nbsp;</span>			minimizeDuration.d,
+<span id="L356" class="ln">   356&nbsp;&nbsp;</span>			int64(minimizeDuration.n),
+<span id="L357" class="ln">   357&nbsp;&nbsp;</span>			*parallel,
+<span id="L358" class="ln">   358&nbsp;&nbsp;</span>			f.corpus,
+<span id="L359" class="ln">   359&nbsp;&nbsp;</span>			types,
+<span id="L360" class="ln">   360&nbsp;&nbsp;</span>			corpusTargetDir,
+<span id="L361" class="ln">   361&nbsp;&nbsp;</span>			cacheTargetDir)
+<span id="L362" class="ln">   362&nbsp;&nbsp;</span>		if err != nil {
+<span id="L363" class="ln">   363&nbsp;&nbsp;</span>			f.result = fuzzResult{Error: err}
+<span id="L364" class="ln">   364&nbsp;&nbsp;</span>			f.Fail()
+<span id="L365" class="ln">   365&nbsp;&nbsp;</span>			fmt.Fprintf(f.w, &#34;%v\n&#34;, err)
+<span id="L366" class="ln">   366&nbsp;&nbsp;</span>			if crashErr, ok := err.(fuzzCrashError); ok {
+<span id="L367" class="ln">   367&nbsp;&nbsp;</span>				crashPath := crashErr.CrashPath()
+<span id="L368" class="ln">   368&nbsp;&nbsp;</span>				fmt.Fprintf(f.w, &#34;Failing input written to %s\n&#34;, crashPath)
+<span id="L369" class="ln">   369&nbsp;&nbsp;</span>				testName := filepath.Base(crashPath)
+<span id="L370" class="ln">   370&nbsp;&nbsp;</span>				fmt.Fprintf(f.w, &#34;To re-run:\ngo test -run=%s/%s\n&#34;, f.name, testName)
+<span id="L371" class="ln">   371&nbsp;&nbsp;</span>			}
+<span id="L372" class="ln">   372&nbsp;&nbsp;</span>		}
+<span id="L373" class="ln">   373&nbsp;&nbsp;</span>		<span class="comment">// TODO(jayconrod,katiehockman): Aggregate statistics across workers</span>
+<span id="L374" class="ln">   374&nbsp;&nbsp;</span>		<span class="comment">// and add to FuzzResult (ie. time taken, num iterations)</span>
+<span id="L375" class="ln">   375&nbsp;&nbsp;</span>
+<span id="L376" class="ln">   376&nbsp;&nbsp;</span>	case fuzzWorker:
+<span id="L377" class="ln">   377&nbsp;&nbsp;</span>		<span class="comment">// Fuzzing is enabled, and this is a worker process. Follow instructions</span>
+<span id="L378" class="ln">   378&nbsp;&nbsp;</span>		<span class="comment">// from the coordinator.</span>
+<span id="L379" class="ln">   379&nbsp;&nbsp;</span>		if err := f.fuzzContext.deps.RunFuzzWorker(func(e corpusEntry) error {
+<span id="L380" class="ln">   380&nbsp;&nbsp;</span>			<span class="comment">// Don&#39;t write to f.w (which points to Stdout) if running from a</span>
+<span id="L381" class="ln">   381&nbsp;&nbsp;</span>			<span class="comment">// fuzz worker. This would become very verbose, particularly during</span>
+<span id="L382" class="ln">   382&nbsp;&nbsp;</span>			<span class="comment">// minimization. Return the error instead, and let the caller deal</span>
+<span id="L383" class="ln">   383&nbsp;&nbsp;</span>			<span class="comment">// with the output.</span>
+<span id="L384" class="ln">   384&nbsp;&nbsp;</span>			var buf strings.Builder
+<span id="L385" class="ln">   385&nbsp;&nbsp;</span>			if ok := run(&amp;buf, e); !ok {
+<span id="L386" class="ln">   386&nbsp;&nbsp;</span>				return errors.New(buf.String())
+<span id="L387" class="ln">   387&nbsp;&nbsp;</span>			}
+<span id="L388" class="ln">   388&nbsp;&nbsp;</span>			return nil
+<span id="L389" class="ln">   389&nbsp;&nbsp;</span>		}); err != nil {
+<span id="L390" class="ln">   390&nbsp;&nbsp;</span>			<span class="comment">// Internal errors are marked with f.Fail; user code may call this too, before F.Fuzz.</span>
+<span id="L391" class="ln">   391&nbsp;&nbsp;</span>			<span class="comment">// The worker will exit with fuzzWorkerExitCode, indicating this is a failure</span>
+<span id="L392" class="ln">   392&nbsp;&nbsp;</span>			<span class="comment">// (and &#39;go test&#39; should exit non-zero) but a failing input should not be recorded.</span>
+<span id="L393" class="ln">   393&nbsp;&nbsp;</span>			f.Errorf(&#34;communicating with fuzzing coordinator: %v&#34;, err)
+<span id="L394" class="ln">   394&nbsp;&nbsp;</span>		}
+<span id="L395" class="ln">   395&nbsp;&nbsp;</span>
+<span id="L396" class="ln">   396&nbsp;&nbsp;</span>	default:
+<span id="L397" class="ln">   397&nbsp;&nbsp;</span>		<span class="comment">// Fuzzing is not enabled, or will be done later. Only run the seed</span>
+<span id="L398" class="ln">   398&nbsp;&nbsp;</span>		<span class="comment">// corpus now.</span>
+<span id="L399" class="ln">   399&nbsp;&nbsp;</span>		for _, e := range f.corpus {
+<span id="L400" class="ln">   400&nbsp;&nbsp;</span>			name := fmt.Sprintf(&#34;%s/%s&#34;, f.name, filepath.Base(e.Path))
+<span id="L401" class="ln">   401&nbsp;&nbsp;</span>			if _, ok, _ := f.testContext.match.fullName(nil, name); ok {
+<span id="L402" class="ln">   402&nbsp;&nbsp;</span>				run(f.w, e)
+<span id="L403" class="ln">   403&nbsp;&nbsp;</span>			}
+<span id="L404" class="ln">   404&nbsp;&nbsp;</span>		}
+<span id="L405" class="ln">   405&nbsp;&nbsp;</span>	}
+<span id="L406" class="ln">   406&nbsp;&nbsp;</span>}
+<span id="L407" class="ln">   407&nbsp;&nbsp;</span>
+<span id="L408" class="ln">   408&nbsp;&nbsp;</span>func (f *F) report() {
+<span id="L409" class="ln">   409&nbsp;&nbsp;</span>	if *isFuzzWorker || f.parent == nil {
+<span id="L410" class="ln">   410&nbsp;&nbsp;</span>		return
+<span id="L411" class="ln">   411&nbsp;&nbsp;</span>	}
+<span id="L412" class="ln">   412&nbsp;&nbsp;</span>	dstr := fmtDuration(f.duration)
+<span id="L413" class="ln">   413&nbsp;&nbsp;</span>	format := &#34;--- %s: %s (%s)\n&#34;
+<span id="L414" class="ln">   414&nbsp;&nbsp;</span>	if f.Failed() {
+<span id="L415" class="ln">   415&nbsp;&nbsp;</span>		f.flushToParent(f.name, format, &#34;FAIL&#34;, f.name, dstr)
+<span id="L416" class="ln">   416&nbsp;&nbsp;</span>	} else if f.chatty != nil {
+<span id="L417" class="ln">   417&nbsp;&nbsp;</span>		if f.Skipped() {
+<span id="L418" class="ln">   418&nbsp;&nbsp;</span>			f.flushToParent(f.name, format, &#34;SKIP&#34;, f.name, dstr)
+<span id="L419" class="ln">   419&nbsp;&nbsp;</span>		} else {
+<span id="L420" class="ln">   420&nbsp;&nbsp;</span>			f.flushToParent(f.name, format, &#34;PASS&#34;, f.name, dstr)
+<span id="L421" class="ln">   421&nbsp;&nbsp;</span>		}
+<span id="L422" class="ln">   422&nbsp;&nbsp;</span>	}
+<span id="L423" class="ln">   423&nbsp;&nbsp;</span>}
+<span id="L424" class="ln">   424&nbsp;&nbsp;</span>
+<span id="L425" class="ln">   425&nbsp;&nbsp;</span><span class="comment">// fuzzResult contains the results of a fuzz run.</span>
+<span id="L426" class="ln">   426&nbsp;&nbsp;</span>type fuzzResult struct {
+<span id="L427" class="ln">   427&nbsp;&nbsp;</span>	N     int           <span class="comment">// The number of iterations.</span>
+<span id="L428" class="ln">   428&nbsp;&nbsp;</span>	T     time.Duration <span class="comment">// The total time taken.</span>
+<span id="L429" class="ln">   429&nbsp;&nbsp;</span>	Error error         <span class="comment">// Error is the error from the failing input</span>
+<span id="L430" class="ln">   430&nbsp;&nbsp;</span>}
+<span id="L431" class="ln">   431&nbsp;&nbsp;</span>
+<span id="L432" class="ln">   432&nbsp;&nbsp;</span>func (r fuzzResult) String() string {
+<span id="L433" class="ln">   433&nbsp;&nbsp;</span>	if r.Error == nil {
+<span id="L434" class="ln">   434&nbsp;&nbsp;</span>		return &#34;&#34;
+<span id="L435" class="ln">   435&nbsp;&nbsp;</span>	}
+<span id="L436" class="ln">   436&nbsp;&nbsp;</span>	return r.Error.Error()
+<span id="L437" class="ln">   437&nbsp;&nbsp;</span>}
+<span id="L438" class="ln">   438&nbsp;&nbsp;</span>
+<span id="L439" class="ln">   439&nbsp;&nbsp;</span><span class="comment">// fuzzCrashError is satisfied by a failing input detected while fuzzing.</span>
+<span id="L440" class="ln">   440&nbsp;&nbsp;</span><span class="comment">// These errors are written to the seed corpus and can be re-run with &#39;go test&#39;.</span>
+<span id="L441" class="ln">   441&nbsp;&nbsp;</span><span class="comment">// Errors within the fuzzing framework (like I/O errors between coordinator</span>
+<span id="L442" class="ln">   442&nbsp;&nbsp;</span><span class="comment">// and worker processes) don&#39;t satisfy this interface.</span>
+<span id="L443" class="ln">   443&nbsp;&nbsp;</span>type fuzzCrashError interface {
+<span id="L444" class="ln">   444&nbsp;&nbsp;</span>	error
+<span id="L445" class="ln">   445&nbsp;&nbsp;</span>	Unwrap() error
+<span id="L446" class="ln">   446&nbsp;&nbsp;</span>
+<span id="L447" class="ln">   447&nbsp;&nbsp;</span>	<span class="comment">// CrashPath returns the path of the subtest that corresponds to the saved</span>
+<span id="L448" class="ln">   448&nbsp;&nbsp;</span>	<span class="comment">// crash input file in the seed corpus. The test can be re-run with go test</span>
+<span id="L449" class="ln">   449&nbsp;&nbsp;</span>	<span class="comment">// -run=$test/$name $test is the fuzz test name, and $name is the</span>
+<span id="L450" class="ln">   450&nbsp;&nbsp;</span>	<span class="comment">// filepath.Base of the string returned here.</span>
+<span id="L451" class="ln">   451&nbsp;&nbsp;</span>	CrashPath() string
+<span id="L452" class="ln">   452&nbsp;&nbsp;</span>}
+<span id="L453" class="ln">   453&nbsp;&nbsp;</span>
+<span id="L454" class="ln">   454&nbsp;&nbsp;</span><span class="comment">// fuzzContext holds fields common to all fuzz tests.</span>
+<span id="L455" class="ln">   455&nbsp;&nbsp;</span>type fuzzContext struct {
+<span id="L456" class="ln">   456&nbsp;&nbsp;</span>	deps testDeps
+<span id="L457" class="ln">   457&nbsp;&nbsp;</span>	mode fuzzMode
+<span id="L458" class="ln">   458&nbsp;&nbsp;</span>}
+<span id="L459" class="ln">   459&nbsp;&nbsp;</span>
+<span id="L460" class="ln">   460&nbsp;&nbsp;</span>type fuzzMode uint8
+<span id="L461" class="ln">   461&nbsp;&nbsp;</span>
+<span id="L462" class="ln">   462&nbsp;&nbsp;</span>const (
+<span id="L463" class="ln">   463&nbsp;&nbsp;</span>	seedCorpusOnly fuzzMode = iota
+<span id="L464" class="ln">   464&nbsp;&nbsp;</span>	fuzzCoordinator
+<span id="L465" class="ln">   465&nbsp;&nbsp;</span>	fuzzWorker
+<span id="L466" class="ln">   466&nbsp;&nbsp;</span>)
+<span id="L467" class="ln">   467&nbsp;&nbsp;</span>
+<span id="L468" class="ln">   468&nbsp;&nbsp;</span><span class="comment">// runFuzzTests runs the fuzz tests matching the pattern for -run. This will</span>
+<span id="L469" class="ln">   469&nbsp;&nbsp;</span><span class="comment">// only run the (*F).Fuzz function for each seed corpus without using the</span>
+<span id="L470" class="ln">   470&nbsp;&nbsp;</span><span class="comment">// fuzzing engine to generate or mutate inputs.</span>
+<span id="L471" class="ln">   471&nbsp;&nbsp;</span>func runFuzzTests(deps testDeps, fuzzTests []InternalFuzzTarget, deadline time.Time) (ran, ok bool) {
+<span id="L472" class="ln">   472&nbsp;&nbsp;</span>	ok = true
+<span id="L473" class="ln">   473&nbsp;&nbsp;</span>	if len(fuzzTests) == 0 || *isFuzzWorker {
+<span id="L474" class="ln">   474&nbsp;&nbsp;</span>		return ran, ok
+<span id="L475" class="ln">   475&nbsp;&nbsp;</span>	}
+<span id="L476" class="ln">   476&nbsp;&nbsp;</span>	m := newMatcher(deps.MatchString, *match, &#34;-test.run&#34;, *skip)
+<span id="L477" class="ln">   477&nbsp;&nbsp;</span>	var mFuzz *matcher
+<span id="L478" class="ln">   478&nbsp;&nbsp;</span>	if *matchFuzz != &#34;&#34; {
+<span id="L479" class="ln">   479&nbsp;&nbsp;</span>		mFuzz = newMatcher(deps.MatchString, *matchFuzz, &#34;-test.fuzz&#34;, *skip)
+<span id="L480" class="ln">   480&nbsp;&nbsp;</span>	}
+<span id="L481" class="ln">   481&nbsp;&nbsp;</span>
+<span id="L482" class="ln">   482&nbsp;&nbsp;</span>	for _, procs := range cpuList {
+<span id="L483" class="ln">   483&nbsp;&nbsp;</span>		runtime.GOMAXPROCS(procs)
+<span id="L484" class="ln">   484&nbsp;&nbsp;</span>		for i := uint(0); i &lt; *count; i++ {
+<span id="L485" class="ln">   485&nbsp;&nbsp;</span>			if shouldFailFast() {
+<span id="L486" class="ln">   486&nbsp;&nbsp;</span>				break
+<span id="L487" class="ln">   487&nbsp;&nbsp;</span>			}
+<span id="L488" class="ln">   488&nbsp;&nbsp;</span>
+<span id="L489" class="ln">   489&nbsp;&nbsp;</span>			tctx := newTestContext(*parallel, m)
+<span id="L490" class="ln">   490&nbsp;&nbsp;</span>			tctx.deadline = deadline
+<span id="L491" class="ln">   491&nbsp;&nbsp;</span>			fctx := &amp;fuzzContext{deps: deps, mode: seedCorpusOnly}
+<span id="L492" class="ln">   492&nbsp;&nbsp;</span>			root := common{w: os.Stdout} <span class="comment">// gather output in one place</span>
+<span id="L493" class="ln">   493&nbsp;&nbsp;</span>			if Verbose() {
+<span id="L494" class="ln">   494&nbsp;&nbsp;</span>				root.chatty = newChattyPrinter(root.w)
+<span id="L495" class="ln">   495&nbsp;&nbsp;</span>			}
+<span id="L496" class="ln">   496&nbsp;&nbsp;</span>			for _, ft := range fuzzTests {
+<span id="L497" class="ln">   497&nbsp;&nbsp;</span>				if shouldFailFast() {
+<span id="L498" class="ln">   498&nbsp;&nbsp;</span>					break
+<span id="L499" class="ln">   499&nbsp;&nbsp;</span>				}
+<span id="L500" class="ln">   500&nbsp;&nbsp;</span>				testName, matched, _ := tctx.match.fullName(nil, ft.Name)
+<span id="L501" class="ln">   501&nbsp;&nbsp;</span>				if !matched {
+<span id="L502" class="ln">   502&nbsp;&nbsp;</span>					continue
+<span id="L503" class="ln">   503&nbsp;&nbsp;</span>				}
+<span id="L504" class="ln">   504&nbsp;&nbsp;</span>				if mFuzz != nil {
+<span id="L505" class="ln">   505&nbsp;&nbsp;</span>					if _, fuzzMatched, _ := mFuzz.fullName(nil, ft.Name); fuzzMatched {
+<span id="L506" class="ln">   506&nbsp;&nbsp;</span>						<span class="comment">// If this will be fuzzed, then don&#39;t run the seed corpus</span>
+<span id="L507" class="ln">   507&nbsp;&nbsp;</span>						<span class="comment">// right now. That will happen later.</span>
+<span id="L508" class="ln">   508&nbsp;&nbsp;</span>						continue
+<span id="L509" class="ln">   509&nbsp;&nbsp;</span>					}
+<span id="L510" class="ln">   510&nbsp;&nbsp;</span>				}
+<span id="L511" class="ln">   511&nbsp;&nbsp;</span>				f := &amp;F{
+<span id="L512" class="ln">   512&nbsp;&nbsp;</span>					common: common{
+<span id="L513" class="ln">   513&nbsp;&nbsp;</span>						signal:  make(chan bool),
+<span id="L514" class="ln">   514&nbsp;&nbsp;</span>						barrier: make(chan bool),
+<span id="L515" class="ln">   515&nbsp;&nbsp;</span>						name:    testName,
+<span id="L516" class="ln">   516&nbsp;&nbsp;</span>						parent:  &amp;root,
+<span id="L517" class="ln">   517&nbsp;&nbsp;</span>						level:   root.level + 1,
+<span id="L518" class="ln">   518&nbsp;&nbsp;</span>						chatty:  root.chatty,
+<span id="L519" class="ln">   519&nbsp;&nbsp;</span>					},
+<span id="L520" class="ln">   520&nbsp;&nbsp;</span>					testContext: tctx,
+<span id="L521" class="ln">   521&nbsp;&nbsp;</span>					fuzzContext: fctx,
+<span id="L522" class="ln">   522&nbsp;&nbsp;</span>				}
+<span id="L523" class="ln">   523&nbsp;&nbsp;</span>				f.w = indenter{&amp;f.common}
+<span id="L524" class="ln">   524&nbsp;&nbsp;</span>				if f.chatty != nil {
+<span id="L525" class="ln">   525&nbsp;&nbsp;</span>					f.chatty.Updatef(f.name, &#34;=== RUN   %s\n&#34;, f.name)
+<span id="L526" class="ln">   526&nbsp;&nbsp;</span>				}
+<span id="L527" class="ln">   527&nbsp;&nbsp;</span>				go fRunner(f, ft.Fn)
+<span id="L528" class="ln">   528&nbsp;&nbsp;</span>				&lt;-f.signal
+<span id="L529" class="ln">   529&nbsp;&nbsp;</span>				if f.chatty != nil &amp;&amp; f.chatty.json {
+<span id="L530" class="ln">   530&nbsp;&nbsp;</span>					f.chatty.Updatef(f.parent.name, &#34;=== NAME  %s\n&#34;, f.parent.name)
+<span id="L531" class="ln">   531&nbsp;&nbsp;</span>				}
+<span id="L532" class="ln">   532&nbsp;&nbsp;</span>				ok = ok &amp;&amp; !f.Failed()
+<span id="L533" class="ln">   533&nbsp;&nbsp;</span>				ran = ran || f.ran
+<span id="L534" class="ln">   534&nbsp;&nbsp;</span>			}
+<span id="L535" class="ln">   535&nbsp;&nbsp;</span>			if !ran {
+<span id="L536" class="ln">   536&nbsp;&nbsp;</span>				<span class="comment">// There were no tests to run on this iteration.</span>
+<span id="L537" class="ln">   537&nbsp;&nbsp;</span>				<span class="comment">// This won&#39;t change, so no reason to keep trying.</span>
+<span id="L538" class="ln">   538&nbsp;&nbsp;</span>				break
+<span id="L539" class="ln">   539&nbsp;&nbsp;</span>			}
+<span id="L540" class="ln">   540&nbsp;&nbsp;</span>		}
+<span id="L541" class="ln">   541&nbsp;&nbsp;</span>	}
+<span id="L542" class="ln">   542&nbsp;&nbsp;</span>
+<span id="L543" class="ln">   543&nbsp;&nbsp;</span>	return ran, ok
+<span id="L544" class="ln">   544&nbsp;&nbsp;</span>}
+<span id="L545" class="ln">   545&nbsp;&nbsp;</span>
+<span id="L546" class="ln">   546&nbsp;&nbsp;</span><span class="comment">// runFuzzing runs the fuzz test matching the pattern for -fuzz. Only one such</span>
+<span id="L547" class="ln">   547&nbsp;&nbsp;</span><span class="comment">// fuzz test must match. This will run the fuzzing engine to generate and</span>
+<span id="L548" class="ln">   548&nbsp;&nbsp;</span><span class="comment">// mutate new inputs against the fuzz target.</span>
+<span id="L549" class="ln">   549&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L550" class="ln">   550&nbsp;&nbsp;</span><span class="comment">// If fuzzing is disabled (-test.fuzz is not set), runFuzzing</span>
+<span id="L551" class="ln">   551&nbsp;&nbsp;</span><span class="comment">// returns immediately.</span>
+<span id="L552" class="ln">   552&nbsp;&nbsp;</span>func runFuzzing(deps testDeps, fuzzTests []InternalFuzzTarget) (ok bool) {
+<span id="L553" class="ln">   553&nbsp;&nbsp;</span>	if len(fuzzTests) == 0 || *matchFuzz == &#34;&#34; {
+<span id="L554" class="ln">   554&nbsp;&nbsp;</span>		return true
+<span id="L555" class="ln">   555&nbsp;&nbsp;</span>	}
+<span id="L556" class="ln">   556&nbsp;&nbsp;</span>	m := newMatcher(deps.MatchString, *matchFuzz, &#34;-test.fuzz&#34;, *skip)
+<span id="L557" class="ln">   557&nbsp;&nbsp;</span>	tctx := newTestContext(1, m)
+<span id="L558" class="ln">   558&nbsp;&nbsp;</span>	tctx.isFuzzing = true
+<span id="L559" class="ln">   559&nbsp;&nbsp;</span>	fctx := &amp;fuzzContext{
+<span id="L560" class="ln">   560&nbsp;&nbsp;</span>		deps: deps,
+<span id="L561" class="ln">   561&nbsp;&nbsp;</span>	}
+<span id="L562" class="ln">   562&nbsp;&nbsp;</span>	root := common{w: os.Stdout}
+<span id="L563" class="ln">   563&nbsp;&nbsp;</span>	if *isFuzzWorker {
+<span id="L564" class="ln">   564&nbsp;&nbsp;</span>		root.w = io.Discard
+<span id="L565" class="ln">   565&nbsp;&nbsp;</span>		fctx.mode = fuzzWorker
+<span id="L566" class="ln">   566&nbsp;&nbsp;</span>	} else {
+<span id="L567" class="ln">   567&nbsp;&nbsp;</span>		fctx.mode = fuzzCoordinator
+<span id="L568" class="ln">   568&nbsp;&nbsp;</span>	}
+<span id="L569" class="ln">   569&nbsp;&nbsp;</span>	if Verbose() &amp;&amp; !*isFuzzWorker {
+<span id="L570" class="ln">   570&nbsp;&nbsp;</span>		root.chatty = newChattyPrinter(root.w)
+<span id="L571" class="ln">   571&nbsp;&nbsp;</span>	}
+<span id="L572" class="ln">   572&nbsp;&nbsp;</span>	var fuzzTest *InternalFuzzTarget
+<span id="L573" class="ln">   573&nbsp;&nbsp;</span>	var testName string
+<span id="L574" class="ln">   574&nbsp;&nbsp;</span>	var matched []string
+<span id="L575" class="ln">   575&nbsp;&nbsp;</span>	for i := range fuzzTests {
+<span id="L576" class="ln">   576&nbsp;&nbsp;</span>		name, ok, _ := tctx.match.fullName(nil, fuzzTests[i].Name)
+<span id="L577" class="ln">   577&nbsp;&nbsp;</span>		if !ok {
+<span id="L578" class="ln">   578&nbsp;&nbsp;</span>			continue
+<span id="L579" class="ln">   579&nbsp;&nbsp;</span>		}
+<span id="L580" class="ln">   580&nbsp;&nbsp;</span>		matched = append(matched, name)
+<span id="L581" class="ln">   581&nbsp;&nbsp;</span>		fuzzTest = &amp;fuzzTests[i]
+<span id="L582" class="ln">   582&nbsp;&nbsp;</span>		testName = name
+<span id="L583" class="ln">   583&nbsp;&nbsp;</span>	}
+<span id="L584" class="ln">   584&nbsp;&nbsp;</span>	if len(matched) == 0 {
+<span id="L585" class="ln">   585&nbsp;&nbsp;</span>		fmt.Fprintln(os.Stderr, &#34;testing: warning: no fuzz tests to fuzz&#34;)
+<span id="L586" class="ln">   586&nbsp;&nbsp;</span>		return true
+<span id="L587" class="ln">   587&nbsp;&nbsp;</span>	}
+<span id="L588" class="ln">   588&nbsp;&nbsp;</span>	if len(matched) &gt; 1 {
+<span id="L589" class="ln">   589&nbsp;&nbsp;</span>		fmt.Fprintf(os.Stderr, &#34;testing: will not fuzz, -fuzz matches more than one fuzz test: %v\n&#34;, matched)
+<span id="L590" class="ln">   590&nbsp;&nbsp;</span>		return false
+<span id="L591" class="ln">   591&nbsp;&nbsp;</span>	}
+<span id="L592" class="ln">   592&nbsp;&nbsp;</span>
+<span id="L593" class="ln">   593&nbsp;&nbsp;</span>	f := &amp;F{
+<span id="L594" class="ln">   594&nbsp;&nbsp;</span>		common: common{
+<span id="L595" class="ln">   595&nbsp;&nbsp;</span>			signal:  make(chan bool),
+<span id="L596" class="ln">   596&nbsp;&nbsp;</span>			barrier: nil, <span class="comment">// T.Parallel has no effect when fuzzing.</span>
+<span id="L597" class="ln">   597&nbsp;&nbsp;</span>			name:    testName,
+<span id="L598" class="ln">   598&nbsp;&nbsp;</span>			parent:  &amp;root,
+<span id="L599" class="ln">   599&nbsp;&nbsp;</span>			level:   root.level + 1,
+<span id="L600" class="ln">   600&nbsp;&nbsp;</span>			chatty:  root.chatty,
+<span id="L601" class="ln">   601&nbsp;&nbsp;</span>		},
+<span id="L602" class="ln">   602&nbsp;&nbsp;</span>		fuzzContext: fctx,
+<span id="L603" class="ln">   603&nbsp;&nbsp;</span>		testContext: tctx,
+<span id="L604" class="ln">   604&nbsp;&nbsp;</span>	}
+<span id="L605" class="ln">   605&nbsp;&nbsp;</span>	f.w = indenter{&amp;f.common}
+<span id="L606" class="ln">   606&nbsp;&nbsp;</span>	if f.chatty != nil {
+<span id="L607" class="ln">   607&nbsp;&nbsp;</span>		f.chatty.Updatef(f.name, &#34;=== RUN   %s\n&#34;, f.name)
+<span id="L608" class="ln">   608&nbsp;&nbsp;</span>	}
+<span id="L609" class="ln">   609&nbsp;&nbsp;</span>	go fRunner(f, fuzzTest.Fn)
+<span id="L610" class="ln">   610&nbsp;&nbsp;</span>	&lt;-f.signal
+<span id="L611" class="ln">   611&nbsp;&nbsp;</span>	if f.chatty != nil {
+<span id="L612" class="ln">   612&nbsp;&nbsp;</span>		f.chatty.Updatef(f.parent.name, &#34;=== NAME  %s\n&#34;, f.parent.name)
+<span id="L613" class="ln">   613&nbsp;&nbsp;</span>	}
+<span id="L614" class="ln">   614&nbsp;&nbsp;</span>	return !f.failed
+<span id="L615" class="ln">   615&nbsp;&nbsp;</span>}
+<span id="L616" class="ln">   616&nbsp;&nbsp;</span>
+<span id="L617" class="ln">   617&nbsp;&nbsp;</span><span class="comment">// fRunner wraps a call to a fuzz test and ensures that cleanup functions are</span>
+<span id="L618" class="ln">   618&nbsp;&nbsp;</span><span class="comment">// called and status flags are set. fRunner should be called in its own</span>
+<span id="L619" class="ln">   619&nbsp;&nbsp;</span><span class="comment">// goroutine. To wait for its completion, receive from f.signal.</span>
+<span id="L620" class="ln">   620&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L621" class="ln">   621&nbsp;&nbsp;</span><span class="comment">// fRunner is analogous to tRunner, which wraps subtests started with T.Run.</span>
+<span id="L622" class="ln">   622&nbsp;&nbsp;</span><span class="comment">// Unit tests and fuzz tests work a little differently, so for now, these</span>
+<span id="L623" class="ln">   623&nbsp;&nbsp;</span><span class="comment">// functions aren&#39;t consolidated. In particular, because there are no F.Run and</span>
+<span id="L624" class="ln">   624&nbsp;&nbsp;</span><span class="comment">// F.Parallel methods, i.e., no fuzz sub-tests or parallel fuzz tests, a few</span>
+<span id="L625" class="ln">   625&nbsp;&nbsp;</span><span class="comment">// simplifications are made. We also require that F.Fuzz, F.Skip, or F.Fail is</span>
+<span id="L626" class="ln">   626&nbsp;&nbsp;</span><span class="comment">// called.</span>
+<span id="L627" class="ln">   627&nbsp;&nbsp;</span>func fRunner(f *F, fn func(*F)) {
+<span id="L628" class="ln">   628&nbsp;&nbsp;</span>	<span class="comment">// When this goroutine is done, either because runtime.Goexit was called, a</span>
+<span id="L629" class="ln">   629&nbsp;&nbsp;</span>	<span class="comment">// panic started, or fn returned normally, record the duration and send</span>
+<span id="L630" class="ln">   630&nbsp;&nbsp;</span>	<span class="comment">// t.signal, indicating the fuzz test is done.</span>
+<span id="L631" class="ln">   631&nbsp;&nbsp;</span>	defer func() {
+<span id="L632" class="ln">   632&nbsp;&nbsp;</span>		<span class="comment">// Detect whether the fuzz test panicked or called runtime.Goexit</span>
+<span id="L633" class="ln">   633&nbsp;&nbsp;</span>		<span class="comment">// without calling F.Fuzz, F.Fail, or F.Skip. If it did, panic (possibly</span>
+<span id="L634" class="ln">   634&nbsp;&nbsp;</span>		<span class="comment">// replacing a nil panic value). Nothing should recover after fRunner</span>
+<span id="L635" class="ln">   635&nbsp;&nbsp;</span>		<span class="comment">// unwinds, so this should crash the process and print stack.</span>
+<span id="L636" class="ln">   636&nbsp;&nbsp;</span>		<span class="comment">// Unfortunately, recovering here adds stack frames, but the location of</span>
+<span id="L637" class="ln">   637&nbsp;&nbsp;</span>		<span class="comment">// the original panic should still be</span>
+<span id="L638" class="ln">   638&nbsp;&nbsp;</span>		<span class="comment">// clear.</span>
+<span id="L639" class="ln">   639&nbsp;&nbsp;</span>		f.checkRaces()
+<span id="L640" class="ln">   640&nbsp;&nbsp;</span>		if f.Failed() {
+<span id="L641" class="ln">   641&nbsp;&nbsp;</span>			numFailed.Add(1)
+<span id="L642" class="ln">   642&nbsp;&nbsp;</span>		}
+<span id="L643" class="ln">   643&nbsp;&nbsp;</span>		err := recover()
+<span id="L644" class="ln">   644&nbsp;&nbsp;</span>		if err == nil {
+<span id="L645" class="ln">   645&nbsp;&nbsp;</span>			f.mu.RLock()
+<span id="L646" class="ln">   646&nbsp;&nbsp;</span>			fuzzNotCalled := !f.fuzzCalled &amp;&amp; !f.skipped &amp;&amp; !f.failed
+<span id="L647" class="ln">   647&nbsp;&nbsp;</span>			if !f.finished &amp;&amp; !f.skipped &amp;&amp; !f.failed {
+<span id="L648" class="ln">   648&nbsp;&nbsp;</span>				err = errNilPanicOrGoexit
+<span id="L649" class="ln">   649&nbsp;&nbsp;</span>			}
+<span id="L650" class="ln">   650&nbsp;&nbsp;</span>			f.mu.RUnlock()
+<span id="L651" class="ln">   651&nbsp;&nbsp;</span>			if fuzzNotCalled &amp;&amp; err == nil {
+<span id="L652" class="ln">   652&nbsp;&nbsp;</span>				f.Error(&#34;returned without calling F.Fuzz, F.Fail, or F.Skip&#34;)
+<span id="L653" class="ln">   653&nbsp;&nbsp;</span>			}
+<span id="L654" class="ln">   654&nbsp;&nbsp;</span>		}
+<span id="L655" class="ln">   655&nbsp;&nbsp;</span>
+<span id="L656" class="ln">   656&nbsp;&nbsp;</span>		<span class="comment">// Use a deferred call to ensure that we report that the test is</span>
+<span id="L657" class="ln">   657&nbsp;&nbsp;</span>		<span class="comment">// complete even if a cleanup function calls F.FailNow. See issue 41355.</span>
+<span id="L658" class="ln">   658&nbsp;&nbsp;</span>		didPanic := false
+<span id="L659" class="ln">   659&nbsp;&nbsp;</span>		defer func() {
+<span id="L660" class="ln">   660&nbsp;&nbsp;</span>			if !didPanic {
+<span id="L661" class="ln">   661&nbsp;&nbsp;</span>				<span class="comment">// Only report that the test is complete if it doesn&#39;t panic,</span>
+<span id="L662" class="ln">   662&nbsp;&nbsp;</span>				<span class="comment">// as otherwise the test binary can exit before the panic is</span>
+<span id="L663" class="ln">   663&nbsp;&nbsp;</span>				<span class="comment">// reported to the user. See issue 41479.</span>
+<span id="L664" class="ln">   664&nbsp;&nbsp;</span>				f.signal &lt;- true
+<span id="L665" class="ln">   665&nbsp;&nbsp;</span>			}
+<span id="L666" class="ln">   666&nbsp;&nbsp;</span>		}()
+<span id="L667" class="ln">   667&nbsp;&nbsp;</span>
+<span id="L668" class="ln">   668&nbsp;&nbsp;</span>		<span class="comment">// If we recovered a panic or inappropriate runtime.Goexit, fail the test,</span>
+<span id="L669" class="ln">   669&nbsp;&nbsp;</span>		<span class="comment">// flush the output log up to the root, then panic.</span>
+<span id="L670" class="ln">   670&nbsp;&nbsp;</span>		doPanic := func(err any) {
+<span id="L671" class="ln">   671&nbsp;&nbsp;</span>			f.Fail()
+<span id="L672" class="ln">   672&nbsp;&nbsp;</span>			if r := f.runCleanup(recoverAndReturnPanic); r != nil {
+<span id="L673" class="ln">   673&nbsp;&nbsp;</span>				f.Logf(&#34;cleanup panicked with %v&#34;, r)
+<span id="L674" class="ln">   674&nbsp;&nbsp;</span>			}
+<span id="L675" class="ln">   675&nbsp;&nbsp;</span>			for root := &amp;f.common; root.parent != nil; root = root.parent {
+<span id="L676" class="ln">   676&nbsp;&nbsp;</span>				root.mu.Lock()
+<span id="L677" class="ln">   677&nbsp;&nbsp;</span>				root.duration += time.Since(root.start)
+<span id="L678" class="ln">   678&nbsp;&nbsp;</span>				d := root.duration
+<span id="L679" class="ln">   679&nbsp;&nbsp;</span>				root.mu.Unlock()
+<span id="L680" class="ln">   680&nbsp;&nbsp;</span>				root.flushToParent(root.name, &#34;--- FAIL: %s (%s)\n&#34;, root.name, fmtDuration(d))
+<span id="L681" class="ln">   681&nbsp;&nbsp;</span>			}
+<span id="L682" class="ln">   682&nbsp;&nbsp;</span>			didPanic = true
+<span id="L683" class="ln">   683&nbsp;&nbsp;</span>			panic(err)
+<span id="L684" class="ln">   684&nbsp;&nbsp;</span>		}
+<span id="L685" class="ln">   685&nbsp;&nbsp;</span>		if err != nil {
+<span id="L686" class="ln">   686&nbsp;&nbsp;</span>			doPanic(err)
+<span id="L687" class="ln">   687&nbsp;&nbsp;</span>		}
+<span id="L688" class="ln">   688&nbsp;&nbsp;</span>
+<span id="L689" class="ln">   689&nbsp;&nbsp;</span>		<span class="comment">// No panic or inappropriate Goexit.</span>
+<span id="L690" class="ln">   690&nbsp;&nbsp;</span>		f.duration += time.Since(f.start)
+<span id="L691" class="ln">   691&nbsp;&nbsp;</span>
+<span id="L692" class="ln">   692&nbsp;&nbsp;</span>		if len(f.sub) &gt; 0 {
+<span id="L693" class="ln">   693&nbsp;&nbsp;</span>			<span class="comment">// Unblock inputs that called T.Parallel while running the seed corpus.</span>
+<span id="L694" class="ln">   694&nbsp;&nbsp;</span>			<span class="comment">// This only affects fuzz tests run as normal tests.</span>
+<span id="L695" class="ln">   695&nbsp;&nbsp;</span>			<span class="comment">// While fuzzing, T.Parallel has no effect, so f.sub is empty, and this</span>
+<span id="L696" class="ln">   696&nbsp;&nbsp;</span>			<span class="comment">// branch is not taken. f.barrier is nil in that case.</span>
+<span id="L697" class="ln">   697&nbsp;&nbsp;</span>			f.testContext.release()
+<span id="L698" class="ln">   698&nbsp;&nbsp;</span>			close(f.barrier)
+<span id="L699" class="ln">   699&nbsp;&nbsp;</span>			<span class="comment">// Wait for the subtests to complete.</span>
+<span id="L700" class="ln">   700&nbsp;&nbsp;</span>			for _, sub := range f.sub {
+<span id="L701" class="ln">   701&nbsp;&nbsp;</span>				&lt;-sub.signal
+<span id="L702" class="ln">   702&nbsp;&nbsp;</span>			}
+<span id="L703" class="ln">   703&nbsp;&nbsp;</span>			cleanupStart := time.Now()
+<span id="L704" class="ln">   704&nbsp;&nbsp;</span>			err := f.runCleanup(recoverAndReturnPanic)
+<span id="L705" class="ln">   705&nbsp;&nbsp;</span>			f.duration += time.Since(cleanupStart)
+<span id="L706" class="ln">   706&nbsp;&nbsp;</span>			if err != nil {
+<span id="L707" class="ln">   707&nbsp;&nbsp;</span>				doPanic(err)
+<span id="L708" class="ln">   708&nbsp;&nbsp;</span>			}
+<span id="L709" class="ln">   709&nbsp;&nbsp;</span>		}
+<span id="L710" class="ln">   710&nbsp;&nbsp;</span>
+<span id="L711" class="ln">   711&nbsp;&nbsp;</span>		<span class="comment">// Report after all subtests have finished.</span>
+<span id="L712" class="ln">   712&nbsp;&nbsp;</span>		f.report()
+<span id="L713" class="ln">   713&nbsp;&nbsp;</span>		f.done = true
+<span id="L714" class="ln">   714&nbsp;&nbsp;</span>		f.setRan()
+<span id="L715" class="ln">   715&nbsp;&nbsp;</span>	}()
+<span id="L716" class="ln">   716&nbsp;&nbsp;</span>	defer func() {
+<span id="L717" class="ln">   717&nbsp;&nbsp;</span>		if len(f.sub) == 0 {
+<span id="L718" class="ln">   718&nbsp;&nbsp;</span>			f.runCleanup(normalPanic)
+<span id="L719" class="ln">   719&nbsp;&nbsp;</span>		}
+<span id="L720" class="ln">   720&nbsp;&nbsp;</span>	}()
+<span id="L721" class="ln">   721&nbsp;&nbsp;</span>
+<span id="L722" class="ln">   722&nbsp;&nbsp;</span>	f.start = time.Now()
+<span id="L723" class="ln">   723&nbsp;&nbsp;</span>	f.resetRaces()
+<span id="L724" class="ln">   724&nbsp;&nbsp;</span>	fn(f)
+<span id="L725" class="ln">   725&nbsp;&nbsp;</span>
+<span id="L726" class="ln">   726&nbsp;&nbsp;</span>	<span class="comment">// Code beyond this point will not be executed when FailNow or SkipNow</span>
+<span id="L727" class="ln">   727&nbsp;&nbsp;</span>	<span class="comment">// is invoked.</span>
+<span id="L728" class="ln">   728&nbsp;&nbsp;</span>	f.mu.Lock()
+<span id="L729" class="ln">   729&nbsp;&nbsp;</span>	f.finished = true
+<span id="L730" class="ln">   730&nbsp;&nbsp;</span>	f.mu.Unlock()
+<span id="L731" class="ln">   731&nbsp;&nbsp;</span>}
+<span id="L732" class="ln">   732&nbsp;&nbsp;</span>
+</pre><p><a href="fuzz.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

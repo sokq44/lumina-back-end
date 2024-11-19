@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>suffixarray - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package suffixarray
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "index/suffixarray"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+				<dd><a href="index.html#pkg-examples" class="examplesLink">Examples</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>Package suffixarray implements substring search in logarithmic time using
+an in-memory suffix array.
+<p>Example use:
+<pre>// create index for some data
+index := suffixarray.New(data)
+
+// lookup byte slice s
+offsets1 := index.Lookup(s, -1) // the list of all indices where s occurs in data
+offsets2 := index.Lookup(s, 3)  // the list of at most 3 indices where s occurs in data
+</pre>
+
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+			
+			
+			
+				
+				<dd><a href="index.html#Index">type Index</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#New">func New(data []byte) *Index</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Index.Bytes">func (x *Index) Bytes() []byte</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Index.FindAllIndex">func (x *Index) FindAllIndex(r *regexp.Regexp, n int) (result [][]int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Index.Lookup">func (x *Index) Lookup(s []byte, n int) (result []int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Index.Read">func (x *Index) Read(r io.Reader) error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Index.Write">func (x *Index) Write(w io.Writer) error</a></dd>
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+		<div id="pkg-examples">
+			<h3>Examples</h3>
+			<div class="js-expandAll expandAll collapsed">(Expand All)</div>
+			<dl>
+			
+			<dd><a class="exampleLink" href="index.html#example_Index_Lookup">Index.Lookup</a></dd>
+			
+			</dl>
+		</div>
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../../src/index/suffixarray/sais.go">sais.go</a>
+			
+				<a href="../../../src/index/suffixarray/sais2.go">sais2.go</a>
+			
+				<a href="../../../src/index/suffixarray/suffixarray.go">suffixarray.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+		
+		
+		
+			
+			
+			<h2 id="Index">type <a href="../../../src/index/suffixarray/suffixarray.go?s=824:917#L24">Index</a>
+				<a class="permalink" href="index.html#Index">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Index implements a suffix array for fast substring search.
+
+			<pre>type Index struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="New">func <a href="../../../src/index/suffixarray/suffixarray.go?s=1640:1668#L65">New</a>
+					<a class="permalink" href="index.html#New">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func New(data []<a href="../../builtin/index.html#byte">byte</a>) *<a href="index.html#Index">Index</a></pre>
+				<p>New creates a new <a href="index.html#Index">Index</a> for data.
+<a href="index.html#Index">Index</a> creation time is O(N) for N = len(data).
+
+				
+				
+			
+
+			
+				
+				<h3 id="Index.Bytes">func (*Index) <a href="../../../src/index/suffixarray/suffixarray.go?s=5280:5310#L222">Bytes</a>
+					<a class="permalink" href="index.html#Index.Bytes">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#Index">Index</a>) Bytes() []<a href="../../builtin/index.html#byte">byte</a></pre>
+				<p>Bytes returns the data over which the index was created.
+It must not be modified.
+
+				
+				
+				
+			
+				
+				<h3 id="Index.FindAllIndex">func (*Index) <a href="../../../src/index/suffixarray/suffixarray.go?s=7054:7124#L276">FindAllIndex</a>
+					<a class="permalink" href="index.html#Index.FindAllIndex">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#Index">Index</a>) FindAllIndex(r *<a href="../../regexp/index.html">regexp</a>.<a href="../../regexp/index.html#Regexp">Regexp</a>, n <a href="../../builtin/index.html#int">int</a>) (result [][]<a href="../../builtin/index.html#int">int</a>)</pre>
+				<p>FindAllIndex returns a sorted list of non-overlapping matches of the
+regular expression r, where a match is a pair of indices specifying
+the matched slice of x.Bytes(). If n &lt; 0, all matches are returned
+in successive order. Otherwise, at most n matches are returned and
+they may not be successive. The result is nil if there are no matches,
+or if n == 0.
+
+				
+				
+				
+			
+				
+				<h3 id="Index.Lookup">func (*Index) <a href="../../../src/index/suffixarray/suffixarray.go?s=6229:6283#L246">Lookup</a>
+					<a class="permalink" href="index.html#Index.Lookup">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#Index">Index</a>) Lookup(s []<a href="../../builtin/index.html#byte">byte</a>, n <a href="../../builtin/index.html#int">int</a>) (result []<a href="../../builtin/index.html#int">int</a>)</pre>
+				<p>Lookup returns an unsorted list of at most n indices where the byte string s
+occurs in the indexed data. If n &lt; 0, all occurrences are returned.
+The result is nil if s is empty, s is not found, or n == 0.
+Lookup time is O(log(N)*len(s) + len(result)) where N is the
+size of the indexed data.
+
+				
+				<div id="example_Index_Lookup" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">index := suffixarray.New([]byte(&#34;banana&#34;))
+offsets := index.Lookup([]byte(&#34;ana&#34;), -1)
+for _, off := range offsets {
+    fmt.Println(off)
+}
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">1
+3
+</pre>
+			
+		
+	</div>
+</div>
+
+				
+			
+				
+				<h3 id="Index.Read">func (*Index) <a href="../../../src/index/suffixarray/suffixarray.go?s=3727:3766#L144">Read</a>
+					<a class="permalink" href="index.html#Index.Read">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#Index">Index</a>) Read(r <a href="../../io/index.html">io</a>.<a href="../../io/index.html#Reader">Reader</a>) <a href="../../builtin/index.html#error">error</a></pre>
+				<p>Read reads the index from r into x; x must not be nil.
+
+				
+				
+				
+			
+				
+				<h3 id="Index.Write">func (*Index) <a href="../../../src/index/suffixarray/suffixarray.go?s=4761:4801#L194">Write</a>
+					<a class="permalink" href="index.html#Index.Write">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#Index">Index</a>) Write(w <a href="../../io/index.html">io</a>.<a href="../../io/index.html#Writer">Writer</a>) <a href="../../builtin/index.html#error">error</a></pre>
+				<p>Write writes the index x to w.
+
+				
+				
+				
+			
+		
+	
+
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

@@ -1,0 +1,998 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>comment - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package comment
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "go/doc/comment"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>Package comment implements parsing and reformatting of Go doc comments,
+(documentation comments), which are comments that immediately precede
+a top-level declaration of a package, const, func, type, or var.
+<p>Go doc comment syntax is a simplified subset of Markdown that supports
+links, headings, paragraphs, lists (without nesting), and preformatted text blocks.
+The details of the syntax are documented at <a href="https://go.dev/doc/comment">https://go.dev/doc/comment</a>.
+<p>To parse the text associated with a doc comment (after removing comment markers),
+use a <a href="index.html#Parser">Parser</a>:
+<pre>var p comment.Parser
+doc := p.Parse(text)
+</pre>
+<p>The result is a <a href="index.html#Doc">*Doc</a>.
+To reformat it as a doc comment, HTML, Markdown, or plain text,
+use a <a href="index.html#Printer">Printer</a>:
+<pre>var pr comment.Printer
+os.Stdout.Write(pr.Text(doc))
+</pre>
+<p>The <a href="index.html#Parser">Parser</a> and <a href="index.html#Printer">Printer</a> types are structs whose fields can be
+modified to customize the operations.
+For details, see the documentation for those types.
+<p>Use cases that need additional control over reformatting can
+implement their own logic by inspecting the parsed syntax itself.
+See the documentation for <a href="index.html#Doc">Doc</a>, <a href="index.html#Block">Block</a>, <a href="index.html#Text">Text</a> for an overview
+and links to additional types.
+
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+			
+			
+				
+				<dd><a href="index.html#DefaultLookupPackage">func DefaultLookupPackage(name string) (importPath string, ok bool)</a></dd>
+			
+			
+				
+				<dd><a href="index.html#Block">type Block</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#Code">type Code</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#Doc">type Doc</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#DocLink">type DocLink</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#DocLink.DefaultURL">func (l *DocLink) DefaultURL(baseURL string) string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Heading">type Heading</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Heading.DefaultID">func (h *Heading) DefaultID() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Italic">type Italic</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#Link">type Link</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#LinkDef">type LinkDef</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#List">type List</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#List.BlankBefore">func (l *List) BlankBefore() bool</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#List.BlankBetween">func (l *List) BlankBetween() bool</a></dd>
+				
+			
+				
+				<dd><a href="index.html#ListItem">type ListItem</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#Paragraph">type Paragraph</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#Parser">type Parser</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Parser.Parse">func (p *Parser) Parse(text string) *Doc</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Plain">type Plain</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#Printer">type Printer</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Printer.Comment">func (p *Printer) Comment(d *Doc) []byte</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Printer.HTML">func (p *Printer) HTML(d *Doc) []byte</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Printer.Markdown">func (p *Printer) Markdown(d *Doc) []byte</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Printer.Text">func (p *Printer) Text(d *Doc) []byte</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Text">type Text</a></dd>
+				
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../../../src/go/doc/comment/doc.go">doc.go</a>
+			
+				<a href="../../../../src/go/doc/comment/html.go">html.go</a>
+			
+				<a href="../../../../src/go/doc/comment/markdown.go">markdown.go</a>
+			
+				<a href="../../../../src/go/doc/comment/parse.go">parse.go</a>
+			
+				<a href="../../../../src/go/doc/comment/print.go">print.go</a>
+			
+				<a href="../../../../src/go/doc/comment/std.go">std.go</a>
+			
+				<a href="../../../../src/go/doc/comment/text.go">text.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+		
+		
+			
+			
+			<h2 id="DefaultLookupPackage">func <a href="../../../../src/go/doc/comment/parse.go?s=9266:9333#L265">DefaultLookupPackage</a>
+				<a class="permalink" href="index.html#DefaultLookupPackage">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func DefaultLookupPackage(name <a href="../../../builtin/index.html#string">string</a>) (importPath <a href="../../../builtin/index.html#string">string</a>, ok <a href="../../../builtin/index.html#bool">bool</a>)</pre>
+			<p>DefaultLookupPackage is the default package lookup
+function, used when [Parser.LookupPackage] is nil.
+It recognizes names of the packages from the standard
+library with single-element import paths, such as math,
+which would otherwise be impossible to name.
+<p>Note that the go/doc package provides a more sophisticated
+lookup based on the imports used in the current package.
+
+			
+			
+
+		
+		
+			
+			
+			<h2 id="Block">type <a href="../../../../src/go/doc/comment/parse.go?s=734:767#L22">Block</a>
+				<a class="permalink" href="index.html#Block">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A Block is block-level content in a doc comment,
+one of <a href="index.html#Code">*Code</a>, <a href="index.html#Heading">*Heading</a>, <a href="index.html#List">*List</a>, or <a href="index.html#Paragraph">*Paragraph</a>.
+
+			<pre>type Block interface {
+    <span class="comment">// contains filtered or unexported methods</span>
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="Code">type <a href="../../../../src/go/doc/comment/parse.go?s=3778:4021#L115">Code</a>
+				<a class="permalink" href="index.html#Code">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A Code is a preformatted code block.
+
+			<pre>type Code struct {
+<span id="Code.Text"></span>    <span class="comment">// Text is the preformatted text, ending with a newline character.</span>
+    <span class="comment">// It may be multiple lines, each of which ends with a newline character.</span>
+    <span class="comment">// It is never empty, nor does it start or end with a blank line.</span>
+    Text <a href="../../../builtin/index.html#string">string</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="Doc">type <a href="../../../../src/go/doc/comment/parse.go?s=274:441#L5">Doc</a>
+				<a class="permalink" href="index.html#Doc">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A Doc is a parsed Go doc comment.
+
+			<pre>type Doc struct {
+<span id="Doc.Content"></span>    <span class="comment">// Content is the sequence of content blocks in the comment.</span>
+    Content []<a href="index.html#Block">Block</a>
+
+<span id="Doc.Links"></span>    <span class="comment">// Links is the link definitions in the comment.</span>
+    Links []*<a href="index.html#LinkDef">LinkDef</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="DocLink">type <a href="../../../../src/go/doc/comment/parse.go?s=4678:5368#L150">DocLink</a>
+				<a class="permalink" href="index.html#DocLink">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A DocLink is a link to documentation for a Go package or symbol.
+
+			<pre>type DocLink struct {
+<span id="DocLink.Text"></span>    Text []<a href="index.html#Text">Text</a> <span class="comment">// text of link</span>
+
+<span id="DocLink.ImportPath"></span>    <span class="comment">// ImportPath, Recv, and Name identify the Go package or symbol</span>
+    <span class="comment">// that is the link target. The potential combinations of</span>
+    <span class="comment">// non-empty fields are:</span>
+    <span class="comment">//  - ImportPath: a link to another package</span>
+    <span class="comment">//  - ImportPath, Name: a link to a const, func, type, or var in another package</span>
+    <span class="comment">//  - ImportPath, Recv, Name: a link to a method in another package</span>
+    <span class="comment">//  - Name: a link to a const, func, type, or var in this package</span>
+    <span class="comment">//  - Recv, Name: a link to a method in this package</span>
+    ImportPath <a href="../../../builtin/index.html#string">string</a> <span class="comment">// import path</span>
+<span id="DocLink.Recv"></span>    Recv       <a href="../../../builtin/index.html#string">string</a> <span class="comment">// receiver type, without any pointer star, for methods</span>
+<span id="DocLink.Name"></span>    Name       <a href="../../../builtin/index.html#string">string</a> <span class="comment">// const, func, type, var, or method name</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="DocLink.DefaultURL">func (*DocLink) <a href="../../../../src/go/doc/comment/print.go?s=3248:3299#L87">DefaultURL</a>
+					<a class="permalink" href="index.html#DocLink.DefaultURL">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (l *<a href="index.html#DocLink">DocLink</a>) DefaultURL(baseURL <a href="../../../builtin/index.html#string">string</a>) <a href="../../../builtin/index.html#string">string</a></pre>
+				<p>DefaultURL constructs and returns the documentation URL for l,
+using baseURL as a prefix for links to other packages.
+<p>The possible forms returned by DefaultURL are:
+<ul>
+<li>baseURL/ImportPath, for a link to another package
+<li>baseURL/ImportPath#Name, for a link to a const, func, type, or var in another package
+<li>baseURL/ImportPath#Recv.Name, for a link to a method in another package
+<li>#Name, for a link to a const, func, type, or var in this package
+<li>#Recv.Name, for a link to a method in this package
+</ul>
+<p>If baseURL ends in a trailing slash, then DefaultURL inserts
+a slash between ImportPath and # in the anchored forms.
+For example, here are some baseURL values and URLs they can generate:
+<pre>&quot;/pkg/&quot; → &quot;/pkg/math/#Sqrt&quot;
+&quot;/pkg&quot;  → &quot;/pkg/math#Sqrt&quot;
+&quot;/&quot;     → &quot;/math/#Sqrt&quot;
+&quot;&quot;      → &quot;/math#Sqrt&quot;
+</pre>
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Heading">type <a href="../../../../src/go/doc/comment/parse.go?s=808:864#L27">Heading</a>
+				<a class="permalink" href="index.html#Heading">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A Heading is a doc comment heading.
+
+			<pre>type Heading struct {
+<span id="Heading.Text"></span>    Text []<a href="index.html#Text">Text</a> <span class="comment">// the heading text</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="Heading.DefaultID">func (*Heading) <a href="../../../../src/go/doc/comment/print.go?s=4083:4119#L117">DefaultID</a>
+					<a class="permalink" href="index.html#Heading.DefaultID">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (h *<a href="index.html#Heading">Heading</a>) DefaultID() <a href="../../../builtin/index.html#string">string</a></pre>
+				<p>DefaultID returns the default anchor ID for the heading h.
+<p>The default anchor ID is constructed by converting every
+rune that is not alphanumeric ASCII to an underscore
+and then adding the prefix “hdr-”.
+For example, if the heading text is “Go Doc Comments”,
+the default ID is “hdr-Go_Doc_Comments”.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Italic">type <a href="../../../../src/go/doc/comment/parse.go?s=4345:4363#L136">Italic</a>
+				<a class="permalink" href="index.html#Italic">&#xb6;</a>
+				
+				
+			</h2>
+			<p>An Italic is a string rendered as italicized text.
+
+			<pre>type Italic <a href="../../../builtin/index.html#string">string</a></pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="Link">type <a href="../../../../src/go/doc/comment/parse.go?s=4429:4584#L141">Link</a>
+				<a class="permalink" href="index.html#Link">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A Link is a link to a specific URL.
+
+			<pre>type Link struct {
+<span id="Link.Auto"></span>    Auto <a href="../../../builtin/index.html#bool">bool</a>   <span class="comment">// is this an automatic (implicit) link of a literal URL?</span>
+<span id="Link.Text"></span>    Text []<a href="index.html#Text">Text</a> <span class="comment">// text of link</span>
+<span id="Link.URL"></span>    URL  <a href="../../../builtin/index.html#string">string</a> <span class="comment">// target URL of link</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="LinkDef">type <a href="../../../../src/go/doc/comment/parse.go?s=485:623#L14">LinkDef</a>
+				<a class="permalink" href="index.html#LinkDef">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A LinkDef is a single link definition.
+
+			<pre>type LinkDef struct {
+<span id="LinkDef.Text"></span>    Text <a href="../../../builtin/index.html#string">string</a> <span class="comment">// the link text</span>
+<span id="LinkDef.URL"></span>    URL  <a href="../../../builtin/index.html#string">string</a> <span class="comment">// the link URL</span>
+<span id="LinkDef.Used"></span>    Used <a href="../../../builtin/index.html#bool">bool</a>   <span class="comment">// whether the comment uses the definition</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="List">type <a href="../../../../src/go/doc/comment/parse.go?s=1112:1930#L37">List</a>
+				<a class="permalink" href="index.html#List">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A List is a numbered or bullet list.
+Lists are always non-empty: len(Items) &gt; 0.
+In a numbered list, every Items[i].Number is a non-empty string.
+In a bullet list, every Items[i].Number is an empty string.
+
+			<pre>type List struct {
+<span id="List.Items"></span>    <span class="comment">// Items is the list items.</span>
+    Items []*<a href="index.html#ListItem">ListItem</a>
+
+<span id="List.ForceBlankBefore"></span>    <span class="comment">// ForceBlankBefore indicates that the list must be</span>
+    <span class="comment">// preceded by a blank line when reformatting the comment,</span>
+    <span class="comment">// overriding the usual conditions. See the BlankBefore method.</span>
+    <span class="comment">//</span>
+    <span class="comment">// The comment parser sets ForceBlankBefore for any list</span>
+    <span class="comment">// that is preceded by a blank line, to make sure</span>
+    <span class="comment">// the blank line is preserved when printing.</span>
+    ForceBlankBefore <a href="../../../builtin/index.html#bool">bool</a>
+
+<span id="List.ForceBlankBetween"></span>    <span class="comment">// ForceBlankBetween indicates that list items must be</span>
+    <span class="comment">// separated by blank lines when reformatting the comment,</span>
+    <span class="comment">// overriding the usual conditions. See the BlankBetween method.</span>
+    <span class="comment">//</span>
+    <span class="comment">// The comment parser sets ForceBlankBetween for any list</span>
+    <span class="comment">// that has a blank line between any two of its items, to make sure</span>
+    <span class="comment">// the blank lines are preserved when printing.</span>
+    ForceBlankBetween <a href="../../../builtin/index.html#bool">bool</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="List.BlankBefore">func (*List) <a href="../../../../src/go/doc/comment/parse.go?s=2363:2396#L69">BlankBefore</a>
+					<a class="permalink" href="index.html#List.BlankBefore">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (l *<a href="index.html#List">List</a>) BlankBefore() <a href="../../../builtin/index.html#bool">bool</a></pre>
+				<p>BlankBefore reports whether a reformatting of the comment
+should include a blank line before the list.
+The default rule is the same as for [BlankBetween]:
+if the list item content contains any blank lines
+(meaning at least one item has multiple paragraphs)
+then the list itself must be preceded by a blank line.
+A preceding blank line can be forced by setting <a href="index.html#List">List</a>.ForceBlankBefore.
+
+				
+				
+				
+			
+				
+				<h3 id="List.BlankBetween">func (*List) <a href="../../../../src/go/doc/comment/parse.go?s=2848:2882#L79">BlankBetween</a>
+					<a class="permalink" href="index.html#List.BlankBetween">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (l *<a href="index.html#List">List</a>) BlankBetween() <a href="../../../builtin/index.html#bool">bool</a></pre>
+				<p>BlankBetween reports whether a reformatting of the comment
+should include a blank line between each pair of list items.
+The default rule is that if the list item content contains any blank lines
+(meaning at least one item has multiple paragraphs)
+then list items must themselves be separated by blank lines.
+Blank line separators can be forced by setting <a href="index.html#List">List</a>.ForceBlankBetween.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="ListItem">type <a href="../../../../src/go/doc/comment/parse.go?s=3273:3627#L96">ListItem</a>
+				<a class="permalink" href="index.html#ListItem">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A ListItem is a single item in a numbered or bullet list.
+
+			<pre>type ListItem struct {
+<span id="ListItem.Number"></span>    <span class="comment">// Number is a decimal string in a numbered list</span>
+    <span class="comment">// or an empty string in a bullet list.</span>
+    Number <a href="../../../builtin/index.html#string">string</a> <span class="comment">// &#34;1&#34;, &#34;2&#34;, ...; &#34;&#34; for bullet list</span>
+
+<span id="ListItem.Content"></span>    <span class="comment">// Content is the list content.</span>
+    <span class="comment">// Currently, restrictions in the parser and printer</span>
+    <span class="comment">// require every element of Content to be a *Paragraph.</span>
+    Content []<a href="index.html#Block">Block</a> <span class="comment">// Content of this item.</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="Paragraph">type <a href="../../../../src/go/doc/comment/parse.go?s=3668:3706#L108">Paragraph</a>
+				<a class="permalink" href="index.html#Paragraph">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A Paragraph is a paragraph of text.
+
+			<pre>type Paragraph struct {
+<span id="Paragraph.Text"></span>    Text []<a href="index.html#Text">Text</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="Parser">type <a href="../../../../src/go/doc/comment/parse.go?s=5570:7415#L171">Parser</a>
+				<a class="permalink" href="index.html#Parser">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A Parser is a doc comment parser.
+The fields in the struct can be filled in before calling <a href="index.html#Parser.Parse">Parser.Parse</a>
+in order to customize the details of the parsing process.
+
+			<pre>type Parser struct {
+<span id="Parser.Words"></span>    <span class="comment">// Words is a map of Go identifier words that</span>
+    <span class="comment">// should be italicized and potentially linked.</span>
+    <span class="comment">// If Words[w] is the empty string, then the word w</span>
+    <span class="comment">// is only italicized. Otherwise it is linked, using</span>
+    <span class="comment">// Words[w] as the link target.</span>
+    <span class="comment">// Words corresponds to the [go/doc.ToHTML] words parameter.</span>
+    Words map[<a href="../../../builtin/index.html#string">string</a>]<a href="../../../builtin/index.html#string">string</a>
+
+<span id="Parser.LookupPackage"></span>    <span class="comment">// LookupPackage resolves a package name to an import path.</span>
+    <span class="comment">//</span>
+    <span class="comment">// If LookupPackage(name) returns ok == true, then [name]</span>
+    <span class="comment">// (or [name.Sym] or [name.Sym.Method])</span>
+    <span class="comment">// is considered a documentation link to importPath&#39;s package docs.</span>
+    <span class="comment">// It is valid to return &#34;&#34;, true, in which case name is considered</span>
+    <span class="comment">// to refer to the current package.</span>
+    <span class="comment">//</span>
+    <span class="comment">// If LookupPackage(name) returns ok == false,</span>
+    <span class="comment">// then [name] (or [name.Sym] or [name.Sym.Method])</span>
+    <span class="comment">// will not be considered a documentation link,</span>
+    <span class="comment">// except in the case where name is the full (but single-element) import path</span>
+    <span class="comment">// of a package in the standard library, such as in [math] or [io.Reader].</span>
+    <span class="comment">// LookupPackage is still called for such names,</span>
+    <span class="comment">// in order to permit references to imports of other packages</span>
+    <span class="comment">// with the same package names.</span>
+    <span class="comment">//</span>
+    <span class="comment">// Setting LookupPackage to nil is equivalent to setting it to</span>
+    <span class="comment">// a function that always returns &#34;&#34;, false.</span>
+    LookupPackage func(name <a href="../../../builtin/index.html#string">string</a>) (importPath <a href="../../../builtin/index.html#string">string</a>, ok <a href="../../../builtin/index.html#bool">bool</a>)
+
+<span id="Parser.LookupSym"></span>    <span class="comment">// LookupSym reports whether a symbol name or method name</span>
+    <span class="comment">// exists in the current package.</span>
+    <span class="comment">//</span>
+    <span class="comment">// If LookupSym(&#34;&#34;, &#34;Name&#34;) returns true, then [Name]</span>
+    <span class="comment">// is considered a documentation link for a const, func, type, or var.</span>
+    <span class="comment">//</span>
+    <span class="comment">// Similarly, if LookupSym(&#34;Recv&#34;, &#34;Name&#34;) returns true,</span>
+    <span class="comment">// then [Recv.Name] is considered a documentation link for</span>
+    <span class="comment">// type Recv&#39;s method Name.</span>
+    <span class="comment">//</span>
+    <span class="comment">// Setting LookupSym to nil is equivalent to setting it to a function</span>
+    <span class="comment">// that always returns false.</span>
+    LookupSym func(recv, name <a href="../../../builtin/index.html#string">string</a>) (ok <a href="../../../builtin/index.html#bool">bool</a>)
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="Parser.Parse">func (*Parser) <a href="../../../../src/go/doc/comment/parse.go?s=9545:9585#L274">Parse</a>
+					<a class="permalink" href="index.html#Parser.Parse">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#Parser">Parser</a>) Parse(text <a href="../../../builtin/index.html#string">string</a>) *<a href="index.html#Doc">Doc</a></pre>
+				<p>Parse parses the doc comment text and returns the *<a href="index.html#Doc">Doc</a> form.
+Comment markers (/* // and */) in the text must have already been removed.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Plain">type <a href="../../../../src/go/doc/comment/parse.go?s=4248:4265#L131">Plain</a>
+				<a class="permalink" href="index.html#Plain">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A Plain is a string rendered as plain text (not italicized).
+
+			<pre>type Plain <a href="../../../builtin/index.html#string">string</a></pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="Printer">type <a href="../../../../src/go/doc/comment/print.go?s=408:2000#L7">Printer</a>
+				<a class="permalink" href="index.html#Printer">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A Printer is a doc comment printer.
+The fields in the struct can be filled in before calling
+any of the printing methods
+in order to customize the details of the printing process.
+
+			<pre>type Printer struct {
+<span id="Printer.HeadingLevel"></span>    <span class="comment">// HeadingLevel is the nesting level used for</span>
+    <span class="comment">// HTML and Markdown headings.</span>
+    <span class="comment">// If HeadingLevel is zero, it defaults to level 3,</span>
+    <span class="comment">// meaning to use &lt;h3&gt; and ###.</span>
+    HeadingLevel <a href="../../../builtin/index.html#int">int</a>
+
+<span id="Printer.HeadingID"></span>    <span class="comment">// HeadingID is a function that computes the heading ID</span>
+    <span class="comment">// (anchor tag) to use for the heading h when generating</span>
+    <span class="comment">// HTML and Markdown. If HeadingID returns an empty string,</span>
+    <span class="comment">// then the heading ID is omitted.</span>
+    <span class="comment">// If HeadingID is nil, h.DefaultID is used.</span>
+    HeadingID func(h *<a href="index.html#Heading">Heading</a>) <a href="../../../builtin/index.html#string">string</a>
+
+<span id="Printer.DocLinkURL"></span>    <span class="comment">// DocLinkURL is a function that computes the URL for the given DocLink.</span>
+    <span class="comment">// If DocLinkURL is nil, then link.DefaultURL(p.DocLinkBaseURL) is used.</span>
+    DocLinkURL func(link *<a href="index.html#DocLink">DocLink</a>) <a href="../../../builtin/index.html#string">string</a>
+
+<span id="Printer.DocLinkBaseURL"></span>    <span class="comment">// DocLinkBaseURL is used when DocLinkURL is nil,</span>
+    <span class="comment">// passed to [DocLink.DefaultURL] to construct a DocLink&#39;s URL.</span>
+    <span class="comment">// See that method&#39;s documentation for details.</span>
+    DocLinkBaseURL <a href="../../../builtin/index.html#string">string</a>
+
+<span id="Printer.TextPrefix"></span>    <span class="comment">// TextPrefix is a prefix to print at the start of every line</span>
+    <span class="comment">// when generating text output using the Text method.</span>
+    TextPrefix <a href="../../../builtin/index.html#string">string</a>
+
+<span id="Printer.TextCodePrefix"></span>    <span class="comment">// TextCodePrefix is the prefix to print at the start of each</span>
+    <span class="comment">// preformatted (code block) line when generating text output,</span>
+    <span class="comment">// instead of (not in addition to) TextPrefix.</span>
+    <span class="comment">// If TextCodePrefix is the empty string, it defaults to TextPrefix+&#34;\t&#34;.</span>
+    TextCodePrefix <a href="../../../builtin/index.html#string">string</a>
+
+<span id="Printer.TextWidth"></span>    <span class="comment">// TextWidth is the maximum width text line to generate,</span>
+    <span class="comment">// measured in Unicode code points,</span>
+    <span class="comment">// excluding TextPrefix and the newline character.</span>
+    <span class="comment">// If TextWidth is zero, it defaults to 80 minus the number of code points in TextPrefix.</span>
+    <span class="comment">// If TextWidth is negative, there is no limit.</span>
+    TextWidth <a href="../../../builtin/index.html#int">int</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="Printer.Comment">func (*Printer) <a href="../../../../src/go/doc/comment/print.go?s=4732:4772#L145">Comment</a>
+					<a class="permalink" href="index.html#Printer.Comment">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#Printer">Printer</a>) Comment(d *<a href="index.html#Doc">Doc</a>) []<a href="../../../builtin/index.html#byte">byte</a></pre>
+				<p>Comment returns the standard Go formatting of the <a href="index.html#Doc">Doc</a>,
+without any comment markers.
+
+				
+				
+				
+			
+				
+				<h3 id="Printer.HTML">func (*Printer) <a href="../../../../src/go/doc/comment/html.go?s=461:498#L11">HTML</a>
+					<a class="permalink" href="index.html#Printer.HTML">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#Printer">Printer</a>) HTML(d *<a href="index.html#Doc">Doc</a>) []<a href="../../../builtin/index.html#byte">byte</a></pre>
+				<p>HTML returns an HTML formatting of the <a href="index.html#Doc">Doc</a>.
+See the <a href="index.html#Printer">Printer</a> documentation for ways to customize the HTML output.
+
+				
+				
+				
+			
+				
+				<h3 id="Printer.Markdown">func (*Printer) <a href="../../../../src/go/doc/comment/markdown.go?s=506:547#L12">Markdown</a>
+					<a class="permalink" href="index.html#Printer.Markdown">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#Printer">Printer</a>) Markdown(d *<a href="index.html#Doc">Doc</a>) []<a href="../../../builtin/index.html#byte">byte</a></pre>
+				<p>Markdown returns a Markdown formatting of the Doc.
+See the <a href="index.html#Printer">Printer</a> documentation for ways to customize the Markdown output.
+
+				
+				
+				
+			
+				
+				<h3 id="Printer.Text">func (*Printer) <a href="../../../../src/go/doc/comment/text.go?s=560:597#L16">Text</a>
+					<a class="permalink" href="index.html#Printer.Text">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#Printer">Printer</a>) Text(d *<a href="index.html#Doc">Doc</a>) []<a href="../../../builtin/index.html#byte">byte</a></pre>
+				<p>Text returns a textual formatting of the <a href="index.html#Doc">Doc</a>.
+See the <a href="index.html#Printer">Printer</a> documentation for ways to customize the text output.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Text">type <a href="../../../../src/go/doc/comment/parse.go?s=4151:4182#L126">Text</a>
+				<a class="permalink" href="index.html#Text">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A Text is text-level content in a doc comment,
+one of <a href="index.html#Plain">Plain</a>, <a href="index.html#Italic">Italic</a>, <a href="index.html#Link">*Link</a>, or <a href="index.html#DocLink">*DocLink</a>.
+
+			<pre>type Text interface {
+    <span class="comment">// contains filtered or unexported methods</span>
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+	
+
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

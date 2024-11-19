@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>pe - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package pe
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "debug/pe"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>Package pe implements access to PE (Microsoft Windows Portable Executable) files.
+<h3 id="hdr-Security">Security</h3>
+<p>This package is not designed to be hardened against adversarial inputs, and is
+outside the scope of <a href="https://go.dev/security/policy">https://go.dev/security/policy</a>. In particular, only basic
+validation is done when parsing object files. As such, care should be taken when
+parsing untrusted inputs, as parsing malformed files may consume significant
+resources, or cause panics.
+
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+				<dd><a href="index.html#pkg-constants">Constants</a></dd>
+			
+			
+			
+			
+				
+				<dd><a href="index.html#COFFSymbol">type COFFSymbol</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#COFFSymbol.FullName">func (sym *COFFSymbol) FullName(st StringTable) (string, error)</a></dd>
+				
+			
+				
+				<dd><a href="index.html#COFFSymbolAuxFormat5">type COFFSymbolAuxFormat5</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#DataDirectory">type DataDirectory</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#File">type File</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewFile">func NewFile(r io.ReaderAt) (*File, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Open">func Open(name string) (*File, error)</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#File.COFFSymbolReadSectionDefAux">func (f *File) COFFSymbolReadSectionDefAux(idx int) (*COFFSymbolAuxFormat5, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#File.Close">func (f *File) Close() error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#File.DWARF">func (f *File) DWARF() (*dwarf.Data, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#File.ImportedLibraries">func (f *File) ImportedLibraries() ([]string, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#File.ImportedSymbols">func (f *File) ImportedSymbols() ([]string, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#File.Section">func (f *File) Section(name string) *Section</a></dd>
+				
+			
+				
+				<dd><a href="index.html#FileHeader">type FileHeader</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#FormatError">type FormatError</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#FormatError.Error">func (e *FormatError) Error() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#ImportDirectory">type ImportDirectory</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#OptionalHeader32">type OptionalHeader32</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#OptionalHeader64">type OptionalHeader64</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#Reloc">type Reloc</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#Section">type Section</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Section.Data">func (s *Section) Data() ([]byte, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Section.Open">func (s *Section) Open() io.ReadSeeker</a></dd>
+				
+			
+				
+				<dd><a href="index.html#SectionHeader">type SectionHeader</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#SectionHeader32">type SectionHeader32</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#StringTable">type StringTable</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#StringTable.String">func (st StringTable) String(start uint32) (string, error)</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Symbol">type Symbol</a></dd>
+				
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../../src/debug/pe/file.go">file.go</a>
+			
+				<a href="../../../src/debug/pe/pe.go">pe.go</a>
+			
+				<a href="../../../src/debug/pe/section.go">section.go</a>
+			
+				<a href="../../../src/debug/pe/string.go">string.go</a>
+			
+				<a href="../../../src/debug/pe/symbol.go">symbol.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+			<h2 id="pkg-constants">Constants</h2>
+			
+				
+				<pre>const (
+    <span id="IMAGE_FILE_MACHINE_UNKNOWN">IMAGE_FILE_MACHINE_UNKNOWN</span>     = 0x0
+    <span id="IMAGE_FILE_MACHINE_AM33">IMAGE_FILE_MACHINE_AM33</span>        = 0x1d3
+    <span id="IMAGE_FILE_MACHINE_AMD64">IMAGE_FILE_MACHINE_AMD64</span>       = 0x8664
+    <span id="IMAGE_FILE_MACHINE_ARM">IMAGE_FILE_MACHINE_ARM</span>         = 0x1c0
+    <span id="IMAGE_FILE_MACHINE_ARMNT">IMAGE_FILE_MACHINE_ARMNT</span>       = 0x1c4
+    <span id="IMAGE_FILE_MACHINE_ARM64">IMAGE_FILE_MACHINE_ARM64</span>       = 0xaa64
+    <span id="IMAGE_FILE_MACHINE_EBC">IMAGE_FILE_MACHINE_EBC</span>         = 0xebc
+    <span id="IMAGE_FILE_MACHINE_I386">IMAGE_FILE_MACHINE_I386</span>        = 0x14c
+    <span id="IMAGE_FILE_MACHINE_IA64">IMAGE_FILE_MACHINE_IA64</span>        = 0x200
+    <span id="IMAGE_FILE_MACHINE_LOONGARCH32">IMAGE_FILE_MACHINE_LOONGARCH32</span> = 0x6232
+    <span id="IMAGE_FILE_MACHINE_LOONGARCH64">IMAGE_FILE_MACHINE_LOONGARCH64</span> = 0x6264
+    <span id="IMAGE_FILE_MACHINE_M32R">IMAGE_FILE_MACHINE_M32R</span>        = 0x9041
+    <span id="IMAGE_FILE_MACHINE_MIPS16">IMAGE_FILE_MACHINE_MIPS16</span>      = 0x266
+    <span id="IMAGE_FILE_MACHINE_MIPSFPU">IMAGE_FILE_MACHINE_MIPSFPU</span>     = 0x366
+    <span id="IMAGE_FILE_MACHINE_MIPSFPU16">IMAGE_FILE_MACHINE_MIPSFPU16</span>   = 0x466
+    <span id="IMAGE_FILE_MACHINE_POWERPC">IMAGE_FILE_MACHINE_POWERPC</span>     = 0x1f0
+    <span id="IMAGE_FILE_MACHINE_POWERPCFP">IMAGE_FILE_MACHINE_POWERPCFP</span>   = 0x1f1
+    <span id="IMAGE_FILE_MACHINE_R4000">IMAGE_FILE_MACHINE_R4000</span>       = 0x166
+    <span id="IMAGE_FILE_MACHINE_SH3">IMAGE_FILE_MACHINE_SH3</span>         = 0x1a2
+    <span id="IMAGE_FILE_MACHINE_SH3DSP">IMAGE_FILE_MACHINE_SH3DSP</span>      = 0x1a3
+    <span id="IMAGE_FILE_MACHINE_SH4">IMAGE_FILE_MACHINE_SH4</span>         = 0x1a6
+    <span id="IMAGE_FILE_MACHINE_SH5">IMAGE_FILE_MACHINE_SH5</span>         = 0x1a8
+    <span id="IMAGE_FILE_MACHINE_THUMB">IMAGE_FILE_MACHINE_THUMB</span>       = 0x1c2
+    <span id="IMAGE_FILE_MACHINE_WCEMIPSV2">IMAGE_FILE_MACHINE_WCEMIPSV2</span>   = 0x169
+    <span id="IMAGE_FILE_MACHINE_RISCV32">IMAGE_FILE_MACHINE_RISCV32</span>     = 0x5032
+    <span id="IMAGE_FILE_MACHINE_RISCV64">IMAGE_FILE_MACHINE_RISCV64</span>     = 0x5064
+    <span id="IMAGE_FILE_MACHINE_RISCV128">IMAGE_FILE_MACHINE_RISCV128</span>    = 0x5128
+)</pre>
+			
+				<p>IMAGE_DIRECTORY_ENTRY constants
+
+				<pre>const (
+    <span id="IMAGE_DIRECTORY_ENTRY_EXPORT">IMAGE_DIRECTORY_ENTRY_EXPORT</span>         = 0
+    <span id="IMAGE_DIRECTORY_ENTRY_IMPORT">IMAGE_DIRECTORY_ENTRY_IMPORT</span>         = 1
+    <span id="IMAGE_DIRECTORY_ENTRY_RESOURCE">IMAGE_DIRECTORY_ENTRY_RESOURCE</span>       = 2
+    <span id="IMAGE_DIRECTORY_ENTRY_EXCEPTION">IMAGE_DIRECTORY_ENTRY_EXCEPTION</span>      = 3
+    <span id="IMAGE_DIRECTORY_ENTRY_SECURITY">IMAGE_DIRECTORY_ENTRY_SECURITY</span>       = 4
+    <span id="IMAGE_DIRECTORY_ENTRY_BASERELOC">IMAGE_DIRECTORY_ENTRY_BASERELOC</span>      = 5
+    <span id="IMAGE_DIRECTORY_ENTRY_DEBUG">IMAGE_DIRECTORY_ENTRY_DEBUG</span>          = 6
+    <span id="IMAGE_DIRECTORY_ENTRY_ARCHITECTURE">IMAGE_DIRECTORY_ENTRY_ARCHITECTURE</span>   = 7
+    <span id="IMAGE_DIRECTORY_ENTRY_GLOBALPTR">IMAGE_DIRECTORY_ENTRY_GLOBALPTR</span>      = 8
+    <span id="IMAGE_DIRECTORY_ENTRY_TLS">IMAGE_DIRECTORY_ENTRY_TLS</span>            = 9
+    <span id="IMAGE_DIRECTORY_ENTRY_LOAD_CONFIG">IMAGE_DIRECTORY_ENTRY_LOAD_CONFIG</span>    = 10
+    <span id="IMAGE_DIRECTORY_ENTRY_BOUND_IMPORT">IMAGE_DIRECTORY_ENTRY_BOUND_IMPORT</span>   = 11
+    <span id="IMAGE_DIRECTORY_ENTRY_IAT">IMAGE_DIRECTORY_ENTRY_IAT</span>            = 12
+    <span id="IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT">IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT</span>   = 13
+    <span id="IMAGE_DIRECTORY_ENTRY_COM_DESCRIPTOR">IMAGE_DIRECTORY_ENTRY_COM_DESCRIPTOR</span> = 14
+)</pre>
+			
+				<p>Values of IMAGE_FILE_HEADER.Characteristics. These can be combined together.
+
+				<pre>const (
+    <span id="IMAGE_FILE_RELOCS_STRIPPED">IMAGE_FILE_RELOCS_STRIPPED</span>         = 0x0001
+    <span id="IMAGE_FILE_EXECUTABLE_IMAGE">IMAGE_FILE_EXECUTABLE_IMAGE</span>        = 0x0002
+    <span id="IMAGE_FILE_LINE_NUMS_STRIPPED">IMAGE_FILE_LINE_NUMS_STRIPPED</span>      = 0x0004
+    <span id="IMAGE_FILE_LOCAL_SYMS_STRIPPED">IMAGE_FILE_LOCAL_SYMS_STRIPPED</span>     = 0x0008
+    <span id="IMAGE_FILE_AGGRESIVE_WS_TRIM">IMAGE_FILE_AGGRESIVE_WS_TRIM</span>       = 0x0010
+    <span id="IMAGE_FILE_LARGE_ADDRESS_AWARE">IMAGE_FILE_LARGE_ADDRESS_AWARE</span>     = 0x0020
+    <span id="IMAGE_FILE_BYTES_REVERSED_LO">IMAGE_FILE_BYTES_REVERSED_LO</span>       = 0x0080
+    <span id="IMAGE_FILE_32BIT_MACHINE">IMAGE_FILE_32BIT_MACHINE</span>           = 0x0100
+    <span id="IMAGE_FILE_DEBUG_STRIPPED">IMAGE_FILE_DEBUG_STRIPPED</span>          = 0x0200
+    <span id="IMAGE_FILE_REMOVABLE_RUN_FROM_SWAP">IMAGE_FILE_REMOVABLE_RUN_FROM_SWAP</span> = 0x0400
+    <span id="IMAGE_FILE_NET_RUN_FROM_SWAP">IMAGE_FILE_NET_RUN_FROM_SWAP</span>       = 0x0800
+    <span id="IMAGE_FILE_SYSTEM">IMAGE_FILE_SYSTEM</span>                  = 0x1000
+    <span id="IMAGE_FILE_DLL">IMAGE_FILE_DLL</span>                     = 0x2000
+    <span id="IMAGE_FILE_UP_SYSTEM_ONLY">IMAGE_FILE_UP_SYSTEM_ONLY</span>          = 0x4000
+    <span id="IMAGE_FILE_BYTES_REVERSED_HI">IMAGE_FILE_BYTES_REVERSED_HI</span>       = 0x8000
+)</pre>
+			
+				<p>OptionalHeader64.Subsystem and OptionalHeader32.Subsystem values.
+
+				<pre>const (
+    <span id="IMAGE_SUBSYSTEM_UNKNOWN">IMAGE_SUBSYSTEM_UNKNOWN</span>                  = 0
+    <span id="IMAGE_SUBSYSTEM_NATIVE">IMAGE_SUBSYSTEM_NATIVE</span>                   = 1
+    <span id="IMAGE_SUBSYSTEM_WINDOWS_GUI">IMAGE_SUBSYSTEM_WINDOWS_GUI</span>              = 2
+    <span id="IMAGE_SUBSYSTEM_WINDOWS_CUI">IMAGE_SUBSYSTEM_WINDOWS_CUI</span>              = 3
+    <span id="IMAGE_SUBSYSTEM_OS2_CUI">IMAGE_SUBSYSTEM_OS2_CUI</span>                  = 5
+    <span id="IMAGE_SUBSYSTEM_POSIX_CUI">IMAGE_SUBSYSTEM_POSIX_CUI</span>                = 7
+    <span id="IMAGE_SUBSYSTEM_NATIVE_WINDOWS">IMAGE_SUBSYSTEM_NATIVE_WINDOWS</span>           = 8
+    <span id="IMAGE_SUBSYSTEM_WINDOWS_CE_GUI">IMAGE_SUBSYSTEM_WINDOWS_CE_GUI</span>           = 9
+    <span id="IMAGE_SUBSYSTEM_EFI_APPLICATION">IMAGE_SUBSYSTEM_EFI_APPLICATION</span>          = 10
+    <span id="IMAGE_SUBSYSTEM_EFI_BOOT_SERVICE_DRIVER">IMAGE_SUBSYSTEM_EFI_BOOT_SERVICE_DRIVER</span>  = 11
+    <span id="IMAGE_SUBSYSTEM_EFI_RUNTIME_DRIVER">IMAGE_SUBSYSTEM_EFI_RUNTIME_DRIVER</span>       = 12
+    <span id="IMAGE_SUBSYSTEM_EFI_ROM">IMAGE_SUBSYSTEM_EFI_ROM</span>                  = 13
+    <span id="IMAGE_SUBSYSTEM_XBOX">IMAGE_SUBSYSTEM_XBOX</span>                     = 14
+    <span id="IMAGE_SUBSYSTEM_WINDOWS_BOOT_APPLICATION">IMAGE_SUBSYSTEM_WINDOWS_BOOT_APPLICATION</span> = 16
+)</pre>
+			
+				<p>OptionalHeader64.DllCharacteristics and OptionalHeader32.DllCharacteristics
+values. These can be combined together.
+
+				<pre>const (
+    <span id="IMAGE_DLLCHARACTERISTICS_HIGH_ENTROPY_VA">IMAGE_DLLCHARACTERISTICS_HIGH_ENTROPY_VA</span>       = 0x0020
+    <span id="IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE">IMAGE_DLLCHARACTERISTICS_DYNAMIC_BASE</span>          = 0x0040
+    <span id="IMAGE_DLLCHARACTERISTICS_FORCE_INTEGRITY">IMAGE_DLLCHARACTERISTICS_FORCE_INTEGRITY</span>       = 0x0080
+    <span id="IMAGE_DLLCHARACTERISTICS_NX_COMPAT">IMAGE_DLLCHARACTERISTICS_NX_COMPAT</span>             = 0x0100
+    <span id="IMAGE_DLLCHARACTERISTICS_NO_ISOLATION">IMAGE_DLLCHARACTERISTICS_NO_ISOLATION</span>          = 0x0200
+    <span id="IMAGE_DLLCHARACTERISTICS_NO_SEH">IMAGE_DLLCHARACTERISTICS_NO_SEH</span>                = 0x0400
+    <span id="IMAGE_DLLCHARACTERISTICS_NO_BIND">IMAGE_DLLCHARACTERISTICS_NO_BIND</span>               = 0x0800
+    <span id="IMAGE_DLLCHARACTERISTICS_APPCONTAINER">IMAGE_DLLCHARACTERISTICS_APPCONTAINER</span>          = 0x1000
+    <span id="IMAGE_DLLCHARACTERISTICS_WDM_DRIVER">IMAGE_DLLCHARACTERISTICS_WDM_DRIVER</span>            = 0x2000
+    <span id="IMAGE_DLLCHARACTERISTICS_GUARD_CF">IMAGE_DLLCHARACTERISTICS_GUARD_CF</span>              = 0x4000
+    <span id="IMAGE_DLLCHARACTERISTICS_TERMINAL_SERVER_AWARE">IMAGE_DLLCHARACTERISTICS_TERMINAL_SERVER_AWARE</span> = 0x8000
+)</pre>
+			
+				<p>Section characteristics flags.
+
+				<pre>const (
+    <span id="IMAGE_SCN_CNT_CODE">IMAGE_SCN_CNT_CODE</span>               = 0x00000020
+    <span id="IMAGE_SCN_CNT_INITIALIZED_DATA">IMAGE_SCN_CNT_INITIALIZED_DATA</span>   = 0x00000040
+    <span id="IMAGE_SCN_CNT_UNINITIALIZED_DATA">IMAGE_SCN_CNT_UNINITIALIZED_DATA</span> = 0x00000080
+    <span id="IMAGE_SCN_LNK_COMDAT">IMAGE_SCN_LNK_COMDAT</span>             = 0x00001000
+    <span id="IMAGE_SCN_MEM_DISCARDABLE">IMAGE_SCN_MEM_DISCARDABLE</span>        = 0x02000000
+    <span id="IMAGE_SCN_MEM_EXECUTE">IMAGE_SCN_MEM_EXECUTE</span>            = 0x20000000
+    <span id="IMAGE_SCN_MEM_READ">IMAGE_SCN_MEM_READ</span>               = 0x40000000
+    <span id="IMAGE_SCN_MEM_WRITE">IMAGE_SCN_MEM_WRITE</span>              = 0x80000000
+)</pre>
+			
+				<p>These constants make up the possible values for the &apos;Selection&apos;
+field in an AuxFormat5.
+
+				<pre>const (
+    <span id="IMAGE_COMDAT_SELECT_NODUPLICATES">IMAGE_COMDAT_SELECT_NODUPLICATES</span> = 1
+    <span id="IMAGE_COMDAT_SELECT_ANY">IMAGE_COMDAT_SELECT_ANY</span>          = 2
+    <span id="IMAGE_COMDAT_SELECT_SAME_SIZE">IMAGE_COMDAT_SELECT_SAME_SIZE</span>    = 3
+    <span id="IMAGE_COMDAT_SELECT_EXACT_MATCH">IMAGE_COMDAT_SELECT_EXACT_MATCH</span>  = 4
+    <span id="IMAGE_COMDAT_SELECT_ASSOCIATIVE">IMAGE_COMDAT_SELECT_ASSOCIATIVE</span>  = 5
+    <span id="IMAGE_COMDAT_SELECT_LARGEST">IMAGE_COMDAT_SELECT_LARGEST</span>      = 6
+)</pre>
+			
+				
+				<pre>const <span id="COFFSymbolSize">COFFSymbolSize</span> = 18</pre>
+			
+		
+		
+		
+		
+			
+			
+			<h2 id="COFFSymbol">type <a href="../../../src/debug/pe/symbol.go?s=341:528#L9">COFFSymbol</a>
+				<a class="permalink" href="index.html#COFFSymbol">&#xb6;</a>
+				
+				
+			</h2>
+			<p>COFFSymbol represents single COFF symbol table record.
+
+			<pre>type COFFSymbol struct {
+<span id="COFFSymbol.Name"></span>    Name               [8]<a href="../../builtin/index.html#uint8">uint8</a>
+<span id="COFFSymbol.Value"></span>    Value              <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="COFFSymbol.SectionNumber"></span>    SectionNumber      <a href="../../builtin/index.html#int16">int16</a>
+<span id="COFFSymbol.Type"></span>    Type               <a href="../../builtin/index.html#uint16">uint16</a>
+<span id="COFFSymbol.StorageClass"></span>    StorageClass       <a href="../../builtin/index.html#uint8">uint8</a>
+<span id="COFFSymbol.NumberOfAuxSymbols"></span>    NumberOfAuxSymbols <a href="../../builtin/index.html#uint8">uint8</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="COFFSymbol.FullName">func (*COFFSymbol) <a href="../../../src/debug/pe/symbol.go?s=3324:3387#L99">FullName</a>
+					<a class="permalink" href="index.html#COFFSymbol.FullName">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (sym *<a href="index.html#COFFSymbol">COFFSymbol</a>) FullName(st <a href="index.html#StringTable">StringTable</a>) (<a href="../../builtin/index.html#string">string</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+				<p>FullName finds real name of symbol sym. Normally name is stored
+in sym.Name, but if it is longer then 8 characters, it is stored
+in COFF string table st instead.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="COFFSymbolAuxFormat5">type <a href="../../../src/debug/pe/symbol.go?s=4884:5093#L152">COFFSymbolAuxFormat5</a>
+				<a class="permalink" href="index.html#COFFSymbolAuxFormat5">&#xb6;</a>
+				
+				
+			</h2>
+			<p>COFFSymbolAuxFormat5 describes the expected form of an aux symbol
+attached to a section definition symbol. The PE format defines a
+number of different aux symbol formats: format 1 for function
+definitions, format 2 for .be and .ef symbols, and so on. Format 5
+holds extra info associated with a section definition, including
+number of relocations + line numbers, as well as COMDAT info. See
+<a href="https://docs.microsoft.com/en-us/windows/win32/debug/pe-format#auxiliary-format-5-section-definitions">https://docs.microsoft.com/en-us/windows/win32/debug/pe-format#auxiliary-format-5-section-definitions</a>
+for more on what&apos;s going on here.
+
+			<pre>type COFFSymbolAuxFormat5 struct {
+<span id="COFFSymbolAuxFormat5.Size"></span>    Size           <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="COFFSymbolAuxFormat5.NumRelocs"></span>    NumRelocs      <a href="../../builtin/index.html#uint16">uint16</a>
+<span id="COFFSymbolAuxFormat5.NumLineNumbers"></span>    NumLineNumbers <a href="../../builtin/index.html#uint16">uint16</a>
+<span id="COFFSymbolAuxFormat5.Checksum"></span>    Checksum       <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="COFFSymbolAuxFormat5.SecNum"></span>    SecNum         <a href="../../builtin/index.html#uint16">uint16</a>
+<span id="COFFSymbolAuxFormat5.Selection"></span>    Selection      <a href="../../builtin/index.html#uint8">uint8</a>
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="DataDirectory">type <a href="../../../src/debug/pe/pe.go?s=403:478#L7">DataDirectory</a>
+				<a class="permalink" href="index.html#DataDirectory">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type DataDirectory struct {
+<span id="DataDirectory.VirtualAddress"></span>    VirtualAddress <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="DataDirectory.Size"></span>    Size           <a href="../../builtin/index.html#uint32">uint32</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="File">type <a href="../../../src/debug/pe/file.go?s=767:1112#L21">File</a>
+				<a class="permalink" href="index.html#File">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A File represents an open PE file.
+
+			<pre>type File struct {
+    <a href="index.html#FileHeader">FileHeader</a>
+<span id="File.OptionalHeader"></span>    OptionalHeader <a href="../../builtin/index.html#any">any</a> <span class="comment">// of type *OptionalHeader32 or *OptionalHeader64</span>
+<span id="File.Sections"></span>    Sections       []*<a href="index.html#Section">Section</a>
+<span id="File.Symbols"></span>    Symbols        []*<a href="index.html#Symbol">Symbol</a>    <span class="comment">// COFF symbols with auxiliary symbol records removed</span>
+<span id="File.COFFSymbols"></span>    COFFSymbols    []<a href="index.html#COFFSymbol">COFFSymbol</a> <span class="comment">// all COFF symbols (including auxiliary symbol records)</span>
+<span id="File.StringTable"></span>    StringTable    <a href="index.html#StringTable">StringTable</a>
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="NewFile">func <a href="../../../src/debug/pe/file.go?s=1868:1910#L62">NewFile</a>
+					<a class="permalink" href="index.html#NewFile">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func NewFile(r <a href="../../io/index.html">io</a>.<a href="../../io/index.html#ReaderAt">ReaderAt</a>) (*<a href="index.html#File">File</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+				<p>NewFile creates a new <a href="index.html#File">File</a> for accessing a PE binary in an underlying reader.
+
+				
+				
+			
+				
+				<h3 id="Open">func <a href="../../../src/debug/pe/file.go?s=1199:1236#L33">Open</a>
+					<a class="permalink" href="index.html#Open">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func Open(name <a href="../../builtin/index.html#string">string</a>) (*<a href="index.html#File">File</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+				<p>Open opens the named file using <a href="http://localhost:8080/os#Open">os.Open</a> and prepares it for use as a PE binary.
+
+				
+				
+			
+
+			
+				
+				<h3 id="File.COFFSymbolReadSectionDefAux">func (*File) <a href="../../../src/debug/pe/symbol.go?s=6110:6192#L182">COFFSymbolReadSectionDefAux</a>
+					<a class="permalink" href="index.html#File.COFFSymbolReadSectionDefAux">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (f *<a href="index.html#File">File</a>) COFFSymbolReadSectionDefAux(idx <a href="../../builtin/index.html#int">int</a>) (*<a href="index.html#COFFSymbolAuxFormat5">COFFSymbolAuxFormat5</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+				<p>COFFSymbolReadSectionDefAux returns a blob of auxiliary information
+(including COMDAT info) for a section definition symbol. Here &apos;idx&apos;
+is the index of a section symbol in the main <a href="index.html#COFFSymbol">COFFSymbol</a> array for
+the File. Return value is a pointer to the appropriate aux symbol
+struct. For more info, see:
+<p>auxiliary symbols: <a href="https://docs.microsoft.com/en-us/windows/win32/debug/pe-format#auxiliary-symbol-records">https://docs.microsoft.com/en-us/windows/win32/debug/pe-format#auxiliary-symbol-records</a>
+COMDAT sections: <a href="https://docs.microsoft.com/en-us/windows/win32/debug/pe-format#comdat-sections-object-only">https://docs.microsoft.com/en-us/windows/win32/debug/pe-format#comdat-sections-object-only</a>
+auxiliary info for section definitions: <a href="https://docs.microsoft.com/en-us/windows/win32/debug/pe-format#auxiliary-format-5-section-definitions">https://docs.microsoft.com/en-us/windows/win32/debug/pe-format#auxiliary-format-5-section-definitions</a>
+
+				
+				
+				
+			
+				
+				<h3 id="File.Close">func (*File) <a href="../../../src/debug/pe/file.go?s=1534:1562#L50">Close</a>
+					<a class="permalink" href="index.html#File.Close">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (f *<a href="index.html#File">File</a>) Close() <a href="../../builtin/index.html#error">error</a></pre>
+				<p>Close closes the <a href="index.html#File">File</a>.
+If the <a href="index.html#File">File</a> was created using <a href="index.html#NewFile">NewFile</a> directly instead of <a href="index.html#Open">Open</a>,
+Close has no effect.
+
+				
+				
+				
+			
+				
+				<h3 id="File.DWARF">func (*File) <a href="../../../src/debug/pe/file.go?s=5603:5646#L204">DWARF</a>
+					<a class="permalink" href="index.html#File.DWARF">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (f *<a href="index.html#File">File</a>) DWARF() (*<a href="../dwarf/index.html">dwarf</a>.<a href="../dwarf/index.html#Data">Data</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="File.ImportedLibraries">func (*File) <a href="../../../src/debug/pe/file.go?s=11712:11764#L438">ImportedLibraries</a>
+					<a class="permalink" href="index.html#File.ImportedLibraries">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (f *<a href="index.html#File">File</a>) ImportedLibraries() ([]<a href="../../builtin/index.html#string">string</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+				<p>ImportedLibraries returns the names of all libraries
+referred to by the binary f that are expected to be
+linked with the binary at dynamic link time.
+
+				
+				
+				
+			
+				
+				<h3 id="File.ImportedSymbols">func (*File) <a href="../../../src/debug/pe/file.go?s=8099:8149#L316">ImportedSymbols</a>
+					<a class="permalink" href="index.html#File.ImportedSymbols">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (f *<a href="index.html#File">File</a>) ImportedSymbols() ([]<a href="../../builtin/index.html#string">string</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+				<p>ImportedSymbols returns the names of all symbols
+referred to by the binary f that are expected to be
+satisfied by other libraries at dynamic load time.
+It does not return weak symbols.
+
+				
+				
+				
+			
+				
+				<h3 id="File.Section">func (*File) <a href="../../../src/debug/pe/file.go?s=5468:5512#L195">Section</a>
+					<a class="permalink" href="index.html#File.Section">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (f *<a href="index.html#File">File</a>) Section(name <a href="../../builtin/index.html#string">string</a>) *<a href="index.html#Section">Section</a></pre>
+				<p>Section returns the first section with the given name, or nil if no such
+section exists.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="FileHeader">type <a href="../../../src/debug/pe/pe.go?s=172:401#L1">FileHeader</a>
+				<a class="permalink" href="index.html#FileHeader">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type FileHeader struct {
+<span id="FileHeader.Machine"></span>    Machine              <a href="../../builtin/index.html#uint16">uint16</a>
+<span id="FileHeader.NumberOfSections"></span>    NumberOfSections     <a href="../../builtin/index.html#uint16">uint16</a>
+<span id="FileHeader.TimeDateStamp"></span>    TimeDateStamp        <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="FileHeader.PointerToSymbolTable"></span>    PointerToSymbolTable <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="FileHeader.NumberOfSymbols"></span>    NumberOfSymbols      <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="FileHeader.SizeOfOptionalHeader"></span>    SizeOfOptionalHeader <a href="../../builtin/index.html#uint16">uint16</a>
+<span id="FileHeader.Characteristics"></span>    Characteristics      <a href="../../builtin/index.html#uint16">uint16</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="FormatError">type <a href="../../../src/debug/pe/file.go?s=11931:11958#L446">FormatError</a>
+				<a class="permalink" href="index.html#FormatError">&#xb6;</a>
+				
+				
+			</h2>
+			<p>FormatError is unused.
+The type is retained for compatibility.
+
+			<pre>type FormatError struct {
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="FormatError.Error">func (*FormatError) <a href="../../../src/debug/pe/file.go?s=11960:11996#L449">Error</a>
+					<a class="permalink" href="index.html#FormatError.Error">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (e *<a href="index.html#FormatError">FormatError</a>) Error() <a href="../../builtin/index.html#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="ImportDirectory">type <a href="../../../src/debug/pe/file.go?s=7721:7900#L302">ImportDirectory</a>
+				<a class="permalink" href="index.html#ImportDirectory">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type ImportDirectory struct {
+<span id="ImportDirectory.OriginalFirstThunk"></span>    OriginalFirstThunk <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="ImportDirectory.TimeDateStamp"></span>    TimeDateStamp      <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="ImportDirectory.ForwarderChain"></span>    ForwarderChain     <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="ImportDirectory.Name"></span>    Name               <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="ImportDirectory.FirstThunk"></span>    FirstThunk         <a href="../../builtin/index.html#uint32">uint32</a>
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="OptionalHeader32">type <a href="../../../src/debug/pe/pe.go?s=480:1637#L12">OptionalHeader32</a>
+				<a class="permalink" href="index.html#OptionalHeader32">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type OptionalHeader32 struct {
+<span id="OptionalHeader32.Magic"></span>    Magic                       <a href="../../builtin/index.html#uint16">uint16</a>
+<span id="OptionalHeader32.MajorLinkerVersion"></span>    MajorLinkerVersion          <a href="../../builtin/index.html#uint8">uint8</a>
+<span id="OptionalHeader32.MinorLinkerVersion"></span>    MinorLinkerVersion          <a href="../../builtin/index.html#uint8">uint8</a>
+<span id="OptionalHeader32.SizeOfCode"></span>    SizeOfCode                  <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="OptionalHeader32.SizeOfInitializedData"></span>    SizeOfInitializedData       <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="OptionalHeader32.SizeOfUninitializedData"></span>    SizeOfUninitializedData     <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="OptionalHeader32.AddressOfEntryPoint"></span>    AddressOfEntryPoint         <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="OptionalHeader32.BaseOfCode"></span>    BaseOfCode                  <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="OptionalHeader32.BaseOfData"></span>    BaseOfData                  <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="OptionalHeader32.ImageBase"></span>    ImageBase                   <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="OptionalHeader32.SectionAlignment"></span>    SectionAlignment            <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="OptionalHeader32.FileAlignment"></span>    FileAlignment               <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="OptionalHeader32.MajorOperatingSystemVersion"></span>    MajorOperatingSystemVersion <a href="../../builtin/index.html#uint16">uint16</a>
+<span id="OptionalHeader32.MinorOperatingSystemVersion"></span>    MinorOperatingSystemVersion <a href="../../builtin/index.html#uint16">uint16</a>
+<span id="OptionalHeader32.MajorImageVersion"></span>    MajorImageVersion           <a href="../../builtin/index.html#uint16">uint16</a>
+<span id="OptionalHeader32.MinorImageVersion"></span>    MinorImageVersion           <a href="../../builtin/index.html#uint16">uint16</a>
+<span id="OptionalHeader32.MajorSubsystemVersion"></span>    MajorSubsystemVersion       <a href="../../builtin/index.html#uint16">uint16</a>
+<span id="OptionalHeader32.MinorSubsystemVersion"></span>    MinorSubsystemVersion       <a href="../../builtin/index.html#uint16">uint16</a>
+<span id="OptionalHeader32.Win32VersionValue"></span>    Win32VersionValue           <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="OptionalHeader32.SizeOfImage"></span>    SizeOfImage                 <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="OptionalHeader32.SizeOfHeaders"></span>    SizeOfHeaders               <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="OptionalHeader32.CheckSum"></span>    CheckSum                    <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="OptionalHeader32.Subsystem"></span>    Subsystem                   <a href="../../builtin/index.html#uint16">uint16</a>
+<span id="OptionalHeader32.DllCharacteristics"></span>    DllCharacteristics          <a href="../../builtin/index.html#uint16">uint16</a>
+<span id="OptionalHeader32.SizeOfStackReserve"></span>    SizeOfStackReserve          <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="OptionalHeader32.SizeOfStackCommit"></span>    SizeOfStackCommit           <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="OptionalHeader32.SizeOfHeapReserve"></span>    SizeOfHeapReserve           <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="OptionalHeader32.SizeOfHeapCommit"></span>    SizeOfHeapCommit            <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="OptionalHeader32.LoaderFlags"></span>    LoaderFlags                 <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="OptionalHeader32.NumberOfRvaAndSizes"></span>    NumberOfRvaAndSizes         <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="OptionalHeader32.DataDirectory"></span>    DataDirectory               [16]<a href="index.html#DataDirectory">DataDirectory</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="OptionalHeader64">type <a href="../../../src/debug/pe/pe.go?s=1639:2760#L46">OptionalHeader64</a>
+				<a class="permalink" href="index.html#OptionalHeader64">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type OptionalHeader64 struct {
+<span id="OptionalHeader64.Magic"></span>    Magic                       <a href="../../builtin/index.html#uint16">uint16</a>
+<span id="OptionalHeader64.MajorLinkerVersion"></span>    MajorLinkerVersion          <a href="../../builtin/index.html#uint8">uint8</a>
+<span id="OptionalHeader64.MinorLinkerVersion"></span>    MinorLinkerVersion          <a href="../../builtin/index.html#uint8">uint8</a>
+<span id="OptionalHeader64.SizeOfCode"></span>    SizeOfCode                  <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="OptionalHeader64.SizeOfInitializedData"></span>    SizeOfInitializedData       <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="OptionalHeader64.SizeOfUninitializedData"></span>    SizeOfUninitializedData     <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="OptionalHeader64.AddressOfEntryPoint"></span>    AddressOfEntryPoint         <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="OptionalHeader64.BaseOfCode"></span>    BaseOfCode                  <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="OptionalHeader64.ImageBase"></span>    ImageBase                   <a href="../../builtin/index.html#uint64">uint64</a>
+<span id="OptionalHeader64.SectionAlignment"></span>    SectionAlignment            <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="OptionalHeader64.FileAlignment"></span>    FileAlignment               <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="OptionalHeader64.MajorOperatingSystemVersion"></span>    MajorOperatingSystemVersion <a href="../../builtin/index.html#uint16">uint16</a>
+<span id="OptionalHeader64.MinorOperatingSystemVersion"></span>    MinorOperatingSystemVersion <a href="../../builtin/index.html#uint16">uint16</a>
+<span id="OptionalHeader64.MajorImageVersion"></span>    MajorImageVersion           <a href="../../builtin/index.html#uint16">uint16</a>
+<span id="OptionalHeader64.MinorImageVersion"></span>    MinorImageVersion           <a href="../../builtin/index.html#uint16">uint16</a>
+<span id="OptionalHeader64.MajorSubsystemVersion"></span>    MajorSubsystemVersion       <a href="../../builtin/index.html#uint16">uint16</a>
+<span id="OptionalHeader64.MinorSubsystemVersion"></span>    MinorSubsystemVersion       <a href="../../builtin/index.html#uint16">uint16</a>
+<span id="OptionalHeader64.Win32VersionValue"></span>    Win32VersionValue           <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="OptionalHeader64.SizeOfImage"></span>    SizeOfImage                 <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="OptionalHeader64.SizeOfHeaders"></span>    SizeOfHeaders               <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="OptionalHeader64.CheckSum"></span>    CheckSum                    <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="OptionalHeader64.Subsystem"></span>    Subsystem                   <a href="../../builtin/index.html#uint16">uint16</a>
+<span id="OptionalHeader64.DllCharacteristics"></span>    DllCharacteristics          <a href="../../builtin/index.html#uint16">uint16</a>
+<span id="OptionalHeader64.SizeOfStackReserve"></span>    SizeOfStackReserve          <a href="../../builtin/index.html#uint64">uint64</a>
+<span id="OptionalHeader64.SizeOfStackCommit"></span>    SizeOfStackCommit           <a href="../../builtin/index.html#uint64">uint64</a>
+<span id="OptionalHeader64.SizeOfHeapReserve"></span>    SizeOfHeapReserve           <a href="../../builtin/index.html#uint64">uint64</a>
+<span id="OptionalHeader64.SizeOfHeapCommit"></span>    SizeOfHeapCommit            <a href="../../builtin/index.html#uint64">uint64</a>
+<span id="OptionalHeader64.LoaderFlags"></span>    LoaderFlags                 <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="OptionalHeader64.NumberOfRvaAndSizes"></span>    NumberOfRvaAndSizes         <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="OptionalHeader64.DataDirectory"></span>    DataDirectory               [16]<a href="index.html#DataDirectory">DataDirectory</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="Reloc">type <a href="../../../src/debug/pe/section.go?s=1205:1301#L37">Reloc</a>
+				<a class="permalink" href="index.html#Reloc">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Reloc represents a PE COFF relocation.
+Each section contains its own relocation list.
+
+			<pre>type Reloc struct {
+<span id="Reloc.VirtualAddress"></span>    VirtualAddress   <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="Reloc.SymbolTableIndex"></span>    SymbolTableIndex <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="Reloc.Type"></span>    Type             <a href="../../builtin/index.html#uint16">uint16</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="Section">type <a href="../../../src/debug/pe/section.go?s=2270:2595#L75">Section</a>
+				<a class="permalink" href="index.html#Section">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Section provides access to PE COFF section.
+
+			<pre>type Section struct {
+    <a href="index.html#SectionHeader">SectionHeader</a>
+<span id="Section.Relocs"></span>    Relocs []<a href="index.html#Reloc">Reloc</a>
+
+    <span class="comment">// Embed ReaderAt for ReadAt method.</span>
+    <span class="comment">// Do not embed SectionReader directly</span>
+    <span class="comment">// to avoid having Read and Seek.</span>
+    <span class="comment">// If a client wants Read and Seek it must use</span>
+    <span class="comment">// Open() to avoid fighting over the seek offset</span>
+    <span class="comment">// with other clients.</span>
+    <a href="../../io/index.html">io</a>.<a href="../../io/index.html#ReaderAt">ReaderAt</a>
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="Section.Data">func (*Section) <a href="../../../src/debug/pe/section.go?s=2758:2798#L93">Data</a>
+					<a class="permalink" href="index.html#Section.Data">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (s *<a href="index.html#Section">Section</a>) Data() ([]<a href="../../builtin/index.html#byte">byte</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+				<p>Data reads and returns the contents of the PE section s.
+<p>If s.Offset is 0, the section has no contents,
+and Data will always return a non-nil error.
+
+				
+				
+				
+			
+				
+				<h3 id="Section.Open">func (*Section) <a href="../../../src/debug/pe/section.go?s=3037:3075#L101">Open</a>
+					<a class="permalink" href="index.html#Section.Open">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (s *<a href="index.html#Section">Section</a>) Open() <a href="../../io/index.html">io</a>.<a href="../../io/index.html#ReadSeeker">ReadSeeker</a></pre>
+				<p>Open returns a new ReadSeeker reading the PE section s.
+<p>If s.Offset is 0, the section has no contents, and all calls
+to the returned reader will return a non-nil error.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="SectionHeader">type <a href="../../../src/debug/pe/section.go?s=1902:2221#L61">SectionHeader</a>
+				<a class="permalink" href="index.html#SectionHeader">&#xb6;</a>
+				
+				
+			</h2>
+			<p>SectionHeader is similar to <a href="index.html#SectionHeader32">SectionHeader32</a> with Name
+field replaced by Go string.
+
+			<pre>type SectionHeader struct {
+<span id="SectionHeader.Name"></span>    Name                 <a href="../../builtin/index.html#string">string</a>
+<span id="SectionHeader.VirtualSize"></span>    VirtualSize          <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="SectionHeader.VirtualAddress"></span>    VirtualAddress       <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="SectionHeader.Size"></span>    Size                 <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="SectionHeader.Offset"></span>    Offset               <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="SectionHeader.PointerToRelocations"></span>    PointerToRelocations <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="SectionHeader.PointerToLineNumbers"></span>    PointerToLineNumbers <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="SectionHeader.NumberOfRelocations"></span>    NumberOfRelocations  <a href="../../builtin/index.html#uint16">uint16</a>
+<span id="SectionHeader.NumberOfLineNumbers"></span>    NumberOfLineNumbers  <a href="../../builtin/index.html#uint16">uint16</a>
+<span id="SectionHeader.Characteristics"></span>    Characteristics      <a href="../../builtin/index.html#uint32">uint32</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="SectionHeader32">type <a href="../../../src/debug/pe/section.go?s=306:629#L6">SectionHeader32</a>
+				<a class="permalink" href="index.html#SectionHeader32">&#xb6;</a>
+				
+				
+			</h2>
+			<p>SectionHeader32 represents real PE COFF section header.
+
+			<pre>type SectionHeader32 struct {
+<span id="SectionHeader32.Name"></span>    Name                 [8]<a href="../../builtin/index.html#uint8">uint8</a>
+<span id="SectionHeader32.VirtualSize"></span>    VirtualSize          <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="SectionHeader32.VirtualAddress"></span>    VirtualAddress       <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="SectionHeader32.SizeOfRawData"></span>    SizeOfRawData        <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="SectionHeader32.PointerToRawData"></span>    PointerToRawData     <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="SectionHeader32.PointerToRelocations"></span>    PointerToRelocations <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="SectionHeader32.PointerToLineNumbers"></span>    PointerToLineNumbers <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="SectionHeader32.NumberOfRelocations"></span>    NumberOfRelocations  <a href="../../builtin/index.html#uint16">uint16</a>
+<span id="SectionHeader32.NumberOfLineNumbers"></span>    NumberOfLineNumbers  <a href="../../builtin/index.html#uint16">uint16</a>
+<span id="SectionHeader32.Characteristics"></span>    Characteristics      <a href="../../builtin/index.html#uint32">uint32</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="StringTable">type <a href="../../../src/debug/pe/string.go?s=501:524#L16">StringTable</a>
+				<a class="permalink" href="index.html#StringTable">&#xb6;</a>
+				
+				
+			</h2>
+			<p>StringTable is a COFF string table.
+
+			<pre>type StringTable []<a href="../../builtin/index.html#byte">byte</a></pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="StringTable.String">func (StringTable) <a href="../../../src/debug/pe/string.go?s=1468:1526#L49">String</a>
+					<a class="permalink" href="index.html#StringTable.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (st <a href="index.html#StringTable">StringTable</a>) String(start <a href="../../builtin/index.html#uint32">uint32</a>) (<a href="../../builtin/index.html#string">string</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+				<p>String extracts string from COFF string table st at offset start.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Symbol">type <a href="../../../src/debug/pe/symbol.go?s=4201:4331#L136">Symbol</a>
+				<a class="permalink" href="index.html#Symbol">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Symbol is similar to <a href="index.html#COFFSymbol">COFFSymbol</a> with Name field replaced
+by Go string. Symbol also does not have NumberOfAuxSymbols.
+
+			<pre>type Symbol struct {
+<span id="Symbol.Name"></span>    Name          <a href="../../builtin/index.html#string">string</a>
+<span id="Symbol.Value"></span>    Value         <a href="../../builtin/index.html#uint32">uint32</a>
+<span id="Symbol.SectionNumber"></span>    SectionNumber <a href="../../builtin/index.html#int16">int16</a>
+<span id="Symbol.Type"></span>    Type          <a href="../../builtin/index.html#uint16">uint16</a>
+<span id="Symbol.StorageClass"></span>    StorageClass  <a href="../../builtin/index.html#uint8">uint8</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+	
+
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

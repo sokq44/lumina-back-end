@@ -1,0 +1,1111 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>mysql - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package mysql
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "github.com/go-sql-driver/mysql"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>Package mysql provides a MySQL driver for Go&apos;s database/sql package.
+<p>The driver should be used via the database/sql package:
+<pre>import &quot;database/sql&quot;
+import _ &quot;github.com/go-sql-driver/mysql&quot;
+
+db, err := sql.Open(&quot;mysql&quot;, &quot;user:password@/dbname&quot;)
+</pre>
+<p>See <a href="https://github.com/go-sql-driver/mysql#usage">https://github.com/go-sql-driver/mysql#usage</a> for details
+
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+			
+				<dd><a href="index.html#pkg-variables">Variables</a></dd>
+			
+			
+				
+				<dd><a href="index.html#DeregisterDialContext">func DeregisterDialContext(net string)</a></dd>
+			
+				
+				<dd><a href="index.html#DeregisterLocalFile">func DeregisterLocalFile(filePath string)</a></dd>
+			
+				
+				<dd><a href="index.html#DeregisterReaderHandler">func DeregisterReaderHandler(name string)</a></dd>
+			
+				
+				<dd><a href="index.html#DeregisterServerPubKey">func DeregisterServerPubKey(name string)</a></dd>
+			
+				
+				<dd><a href="index.html#DeregisterTLSConfig">func DeregisterTLSConfig(key string)</a></dd>
+			
+				
+				<dd><a href="index.html#NewConnector">func NewConnector(cfg *Config) (driver.Connector, error)</a></dd>
+			
+				
+				<dd><a href="index.html#RegisterDial">func RegisterDial(network string, dial DialFunc)</a></dd>
+			
+				
+				<dd><a href="index.html#RegisterDialContext">func RegisterDialContext(net string, dial DialContextFunc)</a></dd>
+			
+				
+				<dd><a href="index.html#RegisterLocalFile">func RegisterLocalFile(filePath string)</a></dd>
+			
+				
+				<dd><a href="index.html#RegisterReaderHandler">func RegisterReaderHandler(name string, handler func() io.Reader)</a></dd>
+			
+				
+				<dd><a href="index.html#RegisterServerPubKey">func RegisterServerPubKey(name string, pubKey *rsa.PublicKey)</a></dd>
+			
+				
+				<dd><a href="index.html#RegisterTLSConfig">func RegisterTLSConfig(key string, config *tls.Config) error</a></dd>
+			
+				
+				<dd><a href="index.html#SetLogger">func SetLogger(logger Logger) error</a></dd>
+			
+			
+				
+				<dd><a href="index.html#Config">type Config</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewConfig">func NewConfig() *Config</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ParseDSN">func ParseDSN(dsn string) (cfg *Config, err error)</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Config.Apply">func (c *Config) Apply(opts ...Option) error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Config.Clone">func (cfg *Config) Clone() *Config</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Config.FormatDSN">func (cfg *Config) FormatDSN() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#DialContextFunc">type DialContextFunc</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#DialFunc">type DialFunc</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#Logger">type Logger</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#MySQLDriver">type MySQLDriver</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#MySQLDriver.Open">func (d MySQLDriver) Open(dsn string) (driver.Conn, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#MySQLDriver.OpenConnector">func (d MySQLDriver) OpenConnector(dsn string) (driver.Connector, error)</a></dd>
+				
+			
+				
+				<dd><a href="index.html#MySQLError">type MySQLError</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#MySQLError.Error">func (me *MySQLError) Error() string</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#MySQLError.Is">func (me *MySQLError) Is(err error) bool</a></dd>
+				
+			
+				
+				<dd><a href="index.html#NopLogger">type NopLogger</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NopLogger.Print">func (nl *NopLogger) Print(_ ...any)</a></dd>
+				
+			
+				
+				<dd><a href="index.html#NullTime">type NullTime</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NullTime.Scan">func (nt *NullTime) Scan(value any) (err error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NullTime.Value">func (nt NullTime) Value() (driver.Value, error)</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Option">type Option</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#BeforeConnect">func BeforeConnect(fn func(context.Context, *Config) error) Option</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#TimeTruncate">func TimeTruncate(d time.Duration) Option</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#Result">type Result</a></dd>
+				
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../../../src/github.com/go-sql-driver/mysql/atomic_bool.go">atomic_bool.go</a>
+			
+				<a href="../../../../src/github.com/go-sql-driver/mysql/auth.go">auth.go</a>
+			
+				<a href="../../../../src/github.com/go-sql-driver/mysql/buffer.go">buffer.go</a>
+			
+				<a href="../../../../src/github.com/go-sql-driver/mysql/collations.go">collations.go</a>
+			
+				<a href="../../../../src/github.com/go-sql-driver/mysql/conncheck.go">conncheck.go</a>
+			
+				<a href="../../../../src/github.com/go-sql-driver/mysql/connection.go">connection.go</a>
+			
+				<a href="../../../../src/github.com/go-sql-driver/mysql/connector.go">connector.go</a>
+			
+				<a href="../../../../src/github.com/go-sql-driver/mysql/const.go">const.go</a>
+			
+				<a href="../../../../src/github.com/go-sql-driver/mysql/driver.go">driver.go</a>
+			
+				<a href="../../../../src/github.com/go-sql-driver/mysql/dsn.go">dsn.go</a>
+			
+				<a href="../../../../src/github.com/go-sql-driver/mysql/errors.go">errors.go</a>
+			
+				<a href="../../../../src/github.com/go-sql-driver/mysql/fields.go">fields.go</a>
+			
+				<a href="../../../../src/github.com/go-sql-driver/mysql/infile.go">infile.go</a>
+			
+				<a href="../../../../src/github.com/go-sql-driver/mysql/nulltime.go">nulltime.go</a>
+			
+				<a href="../../../../src/github.com/go-sql-driver/mysql/packets.go">packets.go</a>
+			
+				<a href="../../../../src/github.com/go-sql-driver/mysql/result.go">result.go</a>
+			
+				<a href="../../../../src/github.com/go-sql-driver/mysql/rows.go">rows.go</a>
+			
+				<a href="../../../../src/github.com/go-sql-driver/mysql/statement.go">statement.go</a>
+			
+				<a href="../../../../src/github.com/go-sql-driver/mysql/transaction.go">transaction.go</a>
+			
+				<a href="../../../../src/github.com/go-sql-driver/mysql/utils.go">utils.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+		
+			<h2 id="pkg-variables">Variables</h2>
+			
+				<p>Various errors the driver might return. Can change between driver versions.
+
+				<pre>var (
+    <span id="ErrInvalidConn">ErrInvalidConn</span>       = <a href="../../../errors/index.html">errors</a>.<a href="../../../errors/index.html#New">New</a>(&#34;invalid connection&#34;)
+    <span id="ErrMalformPkt">ErrMalformPkt</span>        = <a href="../../../errors/index.html">errors</a>.<a href="../../../errors/index.html#New">New</a>(&#34;malformed packet&#34;)
+    <span id="ErrNoTLS">ErrNoTLS</span>             = <a href="../../../errors/index.html">errors</a>.<a href="../../../errors/index.html#New">New</a>(&#34;TLS requested but server does not support TLS&#34;)
+    <span id="ErrCleartextPassword">ErrCleartextPassword</span> = <a href="../../../errors/index.html">errors</a>.<a href="../../../errors/index.html#New">New</a>(&#34;this user requires clear text authentication. If you still want to use it, please add &#39;allowCleartextPasswords=1&#39; to your DSN&#34;)
+    <span id="ErrNativePassword">ErrNativePassword</span>    = <a href="../../../errors/index.html">errors</a>.<a href="../../../errors/index.html#New">New</a>(&#34;this user requires mysql native password authentication&#34;)
+    <span id="ErrOldPassword">ErrOldPassword</span>       = <a href="../../../errors/index.html">errors</a>.<a href="../../../errors/index.html#New">New</a>(&#34;this user requires old password authentication. If you still want to use it, please add &#39;allowOldPasswords=1&#39; to your DSN. See also https://github.com/go-sql-driver/mysql/wiki/old_passwords&#34;)
+    <span id="ErrUnknownPlugin">ErrUnknownPlugin</span>     = <a href="../../../errors/index.html">errors</a>.<a href="../../../errors/index.html#New">New</a>(&#34;this authentication plugin is not supported&#34;)
+    <span id="ErrOldProtocol">ErrOldProtocol</span>       = <a href="../../../errors/index.html">errors</a>.<a href="../../../errors/index.html#New">New</a>(&#34;MySQL server does not support required protocol 41+&#34;)
+    <span id="ErrPktSync">ErrPktSync</span>           = <a href="../../../errors/index.html">errors</a>.<a href="../../../errors/index.html#New">New</a>(&#34;commands out of sync. You can&#39;t run this command now&#34;)
+    <span id="ErrPktSyncMul">ErrPktSyncMul</span>        = <a href="../../../errors/index.html">errors</a>.<a href="../../../errors/index.html#New">New</a>(&#34;commands out of sync. Did you run multiple statements at once?&#34;)
+    <span id="ErrPktTooLarge">ErrPktTooLarge</span>       = <a href="../../../errors/index.html">errors</a>.<a href="../../../errors/index.html#New">New</a>(&#34;packet for query is too large. Try adjusting the `Config.MaxAllowedPacket`&#34;)
+    <span id="ErrBusyBuffer">ErrBusyBuffer</span>        = <a href="../../../errors/index.html">errors</a>.<a href="../../../errors/index.html#New">New</a>(&#34;busy buffer&#34;)
+)</pre>
+			
+		
+		
+			
+			
+			<h2 id="DeregisterDialContext">func <a href="../../../../src/github.com/go-sql-driver/mysql/driver.go?s=1954:1992#L49">DeregisterDialContext</a>
+				<a class="permalink" href="index.html#DeregisterDialContext">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func DeregisterDialContext(net <a href="../../../builtin/index.html#string">string</a>)</pre>
+			<p>DeregisterDialContext removes the custom dial function registered with the given net.
+
+			
+			
+
+		
+			
+			
+			<h2 id="DeregisterLocalFile">func <a href="../../../../src/github.com/go-sql-driver/mysql/infile.go?s=1289:1330#L38">DeregisterLocalFile</a>
+				<a class="permalink" href="index.html#DeregisterLocalFile">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func DeregisterLocalFile(filePath <a href="../../../builtin/index.html#string">string</a>)</pre>
+			<p>DeregisterLocalFile removes the given filepath from the allowlist.
+
+			
+			
+
+		
+			
+			
+			<h2 id="DeregisterReaderHandler">func <a href="../../../../src/github.com/go-sql-driver/mysql/infile.go?s=2344:2385#L71">DeregisterReaderHandler</a>
+				<a class="permalink" href="index.html#DeregisterReaderHandler">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func DeregisterReaderHandler(name <a href="../../../builtin/index.html#string">string</a>)</pre>
+			<p>DeregisterReaderHandler removes the ReaderHandler function with
+the given name from the registry.
+
+			
+			
+
+		
+			
+			
+			<h2 id="DeregisterServerPubKey">func <a href="../../../../src/github.com/go-sql-driver/mysql/auth.go?s=1902:1942#L60">DeregisterServerPubKey</a>
+				<a class="permalink" href="index.html#DeregisterServerPubKey">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func DeregisterServerPubKey(name <a href="../../../builtin/index.html#string">string</a>)</pre>
+			<p>DeregisterServerPubKey removes the public key registered with the given name.
+
+			
+			
+
+		
+			
+			
+			<h2 id="DeregisterTLSConfig">func <a href="../../../../src/github.com/go-sql-driver/mysql/utils.go?s=2001:2037#L63">DeregisterTLSConfig</a>
+				<a class="permalink" href="index.html#DeregisterTLSConfig">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func DeregisterTLSConfig(key <a href="../../../builtin/index.html#string">string</a>)</pre>
+			<p>DeregisterTLSConfig removes the tls.Config associated with key.
+
+			
+			
+
+		
+			
+			
+			<h2 id="NewConnector">func <a href="../../../../src/github.com/go-sql-driver/mysql/driver.go?s=3136:3192#L91">NewConnector</a>
+				<a class="permalink" href="index.html#NewConnector">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func NewConnector(cfg *<a href="index.html#Config">Config</a>) (<a href="../../../database/sql/driver/index.html">driver</a>.<a href="../../../database/sql/driver/index.html#Connector">Connector</a>, <a href="../../../builtin/index.html#error">error</a>)</pre>
+			<p>NewConnector returns new driver.Connector.
+
+			
+			
+
+		
+			
+			
+			<h2 id="RegisterDial">func <a href="../../../../src/github.com/go-sql-driver/mysql/driver.go?s=2356:2404#L62">RegisterDial</a>
+				<a class="permalink" href="index.html#RegisterDial">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func RegisterDial(network <a href="../../../builtin/index.html#string">string</a>, dial <a href="index.html#DialFunc">DialFunc</a>)</pre>
+			<p>RegisterDial registers a custom dial function. It can then be used by the
+network address mynet(addr), where mynet is the registered new network.
+addr is passed as a parameter to the dial function.
+<p>Deprecated: users should call RegisterDialContext instead
+
+			
+			
+
+		
+			
+			
+			<h2 id="RegisterDialContext">func <a href="../../../../src/github.com/go-sql-driver/mysql/driver.go?s=1673:1731#L39">RegisterDialContext</a>
+				<a class="permalink" href="index.html#RegisterDialContext">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func RegisterDialContext(net <a href="../../../builtin/index.html#string">string</a>, dial <a href="index.html#DialContextFunc">DialContextFunc</a>)</pre>
+			<p>RegisterDialContext registers a custom dial function. It can then be used by the
+network address mynet(addr), where mynet is the registered new network.
+The current context for the connection and its address is passed to the dial function.
+
+			
+			
+
+		
+			
+			
+			<h2 id="RegisterLocalFile">func <a href="../../../../src/github.com/go-sql-driver/mysql/infile.go?s=985:1024#L26">RegisterLocalFile</a>
+				<a class="permalink" href="index.html#RegisterLocalFile">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func RegisterLocalFile(filePath <a href="../../../builtin/index.html#string">string</a>)</pre>
+			<p>RegisterLocalFile adds the given file to the file allowlist,
+so that it can be used by &quot;LOAD DATA LOCAL INFILE &lt;filepath&gt;&quot;.
+Alternatively you can allow the use of all local files with
+the DSN parameter &apos;allowAllFiles=true&apos;
+<pre>filePath := &quot;/home/gopher/data.csv&quot;
+mysql.RegisterLocalFile(filePath)
+err := db.Exec(&quot;LOAD DATA LOCAL INFILE &apos;&quot; + filePath + &quot;&apos; INTO TABLE foo&quot;)
+if err != nil {
+...
+</pre>
+
+			
+			
+
+		
+			
+			
+			<h2 id="RegisterReaderHandler">func <a href="../../../../src/github.com/go-sql-driver/mysql/infile.go?s=1978:2043#L58">RegisterReaderHandler</a>
+				<a class="permalink" href="index.html#RegisterReaderHandler">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func RegisterReaderHandler(name <a href="../../../builtin/index.html#string">string</a>, handler func() <a href="../../../io/index.html">io</a>.<a href="../../../io/index.html#Reader">Reader</a>)</pre>
+			<p>RegisterReaderHandler registers a handler function which is used
+to receive a io.Reader.
+The Reader can be used by &quot;LOAD DATA LOCAL INFILE Reader::&lt;name&gt;&quot;.
+If the handler returns a io.ReadCloser Close() is called when the
+request is finished.
+<pre>mysql.RegisterReaderHandler(&quot;data&quot;, func() io.Reader {
+	var csvReader io.Reader // Some Reader that returns CSV data
+	... // Open Reader here
+	return csvReader
+})
+err := db.Exec(&quot;LOAD DATA LOCAL INFILE &apos;Reader::data&apos; INTO TABLE foo&quot;)
+if err != nil {
+...
+</pre>
+
+			
+			
+
+		
+			
+			
+			<h2 id="RegisterServerPubKey">func <a href="../../../../src/github.com/go-sql-driver/mysql/auth.go?s=1570:1631#L49">RegisterServerPubKey</a>
+				<a class="permalink" href="index.html#RegisterServerPubKey">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func RegisterServerPubKey(name <a href="../../../builtin/index.html#string">string</a>, pubKey *<a href="../../../crypto/rsa/index.html">rsa</a>.<a href="../../../crypto/rsa/index.html#PublicKey">PublicKey</a>)</pre>
+			<p>RegisterServerPubKey registers a server RSA public key which can be used to
+send data in a secure manner to the server without receiving the public key
+in a potentially insecure way from the server first.
+Registered keys can afterwards be used adding serverPubKey=&lt;name&gt; to the DSN.
+<p>Note: The provided rsa.PublicKey instance is exclusively owned by the driver
+after registering it and may not be modified.
+<pre>data, err := os.ReadFile(&quot;mykey.pem&quot;)
+if err != nil {
+	log.Fatal(err)
+}
+
+block, _ := pem.Decode(data)
+if block == nil || block.Type != &quot;PUBLIC KEY&quot; {
+	log.Fatal(&quot;failed to decode PEM block containing public key&quot;)
+}
+
+pub, err := x509.ParsePKIXPublicKey(block.Bytes)
+if err != nil {
+	log.Fatal(err)
+}
+
+if rsaPubKey, ok := pub.(*rsa.PublicKey); ok {
+	mysql.RegisterServerPubKey(&quot;mykey&quot;, rsaPubKey)
+} else {
+	log.Fatal(&quot;not a RSA public key&quot;)
+}
+</pre>
+
+			
+			
+
+		
+			
+			
+			<h2 id="RegisterTLSConfig">func <a href="../../../../src/github.com/go-sql-driver/mysql/utils.go?s=1517:1577#L47">RegisterTLSConfig</a>
+				<a class="permalink" href="index.html#RegisterTLSConfig">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func RegisterTLSConfig(key <a href="../../../builtin/index.html#string">string</a>, config *<a href="../../../crypto/tls/index.html">tls</a>.<a href="../../../crypto/tls/index.html#Config">Config</a>) <a href="../../../builtin/index.html#error">error</a></pre>
+			<p>RegisterTLSConfig registers a custom tls.Config to be used with sql.Open.
+Use the key as a value in the DSN where tls=value.
+<p>Note: The provided tls.Config is exclusively owned by the driver after
+registering it.
+<pre>rootCertPool := x509.NewCertPool()
+pem, err := os.ReadFile(&quot;/path/ca-cert.pem&quot;)
+if err != nil {
+    log.Fatal(err)
+}
+if ok := rootCertPool.AppendCertsFromPEM(pem); !ok {
+    log.Fatal(&quot;Failed to append PEM.&quot;)
+}
+clientCert := make([]tls.Certificate, 0, 1)
+certs, err := tls.LoadX509KeyPair(&quot;/path/client-cert.pem&quot;, &quot;/path/client-key.pem&quot;)
+if err != nil {
+    log.Fatal(err)
+}
+clientCert = append(clientCert, certs)
+mysql.RegisterTLSConfig(&quot;custom&quot;, &amp;tls.Config{
+    RootCAs: rootCertPool,
+    Certificates: clientCert,
+})
+db, err := sql.Open(&quot;mysql&quot;, &quot;user@tcp(localhost:3306)/test?tls=custom&quot;)
+</pre>
+
+			
+			
+
+		
+			
+			
+			<h2 id="SetLogger">func <a href="../../../../src/github.com/go-sql-driver/mysql/errors.go?s=2501:2536#L45">SetLogger</a>
+				<a class="permalink" href="index.html#SetLogger">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func SetLogger(logger <a href="index.html#Logger">Logger</a>) <a href="../../../builtin/index.html#error">error</a></pre>
+			<p>SetLogger is used to set the default logger for critical errors.
+The initial logger is os.Stderr.
+
+			
+			
+
+		
+		
+			
+			
+			<h2 id="Config">type <a href="../../../../src/github.com/go-sql-driver/mysql/dsn.go?s=1144:3739#L27">Config</a>
+				<a class="permalink" href="index.html#Config">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Config is a configuration parsed from a DSN string.
+If a new Config is created instead of being parsed from a DSN string,
+the NewConfig function should be used, which sets default values.
+
+			<pre>type Config struct {
+<span id="Config.User"></span>    User                 <a href="../../../builtin/index.html#string">string</a>            <span class="comment">// Username</span>
+<span id="Config.Passwd"></span>    Passwd               <a href="../../../builtin/index.html#string">string</a>            <span class="comment">// Password (requires User)</span>
+<span id="Config.Net"></span>    Net                  <a href="../../../builtin/index.html#string">string</a>            <span class="comment">// Network (e.g. &#34;tcp&#34;, &#34;tcp6&#34;, &#34;unix&#34;. default: &#34;tcp&#34;)</span>
+<span id="Config.Addr"></span>    Addr                 <a href="../../../builtin/index.html#string">string</a>            <span class="comment">// Address (default: &#34;127.0.0.1:3306&#34; for &#34;tcp&#34; and &#34;/tmp/mysql.sock&#34; for &#34;unix&#34;)</span>
+<span id="Config.DBName"></span>    DBName               <a href="../../../builtin/index.html#string">string</a>            <span class="comment">// Database name</span>
+<span id="Config.Params"></span>    Params               map[<a href="../../../builtin/index.html#string">string</a>]<a href="../../../builtin/index.html#string">string</a> <span class="comment">// Connection parameters</span>
+<span id="Config.ConnectionAttributes"></span>    ConnectionAttributes <a href="../../../builtin/index.html#string">string</a>            <span class="comment">// Connection Attributes, comma-delimited string of user-defined &#34;key:value&#34; pairs</span>
+<span id="Config.Collation"></span>    Collation            <a href="../../../builtin/index.html#string">string</a>            <span class="comment">// Connection collation</span>
+<span id="Config.Loc"></span>    Loc                  *<a href="../../../time/index.html">time</a>.<a href="../../../time/index.html#Location">Location</a>    <span class="comment">// Location for time.Time values</span>
+<span id="Config.MaxAllowedPacket"></span>    MaxAllowedPacket     <a href="../../../builtin/index.html#int">int</a>               <span class="comment">// Max packet size allowed</span>
+<span id="Config.ServerPubKey"></span>    ServerPubKey         <a href="../../../builtin/index.html#string">string</a>            <span class="comment">// Server public key name</span>
+<span id="Config.TLSConfig"></span>    TLSConfig            <a href="../../../builtin/index.html#string">string</a>            <span class="comment">// TLS configuration name</span>
+<span id="Config.TLS"></span>    TLS                  *<a href="../../../crypto/tls/index.html">tls</a>.<a href="../../../crypto/tls/index.html#Config">Config</a>       <span class="comment">// TLS configuration, its priority is higher than TLSConfig</span>
+<span id="Config.Timeout"></span>    Timeout              <a href="../../../time/index.html">time</a>.<a href="../../../time/index.html#Duration">Duration</a>     <span class="comment">// Dial timeout</span>
+<span id="Config.ReadTimeout"></span>    ReadTimeout          <a href="../../../time/index.html">time</a>.<a href="../../../time/index.html#Duration">Duration</a>     <span class="comment">// I/O read timeout</span>
+<span id="Config.WriteTimeout"></span>    WriteTimeout         <a href="../../../time/index.html">time</a>.<a href="../../../time/index.html#Duration">Duration</a>     <span class="comment">// I/O write timeout</span>
+<span id="Config.Logger"></span>    Logger               <a href="index.html#Logger">Logger</a>            <span class="comment">// Logger</span>
+
+<span id="Config.AllowAllFiles"></span>    AllowAllFiles            <a href="../../../builtin/index.html#bool">bool</a> <span class="comment">// Allow all files to be used with LOAD DATA LOCAL INFILE</span>
+<span id="Config.AllowCleartextPasswords"></span>    AllowCleartextPasswords  <a href="../../../builtin/index.html#bool">bool</a> <span class="comment">// Allows the cleartext client side plugin</span>
+<span id="Config.AllowFallbackToPlaintext"></span>    AllowFallbackToPlaintext <a href="../../../builtin/index.html#bool">bool</a> <span class="comment">// Allows fallback to unencrypted connection if server does not support TLS</span>
+<span id="Config.AllowNativePasswords"></span>    AllowNativePasswords     <a href="../../../builtin/index.html#bool">bool</a> <span class="comment">// Allows the native password authentication method</span>
+<span id="Config.AllowOldPasswords"></span>    AllowOldPasswords        <a href="../../../builtin/index.html#bool">bool</a> <span class="comment">// Allows the old insecure password method</span>
+<span id="Config.CheckConnLiveness"></span>    CheckConnLiveness        <a href="../../../builtin/index.html#bool">bool</a> <span class="comment">// Check connections for liveness before using them</span>
+<span id="Config.ClientFoundRows"></span>    ClientFoundRows          <a href="../../../builtin/index.html#bool">bool</a> <span class="comment">// Return number of matching rows instead of rows changed</span>
+<span id="Config.ColumnsWithAlias"></span>    ColumnsWithAlias         <a href="../../../builtin/index.html#bool">bool</a> <span class="comment">// Prepend table alias to column names</span>
+<span id="Config.InterpolateParams"></span>    InterpolateParams        <a href="../../../builtin/index.html#bool">bool</a> <span class="comment">// Interpolate placeholders into query string</span>
+<span id="Config.MultiStatements"></span>    MultiStatements          <a href="../../../builtin/index.html#bool">bool</a> <span class="comment">// Allow multiple statements in one query</span>
+<span id="Config.ParseTime"></span>    ParseTime                <a href="../../../builtin/index.html#bool">bool</a> <span class="comment">// Parse time values to time.Time</span>
+<span id="Config.RejectReadOnly"></span>    RejectReadOnly           <a href="../../../builtin/index.html#bool">bool</a> <span class="comment">// Reject read-only connections</span>
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="NewConfig">func <a href="../../../../src/github.com/go-sql-driver/mysql/dsn.go?s=3938:3962#L75">NewConfig</a>
+					<a class="permalink" href="index.html#NewConfig">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func NewConfig() *<a href="index.html#Config">Config</a></pre>
+				<p>NewConfig creates a new Config and sets default values.
+
+				
+				
+			
+				
+				<h3 id="ParseDSN">func <a href="../../../../src/github.com/go-sql-driver/mysql/dsn.go?s=10220:10270#L347">ParseDSN</a>
+					<a class="permalink" href="index.html#ParseDSN">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func ParseDSN(dsn <a href="../../../builtin/index.html#string">string</a>) (cfg *<a href="index.html#Config">Config</a>, err <a href="../../../builtin/index.html#error">error</a>)</pre>
+				<p>ParseDSN parses the DSN string to a Config
+
+				
+				
+			
+
+			
+				
+				<h3 id="Config.Apply">func (*Config) <a href="../../../../src/github.com/go-sql-driver/mysql/dsn.go?s=4240:4284#L88">Apply</a>
+					<a class="permalink" href="index.html#Config.Apply">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#Config">Config</a>) Apply(opts ...<a href="index.html#Option">Option</a>) <a href="../../../builtin/index.html#error">error</a></pre>
+				<p>Apply applies the given options to the Config object.
+
+				
+				
+				
+			
+				
+				<h3 id="Config.Clone">func (*Config) <a href="../../../../src/github.com/go-sql-driver/mysql/dsn.go?s=4829:4863#L115">Clone</a>
+					<a class="permalink" href="index.html#Config.Clone">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (cfg *<a href="index.html#Config">Config</a>) Clone() *<a href="index.html#Config">Config</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="Config.FormatDSN">func (*Config) <a href="../../../../src/github.com/go-sql-driver/mysql/dsn.go?s=7181:7218#L216">FormatDSN</a>
+					<a class="permalink" href="index.html#Config.FormatDSN">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (cfg *<a href="index.html#Config">Config</a>) FormatDSN() <a href="../../../builtin/index.html#string">string</a></pre>
+				<p>FormatDSN formats the given Config into a DSN string which can be passed to
+the driver.
+<p>Note: use <a href="index.html#NewConnector">NewConnector</a> and <a href="http://localhost:8080/database/sql#OpenDB">database/sql.OpenDB</a> to open a connection from a <a href="index.html#Config">*Config</a>.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="DialContextFunc">type <a href="../../../../src/github.com/go-sql-driver/mysql/driver.go?s=1274:1351#L29">DialContextFunc</a>
+				<a class="permalink" href="index.html#DialContextFunc">&#xb6;</a>
+				
+				
+			</h2>
+			<p>DialContextFunc is a function which can be used to establish the network connection.
+Custom dial functions must be registered with RegisterDialContext
+
+			<pre>type DialContextFunc func(ctx <a href="../../../context/index.html">context</a>.<a href="../../../context/index.html#Context">Context</a>, addr <a href="../../../builtin/index.html#string">string</a>) (<a href="../../../net/index.html">net</a>.<a href="../../../net/index.html#Conn">Conn</a>, <a href="../../../builtin/index.html#error">error</a>)</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="DialFunc">type <a href="../../../../src/github.com/go-sql-driver/mysql/driver.go?s=1066:1115#L25">DialFunc</a>
+				<a class="permalink" href="index.html#DialFunc">&#xb6;</a>
+				
+				
+			</h2>
+			<p>DialFunc is a function which can be used to establish the network connection.
+Custom dial functions must be registered with RegisterDial
+<p>Deprecated: users should register a DialContextFunc instead
+
+			<pre>type DialFunc func(addr <a href="../../../builtin/index.html#string">string</a>) (<a href="../../../net/index.html">net</a>.<a href="../../../net/index.html#Conn">Conn</a>, <a href="../../../builtin/index.html#error">error</a>)</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="Logger">type <a href="../../../../src/github.com/go-sql-driver/mysql/errors.go?s=2187:2229#L33">Logger</a>
+				<a class="permalink" href="index.html#Logger">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Logger is used to log critical error messages.
+
+			<pre>type Logger interface {
+    Print(v ...<a href="../../../builtin/index.html#any">any</a>)
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="MySQLDriver">type <a href="../../../../src/github.com/go-sql-driver/mysql/driver.go?s=830:855#L19">MySQLDriver</a>
+				<a class="permalink" href="index.html#MySQLDriver">&#xb6;</a>
+				
+				
+			</h2>
+			<p>MySQLDriver is exported to make the driver directly accessible.
+In general the driver is used via the database/sql package.
+
+			<pre>type MySQLDriver struct{}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="MySQLDriver.Open">func (MySQLDriver) <a href="../../../../src/github.com/go-sql-driver/mysql/driver.go?s=2651:2709#L71">Open</a>
+					<a class="permalink" href="index.html#MySQLDriver.Open">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (d <a href="index.html#MySQLDriver">MySQLDriver</a>) Open(dsn <a href="../../../builtin/index.html#string">string</a>) (<a href="../../../database/sql/driver/index.html">driver</a>.<a href="../../../database/sql/driver/index.html#Conn">Conn</a>, <a href="../../../builtin/index.html#error">error</a>)</pre>
+				<p>Open new Connection.
+See <a href="https://github.com/go-sql-driver/mysql#dsn-data-source-name">https://github.com/go-sql-driver/mysql#dsn-data-source-name</a> for how
+the DSN string is formatted
+
+				
+				
+				
+			
+				
+				<h3 id="MySQLDriver.OpenConnector">func (MySQLDriver) <a href="../../../../src/github.com/go-sql-driver/mysql/driver.go?s=3475:3547#L102">OpenConnector</a>
+					<a class="permalink" href="index.html#MySQLDriver.OpenConnector">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (d <a href="index.html#MySQLDriver">MySQLDriver</a>) OpenConnector(dsn <a href="../../../builtin/index.html#string">string</a>) (<a href="../../../database/sql/driver/index.html">driver</a>.<a href="../../../database/sql/driver/index.html#Connector">Connector</a>, <a href="../../../builtin/index.html#error">error</a>)</pre>
+				<p>OpenConnector implements driver.DriverContext.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="MySQLError">type <a href="../../../../src/github.com/go-sql-driver/mysql/errors.go?s=2707:2785#L54">MySQLError</a>
+				<a class="permalink" href="index.html#MySQLError">&#xb6;</a>
+				
+				
+			</h2>
+			<p>MySQLError is an error type which represents a single MySQL error
+
+			<pre>type MySQLError struct {
+<span id="MySQLError.Number"></span>    Number   <a href="../../../builtin/index.html#uint16">uint16</a>
+<span id="MySQLError.SQLState"></span>    SQLState [5]<a href="../../../builtin/index.html#byte">byte</a>
+<span id="MySQLError.Message"></span>    Message  <a href="../../../builtin/index.html#string">string</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="MySQLError.Error">func (*MySQLError) <a href="../../../../src/github.com/go-sql-driver/mysql/errors.go?s=2787:2823#L60">Error</a>
+					<a class="permalink" href="index.html#MySQLError.Error">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (me *<a href="index.html#MySQLError">MySQLError</a>) Error() <a href="../../../builtin/index.html#string">string</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="MySQLError.Is">func (*MySQLError) <a href="../../../../src/github.com/go-sql-driver/mysql/errors.go?s=3001:3041#L68">Is</a>
+					<a class="permalink" href="index.html#MySQLError.Is">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (me *<a href="index.html#MySQLError">MySQLError</a>) Is(err <a href="../../../builtin/index.html#error">error</a>) <a href="../../../builtin/index.html#bool">bool</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="NopLogger">type <a href="../../../../src/github.com/go-sql-driver/mysql/errors.go?s=2293:2316#L38">NopLogger</a>
+				<a class="permalink" href="index.html#NopLogger">&#xb6;</a>
+				
+				
+			</h2>
+			<p>NopLogger is a nop implementation of the Logger interface.
+
+			<pre>type NopLogger struct{}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="NopLogger.Print">func (*NopLogger) <a href="../../../../src/github.com/go-sql-driver/mysql/errors.go?s=2356:2392#L41">Print</a>
+					<a class="permalink" href="index.html#NopLogger.Print">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (nl *<a href="index.html#NopLogger">NopLogger</a>) Print(_ ...<a href="../../../builtin/index.html#any">any</a>)</pre>
+				<p>Print implements Logger interface.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="NullTime">type <a href="../../../../src/github.com/go-sql-driver/mysql/nulltime.go?s=964:990#L26">NullTime</a>
+				<a class="permalink" href="index.html#NullTime">&#xb6;</a>
+				
+				
+			</h2>
+			<p>NullTime represents a time.Time that may be NULL.
+NullTime implements the Scanner interface so
+it can be used as a scan destination:
+<pre>var nt NullTime
+err := db.QueryRow(&quot;SELECT time FROM foo WHERE id=?&quot;, id).Scan(&amp;nt)
+...
+if nt.Valid {
+   // use nt.Time
+} else {
+   // NULL value
+}
+</pre>
+<h3 id="hdr-This_NullTime_implementation_is_not_driver_specific">This NullTime implementation is not driver-specific</h3>
+<p>Deprecated: NullTime doesn&apos;t honor the loc DSN parameter.
+NullTime.Scan interprets a time as UTC, not the loc DSN parameter.
+Use sql.NullTime instead.
+
+			<pre>type NullTime <a href="../../../database/sql/index.html">sql</a>.<a href="../../../database/sql/index.html#NullTime">NullTime</a></pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="NullTime.Scan">func (*NullTime) <a href="../../../../src/github.com/go-sql-driver/mysql/nulltime.go?s=1139:1186#L31">Scan</a>
+					<a class="permalink" href="index.html#NullTime.Scan">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (nt *<a href="index.html#NullTime">NullTime</a>) Scan(value <a href="../../../builtin/index.html#any">any</a>) (err <a href="../../../builtin/index.html#error">error</a>)</pre>
+				<p>Scan implements the Scanner interface.
+The value type must be time.Time or string / []byte (formatted time-string),
+otherwise Scan fails.
+
+				
+				
+				
+			
+				
+				<h3 id="NullTime.Value">func (NullTime) <a href="../../../../src/github.com/go-sql-driver/mysql/nulltime.go?s=1673:1721#L56">Value</a>
+					<a class="permalink" href="index.html#NullTime.Value">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (nt <a href="index.html#NullTime">NullTime</a>) Value() (<a href="../../../database/sql/driver/index.html">driver</a>.<a href="../../../database/sql/driver/index.html#Value">Value</a>, <a href="../../../builtin/index.html#error">error</a>)</pre>
+				<p>Value implements the driver Valuer interface.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Option">type <a href="../../../../src/github.com/go-sql-driver/mysql/dsn.go?s=3846:3877#L72">Option</a>
+				<a class="permalink" href="index.html#Option">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Functional Options Pattern
+<a href="https://dave.cheney.net/2014/10/17/functional-options-for-friendly-apis">https://dave.cheney.net/2014/10/17/functional-options-for-friendly-apis</a>
+
+			<pre>type Option func(*<a href="index.html#Config">Config</a>) <a href="../../../builtin/index.html#error">error</a></pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="BeforeConnect">func <a href="../../../../src/github.com/go-sql-driver/mysql/dsn.go?s=4682:4748#L108">BeforeConnect</a>
+					<a class="permalink" href="index.html#BeforeConnect">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func BeforeConnect(fn func(<a href="../../../context/index.html">context</a>.<a href="../../../context/index.html#Context">Context</a>, *<a href="index.html#Config">Config</a>) <a href="../../../builtin/index.html#error">error</a>) <a href="index.html#Option">Option</a></pre>
+				<p>BeforeConnect sets the function to be invoked before a connection is established.
+
+				
+				
+			
+				
+				<h3 id="TimeTruncate">func <a href="../../../../src/github.com/go-sql-driver/mysql/dsn.go?s=4477:4518#L100">TimeTruncate</a>
+					<a class="permalink" href="index.html#TimeTruncate">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func TimeTruncate(d <a href="../../../time/index.html">time</a>.<a href="../../../time/index.html#Duration">Duration</a>) <a href="index.html#Option">Option</a></pre>
+				<p>TimeTruncate sets the time duration to truncate time.Time values in
+query parameters.
+
+				
+				
+			
+
+			
+		
+			
+			
+			<h2 id="Result">type <a href="../../../../src/github.com/go-sql-driver/mysql/result.go?s=639:934#L10">Result</a>
+				<a class="permalink" href="index.html#Result">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Result exposes data not available through *connection.Result.
+<p>This is accessible by executing statements using sql.Conn.Raw() and
+downcasting the returned result:
+<pre>res, err := rawConn.Exec(...)
+res.(mysql.Result).AllRowsAffected()
+</pre>
+
+			<pre>type Result interface {
+    <a href="../../../database/sql/driver/index.html">driver</a>.<a href="../../../database/sql/driver/index.html#Result">Result</a>
+    <span class="comment">// AllRowsAffected returns a slice containing the affected rows for each</span>
+    <span class="comment">// executed statement.</span>
+    AllRowsAffected() []<a href="../../../builtin/index.html#int64">int64</a>
+    <span class="comment">// AllLastInsertIds returns a slice containing the last inserted ID for each</span>
+    <span class="comment">// executed statement.</span>
+    AllLastInsertIds() []<a href="../../../builtin/index.html#int64">int64</a>
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+	
+
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

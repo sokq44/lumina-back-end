@@ -1,0 +1,1484 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>slices - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package slices
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "slices"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+				<dd><a href="index.html#pkg-examples" class="examplesLink">Examples</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>Package slices defines various functions useful with slices of any type.
+
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+			
+			
+				
+				<dd><a href="index.html#BinarySearch">func BinarySearch[S ~[]E, E cmp.Ordered](x S, target E) (int, bool)</a></dd>
+			
+				
+				<dd><a href="index.html#BinarySearchFunc">func BinarySearchFunc[S ~[]E, E, T any](x S, target T, cmp func(E, T) int) (int, bool)</a></dd>
+			
+				
+				<dd><a href="index.html#Clip">func Clip[S ~[]E, E any](s S) S</a></dd>
+			
+				
+				<dd><a href="index.html#Clone">func Clone[S ~[]E, E any](s S) S</a></dd>
+			
+				
+				<dd><a href="index.html#Compact">func Compact[S ~[]E, E comparable](s S) S</a></dd>
+			
+				
+				<dd><a href="index.html#CompactFunc">func CompactFunc[S ~[]E, E any](s S, eq func(E, E) bool) S</a></dd>
+			
+				
+				<dd><a href="index.html#Compare">func Compare[S ~[]E, E cmp.Ordered](s1, s2 S) int</a></dd>
+			
+				
+				<dd><a href="index.html#CompareFunc">func CompareFunc[S1 ~[]E1, S2 ~[]E2, E1, E2 any](s1 S1, s2 S2, cmp func(E1, E2) int) int</a></dd>
+			
+				
+				<dd><a href="index.html#Concat">func Concat[S ~[]E, E any](slices ...S) S</a></dd>
+			
+				
+				<dd><a href="index.html#Contains">func Contains[S ~[]E, E comparable](s S, v E) bool</a></dd>
+			
+				
+				<dd><a href="index.html#ContainsFunc">func ContainsFunc[S ~[]E, E any](s S, f func(E) bool) bool</a></dd>
+			
+				
+				<dd><a href="index.html#Delete">func Delete[S ~[]E, E any](s S, i, j int) S</a></dd>
+			
+				
+				<dd><a href="index.html#DeleteFunc">func DeleteFunc[S ~[]E, E any](s S, del func(E) bool) S</a></dd>
+			
+				
+				<dd><a href="index.html#Equal">func Equal[S ~[]E, E comparable](s1, s2 S) bool</a></dd>
+			
+				
+				<dd><a href="index.html#EqualFunc">func EqualFunc[S1 ~[]E1, S2 ~[]E2, E1, E2 any](s1 S1, s2 S2, eq func(E1, E2) bool) bool</a></dd>
+			
+				
+				<dd><a href="index.html#Grow">func Grow[S ~[]E, E any](s S, n int) S</a></dd>
+			
+				
+				<dd><a href="index.html#Index">func Index[S ~[]E, E comparable](s S, v E) int</a></dd>
+			
+				
+				<dd><a href="index.html#IndexFunc">func IndexFunc[S ~[]E, E any](s S, f func(E) bool) int</a></dd>
+			
+				
+				<dd><a href="index.html#Insert">func Insert[S ~[]E, E any](s S, i int, v ...E) S</a></dd>
+			
+				
+				<dd><a href="index.html#IsSorted">func IsSorted[S ~[]E, E cmp.Ordered](x S) bool</a></dd>
+			
+				
+				<dd><a href="index.html#IsSortedFunc">func IsSortedFunc[S ~[]E, E any](x S, cmp func(a, b E) int) bool</a></dd>
+			
+				
+				<dd><a href="index.html#Max">func Max[S ~[]E, E cmp.Ordered](x S) E</a></dd>
+			
+				
+				<dd><a href="index.html#MaxFunc">func MaxFunc[S ~[]E, E any](x S, cmp func(a, b E) int) E</a></dd>
+			
+				
+				<dd><a href="index.html#Min">func Min[S ~[]E, E cmp.Ordered](x S) E</a></dd>
+			
+				
+				<dd><a href="index.html#MinFunc">func MinFunc[S ~[]E, E any](x S, cmp func(a, b E) int) E</a></dd>
+			
+				
+				<dd><a href="index.html#Replace">func Replace[S ~[]E, E any](s S, i, j int, v ...E) S</a></dd>
+			
+				
+				<dd><a href="index.html#Reverse">func Reverse[S ~[]E, E any](s S)</a></dd>
+			
+				
+				<dd><a href="index.html#Sort">func Sort[S ~[]E, E cmp.Ordered](x S)</a></dd>
+			
+				
+				<dd><a href="index.html#SortFunc">func SortFunc[S ~[]E, E any](x S, cmp func(a, b E) int)</a></dd>
+			
+				
+				<dd><a href="index.html#SortStableFunc">func SortStableFunc[S ~[]E, E any](x S, cmp func(a, b E) int)</a></dd>
+			
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+		<div id="pkg-examples">
+			<h3>Examples</h3>
+			<div class="js-expandAll expandAll collapsed">(Expand All)</div>
+			<dl>
+			
+			<dd><a class="exampleLink" href="index.html#example_BinarySearch">BinarySearch</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_BinarySearchFunc">BinarySearchFunc</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Compact">Compact</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_CompactFunc">CompactFunc</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Compare">Compare</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_CompareFunc">CompareFunc</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_ContainsFunc">ContainsFunc</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Delete">Delete</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_DeleteFunc">DeleteFunc</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Equal">Equal</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_EqualFunc">EqualFunc</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Index">Index</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_IndexFunc">IndexFunc</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Insert">Insert</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_IsSorted">IsSorted</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_IsSortedFunc">IsSortedFunc</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Max">Max</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_MaxFunc">MaxFunc</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Min">Min</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_MinFunc">MinFunc</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Replace">Replace</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Reverse">Reverse</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Sort">Sort</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_SortFunc_caseInsensitive">SortFunc (CaseInsensitive)</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_SortFunc_multiField">SortFunc (MultiField)</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_SortStableFunc">SortStableFunc</a></dd>
+			
+			</dl>
+		</div>
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../src/slices/slices.go">slices.go</a>
+			
+				<a href="../../src/slices/sort.go">sort.go</a>
+			
+				<a href="../../src/slices/zsortanyfunc.go">zsortanyfunc.go</a>
+			
+				<a href="../../src/slices/zsortordered.go">zsortordered.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+		
+		
+			
+			
+			<h2 id="BinarySearch">func <a href="../../src/slices/sort.go?s=3595:3662#L114">BinarySearch</a>
+				<a class="permalink" href="index.html#BinarySearch">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func BinarySearch[S ~[]E, E <a href="../cmp/index.html">cmp</a>.<a href="../cmp/index.html#Ordered">Ordered</a>](x S, target E) (<a href="../builtin/index.html#int">int</a>, <a href="../builtin/index.html#bool">bool</a>)</pre>
+			<p>BinarySearch searches for target in a sorted slice and returns the position
+where target is found, or the position where target would appear in the
+sort order; it also returns a bool saying whether the target is really found
+in the slice. The slice must be sorted in increasing order.
+
+			<div id="example_BinarySearch" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">names := []string{&#34;Alice&#34;, &#34;Bob&#34;, &#34;Vera&#34;}
+n, found := slices.BinarySearch(names, &#34;Vera&#34;)
+fmt.Println(&#34;Vera:&#34;, n, found)
+n, found = slices.BinarySearch(names, &#34;Bill&#34;)
+fmt.Println(&#34;Bill:&#34;, n, found)
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">Vera: 2 true
+Bill: 1 false
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="BinarySearchFunc">func <a href="../../src/slices/sort.go?s=4727:4813#L140">BinarySearchFunc</a>
+				<a class="permalink" href="index.html#BinarySearchFunc">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func BinarySearchFunc[S ~[]E, E, T <a href="../builtin/index.html#any">any</a>](x S, target T, cmp func(E, T) <a href="../builtin/index.html#int">int</a>) (<a href="../builtin/index.html#int">int</a>, <a href="../builtin/index.html#bool">bool</a>)</pre>
+			<p>BinarySearchFunc works like <a href="index.html#BinarySearch">BinarySearch</a>, but uses a custom comparison
+function. The slice must be sorted in increasing order, where &quot;increasing&quot;
+is defined by cmp. cmp should return 0 if the slice element matches
+the target, a negative number if the slice element precedes the target,
+or a positive number if the slice element follows the target.
+cmp must implement the same ordering as the slice, such that if
+cmp(a, t) &lt; 0 and cmp(b, t) &gt;= 0, then a must precede b in the slice.
+
+			<div id="example_BinarySearchFunc" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">type Person struct {
+    Name string
+    Age  int
+}
+people := []Person{
+    {&#34;Alice&#34;, 55},
+    {&#34;Bob&#34;, 24},
+    {&#34;Gopher&#34;, 13},
+}
+n, found := slices.BinarySearchFunc(people, Person{&#34;Bob&#34;, 0}, func(a, b Person) int {
+    return cmp.Compare(a.Name, b.Name)
+})
+fmt.Println(&#34;Bob:&#34;, n, found)
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">Bob: 1 true
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Clip">func <a href="../../src/slices/slices.go?s=10954:10985#L393">Clip</a>
+				<a class="permalink" href="index.html#Clip">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Clip[S ~[]E, E <a href="../builtin/index.html#any">any</a>](s S) S</pre>
+			<p>Clip removes unused capacity from the slice, returning s[:len(s):len(s)].
+
+			
+			
+
+		
+			
+			
+			<h2 id="Clone">func <a href="../../src/slices/slices.go?s=9199:9231#L331">Clone</a>
+				<a class="permalink" href="index.html#Clone">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Clone[S ~[]E, E <a href="../builtin/index.html#any">any</a>](s S) S</pre>
+			<p>Clone returns a copy of the slice.
+The elements are copied using assignment, so this is a shallow clone.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Compact">func <a href="../../src/slices/slices.go?s=9635:9676#L341">Compact</a>
+				<a class="permalink" href="index.html#Compact">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Compact[S ~[]E, E <a href="../builtin/index.html#comparable">comparable</a>](s S) S</pre>
+			<p>Compact replaces consecutive runs of equal elements with a single copy.
+This is like the uniq command found on Unix.
+Compact modifies the contents of the slice s and returns the modified slice,
+which may have a smaller length.
+Compact zeroes the elements between the new length and the original length.
+
+			<div id="example_Compact" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">seq := []int{0, 1, 1, 2, 3, 5, 8}
+seq = slices.Compact(seq)
+fmt.Println(seq)
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">[0 1 2 3 5 8]
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="CompactFunc">func <a href="../../src/slices/slices.go?s=10142:10200#L361">CompactFunc</a>
+				<a class="permalink" href="index.html#CompactFunc">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func CompactFunc[S ~[]E, E <a href="../builtin/index.html#any">any</a>](s S, eq func(E, E) <a href="../builtin/index.html#bool">bool</a>) S</pre>
+			<p>CompactFunc is like <a href="index.html#Compact">Compact</a> but uses an equality function to compare elements.
+For runs of elements that compare equal, CompactFunc keeps the first one.
+CompactFunc zeroes the elements between the new length and the original length.
+
+			<div id="example_CompactFunc" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">names := []string{&#34;bob&#34;, &#34;Bob&#34;, &#34;alice&#34;, &#34;Vera&#34;, &#34;VERA&#34;}
+names = slices.CompactFunc(names, strings.EqualFold)
+fmt.Println(names)
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">[bob alice Vera]
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Compare">func <a href="../../src/slices/slices.go?s=1760:1809#L45">Compare</a>
+				<a class="permalink" href="index.html#Compare">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Compare[S ~[]E, E <a href="../cmp/index.html">cmp</a>.<a href="../cmp/index.html#Ordered">Ordered</a>](s1, s2 S) <a href="../builtin/index.html#int">int</a></pre>
+			<p>Compare compares the elements of s1 and s2, using <a href="http://localhost:8080/cmp#Compare">cmp.Compare</a> on each pair
+of elements. The elements are compared sequentially, starting at index 0,
+until one element is not equal to the other.
+The result of comparing the first non-matching elements is returned.
+If both slices are equal until one of them ends, the shorter slice is
+considered less than the longer one.
+The result is 0 if s1 == s2, -1 if s1 &lt; s2, and +1 if s1 &gt; s2.
+
+			<div id="example_Compare" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">names := []string{&#34;Alice&#34;, &#34;Bob&#34;, &#34;Vera&#34;}
+fmt.Println(&#34;Equal:&#34;, slices.Compare(names, []string{&#34;Alice&#34;, &#34;Bob&#34;, &#34;Vera&#34;}))
+fmt.Println(&#34;V &lt; X:&#34;, slices.Compare(names, []string{&#34;Alice&#34;, &#34;Bob&#34;, &#34;Xena&#34;}))
+fmt.Println(&#34;V &gt; C:&#34;, slices.Compare(names, []string{&#34;Alice&#34;, &#34;Bob&#34;, &#34;Cat&#34;}))
+fmt.Println(&#34;3 &gt; 2:&#34;, slices.Compare(names, []string{&#34;Alice&#34;, &#34;Bob&#34;}))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">Equal: 0
+V &lt; X: -1
+V &gt; C: 1
+3 &gt; 2: 1
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="CompareFunc">func <a href="../../src/slices/slices.go?s=2273:2361#L66">CompareFunc</a>
+				<a class="permalink" href="index.html#CompareFunc">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func CompareFunc[S1 ~[]E1, S2 ~[]E2, E1, E2 <a href="../builtin/index.html#any">any</a>](s1 S1, s2 S2, cmp func(E1, E2) <a href="../builtin/index.html#int">int</a>) <a href="../builtin/index.html#int">int</a></pre>
+			<p>CompareFunc is like <a href="index.html#Compare">Compare</a> but uses a custom comparison function on each
+pair of elements.
+The result is the first non-zero result of cmp; if cmp always
+returns 0 the result is 0 if len(s1) == len(s2), -1 if len(s1) &lt; len(s2),
+and +1 if len(s1) &gt; len(s2).
+
+			<div id="example_CompareFunc" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">numbers := []int{0, 43, 8}
+strings := []string{&#34;0&#34;, &#34;0&#34;, &#34;8&#34;}
+result := slices.CompareFunc(numbers, strings, func(n int, s string) int {
+    sn, err := strconv.Atoi(s)
+    if err != nil {
+        return 1
+    }
+    return cmp.Compare(n, sn)
+})
+fmt.Println(result)
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">1
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Concat">func <a href="../../src/slices/slices.go?s=13631:13672#L492">Concat</a>
+				<a class="permalink" href="index.html#Concat">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Concat[S ~[]E, E <a href="../builtin/index.html#any">any</a>](slices ...S) S</pre>
+			<p>Concat returns a new slice concatenating the passed in slices.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Contains">func <a href="../../src/slices/slices.go?s=3001:3051#L105">Contains</a>
+				<a class="permalink" href="index.html#Contains">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Contains[S ~[]E, E <a href="../builtin/index.html#comparable">comparable</a>](s S, v E) <a href="../builtin/index.html#bool">bool</a></pre>
+			<p>Contains reports whether v is present in s.
+
+			
+			
+
+		
+			
+			
+			<h2 id="ContainsFunc">func <a href="../../src/slices/slices.go?s=3161:3219#L111">ContainsFunc</a>
+				<a class="permalink" href="index.html#ContainsFunc">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func ContainsFunc[S ~[]E, E <a href="../builtin/index.html#any">any</a>](s S, f func(E) <a href="../builtin/index.html#bool">bool</a>) <a href="../builtin/index.html#bool">bool</a></pre>
+			<p>ContainsFunc reports whether at least one
+element e of s satisfies f(e).
+
+			<div id="example_ContainsFunc" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">numbers := []int{0, 42, -10, 8}
+hasNegative := slices.ContainsFunc(numbers, func(n int) bool {
+    return n &lt; 0
+})
+fmt.Println(&#34;Has a negative:&#34;, hasNegative)
+hasOdd := slices.ContainsFunc(numbers, func(n int) bool {
+    return n%2 != 0
+})
+fmt.Println(&#34;Has an odd number:&#34;, hasOdd)
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">Has a negative: true
+Has an odd number: false
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Delete">func <a href="../../src/slices/slices.go?s=5959:6002#L208">Delete</a>
+				<a class="permalink" href="index.html#Delete">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Delete[S ~[]E, E <a href="../builtin/index.html#any">any</a>](s S, i, j <a href="../builtin/index.html#int">int</a>) S</pre>
+			<p>Delete removes the elements s[i:j] from s, returning the modified slice.
+Delete panics if j &gt; len(s) or s[i:j] is not a valid slice of s.
+Delete is O(len(s)-i), so if many items must be deleted, it is better to
+make a single call deleting them all together than to delete one at a time.
+Delete zeroes the elements s[len(s)-(j-i):len(s)].
+
+			<div id="example_Delete" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">letters := []string{&#34;a&#34;, &#34;b&#34;, &#34;c&#34;, &#34;d&#34;, &#34;e&#34;}
+letters = slices.Delete(letters, 1, 4)
+fmt.Println(letters)
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">[a e]
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="DeleteFunc">func <a href="../../src/slices/slices.go?s=6385:6440#L224">DeleteFunc</a>
+				<a class="permalink" href="index.html#DeleteFunc">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func DeleteFunc[S ~[]E, E <a href="../builtin/index.html#any">any</a>](s S, del func(E) <a href="../builtin/index.html#bool">bool</a>) S</pre>
+			<p>DeleteFunc removes any elements from s for which del returns true,
+returning the modified slice.
+DeleteFunc zeroes the elements between the new length and the original length.
+
+			<div id="example_DeleteFunc" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">seq := []int{0, 1, 1, 2, 3, 5, 8}
+seq = slices.DeleteFunc(seq, func(n int) bool {
+    return n%2 != 0 <span class="comment">// delete the odd numbers</span>
+})
+fmt.Println(seq)
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">[0 2 8]
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Equal">func <a href="../../src/slices/slices.go?s=593:640#L8">Equal</a>
+				<a class="permalink" href="index.html#Equal">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Equal[S ~[]E, E <a href="../builtin/index.html#comparable">comparable</a>](s1, s2 S) <a href="../builtin/index.html#bool">bool</a></pre>
+			<p>Equal reports whether two slices are equal: the same length and all
+elements equal. If the lengths are different, Equal returns false.
+Otherwise, the elements are compared in increasing index order, and the
+comparison stops at the first unequal pair.
+Floating point NaNs are not considered equal.
+
+			<div id="example_Equal" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">numbers := []int{0, 42, 8}
+fmt.Println(slices.Equal(numbers, []int{0, 42, 8}))
+fmt.Println(slices.Equal(numbers, []int{10}))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">true
+false
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="EqualFunc">func <a href="../../src/slices/slices.go?s=1074:1161#L25">EqualFunc</a>
+				<a class="permalink" href="index.html#EqualFunc">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func EqualFunc[S1 ~[]E1, S2 ~[]E2, E1, E2 <a href="../builtin/index.html#any">any</a>](s1 S1, s2 S2, eq func(E1, E2) <a href="../builtin/index.html#bool">bool</a>) <a href="../builtin/index.html#bool">bool</a></pre>
+			<p>EqualFunc reports whether two slices are equal using an equality
+function on each pair of elements. If the lengths are different,
+EqualFunc returns false. Otherwise, the elements are compared in
+increasing index order, and the comparison stops at the first index
+for which eq returns false.
+
+			<div id="example_EqualFunc" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">numbers := []int{0, 42, 8}
+strings := []string{&#34;000&#34;, &#34;42&#34;, &#34;0o10&#34;}
+equal := slices.EqualFunc(numbers, strings, func(n int, s string) bool {
+    sn, err := strconv.ParseInt(s, 0, 64)
+    if err != nil {
+        return false
+    }
+    return n == int(sn)
+})
+fmt.Println(equal)
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">true
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Grow">func <a href="../../src/slices/slices.go?s=10690:10728#L382">Grow</a>
+				<a class="permalink" href="index.html#Grow">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Grow[S ~[]E, E <a href="../builtin/index.html#any">any</a>](s S, n <a href="../builtin/index.html#int">int</a>) S</pre>
+			<p>Grow increases the slice&apos;s capacity, if necessary, to guarantee space for
+another n elements. After Grow(n), at least n elements can be appended
+to the slice without another allocation. If n is negative or too large to
+allocate the memory, Grow panics.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Index">func <a href="../../src/slices/slices.go?s=2630:2676#L84">Index</a>
+				<a class="permalink" href="index.html#Index">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Index[S ~[]E, E <a href="../builtin/index.html#comparable">comparable</a>](s S, v E) <a href="../builtin/index.html#int">int</a></pre>
+			<p>Index returns the index of the first occurrence of v in s,
+or -1 if not present.
+
+			<div id="example_Index" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">numbers := []int{0, 42, 8}
+fmt.Println(slices.Index(numbers, 8))
+fmt.Println(slices.Index(numbers, 7))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">2
+-1
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="IndexFunc">func <a href="../../src/slices/slices.go?s=2829:2883#L95">IndexFunc</a>
+				<a class="permalink" href="index.html#IndexFunc">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func IndexFunc[S ~[]E, E <a href="../builtin/index.html#any">any</a>](s S, f func(E) <a href="../builtin/index.html#bool">bool</a>) <a href="../builtin/index.html#int">int</a></pre>
+			<p>IndexFunc returns the first index i satisfying f(s[i]),
+or -1 if none do.
+
+			<div id="example_IndexFunc" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">numbers := []int{0, 42, -10, 8}
+i := slices.IndexFunc(numbers, func(n int) bool {
+    return n &lt; 0
+})
+fmt.Println(&#34;First negative at index&#34;, i)
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">First negative at index 2
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Insert">func <a href="../../src/slices/slices.go?s=3563:3611#L122">Insert</a>
+				<a class="permalink" href="index.html#Insert">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Insert[S ~[]E, E <a href="../builtin/index.html#any">any</a>](s S, i <a href="../builtin/index.html#int">int</a>, v ...E) S</pre>
+			<p>Insert inserts the values v... into s at index i,
+returning the modified slice.
+The elements at s[i:] are shifted up to make room.
+In the returned slice r, r[i] == v[0],
+and r[i+len(v)] == value originally at r[i].
+Insert panics if i is out of range.
+This function is O(len(s) + len(v)).
+
+			<div id="example_Insert" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">names := []string{&#34;Alice&#34;, &#34;Bob&#34;, &#34;Vera&#34;}
+names = slices.Insert(names, 1, &#34;Bill&#34;, &#34;Billie&#34;)
+names = slices.Insert(names, len(names), &#34;Zac&#34;)
+fmt.Println(names)
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">[Alice Bill Billie Bob Vera Zac]
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="IsSorted">func <a href="../../src/slices/sort.go?s=1324:1370#L30">IsSorted</a>
+				<a class="permalink" href="index.html#IsSorted">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func IsSorted[S ~[]E, E <a href="../cmp/index.html">cmp</a>.<a href="../cmp/index.html#Ordered">Ordered</a>](x S) <a href="../builtin/index.html#bool">bool</a></pre>
+			<p>IsSorted reports whether x is sorted in ascending order.
+
+			<div id="example_IsSorted" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">fmt.Println(slices.IsSorted([]string{&#34;Alice&#34;, &#34;Bob&#34;, &#34;Vera&#34;}))
+fmt.Println(slices.IsSorted([]int{0, 2, 1}))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">true
+false
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="IsSortedFunc">func <a href="../../src/slices/sort.go?s=1606:1670#L41">IsSortedFunc</a>
+				<a class="permalink" href="index.html#IsSortedFunc">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func IsSortedFunc[S ~[]E, E <a href="../builtin/index.html#any">any</a>](x S, cmp func(a, b E) <a href="../builtin/index.html#int">int</a>) <a href="../builtin/index.html#bool">bool</a></pre>
+			<p>IsSortedFunc reports whether x is sorted in ascending order, with cmp as the
+comparison function as defined by <a href="index.html#SortFunc">SortFunc</a>.
+
+			<div id="example_IsSortedFunc" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">names := []string{&#34;alice&#34;, &#34;Bob&#34;, &#34;VERA&#34;}
+isSortedInsensitive := slices.IsSortedFunc(names, func(a, b string) int {
+    return cmp.Compare(strings.ToLower(a), strings.ToLower(b))
+})
+fmt.Println(isSortedInsensitive)
+fmt.Println(slices.IsSorted(names))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">true
+false
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Max">func <a href="../../src/slices/sort.go?s=2702:2740#L83">Max</a>
+				<a class="permalink" href="index.html#Max">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Max[S ~[]E, E <a href="../cmp/index.html">cmp</a>.<a href="../cmp/index.html#Ordered">Ordered</a>](x S) E</pre>
+			<p>Max returns the maximal value in x. It panics if x is empty.
+For floating-point E, Max propagates NaNs (any NaN value in x
+forces the output to be NaN).
+
+			<div id="example_Max" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">numbers := []int{0, 42, -10, 8}
+fmt.Println(slices.Max(numbers))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">42
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="MaxFunc">func <a href="../../src/slices/sort.go?s=3083:3139#L97">MaxFunc</a>
+				<a class="permalink" href="index.html#MaxFunc">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func MaxFunc[S ~[]E, E <a href="../builtin/index.html#any">any</a>](x S, cmp func(a, b E) <a href="../builtin/index.html#int">int</a>) E</pre>
+			<p>MaxFunc returns the maximal value in x, using cmp to compare elements.
+It panics if x is empty. If there is more than one maximal element
+according to the cmp function, MaxFunc returns the first one.
+
+			<div id="example_MaxFunc" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">type Person struct {
+    Name string
+    Age  int
+}
+people := []Person{
+    {&#34;Gopher&#34;, 13},
+    {&#34;Alice&#34;, 55},
+    {&#34;Vera&#34;, 24},
+    {&#34;Bob&#34;, 55},
+}
+firstOldest := slices.MaxFunc(people, func(a, b Person) int {
+    return cmp.Compare(a.Age, b.Age)
+})
+fmt.Println(firstOldest.Name)
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">Alice
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Min">func <a href="../../src/slices/sort.go?s=1944:1982#L53">Min</a>
+				<a class="permalink" href="index.html#Min">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Min[S ~[]E, E <a href="../cmp/index.html">cmp</a>.<a href="../cmp/index.html#Ordered">Ordered</a>](x S) E</pre>
+			<p>Min returns the minimal value in x. It panics if x is empty.
+For floating-point numbers, Min propagates NaNs (any NaN value in x
+forces the output to be NaN).
+
+			<div id="example_Min" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">numbers := []int{0, 42, -10, 8}
+fmt.Println(slices.Min(numbers))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">-10
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="MinFunc">func <a href="../../src/slices/sort.go?s=2325:2381#L67">MinFunc</a>
+				<a class="permalink" href="index.html#MinFunc">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func MinFunc[S ~[]E, E <a href="../builtin/index.html#any">any</a>](x S, cmp func(a, b E) <a href="../builtin/index.html#int">int</a>) E</pre>
+			<p>MinFunc returns the minimal value in x, using cmp to compare elements.
+It panics if x is empty. If there is more than one minimal element
+according to the cmp function, MinFunc returns the first one.
+
+			<div id="example_MinFunc" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">type Person struct {
+    Name string
+    Age  int
+}
+people := []Person{
+    {&#34;Gopher&#34;, 13},
+    {&#34;Bob&#34;, 5},
+    {&#34;Vera&#34;, 24},
+    {&#34;Bill&#34;, 5},
+}
+firstYoungest := slices.MinFunc(people, func(a, b Person) int {
+    return cmp.Compare(a.Age, b.Age)
+})
+fmt.Println(firstYoungest.Name)
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">Bob
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Replace">func <a href="../../src/slices/slices.go?s=6981:7033#L244">Replace</a>
+				<a class="permalink" href="index.html#Replace">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Replace[S ~[]E, E <a href="../builtin/index.html#any">any</a>](s S, i, j <a href="../builtin/index.html#int">int</a>, v ...E) S</pre>
+			<p>Replace replaces the elements s[i:j] by the given v, and returns the
+modified slice.
+Replace panics if j &gt; len(s) or s[i:j] is not a valid slice of s.
+When len(v) &lt; (j-i), Replace zeroes the elements between the new length and the original length.
+
+			<div id="example_Replace" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">names := []string{&#34;Alice&#34;, &#34;Bob&#34;, &#34;Vera&#34;, &#34;Zac&#34;}
+names = slices.Replace(names, 1, 3, &#34;Bill&#34;, &#34;Billie&#34;, &#34;Cat&#34;)
+fmt.Println(names)
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">[Alice Bill Billie Cat Zac]
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Reverse">func <a href="../../src/slices/slices.go?s=13447:13479#L485">Reverse</a>
+				<a class="permalink" href="index.html#Reverse">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Reverse[S ~[]E, E <a href="../builtin/index.html#any">any</a>](s S)</pre>
+			<p>Reverse reverses the elements of the slice in place.
+
+			<div id="example_Reverse" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">names := []string{&#34;alice&#34;, &#34;Bob&#34;, &#34;VERA&#34;}
+slices.Reverse(names)
+fmt.Println(names)
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">[VERA Bob alice]
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Sort">func <a href="../../src/slices/sort.go?s=417:454#L6">Sort</a>
+				<a class="permalink" href="index.html#Sort">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Sort[S ~[]E, E <a href="../cmp/index.html">cmp</a>.<a href="../cmp/index.html#Ordered">Ordered</a>](x S)</pre>
+			<p>Sort sorts a slice of any ordered type in ascending order.
+When sorting floating-point numbers, NaNs are ordered before other values.
+
+			<div id="example_Sort" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">smallInts := []int8{0, 42, -10, 8}
+slices.Sort(smallInts)
+fmt.Println(smallInts)
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">[-10 0 8 42]
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="SortFunc">func <a href="../../src/slices/sort.go?s=891:946#L18">SortFunc</a>
+				<a class="permalink" href="index.html#SortFunc">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func SortFunc[S ~[]E, E <a href="../builtin/index.html#any">any</a>](x S, cmp func(a, b E) <a href="../builtin/index.html#int">int</a>)</pre>
+			<p>SortFunc sorts the slice x in ascending order as determined by the cmp
+function. This sort is not guaranteed to be stable.
+cmp(a, b) should return a negative number when a &lt; b, a positive number when
+a &gt; b and zero when a == b.
+<p>SortFunc requires that cmp is a strict weak ordering.
+See <a href="https://en.wikipedia.org/wiki/Weak_ordering#Strict_weak_orderings">https://en.wikipedia.org/wiki/Weak_ordering#Strict_weak_orderings</a>.
+
+			<div id="example_SortFunc_caseInsensitive" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example (CaseInsensitive)</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example (CaseInsensitive)</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">names := []string{&#34;Bob&#34;, &#34;alice&#34;, &#34;VERA&#34;}
+slices.SortFunc(names, func(a, b string) int {
+    return cmp.Compare(strings.ToLower(a), strings.ToLower(b))
+})
+fmt.Println(names)
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">[alice Bob VERA]
+</pre>
+			
+		
+	</div>
+</div>
+<div id="example_SortFunc_multiField" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example (MultiField)</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example (MultiField)</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">type Person struct {
+    Name string
+    Age  int
+}
+people := []Person{
+    {&#34;Gopher&#34;, 13},
+    {&#34;Alice&#34;, 55},
+    {&#34;Bob&#34;, 24},
+    {&#34;Alice&#34;, 20},
+}
+slices.SortFunc(people, func(a, b Person) int {
+    if n := cmp.Compare(a.Name, b.Name); n != 0 {
+        return n
+    }
+    <span class="comment">// If names are equal, order by age</span>
+    return cmp.Compare(a.Age, b.Age)
+})
+fmt.Println(people)
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">[{Alice 20} {Alice 55} {Bob 24} {Gopher 13}]
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="SortStableFunc">func <a href="../../src/slices/sort.go?s=1166:1227#L25">SortStableFunc</a>
+				<a class="permalink" href="index.html#SortStableFunc">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func SortStableFunc[S ~[]E, E <a href="../builtin/index.html#any">any</a>](x S, cmp func(a, b E) <a href="../builtin/index.html#int">int</a>)</pre>
+			<p>SortStableFunc sorts the slice x while keeping the original order of equal
+elements, using cmp to compare elements in the same way as <a href="index.html#SortFunc">SortFunc</a>.
+
+			<div id="example_SortStableFunc" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">type Person struct {
+    Name string
+    Age  int
+}
+people := []Person{
+    {&#34;Gopher&#34;, 13},
+    {&#34;Alice&#34;, 20},
+    {&#34;Bob&#34;, 24},
+    {&#34;Alice&#34;, 55},
+}
+<span class="comment">// Stable sort by name, keeping age ordering of Alices intact</span>
+slices.SortStableFunc(people, func(a, b Person) int {
+    return cmp.Compare(a.Name, b.Name)
+})
+fmt.Println(people)
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">[{Alice 20} {Alice 55} {Bob 24} {Gopher 13}]
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+		
+	
+
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

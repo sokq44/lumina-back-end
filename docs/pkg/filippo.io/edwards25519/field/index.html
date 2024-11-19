@@ -1,0 +1,543 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>field - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package field
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "filippo.io/edwards25519/field"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>Package field implements fast arithmetic modulo 2^255-19.
+
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+			
+			
+			
+				
+				<dd><a href="index.html#Element">type Element</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Element.Absolute">func (v *Element) Absolute(u *Element) *Element</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Element.Add">func (v *Element) Add(a, b *Element) *Element</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Element.Bytes">func (v *Element) Bytes() []byte</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Element.Equal">func (v *Element) Equal(u *Element) int</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Element.Invert">func (v *Element) Invert(z *Element) *Element</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Element.IsNegative">func (v *Element) IsNegative() int</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Element.Mult32">func (v *Element) Mult32(x *Element, y uint32) *Element</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Element.Multiply">func (v *Element) Multiply(x, y *Element) *Element</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Element.Negate">func (v *Element) Negate(a *Element) *Element</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Element.One">func (v *Element) One() *Element</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Element.Pow22523">func (v *Element) Pow22523(x *Element) *Element</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Element.Select">func (v *Element) Select(a, b *Element, cond int) *Element</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Element.Set">func (v *Element) Set(a *Element) *Element</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Element.SetBytes">func (v *Element) SetBytes(x []byte) (*Element, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Element.SetWideBytes">func (v *Element) SetWideBytes(x []byte) (*Element, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Element.SqrtRatio">func (r *Element) SqrtRatio(u, v *Element) (R *Element, wasSquare int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Element.Square">func (v *Element) Square(x *Element) *Element</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Element.Subtract">func (v *Element) Subtract(a, b *Element) *Element</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Element.Swap">func (v *Element) Swap(u *Element, cond int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Element.Zero">func (v *Element) Zero() *Element</a></dd>
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../../../src/filippo.io/edwards25519/field/fe.go">fe.go</a>
+			
+				<a href="../../../../src/filippo.io/edwards25519/field/fe_amd64.go">fe_amd64.go</a>
+			
+				<a href="../../../../src/filippo.io/edwards25519/field/fe_arm64_noasm.go">fe_arm64_noasm.go</a>
+			
+				<a href="../../../../src/filippo.io/edwards25519/field/fe_extra.go">fe_extra.go</a>
+			
+				<a href="../../../../src/filippo.io/edwards25519/field/fe_generic.go">fe_generic.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+		
+		
+		
+			
+			
+			<h2 id="Element">type <a href="../../../../src/filippo.io/edwards25519/field/fe.go?s=658:914#L13">Element</a>
+				<a class="permalink" href="index.html#Element">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Element represents an element of the field GF(2^255-19). Note that this
+is not a cryptographically secure group, and should only be used to interact
+with edwards25519.Point coordinates.
+<p>This type works similarly to math/big.Int, and all arguments and receivers
+are allowed to alias.
+<p>The zero value is a valid zero element.
+
+			<pre>type Element struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="Element.Absolute">func (*Element) <a href="../../../../src/filippo.io/edwards25519/field/fe.go?s=8206:8253#L287">Absolute</a>
+					<a class="permalink" href="index.html#Element.Absolute">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v *<a href="index.html#Element">Element</a>) Absolute(u *<a href="index.html#Element">Element</a>) *<a href="index.html#Element">Element</a></pre>
+				<p>Absolute sets v to |u|, and returns v.
+
+				
+				
+				
+			
+				
+				<h3 id="Element.Add">func (*Element) <a href="../../../../src/filippo.io/edwards25519/field/fe.go?s=2190:2235#L77">Add</a>
+					<a class="permalink" href="index.html#Element.Add">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v *<a href="index.html#Element">Element</a>) Add(a, b *<a href="index.html#Element">Element</a>) *<a href="index.html#Element">Element</a></pre>
+				<p>Add sets v = a + b, and returns v.
+
+				
+				
+				
+			
+				
+				<h3 id="Element.Bytes">func (*Element) <a href="../../../../src/filippo.io/edwards25519/field/fe.go?s=6459:6491#L214">Bytes</a>
+					<a class="permalink" href="index.html#Element.Bytes">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v *<a href="index.html#Element">Element</a>) Bytes() []<a href="../../../builtin/index.html#byte">byte</a></pre>
+				<p>Bytes returns the canonical 32-byte little-endian encoding of v.
+
+				
+				
+				
+			
+				
+				<h3 id="Element.Equal">func (*Element) <a href="../../../../src/filippo.io/edwards25519/field/fe.go?s=7077:7116#L242">Equal</a>
+					<a class="permalink" href="index.html#Element.Equal">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v *<a href="index.html#Element">Element</a>) Equal(u *<a href="index.html#Element">Element</a>) <a href="../../../builtin/index.html#int">int</a></pre>
+				<p>Equal returns 1 if v and u are equal, and 0 otherwise.
+
+				
+				
+				
+			
+				
+				<h3 id="Element.Invert">func (*Element) <a href="../../../../src/filippo.io/edwards25519/field/fe.go?s=3275:3320#L110">Invert</a>
+					<a class="permalink" href="index.html#Element.Invert">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v *<a href="index.html#Element">Element</a>) Invert(z *<a href="index.html#Element">Element</a>) *<a href="index.html#Element">Element</a></pre>
+				<p>Invert sets v = 1/z mod p, and returns v.
+<p>If z == 0, Invert returns v = 0.
+
+				
+				
+				
+			
+				
+				<h3 id="Element.IsNegative">func (*Element) <a href="../../../../src/filippo.io/edwards25519/field/fe.go?s=8094:8128#L282">IsNegative</a>
+					<a class="permalink" href="index.html#Element.IsNegative">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v *<a href="index.html#Element">Element</a>) IsNegative() <a href="../../../builtin/index.html#int">int</a></pre>
+				<p>IsNegative returns 1 if v is negative, and 0 otherwise.
+
+				
+				
+				
+			
+				
+				<h3 id="Element.Mult32">func (*Element) <a href="../../../../src/filippo.io/edwards25519/field/fe.go?s=8603:8658#L304">Mult32</a>
+					<a class="permalink" href="index.html#Element.Mult32">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v *<a href="index.html#Element">Element</a>) Mult32(x *<a href="index.html#Element">Element</a>, y <a href="../../../builtin/index.html#uint32">uint32</a>) *<a href="index.html#Element">Element</a></pre>
+				<p>Mult32 sets v = x * y, and returns v.
+
+				
+				
+				
+			
+				
+				<h3 id="Element.Multiply">func (*Element) <a href="../../../../src/filippo.io/edwards25519/field/fe.go?s=8362:8412#L292">Multiply</a>
+					<a class="permalink" href="index.html#Element.Multiply">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v *<a href="index.html#Element">Element</a>) Multiply(x, y *<a href="index.html#Element">Element</a>) *<a href="index.html#Element">Element</a></pre>
+				<p>Multiply sets v = x * y, and returns v.
+
+				
+				
+				
+			
+				
+				<h3 id="Element.Negate">func (*Element) <a href="../../../../src/filippo.io/edwards25519/field/fe.go?s=3110:3155#L103">Negate</a>
+					<a class="permalink" href="index.html#Element.Negate">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v *<a href="index.html#Element">Element</a>) Negate(a *<a href="index.html#Element">Element</a>) *<a href="index.html#Element">Element</a></pre>
+				<p>Negate sets v = -a, and returns v.
+
+				
+				
+				
+			
+				
+				<h3 id="Element.One">func (*Element) <a href="../../../../src/filippo.io/edwards25519/field/fe.go?s=1167:1199#L38">One</a>
+					<a class="permalink" href="index.html#Element.One">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v *<a href="index.html#Element">Element</a>) One() *<a href="index.html#Element">Element</a></pre>
+				<p>One sets v = 1, and returns v.
+
+				
+				
+				
+			
+				
+				<h3 id="Element.Pow22523">func (*Element) <a href="../../../../src/filippo.io/edwards25519/field/fe.go?s=9357:9404#L329">Pow22523</a>
+					<a class="permalink" href="index.html#Element.Pow22523">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v *<a href="index.html#Element">Element</a>) Pow22523(x *<a href="index.html#Element">Element</a>) *<a href="index.html#Element">Element</a></pre>
+				<p>Pow22523 set v = x^((p-5)/8), and returns v. (p-5)/8 is 2^252-3.
+
+				
+				
+				
+			
+				
+				<h3 id="Element.Select">func (*Element) <a href="../../../../src/filippo.io/edwards25519/field/fe.go?s=7385:7443#L251">Select</a>
+					<a class="permalink" href="index.html#Element.Select">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v *<a href="index.html#Element">Element</a>) Select(a, b *<a href="index.html#Element">Element</a>, cond <a href="../../../builtin/index.html#int">int</a>) *<a href="index.html#Element">Element</a></pre>
+				<p>Select sets v to a if cond == 1, and to b if cond == 0.
+
+				
+				
+				
+			
+				
+				<h3 id="Element.Set">func (*Element) <a href="../../../../src/filippo.io/edwards25519/field/fe.go?s=4975:5017#L175">Set</a>
+					<a class="permalink" href="index.html#Element.Set">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v *<a href="index.html#Element">Element</a>) Set(a *<a href="index.html#Element">Element</a>) *<a href="index.html#Element">Element</a></pre>
+				<p>Set sets v = a, and returns v.
+
+				
+				
+				
+			
+				
+				<h3 id="Element.SetBytes">func (*Element) <a href="../../../../src/filippo.io/edwards25519/field/fe.go?s=5495:5549#L188">SetBytes</a>
+					<a class="permalink" href="index.html#Element.SetBytes">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v *<a href="index.html#Element">Element</a>) SetBytes(x []<a href="../../../builtin/index.html#byte">byte</a>) (*<a href="index.html#Element">Element</a>, <a href="../../../builtin/index.html#error">error</a>)</pre>
+				<p>SetBytes sets v to x, where x is a 32-byte little-endian encoding. If x is
+not of the right length, SetBytes returns nil and an error, and the
+receiver is unchanged.
+<p>Consistent with RFC 7748, the most significant bit (the high bit of the
+last byte) is ignored, and non-canonical values (2^255-19 through 2^255-1)
+are accepted. Note that this is laxer than specified by RFC 8032, but
+consistent with most Ed25519 implementations.
+
+				
+				
+				
+			
+				
+				<h3 id="Element.SetWideBytes">func (*Element) <a href="../../../../src/filippo.io/edwards25519/field/fe_extra.go?s=752:810#L9">SetWideBytes</a>
+					<a class="permalink" href="index.html#Element.SetWideBytes">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v *<a href="index.html#Element">Element</a>) SetWideBytes(x []<a href="../../../builtin/index.html#byte">byte</a>) (*<a href="index.html#Element">Element</a>, <a href="../../../builtin/index.html#error">error</a>)</pre>
+				<p>SetWideBytes sets v to x, where x is a 64-byte little-endian encoding, which
+is reduced modulo the field order. If x is not of the right length,
+SetWideBytes returns nil and an error, and the receiver is unchanged.
+<p>SetWideBytes is not necessary to select a uniformly distributed value, and is
+only provided for compatibility: SetBytes can be used instead as the chance
+of bias is less than 2⁻²⁵⁰.
+
+				
+				
+				
+			
+				
+				<h3 id="Element.SqrtRatio">func (*Element) <a href="../../../../src/filippo.io/edwards25519/field/fe.go?s=11254:11324#L388">SqrtRatio</a>
+					<a class="permalink" href="index.html#Element.SqrtRatio">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (r *<a href="index.html#Element">Element</a>) SqrtRatio(u, v *<a href="index.html#Element">Element</a>) (R *<a href="index.html#Element">Element</a>, wasSquare <a href="../../../builtin/index.html#int">int</a>)</pre>
+				<p>SqrtRatio sets r to the non-negative square root of the ratio of u and v.
+<p>If u/v is square, SqrtRatio returns r and 1. If u/v is not square, SqrtRatio
+sets r according to Section 4.3 of draft-irtf-cfrg-ristretto255-decaf448-00,
+and returns r and 0.
+
+				
+				
+				
+			
+				
+				<h3 id="Element.Square">func (*Element) <a href="../../../../src/filippo.io/edwards25519/field/fe.go?s=8485:8530#L298">Square</a>
+					<a class="permalink" href="index.html#Element.Square">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v *<a href="index.html#Element">Element</a>) Square(x *<a href="index.html#Element">Element</a>) *<a href="index.html#Element">Element</a></pre>
+				<p>Square sets v = x * x, and returns v.
+
+				
+				
+				
+			
+				
+				<h3 id="Element.Subtract">func (*Element) <a href="../../../../src/filippo.io/edwards25519/field/fe.go?s=2655:2705#L91">Subtract</a>
+					<a class="permalink" href="index.html#Element.Subtract">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v *<a href="index.html#Element">Element</a>) Subtract(a, b *<a href="index.html#Element">Element</a>) *<a href="index.html#Element">Element</a></pre>
+				<p>Subtract sets v = a - b, and returns v.
+
+				
+				
+				
+			
+				
+				<h3 id="Element.Swap">func (*Element) <a href="../../../../src/filippo.io/edwards25519/field/fe.go?s=7736:7780#L262">Swap</a>
+					<a class="permalink" href="index.html#Element.Swap">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v *<a href="index.html#Element">Element</a>) Swap(u *<a href="index.html#Element">Element</a>, cond <a href="../../../builtin/index.html#int">int</a>)</pre>
+				<p>Swap swaps v and u if cond == 1 or leaves them unchanged if cond == 0, and returns v.
+
+				
+				
+				
+			
+				
+				<h3 id="Element.Zero">func (*Element) <a href="../../../../src/filippo.io/edwards25519/field/fe.go?s=1033:1066#L30">Zero</a>
+					<a class="permalink" href="index.html#Element.Zero">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v *<a href="index.html#Element">Element</a>) Zero() *<a href="index.html#Element">Element</a></pre>
+				<p>Zero sets v = 0, and returns v.
+
+				
+				
+				
+			
+		
+	
+
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>src/math/atan.go - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../index.html">GoDoc</a></div>
+<a href="atan.go#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Source file
+    <a href="http://localhost:8080/src">src</a>/<a href="http://localhost:8080/src/math">math</a>/<span class="text-muted">atan.go</span>
+  </h1>
+
+
+
+
+
+  <h2>
+    Documentation: <a href="http://localhost:8080/pkg/math">math</a>
+  </h2>
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1&nbsp;&nbsp;</span><span class="comment">// Copyright 2009 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2&nbsp;&nbsp;</span><span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3&nbsp;&nbsp;</span><span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4&nbsp;&nbsp;</span>
+<span id="L5" class="ln">     5&nbsp;&nbsp;</span>package math
+<span id="L6" class="ln">     6&nbsp;&nbsp;</span>
+<span id="L7" class="ln">     7&nbsp;&nbsp;</span><span class="comment">/*
+<span id="L8" class="ln">     8&nbsp;&nbsp;</span>	Floating-point arctangent.
+<span id="L9" class="ln">     9&nbsp;&nbsp;</span>*/</span>
+<span id="L10" class="ln">    10&nbsp;&nbsp;</span>
+<span id="L11" class="ln">    11&nbsp;&nbsp;</span><span class="comment">// The original C code, the long comment, and the constants below were</span>
+<span id="L12" class="ln">    12&nbsp;&nbsp;</span><span class="comment">// from http://netlib.sandia.gov/cephes/cmath/atan.c, available from</span>
+<span id="L13" class="ln">    13&nbsp;&nbsp;</span><span class="comment">// http://www.netlib.org/cephes/cmath.tgz.</span>
+<span id="L14" class="ln">    14&nbsp;&nbsp;</span><span class="comment">// The go code is a version of the original C.</span>
+<span id="L15" class="ln">    15&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L16" class="ln">    16&nbsp;&nbsp;</span><span class="comment">// atan.c</span>
+<span id="L17" class="ln">    17&nbsp;&nbsp;</span><span class="comment">// Inverse circular tangent (arctangent)</span>
+<span id="L18" class="ln">    18&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L19" class="ln">    19&nbsp;&nbsp;</span><span class="comment">// SYNOPSIS:</span>
+<span id="L20" class="ln">    20&nbsp;&nbsp;</span><span class="comment">// double x, y, atan();</span>
+<span id="L21" class="ln">    21&nbsp;&nbsp;</span><span class="comment">// y = atan( x );</span>
+<span id="L22" class="ln">    22&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L23" class="ln">    23&nbsp;&nbsp;</span><span class="comment">// DESCRIPTION:</span>
+<span id="L24" class="ln">    24&nbsp;&nbsp;</span><span class="comment">// Returns radian angle between -pi/2 and +pi/2 whose tangent is x.</span>
+<span id="L25" class="ln">    25&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L26" class="ln">    26&nbsp;&nbsp;</span><span class="comment">// Range reduction is from three intervals into the interval from zero to 0.66.</span>
+<span id="L27" class="ln">    27&nbsp;&nbsp;</span><span class="comment">// The approximant uses a rational function of degree 4/5 of the form</span>
+<span id="L28" class="ln">    28&nbsp;&nbsp;</span><span class="comment">// x + x**3 P(x)/Q(x).</span>
+<span id="L29" class="ln">    29&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L30" class="ln">    30&nbsp;&nbsp;</span><span class="comment">// ACCURACY:</span>
+<span id="L31" class="ln">    31&nbsp;&nbsp;</span><span class="comment">//                      Relative error:</span>
+<span id="L32" class="ln">    32&nbsp;&nbsp;</span><span class="comment">// arithmetic   domain    # trials  peak     rms</span>
+<span id="L33" class="ln">    33&nbsp;&nbsp;</span><span class="comment">//    DEC       -10, 10   50000     2.4e-17  8.3e-18</span>
+<span id="L34" class="ln">    34&nbsp;&nbsp;</span><span class="comment">//    IEEE      -10, 10   10^6      1.8e-16  5.0e-17</span>
+<span id="L35" class="ln">    35&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L36" class="ln">    36&nbsp;&nbsp;</span><span class="comment">// Cephes Math Library Release 2.8:  June, 2000</span>
+<span id="L37" class="ln">    37&nbsp;&nbsp;</span><span class="comment">// Copyright 1984, 1987, 1989, 1992, 2000 by Stephen L. Moshier</span>
+<span id="L38" class="ln">    38&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L39" class="ln">    39&nbsp;&nbsp;</span><span class="comment">// The readme file at http://netlib.sandia.gov/cephes/ says:</span>
+<span id="L40" class="ln">    40&nbsp;&nbsp;</span><span class="comment">//    Some software in this archive may be from the book _Methods and</span>
+<span id="L41" class="ln">    41&nbsp;&nbsp;</span><span class="comment">// Programs for Mathematical Functions_ (Prentice-Hall or Simon &amp; Schuster</span>
+<span id="L42" class="ln">    42&nbsp;&nbsp;</span><span class="comment">// International, 1989) or from the Cephes Mathematical Library, a</span>
+<span id="L43" class="ln">    43&nbsp;&nbsp;</span><span class="comment">// commercial product. In either event, it is copyrighted by the author.</span>
+<span id="L44" class="ln">    44&nbsp;&nbsp;</span><span class="comment">// What you see here may be used freely but it comes with no support or</span>
+<span id="L45" class="ln">    45&nbsp;&nbsp;</span><span class="comment">// guarantee.</span>
+<span id="L46" class="ln">    46&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L47" class="ln">    47&nbsp;&nbsp;</span><span class="comment">//   The two known misprints in the book are repaired here in the</span>
+<span id="L48" class="ln">    48&nbsp;&nbsp;</span><span class="comment">// source listings for the gamma function and the incomplete beta</span>
+<span id="L49" class="ln">    49&nbsp;&nbsp;</span><span class="comment">// integral.</span>
+<span id="L50" class="ln">    50&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L51" class="ln">    51&nbsp;&nbsp;</span><span class="comment">//   Stephen L. Moshier</span>
+<span id="L52" class="ln">    52&nbsp;&nbsp;</span><span class="comment">//   moshier@na-net.ornl.gov</span>
+<span id="L53" class="ln">    53&nbsp;&nbsp;</span>
+<span id="L54" class="ln">    54&nbsp;&nbsp;</span><span class="comment">// xatan evaluates a series valid in the range [0, 0.66].</span>
+<span id="L55" class="ln">    55&nbsp;&nbsp;</span>func xatan(x float64) float64 {
+<span id="L56" class="ln">    56&nbsp;&nbsp;</span>	const (
+<span id="L57" class="ln">    57&nbsp;&nbsp;</span>		P0 = -8.750608600031904122785e-01
+<span id="L58" class="ln">    58&nbsp;&nbsp;</span>		P1 = -1.615753718733365076637e+01
+<span id="L59" class="ln">    59&nbsp;&nbsp;</span>		P2 = -7.500855792314704667340e+01
+<span id="L60" class="ln">    60&nbsp;&nbsp;</span>		P3 = -1.228866684490136173410e+02
+<span id="L61" class="ln">    61&nbsp;&nbsp;</span>		P4 = -6.485021904942025371773e+01
+<span id="L62" class="ln">    62&nbsp;&nbsp;</span>		Q0 = +2.485846490142306297962e+01
+<span id="L63" class="ln">    63&nbsp;&nbsp;</span>		Q1 = +1.650270098316988542046e+02
+<span id="L64" class="ln">    64&nbsp;&nbsp;</span>		Q2 = +4.328810604912902668951e+02
+<span id="L65" class="ln">    65&nbsp;&nbsp;</span>		Q3 = +4.853903996359136964868e+02
+<span id="L66" class="ln">    66&nbsp;&nbsp;</span>		Q4 = +1.945506571482613964425e+02
+<span id="L67" class="ln">    67&nbsp;&nbsp;</span>	)
+<span id="L68" class="ln">    68&nbsp;&nbsp;</span>	z := x * x
+<span id="L69" class="ln">    69&nbsp;&nbsp;</span>	z = z * ((((P0*z+P1)*z+P2)*z+P3)*z + P4) / (((((z+Q0)*z+Q1)*z+Q2)*z+Q3)*z + Q4)
+<span id="L70" class="ln">    70&nbsp;&nbsp;</span>	z = x*z + x
+<span id="L71" class="ln">    71&nbsp;&nbsp;</span>	return z
+<span id="L72" class="ln">    72&nbsp;&nbsp;</span>}
+<span id="L73" class="ln">    73&nbsp;&nbsp;</span>
+<span id="L74" class="ln">    74&nbsp;&nbsp;</span><span class="comment">// satan reduces its argument (known to be positive)</span>
+<span id="L75" class="ln">    75&nbsp;&nbsp;</span><span class="comment">// to the range [0, 0.66] and calls xatan.</span>
+<span id="L76" class="ln">    76&nbsp;&nbsp;</span>func satan(x float64) float64 {
+<span id="L77" class="ln">    77&nbsp;&nbsp;</span>	const (
+<span id="L78" class="ln">    78&nbsp;&nbsp;</span>		Morebits = 6.123233995736765886130e-17 <span class="comment">// pi/2 = PIO2 + Morebits</span>
+<span id="L79" class="ln">    79&nbsp;&nbsp;</span>		Tan3pio8 = 2.41421356237309504880      <span class="comment">// tan(3*pi/8)</span>
+<span id="L80" class="ln">    80&nbsp;&nbsp;</span>	)
+<span id="L81" class="ln">    81&nbsp;&nbsp;</span>	if x &lt;= 0.66 {
+<span id="L82" class="ln">    82&nbsp;&nbsp;</span>		return xatan(x)
+<span id="L83" class="ln">    83&nbsp;&nbsp;</span>	}
+<span id="L84" class="ln">    84&nbsp;&nbsp;</span>	if x &gt; Tan3pio8 {
+<span id="L85" class="ln">    85&nbsp;&nbsp;</span>		return Pi/2 - xatan(1/x) + Morebits
+<span id="L86" class="ln">    86&nbsp;&nbsp;</span>	}
+<span id="L87" class="ln">    87&nbsp;&nbsp;</span>	return Pi/4 + xatan((x-1)/(x+1)) + 0.5*Morebits
+<span id="L88" class="ln">    88&nbsp;&nbsp;</span>}
+<span id="L89" class="ln">    89&nbsp;&nbsp;</span>
+<span id="L90" class="ln">    90&nbsp;&nbsp;</span><span class="comment">// Atan returns the arctangent, in radians, of x.</span>
+<span id="L91" class="ln">    91&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L92" class="ln">    92&nbsp;&nbsp;</span><span class="comment">// Special cases are:</span>
+<span id="L93" class="ln">    93&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L94" class="ln">    94&nbsp;&nbsp;</span><span class="comment">//	Atan(±0) = ±0</span>
+<span id="L95" class="ln">    95&nbsp;&nbsp;</span><span class="comment">//	Atan(±Inf) = ±Pi/2</span>
+<span id="L96" class="ln">    96&nbsp;&nbsp;</span>func Atan(x float64) float64 {
+<span id="L97" class="ln">    97&nbsp;&nbsp;</span>	if haveArchAtan {
+<span id="L98" class="ln">    98&nbsp;&nbsp;</span>		return archAtan(x)
+<span id="L99" class="ln">    99&nbsp;&nbsp;</span>	}
+<span id="L100" class="ln">   100&nbsp;&nbsp;</span>	return atan(x)
+<span id="L101" class="ln">   101&nbsp;&nbsp;</span>}
+<span id="L102" class="ln">   102&nbsp;&nbsp;</span>
+<span id="L103" class="ln">   103&nbsp;&nbsp;</span>func atan(x float64) float64 {
+<span id="L104" class="ln">   104&nbsp;&nbsp;</span>	if x == 0 {
+<span id="L105" class="ln">   105&nbsp;&nbsp;</span>		return x
+<span id="L106" class="ln">   106&nbsp;&nbsp;</span>	}
+<span id="L107" class="ln">   107&nbsp;&nbsp;</span>	if x &gt; 0 {
+<span id="L108" class="ln">   108&nbsp;&nbsp;</span>		return satan(x)
+<span id="L109" class="ln">   109&nbsp;&nbsp;</span>	}
+<span id="L110" class="ln">   110&nbsp;&nbsp;</span>	return -satan(-x)
+<span id="L111" class="ln">   111&nbsp;&nbsp;</span>}
+<span id="L112" class="ln">   112&nbsp;&nbsp;</span>
+</pre><p><a href="atan.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

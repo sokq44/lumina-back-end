@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>gofmt - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Command gofmt
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<p>Gofmt formats Go programs.
+It uses tabs for indentation and blanks for alignment.
+Alignment assumes that an editor is using a fixed-width font.
+<p>Without an explicit path, it processes the standard input.  Given a file,
+it operates on that file; given a directory, it operates on all .go files in
+that directory, recursively.  (Files starting with a period are ignored.)
+By default, gofmt prints the reformatted sources to standard output.
+<p>Usage:
+<pre>gofmt [flags] [path ...]
+</pre>
+<p>The flags are:
+<pre>-d
+	Do not print reformatted sources to standard output.
+	If a file&apos;s formatting is different than gofmt&apos;s, print diffs
+	to standard output.
+-e
+	Print all (including spurious) errors.
+-l
+	Do not print reformatted sources to standard output.
+	If a file&apos;s formatting is different from gofmt&apos;s, print its name
+	to standard output.
+-r rule
+	Apply the rewrite rule to the source before reformatting.
+-s
+	Try to simplify code (after applying the rewrite rule, if any).
+-w
+	Do not print reformatted sources to standard output.
+	If a file&apos;s formatting is different from gofmt&apos;s, overwrite it
+	with gofmt&apos;s version. If an error occurred during overwriting,
+	the original file is restored from an automatic backup.
+</pre>
+<p>Debugging support:
+<pre>-cpuprofile filename
+	Write cpu profile to the specified file.
+</pre>
+<p>The rewrite rule specified with the -r flag must be a string of the form:
+<pre>pattern -&gt; replacement
+</pre>
+<p>Both pattern and replacement must be valid Go expressions.
+In the pattern, single-character lowercase identifiers serve as
+wildcards matching arbitrary sub-expressions; those expressions
+will be substituted for the same identifiers in the replacement.
+<p>When gofmt reads from standard input, it accepts either a full Go program
+or a program fragment.  A program fragment must be a syntactically
+valid declaration list, statement list, or expression.  When formatting
+such a fragment, gofmt preserves leading indentation as well as leading
+and trailing spaces, so that individual sections of a Go program can be
+formatted by piping them through gofmt.
+<h3 id="hdr-Examples">Examples</h3>
+<p>To check files for unnecessary parentheses:
+<pre>gofmt -r &apos;(a) -&gt; a&apos; -l *.go
+</pre>
+<p>To remove the parentheses:
+<pre>gofmt -r &apos;(a) -&gt; a&apos; -w *.go
+</pre>
+<p>To convert the package tree from explicit slice upper bounds to implicit ones:
+<pre>gofmt -r &apos;α[β:len(α)] -&gt; α[β:]&apos; -w $GOROOT/src
+</pre>
+<h3 id="hdr-The_simplify_command">The simplify command</h3>
+<p>When invoked with -s gofmt will make the following source transformations where possible.
+<pre>An array, slice, or map composite literal of the form:
+	[]T{T{}, T{}}
+will be simplified to:
+	[]T{{}, {}}
+
+A slice expression of the form:
+	s[a:len(s)]
+will be simplified to:
+	s[a:]
+
+A range of the form:
+	for x, _ = range v {...}
+will be simplified to:
+	for x = range v {...}
+
+A range of the form:
+	for _ = range v {...}
+will be simplified to:
+	for range v {...}
+</pre>
+<p>This may result in changes that are incompatible with earlier versions of Go.
+
+	
+
+	
+		
+			<h2 id="pkg-note-BUG">Bugs</h2>
+			<ul style="list-style: none; padding: 0;">
+			
+			<li><a href="../../src/cmd/gofmt/doc.go?s=3085:3137#L94" style="float: left;">&#x261e;</a> <p>The implementation of -r is a bit slow.
+</li>
+			
+			<li><a href="../../src/cmd/gofmt/doc.go?s=3138:3244#L95" style="float: left;">&#x261e;</a> <p>If -w fails, the restored original file may not have some of the
+original file attributes.
+</li>
+			
+			</ul>
+		
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

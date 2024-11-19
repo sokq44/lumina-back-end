@@ -1,0 +1,717 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>pprof - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package pprof
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "runtime/pprof"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>Package pprof writes runtime profiling data in the format expected
+by the pprof visualization tool.
+<h3 id="hdr-Profiling_a_Go_program">Profiling a Go program</h3>
+<p>The first step to profiling a Go program is to enable profiling.
+Support for profiling benchmarks built with the standard testing
+package is built into go test. For example, the following command
+runs benchmarks in the current directory and writes the CPU and
+memory profiles to cpu.prof and mem.prof:
+<pre>go test -cpuprofile cpu.prof -memprofile mem.prof -bench .
+</pre>
+<p>To add equivalent profiling support to a standalone program, add
+code like the following to your main function:
+<pre>var cpuprofile = flag.String(&quot;cpuprofile&quot;, &quot;&quot;, &quot;write cpu profile to `file`&quot;)
+var memprofile = flag.String(&quot;memprofile&quot;, &quot;&quot;, &quot;write memory profile to `file`&quot;)
+
+func main() {
+    flag.Parse()
+    if *cpuprofile != &quot;&quot; {
+        f, err := os.Create(*cpuprofile)
+        if err != nil {
+            log.Fatal(&quot;could not create CPU profile: &quot;, err)
+        }
+        defer f.Close() // error handling omitted for example
+        if err := pprof.StartCPUProfile(f); err != nil {
+            log.Fatal(&quot;could not start CPU profile: &quot;, err)
+        }
+        defer pprof.StopCPUProfile()
+    }
+
+    // ... rest of the program ...
+
+    if *memprofile != &quot;&quot; {
+        f, err := os.Create(*memprofile)
+        if err != nil {
+            log.Fatal(&quot;could not create memory profile: &quot;, err)
+        }
+        defer f.Close() // error handling omitted for example
+        runtime.GC() // get up-to-date statistics
+        if err := pprof.WriteHeapProfile(f); err != nil {
+            log.Fatal(&quot;could not write memory profile: &quot;, err)
+        }
+    }
+}
+</pre>
+<p>There is also a standard HTTP interface to profiling data. Adding
+the following line will install handlers under the /debug/pprof/
+URL to download live profiles:
+<pre>import _ &quot;net/http/pprof&quot;
+</pre>
+<p>See the net/http/pprof package for more details.
+<p>Profiles can then be visualized with the pprof tool:
+<pre>go tool pprof cpu.prof
+</pre>
+<p>There are many commands available from the pprof command line.
+Commonly used commands include &quot;top&quot;, which prints a summary of the
+top program hot-spots, and &quot;web&quot;, which opens an interactive graph
+of hot-spots and their call graphs. Use &quot;help&quot; for information on
+all pprof commands.
+<p>For more information about pprof, see
+<a href="https://github.com/google/pprof/blob/main/doc/README.md">https://github.com/google/pprof/blob/main/doc/README.md</a>.
+
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+			
+			
+				
+				<dd><a href="index.html#Do">func Do(ctx context.Context, labels LabelSet, f func(context.Context))</a></dd>
+			
+				
+				<dd><a href="index.html#ForLabels">func ForLabels(ctx context.Context, f func(key, value string) bool)</a></dd>
+			
+				
+				<dd><a href="index.html#Label">func Label(ctx context.Context, key string) (string, bool)</a></dd>
+			
+				
+				<dd><a href="index.html#SetGoroutineLabels">func SetGoroutineLabels(ctx context.Context)</a></dd>
+			
+				
+				<dd><a href="index.html#StartCPUProfile">func StartCPUProfile(w io.Writer) error</a></dd>
+			
+				
+				<dd><a href="index.html#StopCPUProfile">func StopCPUProfile()</a></dd>
+			
+				
+				<dd><a href="index.html#WithLabels">func WithLabels(ctx context.Context, labels LabelSet) context.Context</a></dd>
+			
+				
+				<dd><a href="index.html#WriteHeapProfile">func WriteHeapProfile(w io.Writer) error</a></dd>
+			
+			
+				
+				<dd><a href="index.html#LabelSet">type LabelSet</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Labels">func Labels(args ...string) LabelSet</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#Profile">type Profile</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Lookup">func Lookup(name string) *Profile</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewProfile">func NewProfile(name string) *Profile</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Profiles">func Profiles() []*Profile</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Profile.Add">func (p *Profile) Add(value any, skip int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Profile.Count">func (p *Profile) Count() int</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Profile.Name">func (p *Profile) Name() string</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Profile.Remove">func (p *Profile) Remove(value any)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Profile.WriteTo">func (p *Profile) WriteTo(w io.Writer, debug int) error</a></dd>
+				
+			
+			
+				
+				<dd><a href="index.html#pkg-note-BUG">Bugs</a></dd>
+				
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../../src/runtime/pprof/elf.go">elf.go</a>
+			
+				<a href="../../../src/runtime/pprof/label.go">label.go</a>
+			
+				<a href="../../../src/runtime/pprof/map.go">map.go</a>
+			
+				<a href="../../../src/runtime/pprof/pe.go">pe.go</a>
+			
+				<a href="../../../src/runtime/pprof/pprof.go">pprof.go</a>
+			
+				<a href="../../../src/runtime/pprof/pprof_rusage.go">pprof_rusage.go</a>
+			
+				<a href="../../../src/runtime/pprof/proto.go">proto.go</a>
+			
+				<a href="../../../src/runtime/pprof/proto_other.go">proto_other.go</a>
+			
+				<a href="../../../src/runtime/pprof/protobuf.go">protobuf.go</a>
+			
+				<a href="../../../src/runtime/pprof/protomem.go">protomem.go</a>
+			
+				<a href="../../../src/runtime/pprof/runtime.go">runtime.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+		
+		
+			
+			
+			<h2 id="Do">func <a href="../../../src/runtime/pprof/runtime.go?s=1634:1704#L37">Do</a>
+				<a class="permalink" href="index.html#Do">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Do(ctx <a href="../../context/index.html">context</a>.<a href="../../context/index.html#Context">Context</a>, labels <a href="index.html#LabelSet">LabelSet</a>, f func(<a href="../../context/index.html">context</a>.<a href="../../context/index.html#Context">Context</a>))</pre>
+			<p>Do calls f with a copy of the parent context with the
+given labels added to the parent&apos;s label map.
+Goroutines spawned while executing f will inherit the augmented label-set.
+Each key/value pair in labels is inserted into the label map in the
+order provided, overriding any previous value for the same key.
+The augmented label map will be set for the duration of the call to f
+and restored once f returns.
+
+			
+			
+
+		
+			
+			
+			<h2 id="ForLabels">func <a href="../../../src/runtime/pprof/label.go?s=2874:2941#L91">ForLabels</a>
+				<a class="permalink" href="index.html#ForLabels">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func ForLabels(ctx <a href="../../context/index.html">context</a>.<a href="../../context/index.html#Context">Context</a>, f func(key, value <a href="../../builtin/index.html#string">string</a>) <a href="../../builtin/index.html#bool">bool</a>)</pre>
+			<p>ForLabels invokes f with each label set on the context.
+The function f should return true to continue iteration or false to stop iteration early.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Label">func <a href="../../../src/runtime/pprof/label.go?s=2589:2647#L83">Label</a>
+				<a class="permalink" href="index.html#Label">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Label(ctx <a href="../../context/index.html">context</a>.<a href="../../context/index.html#Context">Context</a>, key <a href="../../builtin/index.html#string">string</a>) (<a href="../../builtin/index.html#string">string</a>, <a href="../../builtin/index.html#bool">bool</a>)</pre>
+			<p>Label returns the value of the label with the given key on ctx, and a boolean indicating
+whether that label exists.
+
+			
+			
+
+		
+			
+			
+			<h2 id="SetGoroutineLabels">func <a href="../../../src/runtime/pprof/runtime.go?s=1050:1094#L25">SetGoroutineLabels</a>
+				<a class="permalink" href="index.html#SetGoroutineLabels">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func SetGoroutineLabels(ctx <a href="../../context/index.html">context</a>.<a href="../../context/index.html#Context">Context</a>)</pre>
+			<p>SetGoroutineLabels sets the current goroutine&apos;s labels to match ctx.
+A new goroutine inherits the labels of the goroutine that created it.
+This is a lower-level API than <a href="index.html#Do">Do</a>, which should be used instead when possible.
+
+			
+			
+
+		
+			
+			
+			<h2 id="StartCPUProfile">func <a href="../../../src/runtime/pprof/pprof.go?s=26193:26232#L801">StartCPUProfile</a>
+				<a class="permalink" href="index.html#StartCPUProfile">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func StartCPUProfile(w <a href="../../io/index.html">io</a>.<a href="../../io/index.html#Writer">Writer</a>) <a href="../../builtin/index.html#error">error</a></pre>
+			<p>StartCPUProfile enables CPU profiling for the current process.
+While profiling, the profile will be buffered and written to w.
+StartCPUProfile returns an error if profiling is already enabled.
+<p>On Unix-like systems, StartCPUProfile does not work by default for
+Go code built with -buildmode=c-archive or -buildmode=c-shared.
+StartCPUProfile relies on the SIGPROF signal, but that signal will
+be delivered to the main program&apos;s SIGPROF signal handler (if any)
+not to the one used by Go. To make it work, call <a href="http://localhost:8080/os/signal#Notify">os/signal.Notify</a>
+for <a href="http://localhost:8080/syscall#SIGPROF">syscall.SIGPROF</a>, but note that doing so may break any profiling
+being done by the main program.
+
+			
+			
+
+		
+			
+			
+			<h2 id="StopCPUProfile">func <a href="../../../src/runtime/pprof/pprof.go?s=28121:28142#L860">StopCPUProfile</a>
+				<a class="permalink" href="index.html#StopCPUProfile">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func StopCPUProfile()</pre>
+			<p>StopCPUProfile stops the current CPU profile, if any.
+StopCPUProfile only returns after all the writes for the
+profile have completed.
+
+			
+			
+
+		
+			
+			
+			<h2 id="WithLabels">func <a href="../../../src/runtime/pprof/label.go?s=1353:1422#L49">WithLabels</a>
+				<a class="permalink" href="index.html#WithLabels">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func WithLabels(ctx <a href="../../context/index.html">context</a>.<a href="../../context/index.html#Context">Context</a>, labels <a href="index.html#LabelSet">LabelSet</a>) <a href="../../context/index.html">context</a>.<a href="../../context/index.html#Context">Context</a></pre>
+			<p>WithLabels returns a new <a href="http://localhost:8080/context#Context">context.Context</a> with the given labels added.
+A label overwrites a prior label with the same key.
+
+			
+			
+
+		
+			
+			
+			<h2 id="WriteHeapProfile">func <a href="../../../src/runtime/pprof/pprof.go?s=17668:17708#L550">WriteHeapProfile</a>
+				<a class="permalink" href="index.html#WriteHeapProfile">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func WriteHeapProfile(w <a href="../../io/index.html">io</a>.<a href="../../io/index.html#Writer">Writer</a>) <a href="../../builtin/index.html#error">error</a></pre>
+			<p>WriteHeapProfile is shorthand for <a href="index.html#Lookup">Lookup</a>(&quot;heap&quot;).WriteTo(w, 0).
+It is preserved for backwards compatibility.
+
+			
+			
+
+		
+		
+			
+			
+			<h2 id="LabelSet">type <a href="../../../src/runtime/pprof/label.go?s=307:345#L10">LabelSet</a>
+				<a class="permalink" href="index.html#LabelSet">&#xb6;</a>
+				
+				
+			</h2>
+			<p>LabelSet is a set of labels.
+
+			<pre>type LabelSet struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="Labels">func <a href="../../../src/runtime/pprof/label.go?s=2174:2210#L70">Labels</a>
+					<a class="permalink" href="index.html#Labels">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func Labels(args ...<a href="../../builtin/index.html#string">string</a>) <a href="index.html#LabelSet">LabelSet</a></pre>
+				<p>Labels takes an even number of strings representing key-value pairs
+and makes a <a href="index.html#LabelSet">LabelSet</a> containing them.
+A label overwrites a prior label with the same key.
+Currently only the CPU and goroutine profiles utilize any labels
+information.
+See <a href="https://golang.org/issue/23458">https://golang.org/issue/23458</a> for details.
+
+				
+				
+			
+
+			
+		
+			
+			
+			<h2 id="Profile">type <a href="../../../src/runtime/pprof/pprof.go?s=6758:6890#L162">Profile</a>
+				<a class="permalink" href="index.html#Profile">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A Profile is a collection of stack traces showing the call sequences
+that led to instances of a particular event, such as allocation.
+Packages can create and maintain their own profiles; the most common
+use is for tracking resources that must be explicitly closed, such as files
+or network connections.
+<p>A Profile&apos;s methods can be called from multiple goroutines simultaneously.
+<p>Each Profile has a unique name. A few profiles are predefined:
+<pre>goroutine    - stack traces of all current goroutines
+heap         - a sampling of memory allocations of live objects
+allocs       - a sampling of all past memory allocations
+threadcreate - stack traces that led to the creation of new OS threads
+block        - stack traces that led to blocking on synchronization primitives
+mutex        - stack traces of holders of contended mutexes
+</pre>
+<p>These predefined profiles maintain themselves and panic on an explicit
+<a href="index.html#Profile.Add">Profile.Add</a> or <a href="index.html#Profile.Remove">Profile.Remove</a> method call.
+<p>The CPU profile is not available as a Profile. It has a special API,
+the <a href="index.html#StartCPUProfile">StartCPUProfile</a> and <a href="index.html#StopCPUProfile">StopCPUProfile</a> functions, because it streams
+output to a writer during profiling.
+<h3 id="hdr-Heap_profile">Heap profile</h3>
+<p>The heap profile reports statistics as of the most recently completed
+garbage collection; it elides more recent allocation to avoid skewing
+the profile away from live data and toward garbage.
+If there has been no garbage collection at all, the heap profile reports
+all known allocations. This exception helps mainly in programs running
+without garbage collection enabled, usually for debugging purposes.
+<p>The heap profile tracks both the allocation sites for all live objects in
+the application memory and for all objects allocated since the program start.
+Pprof&apos;s -inuse_space, -inuse_objects, -alloc_space, and -alloc_objects
+flags select which to display, defaulting to -inuse_space (live objects,
+scaled by size).
+<h3 id="hdr-Allocs_profile">Allocs profile</h3>
+<p>The allocs profile is the same as the heap profile but changes the default
+pprof display to -alloc_space, the total number of bytes allocated since
+the program began (including garbage-collected bytes).
+<h3 id="hdr-Block_profile">Block profile</h3>
+<p>The block profile tracks time spent blocked on synchronization primitives,
+such as <a href="http://localhost:8080/sync#Mutex">sync.Mutex</a>, <a href="http://localhost:8080/sync#RWMutex">sync.RWMutex</a>, <a href="http://localhost:8080/sync#WaitGroup">sync.WaitGroup</a>, <a href="http://localhost:8080/sync#Cond">sync.Cond</a>, and
+channel send/receive/select.
+<p>Stack traces correspond to the location that blocked (for example,
+<a href="http://localhost:8080/sync#Mutex.Lock">sync.Mutex.Lock</a>).
+<p>Sample values correspond to cumulative time spent blocked at that stack
+trace, subject to time-based sampling specified by
+<a href="http://localhost:8080/runtime#SetBlockProfileRate">runtime.SetBlockProfileRate</a>.
+<h3 id="hdr-Mutex_profile">Mutex profile</h3>
+<p>The mutex profile tracks contention on mutexes, such as <a href="http://localhost:8080/sync#Mutex">sync.Mutex</a>,
+<a href="http://localhost:8080/sync#RWMutex">sync.RWMutex</a>, and runtime-internal locks.
+<p>Stack traces correspond to the end of the critical section causing
+contention. For example, a lock held for a long time while other goroutines
+are waiting to acquire the lock will report contention when the lock is
+finally unlocked (that is, at <a href="http://localhost:8080/sync#Mutex.Unlock">sync.Mutex.Unlock</a>).
+<p>Sample values correspond to the approximate cumulative time other goroutines
+spent blocked waiting for the lock, subject to event-based sampling
+specified by <a href="http://localhost:8080/runtime#SetMutexProfileFraction">runtime.SetMutexProfileFraction</a>. For example, if a caller
+holds a lock for 1s while 5 other goroutines are waiting for the entire
+second to acquire the lock, its unlock call stack will report 5s of
+contention.
+<p>Runtime-internal locks are always reported at the location
+&quot;runtime._LostContendedRuntimeLock&quot;. More detailed stack traces for
+runtime-internal locks can be obtained by setting
+`GODEBUG=runtimecontentionstacks=1` (see package <a href="http://localhost:8080/runtime">runtime</a> docs for
+caveats).
+
+			<pre>type Profile struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="Lookup">func <a href="../../../src/runtime/pprof/pprof.go?s=8758:8791#L255">Lookup</a>
+					<a class="permalink" href="index.html#Lookup">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func Lookup(name <a href="../../builtin/index.html#string">string</a>) *<a href="index.html#Profile">Profile</a></pre>
+				<p>Lookup returns the profile with the given name, or nil if no such profile exists.
+
+				
+				
+			
+				
+				<h3 id="NewProfile">func <a href="../../../src/runtime/pprof/pprof.go?s=8340:8377#L237">NewProfile</a>
+					<a class="permalink" href="index.html#NewProfile">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func NewProfile(name <a href="../../builtin/index.html#string">string</a>) *<a href="index.html#Profile">Profile</a></pre>
+				<p>NewProfile creates a new profile with the given name.
+If a profile with that name already exists, NewProfile panics.
+The convention is to use a &apos;import/path.&apos; prefix to create
+separate name spaces for each package.
+For compatibility with various tools that read pprof data,
+profile names should not contain spaces.
+
+				
+				
+			
+				
+				<h3 id="Profiles">func <a href="../../../src/runtime/pprof/pprof.go?s=8933:8959#L262">Profiles</a>
+					<a class="permalink" href="index.html#Profiles">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func Profiles() []*<a href="index.html#Profile">Profile</a></pre>
+				<p>Profiles returns a slice of all the known profiles, sorted by name.
+
+				
+				
+			
+
+			
+				
+				<h3 id="Profile.Add">func (*Profile) <a href="../../../src/runtime/pprof/pprof.go?s=10349:10391#L307">Add</a>
+					<a class="permalink" href="index.html#Profile.Add">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#Profile">Profile</a>) Add(value <a href="../../builtin/index.html#any">any</a>, skip <a href="../../builtin/index.html#int">int</a>)</pre>
+				<p>Add adds the current execution stack to the profile, associated with value.
+Add stores value in an internal map, so value must be suitable for use as
+a map key and will not be garbage collected until the corresponding
+call to <a href="index.html#Profile.Remove">Profile.Remove</a>. Add panics if the profile already contains a stack for value.
+<p>The skip parameter has the same meaning as <a href="http://localhost:8080/runtime#Caller">runtime.Caller</a>&apos;s skip
+and controls where the stack trace begins. Passing skip=0 begins the
+trace in the function calling Add. For example, given this
+execution stack:
+<pre>Add
+called from rpc.NewClient
+called from mypkg.Run
+called from main.main
+</pre>
+<p>Passing skip=0 begins the stack trace at the call to Add inside rpc.NewClient.
+Passing skip=1 begins the stack trace at the call to NewClient inside mypkg.Run.
+
+				
+				
+				
+			
+				
+				<h3 id="Profile.Count">func (*Profile) <a href="../../../src/runtime/pprof/pprof.go?s=9417:9446#L281">Count</a>
+					<a class="permalink" href="index.html#Profile.Count">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#Profile">Profile</a>) Count() <a href="../../builtin/index.html#int">int</a></pre>
+				<p>Count returns the number of execution stacks currently in the profile.
+
+				
+				
+				
+			
+				
+				<h3 id="Profile.Name">func (*Profile) <a href="../../../src/runtime/pprof/pprof.go?s=9291:9322#L276">Name</a>
+					<a class="permalink" href="index.html#Profile.Name">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#Profile">Profile</a>) Name() <a href="../../builtin/index.html#string">string</a></pre>
+				<p>Name returns this profile&apos;s name, which can be passed to <a href="index.html#Lookup">Lookup</a> to reobtain the profile.
+
+				
+				
+				
+			
+				
+				<h3 id="Profile.Remove">func (*Profile) <a href="../../../src/runtime/pprof/pprof.go?s=11049:11084#L333">Remove</a>
+					<a class="permalink" href="index.html#Profile.Remove">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#Profile">Profile</a>) Remove(value <a href="../../builtin/index.html#any">any</a>)</pre>
+				<p>Remove removes the execution stack associated with value from the profile.
+It is a no-op if the value is not in the profile.
+
+				
+				
+				
+			
+				
+				<h3 id="Profile.WriteTo">func (*Profile) <a href="../../../src/runtime/pprof/pprof.go?s=11942:11997#L354">WriteTo</a>
+					<a class="permalink" href="index.html#Profile.WriteTo">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#Profile">Profile</a>) WriteTo(w <a href="../../io/index.html">io</a>.<a href="../../io/index.html#Writer">Writer</a>, debug <a href="../../builtin/index.html#int">int</a>) <a href="../../builtin/index.html#error">error</a></pre>
+				<p>WriteTo writes a pprof-formatted snapshot of the profile to w.
+If a write to w returns an error, WriteTo returns that error.
+Otherwise, WriteTo returns nil.
+<p>The debug parameter enables additional output.
+Passing debug=0 writes the gzip-compressed protocol buffer described
+in <a href="https://github.com/google/pprof/tree/master/proto#overview">https://github.com/google/pprof/tree/master/proto#overview</a>.
+Passing debug=1 writes the legacy text format with comments
+translating addresses to function names and line numbers, so that a
+programmer can read the profile without tools.
+<p>The predefined profiles may assign meaning to other debug values;
+for example, when printing the &quot;goroutine&quot; profile, debug=2 means to
+print the goroutine stacks in the same form that a Go program uses
+when dying due to an unrecovered panic.
+
+				
+				
+				
+			
+		
+	
+
+	
+		
+			<h2 id="pkg-note-BUG">Bugs</h2>
+			<ul style="list-style: none; padding: 0;">
+			
+			<li><a href="../../../src/runtime/pprof/pprof.go?s=2830:2985#L79" style="float: left;">&#x261e;</a> <p>Profiles are only as good as the kernel support used to generate them.
+See <a href="https://golang.org/issue/13841">https://golang.org/issue/13841</a> for details about known problems.
+</li>
+			
+			</ul>
+		
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

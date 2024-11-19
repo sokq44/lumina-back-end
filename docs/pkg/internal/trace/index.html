@@ -1,0 +1,1439 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>trace - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package trace
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "internal/trace"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+			
+				<dd><a href="index.html#pkg-subdirectories">Subdirectories</a></dd>
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+				<dd><a href="index.html#pkg-constants">Constants</a></dd>
+			
+			
+				<dd><a href="index.html#pkg-variables">Variables</a></dd>
+			
+			
+				
+				<dd><a href="index.html#GoroutineStats">func GoroutineStats(events []*Event) map[uint64]*GDesc</a></dd>
+			
+				
+				<dd><a href="index.html#IsSystemGoroutine">func IsSystemGoroutine(entryFn string) bool</a></dd>
+			
+				
+				<dd><a href="index.html#MutatorUtilization">func MutatorUtilization(events []*Event, flags UtilFlags) [][]MutatorUtil</a></dd>
+			
+				
+				<dd><a href="index.html#MutatorUtilizationV2">func MutatorUtilizationV2(events []tracev2.Event, flags UtilFlags) [][]MutatorUtil</a></dd>
+			
+				
+				<dd><a href="index.html#Print">func Print(events []*Event)</a></dd>
+			
+				
+				<dd><a href="index.html#PrintEvent">func PrintEvent(ev *Event)</a></dd>
+			
+				
+				<dd><a href="index.html#ReadVersion">func ReadVersion(r io.Reader) (ver int, off int, err error)</a></dd>
+			
+				
+				<dd><a href="index.html#RelatedGoroutines">func RelatedGoroutines(events []*Event, goid uint64) map[uint64]bool</a></dd>
+			
+				
+				<dd><a href="index.html#RelatedGoroutinesV2">func RelatedGoroutinesV2(events []tracev2.Event, goid tracev2.GoID) map[tracev2.GoID]struct{}</a></dd>
+			
+			
+				
+				<dd><a href="index.html#Event">type Event</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Event.String">func (ev *Event) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Frame">type Frame</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#GDesc">type GDesc</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#GExecutionStat">type GExecutionStat</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#GoroutineExecStats">type GoroutineExecStats</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#GoroutineExecStats.NonOverlappingStats">func (s GoroutineExecStats) NonOverlappingStats() map[string]time.Duration</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#GoroutineExecStats.UnknownTime">func (s GoroutineExecStats) UnknownTime() time.Duration</a></dd>
+				
+			
+				
+				<dd><a href="index.html#GoroutineSummary">type GoroutineSummary</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#MMUCurve">type MMUCurve</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewMMUCurve">func NewMMUCurve(utils [][]MutatorUtil) *MMUCurve</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#MMUCurve.Examples">func (c *MMUCurve) Examples(window time.Duration, n int) (worst []UtilWindow)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#MMUCurve.MMU">func (c *MMUCurve) MMU(window time.Duration) (mmu float64)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#MMUCurve.MUD">func (c *MMUCurve) MUD(window time.Duration, quantiles []float64) []float64</a></dd>
+				
+			
+				
+				<dd><a href="index.html#MutatorUtil">type MutatorUtil</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#ParseResult">type ParseResult</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Parse">func Parse(r io.Reader, bin string) (ParseResult, error)</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#Summarizer">type Summarizer</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewSummarizer">func NewSummarizer() *Summarizer</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Summarizer.Event">func (s *Summarizer) Event(ev *tracev2.Event)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Summarizer.Finalize">func (s *Summarizer) Finalize() *Summary</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Summary">type Summary</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#UserRegionDesc">type UserRegionDesc</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#UserRegionSummary">type UserRegionSummary</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#UserTaskSummary">type UserTaskSummary</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#UserTaskSummary.Complete">func (s *UserTaskSummary) Complete() bool</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#UserTaskSummary.Descendents">func (s *UserTaskSummary) Descendents() []*UserTaskSummary</a></dd>
+				
+			
+				
+				<dd><a href="index.html#UtilFlags">type UtilFlags</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#UtilWindow">type UtilWindow</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#Writer">type Writer</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewWriter">func NewWriter() *Writer</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Writer.Emit">func (w *Writer) Emit(typ byte, args ...uint64)</a></dd>
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../../src/internal/trace/gc.go">gc.go</a>
+			
+				<a href="../../../src/internal/trace/goroutines.go">goroutines.go</a>
+			
+				<a href="../../../src/internal/trace/mud.go">mud.go</a>
+			
+				<a href="../../../src/internal/trace/order.go">order.go</a>
+			
+				<a href="../../../src/internal/trace/parser.go">parser.go</a>
+			
+				<a href="../../../src/internal/trace/summary.go">summary.go</a>
+			
+				<a href="../../../src/internal/trace/writer.go">writer.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+			<h2 id="pkg-constants">Constants</h2>
+			
+				
+				<pre>const (
+    <span class="comment">// Special P identifiers:</span>
+    <span id="FakeP">FakeP</span>    = 1000000 + <a href="../../builtin/index.html#iota">iota</a>
+    <span id="TimerP">TimerP</span>   <span class="comment">// depicts timer unblocks</span>
+    <span id="NetpollP">NetpollP</span> <span class="comment">// depicts network unblocks</span>
+    <span id="SyscallP">SyscallP</span> <span class="comment">// depicts returns from syscalls</span>
+    <span id="GCP">GCP</span>      <span class="comment">// depicts GC state</span>
+    <span id="ProfileP">ProfileP</span> <span class="comment">// depicts recording of CPU profile samples</span>
+)</pre>
+			
+				<p>Event types in the trace.
+Verbatim copy from src/runtime/trace.go with the &quot;trace&quot; prefix removed.
+
+				<pre>const (
+    <span id="EvNone">EvNone</span>              = 0  <span class="comment">// unused</span>
+    <span id="EvBatch">EvBatch</span>             = 1  <span class="comment">// start of per-P batch of events [pid, timestamp]</span>
+    <span id="EvFrequency">EvFrequency</span>         = 2  <span class="comment">// contains tracer timer frequency [frequency (ticks per second)]</span>
+    <span id="EvStack">EvStack</span>             = 3  <span class="comment">// stack [stack id, number of PCs, array of {PC, func string ID, file string ID, line}]</span>
+    <span id="EvGomaxprocs">EvGomaxprocs</span>        = 4  <span class="comment">// current value of GOMAXPROCS [timestamp, GOMAXPROCS, stack id]</span>
+    <span id="EvProcStart">EvProcStart</span>         = 5  <span class="comment">// start of P [timestamp, thread id]</span>
+    <span id="EvProcStop">EvProcStop</span>          = 6  <span class="comment">// stop of P [timestamp]</span>
+    <span id="EvGCStart">EvGCStart</span>           = 7  <span class="comment">// GC start [timestamp, seq, stack id]</span>
+    <span id="EvGCDone">EvGCDone</span>            = 8  <span class="comment">// GC done [timestamp]</span>
+    <span id="EvSTWStart">EvSTWStart</span>          = 9  <span class="comment">// GC mark termination start [timestamp, kind]</span>
+    <span id="EvSTWDone">EvSTWDone</span>           = 10 <span class="comment">// GC mark termination done [timestamp]</span>
+    <span id="EvGCSweepStart">EvGCSweepStart</span>      = 11 <span class="comment">// GC sweep start [timestamp, stack id]</span>
+    <span id="EvGCSweepDone">EvGCSweepDone</span>       = 12 <span class="comment">// GC sweep done [timestamp, swept, reclaimed]</span>
+    <span id="EvGoCreate">EvGoCreate</span>          = 13 <span class="comment">// goroutine creation [timestamp, new goroutine id, new stack id, stack id]</span>
+    <span id="EvGoStart">EvGoStart</span>           = 14 <span class="comment">// goroutine starts running [timestamp, goroutine id, seq]</span>
+    <span id="EvGoEnd">EvGoEnd</span>             = 15 <span class="comment">// goroutine ends [timestamp]</span>
+    <span id="EvGoStop">EvGoStop</span>            = 16 <span class="comment">// goroutine stops (like in select{}) [timestamp, stack]</span>
+    <span id="EvGoSched">EvGoSched</span>           = 17 <span class="comment">// goroutine calls Gosched [timestamp, stack]</span>
+    <span id="EvGoPreempt">EvGoPreempt</span>         = 18 <span class="comment">// goroutine is preempted [timestamp, stack]</span>
+    <span id="EvGoSleep">EvGoSleep</span>           = 19 <span class="comment">// goroutine calls Sleep [timestamp, stack]</span>
+    <span id="EvGoBlock">EvGoBlock</span>           = 20 <span class="comment">// goroutine blocks [timestamp, stack]</span>
+    <span id="EvGoUnblock">EvGoUnblock</span>         = 21 <span class="comment">// goroutine is unblocked [timestamp, goroutine id, seq, stack]</span>
+    <span id="EvGoBlockSend">EvGoBlockSend</span>       = 22 <span class="comment">// goroutine blocks on chan send [timestamp, stack]</span>
+    <span id="EvGoBlockRecv">EvGoBlockRecv</span>       = 23 <span class="comment">// goroutine blocks on chan recv [timestamp, stack]</span>
+    <span id="EvGoBlockSelect">EvGoBlockSelect</span>     = 24 <span class="comment">// goroutine blocks on select [timestamp, stack]</span>
+    <span id="EvGoBlockSync">EvGoBlockSync</span>       = 25 <span class="comment">// goroutine blocks on Mutex/RWMutex [timestamp, stack]</span>
+    <span id="EvGoBlockCond">EvGoBlockCond</span>       = 26 <span class="comment">// goroutine blocks on Cond [timestamp, stack]</span>
+    <span id="EvGoBlockNet">EvGoBlockNet</span>        = 27 <span class="comment">// goroutine blocks on network [timestamp, stack]</span>
+    <span id="EvGoSysCall">EvGoSysCall</span>         = 28 <span class="comment">// syscall enter [timestamp, stack]</span>
+    <span id="EvGoSysExit">EvGoSysExit</span>         = 29 <span class="comment">// syscall exit [timestamp, goroutine id, seq, real timestamp]</span>
+    <span id="EvGoSysBlock">EvGoSysBlock</span>        = 30 <span class="comment">// syscall blocks [timestamp]</span>
+    <span id="EvGoWaiting">EvGoWaiting</span>         = 31 <span class="comment">// denotes that goroutine is blocked when tracing starts [timestamp, goroutine id]</span>
+    <span id="EvGoInSyscall">EvGoInSyscall</span>       = 32 <span class="comment">// denotes that goroutine is in syscall when tracing starts [timestamp, goroutine id]</span>
+    <span id="EvHeapAlloc">EvHeapAlloc</span>         = 33 <span class="comment">// gcController.heapLive change [timestamp, heap live bytes]</span>
+    <span id="EvHeapGoal">EvHeapGoal</span>          = 34 <span class="comment">// gcController.heapGoal change [timestamp, heap goal bytes]</span>
+    <span id="EvTimerGoroutine">EvTimerGoroutine</span>    = 35 <span class="comment">// denotes timer goroutine [timer goroutine id]</span>
+    <span id="EvFutileWakeup">EvFutileWakeup</span>      = 36 <span class="comment">// denotes that the previous wakeup of this goroutine was futile [timestamp]</span>
+    <span id="EvString">EvString</span>            = 37 <span class="comment">// string dictionary entry [ID, length, string]</span>
+    <span id="EvGoStartLocal">EvGoStartLocal</span>      = 38 <span class="comment">// goroutine starts running on the same P as the last event [timestamp, goroutine id]</span>
+    <span id="EvGoUnblockLocal">EvGoUnblockLocal</span>    = 39 <span class="comment">// goroutine is unblocked on the same P as the last event [timestamp, goroutine id, stack]</span>
+    <span id="EvGoSysExitLocal">EvGoSysExitLocal</span>    = 40 <span class="comment">// syscall exit on the same P as the last event [timestamp, goroutine id, real timestamp]</span>
+    <span id="EvGoStartLabel">EvGoStartLabel</span>      = 41 <span class="comment">// goroutine starts running with label [timestamp, goroutine id, seq, label string id]</span>
+    <span id="EvGoBlockGC">EvGoBlockGC</span>         = 42 <span class="comment">// goroutine blocks on GC assist [timestamp, stack]</span>
+    <span id="EvGCMarkAssistStart">EvGCMarkAssistStart</span> = 43 <span class="comment">// GC mark assist start [timestamp, stack]</span>
+    <span id="EvGCMarkAssistDone">EvGCMarkAssistDone</span>  = 44 <span class="comment">// GC mark assist done [timestamp]</span>
+    <span id="EvUserTaskCreate">EvUserTaskCreate</span>    = 45 <span class="comment">// trace.NewTask [timestamp, internal task id, internal parent id, name string, stack]</span>
+    <span id="EvUserTaskEnd">EvUserTaskEnd</span>       = 46 <span class="comment">// end of task [timestamp, internal task id, stack]</span>
+    <span id="EvUserRegion">EvUserRegion</span>        = 47 <span class="comment">// trace.WithRegion [timestamp, internal task id, mode(0:start, 1:end), name string, stack]</span>
+    <span id="EvUserLog">EvUserLog</span>           = 48 <span class="comment">// trace.Log [timestamp, internal id, key string id, stack, value string]</span>
+    <span id="EvCPUSample">EvCPUSample</span>         = 49 <span class="comment">// CPU profiling sample [timestamp, real timestamp, real P id (-1 when absent), goroutine id, stack]</span>
+    <span id="EvCount">EvCount</span>             = 50
+)</pre>
+			
+		
+		
+			<h2 id="pkg-variables">Variables</h2>
+			
+				<p>BreakTimestampsForTesting causes the parser to randomly alter timestamps (for testing of broken cputicks).
+
+				<pre>var <span id="BreakTimestampsForTesting">BreakTimestampsForTesting</span> <a href="../../builtin/index.html#bool">bool</a></pre>
+			
+				<p>ErrTimeOrder is returned by Parse when the trace contains
+time stamps that do not respect actual event ordering.
+
+				<pre>var <span id="ErrTimeOrder">ErrTimeOrder</span> = <a href="../../fmt/index.html">fmt</a>.<a href="../../fmt/index.html#Errorf">Errorf</a>(&#34;time stamps out of order&#34;)</pre>
+			
+				
+				<pre>var <span id="EventDescriptions">EventDescriptions</span> = [<a href="index.html#EvCount">EvCount</a>]struct {
+    Name       <a href="../../builtin/index.html#string">string</a>
+    minVersion <a href="../../builtin/index.html#int">int</a>
+    Stack      <a href="../../builtin/index.html#bool">bool</a>
+    Args       []<a href="../../builtin/index.html#string">string</a>
+    SArgs      []<a href="../../builtin/index.html#string">string</a> <span class="comment">// string arguments</span>
+}{
+    <a href="index.html#EvNone">EvNone</a>:              {&#34;None&#34;, 1005, <a href="../../builtin/index.html#false">false</a>, []<a href="../../builtin/index.html#string">string</a>{}, <a href="../../builtin/index.html#nil">nil</a>},
+    <a href="index.html#EvBatch">EvBatch</a>:             {&#34;Batch&#34;, 1005, <a href="../../builtin/index.html#false">false</a>, []<a href="../../builtin/index.html#string">string</a>{&#34;p&#34;, &#34;ticks&#34;}, <a href="../../builtin/index.html#nil">nil</a>},
+    <a href="index.html#EvFrequency">EvFrequency</a>:         {&#34;Frequency&#34;, 1005, <a href="../../builtin/index.html#false">false</a>, []<a href="../../builtin/index.html#string">string</a>{&#34;freq&#34;}, <a href="../../builtin/index.html#nil">nil</a>},
+    <a href="index.html#EvStack">EvStack</a>:             {&#34;Stack&#34;, 1005, <a href="../../builtin/index.html#false">false</a>, []<a href="../../builtin/index.html#string">string</a>{&#34;id&#34;, &#34;siz&#34;}, <a href="../../builtin/index.html#nil">nil</a>},
+    <a href="index.html#EvGomaxprocs">EvGomaxprocs</a>:        {&#34;Gomaxprocs&#34;, 1005, <a href="../../builtin/index.html#true">true</a>, []<a href="../../builtin/index.html#string">string</a>{&#34;procs&#34;}, <a href="../../builtin/index.html#nil">nil</a>},
+    <a href="index.html#EvProcStart">EvProcStart</a>:         {&#34;ProcStart&#34;, 1005, <a href="../../builtin/index.html#false">false</a>, []<a href="../../builtin/index.html#string">string</a>{&#34;thread&#34;}, <a href="../../builtin/index.html#nil">nil</a>},
+    <a href="index.html#EvProcStop">EvProcStop</a>:          {&#34;ProcStop&#34;, 1005, <a href="../../builtin/index.html#false">false</a>, []<a href="../../builtin/index.html#string">string</a>{}, <a href="../../builtin/index.html#nil">nil</a>},
+    <a href="index.html#EvGCStart">EvGCStart</a>:           {&#34;GCStart&#34;, 1005, <a href="../../builtin/index.html#true">true</a>, []<a href="../../builtin/index.html#string">string</a>{&#34;seq&#34;}, <a href="../../builtin/index.html#nil">nil</a>},
+    <a href="index.html#EvGCDone">EvGCDone</a>:            {&#34;GCDone&#34;, 1005, <a href="../../builtin/index.html#false">false</a>, []<a href="../../builtin/index.html#string">string</a>{}, <a href="../../builtin/index.html#nil">nil</a>},
+    <a href="index.html#EvSTWStart">EvSTWStart</a>:          {&#34;STWStart&#34;, 1005, <a href="../../builtin/index.html#false">false</a>, []<a href="../../builtin/index.html#string">string</a>{&#34;kindid&#34;}, []<a href="../../builtin/index.html#string">string</a>{&#34;kind&#34;}},
+    <a href="index.html#EvSTWDone">EvSTWDone</a>:           {&#34;STWDone&#34;, 1005, <a href="../../builtin/index.html#false">false</a>, []<a href="../../builtin/index.html#string">string</a>{}, <a href="../../builtin/index.html#nil">nil</a>},
+    <a href="index.html#EvGCSweepStart">EvGCSweepStart</a>:      {&#34;GCSweepStart&#34;, 1005, <a href="../../builtin/index.html#true">true</a>, []<a href="../../builtin/index.html#string">string</a>{}, <a href="../../builtin/index.html#nil">nil</a>},
+    <a href="index.html#EvGCSweepDone">EvGCSweepDone</a>:       {&#34;GCSweepDone&#34;, 1005, <a href="../../builtin/index.html#false">false</a>, []<a href="../../builtin/index.html#string">string</a>{&#34;swept&#34;, &#34;reclaimed&#34;}, <a href="../../builtin/index.html#nil">nil</a>},
+    <a href="index.html#EvGoCreate">EvGoCreate</a>:          {&#34;GoCreate&#34;, 1005, <a href="../../builtin/index.html#true">true</a>, []<a href="../../builtin/index.html#string">string</a>{&#34;g&#34;, &#34;stack&#34;}, <a href="../../builtin/index.html#nil">nil</a>},
+    <a href="index.html#EvGoStart">EvGoStart</a>:           {&#34;GoStart&#34;, 1005, <a href="../../builtin/index.html#false">false</a>, []<a href="../../builtin/index.html#string">string</a>{&#34;g&#34;, &#34;seq&#34;}, <a href="../../builtin/index.html#nil">nil</a>},
+    <a href="index.html#EvGoEnd">EvGoEnd</a>:             {&#34;GoEnd&#34;, 1005, <a href="../../builtin/index.html#false">false</a>, []<a href="../../builtin/index.html#string">string</a>{}, <a href="../../builtin/index.html#nil">nil</a>},
+    <a href="index.html#EvGoStop">EvGoStop</a>:            {&#34;GoStop&#34;, 1005, <a href="../../builtin/index.html#true">true</a>, []<a href="../../builtin/index.html#string">string</a>{}, <a href="../../builtin/index.html#nil">nil</a>},
+    <a href="index.html#EvGoSched">EvGoSched</a>:           {&#34;GoSched&#34;, 1005, <a href="../../builtin/index.html#true">true</a>, []<a href="../../builtin/index.html#string">string</a>{}, <a href="../../builtin/index.html#nil">nil</a>},
+    <a href="index.html#EvGoPreempt">EvGoPreempt</a>:         {&#34;GoPreempt&#34;, 1005, <a href="../../builtin/index.html#true">true</a>, []<a href="../../builtin/index.html#string">string</a>{}, <a href="../../builtin/index.html#nil">nil</a>},
+    <a href="index.html#EvGoSleep">EvGoSleep</a>:           {&#34;GoSleep&#34;, 1005, <a href="../../builtin/index.html#true">true</a>, []<a href="../../builtin/index.html#string">string</a>{}, <a href="../../builtin/index.html#nil">nil</a>},
+    <a href="index.html#EvGoBlock">EvGoBlock</a>:           {&#34;GoBlock&#34;, 1005, <a href="../../builtin/index.html#true">true</a>, []<a href="../../builtin/index.html#string">string</a>{}, <a href="../../builtin/index.html#nil">nil</a>},
+    <a href="index.html#EvGoUnblock">EvGoUnblock</a>:         {&#34;GoUnblock&#34;, 1005, <a href="../../builtin/index.html#true">true</a>, []<a href="../../builtin/index.html#string">string</a>{&#34;g&#34;, &#34;seq&#34;}, <a href="../../builtin/index.html#nil">nil</a>},
+    <a href="index.html#EvGoBlockSend">EvGoBlockSend</a>:       {&#34;GoBlockSend&#34;, 1005, <a href="../../builtin/index.html#true">true</a>, []<a href="../../builtin/index.html#string">string</a>{}, <a href="../../builtin/index.html#nil">nil</a>},
+    <a href="index.html#EvGoBlockRecv">EvGoBlockRecv</a>:       {&#34;GoBlockRecv&#34;, 1005, <a href="../../builtin/index.html#true">true</a>, []<a href="../../builtin/index.html#string">string</a>{}, <a href="../../builtin/index.html#nil">nil</a>},
+    <a href="index.html#EvGoBlockSelect">EvGoBlockSelect</a>:     {&#34;GoBlockSelect&#34;, 1005, <a href="../../builtin/index.html#true">true</a>, []<a href="../../builtin/index.html#string">string</a>{}, <a href="../../builtin/index.html#nil">nil</a>},
+    <a href="index.html#EvGoBlockSync">EvGoBlockSync</a>:       {&#34;GoBlockSync&#34;, 1005, <a href="../../builtin/index.html#true">true</a>, []<a href="../../builtin/index.html#string">string</a>{}, <a href="../../builtin/index.html#nil">nil</a>},
+    <a href="index.html#EvGoBlockCond">EvGoBlockCond</a>:       {&#34;GoBlockCond&#34;, 1005, <a href="../../builtin/index.html#true">true</a>, []<a href="../../builtin/index.html#string">string</a>{}, <a href="../../builtin/index.html#nil">nil</a>},
+    <a href="index.html#EvGoBlockNet">EvGoBlockNet</a>:        {&#34;GoBlockNet&#34;, 1005, <a href="../../builtin/index.html#true">true</a>, []<a href="../../builtin/index.html#string">string</a>{}, <a href="../../builtin/index.html#nil">nil</a>},
+    <a href="index.html#EvGoSysCall">EvGoSysCall</a>:         {&#34;GoSysCall&#34;, 1005, <a href="../../builtin/index.html#true">true</a>, []<a href="../../builtin/index.html#string">string</a>{}, <a href="../../builtin/index.html#nil">nil</a>},
+    <a href="index.html#EvGoSysExit">EvGoSysExit</a>:         {&#34;GoSysExit&#34;, 1005, <a href="../../builtin/index.html#false">false</a>, []<a href="../../builtin/index.html#string">string</a>{&#34;g&#34;, &#34;seq&#34;, &#34;ts&#34;}, <a href="../../builtin/index.html#nil">nil</a>},
+    <a href="index.html#EvGoSysBlock">EvGoSysBlock</a>:        {&#34;GoSysBlock&#34;, 1005, <a href="../../builtin/index.html#false">false</a>, []<a href="../../builtin/index.html#string">string</a>{}, <a href="../../builtin/index.html#nil">nil</a>},
+    <a href="index.html#EvGoWaiting">EvGoWaiting</a>:         {&#34;GoWaiting&#34;, 1005, <a href="../../builtin/index.html#false">false</a>, []<a href="../../builtin/index.html#string">string</a>{&#34;g&#34;}, <a href="../../builtin/index.html#nil">nil</a>},
+    <a href="index.html#EvGoInSyscall">EvGoInSyscall</a>:       {&#34;GoInSyscall&#34;, 1005, <a href="../../builtin/index.html#false">false</a>, []<a href="../../builtin/index.html#string">string</a>{&#34;g&#34;}, <a href="../../builtin/index.html#nil">nil</a>},
+    <a href="index.html#EvHeapAlloc">EvHeapAlloc</a>:         {&#34;HeapAlloc&#34;, 1005, <a href="../../builtin/index.html#false">false</a>, []<a href="../../builtin/index.html#string">string</a>{&#34;mem&#34;}, <a href="../../builtin/index.html#nil">nil</a>},
+    <a href="index.html#EvHeapGoal">EvHeapGoal</a>:          {&#34;HeapGoal&#34;, 1005, <a href="../../builtin/index.html#false">false</a>, []<a href="../../builtin/index.html#string">string</a>{&#34;mem&#34;}, <a href="../../builtin/index.html#nil">nil</a>},
+    <a href="index.html#EvTimerGoroutine">EvTimerGoroutine</a>:    {&#34;TimerGoroutine&#34;, 1005, <a href="../../builtin/index.html#false">false</a>, []<a href="../../builtin/index.html#string">string</a>{&#34;g&#34;}, <a href="../../builtin/index.html#nil">nil</a>},
+    <a href="index.html#EvFutileWakeup">EvFutileWakeup</a>:      {&#34;FutileWakeup&#34;, 1005, <a href="../../builtin/index.html#false">false</a>, []<a href="../../builtin/index.html#string">string</a>{}, <a href="../../builtin/index.html#nil">nil</a>},
+    <a href="index.html#EvString">EvString</a>:            {&#34;String&#34;, 1007, <a href="../../builtin/index.html#false">false</a>, []<a href="../../builtin/index.html#string">string</a>{}, <a href="../../builtin/index.html#nil">nil</a>},
+    <a href="index.html#EvGoStartLocal">EvGoStartLocal</a>:      {&#34;GoStartLocal&#34;, 1007, <a href="../../builtin/index.html#false">false</a>, []<a href="../../builtin/index.html#string">string</a>{&#34;g&#34;}, <a href="../../builtin/index.html#nil">nil</a>},
+    <a href="index.html#EvGoUnblockLocal">EvGoUnblockLocal</a>:    {&#34;GoUnblockLocal&#34;, 1007, <a href="../../builtin/index.html#true">true</a>, []<a href="../../builtin/index.html#string">string</a>{&#34;g&#34;}, <a href="../../builtin/index.html#nil">nil</a>},
+    <a href="index.html#EvGoSysExitLocal">EvGoSysExitLocal</a>:    {&#34;GoSysExitLocal&#34;, 1007, <a href="../../builtin/index.html#false">false</a>, []<a href="../../builtin/index.html#string">string</a>{&#34;g&#34;, &#34;ts&#34;}, <a href="../../builtin/index.html#nil">nil</a>},
+    <a href="index.html#EvGoStartLabel">EvGoStartLabel</a>:      {&#34;GoStartLabel&#34;, 1008, <a href="../../builtin/index.html#false">false</a>, []<a href="../../builtin/index.html#string">string</a>{&#34;g&#34;, &#34;seq&#34;, &#34;labelid&#34;}, []<a href="../../builtin/index.html#string">string</a>{&#34;label&#34;}},
+    <a href="index.html#EvGoBlockGC">EvGoBlockGC</a>:         {&#34;GoBlockGC&#34;, 1008, <a href="../../builtin/index.html#true">true</a>, []<a href="../../builtin/index.html#string">string</a>{}, <a href="../../builtin/index.html#nil">nil</a>},
+    <a href="index.html#EvGCMarkAssistStart">EvGCMarkAssistStart</a>: {&#34;GCMarkAssistStart&#34;, 1009, <a href="../../builtin/index.html#true">true</a>, []<a href="../../builtin/index.html#string">string</a>{}, <a href="../../builtin/index.html#nil">nil</a>},
+    <a href="index.html#EvGCMarkAssistDone">EvGCMarkAssistDone</a>:  {&#34;GCMarkAssistDone&#34;, 1009, <a href="../../builtin/index.html#false">false</a>, []<a href="../../builtin/index.html#string">string</a>{}, <a href="../../builtin/index.html#nil">nil</a>},
+    <a href="index.html#EvUserTaskCreate">EvUserTaskCreate</a>:    {&#34;UserTaskCreate&#34;, 1011, <a href="../../builtin/index.html#true">true</a>, []<a href="../../builtin/index.html#string">string</a>{&#34;taskid&#34;, &#34;pid&#34;, &#34;typeid&#34;}, []<a href="../../builtin/index.html#string">string</a>{&#34;name&#34;}},
+    <a href="index.html#EvUserTaskEnd">EvUserTaskEnd</a>:       {&#34;UserTaskEnd&#34;, 1011, <a href="../../builtin/index.html#true">true</a>, []<a href="../../builtin/index.html#string">string</a>{&#34;taskid&#34;}, <a href="../../builtin/index.html#nil">nil</a>},
+    <a href="index.html#EvUserRegion">EvUserRegion</a>:        {&#34;UserRegion&#34;, 1011, <a href="../../builtin/index.html#true">true</a>, []<a href="../../builtin/index.html#string">string</a>{&#34;taskid&#34;, &#34;mode&#34;, &#34;typeid&#34;}, []<a href="../../builtin/index.html#string">string</a>{&#34;name&#34;}},
+    <a href="index.html#EvUserLog">EvUserLog</a>:           {&#34;UserLog&#34;, 1011, <a href="../../builtin/index.html#true">true</a>, []<a href="../../builtin/index.html#string">string</a>{&#34;id&#34;, &#34;keyid&#34;}, []<a href="../../builtin/index.html#string">string</a>{&#34;category&#34;, &#34;message&#34;}},
+    <a href="index.html#EvCPUSample">EvCPUSample</a>:         {&#34;CPUSample&#34;, 1019, <a href="../../builtin/index.html#true">true</a>, []<a href="../../builtin/index.html#string">string</a>{&#34;ts&#34;, &#34;p&#34;, &#34;g&#34;}, <a href="../../builtin/index.html#nil">nil</a>},
+}</pre>
+			
+		
+		
+			
+			
+			<h2 id="GoroutineStats">func <a href="../../../src/internal/trace/goroutines.go?s=4385:4439#L151">GoroutineStats</a>
+				<a class="permalink" href="index.html#GoroutineStats">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func GoroutineStats(events []*<a href="index.html#Event">Event</a>) map[<a href="../../builtin/index.html#uint64">uint64</a>]*<a href="index.html#GDesc">GDesc</a></pre>
+			<p>GoroutineStats generates statistics for all goroutines in the trace.
+
+			
+			
+
+		
+			
+			
+			<h2 id="IsSystemGoroutine">func <a href="../../../src/internal/trace/goroutines.go?s=9429:9472#L343">IsSystemGoroutine</a>
+				<a class="permalink" href="index.html#IsSystemGoroutine">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func IsSystemGoroutine(entryFn <a href="../../builtin/index.html#string">string</a>) <a href="../../builtin/index.html#bool">bool</a></pre>
+			
+			
+			
+
+		
+			
+			
+			<h2 id="MutatorUtilization">func <a href="../../../src/internal/trace/gc.go?s=1682:1755#L45">MutatorUtilization</a>
+				<a class="permalink" href="index.html#MutatorUtilization">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func MutatorUtilization(events []*<a href="index.html#Event">Event</a>, flags <a href="index.html#UtilFlags">UtilFlags</a>) [][]<a href="index.html#MutatorUtil">MutatorUtil</a></pre>
+			<p>MutatorUtilization returns a set of mutator utilization functions
+for the given trace. Each function will always end with 0
+utilization. The bounds of each function are implicit in the first
+and last event; outside of these bounds each function is undefined.
+<p>If the UtilPerProc flag is not given, this always returns a single
+utilization function. Otherwise, it returns one function per P.
+
+			
+			
+
+		
+			
+			
+			<h2 id="MutatorUtilizationV2">func <a href="../../../src/internal/trace/gc.go?s=5682:5764#L204">MutatorUtilizationV2</a>
+				<a class="permalink" href="index.html#MutatorUtilizationV2">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func MutatorUtilizationV2(events []<a href="v2/index.html">tracev2</a>.<a href="v2/index.html#Event">Event</a>, flags <a href="index.html#UtilFlags">UtilFlags</a>) [][]<a href="index.html#MutatorUtil">MutatorUtil</a></pre>
+			<p>MutatorUtilizationV2 returns a set of mutator utilization functions
+for the given v2 trace, passed as an io.Reader. Each function will
+always end with 0 utilization. The bounds of each function are implicit
+in the first and last event; outside of these bounds each function is
+undefined.
+<p>If the UtilPerProc flag is not given, this always returns a single
+utilization function. Otherwise, it returns one function per P.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Print">func <a href="../../../src/internal/trace/parser.go?s=27682:27709#L971">Print</a>
+				<a class="permalink" href="index.html#Print">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Print(events []*<a href="index.html#Event">Event</a>)</pre>
+			<p>Print dumps events to stdout. For debugging.
+
+			
+			
+
+		
+			
+			
+			<h2 id="PrintEvent">func <a href="../../../src/internal/trace/parser.go?s=27820:27846#L978">PrintEvent</a>
+				<a class="permalink" href="index.html#PrintEvent">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func PrintEvent(ev *<a href="index.html#Event">Event</a>)</pre>
+			<p>PrintEvent dumps the event to stdout. For debugging.
+
+			
+			
+
+		
+			
+			
+			<h2 id="ReadVersion">func <a href="../../../src/internal/trace/parser.go?s=3755:3814#L129">ReadVersion</a>
+				<a class="permalink" href="index.html#ReadVersion">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func ReadVersion(r <a href="../../io/index.html">io</a>.<a href="../../io/index.html#Reader">Reader</a>) (ver <a href="../../builtin/index.html#int">int</a>, off <a href="../../builtin/index.html#int">int</a>, err <a href="../../builtin/index.html#error">error</a>)</pre>
+			
+			
+			
+
+		
+			
+			
+			<h2 id="RelatedGoroutines">func <a href="../../../src/internal/trace/goroutines.go?s=8935:9003#L322">RelatedGoroutines</a>
+				<a class="permalink" href="index.html#RelatedGoroutines">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func RelatedGoroutines(events []*<a href="index.html#Event">Event</a>, goid <a href="../../builtin/index.html#uint64">uint64</a>) map[<a href="../../builtin/index.html#uint64">uint64</a>]<a href="../../builtin/index.html#bool">bool</a></pre>
+			<p>RelatedGoroutines finds a set of goroutines related to goroutine goid.
+
+			
+			
+
+		
+			
+			
+			<h2 id="RelatedGoroutinesV2">func <a href="../../../src/internal/trace/summary.go?s=20237:20330#L608">RelatedGoroutinesV2</a>
+				<a class="permalink" href="index.html#RelatedGoroutinesV2">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func RelatedGoroutinesV2(events []<a href="v2/index.html">tracev2</a>.<a href="v2/index.html#Event">Event</a>, goid <a href="v2/index.html">tracev2</a>.<a href="v2/index.html#GoID">GoID</a>) map[<a href="v2/index.html">tracev2</a>.<a href="v2/index.html#GoID">GoID</a>]struct{}</pre>
+			<p>RelatedGoroutinesV2 finds a set of goroutines related to goroutine goid for v2 traces.
+The association is based on whether they have synchronized with each other in the Go
+scheduler (one has unblocked another).
+
+			
+			
+
+		
+		
+			
+			
+			<h2 id="Event">type <a href="../../../src/internal/trace/parser.go?s=592:1853#L25">Event</a>
+				<a class="permalink" href="index.html#Event">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Event describes one event in the trace.
+
+			<pre>type Event struct {
+<span id="Event.Off"></span>    Off  <a href="../../builtin/index.html#int">int</a>  <span class="comment">// offset in input file (for debugging and error reporting)</span>
+<span id="Event.Type"></span>    Type <a href="../../builtin/index.html#byte">byte</a> <span class="comment">// one of Ev*</span>
+
+<span id="Event.Ts"></span>    Ts    <a href="../../builtin/index.html#int64">int64</a>     <span class="comment">// timestamp in nanoseconds</span>
+<span id="Event.P"></span>    P     <a href="../../builtin/index.html#int">int</a>       <span class="comment">// P on which the event happened (can be one of TimerP, NetpollP, SyscallP)</span>
+<span id="Event.G"></span>    G     <a href="../../builtin/index.html#uint64">uint64</a>    <span class="comment">// G on which the event happened</span>
+<span id="Event.StkID"></span>    StkID <a href="../../builtin/index.html#uint64">uint64</a>    <span class="comment">// unique stack ID</span>
+<span id="Event.Stk"></span>    Stk   []*<a href="index.html#Frame">Frame</a>  <span class="comment">// stack trace (can be empty)</span>
+<span id="Event.Args"></span>    Args  [3]<a href="../../builtin/index.html#uint64">uint64</a> <span class="comment">// event-type-specific arguments</span>
+<span id="Event.SArgs"></span>    SArgs []<a href="../../builtin/index.html#string">string</a>  <span class="comment">// event-type-specific string args</span>
+    <span class="comment">// linked event (can be nil), depends on event type:</span>
+    <span class="comment">// for GCStart: the GCStop</span>
+    <span class="comment">// for GCSTWStart: the GCSTWDone</span>
+    <span class="comment">// for GCSweepStart: the GCSweepDone</span>
+    <span class="comment">// for GoCreate: first GoStart of the created goroutine</span>
+    <span class="comment">// for GoStart/GoStartLabel: the associated GoEnd, GoBlock or other blocking event</span>
+    <span class="comment">// for GoSched/GoPreempt: the next GoStart</span>
+    <span class="comment">// for GoBlock and other blocking events: the unblock event</span>
+    <span class="comment">// for GoUnblock: the associated GoStart</span>
+    <span class="comment">// for blocking GoSysCall: the associated GoSysExit</span>
+    <span class="comment">// for GoSysExit: the next GoStart</span>
+    <span class="comment">// for GCMarkAssistStart: the associated GCMarkAssistDone</span>
+    <span class="comment">// for UserTaskCreate: the UserTaskEnd</span>
+    <span class="comment">// for UserRegion: if the start region, the corresponding UserRegion end event</span>
+<span id="Event.Link"></span>    Link *<a href="index.html#Event">Event</a>
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="Event.String">func (*Event) <a href="../../../src/internal/trace/parser.go?s=27876:27908#L982">String</a>
+					<a class="permalink" href="index.html#Event.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (ev *<a href="index.html#Event">Event</a>) String() <a href="../../builtin/index.html#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Frame">type <a href="../../../src/internal/trace/parser.go?s=1892:1962#L54">Frame</a>
+				<a class="permalink" href="index.html#Frame">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Frame is a frame in stack traces.
+
+			<pre>type Frame struct {
+<span id="Frame.PC"></span>    PC   <a href="../../builtin/index.html#uint64">uint64</a>
+<span id="Frame.Fn"></span>    Fn   <a href="../../builtin/index.html#string">string</a>
+<span id="Frame.File"></span>    File <a href="../../builtin/index.html#string">string</a>
+<span id="Frame.Line"></span>    Line <a href="../../builtin/index.html#int">int</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="GDesc">type <a href="../../../src/internal/trace/goroutines.go?s=280:630#L3">GDesc</a>
+				<a class="permalink" href="index.html#GDesc">&#xb6;</a>
+				
+				
+			</h2>
+			<p>GDesc contains statistics and execution details of a single goroutine.
+
+			<pre>type GDesc struct {
+<span id="GDesc.ID"></span>    ID           <a href="../../builtin/index.html#uint64">uint64</a>
+<span id="GDesc.Name"></span>    Name         <a href="../../builtin/index.html#string">string</a>
+<span id="GDesc.PC"></span>    PC           <a href="../../builtin/index.html#uint64">uint64</a>
+<span id="GDesc.CreationTime"></span>    CreationTime <a href="../../builtin/index.html#int64">int64</a>
+<span id="GDesc.StartTime"></span>    StartTime    <a href="../../builtin/index.html#int64">int64</a>
+<span id="GDesc.EndTime"></span>    EndTime      <a href="../../builtin/index.html#int64">int64</a>
+
+    <span class="comment">// List of regions in the goroutine, sorted based on the start time.</span>
+<span id="GDesc.Regions"></span>    Regions []*<a href="index.html#UserRegionDesc">UserRegionDesc</a>
+
+    <span class="comment">// Statistics of execution time during the goroutine execution.</span>
+    <a href="index.html#GExecutionStat">GExecutionStat</a>
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="GExecutionStat">type <a href="../../../src/internal/trace/goroutines.go?s=1303:1501#L41">GExecutionStat</a>
+				<a class="permalink" href="index.html#GExecutionStat">&#xb6;</a>
+				
+				
+			</h2>
+			<p>GExecutionStat contains statistics about a goroutine&apos;s execution
+during a period of time.
+
+			<pre>type GExecutionStat struct {
+<span id="GExecutionStat.ExecTime"></span>    ExecTime      <a href="../../builtin/index.html#int64">int64</a>
+<span id="GExecutionStat.SchedWaitTime"></span>    SchedWaitTime <a href="../../builtin/index.html#int64">int64</a>
+<span id="GExecutionStat.IOTime"></span>    IOTime        <a href="../../builtin/index.html#int64">int64</a>
+<span id="GExecutionStat.BlockTime"></span>    BlockTime     <a href="../../builtin/index.html#int64">int64</a>
+<span id="GExecutionStat.SyscallTime"></span>    SyscallTime   <a href="../../builtin/index.html#int64">int64</a>
+<span id="GExecutionStat.GCTime"></span>    GCTime        <a href="../../builtin/index.html#int64">int64</a>
+<span id="GExecutionStat.SweepTime"></span>    SweepTime     <a href="../../builtin/index.html#int64">int64</a>
+<span id="GExecutionStat.TotalTime"></span>    TotalTime     <a href="../../builtin/index.html#int64">int64</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="GoroutineExecStats">type <a href="../../../src/internal/trace/summary.go?s=3494:4011#L94">GoroutineExecStats</a>
+				<a class="permalink" href="index.html#GoroutineExecStats">&#xb6;</a>
+				
+				
+			</h2>
+			<p>GoroutineExecStats contains statistics about a goroutine&apos;s execution
+during a period of time.
+
+			<pre>type GoroutineExecStats struct {
+    <span class="comment">// These stats are all non-overlapping.</span>
+<span id="GoroutineExecStats.ExecTime"></span>    ExecTime          <a href="../../time/index.html">time</a>.<a href="../../time/index.html#Duration">Duration</a>
+<span id="GoroutineExecStats.SchedWaitTime"></span>    SchedWaitTime     <a href="../../time/index.html">time</a>.<a href="../../time/index.html#Duration">Duration</a>
+<span id="GoroutineExecStats.BlockTimeByReason"></span>    BlockTimeByReason map[<a href="../../builtin/index.html#string">string</a>]<a href="../../time/index.html">time</a>.<a href="../../time/index.html#Duration">Duration</a>
+<span id="GoroutineExecStats.SyscallTime"></span>    SyscallTime       <a href="../../time/index.html">time</a>.<a href="../../time/index.html#Duration">Duration</a>
+<span id="GoroutineExecStats.SyscallBlockTime"></span>    SyscallBlockTime  <a href="../../time/index.html">time</a>.<a href="../../time/index.html#Duration">Duration</a>
+
+<span id="GoroutineExecStats.TotalTime"></span>    <span class="comment">// TotalTime is the duration of the goroutine&#39;s presence in the trace.</span>
+    <span class="comment">// Necessarily overlaps with other stats.</span>
+    TotalTime <a href="../../time/index.html">time</a>.<a href="../../time/index.html#Duration">Duration</a>
+
+    <span class="comment">// Total time the goroutine spent in certain ranges; may overlap</span>
+    <span class="comment">// with other stats.</span>
+<span id="GoroutineExecStats.RangeTime"></span>    RangeTime map[<a href="../../builtin/index.html#string">string</a>]<a href="../../time/index.html">time</a>.<a href="../../time/index.html#Duration">Duration</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="GoroutineExecStats.NonOverlappingStats">func (GoroutineExecStats) <a href="../../../src/internal/trace/summary.go?s=4013:4087#L111">NonOverlappingStats</a>
+					<a class="permalink" href="index.html#GoroutineExecStats.NonOverlappingStats">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (s <a href="index.html#GoroutineExecStats">GoroutineExecStats</a>) NonOverlappingStats() map[<a href="../../builtin/index.html#string">string</a>]<a href="../../time/index.html">time</a>.<a href="../../time/index.html#Duration">Duration</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="GoroutineExecStats.UnknownTime">func (GoroutineExecStats) <a href="../../../src/internal/trace/summary.go?s=4612:4667#L128">UnknownTime</a>
+					<a class="permalink" href="index.html#GoroutineExecStats.UnknownTime">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (s <a href="index.html#GoroutineExecStats">GoroutineExecStats</a>) UnknownTime() <a href="../../time/index.html">time</a>.<a href="../../time/index.html#Duration">Duration</a></pre>
+				<p>UnknownTime returns whatever isn&apos;t accounted for in TotalTime.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="GoroutineSummary">type <a href="../../../src/internal/trace/summary.go?s=519:1479#L11">GoroutineSummary</a>
+				<a class="permalink" href="index.html#GoroutineSummary">&#xb6;</a>
+				
+				
+			</h2>
+			<p>GoroutineSummary contains statistics and execution details of a single goroutine.
+(For v2 traces.)
+
+			<pre>type GoroutineSummary struct {
+<span id="GoroutineSummary.ID"></span>    ID           <a href="v2/index.html">tracev2</a>.<a href="v2/index.html#GoID">GoID</a>
+<span id="GoroutineSummary.Name"></span>    Name         <a href="../../builtin/index.html#string">string</a>       <span class="comment">// A non-unique human-friendly identifier for the goroutine.</span>
+<span id="GoroutineSummary.PC"></span>    PC           <a href="../../builtin/index.html#uint64">uint64</a>       <span class="comment">// The first PC we saw for the entry function of the goroutine</span>
+<span id="GoroutineSummary.CreationTime"></span>    CreationTime <a href="v2/index.html">tracev2</a>.<a href="v2/index.html#Time">Time</a> <span class="comment">// Timestamp of the first appearance in the trace.</span>
+<span id="GoroutineSummary.StartTime"></span>    StartTime    <a href="v2/index.html">tracev2</a>.<a href="v2/index.html#Time">Time</a> <span class="comment">// Timestamp of the first time it started running. 0 if the goroutine never ran.</span>
+<span id="GoroutineSummary.EndTime"></span>    EndTime      <a href="v2/index.html">tracev2</a>.<a href="v2/index.html#Time">Time</a> <span class="comment">// Timestamp of when the goroutine exited. 0 if the goroutine never exited.</span>
+
+    <span class="comment">// List of regions in the goroutine, sorted based on the start time.</span>
+<span id="GoroutineSummary.Regions"></span>    Regions []*<a href="index.html#UserRegionSummary">UserRegionSummary</a>
+
+    <span class="comment">// Statistics of execution time during the goroutine execution.</span>
+    <a href="index.html#GoroutineExecStats">GoroutineExecStats</a>
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="MMUCurve">type <a href="../../../src/internal/trace/gc.go?s=13615:13659#L478">MMUCurve</a>
+				<a class="permalink" href="index.html#MMUCurve">&#xb6;</a>
+				
+				
+			</h2>
+			<p>An MMUCurve is the minimum mutator utilization curve across
+multiple window sizes.
+
+			<pre>type MMUCurve struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="NewMMUCurve">func <a href="../../../src/internal/trace/gc.go?s=14346:14395#L508">NewMMUCurve</a>
+					<a class="permalink" href="index.html#NewMMUCurve">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func NewMMUCurve(utils [][]<a href="index.html#MutatorUtil">MutatorUtil</a>) *<a href="index.html#MMUCurve">MMUCurve</a></pre>
+				<p>NewMMUCurve returns an MMU curve for the given mutator utilization
+function.
+
+				
+				
+			
+
+			
+				
+				<h3 id="MMUCurve.Examples">func (*MMUCurve) <a href="../../../src/internal/trace/gc.go?s=21142:21219#L764">Examples</a>
+					<a class="permalink" href="index.html#MMUCurve.Examples">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#MMUCurve">MMUCurve</a>) Examples(window <a href="../../time/index.html">time</a>.<a href="../../time/index.html#Duration">Duration</a>, n <a href="../../builtin/index.html#int">int</a>) (worst []<a href="index.html#UtilWindow">UtilWindow</a>)</pre>
+				<p>Examples returns n specific examples of the lowest mutator
+utilization for the given window size. The returned windows will be
+disjoint (otherwise there would be a huge number of
+mostly-overlapping windows at the single lowest point). There are
+no guarantees on which set of disjoint windows this returns.
+
+				
+				
+				
+			
+				
+				<h3 id="MMUCurve.MMU">func (*MMUCurve) <a href="../../../src/internal/trace/gc.go?s=20678:20736#L753">MMU</a>
+					<a class="permalink" href="index.html#MMUCurve.MMU">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#MMUCurve">MMUCurve</a>) MMU(window <a href="../../time/index.html">time</a>.<a href="../../time/index.html#Duration">Duration</a>) (mmu <a href="../../builtin/index.html#float64">float64</a>)</pre>
+				<p>MMU returns the minimum mutator utilization for the given time
+window. This is the minimum utilization for all windows of this
+duration across the execution. The returned value is in the range
+[0, 1].
+
+				
+				
+				
+			
+				
+				<h3 id="MMUCurve.MUD">func (*MMUCurve) <a href="../../../src/internal/trace/gc.go?s=21796:21871#L781">MUD</a>
+					<a class="permalink" href="index.html#MMUCurve.MUD">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#MMUCurve">MMUCurve</a>) MUD(window <a href="../../time/index.html">time</a>.<a href="../../time/index.html#Duration">Duration</a>, quantiles []<a href="../../builtin/index.html#float64">float64</a>) []<a href="../../builtin/index.html#float64">float64</a></pre>
+				<p>MUD returns mutator utilization distribution quantiles for the
+given window size.
+<p>The mutator utilization distribution is the distribution of mean
+mutator utilization across all windows of the given window size in
+the trace.
+<p>The minimum mutator utilization is the minimum (0th percentile) of
+this distribution. (However, if only the minimum is desired, it&apos;s
+more efficient to use the MMU method.)
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="MutatorUtil">type <a href="../../../src/internal/trace/gc.go?s=426:571#L9">MutatorUtil</a>
+				<a class="permalink" href="index.html#MutatorUtil">&#xb6;</a>
+				
+				
+			</h2>
+			<p>MutatorUtil is a change in mutator utilization at a particular
+time. Mutator utilization functions are represented as a
+time-ordered []MutatorUtil.
+
+			<pre>type MutatorUtil struct {
+<span id="MutatorUtil.Time"></span>    Time <a href="../../builtin/index.html#int64">int64</a>
+<span id="MutatorUtil.Util"></span>    <span class="comment">// Util is the mean mutator utilization starting at Time. This</span>
+    <span class="comment">// is in the range [0, 1].</span>
+    Util <a href="../../builtin/index.html#float64">float64</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="ParseResult">type <a href="../../../src/internal/trace/parser.go?s=2269:2461#L72">ParseResult</a>
+				<a class="permalink" href="index.html#ParseResult">&#xb6;</a>
+				
+				
+			</h2>
+			<p>ParseResult is the result of Parse.
+
+			<pre>type ParseResult struct {
+<span id="ParseResult.Events"></span>    <span class="comment">// Events is the sorted list of Events in the trace.</span>
+    Events []*<a href="index.html#Event">Event</a>
+<span id="ParseResult.Stacks"></span>    <span class="comment">// Stacks is the stack traces keyed by stack IDs from the trace.</span>
+    Stacks map[<a href="../../builtin/index.html#uint64">uint64</a>][]*<a href="index.html#Frame">Frame</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="Parse">func <a href="../../../src/internal/trace/parser.go?s=2519:2575#L80">Parse</a>
+					<a class="permalink" href="index.html#Parse">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func Parse(r <a href="../../io/index.html">io</a>.<a href="../../io/index.html#Reader">Reader</a>, bin <a href="../../builtin/index.html#string">string</a>) (<a href="index.html#ParseResult">ParseResult</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+				<p>Parse parses, post-processes and verifies the trace.
+
+				
+				
+			
+
+			
+		
+			
+			
+			<h2 id="Summarizer">type <a href="../../../src/internal/trace/summary.go?s=8360:9302#L247">Summarizer</a>
+				<a class="permalink" href="index.html#Summarizer">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Summarizer constructs per-goroutine time statistics for v2 traces.
+
+			<pre>type Summarizer struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="NewSummarizer">func <a href="../../../src/internal/trace/summary.go?s=9381:9413#L270">NewSummarizer</a>
+					<a class="permalink" href="index.html#NewSummarizer">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func NewSummarizer() *<a href="index.html#Summarizer">Summarizer</a></pre>
+				<p>NewSummarizer creates a new struct to build goroutine stats from a trace.
+
+				
+				
+			
+
+			
+				
+				<h3 id="Summarizer.Event">func (*Summarizer) <a href="../../../src/internal/trace/summary.go?s=9827:9872#L286">Event</a>
+					<a class="permalink" href="index.html#Summarizer.Event">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (s *<a href="index.html#Summarizer">Summarizer</a>) Event(ev *<a href="v2/index.html">tracev2</a>.<a href="v2/index.html#Event">Event</a>)</pre>
+				<p>Event feeds a single event into the stats summarizer.
+
+				
+				
+				
+			
+				
+				<h3 id="Summarizer.Finalize">func (*Summarizer) <a href="../../../src/internal/trace/summary.go?s=19572:19612#L581">Finalize</a>
+					<a class="permalink" href="index.html#Summarizer.Finalize">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (s *<a href="index.html#Summarizer">Summarizer</a>) Finalize() *<a href="index.html#Summary">Summary</a></pre>
+				<p>Finalize indicates to the summarizer that we&apos;re done processing the trace.
+It cleans up any remaining state and returns the full summary.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Summary">type <a href="../../../src/internal/trace/summary.go?s=294:412#L4">Summary</a>
+				<a class="permalink" href="index.html#Summary">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Summary is the analysis result produced by the summarizer.
+
+			<pre>type Summary struct {
+<span id="Summary.Goroutines"></span>    Goroutines map[<a href="v2/index.html">tracev2</a>.<a href="v2/index.html#GoID">GoID</a>]*<a href="index.html#GoroutineSummary">GoroutineSummary</a>
+<span id="Summary.Tasks"></span>    Tasks      map[<a href="v2/index.html">tracev2</a>.<a href="v2/index.html#TaskID">TaskID</a>]*<a href="index.html#UserTaskSummary">UserTaskSummary</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="UserRegionDesc">type <a href="../../../src/internal/trace/goroutines.go?s=732:1205#L22">UserRegionDesc</a>
+				<a class="permalink" href="index.html#UserRegionDesc">&#xb6;</a>
+				
+				
+			</h2>
+			<p>UserRegionDesc represents a region and goroutine execution stats
+while the region was active.
+
+			<pre>type UserRegionDesc struct {
+<span id="UserRegionDesc.TaskID"></span>    TaskID <a href="../../builtin/index.html#uint64">uint64</a>
+<span id="UserRegionDesc.Name"></span>    Name   <a href="../../builtin/index.html#string">string</a>
+
+    <span class="comment">// Region start event. Normally EvUserRegion start event or nil,</span>
+    <span class="comment">// but can be EvGoCreate event if the region is a synthetic</span>
+    <span class="comment">// region representing task inheritance from the parent goroutine.</span>
+<span id="UserRegionDesc.Start"></span>    Start *<a href="index.html#Event">Event</a>
+
+    <span class="comment">// Region end event. Normally EvUserRegion end event or nil,</span>
+    <span class="comment">// but can be EvGoStop or EvGoEnd event if the goroutine</span>
+    <span class="comment">// terminated without explicitly ending the region.</span>
+<span id="UserRegionDesc.End"></span>    End *<a href="index.html#Event">Event</a>
+
+    <a href="index.html#GExecutionStat">GExecutionStat</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="UserRegionSummary">type <a href="../../../src/internal/trace/summary.go?s=2839:3392#L74">UserRegionSummary</a>
+				<a class="permalink" href="index.html#UserRegionSummary">&#xb6;</a>
+				
+				
+			</h2>
+			<p>UserRegionSummary represents a region and goroutine execution stats
+while the region was active. (For v2 traces.)
+
+			<pre>type UserRegionSummary struct {
+<span id="UserRegionSummary.TaskID"></span>    TaskID <a href="v2/index.html">tracev2</a>.<a href="v2/index.html#TaskID">TaskID</a>
+<span id="UserRegionSummary.Name"></span>    Name   <a href="../../builtin/index.html#string">string</a>
+
+    <span class="comment">// Region start event. Normally EventRegionBegin event or nil,</span>
+    <span class="comment">// but can be a state transition event from NotExist or Undetermined</span>
+    <span class="comment">// if the region is a synthetic region representing task inheritance</span>
+    <span class="comment">// from the parent goroutine.</span>
+<span id="UserRegionSummary.Start"></span>    Start *<a href="v2/index.html">tracev2</a>.<a href="v2/index.html#Event">Event</a>
+
+    <span class="comment">// Region end event. Normally EventRegionEnd event or nil,</span>
+    <span class="comment">// but can be a state transition event to NotExist if the goroutine</span>
+    <span class="comment">// terminated without explicitly ending the region.</span>
+<span id="UserRegionSummary.End"></span>    End *<a href="v2/index.html">tracev2</a>.<a href="v2/index.html#Event">Event</a>
+
+    <a href="index.html#GoroutineExecStats">GoroutineExecStats</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="UserTaskSummary">type <a href="../../../src/internal/trace/summary.go?s=1532:2154#L34">UserTaskSummary</a>
+				<a class="permalink" href="index.html#UserTaskSummary">&#xb6;</a>
+				
+				
+			</h2>
+			<p>UserTaskSummary represents a task in the trace.
+
+			<pre>type UserTaskSummary struct {
+<span id="UserTaskSummary.ID"></span>    ID       <a href="v2/index.html">tracev2</a>.<a href="v2/index.html#TaskID">TaskID</a>
+<span id="UserTaskSummary.Name"></span>    Name     <a href="../../builtin/index.html#string">string</a>
+<span id="UserTaskSummary.Parent"></span>    Parent   *<a href="index.html#UserTaskSummary">UserTaskSummary</a> <span class="comment">// nil if the parent is unknown.</span>
+<span id="UserTaskSummary.Children"></span>    Children []*<a href="index.html#UserTaskSummary">UserTaskSummary</a>
+
+    <span class="comment">// Task begin event. An EventTaskBegin event or nil.</span>
+<span id="UserTaskSummary.Start"></span>    Start *<a href="v2/index.html">tracev2</a>.<a href="v2/index.html#Event">Event</a>
+
+<span id="UserTaskSummary.End"></span>    <span class="comment">// End end event. Normally EventTaskEnd event or nil.</span>
+    End *<a href="v2/index.html">tracev2</a>.<a href="v2/index.html#Event">Event</a>
+
+<span id="UserTaskSummary.Logs"></span>    <span class="comment">// Logs is a list of tracev2.EventLog events associated with the task.</span>
+    Logs []*<a href="v2/index.html">tracev2</a>.<a href="v2/index.html#Event">Event</a>
+
+    <span class="comment">// List of regions in the task, sorted based on the start time.</span>
+<span id="UserTaskSummary.Regions"></span>    Regions []*<a href="index.html#UserRegionSummary">UserRegionSummary</a>
+
+<span id="UserTaskSummary.Goroutines"></span>    <span class="comment">// Goroutines is the set of goroutines associated with this task.</span>
+    Goroutines map[<a href="v2/index.html">tracev2</a>.<a href="v2/index.html#GoID">GoID</a>]*<a href="index.html#GoroutineSummary">GoroutineSummary</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="UserTaskSummary.Complete">func (*UserTaskSummary) <a href="../../../src/internal/trace/summary.go?s=2272:2313#L58">Complete</a>
+					<a class="permalink" href="index.html#UserTaskSummary.Complete">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (s *<a href="index.html#UserTaskSummary">UserTaskSummary</a>) Complete() <a href="../../builtin/index.html#bool">bool</a></pre>
+				<p>Complete returns true if we have complete information about the task
+from the trace: both a start and an end.
+
+				
+				
+				
+			
+				
+				<h3 id="UserTaskSummary.Descendents">func (*UserTaskSummary) <a href="../../../src/internal/trace/summary.go?s=2498:2556#L64">Descendents</a>
+					<a class="permalink" href="index.html#UserTaskSummary.Descendents">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (s *<a href="index.html#UserTaskSummary">UserTaskSummary</a>) Descendents() []*<a href="index.html#UserTaskSummary">UserTaskSummary</a></pre>
+				<p>Descendents returns a slice consisting of itself (always the first task returned),
+and the transitive closure of all of its children.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="UtilFlags">type <a href="../../../src/internal/trace/gc.go?s=631:649#L17">UtilFlags</a>
+				<a class="permalink" href="index.html#UtilFlags">&#xb6;</a>
+				
+				
+			</h2>
+			<p>UtilFlags controls the behavior of MutatorUtilization.
+
+			<pre>type UtilFlags <a href="../../builtin/index.html#int">int</a></pre>
+
+			
+				
+				<pre>const (
+    <span class="comment">// UtilSTW means utilization should account for STW events.</span>
+    <span class="comment">// This includes non-GC STW events, which are typically user-requested.</span>
+    <span id="UtilSTW">UtilSTW</span> <a href="index.html#UtilFlags">UtilFlags</a> = 1 &lt;&lt; <a href="../../builtin/index.html#iota">iota</a>
+    <span class="comment">// UtilBackground means utilization should account for</span>
+    <span class="comment">// background mark workers.</span>
+    <span id="UtilBackground">UtilBackground</span>
+    <span class="comment">// UtilAssist means utilization should account for mark</span>
+    <span class="comment">// assists.</span>
+    <span id="UtilAssist">UtilAssist</span>
+    <span class="comment">// UtilSweep means utilization should account for sweeping.</span>
+    <span id="UtilSweep">UtilSweep</span>
+
+    <span class="comment">// UtilPerProc means each P should be given a separate</span>
+    <span class="comment">// utilization function. Otherwise, there is a single function</span>
+    <span class="comment">// and each P is given a fraction of the utilization.</span>
+    <span id="UtilPerProc">UtilPerProc</span>
+)</pre>
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="UtilWindow">type <a href="../../../src/internal/trace/gc.go?s=16718:16841#L607">UtilWindow</a>
+				<a class="permalink" href="index.html#UtilWindow">&#xb6;</a>
+				
+				
+			</h2>
+			<p>UtilWindow is a specific window at Time.
+
+			<pre>type UtilWindow struct {
+<span id="UtilWindow.Time"></span>    Time <a href="../../builtin/index.html#int64">int64</a>
+<span id="UtilWindow.MutatorUtil"></span>    <span class="comment">// MutatorUtil is the mean mutator utilization in this window.</span>
+    MutatorUtil <a href="../../builtin/index.html#float64">float64</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="Writer">type <a href="../../../src/internal/trace/writer.go?s=225:261#L1">Writer</a>
+				<a class="permalink" href="index.html#Writer">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Writer is a test trace writer.
+
+			<pre>type Writer struct {
+    <a href="../../bytes/index.html">bytes</a>.<a href="../../bytes/index.html#Buffer">Buffer</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="NewWriter">func <a href="../../../src/internal/trace/writer.go?s=263:287#L4">NewWriter</a>
+					<a class="permalink" href="index.html#NewWriter">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func NewWriter() *<a href="index.html#Writer">Writer</a></pre>
+				
+				
+				
+			
+
+			
+				
+				<h3 id="Writer.Emit">func (*Writer) <a href="../../../src/internal/trace/writer.go?s=474:521#L12">Emit</a>
+					<a class="permalink" href="index.html#Writer.Emit">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (w *<a href="index.html#Writer">Writer</a>) Emit(typ <a href="../../builtin/index.html#byte">byte</a>, args ...<a href="../../builtin/index.html#uint64">uint64</a>)</pre>
+				<p>Emit writes an event record to the trace.
+See Event types for valid types and required arguments.
+
+				
+				
+				
+			
+		
+	
+
+	
+
+
+
+
+
+	
+	
+		<h2 id="pkg-subdirectories">Subdirectories</h2>
+	
+	<div class="pkg-dir">
+		<table>
+			<tr>
+				<th class="pkg-name">Name</th>
+				<th class="pkg-synopsis">Synopsis</th>
+			</tr>
+
+			
+			<tr>
+				<td colspan="2"><a href="../index.html">..</a></td>
+			</tr>
+			
+
+			
+		</table>
+	</div>
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>src/context/context.go - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../index.html">GoDoc</a></div>
+<a href="./context.go?s=8248:8270#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Source file
+    <a href="http://localhost:8080/src">src</a>/<a href="http://localhost:8080/src/context">context</a>/<span class="text-muted">context.go</span>
+  </h1>
+
+
+
+
+
+  <h2>
+    Documentation: <a href="http://localhost:8080/pkg/context">context</a>
+  </h2>
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1&nbsp;&nbsp;</span><span class="comment">// Copyright 2014 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2&nbsp;&nbsp;</span><span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3&nbsp;&nbsp;</span><span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4&nbsp;&nbsp;</span>
+<span id="L5" class="ln">     5&nbsp;&nbsp;</span><span class="comment">// Package context defines the Context type, which carries deadlines,</span>
+<span id="L6" class="ln">     6&nbsp;&nbsp;</span><span class="comment">// cancellation signals, and other request-scoped values across API boundaries</span>
+<span id="L7" class="ln">     7&nbsp;&nbsp;</span><span class="comment">// and between processes.</span>
+<span id="L8" class="ln">     8&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L9" class="ln">     9&nbsp;&nbsp;</span><span class="comment">// Incoming requests to a server should create a [Context], and outgoing</span>
+<span id="L10" class="ln">    10&nbsp;&nbsp;</span><span class="comment">// calls to servers should accept a Context. The chain of function</span>
+<span id="L11" class="ln">    11&nbsp;&nbsp;</span><span class="comment">// calls between them must propagate the Context, optionally replacing</span>
+<span id="L12" class="ln">    12&nbsp;&nbsp;</span><span class="comment">// it with a derived Context created using [WithCancel], [WithDeadline],</span>
+<span id="L13" class="ln">    13&nbsp;&nbsp;</span><span class="comment">// [WithTimeout], or [WithValue]. When a Context is canceled, all</span>
+<span id="L14" class="ln">    14&nbsp;&nbsp;</span><span class="comment">// Contexts derived from it are also canceled.</span>
+<span id="L15" class="ln">    15&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L16" class="ln">    16&nbsp;&nbsp;</span><span class="comment">// The [WithCancel], [WithDeadline], and [WithTimeout] functions take a</span>
+<span id="L17" class="ln">    17&nbsp;&nbsp;</span><span class="comment">// Context (the parent) and return a derived Context (the child) and a</span>
+<span id="L18" class="ln">    18&nbsp;&nbsp;</span><span class="comment">// [CancelFunc]. Calling the CancelFunc cancels the child and its</span>
+<span id="L19" class="ln">    19&nbsp;&nbsp;</span><span class="comment">// children, removes the parent&#39;s reference to the child, and stops</span>
+<span id="L20" class="ln">    20&nbsp;&nbsp;</span><span class="comment">// any associated timers. Failing to call the CancelFunc leaks the</span>
+<span id="L21" class="ln">    21&nbsp;&nbsp;</span><span class="comment">// child and its children until the parent is canceled or the timer</span>
+<span id="L22" class="ln">    22&nbsp;&nbsp;</span><span class="comment">// fires. The go vet tool checks that CancelFuncs are used on all</span>
+<span id="L23" class="ln">    23&nbsp;&nbsp;</span><span class="comment">// control-flow paths.</span>
+<span id="L24" class="ln">    24&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L25" class="ln">    25&nbsp;&nbsp;</span><span class="comment">// The [WithCancelCause] function returns a [CancelCauseFunc], which</span>
+<span id="L26" class="ln">    26&nbsp;&nbsp;</span><span class="comment">// takes an error and records it as the cancellation cause. Calling</span>
+<span id="L27" class="ln">    27&nbsp;&nbsp;</span><span class="comment">// [Cause] on the canceled context or any of its children retrieves</span>
+<span id="L28" class="ln">    28&nbsp;&nbsp;</span><span class="comment">// the cause. If no cause is specified, Cause(ctx) returns the same</span>
+<span id="L29" class="ln">    29&nbsp;&nbsp;</span><span class="comment">// value as ctx.Err().</span>
+<span id="L30" class="ln">    30&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L31" class="ln">    31&nbsp;&nbsp;</span><span class="comment">// Programs that use Contexts should follow these rules to keep interfaces</span>
+<span id="L32" class="ln">    32&nbsp;&nbsp;</span><span class="comment">// consistent across packages and enable static analysis tools to check context</span>
+<span id="L33" class="ln">    33&nbsp;&nbsp;</span><span class="comment">// propagation:</span>
+<span id="L34" class="ln">    34&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L35" class="ln">    35&nbsp;&nbsp;</span><span class="comment">// Do not store Contexts inside a struct type; instead, pass a Context</span>
+<span id="L36" class="ln">    36&nbsp;&nbsp;</span><span class="comment">// explicitly to each function that needs it. The Context should be the first</span>
+<span id="L37" class="ln">    37&nbsp;&nbsp;</span><span class="comment">// parameter, typically named ctx:</span>
+<span id="L38" class="ln">    38&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L39" class="ln">    39&nbsp;&nbsp;</span><span class="comment">//	func DoSomething(ctx context.Context, arg Arg) error {</span>
+<span id="L40" class="ln">    40&nbsp;&nbsp;</span><span class="comment">//		// ... use ctx ...</span>
+<span id="L41" class="ln">    41&nbsp;&nbsp;</span><span class="comment">//	}</span>
+<span id="L42" class="ln">    42&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L43" class="ln">    43&nbsp;&nbsp;</span><span class="comment">// Do not pass a nil [Context], even if a function permits it. Pass [context.TODO]</span>
+<span id="L44" class="ln">    44&nbsp;&nbsp;</span><span class="comment">// if you are unsure about which Context to use.</span>
+<span id="L45" class="ln">    45&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L46" class="ln">    46&nbsp;&nbsp;</span><span class="comment">// Use context Values only for request-scoped data that transits processes and</span>
+<span id="L47" class="ln">    47&nbsp;&nbsp;</span><span class="comment">// APIs, not for passing optional parameters to functions.</span>
+<span id="L48" class="ln">    48&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L49" class="ln">    49&nbsp;&nbsp;</span><span class="comment">// The same Context may be passed to functions running in different goroutines;</span>
+<span id="L50" class="ln">    50&nbsp;&nbsp;</span><span class="comment">// Contexts are safe for simultaneous use by multiple goroutines.</span>
+<span id="L51" class="ln">    51&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L52" class="ln">    52&nbsp;&nbsp;</span><span class="comment">// See https://blog.golang.org/context for example code for a server that uses</span>
+<span id="L53" class="ln">    53&nbsp;&nbsp;</span><span class="comment">// Contexts.</span>
+<span id="L54" class="ln">    54&nbsp;&nbsp;</span>package context
+<span id="L55" class="ln">    55&nbsp;&nbsp;</span>
+<span id="L56" class="ln">    56&nbsp;&nbsp;</span>import (
+<span id="L57" class="ln">    57&nbsp;&nbsp;</span>	&#34;errors&#34;
+<span id="L58" class="ln">    58&nbsp;&nbsp;</span>	&#34;internal/reflectlite&#34;
+<span id="L59" class="ln">    59&nbsp;&nbsp;</span>	&#34;sync&#34;
+<span id="L60" class="ln">    60&nbsp;&nbsp;</span>	&#34;sync/atomic&#34;
+<span id="L61" class="ln">    61&nbsp;&nbsp;</span>	&#34;time&#34;
+<span id="L62" class="ln">    62&nbsp;&nbsp;</span>)
+<span id="L63" class="ln">    63&nbsp;&nbsp;</span>
+<span id="L64" class="ln">    64&nbsp;&nbsp;</span><span class="comment">// A Context carries a deadline, a cancellation signal, and other values across</span>
+<span id="L65" class="ln">    65&nbsp;&nbsp;</span><span class="comment">// API boundaries.</span>
+<span id="L66" class="ln">    66&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L67" class="ln">    67&nbsp;&nbsp;</span><span class="comment">// Context&#39;s methods may be called by multiple goroutines simultaneously.</span>
+<span id="L68" class="ln">    68&nbsp;&nbsp;</span>type Context interface {
+<span id="L69" class="ln">    69&nbsp;&nbsp;</span>	<span class="comment">// Deadline returns the time when work done on behalf of this context</span>
+<span id="L70" class="ln">    70&nbsp;&nbsp;</span>	<span class="comment">// should be canceled. Deadline returns ok==false when no deadline is</span>
+<span id="L71" class="ln">    71&nbsp;&nbsp;</span>	<span class="comment">// set. Successive calls to Deadline return the same results.</span>
+<span id="L72" class="ln">    72&nbsp;&nbsp;</span>	Deadline() (deadline time.Time, ok bool)
+<span id="L73" class="ln">    73&nbsp;&nbsp;</span>
+<span id="L74" class="ln">    74&nbsp;&nbsp;</span>	<span class="comment">// Done returns a channel that&#39;s closed when work done on behalf of this</span>
+<span id="L75" class="ln">    75&nbsp;&nbsp;</span>	<span class="comment">// context should be canceled. Done may return nil if this context can</span>
+<span id="L76" class="ln">    76&nbsp;&nbsp;</span>	<span class="comment">// never be canceled. Successive calls to Done return the same value.</span>
+<span id="L77" class="ln">    77&nbsp;&nbsp;</span>	<span class="comment">// The close of the Done channel may happen asynchronously,</span>
+<span id="L78" class="ln">    78&nbsp;&nbsp;</span>	<span class="comment">// after the cancel function returns.</span>
+<span id="L79" class="ln">    79&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L80" class="ln">    80&nbsp;&nbsp;</span>	<span class="comment">// WithCancel arranges for Done to be closed when cancel is called;</span>
+<span id="L81" class="ln">    81&nbsp;&nbsp;</span>	<span class="comment">// WithDeadline arranges for Done to be closed when the deadline</span>
+<span id="L82" class="ln">    82&nbsp;&nbsp;</span>	<span class="comment">// expires; WithTimeout arranges for Done to be closed when the timeout</span>
+<span id="L83" class="ln">    83&nbsp;&nbsp;</span>	<span class="comment">// elapses.</span>
+<span id="L84" class="ln">    84&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L85" class="ln">    85&nbsp;&nbsp;</span>	<span class="comment">// Done is provided for use in select statements:</span>
+<span id="L86" class="ln">    86&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L87" class="ln">    87&nbsp;&nbsp;</span>	<span class="comment">//  // Stream generates values with DoSomething and sends them to out</span>
+<span id="L88" class="ln">    88&nbsp;&nbsp;</span>	<span class="comment">//  // until DoSomething returns an error or ctx.Done is closed.</span>
+<span id="L89" class="ln">    89&nbsp;&nbsp;</span>	<span class="comment">//  func Stream(ctx context.Context, out chan&lt;- Value) error {</span>
+<span id="L90" class="ln">    90&nbsp;&nbsp;</span>	<span class="comment">//  	for {</span>
+<span id="L91" class="ln">    91&nbsp;&nbsp;</span>	<span class="comment">//  		v, err := DoSomething(ctx)</span>
+<span id="L92" class="ln">    92&nbsp;&nbsp;</span>	<span class="comment">//  		if err != nil {</span>
+<span id="L93" class="ln">    93&nbsp;&nbsp;</span>	<span class="comment">//  			return err</span>
+<span id="L94" class="ln">    94&nbsp;&nbsp;</span>	<span class="comment">//  		}</span>
+<span id="L95" class="ln">    95&nbsp;&nbsp;</span>	<span class="comment">//  		select {</span>
+<span id="L96" class="ln">    96&nbsp;&nbsp;</span>	<span class="comment">//  		case &lt;-ctx.Done():</span>
+<span id="L97" class="ln">    97&nbsp;&nbsp;</span>	<span class="comment">//  			return ctx.Err()</span>
+<span id="L98" class="ln">    98&nbsp;&nbsp;</span>	<span class="comment">//  		case out &lt;- v:</span>
+<span id="L99" class="ln">    99&nbsp;&nbsp;</span>	<span class="comment">//  		}</span>
+<span id="L100" class="ln">   100&nbsp;&nbsp;</span>	<span class="comment">//  	}</span>
+<span id="L101" class="ln">   101&nbsp;&nbsp;</span>	<span class="comment">//  }</span>
+<span id="L102" class="ln">   102&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L103" class="ln">   103&nbsp;&nbsp;</span>	<span class="comment">// See https://blog.golang.org/pipelines for more examples of how to use</span>
+<span id="L104" class="ln">   104&nbsp;&nbsp;</span>	<span class="comment">// a Done channel for cancellation.</span>
+<span id="L105" class="ln">   105&nbsp;&nbsp;</span>	Done() &lt;-chan struct{}
+<span id="L106" class="ln">   106&nbsp;&nbsp;</span>
+<span id="L107" class="ln">   107&nbsp;&nbsp;</span>	<span class="comment">// If Done is not yet closed, Err returns nil.</span>
+<span id="L108" class="ln">   108&nbsp;&nbsp;</span>	<span class="comment">// If Done is closed, Err returns a non-nil error explaining why:</span>
+<span id="L109" class="ln">   109&nbsp;&nbsp;</span>	<span class="comment">// Canceled if the context was canceled</span>
+<span id="L110" class="ln">   110&nbsp;&nbsp;</span>	<span class="comment">// or DeadlineExceeded if the context&#39;s deadline passed.</span>
+<span id="L111" class="ln">   111&nbsp;&nbsp;</span>	<span class="comment">// After Err returns a non-nil error, successive calls to Err return the same error.</span>
+<span id="L112" class="ln">   112&nbsp;&nbsp;</span>	Err() error
+<span id="L113" class="ln">   113&nbsp;&nbsp;</span>
+<span id="L114" class="ln">   114&nbsp;&nbsp;</span>	<span class="comment">// Value returns the value associated with this context for key, or nil</span>
+<span id="L115" class="ln">   115&nbsp;&nbsp;</span>	<span class="comment">// if no value is associated with key. Successive calls to Value with</span>
+<span id="L116" class="ln">   116&nbsp;&nbsp;</span>	<span class="comment">// the same key returns the same result.</span>
+<span id="L117" class="ln">   117&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L118" class="ln">   118&nbsp;&nbsp;</span>	<span class="comment">// Use context values only for request-scoped data that transits</span>
+<span id="L119" class="ln">   119&nbsp;&nbsp;</span>	<span class="comment">// processes and API boundaries, not for passing optional parameters to</span>
+<span id="L120" class="ln">   120&nbsp;&nbsp;</span>	<span class="comment">// functions.</span>
+<span id="L121" class="ln">   121&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L122" class="ln">   122&nbsp;&nbsp;</span>	<span class="comment">// A key identifies a specific value in a Context. Functions that wish</span>
+<span id="L123" class="ln">   123&nbsp;&nbsp;</span>	<span class="comment">// to store values in Context typically allocate a key in a global</span>
+<span id="L124" class="ln">   124&nbsp;&nbsp;</span>	<span class="comment">// variable then use that key as the argument to context.WithValue and</span>
+<span id="L125" class="ln">   125&nbsp;&nbsp;</span>	<span class="comment">// Context.Value. A key can be any type that supports equality;</span>
+<span id="L126" class="ln">   126&nbsp;&nbsp;</span>	<span class="comment">// packages should define keys as an unexported type to avoid</span>
+<span id="L127" class="ln">   127&nbsp;&nbsp;</span>	<span class="comment">// collisions.</span>
+<span id="L128" class="ln">   128&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L129" class="ln">   129&nbsp;&nbsp;</span>	<span class="comment">// Packages that define a Context key should provide type-safe accessors</span>
+<span id="L130" class="ln">   130&nbsp;&nbsp;</span>	<span class="comment">// for the values stored using that key:</span>
+<span id="L131" class="ln">   131&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L132" class="ln">   132&nbsp;&nbsp;</span>	<span class="comment">// 	// Package user defines a User type that&#39;s stored in Contexts.</span>
+<span id="L133" class="ln">   133&nbsp;&nbsp;</span>	<span class="comment">// 	package user</span>
+<span id="L134" class="ln">   134&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L135" class="ln">   135&nbsp;&nbsp;</span>	<span class="comment">// 	import &#34;context&#34;</span>
+<span id="L136" class="ln">   136&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L137" class="ln">   137&nbsp;&nbsp;</span>	<span class="comment">// 	// User is the type of value stored in the Contexts.</span>
+<span id="L138" class="ln">   138&nbsp;&nbsp;</span>	<span class="comment">// 	type User struct {...}</span>
+<span id="L139" class="ln">   139&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L140" class="ln">   140&nbsp;&nbsp;</span>	<span class="comment">// 	// key is an unexported type for keys defined in this package.</span>
+<span id="L141" class="ln">   141&nbsp;&nbsp;</span>	<span class="comment">// 	// This prevents collisions with keys defined in other packages.</span>
+<span id="L142" class="ln">   142&nbsp;&nbsp;</span>	<span class="comment">// 	type key int</span>
+<span id="L143" class="ln">   143&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L144" class="ln">   144&nbsp;&nbsp;</span>	<span class="comment">// 	// userKey is the key for user.User values in Contexts. It is</span>
+<span id="L145" class="ln">   145&nbsp;&nbsp;</span>	<span class="comment">// 	// unexported; clients use user.NewContext and user.FromContext</span>
+<span id="L146" class="ln">   146&nbsp;&nbsp;</span>	<span class="comment">// 	// instead of using this key directly.</span>
+<span id="L147" class="ln">   147&nbsp;&nbsp;</span>	<span class="comment">// 	var userKey key</span>
+<span id="L148" class="ln">   148&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L149" class="ln">   149&nbsp;&nbsp;</span>	<span class="comment">// 	// NewContext returns a new Context that carries value u.</span>
+<span id="L150" class="ln">   150&nbsp;&nbsp;</span>	<span class="comment">// 	func NewContext(ctx context.Context, u *User) context.Context {</span>
+<span id="L151" class="ln">   151&nbsp;&nbsp;</span>	<span class="comment">// 		return context.WithValue(ctx, userKey, u)</span>
+<span id="L152" class="ln">   152&nbsp;&nbsp;</span>	<span class="comment">// 	}</span>
+<span id="L153" class="ln">   153&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L154" class="ln">   154&nbsp;&nbsp;</span>	<span class="comment">// 	// FromContext returns the User value stored in ctx, if any.</span>
+<span id="L155" class="ln">   155&nbsp;&nbsp;</span>	<span class="comment">// 	func FromContext(ctx context.Context) (*User, bool) {</span>
+<span id="L156" class="ln">   156&nbsp;&nbsp;</span>	<span class="comment">// 		u, ok := ctx.Value(userKey).(*User)</span>
+<span id="L157" class="ln">   157&nbsp;&nbsp;</span>	<span class="comment">// 		return u, ok</span>
+<span id="L158" class="ln">   158&nbsp;&nbsp;</span>	<span class="comment">// 	}</span>
+<span id="L159" class="ln">   159&nbsp;&nbsp;</span>	Value(key any) any
+<span id="L160" class="ln">   160&nbsp;&nbsp;</span>}
+<span id="L161" class="ln">   161&nbsp;&nbsp;</span>
+<span id="L162" class="ln">   162&nbsp;&nbsp;</span><span class="comment">// Canceled is the error returned by [Context.Err] when the context is canceled.</span>
+<span id="L163" class="ln">   163&nbsp;&nbsp;</span>var Canceled = errors.New(&#34;context canceled&#34;)
+<span id="L164" class="ln">   164&nbsp;&nbsp;</span>
+<span id="L165" class="ln">   165&nbsp;&nbsp;</span><span class="comment">// DeadlineExceeded is the error returned by [Context.Err] when the context&#39;s</span>
+<span id="L166" class="ln">   166&nbsp;&nbsp;</span><span class="comment">// deadline passes.</span>
+<span id="L167" class="ln">   167&nbsp;&nbsp;</span>var DeadlineExceeded error = deadlineExceededError{}
+<span id="L168" class="ln">   168&nbsp;&nbsp;</span>
+<span id="L169" class="ln">   169&nbsp;&nbsp;</span>type deadlineExceededError struct{}
+<span id="L170" class="ln">   170&nbsp;&nbsp;</span>
+<span id="L171" class="ln">   171&nbsp;&nbsp;</span>func (deadlineExceededError) Error() string   { return &#34;context deadline exceeded&#34; }
+<span id="L172" class="ln">   172&nbsp;&nbsp;</span>func (deadlineExceededError) Timeout() bool   { return true }
+<span id="L173" class="ln">   173&nbsp;&nbsp;</span>func (deadlineExceededError) Temporary() bool { return true }
+<span id="L174" class="ln">   174&nbsp;&nbsp;</span>
+<span id="L175" class="ln">   175&nbsp;&nbsp;</span><span class="comment">// An emptyCtx is never canceled, has no values, and has no deadline.</span>
+<span id="L176" class="ln">   176&nbsp;&nbsp;</span><span class="comment">// It is the common base of backgroundCtx and todoCtx.</span>
+<span id="L177" class="ln">   177&nbsp;&nbsp;</span>type emptyCtx struct{}
+<span id="L178" class="ln">   178&nbsp;&nbsp;</span>
+<span id="L179" class="ln">   179&nbsp;&nbsp;</span>func (emptyCtx) Deadline() (deadline time.Time, ok bool) {
+<span id="L180" class="ln">   180&nbsp;&nbsp;</span>	return
+<span id="L181" class="ln">   181&nbsp;&nbsp;</span>}
+<span id="L182" class="ln">   182&nbsp;&nbsp;</span>
+<span id="L183" class="ln">   183&nbsp;&nbsp;</span>func (emptyCtx) Done() &lt;-chan struct{} {
+<span id="L184" class="ln">   184&nbsp;&nbsp;</span>	return nil
+<span id="L185" class="ln">   185&nbsp;&nbsp;</span>}
+<span id="L186" class="ln">   186&nbsp;&nbsp;</span>
+<span id="L187" class="ln">   187&nbsp;&nbsp;</span>func (emptyCtx) Err() error {
+<span id="L188" class="ln">   188&nbsp;&nbsp;</span>	return nil
+<span id="L189" class="ln">   189&nbsp;&nbsp;</span>}
+<span id="L190" class="ln">   190&nbsp;&nbsp;</span>
+<span id="L191" class="ln">   191&nbsp;&nbsp;</span>func (emptyCtx) Value(key any) any {
+<span id="L192" class="ln">   192&nbsp;&nbsp;</span>	return nil
+<span id="L193" class="ln">   193&nbsp;&nbsp;</span>}
+<span id="L194" class="ln">   194&nbsp;&nbsp;</span>
+<span id="L195" class="ln">   195&nbsp;&nbsp;</span>type backgroundCtx struct{ emptyCtx }
+<span id="L196" class="ln">   196&nbsp;&nbsp;</span>
+<span id="L197" class="ln">   197&nbsp;&nbsp;</span>func (backgroundCtx) String() string {
+<span id="L198" class="ln">   198&nbsp;&nbsp;</span>	return &#34;context.Background&#34;
+<span id="L199" class="ln">   199&nbsp;&nbsp;</span>}
+<span id="L200" class="ln">   200&nbsp;&nbsp;</span>
+<span id="L201" class="ln">   201&nbsp;&nbsp;</span>type todoCtx struct{ emptyCtx }
+<span id="L202" class="ln">   202&nbsp;&nbsp;</span>
+<span id="L203" class="ln">   203&nbsp;&nbsp;</span>func (todoCtx) String() string {
+<span id="L204" class="ln">   204&nbsp;&nbsp;</span>	return &#34;context.TODO&#34;
+<span id="L205" class="ln">   205&nbsp;&nbsp;</span>}
+<span id="L206" class="ln">   206&nbsp;&nbsp;</span>
+<span id="L207" class="ln">   207&nbsp;&nbsp;</span><span class="comment">// Background returns a non-nil, empty [Context]. It is never canceled, has no</span>
+<span id="L208" class="ln">   208&nbsp;&nbsp;</span><span class="comment">// values, and has no deadline. It is typically used by the main function,</span>
+<span id="L209" class="ln">   209&nbsp;&nbsp;</span><span class="comment">// initialization, and tests, and as the top-level Context for incoming</span>
+<span id="L210" class="ln">   210&nbsp;&nbsp;</span><span class="comment">// requests.</span>
+<span id="L211" class="ln">   211&nbsp;&nbsp;</span>func Background() Context {
+<span id="L212" class="ln">   212&nbsp;&nbsp;</span>	return backgroundCtx{}
+<span id="L213" class="ln">   213&nbsp;&nbsp;</span>}
+<span id="L214" class="ln">   214&nbsp;&nbsp;</span>
+<span id="L215" class="ln">   215&nbsp;&nbsp;</span><span class="comment">// TODO returns a non-nil, empty [Context]. Code should use context.TODO when</span>
+<span id="L216" class="ln">   216&nbsp;&nbsp;</span><span class="comment">// it&#39;s unclear which Context to use or it is not yet available (because the</span>
+<span id="L217" class="ln">   217&nbsp;&nbsp;</span><span class="comment">// surrounding function has not yet been extended to accept a Context</span>
+<span id="L218" class="ln">   218&nbsp;&nbsp;</span><span class="comment">// parameter).</span>
+<span id="L219" class="ln">   219&nbsp;&nbsp;</span>func TODO() Context {
+<span id="L220" class="ln">   220&nbsp;&nbsp;</span>	return todoCtx{}
+<span id="L221" class="ln">   221&nbsp;&nbsp;</span>}
+<span id="L222" class="ln">   222&nbsp;&nbsp;</span>
+<span id="L223" class="ln">   223&nbsp;&nbsp;</span><span class="comment">// A CancelFunc tells an operation to abandon its work.</span>
+<span id="L224" class="ln">   224&nbsp;&nbsp;</span><span class="comment">// A CancelFunc does not wait for the work to stop.</span>
+<span id="L225" class="ln">   225&nbsp;&nbsp;</span><span class="comment">// A CancelFunc may be called by multiple goroutines simultaneously.</span>
+<span id="L226" class="ln">   226&nbsp;&nbsp;</span><span class="comment">// After the first call, subsequent calls to a CancelFunc do nothing.</span>
+<span id="L227" class="ln">   227&nbsp;&nbsp;</span><span class="selection">type CancelFunc func()</span>
+<span id="L228" class="ln">   228&nbsp;&nbsp;</span>
+<span id="L229" class="ln">   229&nbsp;&nbsp;</span><span class="comment">// WithCancel returns a copy of parent with a new Done channel. The returned</span>
+<span id="L230" class="ln">   230&nbsp;&nbsp;</span><span class="comment">// context&#39;s Done channel is closed when the returned cancel function is called</span>
+<span id="L231" class="ln">   231&nbsp;&nbsp;</span><span class="comment">// or when the parent context&#39;s Done channel is closed, whichever happens first.</span>
+<span id="L232" class="ln">   232&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L233" class="ln">   233&nbsp;&nbsp;</span><span class="comment">// Canceling this context releases resources associated with it, so code should</span>
+<span id="L234" class="ln">   234&nbsp;&nbsp;</span><span class="comment">// call cancel as soon as the operations running in this Context complete.</span>
+<span id="L235" class="ln">   235&nbsp;&nbsp;</span>func WithCancel(parent Context) (ctx Context, cancel CancelFunc) {
+<span id="L236" class="ln">   236&nbsp;&nbsp;</span>	c := withCancel(parent)
+<span id="L237" class="ln">   237&nbsp;&nbsp;</span>	return c, func() { c.cancel(true, Canceled, nil) }
+<span id="L238" class="ln">   238&nbsp;&nbsp;</span>}
+<span id="L239" class="ln">   239&nbsp;&nbsp;</span>
+<span id="L240" class="ln">   240&nbsp;&nbsp;</span><span class="comment">// A CancelCauseFunc behaves like a [CancelFunc] but additionally sets the cancellation cause.</span>
+<span id="L241" class="ln">   241&nbsp;&nbsp;</span><span class="comment">// This cause can be retrieved by calling [Cause] on the canceled Context or on</span>
+<span id="L242" class="ln">   242&nbsp;&nbsp;</span><span class="comment">// any of its derived Contexts.</span>
+<span id="L243" class="ln">   243&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L244" class="ln">   244&nbsp;&nbsp;</span><span class="comment">// If the context has already been canceled, CancelCauseFunc does not set the cause.</span>
+<span id="L245" class="ln">   245&nbsp;&nbsp;</span><span class="comment">// For example, if childContext is derived from parentContext:</span>
+<span id="L246" class="ln">   246&nbsp;&nbsp;</span><span class="comment">//   - if parentContext is canceled with cause1 before childContext is canceled with cause2,</span>
+<span id="L247" class="ln">   247&nbsp;&nbsp;</span><span class="comment">//     then Cause(parentContext) == Cause(childContext) == cause1</span>
+<span id="L248" class="ln">   248&nbsp;&nbsp;</span><span class="comment">//   - if childContext is canceled with cause2 before parentContext is canceled with cause1,</span>
+<span id="L249" class="ln">   249&nbsp;&nbsp;</span><span class="comment">//     then Cause(parentContext) == cause1 and Cause(childContext) == cause2</span>
+<span id="L250" class="ln">   250&nbsp;&nbsp;</span>type CancelCauseFunc func(cause error)
+<span id="L251" class="ln">   251&nbsp;&nbsp;</span>
+<span id="L252" class="ln">   252&nbsp;&nbsp;</span><span class="comment">// WithCancelCause behaves like [WithCancel] but returns a [CancelCauseFunc] instead of a [CancelFunc].</span>
+<span id="L253" class="ln">   253&nbsp;&nbsp;</span><span class="comment">// Calling cancel with a non-nil error (the &#34;cause&#34;) records that error in ctx;</span>
+<span id="L254" class="ln">   254&nbsp;&nbsp;</span><span class="comment">// it can then be retrieved using Cause(ctx).</span>
+<span id="L255" class="ln">   255&nbsp;&nbsp;</span><span class="comment">// Calling cancel with nil sets the cause to Canceled.</span>
+<span id="L256" class="ln">   256&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L257" class="ln">   257&nbsp;&nbsp;</span><span class="comment">// Example use:</span>
+<span id="L258" class="ln">   258&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L259" class="ln">   259&nbsp;&nbsp;</span><span class="comment">//	ctx, cancel := context.WithCancelCause(parent)</span>
+<span id="L260" class="ln">   260&nbsp;&nbsp;</span><span class="comment">//	cancel(myError)</span>
+<span id="L261" class="ln">   261&nbsp;&nbsp;</span><span class="comment">//	ctx.Err() // returns context.Canceled</span>
+<span id="L262" class="ln">   262&nbsp;&nbsp;</span><span class="comment">//	context.Cause(ctx) // returns myError</span>
+<span id="L263" class="ln">   263&nbsp;&nbsp;</span>func WithCancelCause(parent Context) (ctx Context, cancel CancelCauseFunc) {
+<span id="L264" class="ln">   264&nbsp;&nbsp;</span>	c := withCancel(parent)
+<span id="L265" class="ln">   265&nbsp;&nbsp;</span>	return c, func(cause error) { c.cancel(true, Canceled, cause) }
+<span id="L266" class="ln">   266&nbsp;&nbsp;</span>}
+<span id="L267" class="ln">   267&nbsp;&nbsp;</span>
+<span id="L268" class="ln">   268&nbsp;&nbsp;</span>func withCancel(parent Context) *cancelCtx {
+<span id="L269" class="ln">   269&nbsp;&nbsp;</span>	if parent == nil {
+<span id="L270" class="ln">   270&nbsp;&nbsp;</span>		panic(&#34;cannot create context from nil parent&#34;)
+<span id="L271" class="ln">   271&nbsp;&nbsp;</span>	}
+<span id="L272" class="ln">   272&nbsp;&nbsp;</span>	c := &amp;cancelCtx{}
+<span id="L273" class="ln">   273&nbsp;&nbsp;</span>	c.propagateCancel(parent, c)
+<span id="L274" class="ln">   274&nbsp;&nbsp;</span>	return c
+<span id="L275" class="ln">   275&nbsp;&nbsp;</span>}
+<span id="L276" class="ln">   276&nbsp;&nbsp;</span>
+<span id="L277" class="ln">   277&nbsp;&nbsp;</span><span class="comment">// Cause returns a non-nil error explaining why c was canceled.</span>
+<span id="L278" class="ln">   278&nbsp;&nbsp;</span><span class="comment">// The first cancellation of c or one of its parents sets the cause.</span>
+<span id="L279" class="ln">   279&nbsp;&nbsp;</span><span class="comment">// If that cancellation happened via a call to CancelCauseFunc(err),</span>
+<span id="L280" class="ln">   280&nbsp;&nbsp;</span><span class="comment">// then [Cause] returns err.</span>
+<span id="L281" class="ln">   281&nbsp;&nbsp;</span><span class="comment">// Otherwise Cause(c) returns the same value as c.Err().</span>
+<span id="L282" class="ln">   282&nbsp;&nbsp;</span><span class="comment">// Cause returns nil if c has not been canceled yet.</span>
+<span id="L283" class="ln">   283&nbsp;&nbsp;</span>func Cause(c Context) error {
+<span id="L284" class="ln">   284&nbsp;&nbsp;</span>	if cc, ok := c.Value(&amp;cancelCtxKey).(*cancelCtx); ok {
+<span id="L285" class="ln">   285&nbsp;&nbsp;</span>		cc.mu.Lock()
+<span id="L286" class="ln">   286&nbsp;&nbsp;</span>		defer cc.mu.Unlock()
+<span id="L287" class="ln">   287&nbsp;&nbsp;</span>		return cc.cause
+<span id="L288" class="ln">   288&nbsp;&nbsp;</span>	}
+<span id="L289" class="ln">   289&nbsp;&nbsp;</span>	<span class="comment">// There is no cancelCtxKey value, so we know that c is</span>
+<span id="L290" class="ln">   290&nbsp;&nbsp;</span>	<span class="comment">// not a descendant of some Context created by WithCancelCause.</span>
+<span id="L291" class="ln">   291&nbsp;&nbsp;</span>	<span class="comment">// Therefore, there is no specific cause to return.</span>
+<span id="L292" class="ln">   292&nbsp;&nbsp;</span>	<span class="comment">// If this is not one of the standard Context types,</span>
+<span id="L293" class="ln">   293&nbsp;&nbsp;</span>	<span class="comment">// it might still have an error even though it won&#39;t have a cause.</span>
+<span id="L294" class="ln">   294&nbsp;&nbsp;</span>	return c.Err()
+<span id="L295" class="ln">   295&nbsp;&nbsp;</span>}
+<span id="L296" class="ln">   296&nbsp;&nbsp;</span>
+<span id="L297" class="ln">   297&nbsp;&nbsp;</span><span class="comment">// AfterFunc arranges to call f in its own goroutine after ctx is done</span>
+<span id="L298" class="ln">   298&nbsp;&nbsp;</span><span class="comment">// (cancelled or timed out).</span>
+<span id="L299" class="ln">   299&nbsp;&nbsp;</span><span class="comment">// If ctx is already done, AfterFunc calls f immediately in its own goroutine.</span>
+<span id="L300" class="ln">   300&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L301" class="ln">   301&nbsp;&nbsp;</span><span class="comment">// Multiple calls to AfterFunc on a context operate independently;</span>
+<span id="L302" class="ln">   302&nbsp;&nbsp;</span><span class="comment">// one does not replace another.</span>
+<span id="L303" class="ln">   303&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L304" class="ln">   304&nbsp;&nbsp;</span><span class="comment">// Calling the returned stop function stops the association of ctx with f.</span>
+<span id="L305" class="ln">   305&nbsp;&nbsp;</span><span class="comment">// It returns true if the call stopped f from being run.</span>
+<span id="L306" class="ln">   306&nbsp;&nbsp;</span><span class="comment">// If stop returns false,</span>
+<span id="L307" class="ln">   307&nbsp;&nbsp;</span><span class="comment">// either the context is done and f has been started in its own goroutine;</span>
+<span id="L308" class="ln">   308&nbsp;&nbsp;</span><span class="comment">// or f was already stopped.</span>
+<span id="L309" class="ln">   309&nbsp;&nbsp;</span><span class="comment">// The stop function does not wait for f to complete before returning.</span>
+<span id="L310" class="ln">   310&nbsp;&nbsp;</span><span class="comment">// If the caller needs to know whether f is completed,</span>
+<span id="L311" class="ln">   311&nbsp;&nbsp;</span><span class="comment">// it must coordinate with f explicitly.</span>
+<span id="L312" class="ln">   312&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L313" class="ln">   313&nbsp;&nbsp;</span><span class="comment">// If ctx has a &#34;AfterFunc(func()) func() bool&#34; method,</span>
+<span id="L314" class="ln">   314&nbsp;&nbsp;</span><span class="comment">// AfterFunc will use it to schedule the call.</span>
+<span id="L315" class="ln">   315&nbsp;&nbsp;</span>func AfterFunc(ctx Context, f func()) (stop func() bool) {
+<span id="L316" class="ln">   316&nbsp;&nbsp;</span>	a := &amp;afterFuncCtx{
+<span id="L317" class="ln">   317&nbsp;&nbsp;</span>		f: f,
+<span id="L318" class="ln">   318&nbsp;&nbsp;</span>	}
+<span id="L319" class="ln">   319&nbsp;&nbsp;</span>	a.cancelCtx.propagateCancel(ctx, a)
+<span id="L320" class="ln">   320&nbsp;&nbsp;</span>	return func() bool {
+<span id="L321" class="ln">   321&nbsp;&nbsp;</span>		stopped := false
+<span id="L322" class="ln">   322&nbsp;&nbsp;</span>		a.once.Do(func() {
+<span id="L323" class="ln">   323&nbsp;&nbsp;</span>			stopped = true
+<span id="L324" class="ln">   324&nbsp;&nbsp;</span>		})
+<span id="L325" class="ln">   325&nbsp;&nbsp;</span>		if stopped {
+<span id="L326" class="ln">   326&nbsp;&nbsp;</span>			a.cancel(true, Canceled, nil)
+<span id="L327" class="ln">   327&nbsp;&nbsp;</span>		}
+<span id="L328" class="ln">   328&nbsp;&nbsp;</span>		return stopped
+<span id="L329" class="ln">   329&nbsp;&nbsp;</span>	}
+<span id="L330" class="ln">   330&nbsp;&nbsp;</span>}
+<span id="L331" class="ln">   331&nbsp;&nbsp;</span>
+<span id="L332" class="ln">   332&nbsp;&nbsp;</span>type afterFuncer interface {
+<span id="L333" class="ln">   333&nbsp;&nbsp;</span>	AfterFunc(func()) func() bool
+<span id="L334" class="ln">   334&nbsp;&nbsp;</span>}
+<span id="L335" class="ln">   335&nbsp;&nbsp;</span>
+<span id="L336" class="ln">   336&nbsp;&nbsp;</span>type afterFuncCtx struct {
+<span id="L337" class="ln">   337&nbsp;&nbsp;</span>	cancelCtx
+<span id="L338" class="ln">   338&nbsp;&nbsp;</span>	once sync.Once <span class="comment">// either starts running f or stops f from running</span>
+<span id="L339" class="ln">   339&nbsp;&nbsp;</span>	f    func()
+<span id="L340" class="ln">   340&nbsp;&nbsp;</span>}
+<span id="L341" class="ln">   341&nbsp;&nbsp;</span>
+<span id="L342" class="ln">   342&nbsp;&nbsp;</span>func (a *afterFuncCtx) cancel(removeFromParent bool, err, cause error) {
+<span id="L343" class="ln">   343&nbsp;&nbsp;</span>	a.cancelCtx.cancel(false, err, cause)
+<span id="L344" class="ln">   344&nbsp;&nbsp;</span>	if removeFromParent {
+<span id="L345" class="ln">   345&nbsp;&nbsp;</span>		removeChild(a.Context, a)
+<span id="L346" class="ln">   346&nbsp;&nbsp;</span>	}
+<span id="L347" class="ln">   347&nbsp;&nbsp;</span>	a.once.Do(func() {
+<span id="L348" class="ln">   348&nbsp;&nbsp;</span>		go a.f()
+<span id="L349" class="ln">   349&nbsp;&nbsp;</span>	})
+<span id="L350" class="ln">   350&nbsp;&nbsp;</span>}
+<span id="L351" class="ln">   351&nbsp;&nbsp;</span>
+<span id="L352" class="ln">   352&nbsp;&nbsp;</span><span class="comment">// A stopCtx is used as the parent context of a cancelCtx when</span>
+<span id="L353" class="ln">   353&nbsp;&nbsp;</span><span class="comment">// an AfterFunc has been registered with the parent.</span>
+<span id="L354" class="ln">   354&nbsp;&nbsp;</span><span class="comment">// It holds the stop function used to unregister the AfterFunc.</span>
+<span id="L355" class="ln">   355&nbsp;&nbsp;</span>type stopCtx struct {
+<span id="L356" class="ln">   356&nbsp;&nbsp;</span>	Context
+<span id="L357" class="ln">   357&nbsp;&nbsp;</span>	stop func() bool
+<span id="L358" class="ln">   358&nbsp;&nbsp;</span>}
+<span id="L359" class="ln">   359&nbsp;&nbsp;</span>
+<span id="L360" class="ln">   360&nbsp;&nbsp;</span><span class="comment">// goroutines counts the number of goroutines ever created; for testing.</span>
+<span id="L361" class="ln">   361&nbsp;&nbsp;</span>var goroutines atomic.Int32
+<span id="L362" class="ln">   362&nbsp;&nbsp;</span>
+<span id="L363" class="ln">   363&nbsp;&nbsp;</span><span class="comment">// &amp;cancelCtxKey is the key that a cancelCtx returns itself for.</span>
+<span id="L364" class="ln">   364&nbsp;&nbsp;</span>var cancelCtxKey int
+<span id="L365" class="ln">   365&nbsp;&nbsp;</span>
+<span id="L366" class="ln">   366&nbsp;&nbsp;</span><span class="comment">// parentCancelCtx returns the underlying *cancelCtx for parent.</span>
+<span id="L367" class="ln">   367&nbsp;&nbsp;</span><span class="comment">// It does this by looking up parent.Value(&amp;cancelCtxKey) to find</span>
+<span id="L368" class="ln">   368&nbsp;&nbsp;</span><span class="comment">// the innermost enclosing *cancelCtx and then checking whether</span>
+<span id="L369" class="ln">   369&nbsp;&nbsp;</span><span class="comment">// parent.Done() matches that *cancelCtx. (If not, the *cancelCtx</span>
+<span id="L370" class="ln">   370&nbsp;&nbsp;</span><span class="comment">// has been wrapped in a custom implementation providing a</span>
+<span id="L371" class="ln">   371&nbsp;&nbsp;</span><span class="comment">// different done channel, in which case we should not bypass it.)</span>
+<span id="L372" class="ln">   372&nbsp;&nbsp;</span>func parentCancelCtx(parent Context) (*cancelCtx, bool) {
+<span id="L373" class="ln">   373&nbsp;&nbsp;</span>	done := parent.Done()
+<span id="L374" class="ln">   374&nbsp;&nbsp;</span>	if done == closedchan || done == nil {
+<span id="L375" class="ln">   375&nbsp;&nbsp;</span>		return nil, false
+<span id="L376" class="ln">   376&nbsp;&nbsp;</span>	}
+<span id="L377" class="ln">   377&nbsp;&nbsp;</span>	p, ok := parent.Value(&amp;cancelCtxKey).(*cancelCtx)
+<span id="L378" class="ln">   378&nbsp;&nbsp;</span>	if !ok {
+<span id="L379" class="ln">   379&nbsp;&nbsp;</span>		return nil, false
+<span id="L380" class="ln">   380&nbsp;&nbsp;</span>	}
+<span id="L381" class="ln">   381&nbsp;&nbsp;</span>	pdone, _ := p.done.Load().(chan struct{})
+<span id="L382" class="ln">   382&nbsp;&nbsp;</span>	if pdone != done {
+<span id="L383" class="ln">   383&nbsp;&nbsp;</span>		return nil, false
+<span id="L384" class="ln">   384&nbsp;&nbsp;</span>	}
+<span id="L385" class="ln">   385&nbsp;&nbsp;</span>	return p, true
+<span id="L386" class="ln">   386&nbsp;&nbsp;</span>}
+<span id="L387" class="ln">   387&nbsp;&nbsp;</span>
+<span id="L388" class="ln">   388&nbsp;&nbsp;</span><span class="comment">// removeChild removes a context from its parent.</span>
+<span id="L389" class="ln">   389&nbsp;&nbsp;</span>func removeChild(parent Context, child canceler) {
+<span id="L390" class="ln">   390&nbsp;&nbsp;</span>	if s, ok := parent.(stopCtx); ok {
+<span id="L391" class="ln">   391&nbsp;&nbsp;</span>		s.stop()
+<span id="L392" class="ln">   392&nbsp;&nbsp;</span>		return
+<span id="L393" class="ln">   393&nbsp;&nbsp;</span>	}
+<span id="L394" class="ln">   394&nbsp;&nbsp;</span>	p, ok := parentCancelCtx(parent)
+<span id="L395" class="ln">   395&nbsp;&nbsp;</span>	if !ok {
+<span id="L396" class="ln">   396&nbsp;&nbsp;</span>		return
+<span id="L397" class="ln">   397&nbsp;&nbsp;</span>	}
+<span id="L398" class="ln">   398&nbsp;&nbsp;</span>	p.mu.Lock()
+<span id="L399" class="ln">   399&nbsp;&nbsp;</span>	if p.children != nil {
+<span id="L400" class="ln">   400&nbsp;&nbsp;</span>		delete(p.children, child)
+<span id="L401" class="ln">   401&nbsp;&nbsp;</span>	}
+<span id="L402" class="ln">   402&nbsp;&nbsp;</span>	p.mu.Unlock()
+<span id="L403" class="ln">   403&nbsp;&nbsp;</span>}
+<span id="L404" class="ln">   404&nbsp;&nbsp;</span>
+<span id="L405" class="ln">   405&nbsp;&nbsp;</span><span class="comment">// A canceler is a context type that can be canceled directly. The</span>
+<span id="L406" class="ln">   406&nbsp;&nbsp;</span><span class="comment">// implementations are *cancelCtx and *timerCtx.</span>
+<span id="L407" class="ln">   407&nbsp;&nbsp;</span>type canceler interface {
+<span id="L408" class="ln">   408&nbsp;&nbsp;</span>	cancel(removeFromParent bool, err, cause error)
+<span id="L409" class="ln">   409&nbsp;&nbsp;</span>	Done() &lt;-chan struct{}
+<span id="L410" class="ln">   410&nbsp;&nbsp;</span>}
+<span id="L411" class="ln">   411&nbsp;&nbsp;</span>
+<span id="L412" class="ln">   412&nbsp;&nbsp;</span><span class="comment">// closedchan is a reusable closed channel.</span>
+<span id="L413" class="ln">   413&nbsp;&nbsp;</span>var closedchan = make(chan struct{})
+<span id="L414" class="ln">   414&nbsp;&nbsp;</span>
+<span id="L415" class="ln">   415&nbsp;&nbsp;</span>func init() {
+<span id="L416" class="ln">   416&nbsp;&nbsp;</span>	close(closedchan)
+<span id="L417" class="ln">   417&nbsp;&nbsp;</span>}
+<span id="L418" class="ln">   418&nbsp;&nbsp;</span>
+<span id="L419" class="ln">   419&nbsp;&nbsp;</span><span class="comment">// A cancelCtx can be canceled. When canceled, it also cancels any children</span>
+<span id="L420" class="ln">   420&nbsp;&nbsp;</span><span class="comment">// that implement canceler.</span>
+<span id="L421" class="ln">   421&nbsp;&nbsp;</span>type cancelCtx struct {
+<span id="L422" class="ln">   422&nbsp;&nbsp;</span>	Context
+<span id="L423" class="ln">   423&nbsp;&nbsp;</span>
+<span id="L424" class="ln">   424&nbsp;&nbsp;</span>	mu       sync.Mutex            <span class="comment">// protects following fields</span>
+<span id="L425" class="ln">   425&nbsp;&nbsp;</span>	done     atomic.Value          <span class="comment">// of chan struct{}, created lazily, closed by first cancel call</span>
+<span id="L426" class="ln">   426&nbsp;&nbsp;</span>	children map[canceler]struct{} <span class="comment">// set to nil by the first cancel call</span>
+<span id="L427" class="ln">   427&nbsp;&nbsp;</span>	err      error                 <span class="comment">// set to non-nil by the first cancel call</span>
+<span id="L428" class="ln">   428&nbsp;&nbsp;</span>	cause    error                 <span class="comment">// set to non-nil by the first cancel call</span>
+<span id="L429" class="ln">   429&nbsp;&nbsp;</span>}
+<span id="L430" class="ln">   430&nbsp;&nbsp;</span>
+<span id="L431" class="ln">   431&nbsp;&nbsp;</span>func (c *cancelCtx) Value(key any) any {
+<span id="L432" class="ln">   432&nbsp;&nbsp;</span>	if key == &amp;cancelCtxKey {
+<span id="L433" class="ln">   433&nbsp;&nbsp;</span>		return c
+<span id="L434" class="ln">   434&nbsp;&nbsp;</span>	}
+<span id="L435" class="ln">   435&nbsp;&nbsp;</span>	return value(c.Context, key)
+<span id="L436" class="ln">   436&nbsp;&nbsp;</span>}
+<span id="L437" class="ln">   437&nbsp;&nbsp;</span>
+<span id="L438" class="ln">   438&nbsp;&nbsp;</span>func (c *cancelCtx) Done() &lt;-chan struct{} {
+<span id="L439" class="ln">   439&nbsp;&nbsp;</span>	d := c.done.Load()
+<span id="L440" class="ln">   440&nbsp;&nbsp;</span>	if d != nil {
+<span id="L441" class="ln">   441&nbsp;&nbsp;</span>		return d.(chan struct{})
+<span id="L442" class="ln">   442&nbsp;&nbsp;</span>	}
+<span id="L443" class="ln">   443&nbsp;&nbsp;</span>	c.mu.Lock()
+<span id="L444" class="ln">   444&nbsp;&nbsp;</span>	defer c.mu.Unlock()
+<span id="L445" class="ln">   445&nbsp;&nbsp;</span>	d = c.done.Load()
+<span id="L446" class="ln">   446&nbsp;&nbsp;</span>	if d == nil {
+<span id="L447" class="ln">   447&nbsp;&nbsp;</span>		d = make(chan struct{})
+<span id="L448" class="ln">   448&nbsp;&nbsp;</span>		c.done.Store(d)
+<span id="L449" class="ln">   449&nbsp;&nbsp;</span>	}
+<span id="L450" class="ln">   450&nbsp;&nbsp;</span>	return d.(chan struct{})
+<span id="L451" class="ln">   451&nbsp;&nbsp;</span>}
+<span id="L452" class="ln">   452&nbsp;&nbsp;</span>
+<span id="L453" class="ln">   453&nbsp;&nbsp;</span>func (c *cancelCtx) Err() error {
+<span id="L454" class="ln">   454&nbsp;&nbsp;</span>	c.mu.Lock()
+<span id="L455" class="ln">   455&nbsp;&nbsp;</span>	err := c.err
+<span id="L456" class="ln">   456&nbsp;&nbsp;</span>	c.mu.Unlock()
+<span id="L457" class="ln">   457&nbsp;&nbsp;</span>	return err
+<span id="L458" class="ln">   458&nbsp;&nbsp;</span>}
+<span id="L459" class="ln">   459&nbsp;&nbsp;</span>
+<span id="L460" class="ln">   460&nbsp;&nbsp;</span><span class="comment">// propagateCancel arranges for child to be canceled when parent is.</span>
+<span id="L461" class="ln">   461&nbsp;&nbsp;</span><span class="comment">// It sets the parent context of cancelCtx.</span>
+<span id="L462" class="ln">   462&nbsp;&nbsp;</span>func (c *cancelCtx) propagateCancel(parent Context, child canceler) {
+<span id="L463" class="ln">   463&nbsp;&nbsp;</span>	c.Context = parent
+<span id="L464" class="ln">   464&nbsp;&nbsp;</span>
+<span id="L465" class="ln">   465&nbsp;&nbsp;</span>	done := parent.Done()
+<span id="L466" class="ln">   466&nbsp;&nbsp;</span>	if done == nil {
+<span id="L467" class="ln">   467&nbsp;&nbsp;</span>		return <span class="comment">// parent is never canceled</span>
+<span id="L468" class="ln">   468&nbsp;&nbsp;</span>	}
+<span id="L469" class="ln">   469&nbsp;&nbsp;</span>
+<span id="L470" class="ln">   470&nbsp;&nbsp;</span>	select {
+<span id="L471" class="ln">   471&nbsp;&nbsp;</span>	case &lt;-done:
+<span id="L472" class="ln">   472&nbsp;&nbsp;</span>		<span class="comment">// parent is already canceled</span>
+<span id="L473" class="ln">   473&nbsp;&nbsp;</span>		child.cancel(false, parent.Err(), Cause(parent))
+<span id="L474" class="ln">   474&nbsp;&nbsp;</span>		return
+<span id="L475" class="ln">   475&nbsp;&nbsp;</span>	default:
+<span id="L476" class="ln">   476&nbsp;&nbsp;</span>	}
+<span id="L477" class="ln">   477&nbsp;&nbsp;</span>
+<span id="L478" class="ln">   478&nbsp;&nbsp;</span>	if p, ok := parentCancelCtx(parent); ok {
+<span id="L479" class="ln">   479&nbsp;&nbsp;</span>		<span class="comment">// parent is a *cancelCtx, or derives from one.</span>
+<span id="L480" class="ln">   480&nbsp;&nbsp;</span>		p.mu.Lock()
+<span id="L481" class="ln">   481&nbsp;&nbsp;</span>		if p.err != nil {
+<span id="L482" class="ln">   482&nbsp;&nbsp;</span>			<span class="comment">// parent has already been canceled</span>
+<span id="L483" class="ln">   483&nbsp;&nbsp;</span>			child.cancel(false, p.err, p.cause)
+<span id="L484" class="ln">   484&nbsp;&nbsp;</span>		} else {
+<span id="L485" class="ln">   485&nbsp;&nbsp;</span>			if p.children == nil {
+<span id="L486" class="ln">   486&nbsp;&nbsp;</span>				p.children = make(map[canceler]struct{})
+<span id="L487" class="ln">   487&nbsp;&nbsp;</span>			}
+<span id="L488" class="ln">   488&nbsp;&nbsp;</span>			p.children[child] = struct{}{}
+<span id="L489" class="ln">   489&nbsp;&nbsp;</span>		}
+<span id="L490" class="ln">   490&nbsp;&nbsp;</span>		p.mu.Unlock()
+<span id="L491" class="ln">   491&nbsp;&nbsp;</span>		return
+<span id="L492" class="ln">   492&nbsp;&nbsp;</span>	}
+<span id="L493" class="ln">   493&nbsp;&nbsp;</span>
+<span id="L494" class="ln">   494&nbsp;&nbsp;</span>	if a, ok := parent.(afterFuncer); ok {
+<span id="L495" class="ln">   495&nbsp;&nbsp;</span>		<span class="comment">// parent implements an AfterFunc method.</span>
+<span id="L496" class="ln">   496&nbsp;&nbsp;</span>		c.mu.Lock()
+<span id="L497" class="ln">   497&nbsp;&nbsp;</span>		stop := a.AfterFunc(func() {
+<span id="L498" class="ln">   498&nbsp;&nbsp;</span>			child.cancel(false, parent.Err(), Cause(parent))
+<span id="L499" class="ln">   499&nbsp;&nbsp;</span>		})
+<span id="L500" class="ln">   500&nbsp;&nbsp;</span>		c.Context = stopCtx{
+<span id="L501" class="ln">   501&nbsp;&nbsp;</span>			Context: parent,
+<span id="L502" class="ln">   502&nbsp;&nbsp;</span>			stop:    stop,
+<span id="L503" class="ln">   503&nbsp;&nbsp;</span>		}
+<span id="L504" class="ln">   504&nbsp;&nbsp;</span>		c.mu.Unlock()
+<span id="L505" class="ln">   505&nbsp;&nbsp;</span>		return
+<span id="L506" class="ln">   506&nbsp;&nbsp;</span>	}
+<span id="L507" class="ln">   507&nbsp;&nbsp;</span>
+<span id="L508" class="ln">   508&nbsp;&nbsp;</span>	goroutines.Add(1)
+<span id="L509" class="ln">   509&nbsp;&nbsp;</span>	go func() {
+<span id="L510" class="ln">   510&nbsp;&nbsp;</span>		select {
+<span id="L511" class="ln">   511&nbsp;&nbsp;</span>		case &lt;-parent.Done():
+<span id="L512" class="ln">   512&nbsp;&nbsp;</span>			child.cancel(false, parent.Err(), Cause(parent))
+<span id="L513" class="ln">   513&nbsp;&nbsp;</span>		case &lt;-child.Done():
+<span id="L514" class="ln">   514&nbsp;&nbsp;</span>		}
+<span id="L515" class="ln">   515&nbsp;&nbsp;</span>	}()
+<span id="L516" class="ln">   516&nbsp;&nbsp;</span>}
+<span id="L517" class="ln">   517&nbsp;&nbsp;</span>
+<span id="L518" class="ln">   518&nbsp;&nbsp;</span>type stringer interface {
+<span id="L519" class="ln">   519&nbsp;&nbsp;</span>	String() string
+<span id="L520" class="ln">   520&nbsp;&nbsp;</span>}
+<span id="L521" class="ln">   521&nbsp;&nbsp;</span>
+<span id="L522" class="ln">   522&nbsp;&nbsp;</span>func contextName(c Context) string {
+<span id="L523" class="ln">   523&nbsp;&nbsp;</span>	if s, ok := c.(stringer); ok {
+<span id="L524" class="ln">   524&nbsp;&nbsp;</span>		return s.String()
+<span id="L525" class="ln">   525&nbsp;&nbsp;</span>	}
+<span id="L526" class="ln">   526&nbsp;&nbsp;</span>	return reflectlite.TypeOf(c).String()
+<span id="L527" class="ln">   527&nbsp;&nbsp;</span>}
+<span id="L528" class="ln">   528&nbsp;&nbsp;</span>
+<span id="L529" class="ln">   529&nbsp;&nbsp;</span>func (c *cancelCtx) String() string {
+<span id="L530" class="ln">   530&nbsp;&nbsp;</span>	return contextName(c.Context) + &#34;.WithCancel&#34;
+<span id="L531" class="ln">   531&nbsp;&nbsp;</span>}
+<span id="L532" class="ln">   532&nbsp;&nbsp;</span>
+<span id="L533" class="ln">   533&nbsp;&nbsp;</span><span class="comment">// cancel closes c.done, cancels each of c&#39;s children, and, if</span>
+<span id="L534" class="ln">   534&nbsp;&nbsp;</span><span class="comment">// removeFromParent is true, removes c from its parent&#39;s children.</span>
+<span id="L535" class="ln">   535&nbsp;&nbsp;</span><span class="comment">// cancel sets c.cause to cause if this is the first time c is canceled.</span>
+<span id="L536" class="ln">   536&nbsp;&nbsp;</span>func (c *cancelCtx) cancel(removeFromParent bool, err, cause error) {
+<span id="L537" class="ln">   537&nbsp;&nbsp;</span>	if err == nil {
+<span id="L538" class="ln">   538&nbsp;&nbsp;</span>		panic(&#34;context: internal error: missing cancel error&#34;)
+<span id="L539" class="ln">   539&nbsp;&nbsp;</span>	}
+<span id="L540" class="ln">   540&nbsp;&nbsp;</span>	if cause == nil {
+<span id="L541" class="ln">   541&nbsp;&nbsp;</span>		cause = err
+<span id="L542" class="ln">   542&nbsp;&nbsp;</span>	}
+<span id="L543" class="ln">   543&nbsp;&nbsp;</span>	c.mu.Lock()
+<span id="L544" class="ln">   544&nbsp;&nbsp;</span>	if c.err != nil {
+<span id="L545" class="ln">   545&nbsp;&nbsp;</span>		c.mu.Unlock()
+<span id="L546" class="ln">   546&nbsp;&nbsp;</span>		return <span class="comment">// already canceled</span>
+<span id="L547" class="ln">   547&nbsp;&nbsp;</span>	}
+<span id="L548" class="ln">   548&nbsp;&nbsp;</span>	c.err = err
+<span id="L549" class="ln">   549&nbsp;&nbsp;</span>	c.cause = cause
+<span id="L550" class="ln">   550&nbsp;&nbsp;</span>	d, _ := c.done.Load().(chan struct{})
+<span id="L551" class="ln">   551&nbsp;&nbsp;</span>	if d == nil {
+<span id="L552" class="ln">   552&nbsp;&nbsp;</span>		c.done.Store(closedchan)
+<span id="L553" class="ln">   553&nbsp;&nbsp;</span>	} else {
+<span id="L554" class="ln">   554&nbsp;&nbsp;</span>		close(d)
+<span id="L555" class="ln">   555&nbsp;&nbsp;</span>	}
+<span id="L556" class="ln">   556&nbsp;&nbsp;</span>	for child := range c.children {
+<span id="L557" class="ln">   557&nbsp;&nbsp;</span>		<span class="comment">// NOTE: acquiring the child&#39;s lock while holding parent&#39;s lock.</span>
+<span id="L558" class="ln">   558&nbsp;&nbsp;</span>		child.cancel(false, err, cause)
+<span id="L559" class="ln">   559&nbsp;&nbsp;</span>	}
+<span id="L560" class="ln">   560&nbsp;&nbsp;</span>	c.children = nil
+<span id="L561" class="ln">   561&nbsp;&nbsp;</span>	c.mu.Unlock()
+<span id="L562" class="ln">   562&nbsp;&nbsp;</span>
+<span id="L563" class="ln">   563&nbsp;&nbsp;</span>	if removeFromParent {
+<span id="L564" class="ln">   564&nbsp;&nbsp;</span>		removeChild(c.Context, c)
+<span id="L565" class="ln">   565&nbsp;&nbsp;</span>	}
+<span id="L566" class="ln">   566&nbsp;&nbsp;</span>}
+<span id="L567" class="ln">   567&nbsp;&nbsp;</span>
+<span id="L568" class="ln">   568&nbsp;&nbsp;</span><span class="comment">// WithoutCancel returns a copy of parent that is not canceled when parent is canceled.</span>
+<span id="L569" class="ln">   569&nbsp;&nbsp;</span><span class="comment">// The returned context returns no Deadline or Err, and its Done channel is nil.</span>
+<span id="L570" class="ln">   570&nbsp;&nbsp;</span><span class="comment">// Calling [Cause] on the returned context returns nil.</span>
+<span id="L571" class="ln">   571&nbsp;&nbsp;</span>func WithoutCancel(parent Context) Context {
+<span id="L572" class="ln">   572&nbsp;&nbsp;</span>	if parent == nil {
+<span id="L573" class="ln">   573&nbsp;&nbsp;</span>		panic(&#34;cannot create context from nil parent&#34;)
+<span id="L574" class="ln">   574&nbsp;&nbsp;</span>	}
+<span id="L575" class="ln">   575&nbsp;&nbsp;</span>	return withoutCancelCtx{parent}
+<span id="L576" class="ln">   576&nbsp;&nbsp;</span>}
+<span id="L577" class="ln">   577&nbsp;&nbsp;</span>
+<span id="L578" class="ln">   578&nbsp;&nbsp;</span>type withoutCancelCtx struct {
+<span id="L579" class="ln">   579&nbsp;&nbsp;</span>	c Context
+<span id="L580" class="ln">   580&nbsp;&nbsp;</span>}
+<span id="L581" class="ln">   581&nbsp;&nbsp;</span>
+<span id="L582" class="ln">   582&nbsp;&nbsp;</span>func (withoutCancelCtx) Deadline() (deadline time.Time, ok bool) {
+<span id="L583" class="ln">   583&nbsp;&nbsp;</span>	return
+<span id="L584" class="ln">   584&nbsp;&nbsp;</span>}
+<span id="L585" class="ln">   585&nbsp;&nbsp;</span>
+<span id="L586" class="ln">   586&nbsp;&nbsp;</span>func (withoutCancelCtx) Done() &lt;-chan struct{} {
+<span id="L587" class="ln">   587&nbsp;&nbsp;</span>	return nil
+<span id="L588" class="ln">   588&nbsp;&nbsp;</span>}
+<span id="L589" class="ln">   589&nbsp;&nbsp;</span>
+<span id="L590" class="ln">   590&nbsp;&nbsp;</span>func (withoutCancelCtx) Err() error {
+<span id="L591" class="ln">   591&nbsp;&nbsp;</span>	return nil
+<span id="L592" class="ln">   592&nbsp;&nbsp;</span>}
+<span id="L593" class="ln">   593&nbsp;&nbsp;</span>
+<span id="L594" class="ln">   594&nbsp;&nbsp;</span>func (c withoutCancelCtx) Value(key any) any {
+<span id="L595" class="ln">   595&nbsp;&nbsp;</span>	return value(c, key)
+<span id="L596" class="ln">   596&nbsp;&nbsp;</span>}
+<span id="L597" class="ln">   597&nbsp;&nbsp;</span>
+<span id="L598" class="ln">   598&nbsp;&nbsp;</span>func (c withoutCancelCtx) String() string {
+<span id="L599" class="ln">   599&nbsp;&nbsp;</span>	return contextName(c.c) + &#34;.WithoutCancel&#34;
+<span id="L600" class="ln">   600&nbsp;&nbsp;</span>}
+<span id="L601" class="ln">   601&nbsp;&nbsp;</span>
+<span id="L602" class="ln">   602&nbsp;&nbsp;</span><span class="comment">// WithDeadline returns a copy of the parent context with the deadline adjusted</span>
+<span id="L603" class="ln">   603&nbsp;&nbsp;</span><span class="comment">// to be no later than d. If the parent&#39;s deadline is already earlier than d,</span>
+<span id="L604" class="ln">   604&nbsp;&nbsp;</span><span class="comment">// WithDeadline(parent, d) is semantically equivalent to parent. The returned</span>
+<span id="L605" class="ln">   605&nbsp;&nbsp;</span><span class="comment">// [Context.Done] channel is closed when the deadline expires, when the returned</span>
+<span id="L606" class="ln">   606&nbsp;&nbsp;</span><span class="comment">// cancel function is called, or when the parent context&#39;s Done channel is</span>
+<span id="L607" class="ln">   607&nbsp;&nbsp;</span><span class="comment">// closed, whichever happens first.</span>
+<span id="L608" class="ln">   608&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L609" class="ln">   609&nbsp;&nbsp;</span><span class="comment">// Canceling this context releases resources associated with it, so code should</span>
+<span id="L610" class="ln">   610&nbsp;&nbsp;</span><span class="comment">// call cancel as soon as the operations running in this [Context] complete.</span>
+<span id="L611" class="ln">   611&nbsp;&nbsp;</span>func WithDeadline(parent Context, d time.Time) (Context, CancelFunc) {
+<span id="L612" class="ln">   612&nbsp;&nbsp;</span>	return WithDeadlineCause(parent, d, nil)
+<span id="L613" class="ln">   613&nbsp;&nbsp;</span>}
+<span id="L614" class="ln">   614&nbsp;&nbsp;</span>
+<span id="L615" class="ln">   615&nbsp;&nbsp;</span><span class="comment">// WithDeadlineCause behaves like [WithDeadline] but also sets the cause of the</span>
+<span id="L616" class="ln">   616&nbsp;&nbsp;</span><span class="comment">// returned Context when the deadline is exceeded. The returned [CancelFunc] does</span>
+<span id="L617" class="ln">   617&nbsp;&nbsp;</span><span class="comment">// not set the cause.</span>
+<span id="L618" class="ln">   618&nbsp;&nbsp;</span>func WithDeadlineCause(parent Context, d time.Time, cause error) (Context, CancelFunc) {
+<span id="L619" class="ln">   619&nbsp;&nbsp;</span>	if parent == nil {
+<span id="L620" class="ln">   620&nbsp;&nbsp;</span>		panic(&#34;cannot create context from nil parent&#34;)
+<span id="L621" class="ln">   621&nbsp;&nbsp;</span>	}
+<span id="L622" class="ln">   622&nbsp;&nbsp;</span>	if cur, ok := parent.Deadline(); ok &amp;&amp; cur.Before(d) {
+<span id="L623" class="ln">   623&nbsp;&nbsp;</span>		<span class="comment">// The current deadline is already sooner than the new one.</span>
+<span id="L624" class="ln">   624&nbsp;&nbsp;</span>		return WithCancel(parent)
+<span id="L625" class="ln">   625&nbsp;&nbsp;</span>	}
+<span id="L626" class="ln">   626&nbsp;&nbsp;</span>	c := &amp;timerCtx{
+<span id="L627" class="ln">   627&nbsp;&nbsp;</span>		deadline: d,
+<span id="L628" class="ln">   628&nbsp;&nbsp;</span>	}
+<span id="L629" class="ln">   629&nbsp;&nbsp;</span>	c.cancelCtx.propagateCancel(parent, c)
+<span id="L630" class="ln">   630&nbsp;&nbsp;</span>	dur := time.Until(d)
+<span id="L631" class="ln">   631&nbsp;&nbsp;</span>	if dur &lt;= 0 {
+<span id="L632" class="ln">   632&nbsp;&nbsp;</span>		c.cancel(true, DeadlineExceeded, cause) <span class="comment">// deadline has already passed</span>
+<span id="L633" class="ln">   633&nbsp;&nbsp;</span>		return c, func() { c.cancel(false, Canceled, nil) }
+<span id="L634" class="ln">   634&nbsp;&nbsp;</span>	}
+<span id="L635" class="ln">   635&nbsp;&nbsp;</span>	c.mu.Lock()
+<span id="L636" class="ln">   636&nbsp;&nbsp;</span>	defer c.mu.Unlock()
+<span id="L637" class="ln">   637&nbsp;&nbsp;</span>	if c.err == nil {
+<span id="L638" class="ln">   638&nbsp;&nbsp;</span>		c.timer = time.AfterFunc(dur, func() {
+<span id="L639" class="ln">   639&nbsp;&nbsp;</span>			c.cancel(true, DeadlineExceeded, cause)
+<span id="L640" class="ln">   640&nbsp;&nbsp;</span>		})
+<span id="L641" class="ln">   641&nbsp;&nbsp;</span>	}
+<span id="L642" class="ln">   642&nbsp;&nbsp;</span>	return c, func() { c.cancel(true, Canceled, nil) }
+<span id="L643" class="ln">   643&nbsp;&nbsp;</span>}
+<span id="L644" class="ln">   644&nbsp;&nbsp;</span>
+<span id="L645" class="ln">   645&nbsp;&nbsp;</span><span class="comment">// A timerCtx carries a timer and a deadline. It embeds a cancelCtx to</span>
+<span id="L646" class="ln">   646&nbsp;&nbsp;</span><span class="comment">// implement Done and Err. It implements cancel by stopping its timer then</span>
+<span id="L647" class="ln">   647&nbsp;&nbsp;</span><span class="comment">// delegating to cancelCtx.cancel.</span>
+<span id="L648" class="ln">   648&nbsp;&nbsp;</span>type timerCtx struct {
+<span id="L649" class="ln">   649&nbsp;&nbsp;</span>	cancelCtx
+<span id="L650" class="ln">   650&nbsp;&nbsp;</span>	timer *time.Timer <span class="comment">// Under cancelCtx.mu.</span>
+<span id="L651" class="ln">   651&nbsp;&nbsp;</span>
+<span id="L652" class="ln">   652&nbsp;&nbsp;</span>	deadline time.Time
+<span id="L653" class="ln">   653&nbsp;&nbsp;</span>}
+<span id="L654" class="ln">   654&nbsp;&nbsp;</span>
+<span id="L655" class="ln">   655&nbsp;&nbsp;</span>func (c *timerCtx) Deadline() (deadline time.Time, ok bool) {
+<span id="L656" class="ln">   656&nbsp;&nbsp;</span>	return c.deadline, true
+<span id="L657" class="ln">   657&nbsp;&nbsp;</span>}
+<span id="L658" class="ln">   658&nbsp;&nbsp;</span>
+<span id="L659" class="ln">   659&nbsp;&nbsp;</span>func (c *timerCtx) String() string {
+<span id="L660" class="ln">   660&nbsp;&nbsp;</span>	return contextName(c.cancelCtx.Context) + &#34;.WithDeadline(&#34; +
+<span id="L661" class="ln">   661&nbsp;&nbsp;</span>		c.deadline.String() + &#34; [&#34; +
+<span id="L662" class="ln">   662&nbsp;&nbsp;</span>		time.Until(c.deadline).String() + &#34;])&#34;
+<span id="L663" class="ln">   663&nbsp;&nbsp;</span>}
+<span id="L664" class="ln">   664&nbsp;&nbsp;</span>
+<span id="L665" class="ln">   665&nbsp;&nbsp;</span>func (c *timerCtx) cancel(removeFromParent bool, err, cause error) {
+<span id="L666" class="ln">   666&nbsp;&nbsp;</span>	c.cancelCtx.cancel(false, err, cause)
+<span id="L667" class="ln">   667&nbsp;&nbsp;</span>	if removeFromParent {
+<span id="L668" class="ln">   668&nbsp;&nbsp;</span>		<span class="comment">// Remove this timerCtx from its parent cancelCtx&#39;s children.</span>
+<span id="L669" class="ln">   669&nbsp;&nbsp;</span>		removeChild(c.cancelCtx.Context, c)
+<span id="L670" class="ln">   670&nbsp;&nbsp;</span>	}
+<span id="L671" class="ln">   671&nbsp;&nbsp;</span>	c.mu.Lock()
+<span id="L672" class="ln">   672&nbsp;&nbsp;</span>	if c.timer != nil {
+<span id="L673" class="ln">   673&nbsp;&nbsp;</span>		c.timer.Stop()
+<span id="L674" class="ln">   674&nbsp;&nbsp;</span>		c.timer = nil
+<span id="L675" class="ln">   675&nbsp;&nbsp;</span>	}
+<span id="L676" class="ln">   676&nbsp;&nbsp;</span>	c.mu.Unlock()
+<span id="L677" class="ln">   677&nbsp;&nbsp;</span>}
+<span id="L678" class="ln">   678&nbsp;&nbsp;</span>
+<span id="L679" class="ln">   679&nbsp;&nbsp;</span><span class="comment">// WithTimeout returns WithDeadline(parent, time.Now().Add(timeout)).</span>
+<span id="L680" class="ln">   680&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L681" class="ln">   681&nbsp;&nbsp;</span><span class="comment">// Canceling this context releases resources associated with it, so code should</span>
+<span id="L682" class="ln">   682&nbsp;&nbsp;</span><span class="comment">// call cancel as soon as the operations running in this [Context] complete:</span>
+<span id="L683" class="ln">   683&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L684" class="ln">   684&nbsp;&nbsp;</span><span class="comment">//	func slowOperationWithTimeout(ctx context.Context) (Result, error) {</span>
+<span id="L685" class="ln">   685&nbsp;&nbsp;</span><span class="comment">//		ctx, cancel := context.WithTimeout(ctx, 100*time.Millisecond)</span>
+<span id="L686" class="ln">   686&nbsp;&nbsp;</span><span class="comment">//		defer cancel()  // releases resources if slowOperation completes before timeout elapses</span>
+<span id="L687" class="ln">   687&nbsp;&nbsp;</span><span class="comment">//		return slowOperation(ctx)</span>
+<span id="L688" class="ln">   688&nbsp;&nbsp;</span><span class="comment">//	}</span>
+<span id="L689" class="ln">   689&nbsp;&nbsp;</span>func WithTimeout(parent Context, timeout time.Duration) (Context, CancelFunc) {
+<span id="L690" class="ln">   690&nbsp;&nbsp;</span>	return WithDeadline(parent, time.Now().Add(timeout))
+<span id="L691" class="ln">   691&nbsp;&nbsp;</span>}
+<span id="L692" class="ln">   692&nbsp;&nbsp;</span>
+<span id="L693" class="ln">   693&nbsp;&nbsp;</span><span class="comment">// WithTimeoutCause behaves like [WithTimeout] but also sets the cause of the</span>
+<span id="L694" class="ln">   694&nbsp;&nbsp;</span><span class="comment">// returned Context when the timeout expires. The returned [CancelFunc] does</span>
+<span id="L695" class="ln">   695&nbsp;&nbsp;</span><span class="comment">// not set the cause.</span>
+<span id="L696" class="ln">   696&nbsp;&nbsp;</span>func WithTimeoutCause(parent Context, timeout time.Duration, cause error) (Context, CancelFunc) {
+<span id="L697" class="ln">   697&nbsp;&nbsp;</span>	return WithDeadlineCause(parent, time.Now().Add(timeout), cause)
+<span id="L698" class="ln">   698&nbsp;&nbsp;</span>}
+<span id="L699" class="ln">   699&nbsp;&nbsp;</span>
+<span id="L700" class="ln">   700&nbsp;&nbsp;</span><span class="comment">// WithValue returns a copy of parent in which the value associated with key is</span>
+<span id="L701" class="ln">   701&nbsp;&nbsp;</span><span class="comment">// val.</span>
+<span id="L702" class="ln">   702&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L703" class="ln">   703&nbsp;&nbsp;</span><span class="comment">// Use context Values only for request-scoped data that transits processes and</span>
+<span id="L704" class="ln">   704&nbsp;&nbsp;</span><span class="comment">// APIs, not for passing optional parameters to functions.</span>
+<span id="L705" class="ln">   705&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L706" class="ln">   706&nbsp;&nbsp;</span><span class="comment">// The provided key must be comparable and should not be of type</span>
+<span id="L707" class="ln">   707&nbsp;&nbsp;</span><span class="comment">// string or any other built-in type to avoid collisions between</span>
+<span id="L708" class="ln">   708&nbsp;&nbsp;</span><span class="comment">// packages using context. Users of WithValue should define their own</span>
+<span id="L709" class="ln">   709&nbsp;&nbsp;</span><span class="comment">// types for keys. To avoid allocating when assigning to an</span>
+<span id="L710" class="ln">   710&nbsp;&nbsp;</span><span class="comment">// interface{}, context keys often have concrete type</span>
+<span id="L711" class="ln">   711&nbsp;&nbsp;</span><span class="comment">// struct{}. Alternatively, exported context key variables&#39; static</span>
+<span id="L712" class="ln">   712&nbsp;&nbsp;</span><span class="comment">// type should be a pointer or interface.</span>
+<span id="L713" class="ln">   713&nbsp;&nbsp;</span>func WithValue(parent Context, key, val any) Context {
+<span id="L714" class="ln">   714&nbsp;&nbsp;</span>	if parent == nil {
+<span id="L715" class="ln">   715&nbsp;&nbsp;</span>		panic(&#34;cannot create context from nil parent&#34;)
+<span id="L716" class="ln">   716&nbsp;&nbsp;</span>	}
+<span id="L717" class="ln">   717&nbsp;&nbsp;</span>	if key == nil {
+<span id="L718" class="ln">   718&nbsp;&nbsp;</span>		panic(&#34;nil key&#34;)
+<span id="L719" class="ln">   719&nbsp;&nbsp;</span>	}
+<span id="L720" class="ln">   720&nbsp;&nbsp;</span>	if !reflectlite.TypeOf(key).Comparable() {
+<span id="L721" class="ln">   721&nbsp;&nbsp;</span>		panic(&#34;key is not comparable&#34;)
+<span id="L722" class="ln">   722&nbsp;&nbsp;</span>	}
+<span id="L723" class="ln">   723&nbsp;&nbsp;</span>	return &amp;valueCtx{parent, key, val}
+<span id="L724" class="ln">   724&nbsp;&nbsp;</span>}
+<span id="L725" class="ln">   725&nbsp;&nbsp;</span>
+<span id="L726" class="ln">   726&nbsp;&nbsp;</span><span class="comment">// A valueCtx carries a key-value pair. It implements Value for that key and</span>
+<span id="L727" class="ln">   727&nbsp;&nbsp;</span><span class="comment">// delegates all other calls to the embedded Context.</span>
+<span id="L728" class="ln">   728&nbsp;&nbsp;</span>type valueCtx struct {
+<span id="L729" class="ln">   729&nbsp;&nbsp;</span>	Context
+<span id="L730" class="ln">   730&nbsp;&nbsp;</span>	key, val any
+<span id="L731" class="ln">   731&nbsp;&nbsp;</span>}
+<span id="L732" class="ln">   732&nbsp;&nbsp;</span>
+<span id="L733" class="ln">   733&nbsp;&nbsp;</span><span class="comment">// stringify tries a bit to stringify v, without using fmt, since we don&#39;t</span>
+<span id="L734" class="ln">   734&nbsp;&nbsp;</span><span class="comment">// want context depending on the unicode tables. This is only used by</span>
+<span id="L735" class="ln">   735&nbsp;&nbsp;</span><span class="comment">// *valueCtx.String().</span>
+<span id="L736" class="ln">   736&nbsp;&nbsp;</span>func stringify(v any) string {
+<span id="L737" class="ln">   737&nbsp;&nbsp;</span>	switch s := v.(type) {
+<span id="L738" class="ln">   738&nbsp;&nbsp;</span>	case stringer:
+<span id="L739" class="ln">   739&nbsp;&nbsp;</span>		return s.String()
+<span id="L740" class="ln">   740&nbsp;&nbsp;</span>	case string:
+<span id="L741" class="ln">   741&nbsp;&nbsp;</span>		return s
+<span id="L742" class="ln">   742&nbsp;&nbsp;</span>	}
+<span id="L743" class="ln">   743&nbsp;&nbsp;</span>	return &#34;&lt;not Stringer&gt;&#34;
+<span id="L744" class="ln">   744&nbsp;&nbsp;</span>}
+<span id="L745" class="ln">   745&nbsp;&nbsp;</span>
+<span id="L746" class="ln">   746&nbsp;&nbsp;</span>func (c *valueCtx) String() string {
+<span id="L747" class="ln">   747&nbsp;&nbsp;</span>	return contextName(c.Context) + &#34;.WithValue(type &#34; +
+<span id="L748" class="ln">   748&nbsp;&nbsp;</span>		reflectlite.TypeOf(c.key).String() +
+<span id="L749" class="ln">   749&nbsp;&nbsp;</span>		&#34;, val &#34; + stringify(c.val) + &#34;)&#34;
+<span id="L750" class="ln">   750&nbsp;&nbsp;</span>}
+<span id="L751" class="ln">   751&nbsp;&nbsp;</span>
+<span id="L752" class="ln">   752&nbsp;&nbsp;</span>func (c *valueCtx) Value(key any) any {
+<span id="L753" class="ln">   753&nbsp;&nbsp;</span>	if c.key == key {
+<span id="L754" class="ln">   754&nbsp;&nbsp;</span>		return c.val
+<span id="L755" class="ln">   755&nbsp;&nbsp;</span>	}
+<span id="L756" class="ln">   756&nbsp;&nbsp;</span>	return value(c.Context, key)
+<span id="L757" class="ln">   757&nbsp;&nbsp;</span>}
+<span id="L758" class="ln">   758&nbsp;&nbsp;</span>
+<span id="L759" class="ln">   759&nbsp;&nbsp;</span>func value(c Context, key any) any {
+<span id="L760" class="ln">   760&nbsp;&nbsp;</span>	for {
+<span id="L761" class="ln">   761&nbsp;&nbsp;</span>		switch ctx := c.(type) {
+<span id="L762" class="ln">   762&nbsp;&nbsp;</span>		case *valueCtx:
+<span id="L763" class="ln">   763&nbsp;&nbsp;</span>			if key == ctx.key {
+<span id="L764" class="ln">   764&nbsp;&nbsp;</span>				return ctx.val
+<span id="L765" class="ln">   765&nbsp;&nbsp;</span>			}
+<span id="L766" class="ln">   766&nbsp;&nbsp;</span>			c = ctx.Context
+<span id="L767" class="ln">   767&nbsp;&nbsp;</span>		case *cancelCtx:
+<span id="L768" class="ln">   768&nbsp;&nbsp;</span>			if key == &amp;cancelCtxKey {
+<span id="L769" class="ln">   769&nbsp;&nbsp;</span>				return c
+<span id="L770" class="ln">   770&nbsp;&nbsp;</span>			}
+<span id="L771" class="ln">   771&nbsp;&nbsp;</span>			c = ctx.Context
+<span id="L772" class="ln">   772&nbsp;&nbsp;</span>		case withoutCancelCtx:
+<span id="L773" class="ln">   773&nbsp;&nbsp;</span>			if key == &amp;cancelCtxKey {
+<span id="L774" class="ln">   774&nbsp;&nbsp;</span>				<span class="comment">// This implements Cause(ctx) == nil</span>
+<span id="L775" class="ln">   775&nbsp;&nbsp;</span>				<span class="comment">// when ctx is created using WithoutCancel.</span>
+<span id="L776" class="ln">   776&nbsp;&nbsp;</span>				return nil
+<span id="L777" class="ln">   777&nbsp;&nbsp;</span>			}
+<span id="L778" class="ln">   778&nbsp;&nbsp;</span>			c = ctx.c
+<span id="L779" class="ln">   779&nbsp;&nbsp;</span>		case *timerCtx:
+<span id="L780" class="ln">   780&nbsp;&nbsp;</span>			if key == &amp;cancelCtxKey {
+<span id="L781" class="ln">   781&nbsp;&nbsp;</span>				return &amp;ctx.cancelCtx
+<span id="L782" class="ln">   782&nbsp;&nbsp;</span>			}
+<span id="L783" class="ln">   783&nbsp;&nbsp;</span>			c = ctx.Context
+<span id="L784" class="ln">   784&nbsp;&nbsp;</span>		case backgroundCtx, todoCtx:
+<span id="L785" class="ln">   785&nbsp;&nbsp;</span>			return nil
+<span id="L786" class="ln">   786&nbsp;&nbsp;</span>		default:
+<span id="L787" class="ln">   787&nbsp;&nbsp;</span>			return c.Value(key)
+<span id="L788" class="ln">   788&nbsp;&nbsp;</span>		}
+<span id="L789" class="ln">   789&nbsp;&nbsp;</span>	}
+<span id="L790" class="ln">   790&nbsp;&nbsp;</span>}
+<span id="L791" class="ln">   791&nbsp;&nbsp;</span>
+</pre><p><a href="context.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

@@ -1,0 +1,2021 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>parse - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package parse
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "text/template/parse"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>Package parse builds parse trees for templates as defined by text/template
+and html/template. Clients should use those packages to construct templates
+rather than this one, which provides shared internal data structures not
+intended for general use.
+
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+			
+			
+				
+				<dd><a href="index.html#IsEmptyTree">func IsEmptyTree(n Node) bool</a></dd>
+			
+				
+				<dd><a href="index.html#Parse">func Parse(name, text, leftDelim, rightDelim string, funcs ...map[string]any) (map[string]*Tree, error)</a></dd>
+			
+			
+				
+				<dd><a href="index.html#ActionNode">type ActionNode</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ActionNode.Copy">func (a *ActionNode) Copy() Node</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ActionNode.String">func (a *ActionNode) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#BoolNode">type BoolNode</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#BoolNode.Copy">func (b *BoolNode) Copy() Node</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#BoolNode.String">func (b *BoolNode) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#BranchNode">type BranchNode</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#BranchNode.Copy">func (b *BranchNode) Copy() Node</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#BranchNode.String">func (b *BranchNode) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#BreakNode">type BreakNode</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#BreakNode.Copy">func (b *BreakNode) Copy() Node</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#BreakNode.String">func (b *BreakNode) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#ChainNode">type ChainNode</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ChainNode.Add">func (c *ChainNode) Add(field string)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ChainNode.Copy">func (c *ChainNode) Copy() Node</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ChainNode.String">func (c *ChainNode) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#CommandNode">type CommandNode</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#CommandNode.Copy">func (c *CommandNode) Copy() Node</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#CommandNode.String">func (c *CommandNode) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#CommentNode">type CommentNode</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#CommentNode.Copy">func (c *CommentNode) Copy() Node</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#CommentNode.String">func (c *CommentNode) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#ContinueNode">type ContinueNode</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ContinueNode.Copy">func (c *ContinueNode) Copy() Node</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ContinueNode.String">func (c *ContinueNode) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#DotNode">type DotNode</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#DotNode.Copy">func (d *DotNode) Copy() Node</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#DotNode.String">func (d *DotNode) String() string</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#DotNode.Type">func (d *DotNode) Type() NodeType</a></dd>
+				
+			
+				
+				<dd><a href="index.html#FieldNode">type FieldNode</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#FieldNode.Copy">func (f *FieldNode) Copy() Node</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#FieldNode.String">func (f *FieldNode) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#IdentifierNode">type IdentifierNode</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewIdentifier">func NewIdentifier(ident string) *IdentifierNode</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#IdentifierNode.Copy">func (i *IdentifierNode) Copy() Node</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#IdentifierNode.SetPos">func (i *IdentifierNode) SetPos(pos Pos) *IdentifierNode</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#IdentifierNode.SetTree">func (i *IdentifierNode) SetTree(t *Tree) *IdentifierNode</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#IdentifierNode.String">func (i *IdentifierNode) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#IfNode">type IfNode</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#IfNode.Copy">func (i *IfNode) Copy() Node</a></dd>
+				
+			
+				
+				<dd><a href="index.html#ListNode">type ListNode</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ListNode.Copy">func (l *ListNode) Copy() Node</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ListNode.CopyList">func (l *ListNode) CopyList() *ListNode</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ListNode.String">func (l *ListNode) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Mode">type Mode</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#NilNode">type NilNode</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NilNode.Copy">func (n *NilNode) Copy() Node</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NilNode.String">func (n *NilNode) String() string</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NilNode.Type">func (n *NilNode) Type() NodeType</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Node">type Node</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#NodeType">type NodeType</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NodeType.Type">func (t NodeType) Type() NodeType</a></dd>
+				
+			
+				
+				<dd><a href="index.html#NumberNode">type NumberNode</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NumberNode.Copy">func (n *NumberNode) Copy() Node</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NumberNode.String">func (n *NumberNode) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#PipeNode">type PipeNode</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#PipeNode.Copy">func (p *PipeNode) Copy() Node</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#PipeNode.CopyPipe">func (p *PipeNode) CopyPipe() *PipeNode</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#PipeNode.String">func (p *PipeNode) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Pos">type Pos</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Pos.Position">func (p Pos) Position() Pos</a></dd>
+				
+			
+				
+				<dd><a href="index.html#RangeNode">type RangeNode</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#RangeNode.Copy">func (r *RangeNode) Copy() Node</a></dd>
+				
+			
+				
+				<dd><a href="index.html#StringNode">type StringNode</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#StringNode.Copy">func (s *StringNode) Copy() Node</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#StringNode.String">func (s *StringNode) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#TemplateNode">type TemplateNode</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#TemplateNode.Copy">func (t *TemplateNode) Copy() Node</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#TemplateNode.String">func (t *TemplateNode) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#TextNode">type TextNode</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#TextNode.Copy">func (t *TextNode) Copy() Node</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#TextNode.String">func (t *TextNode) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Tree">type Tree</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#New">func New(name string, funcs ...map[string]any) *Tree</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Tree.Copy">func (t *Tree) Copy() *Tree</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Tree.ErrorContext">func (t *Tree) ErrorContext(n Node) (location, context string)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Tree.Parse">func (t *Tree) Parse(text, leftDelim, rightDelim string, treeSet map[string]*Tree, funcs ...map[string]any) (tree *Tree, err error)</a></dd>
+				
+			
+				
+				<dd><a href="index.html#VariableNode">type VariableNode</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#VariableNode.Copy">func (v *VariableNode) Copy() Node</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#VariableNode.String">func (v *VariableNode) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#WithNode">type WithNode</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#WithNode.Copy">func (w *WithNode) Copy() Node</a></dd>
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../../../src/text/template/parse/lex.go">lex.go</a>
+			
+				<a href="../../../../src/text/template/parse/node.go">node.go</a>
+			
+				<a href="../../../../src/text/template/parse/parse.go">parse.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+		
+		
+			
+			
+			<h2 id="IsEmptyTree">func <a href="../../../../src/text/template/parse/parse.go?s=7451:7480#L260">IsEmptyTree</a>
+				<a class="permalink" href="index.html#IsEmptyTree">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func IsEmptyTree(n <a href="index.html#Node">Node</a>) <a href="../../../builtin/index.html#bool">bool</a></pre>
+			<p>IsEmptyTree reports whether this tree (node) is empty of everything but space or comments.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Parse">func <a href="../../../../src/text/template/parse/parse.go?s=1993:2096#L52">Parse</a>
+				<a class="permalink" href="index.html#Parse">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Parse(name, text, leftDelim, rightDelim <a href="../../../builtin/index.html#string">string</a>, funcs ...map[<a href="../../../builtin/index.html#string">string</a>]<a href="../../../builtin/index.html#any">any</a>) (map[<a href="../../../builtin/index.html#string">string</a>]*<a href="index.html#Tree">Tree</a>, <a href="../../../builtin/index.html#error">error</a>)</pre>
+			<p>Parse returns a map from template name to parse.Tree, created by parsing the
+templates described in the argument string. The top-level template will be
+given the specified name. If an error is encountered, parsing stops and an
+empty map is returned with the error.
+
+			
+			
+
+		
+		
+			
+			
+			<h2 id="ActionNode">type <a href="../../../../src/text/template/parse/node.go?s=6508:6693#L247">ActionNode</a>
+				<a class="permalink" href="index.html#ActionNode">&#xb6;</a>
+				
+				
+			</h2>
+			<p>ActionNode holds an action (something bounded by delimiters).
+Control actions have their own nodes; ActionNode represents simple
+ones such as field evaluations and parenthesized pipelines.
+
+			<pre>type ActionNode struct {
+    <a href="index.html#NodeType">NodeType</a>
+    <a href="index.html#Pos">Pos</a>
+
+<span id="ActionNode.Line"></span>    Line <a href="../../../builtin/index.html#int">int</a>       <span class="comment">// The line number in the input. Deprecated: Kept for compatibility.</span>
+<span id="ActionNode.Pipe"></span>    Pipe *<a href="index.html#PipeNode">PipeNode</a> <span class="comment">// The pipeline in the action.</span>
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="ActionNode.Copy">func (*ActionNode) <a href="../../../../src/text/template/parse/node.go?s=7128:7160#L275">Copy</a>
+					<a class="permalink" href="index.html#ActionNode.Copy">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (a *<a href="index.html#ActionNode">ActionNode</a>) Copy() <a href="index.html#Node">Node</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="ActionNode.String">func (*ActionNode) <a href="../../../../src/text/template/parse/node.go?s=6855:6891#L259">String</a>
+					<a class="permalink" href="index.html#ActionNode.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (a *<a href="index.html#ActionNode">ActionNode</a>) String() <a href="../../../builtin/index.html#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="BoolNode">type <a href="../../../../src/text/template/parse/node.go?s=13728:13828#L571">BoolNode</a>
+				<a class="permalink" href="index.html#BoolNode">&#xb6;</a>
+				
+				
+			</h2>
+			<p>BoolNode holds a boolean constant.
+
+			<pre>type BoolNode struct {
+    <a href="index.html#NodeType">NodeType</a>
+    <a href="index.html#Pos">Pos</a>
+
+<span id="BoolNode.True"></span>    True <a href="../../../builtin/index.html#bool">bool</a> <span class="comment">// The value of the boolean constant.</span>
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="BoolNode.Copy">func (*BoolNode) <a href="../../../../src/text/template/parse/node.go?s=14174:14204#L597">Copy</a>
+					<a class="permalink" href="index.html#BoolNode.Copy">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (b *<a href="index.html#BoolNode">BoolNode</a>) Copy() <a href="index.html#Node">Node</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="BoolNode.String">func (*BoolNode) <a href="../../../../src/text/template/parse/node.go?s=13955:13989#L582">String</a>
+					<a class="permalink" href="index.html#BoolNode.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (b *<a href="index.html#BoolNode">BoolNode</a>) String() <a href="../../../builtin/index.html#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="BranchNode">type <a href="../../../../src/text/template/parse/node.go?s=20061:20404#L830">BranchNode</a>
+				<a class="permalink" href="index.html#BranchNode">&#xb6;</a>
+				
+				
+			</h2>
+			<p>BranchNode is the common representation of if, range, and with.
+
+			<pre>type BranchNode struct {
+    <a href="index.html#NodeType">NodeType</a>
+    <a href="index.html#Pos">Pos</a>
+
+<span id="BranchNode.Line"></span>    Line     <a href="../../../builtin/index.html#int">int</a>       <span class="comment">// The line number in the input. Deprecated: Kept for compatibility.</span>
+<span id="BranchNode.Pipe"></span>    Pipe     *<a href="index.html#PipeNode">PipeNode</a> <span class="comment">// The pipeline to be evaluated.</span>
+<span id="BranchNode.List"></span>    List     *<a href="index.html#ListNode">ListNode</a> <span class="comment">// What to execute if the value is non-empty.</span>
+<span id="BranchNode.ElseList"></span>    ElseList *<a href="index.html#ListNode">ListNode</a> <span class="comment">// What to execute if the value is empty (nil if absent).</span>
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="BranchNode.Copy">func (*BranchNode) <a href="../../../../src/text/template/parse/node.go?s=21019:21051#L875">Copy</a>
+					<a class="permalink" href="index.html#BranchNode.Copy">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (b *<a href="index.html#BranchNode">BranchNode</a>) Copy() <a href="index.html#Node">Node</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="BranchNode.String">func (*BranchNode) <a href="../../../../src/text/template/parse/node.go?s=20406:20442#L840">String</a>
+					<a class="permalink" href="index.html#BranchNode.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (b *<a href="index.html#BranchNode">BranchNode</a>) String() <a href="../../../builtin/index.html#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="BreakNode">type <a href="../../../../src/text/template/parse/node.go?s=21842:21902#L902">BreakNode</a>
+				<a class="permalink" href="index.html#BreakNode">&#xb6;</a>
+				
+				
+			</h2>
+			<p>BreakNode represents a {{break}} action.
+
+			<pre>type BreakNode struct {
+    <a href="index.html#NodeType">NodeType</a>
+    <a href="index.html#Pos">Pos</a>
+<span id="BreakNode.Line"></span>    Line <a href="../../../builtin/index.html#int">int</a>
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="BreakNode.Copy">func (*BreakNode) <a href="../../../../src/text/template/parse/node.go?s=22032:22063#L913">Copy</a>
+					<a class="permalink" href="index.html#BreakNode.Copy">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (b *<a href="index.html#BreakNode">BreakNode</a>) Copy() <a href="index.html#Node">Node</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="BreakNode.String">func (*BreakNode) <a href="../../../../src/text/template/parse/node.go?s=22121:22156#L914">String</a>
+					<a class="permalink" href="index.html#BreakNode.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (b *<a href="index.html#BreakNode">BreakNode</a>) String() <a href="../../../builtin/index.html#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="ChainNode">type <a href="../../../../src/text/template/parse/node.go?s=12548:12666#L518">ChainNode</a>
+				<a class="permalink" href="index.html#ChainNode">&#xb6;</a>
+				
+				
+			</h2>
+			<p>ChainNode holds a term followed by a chain of field accesses (identifier starting with &apos;.&apos;).
+The names may be chained (&apos;.x.y&apos;).
+The periods are dropped from each ident.
+
+			<pre>type ChainNode struct {
+    <a href="index.html#NodeType">NodeType</a>
+    <a href="index.html#Pos">Pos</a>
+
+<span id="ChainNode.Node"></span>    Node  <a href="index.html#Node">Node</a>
+<span id="ChainNode.Field"></span>    Field []<a href="../../../builtin/index.html#string">string</a> <span class="comment">// The identifiers in lexical order.</span>
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="ChainNode.Add">func (*ChainNode) <a href="../../../../src/text/template/parse/node.go?s=12885:12922#L531">Add</a>
+					<a class="permalink" href="index.html#ChainNode.Add">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#ChainNode">ChainNode</a>) Add(field <a href="../../../builtin/index.html#string">string</a>)</pre>
+				<p>Add adds the named field (which should start with a period) to the end of the chain.
+
+				
+				
+				
+			
+				
+				<h3 id="ChainNode.Copy">func (*ChainNode) <a href="../../../../src/text/template/parse/node.go?s=13538:13569#L566">Copy</a>
+					<a class="permalink" href="index.html#ChainNode.Copy">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#ChainNode">ChainNode</a>) Copy() <a href="index.html#Node">Node</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="ChainNode.String">func (*ChainNode) <a href="../../../../src/text/template/parse/node.go?s=13119:13154#L542">String</a>
+					<a class="permalink" href="index.html#ChainNode.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#ChainNode">ChainNode</a>) String() <a href="../../../builtin/index.html#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="CommandNode">type <a href="../../../../src/text/template/parse/node.go?s=7296:7426#L280">CommandNode</a>
+				<a class="permalink" href="index.html#CommandNode">&#xb6;</a>
+				
+				
+			</h2>
+			<p>CommandNode holds a command (a pipeline inside an evaluating action).
+
+			<pre>type CommandNode struct {
+    <a href="index.html#NodeType">NodeType</a>
+    <a href="index.html#Pos">Pos</a>
+
+<span id="CommandNode.Args"></span>    Args []<a href="index.html#Node">Node</a> <span class="comment">// Arguments in lexical order: Identifier, field, or constant.</span>
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="CommandNode.Copy">func (*CommandNode) <a href="../../../../src/text/template/parse/node.go?s=8032:8065#L320">Copy</a>
+					<a class="permalink" href="index.html#CommandNode.Copy">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#CommandNode">CommandNode</a>) Copy() <a href="index.html#Node">Node</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="CommandNode.String">func (*CommandNode) <a href="../../../../src/text/template/parse/node.go?s=7616:7653#L295">String</a>
+					<a class="permalink" href="index.html#CommandNode.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#CommandNode">CommandNode</a>) String() <a href="../../../builtin/index.html#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="CommentNode">type <a href="../../../../src/text/template/parse/node.go?s=4211:4295#L146">CommentNode</a>
+				<a class="permalink" href="index.html#CommentNode">&#xb6;</a>
+				
+				
+			</h2>
+			<p>CommentNode holds a comment.
+
+			<pre>type CommentNode struct {
+    <a href="index.html#NodeType">NodeType</a>
+    <a href="index.html#Pos">Pos</a>
+
+<span id="CommentNode.Text"></span>    Text <a href="../../../builtin/index.html#string">string</a> <span class="comment">// Comment text.</span>
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="CommentNode.Copy">func (*CommentNode) <a href="../../../../src/text/template/parse/node.go?s=4716:4749#L173">Copy</a>
+					<a class="permalink" href="index.html#CommentNode.Copy">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#CommentNode">CommentNode</a>) Copy() <a href="index.html#Node">Node</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="CommentNode.String">func (*CommentNode) <a href="../../../../src/text/template/parse/node.go?s=4436:4473#L157">String</a>
+					<a class="permalink" href="index.html#CommentNode.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#CommentNode">CommentNode</a>) String() <a href="../../../builtin/index.html#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="ContinueNode">type <a href="../../../../src/text/template/parse/node.go?s=22390:22453#L919">ContinueNode</a>
+				<a class="permalink" href="index.html#ContinueNode">&#xb6;</a>
+				
+				
+			</h2>
+			<p>ContinueNode represents a {{continue}} action.
+
+			<pre>type ContinueNode struct {
+    <a href="index.html#NodeType">NodeType</a>
+    <a href="index.html#Pos">Pos</a>
+<span id="ContinueNode.Line"></span>    Line <a href="../../../builtin/index.html#int">int</a>
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="ContinueNode.Copy">func (*ContinueNode) <a href="../../../../src/text/template/parse/node.go?s=22595:22629#L930">Copy</a>
+					<a class="permalink" href="index.html#ContinueNode.Copy">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#ContinueNode">ContinueNode</a>) Copy() <a href="index.html#Node">Node</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="ContinueNode.String">func (*ContinueNode) <a href="../../../../src/text/template/parse/node.go?s=22690:22728#L931">String</a>
+					<a class="permalink" href="index.html#ContinueNode.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#ContinueNode">ContinueNode</a>) String() <a href="../../../builtin/index.html#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="DotNode">type <a href="../../../../src/text/template/parse/node.go?s=10228:10276#L413">DotNode</a>
+				<a class="permalink" href="index.html#DotNode">&#xb6;</a>
+				
+				
+			</h2>
+			<p>DotNode holds the special identifier &apos;.&apos;.
+
+			<pre>type DotNode struct {
+    <a href="index.html#NodeType">NodeType</a>
+    <a href="index.html#Pos">Pos</a>
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="DotNode.Copy">func (*DotNode) <a href="../../../../src/text/template/parse/node.go?s=10767:10796#L442">Copy</a>
+					<a class="permalink" href="index.html#DotNode.Copy">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (d *<a href="index.html#DotNode">DotNode</a>) Copy() <a href="index.html#Node">Node</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="DotNode.String">func (*DotNode) <a href="../../../../src/text/template/parse/node.go?s=10587:10620#L430">String</a>
+					<a class="permalink" href="index.html#DotNode.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (d *<a href="index.html#DotNode">DotNode</a>) String() <a href="../../../builtin/index.html#string">string</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="DotNode.Type">func (*DotNode) <a href="../../../../src/text/template/parse/node.go?s=10376:10409#L423">Type</a>
+					<a class="permalink" href="index.html#DotNode.Type">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (d *<a href="index.html#DotNode">DotNode</a>) Type() <a href="index.html#NodeType">NodeType</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="FieldNode">type <a href="../../../../src/text/template/parse/node.go?s=11655:11761#L483">FieldNode</a>
+				<a class="permalink" href="index.html#FieldNode">&#xb6;</a>
+				
+				
+			</h2>
+			<p>FieldNode holds a field (identifier starting with &apos;.&apos;).
+The names may be chained (&apos;.x.y&apos;).
+The period is dropped from each ident.
+
+			<pre>type FieldNode struct {
+    <a href="index.html#NodeType">NodeType</a>
+    <a href="index.html#Pos">Pos</a>
+
+<span id="FieldNode.Ident"></span>    Ident []<a href="../../../builtin/index.html#string">string</a> <span class="comment">// The identifiers in lexical order.</span>
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="FieldNode.Copy">func (*FieldNode) <a href="../../../../src/text/template/parse/node.go?s=12232:12263#L511">Copy</a>
+					<a class="permalink" href="index.html#FieldNode.Copy">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (f *<a href="index.html#FieldNode">FieldNode</a>) Copy() <a href="index.html#Node">Node</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="FieldNode.String">func (*FieldNode) <a href="../../../../src/text/template/parse/node.go?s=11952:11987#L494">String</a>
+					<a class="permalink" href="index.html#FieldNode.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (f *<a href="index.html#FieldNode">FieldNode</a>) String() <a href="../../../builtin/index.html#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="IdentifierNode">type <a href="../../../../src/text/template/parse/node.go?s=8230:8328#L332">IdentifierNode</a>
+				<a class="permalink" href="index.html#IdentifierNode">&#xb6;</a>
+				
+				
+			</h2>
+			<p>IdentifierNode holds an identifier.
+
+			<pre>type IdentifierNode struct {
+    <a href="index.html#NodeType">NodeType</a>
+    <a href="index.html#Pos">Pos</a>
+
+<span id="IdentifierNode.Ident"></span>    Ident <a href="../../../builtin/index.html#string">string</a> <span class="comment">// The identifier&#39;s name.</span>
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="NewIdentifier">func <a href="../../../../src/text/template/parse/node.go?s=8408:8456#L340">NewIdentifier</a>
+					<a class="permalink" href="index.html#NewIdentifier">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func NewIdentifier(ident <a href="../../../builtin/index.html#string">string</a>) *<a href="index.html#IdentifierNode">IdentifierNode</a></pre>
+				<p>NewIdentifier returns a new IdentifierNode with the given identifier name.
+
+				
+				
+			
+
+			
+				
+				<h3 id="IdentifierNode.Copy">func (*IdentifierNode) <a href="../../../../src/text/template/parse/node.go?s=9208:9244#L372">Copy</a>
+					<a class="permalink" href="index.html#IdentifierNode.Copy">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (i *<a href="index.html#IdentifierNode">IdentifierNode</a>) Copy() <a href="index.html#Node">Node</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="IdentifierNode.SetPos">func (*IdentifierNode) <a href="../../../../src/text/template/parse/node.go?s=8672:8728#L347">SetPos</a>
+					<a class="permalink" href="index.html#IdentifierNode.SetPos">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (i *<a href="index.html#IdentifierNode">IdentifierNode</a>) SetPos(pos <a href="index.html#Pos">Pos</a>) *<a href="index.html#IdentifierNode">IdentifierNode</a></pre>
+				<p>SetPos sets the position. NewIdentifier is a public method so we can&apos;t modify its signature.
+Chained for convenience.
+TODO: fix one day?
+
+				
+				
+				
+			
+				
+				<h3 id="IdentifierNode.SetTree">func (*IdentifierNode) <a href="../../../../src/text/template/parse/node.go?s=8920:8977#L355">SetTree</a>
+					<a class="permalink" href="index.html#IdentifierNode.SetTree">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (i *<a href="index.html#IdentifierNode">IdentifierNode</a>) SetTree(t *<a href="index.html#Tree">Tree</a>) *<a href="index.html#IdentifierNode">IdentifierNode</a></pre>
+				<p>SetTree sets the parent tree for the node. NewIdentifier is a public method so we can&apos;t modify its signature.
+Chained for convenience.
+TODO: fix one day?
+
+				
+				
+				
+			
+				
+				<h3 id="IdentifierNode.String">func (*IdentifierNode) <a href="../../../../src/text/template/parse/node.go?s=9003:9043#L360">String</a>
+					<a class="permalink" href="index.html#IdentifierNode.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (i *<a href="index.html#IdentifierNode">IdentifierNode</a>) String() <a href="../../../builtin/index.html#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="IfNode">type <a href="../../../../src/text/template/parse/node.go?s=21419:21453#L889">IfNode</a>
+				<a class="permalink" href="index.html#IfNode">&#xb6;</a>
+				
+				
+			</h2>
+			<p>IfNode represents an {{if}} action and its commands.
+
+			<pre>type IfNode struct {
+    <a href="index.html#BranchNode">BranchNode</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="IfNode.Copy">func (*IfNode) <a href="../../../../src/text/template/parse/node.go?s=21669:21697#L897">Copy</a>
+					<a class="permalink" href="index.html#IfNode.Copy">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (i *<a href="index.html#IfNode">IfNode</a>) Copy() <a href="index.html#Node">Node</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="ListNode">type <a href="../../../../src/text/template/parse/node.go?s=2819:2924#L71">ListNode</a>
+				<a class="permalink" href="index.html#ListNode">&#xb6;</a>
+				
+				
+			</h2>
+			<p>ListNode holds a sequence of nodes.
+
+			<pre>type ListNode struct {
+    <a href="index.html#NodeType">NodeType</a>
+    <a href="index.html#Pos">Pos</a>
+
+<span id="ListNode.Nodes"></span>    Nodes []<a href="index.html#Node">Node</a> <span class="comment">// The element nodes in lexical order.</span>
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="ListNode.Copy">func (*ListNode) <a href="../../../../src/text/template/parse/node.go?s=3517:3547#L113">Copy</a>
+					<a class="permalink" href="index.html#ListNode.Copy">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (l *<a href="index.html#ListNode">ListNode</a>) Copy() <a href="index.html#Node">Node</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="ListNode.CopyList">func (*ListNode) <a href="../../../../src/text/template/parse/node.go?s=3348:3387#L102">CopyList</a>
+					<a class="permalink" href="index.html#ListNode.CopyList">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (l *<a href="index.html#ListNode">ListNode</a>) CopyList() *<a href="index.html#ListNode">ListNode</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="ListNode.String">func (*ListNode) <a href="../../../../src/text/template/parse/node.go?s=3147:3181#L90">String</a>
+					<a class="permalink" href="index.html#ListNode.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (l *<a href="index.html#ListNode">ListNode</a>) String() <a href="../../../builtin/index.html#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Mode">type <a href="../../../../src/text/template/parse/parse.go?s=1294:1308#L28">Mode</a>
+				<a class="permalink" href="index.html#Mode">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A mode value is a set of flags (or 0). Modes control parser behavior.
+
+			<pre>type Mode <a href="../../../builtin/index.html#uint">uint</a></pre>
+
+			
+				
+				<pre>const (
+    <span id="ParseComments">ParseComments</span> <a href="index.html#Mode">Mode</a> = 1 &lt;&lt; <a href="../../../builtin/index.html#iota">iota</a> <span class="comment">// parse comments and add them to AST</span>
+    <span id="SkipFuncCheck">SkipFuncCheck</span>                  <span class="comment">// do not check that functions are defined</span>
+)</pre>
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="NilNode">type <a href="../../../../src/text/template/parse/node.go?s=10913:10961#L447">NilNode</a>
+				<a class="permalink" href="index.html#NilNode">&#xb6;</a>
+				
+				
+			</h2>
+			<p>NilNode holds the special identifier &apos;nil&apos; representing an untyped nil constant.
+
+			<pre>type NilNode struct {
+    <a href="index.html#NodeType">NodeType</a>
+    <a href="index.html#Pos">Pos</a>
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="NilNode.Copy">func (*NilNode) <a href="../../../../src/text/template/parse/node.go?s=11454:11483#L476">Copy</a>
+					<a class="permalink" href="index.html#NilNode.Copy">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (n *<a href="index.html#NilNode">NilNode</a>) Copy() <a href="index.html#Node">Node</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="NilNode.String">func (*NilNode) <a href="../../../../src/text/template/parse/node.go?s=11272:11305#L464">String</a>
+					<a class="permalink" href="index.html#NilNode.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (n *<a href="index.html#NilNode">NilNode</a>) String() <a href="../../../builtin/index.html#string">string</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="NilNode.Type">func (*NilNode) <a href="../../../../src/text/template/parse/node.go?s=11061:11094#L457">Type</a>
+					<a class="permalink" href="index.html#NilNode.Type">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (n *<a href="index.html#NilNode">NilNode</a>) Type() <a href="index.html#NodeType">NodeType</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Node">type <a href="../../../../src/text/template/parse/node.go?s=487:1013#L10">Node</a>
+				<a class="permalink" href="index.html#Node">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A Node is an element in the parse tree. The interface is trivial.
+The interface contains an unexported method so that only
+types local to this package can satisfy it.
+
+			<pre>type Node interface {
+    Type() <a href="index.html#NodeType">NodeType</a>
+    String() <a href="../../../builtin/index.html#string">string</a>
+    <span class="comment">// Copy does a deep copy of the Node and all its components.</span>
+    <span class="comment">// To avoid type assertions, some XxxNodes also have specialized</span>
+    <span class="comment">// CopyXxx methods that return *XxxNode.</span>
+    Copy() <a href="index.html#Node">Node</a>
+    Position() <a href="index.html#Pos">Pos</a> <span class="comment">// byte position of start of node in full original input string</span>
+    <span class="comment">// contains filtered or unexported methods</span>
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="NodeType">type <a href="../../../../src/text/template/parse/node.go?s=1069:1086#L26">NodeType</a>
+				<a class="permalink" href="index.html#NodeType">&#xb6;</a>
+				
+				
+			</h2>
+			<p>NodeType identifies the type of a parse tree node.
+
+			<pre>type NodeType <a href="../../../builtin/index.html#int">int</a></pre>
+
+			
+				
+				<pre>const (
+    <span id="NodeText">NodeText</span>    <a href="index.html#NodeType">NodeType</a> = <a href="../../../builtin/index.html#iota">iota</a> <span class="comment">// Plain text.</span>
+    <span id="NodeAction">NodeAction</span>                  <span class="comment">// A non-control action such as a field evaluation.</span>
+    <span id="NodeBool">NodeBool</span>                    <span class="comment">// A boolean constant.</span>
+    <span id="NodeChain">NodeChain</span>                   <span class="comment">// A sequence of field accesses.</span>
+    <span id="NodeCommand">NodeCommand</span>                 <span class="comment">// An element of a pipeline.</span>
+    <span id="NodeDot">NodeDot</span>                     <span class="comment">// The cursor, dot.</span>
+
+    <span id="NodeField">NodeField</span>      <span class="comment">// A field or method name.</span>
+    <span id="NodeIdentifier">NodeIdentifier</span> <span class="comment">// An identifier; always a function name.</span>
+    <span id="NodeIf">NodeIf</span>         <span class="comment">// An if action.</span>
+    <span id="NodeList">NodeList</span>       <span class="comment">// A list of Nodes.</span>
+    <span id="NodeNil">NodeNil</span>        <span class="comment">// An untyped nil constant.</span>
+    <span id="NodeNumber">NodeNumber</span>     <span class="comment">// A numerical constant.</span>
+    <span id="NodePipe">NodePipe</span>       <span class="comment">// A pipeline of commands.</span>
+    <span id="NodeRange">NodeRange</span>      <span class="comment">// A range action.</span>
+    <span id="NodeString">NodeString</span>     <span class="comment">// A string constant.</span>
+    <span id="NodeTemplate">NodeTemplate</span>   <span class="comment">// A template invocation action.</span>
+    <span id="NodeVariable">NodeVariable</span>   <span class="comment">// A $ variable.</span>
+    <span id="NodeWith">NodeWith</span>       <span class="comment">// A with action.</span>
+    <span id="NodeComment">NodeComment</span>    <span class="comment">// A comment.</span>
+    <span id="NodeBreak">NodeBreak</span>      <span class="comment">// A break action.</span>
+    <span id="NodeContinue">NodeContinue</span>   <span class="comment">// A continue action.</span>
+)</pre>
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="NodeType.Type">func (NodeType) <a href="../../../../src/text/template/parse/node.go?s=1376:1409#L38">Type</a>
+					<a class="permalink" href="index.html#NodeType.Type">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t <a href="index.html#NodeType">NodeType</a>) Type() <a href="index.html#NodeType">NodeType</a></pre>
+				<p>Type returns itself and provides an easy default implementation
+for embedding in a Node. Embedded in all non-trivial Nodes.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="NumberNode">type <a href="../../../../src/text/template/parse/node.go?s=14489:15056#L604">NumberNode</a>
+				<a class="permalink" href="index.html#NumberNode">&#xb6;</a>
+				
+				
+			</h2>
+			<p>NumberNode holds a number: signed or unsigned integer, float, or complex.
+The value is parsed and stored under all the types that can represent the value.
+This simulates in a small amount of code the behavior of Go&apos;s ideal constants.
+
+			<pre>type NumberNode struct {
+    <a href="index.html#NodeType">NodeType</a>
+    <a href="index.html#Pos">Pos</a>
+
+<span id="NumberNode.IsInt"></span>    IsInt      <a href="../../../builtin/index.html#bool">bool</a>       <span class="comment">// Number has an integral value.</span>
+<span id="NumberNode.IsUint"></span>    IsUint     <a href="../../../builtin/index.html#bool">bool</a>       <span class="comment">// Number has an unsigned integral value.</span>
+<span id="NumberNode.IsFloat"></span>    IsFloat    <a href="../../../builtin/index.html#bool">bool</a>       <span class="comment">// Number has a floating-point value.</span>
+<span id="NumberNode.IsComplex"></span>    IsComplex  <a href="../../../builtin/index.html#bool">bool</a>       <span class="comment">// Number is complex.</span>
+<span id="NumberNode.Int64"></span>    Int64      <a href="../../../builtin/index.html#int64">int64</a>      <span class="comment">// The signed integer value.</span>
+<span id="NumberNode.Uint64"></span>    Uint64     <a href="../../../builtin/index.html#uint64">uint64</a>     <span class="comment">// The unsigned integer value.</span>
+<span id="NumberNode.Float64"></span>    Float64    <a href="../../../builtin/index.html#float64">float64</a>    <span class="comment">// The floating-point value.</span>
+<span id="NumberNode.Complex128"></span>    Complex128 <a href="../../../builtin/index.html#complex128">complex128</a> <span class="comment">// The complex value.</span>
+<span id="NumberNode.Text"></span>    Text       <a href="../../../builtin/index.html#string">string</a>     <span class="comment">// The original textual representation from the input.</span>
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="NumberNode.Copy">func (*NumberNode) <a href="../../../../src/text/template/parse/node.go?s=18071:18103#L734">Copy</a>
+					<a class="permalink" href="index.html#NumberNode.Copy">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (n *<a href="index.html#NumberNode">NumberNode</a>) Copy() <a href="index.html#Node">Node</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="NumberNode.String">func (*NumberNode) <a href="../../../../src/text/template/parse/node.go?s=17879:17915#L722">String</a>
+					<a class="permalink" href="index.html#NumberNode.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (n *<a href="index.html#NumberNode">NumberNode</a>) String() <a href="../../../builtin/index.html#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="PipeNode">type <a href="../../../../src/text/template/parse/node.go?s=4890:5234#L178">PipeNode</a>
+				<a class="permalink" href="index.html#PipeNode">&#xb6;</a>
+				
+				
+			</h2>
+			<p>PipeNode holds a pipeline with optional declaration
+
+			<pre>type PipeNode struct {
+    <a href="index.html#NodeType">NodeType</a>
+    <a href="index.html#Pos">Pos</a>
+
+<span id="PipeNode.Line"></span>    Line     <a href="../../../builtin/index.html#int">int</a>             <span class="comment">// The line number in the input. Deprecated: Kept for compatibility.</span>
+<span id="PipeNode.IsAssign"></span>    IsAssign <a href="../../../builtin/index.html#bool">bool</a>            <span class="comment">// The variables are being assigned, not declared.</span>
+<span id="PipeNode.Decl"></span>    Decl     []*<a href="index.html#VariableNode">VariableNode</a> <span class="comment">// Variables in lexical order.</span>
+<span id="PipeNode.Cmds"></span>    Cmds     []*<a href="index.html#CommandNode">CommandNode</a>  <span class="comment">// The commands in lexical order.</span>
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="PipeNode.Copy">func (*PipeNode) <a href="../../../../src/text/template/parse/node.go?s=6253:6283#L240">Copy</a>
+					<a class="permalink" href="index.html#PipeNode.Copy">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#PipeNode">PipeNode</a>) Copy() <a href="index.html#Node">Node</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="PipeNode.CopyPipe">func (*PipeNode) <a href="../../../../src/text/template/parse/node.go?s=5921:5960#L224">CopyPipe</a>
+					<a class="permalink" href="index.html#PipeNode.CopyPipe">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#PipeNode">PipeNode</a>) CopyPipe() *<a href="index.html#PipeNode">PipeNode</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="PipeNode.String">func (*PipeNode) <a href="../../../../src/text/template/parse/node.go?s=5485:5519#L196">String</a>
+					<a class="permalink" href="index.html#PipeNode.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#PipeNode">PipeNode</a>) String() <a href="../../../builtin/index.html#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Pos">type <a href="../../../../src/text/template/parse/node.go?s=1189:1201#L30">Pos</a>
+				<a class="permalink" href="index.html#Pos">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Pos represents a byte position in the original input text from which
+this template was parsed.
+
+			<pre>type Pos <a href="../../../builtin/index.html#int">int</a></pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="Pos.Position">func (Pos) <a href="../../../../src/text/template/parse/node.go?s=1203:1230#L32">Position</a>
+					<a class="permalink" href="index.html#Pos.Position">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p <a href="index.html#Pos">Pos</a>) Position() <a href="index.html#Pos">Pos</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="RangeNode">type <a href="../../../../src/text/template/parse/node.go?s=22985:23022#L936">RangeNode</a>
+				<a class="permalink" href="index.html#RangeNode">&#xb6;</a>
+				
+				
+			</h2>
+			<p>RangeNode represents a {{range}} action and its commands.
+
+			<pre>type RangeNode struct {
+    <a href="index.html#BranchNode">BranchNode</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="RangeNode.Copy">func (*RangeNode) <a href="../../../../src/text/template/parse/node.go?s=23250:23281#L944">Copy</a>
+					<a class="permalink" href="index.html#RangeNode.Copy">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (r *<a href="index.html#RangeNode">RangeNode</a>) Copy() <a href="index.html#Node">Node</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="StringNode">type <a href="../../../../src/text/template/parse/node.go?s=18247:18420#L741">StringNode</a>
+				<a class="permalink" href="index.html#StringNode">&#xb6;</a>
+				
+				
+			</h2>
+			<p>StringNode holds a string constant. The value has been &quot;unquoted&quot;.
+
+			<pre>type StringNode struct {
+    <a href="index.html#NodeType">NodeType</a>
+    <a href="index.html#Pos">Pos</a>
+
+<span id="StringNode.Quoted"></span>    Quoted <a href="../../../builtin/index.html#string">string</a> <span class="comment">// The original text of the string, with quotes.</span>
+<span id="StringNode.Text"></span>    Text   <a href="../../../builtin/index.html#string">string</a> <span class="comment">// The string, after quote processing.</span>
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="StringNode.Copy">func (*StringNode) <a href="../../../../src/text/template/parse/node.go?s=18771:18803#L765">Copy</a>
+					<a class="permalink" href="index.html#StringNode.Copy">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (s *<a href="index.html#StringNode">StringNode</a>) Copy() <a href="index.html#Node">Node</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="StringNode.String">func (*StringNode) <a href="../../../../src/text/template/parse/node.go?s=18577:18613#L753">String</a>
+					<a class="permalink" href="index.html#StringNode.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (s *<a href="index.html#StringNode">StringNode</a>) String() <a href="../../../builtin/index.html#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="TemplateNode">type <a href="../../../../src/text/template/parse/node.go?s=23887:24151#L962">TemplateNode</a>
+				<a class="permalink" href="index.html#TemplateNode">&#xb6;</a>
+				
+				
+			</h2>
+			<p>TemplateNode represents a {{template}} action.
+
+			<pre>type TemplateNode struct {
+    <a href="index.html#NodeType">NodeType</a>
+    <a href="index.html#Pos">Pos</a>
+
+<span id="TemplateNode.Line"></span>    Line <a href="../../../builtin/index.html#int">int</a>       <span class="comment">// The line number in the input. Deprecated: Kept for compatibility.</span>
+<span id="TemplateNode.Name"></span>    Name <a href="../../../builtin/index.html#string">string</a>    <span class="comment">// The name of the template (unquoted).</span>
+<span id="TemplateNode.Pipe"></span>    Pipe *<a href="index.html#PipeNode">PipeNode</a> <span class="comment">// The command to evaluate as dot for the template.</span>
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="TemplateNode.Copy">func (*TemplateNode) <a href="../../../../src/text/template/parse/node.go?s=24717:24751#L995">Copy</a>
+					<a class="permalink" href="index.html#TemplateNode.Copy">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t *<a href="index.html#TemplateNode">TemplateNode</a>) Copy() <a href="index.html#Node">Node</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="TemplateNode.String">func (*TemplateNode) <a href="../../../../src/text/template/parse/node.go?s=24346:24384#L975">String</a>
+					<a class="permalink" href="index.html#TemplateNode.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t *<a href="index.html#TemplateNode">TemplateNode</a>) String() <a href="../../../builtin/index.html#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="TextNode">type <a href="../../../../src/text/template/parse/node.go?s=3604:3700#L118">TextNode</a>
+				<a class="permalink" href="index.html#TextNode">&#xb6;</a>
+				
+				
+			</h2>
+			<p>TextNode holds plain text.
+
+			<pre>type TextNode struct {
+    <a href="index.html#NodeType">NodeType</a>
+    <a href="index.html#Pos">Pos</a>
+
+<span id="TextNode.Text"></span>    Text []<a href="../../../builtin/index.html#byte">byte</a> <span class="comment">// The text; may span newlines.</span>
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="TextNode.Copy">func (*TextNode) <a href="../../../../src/text/template/parse/node.go?s=4048:4078#L141">Copy</a>
+					<a class="permalink" href="index.html#TextNode.Copy">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t *<a href="index.html#TextNode">TextNode</a>) Copy() <a href="index.html#Node">Node</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="TextNode.String">func (*TextNode) <a href="../../../../src/text/template/parse/node.go?s=3837:3871#L129">String</a>
+					<a class="permalink" href="index.html#TextNode.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t *<a href="index.html#TextNode">TextNode</a>) String() <a href="../../../builtin/index.html#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Tree">type <a href="../../../../src/text/template/parse/parse.go?s=557:1219#L10">Tree</a>
+				<a class="permalink" href="index.html#Tree">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Tree is the representation of a single parsed template.
+
+			<pre>type Tree struct {
+<span id="Tree.Name"></span>    Name      <a href="../../../builtin/index.html#string">string</a>    <span class="comment">// name of the template represented by the tree.</span>
+<span id="Tree.ParseName"></span>    ParseName <a href="../../../builtin/index.html#string">string</a>    <span class="comment">// name of the top-level template during parsing, for error messages.</span>
+<span id="Tree.Root"></span>    Root      *<a href="index.html#ListNode">ListNode</a> <span class="comment">// top-level root of the tree.</span>
+<span id="Tree.Mode"></span>    Mode      <a href="index.html#Mode">Mode</a>      <span class="comment">// parsing mode.</span>
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="New">func <a href="../../../../src/text/template/parse/parse.go?s=3524:3576#L121">New</a>
+					<a class="permalink" href="index.html#New">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func New(name <a href="../../../builtin/index.html#string">string</a>, funcs ...map[<a href="../../../builtin/index.html#string">string</a>]<a href="../../../builtin/index.html#any">any</a>) *<a href="index.html#Tree">Tree</a></pre>
+				<p>New allocates a new parse tree with the given name.
+
+				
+				
+			
+
+			
+				
+				<h3 id="Tree.Copy">func (*Tree) <a href="../../../../src/text/template/parse/parse.go?s=1534:1561#L36">Copy</a>
+					<a class="permalink" href="index.html#Tree.Copy">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t *<a href="index.html#Tree">Tree</a>) Copy() *<a href="index.html#Tree">Tree</a></pre>
+				<p>Copy returns a copy of the Tree. Any parsing state is discarded.
+
+				
+				
+				
+			
+				
+				<h3 id="Tree.ErrorContext">func (*Tree) <a href="../../../../src/text/template/parse/parse.go?s=3846:3908#L131">ErrorContext</a>
+					<a class="permalink" href="index.html#Tree.ErrorContext">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t *<a href="index.html#Tree">Tree</a>) ErrorContext(n <a href="index.html#Node">Node</a>) (location, context <a href="../../../builtin/index.html#string">string</a>)</pre>
+				<p>ErrorContext returns a textual representation of the location of the node in the input text.
+The receiver is only used when the node does not have a pointer to the tree inside,
+which can occur in old code.
+
+				
+				
+				
+			
+				
+				<h3 id="Tree.Parse">func (*Tree) <a href="../../../../src/text/template/parse/parse.go?s=6761:6892#L235">Parse</a>
+					<a class="permalink" href="index.html#Tree.Parse">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t *<a href="index.html#Tree">Tree</a>) Parse(text, leftDelim, rightDelim <a href="../../../builtin/index.html#string">string</a>, treeSet map[<a href="../../../builtin/index.html#string">string</a>]*<a href="index.html#Tree">Tree</a>, funcs ...map[<a href="../../../builtin/index.html#string">string</a>]<a href="../../../builtin/index.html#any">any</a>) (tree *<a href="index.html#Tree">Tree</a>, err <a href="../../../builtin/index.html#error">error</a>)</pre>
+				<p>Parse parses the template definition string to construct a representation of
+the template for execution. If either action delimiter string is empty, the
+default (&quot;{{&quot; or &quot;}}&quot;) is used. Embedded template definitions are added to
+the treeSet map.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="VariableNode">type <a href="../../../../src/text/template/parse/node.go?s=9443:9561#L378">VariableNode</a>
+				<a class="permalink" href="index.html#VariableNode">&#xb6;</a>
+				
+				
+			</h2>
+			<p>VariableNode holds a list of variable names, possibly with chained field
+accesses. The dollar sign is part of the (first) name.
+
+			<pre>type VariableNode struct {
+    <a href="index.html#NodeType">NodeType</a>
+    <a href="index.html#Pos">Pos</a>
+
+<span id="VariableNode.Ident"></span>    Ident []<a href="../../../builtin/index.html#string">string</a> <span class="comment">// Variable name and fields in lexical order.</span>
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="VariableNode.Copy">func (*VariableNode) <a href="../../../../src/text/template/parse/node.go?s=10036:10070#L408">Copy</a>
+					<a class="permalink" href="index.html#VariableNode.Copy">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v *<a href="index.html#VariableNode">VariableNode</a>) Copy() <a href="index.html#Node">Node</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="VariableNode.String">func (*VariableNode) <a href="../../../../src/text/template/parse/node.go?s=9729:9767#L389">String</a>
+					<a class="permalink" href="index.html#VariableNode.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v *<a href="index.html#VariableNode">VariableNode</a>) String() <a href="../../../builtin/index.html#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="WithNode">type <a href="../../../../src/text/template/parse/node.go?s=23444:23480#L949">WithNode</a>
+				<a class="permalink" href="index.html#WithNode">&#xb6;</a>
+				
+				
+			</h2>
+			<p>WithNode represents a {{with}} action and its commands.
+
+			<pre>type WithNode struct {
+    <a href="index.html#BranchNode">BranchNode</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="WithNode.Copy">func (*WithNode) <a href="../../../../src/text/template/parse/node.go?s=23704:23734#L957">Copy</a>
+					<a class="permalink" href="index.html#WithNode.Copy">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (w *<a href="index.html#WithNode">WithNode</a>) Copy() <a href="index.html#Node">Node</a></pre>
+				
+				
+				
+				
+			
+		
+	
+
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

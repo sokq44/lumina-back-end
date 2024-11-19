@@ -1,0 +1,2827 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>testing - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package testing
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "testing"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+				<dd><a href="index.html#pkg-examples" class="examplesLink">Examples</a></dd>
+			
+			
+				<dd><a href="index.html#pkg-subdirectories">Subdirectories</a></dd>
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>Package testing provides support for automated testing of Go packages.
+It is intended to be used in concert with the &quot;go test&quot; command, which automates
+execution of any function of the form
+<pre>func TestXxx(*testing.T)
+</pre>
+<p>where Xxx does not start with a lowercase letter. The function name
+serves to identify the test routine.
+<p>Within these functions, use the Error, Fail or related methods to signal failure.
+<p>To write a new test suite, create a file that
+contains the TestXxx functions as described here,
+and give that file a name ending in &quot;_test.go&quot;.
+The file will be excluded from regular
+package builds but will be included when the &quot;go test&quot; command is run.
+<p>The test file can be in the same package as the one being tested,
+or in a corresponding package with the suffix &quot;_test&quot;.
+<p>If the test file is in the same package, it may refer to unexported
+identifiers within the package, as in this example:
+<pre>package abs
+
+import &quot;testing&quot;
+
+func TestAbs(t *testing.T) {
+    got := Abs(-1)
+    if got != 1 {
+        t.Errorf(&quot;Abs(-1) = %d; want 1&quot;, got)
+    }
+}
+</pre>
+<p>If the file is in a separate &quot;_test&quot; package, the package being tested
+must be imported explicitly and only its exported identifiers may be used.
+This is known as &quot;black box&quot; testing.
+<pre>package abs_test
+
+import (
+	&quot;testing&quot;
+
+	&quot;path_to_pkg/abs&quot;
+)
+
+func TestAbs(t *testing.T) {
+    got := abs.Abs(-1)
+    if got != 1 {
+        t.Errorf(&quot;Abs(-1) = %d; want 1&quot;, got)
+    }
+}
+</pre>
+<p>For more detail, run &quot;go help test&quot; and &quot;go help testflag&quot;.
+<h3 id="hdr-Benchmarks">Benchmarks</h3>
+<p>Functions of the form
+<pre>func BenchmarkXxx(*testing.B)
+</pre>
+<p>are considered benchmarks, and are executed by the &quot;go test&quot; command when
+its -bench flag is provided. Benchmarks are run sequentially.
+<p>For a description of the testing flags, see
+<a href="https://golang.org/cmd/go/#hdr-Testing_flags">https://golang.org/cmd/go/#hdr-Testing_flags</a>.
+<p>A sample benchmark function looks like this:
+<pre>func BenchmarkRandInt(b *testing.B) {
+    for i := 0; i &lt; b.N; i++ {
+        rand.Int()
+    }
+}
+</pre>
+<p>The benchmark function must run the target code b.N times.
+During benchmark execution, b.N is adjusted until the benchmark function lasts
+long enough to be timed reliably. The output
+<pre>BenchmarkRandInt-8   	68453040	        17.8 ns/op
+</pre>
+<p>means that the loop ran 68453040 times at a speed of 17.8 ns per loop.
+<p>If a benchmark needs some expensive setup before running, the timer
+may be reset:
+<pre>func BenchmarkBigLen(b *testing.B) {
+    big := NewBig()
+    b.ResetTimer()
+    for i := 0; i &lt; b.N; i++ {
+        big.Len()
+    }
+}
+</pre>
+<p>If a benchmark needs to test performance in a parallel setting, it may use
+the RunParallel helper function; such benchmarks are intended to be used with
+the go test -cpu flag:
+<pre>func BenchmarkTemplateParallel(b *testing.B) {
+    templ := template.Must(template.New(&quot;test&quot;).Parse(&quot;Hello, {{.}}!&quot;))
+    b.RunParallel(func(pb *testing.PB) {
+        var buf bytes.Buffer
+        for pb.Next() {
+            buf.Reset()
+            templ.Execute(&amp;buf, &quot;World&quot;)
+        }
+    })
+}
+</pre>
+<p>A detailed specification of the benchmark results format is given
+in <a href="https://golang.org/design/14313-benchmark-format">https://golang.org/design/14313-benchmark-format</a>.
+<p>There are standard tools for working with benchmark results at
+<a href="https://golang.org/x/perf/cmd">https://golang.org/x/perf/cmd</a>.
+In particular, <a href="https://golang.org/x/perf/cmd/benchstat">https://golang.org/x/perf/cmd/benchstat</a> performs
+statistically robust A/B comparisons.
+<h3 id="hdr-Examples">Examples</h3>
+<p>The package also runs and verifies example code. Example functions may
+include a concluding line comment that begins with &quot;Output:&quot; and is compared with
+the standard output of the function when the tests are run. (The comparison
+ignores leading and trailing space.) These are examples of an example:
+<pre>func ExampleHello() {
+    fmt.Println(&quot;hello&quot;)
+    // Output: hello
+}
+
+func ExampleSalutations() {
+    fmt.Println(&quot;hello, and&quot;)
+    fmt.Println(&quot;goodbye&quot;)
+    // Output:
+    // hello, and
+    // goodbye
+}
+</pre>
+<p>The comment prefix &quot;Unordered output:&quot; is like &quot;Output:&quot;, but matches any
+line order:
+<pre>func ExamplePerm() {
+    for _, value := range Perm(5) {
+        fmt.Println(value)
+    }
+    // Unordered output: 4
+    // 2
+    // 1
+    // 3
+    // 0
+}
+</pre>
+<p>Example functions without output comments are compiled but not executed.
+<p>The naming convention to declare examples for the package, a function F, a type T and
+method M on type T are:
+<pre>func Example() { ... }
+func ExampleF() { ... }
+func ExampleT() { ... }
+func ExampleT_M() { ... }
+</pre>
+<p>Multiple example functions for a package/type/function/method may be provided by
+appending a distinct suffix to the name. The suffix must start with a
+lower-case letter.
+<pre>func Example_suffix() { ... }
+func ExampleF_suffix() { ... }
+func ExampleT_suffix() { ... }
+func ExampleT_M_suffix() { ... }
+</pre>
+<p>The entire test file is presented as the example when it contains a single
+example function, at least one other function, type, variable, or constant
+declaration, and no test or benchmark functions.
+<h3 id="hdr-Fuzzing">Fuzzing</h3>
+<p>&apos;go test&apos; and the testing package support fuzzing, a testing technique where
+a function is called with randomly generated inputs to find bugs not
+anticipated by unit tests.
+<p>Functions of the form
+<pre>func FuzzXxx(*testing.F)
+</pre>
+<p>are considered fuzz tests.
+<p>For example:
+<pre>func FuzzHex(f *testing.F) {
+  for _, seed := range [][]byte{{}, {0}, {9}, {0xa}, {0xf}, {1, 2, 3, 4}} {
+    f.Add(seed)
+  }
+  f.Fuzz(func(t *testing.T, in []byte) {
+    enc := hex.EncodeToString(in)
+    out, err := hex.DecodeString(enc)
+    if err != nil {
+      t.Fatalf(&quot;%v: decode: %v&quot;, in, err)
+    }
+    if !bytes.Equal(in, out) {
+      t.Fatalf(&quot;%v: not equal after round trip: %v&quot;, in, out)
+    }
+  })
+}
+</pre>
+<p>A fuzz test maintains a seed corpus, or a set of inputs which are run by
+default, and can seed input generation. Seed inputs may be registered by
+calling (*F).Add or by storing files in the directory testdata/fuzz/&lt;Name&gt;
+(where &lt;Name&gt; is the name of the fuzz test) within the package containing
+the fuzz test. Seed inputs are optional, but the fuzzing engine may find
+bugs more efficiently when provided with a set of small seed inputs with good
+code coverage. These seed inputs can also serve as regression tests for bugs
+identified through fuzzing.
+<p>The function passed to (*F).Fuzz within the fuzz test is considered the fuzz
+target. A fuzz target must accept a *T parameter, followed by one or more
+parameters for random inputs. The types of arguments passed to (*F).Add must
+be identical to the types of these parameters. The fuzz target may signal
+that it&apos;s found a problem the same way tests do: by calling T.Fail (or any
+method that calls it like T.Error or T.Fatal) or by panicking.
+<p>When fuzzing is enabled (by setting the -fuzz flag to a regular expression
+that matches a specific fuzz test), the fuzz target is called with arguments
+generated by repeatedly making random changes to the seed inputs. On
+supported platforms, &apos;go test&apos; compiles the test executable with fuzzing
+coverage instrumentation. The fuzzing engine uses that instrumentation to
+find and cache inputs that expand coverage, increasing the likelihood of
+finding bugs. If the fuzz target fails for a given input, the fuzzing engine
+writes the inputs that caused the failure to a file in the directory
+testdata/fuzz/&lt;Name&gt; within the package directory. This file later serves as
+a seed input. If the file can&apos;t be written at that location (for example,
+because the directory is read-only), the fuzzing engine writes the file to
+the fuzz cache directory within the build cache instead.
+<p>When fuzzing is disabled, the fuzz target is called with the seed inputs
+registered with F.Add and seed inputs from testdata/fuzz/&lt;Name&gt;. In this
+mode, the fuzz test acts much like a regular test, with subtests started
+with F.Fuzz instead of T.Run.
+<p>See <a href="https://go.dev/doc/fuzz">https://go.dev/doc/fuzz</a> for documentation about fuzzing.
+<h3 id="hdr-Skipping">Skipping</h3>
+<p>Tests or benchmarks may be skipped at run time with a call to
+the Skip method of *T or *B:
+<pre>func TestTimeConsuming(t *testing.T) {
+    if testing.Short() {
+        t.Skip(&quot;skipping test in short mode.&quot;)
+    }
+    ...
+}
+</pre>
+<p>The Skip method of *T can be used in a fuzz target if the input is invalid,
+but should not be considered a failing input. For example:
+<pre>func FuzzJSONMarshaling(f *testing.F) {
+    f.Fuzz(func(t *testing.T, b []byte) {
+        var v interface{}
+        if err := json.Unmarshal(b, &amp;v); err != nil {
+            t.Skip()
+        }
+        if _, err := json.Marshal(v); err != nil {
+            t.Errorf(&quot;Marshal: %v&quot;, err)
+        }
+    })
+}
+</pre>
+<h3 id="hdr-Subtests_and_Sub_benchmarks">Subtests and Sub-benchmarks</h3>
+<p>The Run methods of T and B allow defining subtests and sub-benchmarks,
+without having to define separate functions for each. This enables uses
+like table-driven benchmarks and creating hierarchical tests.
+It also provides a way to share common setup and tear-down code:
+<pre>func TestFoo(t *testing.T) {
+    // &lt;setup code&gt;
+    t.Run(&quot;A=1&quot;, func(t *testing.T) { ... })
+    t.Run(&quot;A=2&quot;, func(t *testing.T) { ... })
+    t.Run(&quot;B=1&quot;, func(t *testing.T) { ... })
+    // &lt;tear-down code&gt;
+}
+</pre>
+<p>Each subtest and sub-benchmark has a unique name: the combination of the name
+of the top-level test and the sequence of names passed to Run, separated by
+slashes, with an optional trailing sequence number for disambiguation.
+<p>The argument to the -run, -bench, and -fuzz command-line flags is an unanchored regular
+expression that matches the test&apos;s name. For tests with multiple slash-separated
+elements, such as subtests, the argument is itself slash-separated, with
+expressions matching each name element in turn. Because it is unanchored, an
+empty expression matches any string.
+For example, using &quot;matching&quot; to mean &quot;whose name contains&quot;:
+<pre>go test -run &apos;&apos;        # Run all tests.
+go test -run Foo       # Run top-level tests matching &quot;Foo&quot;, such as &quot;TestFooBar&quot;.
+go test -run Foo/A=    # For top-level tests matching &quot;Foo&quot;, run subtests matching &quot;A=&quot;.
+go test -run /A=1      # For all top-level tests, run subtests matching &quot;A=1&quot;.
+go test -fuzz FuzzFoo  # Fuzz the target matching &quot;FuzzFoo&quot;
+</pre>
+<p>The -run argument can also be used to run a specific value in the seed
+corpus, for debugging. For example:
+<pre>go test -run=FuzzFoo/9ddb952d9814
+</pre>
+<p>The -fuzz and -run flags can both be set, in order to fuzz a target but
+skip the execution of all other tests.
+<p>Subtests can also be used to control parallelism. A parent test will only
+complete once all of its subtests complete. In this example, all tests are
+run in parallel with each other, and only with each other, regardless of
+other top-level tests that may be defined:
+<pre>func TestGroupedParallel(t *testing.T) {
+    for _, tc := range tests {
+        tc := tc // capture range variable
+        t.Run(tc.Name, func(t *testing.T) {
+            t.Parallel()
+            ...
+        })
+    }
+}
+</pre>
+<p>Run does not return until parallel subtests have completed, providing a way
+to clean up after a group of parallel tests:
+<pre>func TestTeardownParallel(t *testing.T) {
+    // This Run will not return until the parallel tests finish.
+    t.Run(&quot;group&quot;, func(t *testing.T) {
+        t.Run(&quot;Test1&quot;, parallelTest1)
+        t.Run(&quot;Test2&quot;, parallelTest2)
+        t.Run(&quot;Test3&quot;, parallelTest3)
+    })
+    // &lt;tear-down code&gt;
+}
+</pre>
+<h3 id="hdr-Main">Main</h3>
+<p>It is sometimes necessary for a test or benchmark program to do extra setup or teardown
+before or after it executes. It is also sometimes necessary to control
+which code runs on the main thread. To support these and other cases,
+if a test file contains a function:
+<pre>func TestMain(m *testing.M)
+</pre>
+<p>then the generated test will call TestMain(m) instead of running the tests or benchmarks
+directly. TestMain runs in the main goroutine and can do whatever setup
+and teardown is necessary around a call to m.Run. m.Run will return an exit
+code that may be passed to os.Exit. If TestMain returns, the test wrapper
+will pass the result of m.Run to os.Exit itself.
+<p>When TestMain is called, flag.Parse has not been run. If TestMain depends on
+command-line flags, including those of the testing package, it should call
+flag.Parse explicitly. Command line flags are always parsed by the time test
+or benchmark functions run.
+<p>A simple implementation of TestMain is:
+<pre>func TestMain(m *testing.M) {
+	// call flag.Parse() here if TestMain uses flags
+	os.Exit(m.Run())
+}
+</pre>
+<p>TestMain is a low-level primitive and should not be necessary for casual
+testing needs, where ordinary test functions suffice.
+
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+			
+			
+				
+				<dd><a href="index.html#AllocsPerRun">func AllocsPerRun(runs int, f func()) (avg float64)</a></dd>
+			
+				
+				<dd><a href="index.html#CoverMode">func CoverMode() string</a></dd>
+			
+				
+				<dd><a href="index.html#Coverage">func Coverage() float64</a></dd>
+			
+				
+				<dd><a href="index.html#Init">func Init()</a></dd>
+			
+				
+				<dd><a href="index.html#Main">func Main(matchString func(pat, str string) (bool, error), tests []InternalTest, benchmarks []InternalBenchmark, examples []InternalExample)</a></dd>
+			
+				
+				<dd><a href="index.html#RegisterCover">func RegisterCover(c Cover)</a></dd>
+			
+				
+				<dd><a href="index.html#RunBenchmarks">func RunBenchmarks(matchString func(pat, str string) (bool, error), benchmarks []InternalBenchmark)</a></dd>
+			
+				
+				<dd><a href="index.html#RunExamples">func RunExamples(matchString func(pat, str string) (bool, error), examples []InternalExample) (ok bool)</a></dd>
+			
+				
+				<dd><a href="index.html#RunTests">func RunTests(matchString func(pat, str string) (bool, error), tests []InternalTest) (ok bool)</a></dd>
+			
+				
+				<dd><a href="index.html#Short">func Short() bool</a></dd>
+			
+				
+				<dd><a href="index.html#Testing">func Testing() bool</a></dd>
+			
+				
+				<dd><a href="index.html#Verbose">func Verbose() bool</a></dd>
+			
+			
+				
+				<dd><a href="index.html#B">type B</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#B.Cleanup">func (c *B) Cleanup(f func())</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#B.Elapsed">func (b *B) Elapsed() time.Duration</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#B.Error">func (c *B) Error(args ...any)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#B.Errorf">func (c *B) Errorf(format string, args ...any)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#B.Fail">func (c *B) Fail()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#B.FailNow">func (c *B) FailNow()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#B.Failed">func (c *B) Failed() bool</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#B.Fatal">func (c *B) Fatal(args ...any)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#B.Fatalf">func (c *B) Fatalf(format string, args ...any)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#B.Helper">func (c *B) Helper()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#B.Log">func (c *B) Log(args ...any)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#B.Logf">func (c *B) Logf(format string, args ...any)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#B.Name">func (c *B) Name() string</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#B.ReportAllocs">func (b *B) ReportAllocs()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#B.ReportMetric">func (b *B) ReportMetric(n float64, unit string)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#B.ResetTimer">func (b *B) ResetTimer()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#B.Run">func (b *B) Run(name string, f func(b *B)) bool</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#B.RunParallel">func (b *B) RunParallel(body func(*PB))</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#B.SetBytes">func (b *B) SetBytes(n int64)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#B.SetParallelism">func (b *B) SetParallelism(p int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#B.Setenv">func (c *B) Setenv(key, value string)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#B.Skip">func (c *B) Skip(args ...any)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#B.SkipNow">func (c *B) SkipNow()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#B.Skipf">func (c *B) Skipf(format string, args ...any)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#B.Skipped">func (c *B) Skipped() bool</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#B.StartTimer">func (b *B) StartTimer()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#B.StopTimer">func (b *B) StopTimer()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#B.TempDir">func (c *B) TempDir() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#BenchmarkResult">type BenchmarkResult</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Benchmark">func Benchmark(f func(b *B)) BenchmarkResult</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#BenchmarkResult.AllocedBytesPerOp">func (r BenchmarkResult) AllocedBytesPerOp() int64</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#BenchmarkResult.AllocsPerOp">func (r BenchmarkResult) AllocsPerOp() int64</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#BenchmarkResult.MemString">func (r BenchmarkResult) MemString() string</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#BenchmarkResult.NsPerOp">func (r BenchmarkResult) NsPerOp() int64</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#BenchmarkResult.String">func (r BenchmarkResult) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Cover">type Cover</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#CoverBlock">type CoverBlock</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#F">type F</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#F.Add">func (f *F) Add(args ...any)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#F.Cleanup">func (c *F) Cleanup(f func())</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#F.Error">func (c *F) Error(args ...any)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#F.Errorf">func (c *F) Errorf(format string, args ...any)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#F.Fail">func (f *F) Fail()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#F.FailNow">func (c *F) FailNow()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#F.Failed">func (c *F) Failed() bool</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#F.Fatal">func (c *F) Fatal(args ...any)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#F.Fatalf">func (c *F) Fatalf(format string, args ...any)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#F.Fuzz">func (f *F) Fuzz(ff any)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#F.Helper">func (f *F) Helper()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#F.Log">func (c *F) Log(args ...any)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#F.Logf">func (c *F) Logf(format string, args ...any)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#F.Name">func (c *F) Name() string</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#F.Setenv">func (c *F) Setenv(key, value string)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#F.Skip">func (c *F) Skip(args ...any)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#F.SkipNow">func (c *F) SkipNow()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#F.Skipf">func (c *F) Skipf(format string, args ...any)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#F.Skipped">func (f *F) Skipped() bool</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#F.TempDir">func (c *F) TempDir() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#InternalBenchmark">type InternalBenchmark</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#InternalExample">type InternalExample</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#InternalFuzzTarget">type InternalFuzzTarget</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#InternalTest">type InternalTest</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#M">type M</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#MainStart">func MainStart(deps testDeps, tests []InternalTest, benchmarks []InternalBenchmark, fuzzTargets []InternalFuzzTarget, examples []InternalExample) *M</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#M.Run">func (m *M) Run() (code int)</a></dd>
+				
+			
+				
+				<dd><a href="index.html#PB">type PB</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#PB.Next">func (pb *PB) Next() bool</a></dd>
+				
+			
+				
+				<dd><a href="index.html#T">type T</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#T.Cleanup">func (c *T) Cleanup(f func())</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#T.Deadline">func (t *T) Deadline() (deadline time.Time, ok bool)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#T.Error">func (c *T) Error(args ...any)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#T.Errorf">func (c *T) Errorf(format string, args ...any)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#T.Fail">func (c *T) Fail()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#T.FailNow">func (c *T) FailNow()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#T.Failed">func (c *T) Failed() bool</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#T.Fatal">func (c *T) Fatal(args ...any)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#T.Fatalf">func (c *T) Fatalf(format string, args ...any)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#T.Helper">func (c *T) Helper()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#T.Log">func (c *T) Log(args ...any)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#T.Logf">func (c *T) Logf(format string, args ...any)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#T.Name">func (c *T) Name() string</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#T.Parallel">func (t *T) Parallel()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#T.Run">func (t *T) Run(name string, f func(t *T)) bool</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#T.Setenv">func (t *T) Setenv(key, value string)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#T.Skip">func (c *T) Skip(args ...any)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#T.SkipNow">func (c *T) SkipNow()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#T.Skipf">func (c *T) Skipf(format string, args ...any)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#T.Skipped">func (c *T) Skipped() bool</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#T.TempDir">func (c *T) TempDir() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#TB">type TB</a></dd>
+				
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+		<div id="pkg-examples">
+			<h3>Examples</h3>
+			<div class="js-expandAll expandAll collapsed">(Expand All)</div>
+			<dl>
+			
+			<dd><a class="exampleLink" href="index.html#example_B_ReportMetric">B.ReportMetric</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_B_ReportMetric_parallel">B.ReportMetric (Parallel)</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_B_RunParallel">B.RunParallel</a></dd>
+			
+			</dl>
+		</div>
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../src/testing/allocs.go">allocs.go</a>
+			
+				<a href="../../src/testing/benchmark.go">benchmark.go</a>
+			
+				<a href="../../src/testing/cover.go">cover.go</a>
+			
+				<a href="../../src/testing/example.go">example.go</a>
+			
+				<a href="../../src/testing/fuzz.go">fuzz.go</a>
+			
+				<a href="../../src/testing/match.go">match.go</a>
+			
+				<a href="../../src/testing/newcover.go">newcover.go</a>
+			
+				<a href="../../src/testing/run_example.go">run_example.go</a>
+			
+				<a href="../../src/testing/testing.go">testing.go</a>
+			
+				<a href="../../src/testing/testing_other.go">testing_other.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+		
+		
+			
+			
+			<h2 id="AllocsPerRun">func <a href="../../src/testing/allocs.go?s=669:720#L10">AllocsPerRun</a>
+				<a class="permalink" href="index.html#AllocsPerRun">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func AllocsPerRun(runs <a href="../builtin/index.html#int">int</a>, f func()) (avg <a href="../builtin/index.html#float64">float64</a>)</pre>
+			<p>AllocsPerRun returns the average number of allocations during calls to f.
+Although the return value has type float64, it will always be an integral value.
+<p>To compute the number of allocations, the function will first be run once as
+a warm-up. The average number of allocations over the specified number of
+runs will then be measured and returned.
+<p>AllocsPerRun sets GOMAXPROCS to 1 during its measurement and will restore
+it before returning.
+
+			
+			
+
+		
+			
+			
+			<h2 id="CoverMode">func <a href="../../src/testing/testing.go?s=24537:24560#L658">CoverMode</a>
+				<a class="permalink" href="index.html#CoverMode">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func CoverMode() <a href="../builtin/index.html#string">string</a></pre>
+			<p>CoverMode reports what the test coverage mode is set to. The
+values are &quot;set&quot;, &quot;count&quot;, or &quot;atomic&quot;. The return value will be
+empty if test coverage is not enabled.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Coverage">func <a href="../../src/testing/cover.go?s=1658:1681#L39">Coverage</a>
+				<a class="permalink" href="index.html#Coverage">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Coverage() <a href="../builtin/index.html#float64">float64</a></pre>
+			<p>Coverage reports the current code coverage as a fraction in the range [0, 1].
+If coverage is not enabled, Coverage returns 0.
+<p>When running a large set of sequential test cases, checking Coverage after each one
+can be useful for identifying which test cases exercise new code paths.
+It is not a replacement for the reports generated by &apos;go test -cover&apos; and
+&apos;go tool cover&apos;.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Init">func <a href="../../src/testing/testing.go?s=13958:13969#L392">Init</a>
+				<a class="permalink" href="index.html#Init">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Init()</pre>
+			<p>Init registers testing flags. These flags are automatically registered by
+the &quot;go test&quot; command before running test functions, so Init is only needed
+when calling functions such as Benchmark without using &quot;go test&quot;.
+<p>Init is not safe to call concurrently. It has no effect if it was already called.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Main">func <a href="../../src/testing/testing.go?s=60790:60930#L1853">Main</a>
+				<a class="permalink" href="index.html#Main">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Main(matchString func(pat, str <a href="../builtin/index.html#string">string</a>) (<a href="../builtin/index.html#bool">bool</a>, <a href="../builtin/index.html#error">error</a>), tests []<a href="index.html#InternalTest">InternalTest</a>, benchmarks []<a href="index.html#InternalBenchmark">InternalBenchmark</a>, examples []<a href="index.html#InternalExample">InternalExample</a>)</pre>
+			<p>Main is an internal function, part of the implementation of the &quot;go test&quot; command.
+It was exported because it is cross-package and predates &quot;internal&quot; packages.
+It is no longer used by &quot;go test&quot; but preserved, as much as possible, for other
+systems that simulate &quot;go test&quot; using Main, but Main sometimes cannot be updated as
+new functionality is added to the testing package.
+Systems simulating &quot;go test&quot; should be updated to use MainStart.
+
+			
+			
+
+		
+			
+			
+			<h2 id="RegisterCover">func <a href="../../src/testing/cover.go?s=2181:2208#L61">RegisterCover</a>
+				<a class="permalink" href="index.html#RegisterCover">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func RegisterCover(c <a href="index.html#Cover">Cover</a>)</pre>
+			<p>RegisterCover records the coverage data accumulators for the tests.
+NOTE: This function is internal to the testing infrastructure and may change.
+It is not covered (yet) by the Go 1 compatibility guidelines.
+
+			
+			
+
+		
+			
+			
+			<h2 id="RunBenchmarks">func <a href="../../src/testing/benchmark.go?s=14473:14572#L494">RunBenchmarks</a>
+				<a class="permalink" href="index.html#RunBenchmarks">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func RunBenchmarks(matchString func(pat, str <a href="../builtin/index.html#string">string</a>) (<a href="../builtin/index.html#bool">bool</a>, <a href="../builtin/index.html#error">error</a>), benchmarks []<a href="index.html#InternalBenchmark">InternalBenchmark</a>)</pre>
+			<p>RunBenchmarks is an internal function but exported because it is cross-package;
+it is part of the implementation of the &quot;go test&quot; command.
+
+			
+			
+
+		
+			
+			
+			<h2 id="RunExamples">func <a href="../../src/testing/example.go?s=469:572#L13">RunExamples</a>
+				<a class="permalink" href="index.html#RunExamples">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func RunExamples(matchString func(pat, str <a href="../builtin/index.html#string">string</a>) (<a href="../builtin/index.html#bool">bool</a>, <a href="../builtin/index.html#error">error</a>), examples []<a href="index.html#InternalExample">InternalExample</a>) (ok <a href="../builtin/index.html#bool">bool</a>)</pre>
+			<p>RunExamples is an internal function but exported because it is cross-package;
+it is part of the implementation of the &quot;go test&quot; command.
+
+			
+			
+
+		
+			
+			
+			<h2 id="RunTests">func <a href="../../src/testing/testing.go?s=69624:69718#L2110">RunTests</a>
+				<a class="permalink" href="index.html#RunTests">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func RunTests(matchString func(pat, str <a href="../builtin/index.html#string">string</a>) (<a href="../builtin/index.html#bool">bool</a>, <a href="../builtin/index.html#error">error</a>), tests []<a href="index.html#InternalTest">InternalTest</a>) (ok <a href="../builtin/index.html#bool">bool</a>)</pre>
+			<p>RunTests is an internal function but exported because it is cross-package;
+it is part of the implementation of the &quot;go test&quot; command.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Short">func <a href="../../src/testing/testing.go?s=23382:23399#L627">Short</a>
+				<a class="permalink" href="index.html#Short">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Short() <a href="../builtin/index.html#bool">bool</a></pre>
+			<p>Short reports whether the -test.short flag is set.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Testing">func <a href="../../src/testing/testing.go?s=24312:24331#L651">Testing</a>
+				<a class="permalink" href="index.html#Testing">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Testing() <a href="../builtin/index.html#bool">bool</a></pre>
+			<p>Testing reports whether the current code is being run in a test.
+This will report true in programs created by &quot;go test&quot;,
+false in programs created by &quot;go build&quot;.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Verbose">func <a href="../../src/testing/testing.go?s=24697:24716#L666">Verbose</a>
+				<a class="permalink" href="index.html#Verbose">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Verbose() <a href="../builtin/index.html#bool">bool</a></pre>
+			<p>Verbose reports whether the -test.v flag is set.
+
+			
+			
+
+		
+		
+			
+			
+			<h2 id="B">type <a href="../../src/testing/benchmark.go?s=2601:3495#L83">B</a>
+				<a class="permalink" href="index.html#B">&#xb6;</a>
+				
+				
+			</h2>
+			<p>B is a type passed to <a href="index.html#Benchmark">Benchmark</a> functions to manage benchmark
+timing and to specify the number of iterations to run.
+<p>A benchmark ends when its Benchmark function returns or calls any of the methods
+FailNow, Fatal, Fatalf, SkipNow, Skip, or Skipf. Those methods must be called
+only from the goroutine running the Benchmark function.
+The other reporting methods, such as the variations of Log and Error,
+may be called simultaneously from multiple goroutines.
+<p>Like in tests, benchmark logs are accumulated during execution
+and dumped to standard output when done. Unlike in tests, benchmark logs
+are always printed, so as not to hide output whose existence may be
+affecting benchmark results.
+
+			<pre>type B struct {
+<span id="B.N"></span>    N <a href="../builtin/index.html#int">int</a>
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="B.Cleanup">func (*B) <a href="../../src/testing/testing.go?s=39266:39300#L1144">Cleanup</a>
+					<a class="permalink" href="index.html#B.Cleanup">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#B">B</a>) Cleanup(f func())</pre>
+				<p>Cleanup registers a function to be called when the test (or subtest) and all its
+subtests complete. Cleanup functions will be called in last added,
+first called order.
+
+				
+				
+				
+			
+				
+				<h3 id="B.Elapsed">func (*B) <a href="../../src/testing/benchmark.go?s=9499:9534#L315">Elapsed</a>
+					<a class="permalink" href="index.html#B.Elapsed">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (b *<a href="index.html#B">B</a>) Elapsed() <a href="../time/index.html">time</a>.<a href="../time/index.html#Duration">Duration</a></pre>
+				<p>Elapsed returns the measured elapsed time of the benchmark.
+The duration reported by Elapsed matches the one measured by
+<a href="index.html#B.StartTimer">B.StartTimer</a>, <a href="index.html#B.StopTimer">B.StopTimer</a>, and <a href="index.html#B.ResetTimer">B.ResetTimer</a>.
+
+				
+				
+				
+			
+				
+				<h3 id="B.Error">func (*B) <a href="../../src/testing/testing.go?s=36678:36713#L1055">Error</a>
+					<a class="permalink" href="index.html#B.Error">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#B">B</a>) Error(args ...<a href="../builtin/index.html#any">any</a>)</pre>
+				<p>Error is equivalent to Log followed by Fail.
+
+				
+				
+				
+			
+				
+				<h3 id="B.Errorf">func (*B) <a href="../../src/testing/testing.go?s=36833:36884#L1062">Errorf</a>
+					<a class="permalink" href="index.html#B.Errorf">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#B">B</a>) Errorf(format <a href="../builtin/index.html#string">string</a>, args ...<a href="../builtin/index.html#any">any</a>)</pre>
+				<p>Errorf is equivalent to Logf followed by Fail.
+
+				
+				
+				
+			
+				
+				<h3 id="B.Fail">func (*B) <a href="../../src/testing/testing.go?s=32670:32693#L934">Fail</a>
+					<a class="permalink" href="index.html#B.Fail">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#B">B</a>) Fail()</pre>
+				<p>Fail marks the function as having failed but continues execution.
+
+				
+				
+				
+			
+				
+				<h3 id="B.FailNow">func (*B) <a href="../../src/testing/testing.go?s=33633:33659#L969">FailNow</a>
+					<a class="permalink" href="index.html#B.FailNow">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#B">B</a>) FailNow()</pre>
+				<p>FailNow marks the function as having failed and stops its execution
+by calling runtime.Goexit (which then runs all deferred calls in the
+current goroutine).
+Execution will continue at the next test or benchmark.
+FailNow must be called from the goroutine running the
+test or benchmark function, not from other goroutines
+created during the test. Calling FailNow does not stop
+those other goroutines.
+
+				
+				
+				
+			
+				
+				<h3 id="B.Failed">func (*B) <a href="../../src/testing/testing.go?s=33003:33033#L948">Failed</a>
+					<a class="permalink" href="index.html#B.Failed">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#B">B</a>) Failed() <a href="../builtin/index.html#bool">bool</a></pre>
+				<p>Failed reports whether the function has failed.
+
+				
+				
+				
+			
+				
+				<h3 id="B.Fatal">func (*B) <a href="../../src/testing/testing.go?s=37013:37048#L1069">Fatal</a>
+					<a class="permalink" href="index.html#B.Fatal">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#B">B</a>) Fatal(args ...<a href="../builtin/index.html#any">any</a>)</pre>
+				<p>Fatal is equivalent to Log followed by FailNow.
+
+				
+				
+				
+			
+				
+				<h3 id="B.Fatalf">func (*B) <a href="../../src/testing/testing.go?s=37174:37225#L1076">Fatalf</a>
+					<a class="permalink" href="index.html#B.Fatalf">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#B">B</a>) Fatalf(format <a href="../builtin/index.html#string">string</a>, args ...<a href="../builtin/index.html#any">any</a>)</pre>
+				<p>Fatalf is equivalent to Logf followed by FailNow.
+
+				
+				
+				
+			
+				
+				<h3 id="B.Helper">func (*B) <a href="../../src/testing/testing.go?s=38592:38617#L1123">Helper</a>
+					<a class="permalink" href="index.html#B.Helper">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#B">B</a>) Helper()</pre>
+				<p>Helper marks the calling function as a test helper function.
+When printing file and line information, that function will be skipped.
+Helper may be called simultaneously from multiple goroutines.
+
+				
+				
+				
+			
+				
+				<h3 id="B.Log">func (*B) <a href="../../src/testing/testing.go?s=36056:36089#L1039">Log</a>
+					<a class="permalink" href="index.html#B.Log">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#B">B</a>) Log(args ...<a href="../builtin/index.html#any">any</a>)</pre>
+				<p>Log formats its arguments using default formatting, analogous to Println,
+and records the text in the error log. For tests, the text will be printed only if
+the test fails or the -test.v flag is set. For benchmarks, the text is always
+printed to avoid having performance depend on the value of the -test.v flag.
+
+				
+				
+				
+			
+				
+				<h3 id="B.Logf">func (*B) <a href="../../src/testing/testing.go?s=36515:36564#L1049">Logf</a>
+					<a class="permalink" href="index.html#B.Logf">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#B">B</a>) Logf(format <a href="../builtin/index.html#string">string</a>, args ...<a href="../builtin/index.html#any">any</a>)</pre>
+				<p>Logf formats its arguments according to the format, analogous to Printf, and
+records the text in the error log. A final newline is added if not provided. For
+tests, the text will be printed only if the test fails or the -test.v flag is
+set. For benchmarks, the text is always printed to avoid having performance
+depend on the value of the -test.v flag.
+
+				
+				
+				
+			
+				
+				<h3 id="B.Name">func (*B) <a href="../../src/testing/testing.go?s=32426:32456#L920">Name</a>
+					<a class="permalink" href="index.html#B.Name">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#B">B</a>) Name() <a href="../builtin/index.html#string">string</a></pre>
+				<p>Name returns the name of the running (sub-) test or benchmark.
+<p>The name will include the name of the test along with the names of
+any nested sub-tests. If two sibling sub-tests have the same name,
+Name will append a suffix to guarantee the returned name is unique.
+
+				
+				
+				
+			
+				
+				<h3 id="B.ReportAllocs">func (*B) <a href="../../src/testing/benchmark.go?s=5221:5247#L163">ReportAllocs</a>
+					<a class="permalink" href="index.html#B.ReportAllocs">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (b *<a href="index.html#B">B</a>) ReportAllocs()</pre>
+				<p>ReportAllocs enables malloc statistics for this benchmark.
+It is equivalent to setting -test.benchmem, but it only affects the
+benchmark function that calls ReportAllocs.
+
+				
+				
+				
+			
+				
+				<h3 id="B.ReportMetric">func (*B) <a href="../../src/testing/benchmark.go?s=10158:10206#L332">ReportMetric</a>
+					<a class="permalink" href="index.html#B.ReportMetric">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (b *<a href="index.html#B">B</a>) ReportMetric(n <a href="../builtin/index.html#float64">float64</a>, unit <a href="../builtin/index.html#string">string</a>)</pre>
+				<p>ReportMetric adds &quot;n unit&quot; to the reported benchmark results.
+If the metric is per-iteration, the caller should divide by b.N,
+and by convention units should end in &quot;/op&quot;.
+ReportMetric overrides any previously reported value for the same unit.
+ReportMetric panics if unit is the empty string or if unit contains
+any whitespace.
+If unit is a unit normally reported by the benchmark framework itself
+(such as &quot;allocs/op&quot;), ReportMetric will override that metric.
+Setting &quot;ns/op&quot; to 0 will suppress that built-in metric.
+
+				
+				<div id="example_B_ReportMetric" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">
+<span class="comment">// This reports a custom benchmark metric relevant to a</span>
+<span class="comment">// specific algorithm (in this case, sorting).</span>
+testing.Benchmark(func(b *testing.B) {
+    var compares int64
+    for i := 0; i &lt; b.N; i++ {
+        s := []int{5, 4, 3, 2, 1}
+        sort.Slice(s, func(i, j int) bool {
+            compares++
+            return s[i] &lt; s[j]
+        })
+    }
+    <span class="comment">// This metric is per-operation, so divide by b.N and</span>
+    <span class="comment">// report it as a &#34;/op&#34; unit.</span>
+    b.ReportMetric(float64(compares)/float64(b.N), &#34;compares/op&#34;)
+    <span class="comment">// This metric is per-time, so divide by b.Elapsed and</span>
+    <span class="comment">// report it as a &#34;/ns&#34; unit.</span>
+    b.ReportMetric(float64(compares)/float64(b.Elapsed().Nanoseconds()), &#34;compares/ns&#34;)
+})
+</pre>
+			
+		
+	</div>
+</div>
+<div id="example_B_ReportMetric_parallel" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example (Parallel)</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example (Parallel)</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">
+<span class="comment">// This reports a custom benchmark metric relevant to a</span>
+<span class="comment">// specific algorithm (in this case, sorting) in parallel.</span>
+testing.Benchmark(func(b *testing.B) {
+    var compares atomic.Int64
+    b.RunParallel(func(pb *testing.PB) {
+        for pb.Next() {
+            s := []int{5, 4, 3, 2, 1}
+            sort.Slice(s, func(i, j int) bool {
+                <span class="comment">// Because RunParallel runs the function many</span>
+                <span class="comment">// times in parallel, we must increment the</span>
+                <span class="comment">// counter atomically to avoid racing writes.</span>
+                compares.Add(1)
+                return s[i] &lt; s[j]
+            })
+        }
+    })
+
+    <span class="comment">// NOTE: Report each metric once, after all of the parallel</span>
+    <span class="comment">// calls have completed.</span>
+
+    <span class="comment">// This metric is per-operation, so divide by b.N and</span>
+    <span class="comment">// report it as a &#34;/op&#34; unit.</span>
+    b.ReportMetric(float64(compares.Load())/float64(b.N), &#34;compares/op&#34;)
+    <span class="comment">// This metric is per-time, so divide by b.Elapsed and</span>
+    <span class="comment">// report it as a &#34;/ns&#34; unit.</span>
+    b.ReportMetric(float64(compares.Load())/float64(b.Elapsed().Nanoseconds()), &#34;compares/ns&#34;)
+})
+</pre>
+			
+		
+	</div>
+</div>
+
+				
+			
+				
+				<h3 id="B.ResetTimer">func (*B) <a href="../../src/testing/benchmark.go?s=4430:4454#L137">ResetTimer</a>
+					<a class="permalink" href="index.html#B.ResetTimer">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (b *<a href="index.html#B">B</a>) ResetTimer()</pre>
+				<p>ResetTimer zeroes the elapsed benchmark time and memory allocation counters
+and deletes user-reported metrics.
+It does not affect whether the timer is running.
+
+				
+				
+				
+			
+				
+				<h3 id="B.Run">func (*B) <a href="../../src/testing/benchmark.go?s=18150:18197#L614">Run</a>
+					<a class="permalink" href="index.html#B.Run">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (b *<a href="index.html#B">B</a>) Run(name <a href="../builtin/index.html#string">string</a>, f func(b *<a href="index.html#B">B</a>)) <a href="../builtin/index.html#bool">bool</a></pre>
+				<p>Run benchmarks f as a subbenchmark with the given name. It reports
+whether there were any failures.
+<p>A subbenchmark is like any other benchmark. A benchmark that calls Run at
+least once will not be measured itself and will be called once with N=1.
+
+				
+				
+				
+			
+				
+				<h3 id="B.RunParallel">func (*B) <a href="../../src/testing/benchmark.go?s=22383:22422#L755">RunParallel</a>
+					<a class="permalink" href="index.html#B.RunParallel">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (b *<a href="index.html#B">B</a>) RunParallel(body func(*<a href="index.html#PB">PB</a>))</pre>
+				<p>RunParallel runs a benchmark in parallel.
+It creates multiple goroutines and distributes b.N iterations among them.
+The number of goroutines defaults to GOMAXPROCS. To increase parallelism for
+non-CPU-bound benchmarks, call <a href="index.html#B.SetParallelism">B.SetParallelism</a> before RunParallel.
+RunParallel is usually used with the go test -cpu flag.
+<p>The body function will be run in each goroutine. It should set up any
+goroutine-local state and then iterate until pb.Next returns false.
+It should not use the <a href="index.html#B.StartTimer">B.StartTimer</a>, <a href="index.html#B.StopTimer">B.StopTimer</a>, or <a href="index.html#B.ResetTimer">B.ResetTimer</a> functions,
+because they have global effect. It should also not call <a href="index.html#B.Run">B.Run</a>.
+<p>RunParallel reports ns/op values as wall time for the benchmark as a whole,
+not the sum of wall time or CPU time over each parallel goroutine.
+
+				
+				<div id="example_B_RunParallel" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">
+<span class="comment">// Parallel benchmark for text/template.Template.Execute on a single object.</span>
+testing.Benchmark(func(b *testing.B) {
+    templ := template.Must(template.New(&#34;test&#34;).Parse(&#34;Hello, {{.}}!&#34;))
+    <span class="comment">// RunParallel will create GOMAXPROCS goroutines</span>
+    <span class="comment">// and distribute work among them.</span>
+    b.RunParallel(func(pb *testing.PB) {
+        <span class="comment">// Each goroutine has its own bytes.Buffer.</span>
+        var buf bytes.Buffer
+        for pb.Next() {
+            <span class="comment">// The loop body is executed b.N times total across all goroutines.</span>
+            buf.Reset()
+            templ.Execute(&amp;buf, &#34;World&#34;)
+        }
+    })
+})
+</pre>
+			
+		
+	</div>
+</div>
+
+				
+			
+				
+				<h3 id="B.SetBytes">func (*B) <a href="../../src/testing/benchmark.go?s=4994:5023#L158">SetBytes</a>
+					<a class="permalink" href="index.html#B.SetBytes">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (b *<a href="index.html#B">B</a>) SetBytes(n <a href="../builtin/index.html#int64">int64</a>)</pre>
+				<p>SetBytes records the number of bytes processed in a single operation.
+If this is called, the benchmark will report ns/op and MB/s.
+
+				
+				
+				
+			
+				
+				<h3 id="B.SetParallelism">func (*B) <a href="../../src/testing/benchmark.go?s=23606:23639#L799">SetParallelism</a>
+					<a class="permalink" href="index.html#B.SetParallelism">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (b *<a href="index.html#B">B</a>) SetParallelism(p <a href="../builtin/index.html#int">int</a>)</pre>
+				<p>SetParallelism sets the number of goroutines used by <a href="index.html#B.RunParallel">B.RunParallel</a> to p*GOMAXPROCS.
+There is usually no need to call SetParallelism for CPU-bound benchmarks.
+If p is less than 1, this call will have no effect.
+
+				
+				
+				
+			
+				
+				<h3 id="B.Setenv">func (*B) <a href="../../src/testing/testing.go?s=42956:42998#L1280">Setenv</a>
+					<a class="permalink" href="index.html#B.Setenv">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#B">B</a>) Setenv(key, value <a href="../builtin/index.html#string">string</a>)</pre>
+				<p>Setenv calls os.Setenv(key, value) and uses Cleanup to
+restore the environment variable to its original value
+after the test.
+<p>Because Setenv affects the whole process, it cannot be used
+in parallel tests or tests with parallel ancestors.
+
+				
+				
+				
+			
+				
+				<h3 id="B.Skip">func (*B) <a href="../../src/testing/testing.go?s=37356:37390#L1083">Skip</a>
+					<a class="permalink" href="index.html#B.Skip">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#B">B</a>) Skip(args ...<a href="../builtin/index.html#any">any</a>)</pre>
+				<p>Skip is equivalent to Log followed by SkipNow.
+
+				
+				
+				
+			
+				
+				<h3 id="B.SkipNow">func (*B) <a href="../../src/testing/testing.go?s=38107:38133#L1104">SkipNow</a>
+					<a class="permalink" href="index.html#B.SkipNow">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#B">B</a>) SkipNow()</pre>
+				<p>SkipNow marks the test as having been skipped and stops its execution
+by calling <a href="http://localhost:8080/runtime#Goexit">runtime.Goexit</a>.
+If a test fails (see Error, Errorf, Fail) and is then skipped,
+it is still considered to have failed.
+Execution will continue at the next test or benchmark. See also FailNow.
+SkipNow must be called from the goroutine running the test, not from
+other goroutines created during the test. Calling SkipNow does not stop
+those other goroutines.
+
+				
+				
+				
+			
+				
+				<h3 id="B.Skipf">func (*B) <a href="../../src/testing/testing.go?s=37514:37564#L1090">Skipf</a>
+					<a class="permalink" href="index.html#B.Skipf">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#B">B</a>) Skipf(format <a href="../builtin/index.html#string">string</a>, args ...<a href="../builtin/index.html#any">any</a>)</pre>
+				<p>Skipf is equivalent to Logf followed by SkipNow.
+
+				
+				
+				
+			
+				
+				<h3 id="B.Skipped">func (*B) <a href="../../src/testing/testing.go?s=38297:38328#L1114">Skipped</a>
+					<a class="permalink" href="index.html#B.Skipped">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#B">B</a>) Skipped() <a href="../builtin/index.html#bool">bool</a></pre>
+				<p>Skipped reports whether the test was skipped.
+
+				
+				
+				
+			
+				
+				<h3 id="B.StartTimer">func (*B) <a href="../../src/testing/benchmark.go?s=3676:3700#L111">StartTimer</a>
+					<a class="permalink" href="index.html#B.StartTimer">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (b *<a href="index.html#B">B</a>) StartTimer()</pre>
+				<p>StartTimer starts timing a test. This function is called automatically
+before a benchmark starts, but it can also be used to resume timing after
+a call to <a href="index.html#B.StopTimer">B.StopTimer</a>.
+
+				
+				
+				
+			
+				
+				<h3 id="B.StopTimer">func (*B) <a href="../../src/testing/benchmark.go?s=4022:4045#L124">StopTimer</a>
+					<a class="permalink" href="index.html#B.StopTimer">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (b *<a href="index.html#B">B</a>) StopTimer()</pre>
+				<p>StopTimer stops timing a test. This can be used to pause the timer
+while performing complex initialization that you don&apos;t
+want to measure.
+
+				
+				
+				
+			
+				
+				<h3 id="B.TempDir">func (*B) <a href="../../src/testing/testing.go?s=40103:40136#L1178">TempDir</a>
+					<a class="permalink" href="index.html#B.TempDir">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#B">B</a>) TempDir() <a href="../builtin/index.html#string">string</a></pre>
+				<p>TempDir returns a temporary directory for the test to use.
+The directory is automatically removed when the test and
+all its subtests complete.
+Each subsequent call to t.TempDir returns a unique directory;
+if the directory creation fails, TempDir terminates the test by calling Fatal.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="BenchmarkResult">type <a href="../../src/testing/benchmark.go?s=10458:10878#L343">BenchmarkResult</a>
+				<a class="permalink" href="index.html#BenchmarkResult">&#xb6;</a>
+				
+				
+			</h2>
+			<p>BenchmarkResult contains the results of a benchmark run.
+
+			<pre>type BenchmarkResult struct {
+<span id="BenchmarkResult.N"></span>    N         <a href="../builtin/index.html#int">int</a>           <span class="comment">// The number of iterations.</span>
+<span id="BenchmarkResult.T"></span>    T         <a href="../time/index.html">time</a>.<a href="../time/index.html#Duration">Duration</a> <span class="comment">// The total time taken.</span>
+<span id="BenchmarkResult.Bytes"></span>    Bytes     <a href="../builtin/index.html#int64">int64</a>         <span class="comment">// Bytes processed in one iteration.</span>
+<span id="BenchmarkResult.MemAllocs"></span>    MemAllocs <a href="../builtin/index.html#uint64">uint64</a>        <span class="comment">// The total number of memory allocations.</span>
+<span id="BenchmarkResult.MemBytes"></span>    MemBytes  <a href="../builtin/index.html#uint64">uint64</a>        <span class="comment">// The total number of bytes allocated.</span>
+
+<span id="BenchmarkResult.Extra"></span>    <span class="comment">// Extra records additional metrics reported by ReportMetric.</span>
+    Extra map[<a href="../builtin/index.html#string">string</a>]<a href="../builtin/index.html#float64">float64</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="Benchmark">func <a href="../../src/testing/benchmark.go?s=24101:24145#L813">Benchmark</a>
+					<a class="permalink" href="index.html#Benchmark">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func Benchmark(f func(b *<a href="index.html#B">B</a>)) <a href="index.html#BenchmarkResult">BenchmarkResult</a></pre>
+				<p>Benchmark benchmarks a single function. It is useful for creating
+custom benchmarks that do not use the &quot;go test&quot; command.
+<p>If f depends on testing flags, then <a href="index.html#Init">Init</a> must be used to register
+those flags before calling Benchmark and before calling <a href="http://localhost:8080/flag#Parse">flag.Parse</a>.
+<p>If f calls Run, the result will be an estimate of running all its
+subbenchmarks that don&apos;t call Run in sequence in a single benchmark.
+
+				
+				
+			
+
+			
+				
+				<h3 id="BenchmarkResult.AllocedBytesPerOp">func (BenchmarkResult) <a href="../../src/testing/benchmark.go?s=11712:11762#L390">AllocedBytesPerOp</a>
+					<a class="permalink" href="index.html#BenchmarkResult.AllocedBytesPerOp">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (r <a href="index.html#BenchmarkResult">BenchmarkResult</a>) AllocedBytesPerOp() <a href="../builtin/index.html#int64">int64</a></pre>
+				<p>AllocedBytesPerOp returns the &quot;B/op&quot; metric,
+which is calculated as r.MemBytes / r.N.
+
+				
+				
+				
+			
+				
+				<h3 id="BenchmarkResult.AllocsPerOp">func (BenchmarkResult) <a href="../../src/testing/benchmark.go?s=11440:11484#L378">AllocsPerOp</a>
+					<a class="permalink" href="index.html#BenchmarkResult.AllocsPerOp">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (r <a href="index.html#BenchmarkResult">BenchmarkResult</a>) AllocsPerOp() <a href="../builtin/index.html#int64">int64</a></pre>
+				<p>AllocsPerOp returns the &quot;allocs/op&quot; metric,
+which is calculated as r.MemAllocs / r.N.
+
+				
+				
+				
+			
+				
+				<h3 id="BenchmarkResult.MemString">func (BenchmarkResult) <a href="../../src/testing/benchmark.go?s=13859:13902#L472">MemString</a>
+					<a class="permalink" href="index.html#BenchmarkResult.MemString">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (r <a href="index.html#BenchmarkResult">BenchmarkResult</a>) MemString() <a href="../builtin/index.html#string">string</a></pre>
+				<p>MemString returns r.AllocedBytesPerOp and r.AllocsPerOp in the same format as &apos;go test&apos;.
+
+				
+				
+				
+			
+				
+				<h3 id="BenchmarkResult.NsPerOp">func (BenchmarkResult) <a href="../../src/testing/benchmark.go?s=10919:10959#L355">NsPerOp</a>
+					<a class="permalink" href="index.html#BenchmarkResult.NsPerOp">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (r <a href="index.html#BenchmarkResult">BenchmarkResult</a>) NsPerOp() <a href="../builtin/index.html#int64">int64</a></pre>
+				<p>NsPerOp returns the &quot;ns/op&quot; metric.
+
+				
+				
+				
+			
+				
+				<h3 id="BenchmarkResult.String">func (BenchmarkResult) <a href="../../src/testing/benchmark.go?s=12255:12295#L407">String</a>
+					<a class="permalink" href="index.html#BenchmarkResult.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (r <a href="index.html#BenchmarkResult">BenchmarkResult</a>) String() <a href="../builtin/index.html#string">string</a></pre>
+				<p>String returns a summary of the benchmark results.
+It follows the benchmark result line format from
+<a href="https://golang.org/design/14313-benchmark-format">https://golang.org/design/14313-benchmark-format</a>, not including the
+benchmark name.
+Extra metrics override built-in metrics of the same name.
+String does not include allocs/op or B/op, since those are reported
+by <a href="index.html#BenchmarkResult.MemString">BenchmarkResult.MemString</a>.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Cover">type <a href="../../src/testing/cover.go?s=1115:1262#L25">Cover</a>
+				<a class="permalink" href="index.html#Cover">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Cover records information about test coverage checking.
+NOTE: This struct is internal to the testing infrastructure and may change.
+It is not covered (yet) by the Go 1 compatibility guidelines.
+
+			<pre>type Cover struct {
+<span id="Cover.Mode"></span>    Mode            <a href="../builtin/index.html#string">string</a>
+<span id="Cover.Counters"></span>    Counters        map[<a href="../builtin/index.html#string">string</a>][]<a href="../builtin/index.html#uint32">uint32</a>
+<span id="Cover.Blocks"></span>    Blocks          map[<a href="../builtin/index.html#string">string</a>][]<a href="index.html#CoverBlock">CoverBlock</a>
+<span id="Cover.CoveredPackages"></span>    CoveredPackages <a href="../builtin/index.html#string">string</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="CoverBlock">type <a href="../../src/testing/cover.go?s=621:893#L12">CoverBlock</a>
+				<a class="permalink" href="index.html#CoverBlock">&#xb6;</a>
+				
+				
+			</h2>
+			<p>CoverBlock records the coverage data for a single basic block.
+The fields are 1-indexed, as in an editor: The opening line of
+the file is number 1, for example. Columns are measured
+in bytes.
+NOTE: This struct is internal to the testing infrastructure and may change.
+It is not covered (yet) by the Go 1 compatibility guidelines.
+
+			<pre>type CoverBlock struct {
+<span id="CoverBlock.Line0"></span>    Line0 <a href="../builtin/index.html#uint32">uint32</a> <span class="comment">// Line number for block start.</span>
+<span id="CoverBlock.Col0"></span>    Col0  <a href="../builtin/index.html#uint16">uint16</a> <span class="comment">// Column number for block start.</span>
+<span id="CoverBlock.Line1"></span>    Line1 <a href="../builtin/index.html#uint32">uint32</a> <span class="comment">// Line number for block end.</span>
+<span id="CoverBlock.Col1"></span>    Col1  <a href="../builtin/index.html#uint16">uint16</a> <span class="comment">// Column number for block end.</span>
+<span id="CoverBlock.Stmts"></span>    Stmts <a href="../builtin/index.html#uint16">uint16</a> <span class="comment">// Number of statements included in this block.</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="F">type <a href="../../src/testing/fuzz.go?s=2492:2855#L58">F</a>
+				<a class="permalink" href="index.html#F">&#xb6;</a>
+				
+				
+			</h2>
+			<p>F is a type passed to fuzz tests.
+<p>Fuzz tests run generated inputs against a provided fuzz target, which can
+find and report potential bugs in the code being tested.
+<p>A fuzz test runs the seed corpus by default, which includes entries provided
+by (*F).Add and entries in the testdata/fuzz/&lt;FuzzTestName&gt; directory. After
+any necessary setup and calls to (*F).Add, the fuzz test must then call
+(*F).Fuzz to provide the fuzz target. See the testing package documentation
+for an example, and see the <a href="index.html#F.Fuzz">F.Fuzz</a> and <a href="index.html#F.Add">F.Add</a> method documentation for
+details.
+<p>*F methods can only be called before (*F).Fuzz. Once the test is
+executing the fuzz target, only (*T) methods can be used. The only *F methods
+that are allowed in the (*F).Fuzz function are (*F).Failed and (*F).Name.
+
+			<pre>type F struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="F.Add">func (*F) <a href="../../src/testing/fuzz.go?s=5104:5132#L142">Add</a>
+					<a class="permalink" href="index.html#F.Add">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (f *<a href="index.html#F">F</a>) Add(args ...<a href="../builtin/index.html#any">any</a>)</pre>
+				<p>Add will add the arguments to the seed corpus for the fuzz test. This will be
+a no-op if called after or within the fuzz target, and args must match the
+arguments for the fuzz target.
+
+				
+				
+				
+			
+				
+				<h3 id="F.Cleanup">func (*F) <a href="../../src/testing/testing.go?s=39266:39300#L1144">Cleanup</a>
+					<a class="permalink" href="index.html#F.Cleanup">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#F">F</a>) Cleanup(f func())</pre>
+				<p>Cleanup registers a function to be called when the test (or subtest) and all its
+subtests complete. Cleanup functions will be called in last added,
+first called order.
+
+				
+				
+				
+			
+				
+				<h3 id="F.Error">func (*F) <a href="../../src/testing/testing.go?s=36678:36713#L1055">Error</a>
+					<a class="permalink" href="index.html#F.Error">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#F">F</a>) Error(args ...<a href="../builtin/index.html#any">any</a>)</pre>
+				<p>Error is equivalent to Log followed by Fail.
+
+				
+				
+				
+			
+				
+				<h3 id="F.Errorf">func (*F) <a href="../../src/testing/testing.go?s=36833:36884#L1062">Errorf</a>
+					<a class="permalink" href="index.html#F.Errorf">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#F">F</a>) Errorf(format <a href="../builtin/index.html#string">string</a>, args ...<a href="../builtin/index.html#any">any</a>)</pre>
+				<p>Errorf is equivalent to Logf followed by Fail.
+
+				
+				
+				
+			
+				
+				<h3 id="F.Fail">func (*F) <a href="../../src/testing/fuzz.go?s=4200:4218#L118">Fail</a>
+					<a class="permalink" href="index.html#F.Fail">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (f *<a href="index.html#F">F</a>) Fail()</pre>
+				<p>Fail marks the function as having failed but continues execution.
+
+				
+				
+				
+			
+				
+				<h3 id="F.FailNow">func (*F) <a href="../../src/testing/testing.go?s=33633:33659#L969">FailNow</a>
+					<a class="permalink" href="index.html#F.FailNow">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#F">F</a>) FailNow()</pre>
+				<p>FailNow marks the function as having failed and stops its execution
+by calling runtime.Goexit (which then runs all deferred calls in the
+current goroutine).
+Execution will continue at the next test or benchmark.
+FailNow must be called from the goroutine running the
+test or benchmark function, not from other goroutines
+created during the test. Calling FailNow does not stop
+those other goroutines.
+
+				
+				
+				
+			
+				
+				<h3 id="F.Failed">func (*F) <a href="../../src/testing/testing.go?s=33003:33033#L948">Failed</a>
+					<a class="permalink" href="index.html#F.Failed">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#F">F</a>) Failed() <a href="../builtin/index.html#bool">bool</a></pre>
+				<p>Failed reports whether the function has failed.
+
+				
+				
+				
+			
+				
+				<h3 id="F.Fatal">func (*F) <a href="../../src/testing/testing.go?s=37013:37048#L1069">Fatal</a>
+					<a class="permalink" href="index.html#F.Fatal">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#F">F</a>) Fatal(args ...<a href="../builtin/index.html#any">any</a>)</pre>
+				<p>Fatal is equivalent to Log followed by FailNow.
+
+				
+				
+				
+			
+				
+				<h3 id="F.Fatalf">func (*F) <a href="../../src/testing/testing.go?s=37174:37225#L1076">Fatalf</a>
+					<a class="permalink" href="index.html#F.Fatalf">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#F">F</a>) Fatalf(format <a href="../builtin/index.html#string">string</a>, args ...<a href="../builtin/index.html#any">any</a>)</pre>
+				<p>Fatalf is equivalent to Logf followed by FailNow.
+
+				
+				
+				
+			
+				
+				<h3 id="F.Fuzz">func (*F) <a href="../../src/testing/fuzz.go?s=7645:7669#L200">Fuzz</a>
+					<a class="permalink" href="index.html#F.Fuzz">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (f *<a href="index.html#F">F</a>) Fuzz(ff <a href="../builtin/index.html#any">any</a>)</pre>
+				<p>Fuzz runs the fuzz function, ff, for fuzz testing. If ff fails for a set of
+arguments, those arguments will be added to the seed corpus.
+<p>ff must be a function with no return value whose first argument is *T and
+whose remaining arguments are the types to be fuzzed.
+For example:
+<pre>f.Fuzz(func(t *testing.T, b []byte, i int) { ... })
+</pre>
+<p>The following types are allowed: []byte, string, bool, byte, rune, float32,
+float64, int, int8, int16, int32, int64, uint, uint8, uint16, uint32, uint64.
+More types may be supported in the future.
+<p>ff must not call any *F methods, e.g. (*F).Log, (*F).Error, (*F).Skip. Use
+the corresponding *T method instead. The only *F methods that are allowed in
+the (*F).Fuzz function are (*F).Failed and (*F).Name.
+<p>This function should be fast and deterministic, and its behavior should not
+depend on shared state. No mutatable input arguments, or pointers to them,
+should be retained between executions of the fuzz function, as the memory
+backing them may be mutated during a subsequent invocation. ff must not
+modify the underlying data of the arguments provided by the fuzzing engine.
+<p>When fuzzing, F.Fuzz does not return until a problem is found, time runs out
+(set with -fuzztime), or the test process is interrupted by a signal. F.Fuzz
+should be called exactly once, unless F.Skip or <a href="index.html#F.Fail">F.Fail</a> is called beforehand.
+
+				
+				
+				
+			
+				
+				<h3 id="F.Helper">func (*F) <a href="../../src/testing/fuzz.go?s=3413:3433#L92">Helper</a>
+					<a class="permalink" href="index.html#F.Helper">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (f *<a href="index.html#F">F</a>) Helper()</pre>
+				<p>Helper marks the calling function as a test helper function.
+When printing file and line information, that function will be skipped.
+Helper may be called simultaneously from multiple goroutines.
+
+				
+				
+				
+			
+				
+				<h3 id="F.Log">func (*F) <a href="../../src/testing/testing.go?s=36056:36089#L1039">Log</a>
+					<a class="permalink" href="index.html#F.Log">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#F">F</a>) Log(args ...<a href="../builtin/index.html#any">any</a>)</pre>
+				<p>Log formats its arguments using default formatting, analogous to Println,
+and records the text in the error log. For tests, the text will be printed only if
+the test fails or the -test.v flag is set. For benchmarks, the text is always
+printed to avoid having performance depend on the value of the -test.v flag.
+
+				
+				
+				
+			
+				
+				<h3 id="F.Logf">func (*F) <a href="../../src/testing/testing.go?s=36515:36564#L1049">Logf</a>
+					<a class="permalink" href="index.html#F.Logf">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#F">F</a>) Logf(format <a href="../builtin/index.html#string">string</a>, args ...<a href="../builtin/index.html#any">any</a>)</pre>
+				<p>Logf formats its arguments according to the format, analogous to Printf, and
+records the text in the error log. A final newline is added if not provided. For
+tests, the text will be printed only if the test fails or the -test.v flag is
+set. For benchmarks, the text is always printed to avoid having performance
+depend on the value of the -test.v flag.
+
+				
+				
+				
+			
+				
+				<h3 id="F.Name">func (*F) <a href="../../src/testing/testing.go?s=32426:32456#L920">Name</a>
+					<a class="permalink" href="index.html#F.Name">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#F">F</a>) Name() <a href="../builtin/index.html#string">string</a></pre>
+				<p>Name returns the name of the running (sub-) test or benchmark.
+<p>The name will include the name of the test along with the names of
+any nested sub-tests. If two sibling sub-tests have the same name,
+Name will append a suffix to guarantee the returned name is unique.
+
+				
+				
+				
+			
+				
+				<h3 id="F.Setenv">func (*F) <a href="../../src/testing/testing.go?s=42956:42998#L1280">Setenv</a>
+					<a class="permalink" href="index.html#F.Setenv">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#F">F</a>) Setenv(key, value <a href="../builtin/index.html#string">string</a>)</pre>
+				<p>Setenv calls os.Setenv(key, value) and uses Cleanup to
+restore the environment variable to its original value
+after the test.
+<p>Because Setenv affects the whole process, it cannot be used
+in parallel tests or tests with parallel ancestors.
+
+				
+				
+				
+			
+				
+				<h3 id="F.Skip">func (*F) <a href="../../src/testing/testing.go?s=37356:37390#L1083">Skip</a>
+					<a class="permalink" href="index.html#F.Skip">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#F">F</a>) Skip(args ...<a href="../builtin/index.html#any">any</a>)</pre>
+				<p>Skip is equivalent to Log followed by SkipNow.
+
+				
+				
+				
+			
+				
+				<h3 id="F.SkipNow">func (*F) <a href="../../src/testing/testing.go?s=38107:38133#L1104">SkipNow</a>
+					<a class="permalink" href="index.html#F.SkipNow">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#F">F</a>) SkipNow()</pre>
+				<p>SkipNow marks the test as having been skipped and stops its execution
+by calling <a href="http://localhost:8080/runtime#Goexit">runtime.Goexit</a>.
+If a test fails (see Error, Errorf, Fail) and is then skipped,
+it is still considered to have failed.
+Execution will continue at the next test or benchmark. See also FailNow.
+SkipNow must be called from the goroutine running the test, not from
+other goroutines created during the test. Calling SkipNow does not stop
+those other goroutines.
+
+				
+				
+				
+			
+				
+				<h3 id="F.Skipf">func (*F) <a href="../../src/testing/testing.go?s=37514:37564#L1090">Skipf</a>
+					<a class="permalink" href="index.html#F.Skipf">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#F">F</a>) Skipf(format <a href="../builtin/index.html#string">string</a>, args ...<a href="../builtin/index.html#any">any</a>)</pre>
+				<p>Skipf is equivalent to Logf followed by SkipNow.
+
+				
+				
+				
+			
+				
+				<h3 id="F.Skipped">func (*F) <a href="../../src/testing/fuzz.go?s=4566:4592#L129">Skipped</a>
+					<a class="permalink" href="index.html#F.Skipped">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (f *<a href="index.html#F">F</a>) Skipped() <a href="../builtin/index.html#bool">bool</a></pre>
+				<p>Skipped reports whether the test was skipped.
+
+				
+				
+				
+			
+				
+				<h3 id="F.TempDir">func (*F) <a href="../../src/testing/testing.go?s=40103:40136#L1178">TempDir</a>
+					<a class="permalink" href="index.html#F.TempDir">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#F">F</a>) TempDir() <a href="../builtin/index.html#string">string</a></pre>
+				<p>TempDir returns a temporary directory for the test to use.
+The directory is automatically removed when the test and
+all its subtests complete.
+Each subsequent call to t.TempDir returns a unique directory;
+if the directory creation fails, TempDir terminates the test by calling Fatal.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="InternalBenchmark">type <a href="../../src/testing/benchmark.go?s=1805:1868#L65">InternalBenchmark</a>
+				<a class="permalink" href="index.html#InternalBenchmark">&#xb6;</a>
+				
+				
+			</h2>
+			<p>InternalBenchmark is an internal type but exported because it is cross-package;
+it is part of the implementation of the &quot;go test&quot; command.
+
+			<pre>type InternalBenchmark struct {
+<span id="InternalBenchmark.Name"></span>    Name <a href="../builtin/index.html#string">string</a>
+<span id="InternalBenchmark.F"></span>    F    func(b *<a href="index.html#B">B</a>)
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="InternalExample">type <a href="../../src/testing/example.go?s=223:324#L4">InternalExample</a>
+				<a class="permalink" href="index.html#InternalExample">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type InternalExample struct {
+<span id="InternalExample.Name"></span>    Name      <a href="../builtin/index.html#string">string</a>
+<span id="InternalExample.F"></span>    F         func()
+<span id="InternalExample.Output"></span>    Output    <a href="../builtin/index.html#string">string</a>
+<span id="InternalExample.Unordered"></span>    Unordered <a href="../builtin/index.html#bool">bool</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="InternalFuzzTarget">type <a href="../../src/testing/fuzz.go?s=1614:1678#L38">InternalFuzzTarget</a>
+				<a class="permalink" href="index.html#InternalFuzzTarget">&#xb6;</a>
+				
+				
+			</h2>
+			<p>InternalFuzzTarget is an internal type but exported because it is
+cross-package; it is part of the implementation of the &quot;go test&quot; command.
+
+			<pre>type InternalFuzzTarget struct {
+<span id="InternalFuzzTarget.Name"></span>    Name <a href="../builtin/index.html#string">string</a>
+<span id="InternalFuzzTarget.Fn"></span>    Fn   func(f *<a href="index.html#F">F</a>)
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="InternalTest">type <a href="../../src/testing/testing.go?s=50354:50410#L1522">InternalTest</a>
+				<a class="permalink" href="index.html#InternalTest">&#xb6;</a>
+				
+				
+			</h2>
+			<p>InternalTest is an internal type but exported because it is cross-package;
+it is part of the implementation of the &quot;go test&quot; command.
+
+			<pre>type InternalTest struct {
+<span id="InternalTest.Name"></span>    Name <a href="../builtin/index.html#string">string</a>
+<span id="InternalTest.F"></span>    F    func(*<a href="index.html#T">T</a>)
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="M">type <a href="../../src/testing/testing.go?s=61096:61443#L1858">M</a>
+				<a class="permalink" href="index.html#M">&#xb6;</a>
+				
+				
+			</h2>
+			<p>M is a type passed to a TestMain function to run the actual tests.
+
+			<pre>type M struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="MainStart">func <a href="../../src/testing/testing.go?s=62442:62590#L1899">MainStart</a>
+					<a class="permalink" href="index.html#MainStart">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func MainStart(deps testDeps, tests []<a href="index.html#InternalTest">InternalTest</a>, benchmarks []<a href="index.html#InternalBenchmark">InternalBenchmark</a>, fuzzTargets []<a href="index.html#InternalFuzzTarget">InternalFuzzTarget</a>, examples []<a href="index.html#InternalExample">InternalExample</a>) *<a href="index.html#M">M</a></pre>
+				<p>MainStart is meant for use by tests generated by &apos;go test&apos;.
+It is not meant to be called directly and is not subject to the Go 1 compatibility document.
+It may change signature from release to release.
+
+				
+				
+			
+
+			
+				
+				<h3 id="M.Run">func (*M) <a href="../../src/testing/testing.go?s=62858:62886#L1914">Run</a>
+					<a class="permalink" href="index.html#M.Run">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (m *<a href="index.html#M">M</a>) Run() (code <a href="../builtin/index.html#int">int</a>)</pre>
+				<p>Run runs the tests. It returns an exit code to pass to os.Exit.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="PB">type <a href="../../src/testing/benchmark.go?s=20971:21281#L719">PB</a>
+				<a class="permalink" href="index.html#PB">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A PB is used by RunParallel for running parallel benchmarks.
+
+			<pre>type PB struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="PB.Next">func (*PB) <a href="../../src/testing/benchmark.go?s=21345:21370#L727">Next</a>
+					<a class="permalink" href="index.html#PB.Next">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (pb *<a href="index.html#PB">PB</a>) Next() <a href="../builtin/index.html#bool">bool</a></pre>
+				<p>Next reports whether there are more iterations to execute.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="T">type <a href="../../src/testing/testing.go?s=32015:32113#L907">T</a>
+				<a class="permalink" href="index.html#T">&#xb6;</a>
+				
+				
+			</h2>
+			<p>T is a type passed to Test functions to manage test state and support formatted test logs.
+<p>A test ends when its Test function returns or calls any of the methods
+FailNow, Fatal, Fatalf, SkipNow, Skip, or Skipf. Those methods, as well as
+the Parallel method, must be called only from the goroutine running the
+Test function.
+<p>The other reporting methods, such as the variations of Log and Error,
+may be called simultaneously from multiple goroutines.
+
+			<pre>type T struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="T.Cleanup">func (*T) <a href="../../src/testing/testing.go?s=39266:39300#L1144">Cleanup</a>
+					<a class="permalink" href="index.html#T.Cleanup">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#T">T</a>) Cleanup(f func())</pre>
+				<p>Cleanup registers a function to be called when the test (or subtest) and all its
+subtests complete. Cleanup functions will be called in last added,
+first called order.
+
+				
+				
+				
+			
+				
+				<h3 id="T.Deadline">func (*T) <a href="../../src/testing/testing.go?s=57218:57270#L1756">Deadline</a>
+					<a class="permalink" href="index.html#T.Deadline">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t *<a href="index.html#T">T</a>) Deadline() (deadline <a href="../time/index.html">time</a>.<a href="../time/index.html#Time">Time</a>, ok <a href="../builtin/index.html#bool">bool</a>)</pre>
+				<p>Deadline reports the time at which the test binary will have
+exceeded the timeout specified by the -timeout flag.
+<p>The ok result is false if the -timeout flag indicates “no timeout” (0).
+
+				
+				
+				
+			
+				
+				<h3 id="T.Error">func (*T) <a href="../../src/testing/testing.go?s=36678:36713#L1055">Error</a>
+					<a class="permalink" href="index.html#T.Error">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#T">T</a>) Error(args ...<a href="../builtin/index.html#any">any</a>)</pre>
+				<p>Error is equivalent to Log followed by Fail.
+
+				
+				
+				
+			
+				
+				<h3 id="T.Errorf">func (*T) <a href="../../src/testing/testing.go?s=36833:36884#L1062">Errorf</a>
+					<a class="permalink" href="index.html#T.Errorf">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#T">T</a>) Errorf(format <a href="../builtin/index.html#string">string</a>, args ...<a href="../builtin/index.html#any">any</a>)</pre>
+				<p>Errorf is equivalent to Logf followed by Fail.
+
+				
+				
+				
+			
+				
+				<h3 id="T.Fail">func (*T) <a href="../../src/testing/testing.go?s=32670:32693#L934">Fail</a>
+					<a class="permalink" href="index.html#T.Fail">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#T">T</a>) Fail()</pre>
+				<p>Fail marks the function as having failed but continues execution.
+
+				
+				
+				
+			
+				
+				<h3 id="T.FailNow">func (*T) <a href="../../src/testing/testing.go?s=33633:33659#L969">FailNow</a>
+					<a class="permalink" href="index.html#T.FailNow">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#T">T</a>) FailNow()</pre>
+				<p>FailNow marks the function as having failed and stops its execution
+by calling runtime.Goexit (which then runs all deferred calls in the
+current goroutine).
+Execution will continue at the next test or benchmark.
+FailNow must be called from the goroutine running the
+test or benchmark function, not from other goroutines
+created during the test. Calling FailNow does not stop
+those other goroutines.
+
+				
+				
+				
+			
+				
+				<h3 id="T.Failed">func (*T) <a href="../../src/testing/testing.go?s=33003:33033#L948">Failed</a>
+					<a class="permalink" href="index.html#T.Failed">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#T">T</a>) Failed() <a href="../builtin/index.html#bool">bool</a></pre>
+				<p>Failed reports whether the function has failed.
+
+				
+				
+				
+			
+				
+				<h3 id="T.Fatal">func (*T) <a href="../../src/testing/testing.go?s=37013:37048#L1069">Fatal</a>
+					<a class="permalink" href="index.html#T.Fatal">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#T">T</a>) Fatal(args ...<a href="../builtin/index.html#any">any</a>)</pre>
+				<p>Fatal is equivalent to Log followed by FailNow.
+
+				
+				
+				
+			
+				
+				<h3 id="T.Fatalf">func (*T) <a href="../../src/testing/testing.go?s=37174:37225#L1076">Fatalf</a>
+					<a class="permalink" href="index.html#T.Fatalf">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#T">T</a>) Fatalf(format <a href="../builtin/index.html#string">string</a>, args ...<a href="../builtin/index.html#any">any</a>)</pre>
+				<p>Fatalf is equivalent to Logf followed by FailNow.
+
+				
+				
+				
+			
+				
+				<h3 id="T.Helper">func (*T) <a href="../../src/testing/testing.go?s=38592:38617#L1123">Helper</a>
+					<a class="permalink" href="index.html#T.Helper">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#T">T</a>) Helper()</pre>
+				<p>Helper marks the calling function as a test helper function.
+When printing file and line information, that function will be skipped.
+Helper may be called simultaneously from multiple goroutines.
+
+				
+				
+				
+			
+				
+				<h3 id="T.Log">func (*T) <a href="../../src/testing/testing.go?s=36056:36089#L1039">Log</a>
+					<a class="permalink" href="index.html#T.Log">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#T">T</a>) Log(args ...<a href="../builtin/index.html#any">any</a>)</pre>
+				<p>Log formats its arguments using default formatting, analogous to Println,
+and records the text in the error log. For tests, the text will be printed only if
+the test fails or the -test.v flag is set. For benchmarks, the text is always
+printed to avoid having performance depend on the value of the -test.v flag.
+
+				
+				
+				
+			
+				
+				<h3 id="T.Logf">func (*T) <a href="../../src/testing/testing.go?s=36515:36564#L1049">Logf</a>
+					<a class="permalink" href="index.html#T.Logf">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#T">T</a>) Logf(format <a href="../builtin/index.html#string">string</a>, args ...<a href="../builtin/index.html#any">any</a>)</pre>
+				<p>Logf formats its arguments according to the format, analogous to Printf, and
+records the text in the error log. A final newline is added if not provided. For
+tests, the text will be printed only if the test fails or the -test.v flag is
+set. For benchmarks, the text is always printed to avoid having performance
+depend on the value of the -test.v flag.
+
+				
+				
+				
+			
+				
+				<h3 id="T.Name">func (*T) <a href="../../src/testing/testing.go?s=32426:32456#L920">Name</a>
+					<a class="permalink" href="index.html#T.Name">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#T">T</a>) Name() <a href="../builtin/index.html#string">string</a></pre>
+				<p>Name returns the name of the running (sub-) test or benchmark.
+<p>The name will include the name of the test along with the names of
+any nested sub-tests. If two sibling sub-tests have the same name,
+Name will append a suffix to guarantee the returned name is unique.
+
+				
+				
+				
+			
+				
+				<h3 id="T.Parallel">func (*T) <a href="../../src/testing/testing.go?s=47038:47060#L1432">Parallel</a>
+					<a class="permalink" href="index.html#T.Parallel">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t *<a href="index.html#T">T</a>) Parallel()</pre>
+				<p>Parallel signals that this test is to be run in parallel with (and only with)
+other parallel tests. When a test is run multiple times due to use of
+-test.count or -test.cpu, multiple instances of a single test never run in
+parallel with each other.
+
+				
+				
+				
+			
+				
+				<h3 id="T.Run">func (*T) <a href="../../src/testing/testing.go?s=55067:55114#L1693">Run</a>
+					<a class="permalink" href="index.html#T.Run">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t *<a href="index.html#T">T</a>) Run(name <a href="../builtin/index.html#string">string</a>, f func(t *<a href="index.html#T">T</a>)) <a href="../builtin/index.html#bool">bool</a></pre>
+				<p>Run runs f as a subtest of t called name. It runs f in a separate goroutine
+and blocks until f returns or calls t.Parallel to become a parallel test.
+Run reports whether f succeeded (or at least did not fail before calling t.Parallel).
+<p>Run may be called simultaneously from multiple goroutines, but all such calls
+must return before the outer test function for t returns.
+
+				
+				
+				
+			
+				
+				<h3 id="T.Setenv">func (*T) <a href="../../src/testing/testing.go?s=49565:49602#L1498">Setenv</a>
+					<a class="permalink" href="index.html#T.Setenv">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t *<a href="index.html#T">T</a>) Setenv(key, value <a href="../builtin/index.html#string">string</a>)</pre>
+				<p>Setenv calls os.Setenv(key, value) and uses Cleanup to
+restore the environment variable to its original value
+after the test.
+<p>Because Setenv affects the whole process, it cannot be used
+in parallel tests or tests with parallel ancestors.
+
+				
+				
+				
+			
+				
+				<h3 id="T.Skip">func (*T) <a href="../../src/testing/testing.go?s=37356:37390#L1083">Skip</a>
+					<a class="permalink" href="index.html#T.Skip">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#T">T</a>) Skip(args ...<a href="../builtin/index.html#any">any</a>)</pre>
+				<p>Skip is equivalent to Log followed by SkipNow.
+
+				
+				
+				
+			
+				
+				<h3 id="T.SkipNow">func (*T) <a href="../../src/testing/testing.go?s=38107:38133#L1104">SkipNow</a>
+					<a class="permalink" href="index.html#T.SkipNow">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#T">T</a>) SkipNow()</pre>
+				<p>SkipNow marks the test as having been skipped and stops its execution
+by calling <a href="http://localhost:8080/runtime#Goexit">runtime.Goexit</a>.
+If a test fails (see Error, Errorf, Fail) and is then skipped,
+it is still considered to have failed.
+Execution will continue at the next test or benchmark. See also FailNow.
+SkipNow must be called from the goroutine running the test, not from
+other goroutines created during the test. Calling SkipNow does not stop
+those other goroutines.
+
+				
+				
+				
+			
+				
+				<h3 id="T.Skipf">func (*T) <a href="../../src/testing/testing.go?s=37514:37564#L1090">Skipf</a>
+					<a class="permalink" href="index.html#T.Skipf">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#T">T</a>) Skipf(format <a href="../builtin/index.html#string">string</a>, args ...<a href="../builtin/index.html#any">any</a>)</pre>
+				<p>Skipf is equivalent to Logf followed by SkipNow.
+
+				
+				
+				
+			
+				
+				<h3 id="T.Skipped">func (*T) <a href="../../src/testing/testing.go?s=38297:38328#L1114">Skipped</a>
+					<a class="permalink" href="index.html#T.Skipped">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#T">T</a>) Skipped() <a href="../builtin/index.html#bool">bool</a></pre>
+				<p>Skipped reports whether the test was skipped.
+
+				
+				
+				
+			
+				
+				<h3 id="T.TempDir">func (*T) <a href="../../src/testing/testing.go?s=40103:40136#L1178">TempDir</a>
+					<a class="permalink" href="index.html#T.TempDir">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c *<a href="index.html#T">T</a>) TempDir() <a href="../builtin/index.html#string">string</a></pre>
+				<p>TempDir returns a temporary directory for the test to use.
+The directory is automatically removed when the test and
+all its subtests complete.
+Each subsequent call to t.TempDir returns a unique directory;
+if the directory creation fails, TempDir terminates the test by calling Fatal.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="TB">type <a href="../../src/testing/testing.go?s=30955:31494#L869">TB</a>
+				<a class="permalink" href="index.html#TB">&#xb6;</a>
+				
+				
+			</h2>
+			<p>TB is the interface common to T, B, and F.
+
+			<pre>type TB interface {
+    Cleanup(func())
+    Error(args ...<a href="../builtin/index.html#any">any</a>)
+    Errorf(format <a href="../builtin/index.html#string">string</a>, args ...<a href="../builtin/index.html#any">any</a>)
+    Fail()
+    FailNow()
+    Failed() <a href="../builtin/index.html#bool">bool</a>
+    Fatal(args ...<a href="../builtin/index.html#any">any</a>)
+    Fatalf(format <a href="../builtin/index.html#string">string</a>, args ...<a href="../builtin/index.html#any">any</a>)
+    Helper()
+    Log(args ...<a href="../builtin/index.html#any">any</a>)
+    Logf(format <a href="../builtin/index.html#string">string</a>, args ...<a href="../builtin/index.html#any">any</a>)
+    Name() <a href="../builtin/index.html#string">string</a>
+    Setenv(key, value <a href="../builtin/index.html#string">string</a>)
+    Skip(args ...<a href="../builtin/index.html#any">any</a>)
+    SkipNow()
+    Skipf(format <a href="../builtin/index.html#string">string</a>, args ...<a href="../builtin/index.html#any">any</a>)
+    Skipped() <a href="../builtin/index.html#bool">bool</a>
+    TempDir() <a href="../builtin/index.html#string">string</a>
+    <span class="comment">// contains filtered or unexported methods</span>
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+	
+
+	
+
+
+
+
+
+	
+	
+		<h2 id="pkg-subdirectories">Subdirectories</h2>
+	
+	<div class="pkg-dir">
+		<table>
+			<tr>
+				<th class="pkg-name">Name</th>
+				<th class="pkg-synopsis">Synopsis</th>
+			</tr>
+
+			
+			<tr>
+				<td colspan="2"><a href="../../index.html">..</a></td>
+			</tr>
+			
+
+			
+				<tr>
+				
+					<td class="pkg-name" style="padding-left: 0px;">
+						<a href="fstest/index.html">fstest</a>
+					</td>
+				
+					<td class="pkg-synopsis">
+						Package fstest implements support for testing implementations and users of file systems.
+					</td>
+				</tr>
+			
+				<tr>
+				
+					<td class="pkg-name" style="padding-left: 0px;">
+						<a href="iotest/index.html">iotest</a>
+					</td>
+				
+					<td class="pkg-synopsis">
+						Package iotest implements Readers and Writers useful mainly for testing.
+					</td>
+				</tr>
+			
+				<tr>
+				
+					<td class="pkg-name" style="padding-left: 0px;">
+						<a href="quick/index.html">quick</a>
+					</td>
+				
+					<td class="pkg-synopsis">
+						Package quick implements utility functions to help with black box testing.
+					</td>
+				</tr>
+			
+				<tr>
+				
+					<td class="pkg-name" style="padding-left: 0px;">
+						<a href="slogtest/index.html">slogtest</a>
+					</td>
+				
+					<td class="pkg-synopsis">
+						Package slogtest implements support for testing implementations of log/slog.Handler.
+					</td>
+				</tr>
+			
+		</table>
+	</div>
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

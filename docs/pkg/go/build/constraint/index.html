@@ -1,0 +1,600 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>constraint - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package constraint
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "go/build/constraint"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>Package constraint implements parsing and evaluation of build constraint lines.
+See <a href="https://golang.org/cmd/go/#hdr-Build_constraints">https://golang.org/cmd/go/#hdr-Build_constraints</a> for documentation about build constraints themselves.
+<p>This package parses both the original “// +build” syntax and the “//go:build” syntax that was added in Go 1.17.
+See <a href="https://golang.org/design/draft-gobuild">https://golang.org/design/draft-gobuild</a> for details about the “//go:build” syntax.
+
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+			
+			
+				
+				<dd><a href="index.html#GoVersion">func GoVersion(x Expr) string</a></dd>
+			
+				
+				<dd><a href="index.html#IsGoBuild">func IsGoBuild(line string) bool</a></dd>
+			
+				
+				<dd><a href="index.html#IsPlusBuild">func IsPlusBuild(line string) bool</a></dd>
+			
+				
+				<dd><a href="index.html#PlusBuildLines">func PlusBuildLines(x Expr) ([]string, error)</a></dd>
+			
+			
+				
+				<dd><a href="index.html#AndExpr">type AndExpr</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#AndExpr.Eval">func (x *AndExpr) Eval(ok func(tag string) bool) bool</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#AndExpr.String">func (x *AndExpr) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Expr">type Expr</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Parse">func Parse(line string) (Expr, error)</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#NotExpr">type NotExpr</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NotExpr.Eval">func (x *NotExpr) Eval(ok func(tag string) bool) bool</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NotExpr.String">func (x *NotExpr) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#OrExpr">type OrExpr</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#OrExpr.Eval">func (x *OrExpr) Eval(ok func(tag string) bool) bool</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#OrExpr.String">func (x *OrExpr) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#SyntaxError">type SyntaxError</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#SyntaxError.Error">func (e *SyntaxError) Error() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#TagExpr">type TagExpr</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#TagExpr.Eval">func (x *TagExpr) Eval(ok func(tag string) bool) bool</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#TagExpr.String">func (x *TagExpr) String() string</a></dd>
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../../../src/go/build/constraint/expr.go">expr.go</a>
+			
+				<a href="../../../../src/go/build/constraint/vers.go">vers.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+		
+		
+			
+			
+			<h2 id="GoVersion">func <a href="../../../../src/go/build/constraint/vers.go?s=939:968#L20">GoVersion</a>
+				<a class="permalink" href="index.html#GoVersion">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func GoVersion(x <a href="index.html#Expr">Expr</a>) <a href="../../../builtin/index.html#string">string</a></pre>
+			<p>GoVersion returns the minimum Go version implied by a given build expression.
+If the expression can be satisfied without any Go version tags, GoVersion returns an empty string.
+<p>For example:
+<pre>GoVersion(linux &amp;&amp; go1.22) = &quot;go1.22&quot;
+GoVersion((linux &amp;&amp; go1.22) || (windows &amp;&amp; go1.20)) = &quot;go1.20&quot; =&gt; go1.20
+GoVersion(linux) = &quot;&quot;
+GoVersion(linux || (windows &amp;&amp; go1.22)) = &quot;&quot;
+GoVersion(!go1.22) = &quot;&quot;
+</pre>
+<p>GoVersion assumes that any tag or negated tag may independently be true,
+so that its analysis can be purely structural, without SAT solving.
+“Impossible” subexpressions may therefore affect the result.
+<p>For example:
+<pre>GoVersion((linux &amp;&amp; !linux &amp;&amp; go1.20) || go1.21) = &quot;go1.20&quot;
+</pre>
+
+			
+			
+
+		
+			
+			
+			<h2 id="IsGoBuild">func <a href="../../../../src/go/build/constraint/expr.go?s=4140:4172#L155">IsGoBuild</a>
+				<a class="permalink" href="index.html#IsGoBuild">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func IsGoBuild(line <a href="../../../builtin/index.html#string">string</a>) <a href="../../../builtin/index.html#bool">bool</a></pre>
+			<p>IsGoBuild reports whether the line of text is a “//go:build” constraint.
+It only checks the prefix of the text, not that the expression itself parses.
+
+			
+			
+
+		
+			
+			
+			<h2 id="IsPlusBuild">func <a href="../../../../src/go/build/constraint/expr.go?s=9158:9192#L350">IsPlusBuild</a>
+				<a class="permalink" href="index.html#IsPlusBuild">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func IsPlusBuild(line <a href="../../../builtin/index.html#string">string</a>) <a href="../../../builtin/index.html#bool">bool</a></pre>
+			<p>IsPlusBuild reports whether the line of text is a “// +build” constraint.
+It only checks the prefix of the text, not that the expression itself parses.
+
+			
+			
+
+		
+			
+			
+			<h2 id="PlusBuildLines">func <a href="../../../../src/go/build/constraint/expr.go?s=12175:12220#L463">PlusBuildLines</a>
+				<a class="permalink" href="index.html#PlusBuildLines">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func PlusBuildLines(x <a href="index.html#Expr">Expr</a>) ([]<a href="../../../builtin/index.html#string">string</a>, <a href="../../../builtin/index.html#error">error</a>)</pre>
+			<p>PlusBuildLines returns a sequence of “// +build” lines that evaluate to the build expression x.
+If the expression is too complex to convert directly to “// +build” lines, PlusBuildLines returns an error.
+
+			
+			
+
+		
+		
+			
+			
+			<h2 id="AndExpr">type <a href="../../../../src/go/build/constraint/expr.go?s=2251:2285#L70">AndExpr</a>
+				<a class="permalink" href="index.html#AndExpr">&#xb6;</a>
+				
+				
+			</h2>
+			<p>An AndExpr represents the expression X &amp;&amp; Y.
+
+			<pre>type AndExpr struct {
+<span id="AndExpr.X"></span>    X, Y <a href="index.html#Expr">Expr</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="AndExpr.Eval">func (*AndExpr) <a href="../../../../src/go/build/constraint/expr.go?s=2318:2371#L76">Eval</a>
+					<a class="permalink" href="index.html#AndExpr.Eval">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#AndExpr">AndExpr</a>) Eval(ok func(tag <a href="../../../builtin/index.html#string">string</a>) <a href="../../../builtin/index.html#bool">bool</a>) <a href="../../../builtin/index.html#bool">bool</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="AndExpr.String">func (*AndExpr) <a href="../../../../src/go/build/constraint/expr.go?s=2499:2532#L83">String</a>
+					<a class="permalink" href="index.html#AndExpr.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#AndExpr">AndExpr</a>) String() <a href="../../../builtin/index.html#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Expr">type <a href="../../../../src/go/build/constraint/expr.go?s=943:1463#L15">Expr</a>
+				<a class="permalink" href="index.html#Expr">&#xb6;</a>
+				
+				
+			</h2>
+			<p>An Expr is a build tag constraint expression.
+The underlying concrete type is *<a href="index.html#AndExpr">AndExpr</a>, *<a href="index.html#OrExpr">OrExpr</a>, *<a href="index.html#NotExpr">NotExpr</a>, or *<a href="index.html#TagExpr">TagExpr</a>.
+
+			<pre>type Expr interface {
+    <span class="comment">// String returns the string form of the expression,</span>
+    <span class="comment">// using the boolean syntax used in //go:build lines.</span>
+    String() <a href="../../../builtin/index.html#string">string</a>
+
+    <span class="comment">// Eval reports whether the expression evaluates to true.</span>
+    <span class="comment">// It calls ok(tag) as needed to find out whether a given build tag</span>
+    <span class="comment">// is satisfied by the current build configuration.</span>
+    Eval(ok func(tag <a href="../../../builtin/index.html#string">string</a>) <a href="../../../builtin/index.html#bool">bool</a>) <a href="../../../builtin/index.html#bool">bool</a>
+    <span class="comment">// contains filtered or unexported methods</span>
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="Parse">func <a href="../../../../src/go/build/constraint/expr.go?s=3757:3794#L143">Parse</a>
+					<a class="permalink" href="index.html#Parse">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func Parse(line <a href="../../../builtin/index.html#string">string</a>) (<a href="index.html#Expr">Expr</a>, <a href="../../../builtin/index.html#error">error</a>)</pre>
+				<p>Parse parses a single build constraint line of the form “//go:build ...” or “// +build ...”
+and returns the corresponding boolean expression.
+
+				
+				
+			
+
+			
+		
+			
+			
+			<h2 id="NotExpr">type <a href="../../../../src/go/build/constraint/expr.go?s=1869:1900#L48">NotExpr</a>
+				<a class="permalink" href="index.html#NotExpr">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A NotExpr represents the expression !X (the negation of X).
+
+			<pre>type NotExpr struct {
+<span id="NotExpr.X"></span>    X <a href="index.html#Expr">Expr</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="NotExpr.Eval">func (*NotExpr) <a href="../../../../src/go/build/constraint/expr.go?s=1933:1986#L54">Eval</a>
+					<a class="permalink" href="index.html#NotExpr.Eval">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#NotExpr">NotExpr</a>) Eval(ok func(tag <a href="../../../builtin/index.html#string">string</a>) <a href="../../../builtin/index.html#bool">bool</a>) <a href="../../../builtin/index.html#bool">bool</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="NotExpr.String">func (*NotExpr) <a href="../../../../src/go/build/constraint/expr.go?s=2014:2047#L58">String</a>
+					<a class="permalink" href="index.html#NotExpr.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#NotExpr">NotExpr</a>) String() <a href="../../../builtin/index.html#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="OrExpr">type <a href="../../../../src/go/build/constraint/expr.go?s=2794:2827#L100">OrExpr</a>
+				<a class="permalink" href="index.html#OrExpr">&#xb6;</a>
+				
+				
+			</h2>
+			<p>An OrExpr represents the expression X || Y.
+
+			<pre>type OrExpr struct {
+<span id="OrExpr.X"></span>    X, Y <a href="index.html#Expr">Expr</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="OrExpr.Eval">func (*OrExpr) <a href="../../../../src/go/build/constraint/expr.go?s=2859:2911#L106">Eval</a>
+					<a class="permalink" href="index.html#OrExpr.Eval">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#OrExpr">OrExpr</a>) Eval(ok func(tag <a href="../../../builtin/index.html#string">string</a>) <a href="../../../builtin/index.html#bool">bool</a>) <a href="../../../builtin/index.html#bool">bool</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="OrExpr.String">func (*OrExpr) <a href="../../../../src/go/build/constraint/expr.go?s=3039:3071#L113">String</a>
+					<a class="permalink" href="index.html#OrExpr.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#OrExpr">OrExpr</a>) String() <a href="../../../builtin/index.html#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="SyntaxError">type <a href="../../../../src/go/build/constraint/expr.go?s=3352:3482#L130">SyntaxError</a>
+				<a class="permalink" href="index.html#SyntaxError">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A SyntaxError reports a syntax error in a parsed build expression.
+
+			<pre>type SyntaxError struct {
+<span id="SyntaxError.Offset"></span>    Offset <a href="../../../builtin/index.html#int">int</a>    <span class="comment">// byte offset in input where error was detected</span>
+<span id="SyntaxError.Err"></span>    Err    <a href="../../../builtin/index.html#string">string</a> <span class="comment">// description of error</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="SyntaxError.Error">func (*SyntaxError) <a href="../../../../src/go/build/constraint/expr.go?s=3484:3520#L135">Error</a>
+					<a class="permalink" href="index.html#SyntaxError.Error">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (e *<a href="index.html#SyntaxError">SyntaxError</a>) Error() <a href="../../../builtin/index.html#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="TagExpr">type <a href="../../../../src/go/build/constraint/expr.go?s=1515:1591#L31">TagExpr</a>
+				<a class="permalink" href="index.html#TagExpr">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A TagExpr is an <a href="index.html#Expr">Expr</a> for the single tag Tag.
+
+			<pre>type TagExpr struct {
+<span id="TagExpr.Tag"></span>    Tag <a href="../../../builtin/index.html#string">string</a> <span class="comment">// for example, “linux” or “cgo”</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="TagExpr.Eval">func (*TagExpr) <a href="../../../../src/go/build/constraint/expr.go?s=1624:1677#L37">Eval</a>
+					<a class="permalink" href="index.html#TagExpr.Eval">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#TagExpr">TagExpr</a>) Eval(ok func(tag <a href="../../../builtin/index.html#string">string</a>) <a href="../../../builtin/index.html#bool">bool</a>) <a href="../../../builtin/index.html#bool">bool</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="TagExpr.String">func (*TagExpr) <a href="../../../../src/go/build/constraint/expr.go?s=1701:1734#L41">String</a>
+					<a class="permalink" href="index.html#TagExpr.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x *<a href="index.html#TagExpr">TagExpr</a>) String() <a href="../../../builtin/index.html#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+	
+
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

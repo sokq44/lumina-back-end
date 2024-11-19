@@ -1,0 +1,1400 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>builtin - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package builtin
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "builtin"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>Package builtin provides documentation for Go&apos;s predeclared identifiers.
+The items documented here are not actually in package builtin
+but their descriptions here allow godoc to present documentation
+for the language&apos;s special identifiers.
+
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+				<dd><a href="index.html#pkg-constants">Constants</a></dd>
+			
+			
+				<dd><a href="index.html#pkg-variables">Variables</a></dd>
+			
+			
+				
+				<dd><a href="index.html#append">func append(slice []Type, elems ...Type) []Type</a></dd>
+			
+				
+				<dd><a href="index.html#cap">func cap(v Type) int</a></dd>
+			
+				
+				<dd><a href="index.html#clear">func clear[T ~[]Type | ~map[Type]Type1](t T)</a></dd>
+			
+				
+				<dd><a href="index.html#close">func close(c chan&lt;- Type)</a></dd>
+			
+				
+				<dd><a href="index.html#complex">func complex(r, i FloatType) ComplexType</a></dd>
+			
+				
+				<dd><a href="index.html#copy">func copy(dst, src []Type) int</a></dd>
+			
+				
+				<dd><a href="index.html#delete">func delete(m map[Type]Type1, key Type)</a></dd>
+			
+				
+				<dd><a href="index.html#imag">func imag(c ComplexType) FloatType</a></dd>
+			
+				
+				<dd><a href="index.html#len">func len(v Type) int</a></dd>
+			
+				
+				<dd><a href="index.html#make">func make(t Type, size ...IntegerType) Type</a></dd>
+			
+				
+				<dd><a href="index.html#max">func max[T cmp.Ordered](x T, y ...T) T</a></dd>
+			
+				
+				<dd><a href="index.html#min">func min[T cmp.Ordered](x T, y ...T) T</a></dd>
+			
+				
+				<dd><a href="index.html#new">func new(Type) *Type</a></dd>
+			
+				
+				<dd><a href="index.html#panic">func panic(v any)</a></dd>
+			
+				
+				<dd><a href="index.html#print">func print(args ...Type)</a></dd>
+			
+				
+				<dd><a href="index.html#println">func println(args ...Type)</a></dd>
+			
+				
+				<dd><a href="index.html#real">func real(c ComplexType) FloatType</a></dd>
+			
+				
+				<dd><a href="index.html#recover">func recover() any</a></dd>
+			
+			
+				
+				<dd><a href="index.html#ComplexType">type ComplexType</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#FloatType">type FloatType</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#IntegerType">type IntegerType</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#Type">type Type</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#Type1">type Type1</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#any">type any</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#bool">type bool</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#byte">type byte</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#comparable">type comparable</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#complex128">type complex128</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#complex64">type complex64</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#error">type error</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#float32">type float32</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#float64">type float64</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#int">type int</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#int16">type int16</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#int32">type int32</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#int64">type int64</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#int8">type int8</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#rune">type rune</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#string">type string</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#uint">type uint</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#uint16">type uint16</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#uint32">type uint32</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#uint64">type uint64</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#uint8">type uint8</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#uintptr">type uintptr</a></dd>
+				
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../src/builtin/builtin.go">builtin.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+			<h2 id="pkg-constants">Constants</h2>
+			
+				<p>true and false are the two untyped boolean values.
+
+				<pre>const (
+    <span id="true">true</span>  = 0 == 0 <span class="comment">// Untyped bool.</span>
+    <span id="false">false</span> = 0 != 0 <span class="comment">// Untyped bool.</span>
+)</pre>
+			
+				<p>iota is a predeclared identifier representing the untyped integer ordinal
+number of the current const specification in a (usually parenthesized)
+const declaration. It is zero-indexed.
+
+				<pre>const <span id="iota">iota</span> = 0 <span class="comment">// Untyped int.</span>
+</pre>
+			
+		
+		
+			<h2 id="pkg-variables">Variables</h2>
+			
+				<p>nil is a predeclared identifier representing the zero value for a
+pointer, channel, func, interface, map, or slice type.
+
+				<pre>var <span id="nil">nil</span> <a href="index.html#Type">Type</a> <span class="comment">// Type must be a pointer, channel, func, interface, map, or slice type</span>
+</pre>
+			
+		
+		
+			
+			
+			<h2 id="append">func <a href="../../src/builtin/builtin.go?s=5203:5250#L139">append</a>
+				<a class="permalink" href="index.html#append">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func append(slice []<a href="index.html#Type">Type</a>, elems ...<a href="index.html#Type">Type</a>) []<a href="index.html#Type">Type</a></pre>
+			<p>The append built-in function appends elements to the end of a slice. If
+it has sufficient capacity, the destination is resliced to accommodate the
+new elements. If it does not, a new underlying array will be allocated.
+Append returns the updated slice. It is therefore necessary to store the
+result of append, often in the variable holding the slice itself:
+<pre>slice = append(slice, elem1, elem2)
+slice = append(slice, anotherSlice...)
+</pre>
+<p>As a special case, it is legal to append a string to a byte slice, like this:
+<pre>slice = append([]byte(&quot;hello &quot;), &quot;world&quot;...)
+</pre>
+
+			
+			
+
+		
+			
+			
+			<h2 id="cap">func <a href="../../src/builtin/builtin.go?s=7017:7037#L179">cap</a>
+				<a class="permalink" href="index.html#cap">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func cap(v <a href="index.html#Type">Type</a>) int</pre>
+			<p>The cap built-in function returns the capacity of v, according to its type:
+<pre>Array: the number of elements in v (same as len(v)).
+Pointer to array: the number of elements in *v (same as len(v)).
+Slice: the maximum length the slice can reach when resliced;
+if v is nil, cap(v) is zero.
+Channel: the channel buffer capacity, in units of elements;
+if v is nil, cap(v) is zero.
+</pre>
+<p>For some arguments, such as a simple array expression, the result can be a
+constant. See the Go language specification&apos;s &quot;Length and capacity&quot; section for
+details.
+
+			
+			
+
+		
+			
+			
+			<h2 id="clear">func <a href="../../src/builtin/builtin.go?s=10053:10097#L241">clear</a>
+				<a class="permalink" href="index.html#clear">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func clear[T ~[]<a href="index.html#Type">Type</a> | ~map[<a href="index.html#Type">Type</a>]<a href="index.html#Type1">Type1</a>](t T)</pre>
+			<p>The clear built-in function clears maps and slices.
+For maps, clear deletes all entries, resulting in an empty map.
+For slices, clear sets all elements up to the length of the slice
+to the zero value of the respective element type. If the argument
+type is a type parameter, the type parameter&apos;s type set must
+contain only map or slice types, and clear performs the operation
+implied by the type argument.
+
+			
+			
+
+		
+			
+			
+			<h2 id="close">func <a href="../../src/builtin/builtin.go?s=10617:10642#L253">close</a>
+				<a class="permalink" href="index.html#close">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func close(c chan&lt;- <a href="index.html#Type">Type</a>)</pre>
+			<p>The close built-in function closes a channel, which must be either
+bidirectional or send-only. It should be executed only by the sender,
+never the receiver, and has the effect of shutting down the channel after
+the last sent value is received. After the last value has been received
+from a closed channel c, any receive from c will succeed without
+blocking, returning the zero value for the channel element. The form
+<pre>x, ok := &lt;-c
+</pre>
+<p>will also set ok to false for a closed and empty channel.
+
+			
+			
+
+		
+			
+			
+			<h2 id="complex">func <a href="../../src/builtin/builtin.go?s=9191:9231#L223">complex</a>
+				<a class="permalink" href="index.html#complex">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func complex(r, i <a href="index.html#FloatType">FloatType</a>) <a href="index.html#ComplexType">ComplexType</a></pre>
+			<p>The complex built-in function constructs a complex value from two
+floating-point values. The real and imaginary parts must be of the same
+size, either float32 or float64 (or assignable to them), and the return
+value will be the corresponding complex type (complex64 for float32,
+complex128 for float64).
+
+			
+			
+
+		
+			
+			
+			<h2 id="copy">func <a href="../../src/builtin/builtin.go?s=5572:5602#L146">copy</a>
+				<a class="permalink" href="index.html#copy">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func copy(dst, src []<a href="index.html#Type">Type</a>) int</pre>
+			<p>The copy built-in function copies elements from a source slice into a
+destination slice. (As a special case, it also will copy bytes from a
+string to a slice of bytes.) The source and destination may overlap. Copy
+returns the number of elements copied, which will be the minimum of
+len(src) and len(dst).
+
+			
+			
+
+		
+			
+			
+			<h2 id="delete">func <a href="../../src/builtin/builtin.go?s=5768:5807#L151">delete</a>
+				<a class="permalink" href="index.html#delete">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func delete(m map[<a href="index.html#Type">Type</a>]<a href="index.html#Type1">Type1</a>, key <a href="index.html#Type">Type</a>)</pre>
+			<p>The delete built-in function deletes the element with the specified key
+(m[key]) from the map. If m is nil or there is no such element, delete
+is a no-op.
+
+			
+			
+
+		
+			
+			
+			<h2 id="imag">func <a href="../../src/builtin/builtin.go?s=9591:9625#L232">imag</a>
+				<a class="permalink" href="index.html#imag">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func imag(c <a href="index.html#ComplexType">ComplexType</a>) <a href="index.html#FloatType">FloatType</a></pre>
+			<p>The imag built-in function returns the imaginary part of the complex
+number c. The return value will be floating point type corresponding to
+the type of c.
+
+			
+			
+
+		
+			
+			
+			<h2 id="len">func <a href="../../src/builtin/builtin.go?s=6422:6442#L165">len</a>
+				<a class="permalink" href="index.html#len">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func len(v <a href="index.html#Type">Type</a>) int</pre>
+			<p>The len built-in function returns the length of v, according to its type:
+<pre>Array: the number of elements in v.
+Pointer to array: the number of elements in *v (even if v is nil).
+Slice, or map: the number of elements in v; if v is nil, len(v) is zero.
+String: the number of bytes in v.
+Channel: the number of elements queued (unread) in the channel buffer;
+         if v is nil, len(v) is zero.
+</pre>
+<p>For some arguments, such as a string literal or a simple array expression, the
+result can be a constant. See the Go language specification&apos;s &quot;Length and
+capacity&quot; section for details.
+
+			
+			
+
+		
+			
+			
+			<h2 id="make">func <a href="../../src/builtin/builtin.go?s=8062:8105#L199">make</a>
+				<a class="permalink" href="index.html#make">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func make(t <a href="index.html#Type">Type</a>, size ...<a href="index.html#IntegerType">IntegerType</a>) <a href="index.html#Type">Type</a></pre>
+			<p>The make built-in function allocates and initializes an object of type
+slice, map, or chan (only). Like new, the first argument is a type, not a
+value. Unlike new, make&apos;s return type is the same as the type of its
+argument, not a pointer to it. The specification of the result depends on
+the type:
+<pre>Slice: The size specifies the length. The capacity of the slice is
+equal to its length. A second integer argument may be provided to
+specify a different capacity; it must be no smaller than the
+length. For example, make([]int, 0, 10) allocates an underlying array
+of size 10 and returns a slice of length 0 and capacity 10 that is
+backed by this underlying array.
+Map: An empty map is allocated with enough space to hold the
+specified number of elements. The size may be omitted, in which case
+a small starting size is allocated.
+Channel: The channel&apos;s buffer is initialized with the specified
+buffer capacity. If zero, or the size is omitted, the channel is
+unbuffered.
+</pre>
+
+			
+			
+
+		
+			
+			
+			<h2 id="max">func <a href="../../src/builtin/builtin.go?s=8349:8387#L205">max</a>
+				<a class="permalink" href="index.html#max">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func max[T <a href="../cmp/index.html">cmp</a>.<a href="../cmp/index.html#Ordered">Ordered</a>](x T, y ...T) T</pre>
+			<p>The max built-in function returns the largest value of a fixed number of
+arguments of <a href="http://localhost:8080/cmp#Ordered">cmp.Ordered</a> types. There must be at least one argument.
+If T is a floating-point type and any of the arguments are NaNs,
+max will return NaN.
+
+			
+			
+
+		
+			
+			
+			<h2 id="min">func <a href="../../src/builtin/builtin.go?s=8632:8670#L211">min</a>
+				<a class="permalink" href="index.html#min">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func min[T <a href="../cmp/index.html">cmp</a>.<a href="../cmp/index.html#Ordered">Ordered</a>](x T, y ...T) T</pre>
+			<p>The min built-in function returns the smallest value of a fixed number of
+arguments of <a href="http://localhost:8080/cmp#Ordered">cmp.Ordered</a> types. There must be at least one argument.
+If T is a floating-point type and any of the arguments are NaNs,
+min will return NaN.
+
+			
+			
+
+		
+			
+			
+			<h2 id="new">func <a href="../../src/builtin/builtin.go?s=8850:8870#L216">new</a>
+				<a class="permalink" href="index.html#new">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func new(<a href="index.html#Type">Type</a>) *<a href="index.html#Type">Type</a></pre>
+			<p>The new built-in function allocates memory. The first argument is a type,
+not a value, and the value returned is a pointer to a newly
+allocated zero value of that type.
+
+			
+			
+
+		
+			
+			
+			<h2 id="panic">func <a href="../../src/builtin/builtin.go?s=11526:11543#L269">panic</a>
+				<a class="permalink" href="index.html#panic">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func panic(v any)</pre>
+			<p>The panic built-in function stops normal execution of the current
+goroutine. When a function F calls panic, normal execution of F stops
+immediately. Any functions whose execution was deferred by F are run in
+the usual way, and then F returns to its caller. To the caller G, the
+invocation of F then behaves like a call to panic, terminating G&apos;s
+execution and running any deferred functions. This continues until all
+functions in the executing goroutine have stopped, in reverse order. At
+that point, the program is terminated with a non-zero exit code. This
+termination sequence is called panicking and can be controlled by the
+built-in function recover.
+<p>Starting in Go 1.21, calling panic with a nil interface value or an
+untyped nil causes a run-time error (a different panic).
+The GODEBUG setting panicnil=1 disables the run-time error.
+
+			
+			
+
+		
+			
+			
+			<h2 id="print">func <a href="../../src/builtin/builtin.go?s=12406:12430#L287">print</a>
+				<a class="permalink" href="index.html#print">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func print(args ...<a href="index.html#Type">Type</a>)</pre>
+			<p>The print built-in function formats its arguments in an
+implementation-specific way and writes the result to standard error.
+Print is useful for bootstrapping and debugging; it is not guaranteed
+to stay in the language.
+
+			
+			
+
+		
+			
+			
+			<h2 id="println">func <a href="../../src/builtin/builtin.go?s=12740:12766#L294">println</a>
+				<a class="permalink" href="index.html#println">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func println(args ...<a href="index.html#Type">Type</a>)</pre>
+			<p>The println built-in function formats its arguments in an
+implementation-specific way and writes the result to standard error.
+Spaces are always added between arguments and a newline is appended.
+Println is useful for bootstrapping and debugging; it is not guaranteed
+to stay in the language.
+
+			
+			
+
+		
+			
+			
+			<h2 id="real">func <a href="../../src/builtin/builtin.go?s=9390:9424#L227">real</a>
+				<a class="permalink" href="index.html#real">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func real(c <a href="index.html#ComplexType">ComplexType</a>) <a href="index.html#FloatType">FloatType</a></pre>
+			<p>The real built-in function returns the real part of the complex number c.
+The return value will be floating point type corresponding to the type of c.
+
+			
+			
+
+		
+			
+			
+			<h2 id="recover">func <a href="../../src/builtin/builtin.go?s=12154:12172#L281">recover</a>
+				<a class="permalink" href="index.html#recover">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func recover() any</pre>
+			<p>The recover built-in function allows a program to manage behavior of a
+panicking goroutine. Executing a call to recover inside a deferred
+function (but not any function called by it) stops the panicking sequence
+by restoring normal execution and retrieves the error value passed to the
+call of panic. If recover is called outside the deferred function it will
+not stop a panicking sequence. In this case, or when the goroutine is not
+panicking, recover returns nil.
+<p>Prior to Go 1.21, recover would also return nil if panic is called with
+a nil argument. See [panic] for details.
+
+			
+			
+
+		
+		
+			
+			
+			<h2 id="ComplexType">type <a href="../../src/builtin/builtin.go?s=4583:4609#L125">ComplexType</a>
+				<a class="permalink" href="index.html#ComplexType">&#xb6;</a>
+				
+				
+			</h2>
+			<p>ComplexType is here for the purposes of documentation only. It is a
+stand-in for either complex type: complex64 or complex128.
+
+			<pre>type ComplexType complex64</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="FloatType">type <a href="../../src/builtin/builtin.go?s=4426:4448#L121">FloatType</a>
+				<a class="permalink" href="index.html#FloatType">&#xb6;</a>
+				
+				
+			</h2>
+			<p>FloatType is here for the purposes of documentation only. It is a stand-in
+for either float type: float32 or float64.
+
+			<pre>type FloatType float32</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="IntegerType">type <a href="../../src/builtin/builtin.go?s=4280:4300#L117">IntegerType</a>
+				<a class="permalink" href="index.html#IntegerType">&#xb6;</a>
+				
+				
+			</h2>
+			<p>IntegerType is here for the purposes of documentation only. It is a stand-in
+for any integer type: int, uint, int8 etc.
+
+			<pre>type IntegerType int</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="Type">type <a href="../../src/builtin/builtin.go?s=3962:3975#L108">Type</a>
+				<a class="permalink" href="index.html#Type">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Type is here for the purposes of documentation only. It is a stand-in
+for any Go type, but represents the same type for any given function
+invocation.
+
+			<pre>type Type int</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="Type1">type <a href="../../src/builtin/builtin.go?s=4138:4152#L113">Type1</a>
+				<a class="permalink" href="index.html#Type1">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Type1 is here for the purposes of documentation only. It is a stand-in
+for any Go type, but represents the same type for any given function
+invocation.
+
+			<pre>type Type1 int</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="any">type <a href="../../src/builtin/builtin.go?s=2983:3005#L87">any</a>
+				<a class="permalink" href="index.html#any">&#xb6;</a>
+				
+				
+			</h2>
+			<p>any is an alias for interface{} and is equivalent to interface{} in all ways.
+
+			<pre>type any = interface{}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="bool">type <a href="../../src/builtin/builtin.go?s=491:505#L6">bool</a>
+				<a class="permalink" href="index.html#bool">&#xb6;</a>
+				
+				
+			</h2>
+			<p>bool is the set of boolean values, true and false.
+
+			<pre>type bool bool</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="byte">type <a href="../../src/builtin/builtin.go?s=2711:2728#L80">byte</a>
+				<a class="permalink" href="index.html#byte">&#xb6;</a>
+				
+				
+			</h2>
+			<p>byte is an alias for uint8 and is equivalent to uint8 in all ways. It is
+used, by convention, to distinguish byte values from 8-bit unsigned
+integer values.
+
+			<pre>type byte = uint8</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="comparable">type <a href="../../src/builtin/builtin.go?s=3323:3362#L94">comparable</a>
+				<a class="permalink" href="index.html#comparable">&#xb6;</a>
+				
+				
+			</h2>
+			<p>comparable is an interface that is implemented by all comparable types
+(booleans, numbers, strings, pointers, channels, arrays of comparable types,
+structs whose fields are all comparable types).
+The comparable interface may only be used as a type parameter constraint,
+not as the type of a variable.
+
+			<pre>type comparable interface{ comparable }</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="complex128">type <a href="../../src/builtin/builtin.go?s=1877:1903#L58">complex128</a>
+				<a class="permalink" href="index.html#complex128">&#xb6;</a>
+				
+				
+			</h2>
+			<p>complex128 is the set of all complex numbers with float64 real and
+imaginary parts.
+
+			<pre>type complex128 complex128</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="complex64">type <a href="../../src/builtin/builtin.go?s=1761:1785#L54">complex64</a>
+				<a class="permalink" href="index.html#complex64">&#xb6;</a>
+				
+				
+			</h2>
+			<p>complex64 is the set of all complex numbers with float32 real and
+imaginary parts.
+
+			<pre>type complex64 complex64</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="error">type <a href="../../src/builtin/builtin.go?s=12917:12957#L298">error</a>
+				<a class="permalink" href="index.html#error">&#xb6;</a>
+				
+				
+			</h2>
+			<p>The error built-in interface type is the conventional interface for
+representing an error condition, with the nil value representing no error.
+
+			<pre>type error interface {
+    Error() string
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="float32">type <a href="../../src/builtin/builtin.go?s=1559:1579#L47">float32</a>
+				<a class="permalink" href="index.html#float32">&#xb6;</a>
+				
+				
+			</h2>
+			<p>float32 is the set of all IEEE-754 32-bit floating-point numbers.
+
+			<pre>type float32 float32</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="float64">type <a href="../../src/builtin/builtin.go?s=1650:1670#L50">float64</a>
+				<a class="permalink" href="index.html#float64">&#xb6;</a>
+				
+				
+			</h2>
+			<p>float64 is the set of all IEEE-754 64-bit floating-point numbers.
+
+			<pre>type float64 float64</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="int">type <a href="../../src/builtin/builtin.go?s=2259:2271#L67">int</a>
+				<a class="permalink" href="index.html#int">&#xb6;</a>
+				
+				
+			</h2>
+			<p>int is a signed integer type that is at least 32 bits in size. It is a
+distinct type, however, and not an alias for, say, int32.
+
+			<pre>type int int</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="int16">type <a href="../../src/builtin/builtin.go?s=1232:1248#L36">int16</a>
+				<a class="permalink" href="index.html#int16">&#xb6;</a>
+				
+				
+			</h2>
+			<p>int16 is the set of all signed 16-bit integers.
+Range: -32768 through 32767.
+
+			<pre>type int16 int16</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="int32">type <a href="../../src/builtin/builtin.go?s=1343:1359#L40">int32</a>
+				<a class="permalink" href="index.html#int32">&#xb6;</a>
+				
+				
+			</h2>
+			<p>int32 is the set of all signed 32-bit integers.
+Range: -2147483648 through 2147483647.
+
+			<pre>type int32 int32</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="int64">type <a href="../../src/builtin/builtin.go?s=1472:1488#L44">int64</a>
+				<a class="permalink" href="index.html#int64">&#xb6;</a>
+				
+				
+			</h2>
+			<p>int64 is the set of all signed 64-bit integers.
+Range: -9223372036854775808 through 9223372036854775807.
+
+			<pre>type int64 int64</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="int8">type <a href="../../src/builtin/builtin.go?s=1133:1147#L32">int8</a>
+				<a class="permalink" href="index.html#int8">&#xb6;</a>
+				
+				
+			</h2>
+			<p>int8 is the set of all signed 8-bit integers.
+Range: -128 through 127.
+
+			<pre>type int8 int8</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="rune">type <a href="../../src/builtin/builtin.go?s=2883:2900#L84">rune</a>
+				<a class="permalink" href="index.html#rune">&#xb6;</a>
+				
+				
+			</h2>
+			<p>rune is an alias for int32 and is equivalent to int32 in all ways. It is
+used, by convention, to distinguish character values from integer values.
+
+			<pre>type rune = int32</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="string">type <a href="../../src/builtin/builtin.go?s=2104:2122#L63">string</a>
+				<a class="permalink" href="index.html#string">&#xb6;</a>
+				
+				
+			</h2>
+			<p>string is the set of all strings of 8-bit bytes, conventionally but not
+necessarily representing UTF-8-encoded text. A string may be empty, but
+not nil. Values of string type are immutable.
+
+			<pre>type string string</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="uint">type <a href="../../src/builtin/builtin.go?s=2413:2427#L71">uint</a>
+				<a class="permalink" href="index.html#uint">&#xb6;</a>
+				
+				
+			</h2>
+			<p>uint is an unsigned integer type that is at least 32 bits in size. It is a
+distinct type, however, and not an alias for, say, uint32.
+
+			<pre>type uint uint</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="uint16">type <a href="../../src/builtin/builtin.go?s=814:832#L20">uint16</a>
+				<a class="permalink" href="index.html#uint16">&#xb6;</a>
+				
+				
+			</h2>
+			<p>uint16 is the set of all unsigned 16-bit integers.
+Range: 0 through 65535.
+
+			<pre>type uint16 uint16</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="uint32">type <a href="../../src/builtin/builtin.go?s=920:938#L24">uint32</a>
+				<a class="permalink" href="index.html#uint32">&#xb6;</a>
+				
+				
+			</h2>
+			<p>uint32 is the set of all unsigned 32-bit integers.
+Range: 0 through 4294967295.
+
+			<pre>type uint32 uint32</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="uint64">type <a href="../../src/builtin/builtin.go?s=1036:1054#L28">uint64</a>
+				<a class="permalink" href="index.html#uint64">&#xb6;</a>
+				
+				
+			</h2>
+			<p>uint64 is the set of all unsigned 64-bit integers.
+Range: 0 through 18446744073709551615.
+
+			<pre>type uint64 uint64</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="uint8">type <a href="../../src/builtin/builtin.go?s=715:731#L16">uint8</a>
+				<a class="permalink" href="index.html#uint8">&#xb6;</a>
+				
+				
+			</h2>
+			<p>uint8 is the set of all unsigned 8-bit integers.
+Range: 0 through 255.
+
+			<pre>type uint8 uint8</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="uintptr">type <a href="../../src/builtin/builtin.go?s=2523:2543#L75">uintptr</a>
+				<a class="permalink" href="index.html#uintptr">&#xb6;</a>
+				
+				
+			</h2>
+			<p>uintptr is an integer type that is large enough to hold the bit pattern of
+any pointer.
+
+			<pre>type uintptr uintptr</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+	
+
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

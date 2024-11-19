@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>scanner - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package scanner
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "text/scanner"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+				<dd><a href="index.html#pkg-examples" class="examplesLink">Examples</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>Package scanner provides a scanner and tokenizer for UTF-8-encoded text.
+It takes an io.Reader providing the source, which then can be tokenized
+through repeated calls to the Scan function. For compatibility with
+existing tools, the NUL character is not allowed. If the first character
+in the source is a UTF-8 encoded byte order mark (BOM), it is discarded.
+<p>By default, a Scanner skips white space and Go comments and recognizes all
+literals as defined by the Go language specification. It may be
+customized to recognize only a subset of those literals and to recognize
+different identifier and white space characters.
+
+				<div id="example_" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">const src = `
+// This is scanned code.
+if a &gt; 10 {
+    someParsable = text
+}`
+
+var s scanner.Scanner
+s.Init(strings.NewReader(src))
+s.Filename = &#34;example&#34;
+for tok := s.Scan(); tok != scanner.EOF; tok = s.Scan() {
+    fmt.Printf(&#34;%s: %s\n&#34;, s.Position, s.TokenText())
+}
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">example:3:1: if
+example:3:4: a
+example:3:6: &gt;
+example:3:8: 10
+example:3:11: {
+example:4:2: someParsable
+example:4:15: =
+example:4:17: text
+example:5:1: }
+</pre>
+			
+		
+	</div>
+</div>
+<div id="example__isIdentRune" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example (IsIdentRune)</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example (IsIdentRune)</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">const src = &#34;%var1 var2%&#34;
+
+var s scanner.Scanner
+s.Init(strings.NewReader(src))
+s.Filename = &#34;default&#34;
+
+for tok := s.Scan(); tok != scanner.EOF; tok = s.Scan() {
+    fmt.Printf(&#34;%s: %s\n&#34;, s.Position, s.TokenText())
+}
+
+fmt.Println()
+s.Init(strings.NewReader(src))
+s.Filename = &#34;percent&#34;
+
+<span class="comment">// treat leading &#39;%&#39; as part of an identifier</span>
+s.IsIdentRune = func(ch rune, i int) bool {
+    return ch == &#39;%&#39; &amp;&amp; i == 0 || unicode.IsLetter(ch) || unicode.IsDigit(ch) &amp;&amp; i &gt; 0
+}
+
+for tok := s.Scan(); tok != scanner.EOF; tok = s.Scan() {
+    fmt.Printf(&#34;%s: %s\n&#34;, s.Position, s.TokenText())
+}
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">default:1:1: %
+default:1:2: var1
+default:1:7: var2
+default:1:11: %
+
+percent:1:1: %var1
+percent:1:7: var2
+percent:1:11: %
+</pre>
+			
+		
+	</div>
+</div>
+<div id="example__mode" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example (Mode)</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example (Mode)</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">const src = `
+    // Comment begins at column 5.
+
+This line should not be included in the output.
+
+/*
+This multiline comment
+should be extracted in
+its entirety.
+*/
+`
+
+var s scanner.Scanner
+s.Init(strings.NewReader(src))
+s.Filename = &#34;comments&#34;
+s.Mode ^= scanner.SkipComments <span class="comment">// don&#39;t skip comments</span>
+
+for tok := s.Scan(); tok != scanner.EOF; tok = s.Scan() {
+    txt := s.TokenText()
+    if strings.HasPrefix(txt, &#34;//&#34;) || strings.HasPrefix(txt, &#34;/*&#34;) {
+        fmt.Printf(&#34;%s: %s\n&#34;, s.Position, txt)
+    }
+}
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">comments:2:5: // Comment begins at column 5.
+comments:6:1: /*
+This multiline comment
+should be extracted in
+its entirety.
+*/
+</pre>
+			
+		
+	</div>
+</div>
+<div id="example__whitespace" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example (Whitespace)</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example (Whitespace)</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code"><span class="comment">// tab-separated values</span>
+const src = `aa	ab	ac	ad
+ba	bb	bc	bd
+ca	cb	cc	cd
+da	db	dc	dd`
+
+var (
+    col, row int
+    s        scanner.Scanner
+    tsv      [4][4]string <span class="comment">// large enough for example above</span>
+)
+s.Init(strings.NewReader(src))
+s.Whitespace ^= 1&lt;&lt;&#39;\t&#39; | 1&lt;&lt;&#39;\n&#39; <span class="comment">// don&#39;t skip tabs and new lines</span>
+
+for tok := s.Scan(); tok != scanner.EOF; tok = s.Scan() {
+    switch tok {
+    case &#39;\n&#39;:
+        row++
+        col = 0
+    case &#39;\t&#39;:
+        col++
+    default:
+        tsv[row][col] = s.TokenText()
+    }
+}
+
+fmt.Print(tsv)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">[[aa ab ac ad] [ba bb bc bd] [ca cb cc cd] [da db dc dd]]
+</pre>
+			
+		
+	</div>
+</div>
+
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+				<dd><a href="index.html#pkg-constants">Constants</a></dd>
+			
+			
+			
+				
+				<dd><a href="index.html#TokenString">func TokenString(tok rune) string</a></dd>
+			
+			
+				
+				<dd><a href="index.html#Position">type Position</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Position.IsValid">func (pos *Position) IsValid() bool</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Position.String">func (pos Position) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Scanner">type Scanner</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Scanner.Init">func (s *Scanner) Init(src io.Reader) *Scanner</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Scanner.Next">func (s *Scanner) Next() rune</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Scanner.Peek">func (s *Scanner) Peek() rune</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Scanner.Pos">func (s *Scanner) Pos() (pos Position)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Scanner.Scan">func (s *Scanner) Scan() rune</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Scanner.TokenText">func (s *Scanner) TokenText() string</a></dd>
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+		<div id="pkg-examples">
+			<h3>Examples</h3>
+			<div class="js-expandAll expandAll collapsed">(Expand All)</div>
+			<dl>
+			
+			<dd><a class="exampleLink" href="index.html#example_">Package</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example__isIdentRune">Package (IsIdentRune)</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example__mode">Package (Mode)</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example__whitespace">Package (Whitespace)</a></dd>
+			
+			</dl>
+		</div>
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../../src/text/scanner/scanner.go">scanner.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+			<h2 id="pkg-constants">Constants</h2>
+			
+				<p>Predefined mode bits to control recognition of tokens. For instance,
+to configure a Scanner such that it only recognizes (Go) identifiers,
+integers, and skips comments, set the Scanner&apos;s Mode field to:
+<pre>ScanIdents | ScanInts | SkipComments
+</pre>
+<p>With the exceptions of comments, which are skipped if SkipComments is
+set, unrecognized tokens are not ignored. Instead, the scanner simply
+returns the respective individual characters (or possibly sub-tokens).
+For instance, if the mode is ScanIdents (not ScanStrings), the string
+&quot;foo&quot; is scanned as the token sequence &apos;&quot;&apos; Ident &apos;&quot;&apos;.
+<p>Use GoTokens to configure the Scanner such that it accepts all Go
+literal tokens including Go identifiers. Comments will be skipped.
+
+				<pre>const (
+    <span id="ScanIdents">ScanIdents</span>     = 1 &lt;&lt; -<a href="index.html#Ident">Ident</a>
+    <span id="ScanInts">ScanInts</span>       = 1 &lt;&lt; -<a href="index.html#Int">Int</a>
+    <span id="ScanFloats">ScanFloats</span>     = 1 &lt;&lt; -<a href="index.html#Float">Float</a> <span class="comment">// includes Ints and hexadecimal floats</span>
+    <span id="ScanChars">ScanChars</span>      = 1 &lt;&lt; -<a href="index.html#Char">Char</a>
+    <span id="ScanStrings">ScanStrings</span>    = 1 &lt;&lt; -<a href="index.html#String">String</a>
+    <span id="ScanRawStrings">ScanRawStrings</span> = 1 &lt;&lt; -<a href="index.html#RawString">RawString</a>
+    <span id="ScanComments">ScanComments</span>   = 1 &lt;&lt; -<a href="index.html#Comment">Comment</a>
+    <span id="SkipComments">SkipComments</span>   = 1 &lt;&lt; -skipComment <span class="comment">// if set with ScanComments, comments become white space</span>
+    <span id="GoTokens">GoTokens</span>       = <a href="index.html#ScanIdents">ScanIdents</a> | <a href="index.html#ScanFloats">ScanFloats</a> | <a href="index.html#ScanChars">ScanChars</a> | <a href="index.html#ScanStrings">ScanStrings</a> | <a href="index.html#ScanRawStrings">ScanRawStrings</a> | <a href="index.html#ScanComments">ScanComments</a> | <a href="index.html#SkipComments">SkipComments</a>
+)</pre>
+			
+				<p>The result of Scan is one of these tokens or a Unicode character.
+
+				<pre>const (
+    <span id="EOF">EOF</span> = -(<a href="../../builtin/index.html#iota">iota</a> + 1)
+    <span id="Ident">Ident</span>
+    <span id="Int">Int</span>
+    <span id="Float">Float</span>
+    <span id="Char">Char</span>
+    <span id="String">String</span>
+    <span id="RawString">RawString</span>
+    <span id="Comment">Comment</span>
+)</pre>
+			
+				<p>GoWhitespace is the default value for the Scanner&apos;s Whitespace field.
+Its value selects Go&apos;s white space characters.
+
+				<pre>const <span id="GoWhitespace">GoWhitespace</span> = 1&lt;&lt;&#39;\t&#39; | 1&lt;&lt;&#39;\n&#39; | 1&lt;&lt;&#39;\r&#39; | 1&lt;&lt;&#39; &#39;</pre>
+			
+		
+		
+		
+			
+			
+			<h2 id="TokenString">func <a href="../../../src/text/scanner/scanner.go?s=3203:3236#L92">TokenString</a>
+				<a class="permalink" href="index.html#TokenString">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func TokenString(tok <a href="../../builtin/index.html#rune">rune</a>) <a href="../../builtin/index.html#string">string</a></pre>
+			<p>TokenString returns a printable string for a token or Unicode character.
+
+			
+			
+
+		
+		
+			
+			
+			<h2 id="Position">type <a href="../../../src/text/scanner/scanner.go?s=988:1219#L18">Position</a>
+				<a class="permalink" href="index.html#Position">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Position is a value that represents a source position.
+A position is valid if Line &gt; 0.
+
+			<pre>type Position struct {
+<span id="Position.Filename"></span>    Filename <a href="../../builtin/index.html#string">string</a> <span class="comment">// filename, if any</span>
+<span id="Position.Offset"></span>    Offset   <a href="../../builtin/index.html#int">int</a>    <span class="comment">// byte offset, starting at 0</span>
+<span id="Position.Line"></span>    Line     <a href="../../builtin/index.html#int">int</a>    <span class="comment">// line number, starting at 1</span>
+<span id="Position.Column"></span>    Column   <a href="../../builtin/index.html#int">int</a>    <span class="comment">// column number, starting at 1 (character count per line)</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="Position.IsValid">func (*Position) <a href="../../../src/text/scanner/scanner.go?s=1271:1306#L26">IsValid</a>
+					<a class="permalink" href="index.html#Position.IsValid">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (pos *<a href="index.html#Position">Position</a>) IsValid() <a href="../../builtin/index.html#bool">bool</a></pre>
+				<p>IsValid reports whether the position is valid.
+
+				
+				
+				
+			
+				
+				<h3 id="Position.String">func (Position) <a href="../../../src/text/scanner/scanner.go?s=1332:1367#L28">String</a>
+					<a class="permalink" href="index.html#Position.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (pos <a href="index.html#Position">Position</a>) String() <a href="../../builtin/index.html#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Scanner">type <a href="../../../src/text/scanner/scanner.go?s=3648:6183#L106">Scanner</a>
+				<a class="permalink" href="index.html#Scanner">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A Scanner implements reading of Unicode characters and tokens from an io.Reader.
+
+			<pre>type Scanner struct {
+
+<span id="Scanner.Error"></span>    <span class="comment">// Error is called for each error encountered. If no Error</span>
+    <span class="comment">// function is set, the error is reported to os.Stderr.</span>
+    Error func(s *<a href="index.html#Scanner">Scanner</a>, msg <a href="../../builtin/index.html#string">string</a>)
+
+<span id="Scanner.ErrorCount"></span>    <span class="comment">// ErrorCount is incremented by one for each error encountered.</span>
+    ErrorCount <a href="../../builtin/index.html#int">int</a>
+
+    <span class="comment">// The Mode field controls which tokens are recognized. For instance,</span>
+    <span class="comment">// to recognize Ints, set the ScanInts bit in Mode. The field may be</span>
+    <span class="comment">// changed at any time.</span>
+<span id="Scanner.Mode"></span>    Mode <a href="../../builtin/index.html#uint">uint</a>
+
+    <span class="comment">// The Whitespace field controls which characters are recognized</span>
+    <span class="comment">// as white space. To recognize a character ch &lt;= &#39; &#39; as white space,</span>
+    <span class="comment">// set the ch&#39;th bit in Whitespace (the Scanner&#39;s behavior is undefined</span>
+    <span class="comment">// for values ch &gt; &#39; &#39;). The field may be changed at any time.</span>
+<span id="Scanner.Whitespace"></span>    Whitespace <a href="../../builtin/index.html#uint64">uint64</a>
+
+<span id="Scanner.IsIdentRune"></span>    <span class="comment">// IsIdentRune is a predicate controlling the characters accepted</span>
+    <span class="comment">// as the ith rune in an identifier. The set of valid characters</span>
+    <span class="comment">// must not intersect with the set of white space characters.</span>
+    <span class="comment">// If no IsIdentRune function is set, regular Go identifiers are</span>
+    <span class="comment">// accepted instead. The field may be changed at any time.</span>
+    IsIdentRune func(ch <a href="../../builtin/index.html#rune">rune</a>, i <a href="../../builtin/index.html#int">int</a>) <a href="../../builtin/index.html#bool">bool</a>
+
+    <span class="comment">// Start position of most recently scanned token; set by Scan.</span>
+    <span class="comment">// Calling Init or Next invalidates the position (Line == 0).</span>
+    <span class="comment">// The Filename field is always left untouched by the Scanner.</span>
+    <span class="comment">// If an error is reported (via Error) and Position is invalid,</span>
+    <span class="comment">// the scanner is not inside a token. Call Pos to obtain an error</span>
+    <span class="comment">// position in that case, or to obtain the position immediately</span>
+    <span class="comment">// after the most recently scanned token.</span>
+    <a href="index.html#Position">Position</a>
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="Scanner.Init">func (*Scanner) <a href="../../../src/text/scanner/scanner.go?s=6363:6409#L171">Init</a>
+					<a class="permalink" href="index.html#Scanner.Init">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (s *<a href="index.html#Scanner">Scanner</a>) Init(src <a href="../../io/index.html">io</a>.<a href="../../io/index.html#Reader">Reader</a>) *<a href="index.html#Scanner">Scanner</a></pre>
+				<p>Init initializes a Scanner with a new source and returns s.
+Error is set to nil, ErrorCount is set to 0, Mode is set to GoTokens,
+and Whitespace is set to GoWhitespace.
+
+				
+				
+				
+			
+				
+				<h3 id="Scanner.Next">func (*Scanner) <a href="../../../src/text/scanner/scanner.go?s=9674:9703#L294">Next</a>
+					<a class="permalink" href="index.html#Scanner.Next">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (s *<a href="index.html#Scanner">Scanner</a>) Next() <a href="../../builtin/index.html#rune">rune</a></pre>
+				<p>Next reads and returns the next Unicode character.
+It returns EOF at the end of the source. It reports
+a read error by calling s.Error, if not nil; otherwise
+it prints an error message to os.Stderr. Next does not
+update the Scanner&apos;s Position field; use Pos() to
+get the current position.
+
+				
+				
+				
+			
+				
+				<h3 id="Scanner.Peek">func (*Scanner) <a href="../../../src/text/scanner/scanner.go?s=10035:10064#L307">Peek</a>
+					<a class="permalink" href="index.html#Scanner.Peek">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (s *<a href="index.html#Scanner">Scanner</a>) Peek() <a href="../../builtin/index.html#rune">rune</a></pre>
+				<p>Peek returns the next Unicode character in the source without advancing
+the scanner. It returns EOF if the scanner&apos;s position is at the last
+character of the source.
+
+				
+				
+				
+			
+				
+				<h3 id="Scanner.Pos">func (*Scanner) <a href="../../../src/text/scanner/scanner.go?s=19454:19492#L738">Pos</a>
+					<a class="permalink" href="index.html#Scanner.Pos">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (s *<a href="index.html#Scanner">Scanner</a>) Pos() (pos <a href="index.html#Position">Position</a>)</pre>
+				<p>Pos returns the position of the character immediately after
+the character or token returned by the last call to Next or Scan.
+Use the Scanner&apos;s Position field for the start position of the most
+recently scanned token.
+
+				
+				
+				
+			
+				
+				<h3 id="Scanner.Scan">func (*Scanner) <a href="../../../src/text/scanner/scanner.go?s=17340:17369#L636">Scan</a>
+					<a class="permalink" href="index.html#Scanner.Scan">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (s *<a href="index.html#Scanner">Scanner</a>) Scan() <a href="../../builtin/index.html#rune">rune</a></pre>
+				<p>Scan reads the next token or Unicode character from source and returns it.
+It only recognizes tokens t for which the respective Mode bit (1&lt;&lt;-t) is set.
+It returns EOF at the end of the source. It reports scanner errors (read and
+token errors) by calling s.Error, if not nil; otherwise it prints an error
+message to os.Stderr.
+
+				
+				
+				
+			
+				
+				<h3 id="Scanner.TokenText">func (*Scanner) <a href="../../../src/text/scanner/scanner.go?s=20042:20078#L760">TokenText</a>
+					<a class="permalink" href="index.html#Scanner.TokenText">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (s *<a href="index.html#Scanner">Scanner</a>) TokenText() <a href="../../builtin/index.html#string">string</a></pre>
+				<p>TokenText returns the string corresponding to the most recently scanned token.
+Valid after calling Scan and in calls of Scanner.Error.
+
+				
+				
+				
+			
+		
+	
+
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>lzw - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package lzw
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "compress/lzw"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>Package lzw implements the Lempel-Ziv-Welch compressed data format,
+described in T. A. Welch, “A Technique for High-Performance Data
+Compression”, Computer, 17(6) (June 1984), pp 8-19.
+<p>In particular, it implements LZW as used by the GIF and PDF file
+formats, which means variable-width codes up to 12 bits and the first
+two non-literal codes are a clear code and an EOF code.
+<p>The TIFF file format uses a similar but incompatible version of the LZW
+algorithm. See the golang.org/x/image/tiff/lzw package for an
+implementation.
+
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+			
+			
+				
+				<dd><a href="index.html#NewReader">func NewReader(r io.Reader, order Order, litWidth int) io.ReadCloser</a></dd>
+			
+				
+				<dd><a href="index.html#NewWriter">func NewWriter(w io.Writer, order Order, litWidth int) io.WriteCloser</a></dd>
+			
+			
+				
+				<dd><a href="index.html#Order">type Order</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#Reader">type Reader</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Reader.Close">func (r *Reader) Close() error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Reader.Read">func (r *Reader) Read(b []byte) (int, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Reader.Reset">func (r *Reader) Reset(src io.Reader, order Order, litWidth int)</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Writer">type Writer</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Writer.Close">func (w *Writer) Close() error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Writer.Reset">func (w *Writer) Reset(dst io.Writer, order Order, litWidth int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Writer.Write">func (w *Writer) Write(p []byte) (n int, err error)</a></dd>
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../../src/compress/lzw/reader.go">reader.go</a>
+			
+				<a href="../../../src/compress/lzw/writer.go">writer.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+		
+		
+			
+			
+			<h2 id="NewReader">func <a href="../../../src/compress/lzw/reader.go?s=7294:7362#L244">NewReader</a>
+				<a class="permalink" href="index.html#NewReader">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func NewReader(r <a href="../../io/index.html">io</a>.<a href="../../io/index.html#Reader">Reader</a>, order <a href="index.html#Order">Order</a>, litWidth <a href="../../builtin/index.html#int">int</a>) <a href="../../io/index.html">io</a>.<a href="../../io/index.html#ReadCloser">ReadCloser</a></pre>
+			<p>NewReader creates a new <a href="http://localhost:8080/io#ReadCloser">io.ReadCloser</a>.
+Reads from the returned <a href="http://localhost:8080/io#ReadCloser">io.ReadCloser</a> read and decompress data from r.
+If r does not also implement <a href="http://localhost:8080/io#ByteReader">io.ByteReader</a>,
+the decompressor may read more data than necessary from r.
+It is the caller&apos;s responsibility to call Close on the ReadCloser when
+finished reading.
+The number of bits to use for literal codes, litWidth, must be in the
+range [2,8] and is typically 8. It must equal the litWidth
+used during compression.
+<p>It is guaranteed that the underlying type of the returned <a href="http://localhost:8080/io#ReadCloser">io.ReadCloser</a>
+is a *<a href="index.html#Reader">Reader</a>.
+
+			
+			
+
+		
+			
+			
+			<h2 id="NewWriter">func <a href="../../../src/compress/lzw/writer.go?s=7252:7321#L247">NewWriter</a>
+				<a class="permalink" href="index.html#NewWriter">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func NewWriter(w <a href="../../io/index.html">io</a>.<a href="../../io/index.html#Writer">Writer</a>, order <a href="index.html#Order">Order</a>, litWidth <a href="../../builtin/index.html#int">int</a>) <a href="../../io/index.html">io</a>.<a href="../../io/index.html#WriteCloser">WriteCloser</a></pre>
+			<p>NewWriter creates a new <a href="http://localhost:8080/io#WriteCloser">io.WriteCloser</a>.
+Writes to the returned <a href="http://localhost:8080/io#WriteCloser">io.WriteCloser</a> are compressed and written to w.
+It is the caller&apos;s responsibility to call Close on the WriteCloser when
+finished writing.
+The number of bits to use for literal codes, litWidth, must be in the
+range [2,8] and is typically 8. Input bytes must be less than 1&lt;&lt;litWidth.
+<p>It is guaranteed that the underlying type of the returned <a href="http://localhost:8080/io#WriteCloser">io.WriteCloser</a>
+is a *<a href="index.html#Writer">Writer</a>.
+
+			
+			
+
+		
+		
+			
+			
+			<h2 id="Order">type <a href="../../../src/compress/lzw/reader.go?s=940:954#L19">Order</a>
+				<a class="permalink" href="index.html#Order">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Order specifies the bit ordering in an LZW data stream.
+
+			<pre>type Order <a href="../../builtin/index.html#int">int</a></pre>
+
+			
+				
+				<pre>const (
+    <span class="comment">// LSB means Least Significant Bits first, as used in the GIF file format.</span>
+    <span id="LSB">LSB</span> <a href="index.html#Order">Order</a> = <a href="../../builtin/index.html#iota">iota</a>
+    <span class="comment">// MSB means Most Significant Bits first, as used in the TIFF and PDF</span>
+    <span class="comment">// file formats.</span>
+    <span id="MSB">MSB</span>
+)</pre>
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="Reader">type <a href="../../../src/compress/lzw/reader.go?s=1346:2925#L37">Reader</a>
+				<a class="permalink" href="index.html#Reader">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Reader is an io.Reader which can be used to read compressed data in the
+LZW format.
+
+			<pre>type Reader struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="Reader.Close">func (*Reader) <a href="../../../src/compress/lzw/reader.go?s=6400:6430#L220">Close</a>
+					<a class="permalink" href="index.html#Reader.Close">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (r *<a href="index.html#Reader">Reader</a>) Close() <a href="../../builtin/index.html#error">error</a></pre>
+				<p>Close closes the <a href="index.html#Reader">Reader</a> and returns an error for any future read operation.
+It does not close the underlying <a href="http://localhost:8080/io#Reader">io.Reader</a>.
+
+				
+				
+				
+			
+				
+				<h3 id="Reader.Read">func (*Reader) <a href="../../../src/compress/lzw/reader.go?s=3749:3793#L112">Read</a>
+					<a class="permalink" href="index.html#Reader.Read">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (r *<a href="index.html#Reader">Reader</a>) Read(b []<a href="../../builtin/index.html#byte">byte</a>) (<a href="../../builtin/index.html#int">int</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+				<p>Read implements io.Reader, reading uncompressed bytes from its underlying <a href="index.html#Reader">Reader</a>.
+
+				
+				
+				
+			
+				
+				<h3 id="Reader.Reset">func (*Reader) <a href="../../../src/compress/lzw/reader.go?s=6591:6655#L227">Reset</a>
+					<a class="permalink" href="index.html#Reader.Reset">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (r *<a href="index.html#Reader">Reader</a>) Reset(src <a href="../../io/index.html">io</a>.<a href="../../io/index.html#Reader">Reader</a>, order <a href="index.html#Order">Order</a>, litWidth <a href="../../builtin/index.html#int">int</a>)</pre>
+				<p>Reset clears the <a href="index.html#Reader">Reader</a>&apos;s state and allows it to be reused again
+as a new <a href="index.html#Reader">Reader</a>.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Writer">type <a href="../../../src/compress/lzw/writer.go?s=973:2033#L26">Writer</a>
+				<a class="permalink" href="index.html#Writer">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Writer is an LZW compressor. It writes the compressed form of the data
+to an underlying writer (see <a href="index.html#NewWriter">NewWriter</a>).
+
+			<pre>type Writer struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="Writer.Close">func (*Writer) <a href="../../../src/compress/lzw/writer.go?s=5711:5741#L190">Close</a>
+					<a class="permalink" href="index.html#Writer.Close">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (w *<a href="index.html#Writer">Writer</a>) Close() <a href="../../builtin/index.html#error">error</a></pre>
+				<p>Close closes the <a href="index.html#Writer">Writer</a>, flushing any pending output. It does not close
+w&apos;s underlying writer.
+
+				
+				
+				
+			
+				
+				<h3 id="Writer.Reset">func (*Writer) <a href="../../../src/compress/lzw/writer.go?s=6669:6733#L233">Reset</a>
+					<a class="permalink" href="index.html#Writer.Reset">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (w *<a href="index.html#Writer">Writer</a>) Reset(dst <a href="../../io/index.html">io</a>.<a href="../../io/index.html#Writer">Writer</a>, order <a href="index.html#Order">Order</a>, litWidth <a href="../../builtin/index.html#int">int</a>)</pre>
+				<p>Reset clears the <a href="index.html#Writer">Writer</a>&apos;s state and allows it to be reused again
+as a new <a href="index.html#Writer">Writer</a>.
+
+				
+				
+				
+			
+				
+				<h3 id="Writer.Write">func (*Writer) <a href="../../../src/compress/lzw/writer.go?s=3503:3554#L112">Write</a>
+					<a class="permalink" href="index.html#Writer.Write">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (w *<a href="index.html#Writer">Writer</a>) Write(p []<a href="../../builtin/index.html#byte">byte</a>) (n <a href="../../builtin/index.html#int">int</a>, err <a href="../../builtin/index.html#error">error</a>)</pre>
+				<p>Write writes a compressed representation of p to w&apos;s underlying writer.
+
+				
+				
+				
+			
+		
+	
+
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

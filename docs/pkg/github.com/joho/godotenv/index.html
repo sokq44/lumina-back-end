@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>godotenv - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package godotenv
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "github.com/joho/godotenv"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+			
+				<dd><a href="index.html#pkg-subdirectories">Subdirectories</a></dd>
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>Package godotenv is a go port of the ruby dotenv library (<a href="https://github.com/bkeepers/dotenv">https://github.com/bkeepers/dotenv</a>)
+<p>Examples/readme can be found on the GitHub page at <a href="https://github.com/joho/godotenv">https://github.com/joho/godotenv</a>
+<p>The TL;DR is that you make a .env file that looks something like
+<pre>SOME_ENV_VAR=somevalue
+</pre>
+<p>and then in your go code you can call
+<pre>godotenv.Load()
+</pre>
+<p>and all the env vars declared in .env will be available through os.Getenv(&quot;SOME_ENV_VAR&quot;)
+
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+			
+			
+				
+				<dd><a href="index.html#Exec">func Exec(filenames []string, cmd string, cmdArgs []string, overload bool) error</a></dd>
+			
+				
+				<dd><a href="index.html#Load">func Load(filenames ...string) (err error)</a></dd>
+			
+				
+				<dd><a href="index.html#Marshal">func Marshal(envMap map[string]string) (string, error)</a></dd>
+			
+				
+				<dd><a href="index.html#Overload">func Overload(filenames ...string) (err error)</a></dd>
+			
+				
+				<dd><a href="index.html#Parse">func Parse(r io.Reader) (map[string]string, error)</a></dd>
+			
+				
+				<dd><a href="index.html#Read">func Read(filenames ...string) (envMap map[string]string, err error)</a></dd>
+			
+				
+				<dd><a href="index.html#Unmarshal">func Unmarshal(str string) (envMap map[string]string, err error)</a></dd>
+			
+				
+				<dd><a href="index.html#UnmarshalBytes">func UnmarshalBytes(src []byte) (map[string]string, error)</a></dd>
+			
+				
+				<dd><a href="index.html#Write">func Write(envMap map[string]string, filename string) error</a></dd>
+			
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../../../src/github.com/joho/godotenv/godotenv.go">godotenv.go</a>
+			
+				<a href="../../../../src/github.com/joho/godotenv/parser.go">parser.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+		
+		
+			
+			
+			<h2 id="Exec">func <a href="../../../../src/github.com/joho/godotenv/godotenv.go?s=3768:3848#L118">Exec</a>
+				<a class="permalink" href="index.html#Exec">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Exec(filenames []<a href="../../../builtin/index.html#string">string</a>, cmd <a href="../../../builtin/index.html#string">string</a>, cmdArgs []<a href="../../../builtin/index.html#string">string</a>, overload <a href="../../../builtin/index.html#bool">bool</a>) <a href="../../../builtin/index.html#error">error</a></pre>
+			<p>Exec loads env vars from the specified filenames (empty map falls back to default)
+then executes the cmd specified.
+<p>Simply hooks up os.Stdin/err/out to the command and calls Run().
+<p>If you want more fine grained control over your command it&apos;s recommended
+that you use `Load()`, `Overload()` or `Read()` and the `os/exec` package yourself.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Load">func <a href="../../../../src/github.com/joho/godotenv/godotenv.go?s=1401:1443#L41">Load</a>
+				<a class="permalink" href="index.html#Load">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Load(filenames ...<a href="../../../builtin/index.html#string">string</a>) (err <a href="../../../builtin/index.html#error">error</a>)</pre>
+			<p>Load will read your env file(s) and load them into ENV for this process.
+<p>Call this function as close as possible to the start of your program (ideally in main).
+<p>If you call Load without any args it will default to loading .env in the current path.
+<p>You can otherwise tell it which files to load (there can be more than one) like:
+<pre>godotenv.Load(&quot;fileone&quot;, &quot;filetwo&quot;)
+</pre>
+<p>It&apos;s important to note that it WILL NOT OVERRIDE an env variable that already exists - consider the .env file to set dev vars or sensible defaults.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Marshal">func <a href="../../../../src/github.com/joho/godotenv/godotenv.go?s=4644:4698#L154">Marshal</a>
+				<a class="permalink" href="index.html#Marshal">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Marshal(envMap map[<a href="../../../builtin/index.html#string">string</a>]<a href="../../../builtin/index.html#string">string</a>) (<a href="../../../builtin/index.html#string">string</a>, <a href="../../../builtin/index.html#error">error</a>)</pre>
+			<p>Marshal outputs the given environment as a dotenv-formatted environment file.
+Each line is in the format: KEY=&quot;VALUE&quot; where VALUE is backslash-escaped.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Overload">func <a href="../../../../src/github.com/joho/godotenv/godotenv.go?s=2178:2224#L64">Overload</a>
+				<a class="permalink" href="index.html#Overload">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Overload(filenames ...<a href="../../../builtin/index.html#string">string</a>) (err <a href="../../../builtin/index.html#error">error</a>)</pre>
+			<p>Overload will read your env file(s) and load them into ENV for this process.
+<p>Call this function as close as possible to the start of your program (ideally in main).
+<p>If you call Overload without any args it will default to loading .env in the current path.
+<p>You can otherwise tell it which files to load (there can be more than one) like:
+<pre>godotenv.Overload(&quot;fileone&quot;, &quot;filetwo&quot;)
+</pre>
+<p>It&apos;s important to note this WILL OVERRIDE an env variable that already exists - consider the .env file to forcefully set all vars.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Parse">func <a href="../../../../src/github.com/joho/godotenv/godotenv.go?s=674:724#L20">Parse</a>
+				<a class="permalink" href="index.html#Parse">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Parse(r <a href="../../../io/index.html">io</a>.<a href="../../../io/index.html#Reader">Reader</a>) (map[<a href="../../../builtin/index.html#string">string</a>]<a href="../../../builtin/index.html#string">string</a>, <a href="../../../builtin/index.html#error">error</a>)</pre>
+			<p>Parse reads an env file from io.Reader, returning a map of keys and values.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Read">func <a href="../../../../src/github.com/joho/godotenv/godotenv.go?s=2556:2624#L78">Read</a>
+				<a class="permalink" href="index.html#Read">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Read(filenames ...<a href="../../../builtin/index.html#string">string</a>) (envMap map[<a href="../../../builtin/index.html#string">string</a>]<a href="../../../builtin/index.html#string">string</a>, err <a href="../../../builtin/index.html#error">error</a>)</pre>
+			<p>Read all env (with same file loading semantics as Load) but return values as
+a map rather than automatically writing values into env
+
+			
+			
+
+		
+			
+			
+			<h2 id="Unmarshal">func <a href="../../../../src/github.com/joho/godotenv/godotenv.go?s=3064:3128#L99">Unmarshal</a>
+				<a class="permalink" href="index.html#Unmarshal">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Unmarshal(str <a href="../../../builtin/index.html#string">string</a>) (envMap map[<a href="../../../builtin/index.html#string">string</a>]<a href="../../../builtin/index.html#string">string</a>, err <a href="../../../builtin/index.html#error">error</a>)</pre>
+			<p>Unmarshal reads an env file from a string, returning a map of keys and values.
+
+			
+			
+
+		
+			
+			
+			<h2 id="UnmarshalBytes">func <a href="../../../../src/github.com/joho/godotenv/godotenv.go?s=3266:3324#L104">UnmarshalBytes</a>
+				<a class="permalink" href="index.html#UnmarshalBytes">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func UnmarshalBytes(src []<a href="../../../builtin/index.html#byte">byte</a>) (map[<a href="../../../builtin/index.html#string">string</a>]<a href="../../../builtin/index.html#string">string</a>, <a href="../../../builtin/index.html#error">error</a>)</pre>
+			<p>UnmarshalBytes parses env file from byte slice of chars, returning a map of keys and values.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Write">func <a href="../../../../src/github.com/joho/godotenv/godotenv.go?s=4172:4231#L135">Write</a>
+				<a class="permalink" href="index.html#Write">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Write(envMap map[<a href="../../../builtin/index.html#string">string</a>]<a href="../../../builtin/index.html#string">string</a>, filename <a href="../../../builtin/index.html#string">string</a>) <a href="../../../builtin/index.html#error">error</a></pre>
+			<p>Write serializes the given environment and writes it to a file.
+
+			
+			
+
+		
+		
+	
+
+	
+
+
+
+
+
+	
+	
+		<h2 id="pkg-subdirectories">Subdirectories</h2>
+	
+	<div class="pkg-dir">
+		<table>
+			<tr>
+				<th class="pkg-name">Name</th>
+				<th class="pkg-synopsis">Synopsis</th>
+			</tr>
+
+			
+			<tr>
+				<td colspan="2"><a href="http://localhost:8080/pkg/github.com/joho/">..</a></td>
+			</tr>
+			
+
+			
+				<tr>
+				
+					<td class="pkg-name" style="padding-left: 0px;">
+						<a href="autoload/index.html">autoload</a>
+					</td>
+				
+					<td class="pkg-synopsis">
+						
+					</td>
+				</tr>
+			
+				<tr>
+				
+					<td class="pkg-name" style="padding-left: 0px;">
+						<a href="cmd/index.html">cmd</a>
+					</td>
+				
+					<td class="pkg-synopsis">
+						
+					</td>
+				</tr>
+			
+				<tr>
+				
+					<td class="pkg-name" style="padding-left: 20px;">
+						<a href="cmd/godotenv/index.html">godotenv</a>
+					</td>
+				
+					<td class="pkg-synopsis">
+						
+					</td>
+				</tr>
+			
+		</table>
+	</div>
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

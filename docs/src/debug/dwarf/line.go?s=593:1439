@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>src/debug/dwarf/line.go - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="./line.go?s=593:1439#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Source file
+    <a href="http://localhost:8080/src">src</a>/<a href="http://localhost:8080/src/debug">debug</a>/<a href="http://localhost:8080/src/debug/dwarf">dwarf</a>/<span class="text-muted">line.go</span>
+  </h1>
+
+
+
+
+
+  <h2>
+    Documentation: <a href="http://localhost:8080/pkg/debug/dwarf">debug/dwarf</a>
+  </h2>
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1&nbsp;&nbsp;</span><span class="comment">// Copyright 2015 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2&nbsp;&nbsp;</span><span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3&nbsp;&nbsp;</span><span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4&nbsp;&nbsp;</span>
+<span id="L5" class="ln">     5&nbsp;&nbsp;</span>package dwarf
+<span id="L6" class="ln">     6&nbsp;&nbsp;</span>
+<span id="L7" class="ln">     7&nbsp;&nbsp;</span>import (
+<span id="L8" class="ln">     8&nbsp;&nbsp;</span>	&#34;errors&#34;
+<span id="L9" class="ln">     9&nbsp;&nbsp;</span>	&#34;fmt&#34;
+<span id="L10" class="ln">    10&nbsp;&nbsp;</span>	&#34;io&#34;
+<span id="L11" class="ln">    11&nbsp;&nbsp;</span>	&#34;path&#34;
+<span id="L12" class="ln">    12&nbsp;&nbsp;</span>	&#34;strings&#34;
+<span id="L13" class="ln">    13&nbsp;&nbsp;</span>)
+<span id="L14" class="ln">    14&nbsp;&nbsp;</span>
+<span id="L15" class="ln">    15&nbsp;&nbsp;</span><span class="comment">// A LineReader reads a sequence of [LineEntry] structures from a DWARF</span>
+<span id="L16" class="ln">    16&nbsp;&nbsp;</span><span class="comment">// &#34;line&#34; section for a single compilation unit. LineEntries occur in</span>
+<span id="L17" class="ln">    17&nbsp;&nbsp;</span><span class="comment">// order of increasing PC and each [LineEntry] gives metadata for the</span>
+<span id="L18" class="ln">    18&nbsp;&nbsp;</span><span class="comment">// instructions from that [LineEntry]&#39;s PC to just before the next</span>
+<span id="L19" class="ln">    19&nbsp;&nbsp;</span><span class="comment">// [LineEntry]&#39;s PC. The last entry will have the [LineEntry.EndSequence] field set.</span>
+<span id="L20" class="ln">    20&nbsp;&nbsp;</span><span class="selection">type LineReader struct {
+<span id="L21" class="ln">    21&nbsp;&nbsp;</span>	buf buf
+<span id="L22" class="ln">    22&nbsp;&nbsp;</span>
+<span id="L23" class="ln">    23&nbsp;&nbsp;</span>	</span><span class="selection-comment">// Original .debug_line section data. Used by Seek.</span><span class="selection">
+<span id="L24" class="ln">    24&nbsp;&nbsp;</span>	section []byte
+<span id="L25" class="ln">    25&nbsp;&nbsp;</span>
+<span id="L26" class="ln">    26&nbsp;&nbsp;</span>	str     []byte </span><span class="selection-comment">// .debug_str</span><span class="selection">
+<span id="L27" class="ln">    27&nbsp;&nbsp;</span>	lineStr []byte </span><span class="selection-comment">// .debug_line_str</span><span class="selection">
+<span id="L28" class="ln">    28&nbsp;&nbsp;</span>
+<span id="L29" class="ln">    29&nbsp;&nbsp;</span>	</span><span class="selection-comment">// Header information</span><span class="selection">
+<span id="L30" class="ln">    30&nbsp;&nbsp;</span>	version              uint16
+<span id="L31" class="ln">    31&nbsp;&nbsp;</span>	addrsize             int
+<span id="L32" class="ln">    32&nbsp;&nbsp;</span>	segmentSelectorSize  int
+<span id="L33" class="ln">    33&nbsp;&nbsp;</span>	minInstructionLength int
+<span id="L34" class="ln">    34&nbsp;&nbsp;</span>	maxOpsPerInstruction int
+<span id="L35" class="ln">    35&nbsp;&nbsp;</span>	defaultIsStmt        bool
+<span id="L36" class="ln">    36&nbsp;&nbsp;</span>	lineBase             int
+<span id="L37" class="ln">    37&nbsp;&nbsp;</span>	lineRange            int
+<span id="L38" class="ln">    38&nbsp;&nbsp;</span>	opcodeBase           int
+<span id="L39" class="ln">    39&nbsp;&nbsp;</span>	opcodeLengths        []int
+<span id="L40" class="ln">    40&nbsp;&nbsp;</span>	directories          []string
+<span id="L41" class="ln">    41&nbsp;&nbsp;</span>	fileEntries          []*LineFile
+<span id="L42" class="ln">    42&nbsp;&nbsp;</span>
+<span id="L43" class="ln">    43&nbsp;&nbsp;</span>	programOffset Offset </span><span class="selection-comment">// section offset of line number program</span><span class="selection">
+<span id="L44" class="ln">    44&nbsp;&nbsp;</span>	endOffset     Offset </span><span class="selection-comment">// section offset of byte following program</span><span class="selection">
+<span id="L45" class="ln">    45&nbsp;&nbsp;</span>
+<span id="L46" class="ln">    46&nbsp;&nbsp;</span>	initialFileEntries int </span><span class="selection-comment">// initial length of fileEntries</span><span class="selection">
+<span id="L47" class="ln">    47&nbsp;&nbsp;</span>
+<span id="L48" class="ln">    48&nbsp;&nbsp;</span>	</span><span class="selection-comment">// Current line number program state machine registers</span><span class="selection">
+<span id="L49" class="ln">    49&nbsp;&nbsp;</span>	state     LineEntry </span><span class="selection-comment">// public state</span><span class="selection">
+<span id="L50" class="ln">    50&nbsp;&nbsp;</span>	fileIndex int       </span><span class="selection-comment">// private state</span><span class="selection">
+<span id="L51" class="ln">    51&nbsp;&nbsp;</span>}</span>
+<span id="L52" class="ln">    52&nbsp;&nbsp;</span>
+<span id="L53" class="ln">    53&nbsp;&nbsp;</span><span class="comment">// A LineEntry is a row in a DWARF line table.</span>
+<span id="L54" class="ln">    54&nbsp;&nbsp;</span>type LineEntry struct {
+<span id="L55" class="ln">    55&nbsp;&nbsp;</span>	<span class="comment">// Address is the program-counter value of a machine</span>
+<span id="L56" class="ln">    56&nbsp;&nbsp;</span>	<span class="comment">// instruction generated by the compiler. This LineEntry</span>
+<span id="L57" class="ln">    57&nbsp;&nbsp;</span>	<span class="comment">// applies to each instruction from Address to just before the</span>
+<span id="L58" class="ln">    58&nbsp;&nbsp;</span>	<span class="comment">// Address of the next LineEntry.</span>
+<span id="L59" class="ln">    59&nbsp;&nbsp;</span>	Address uint64
+<span id="L60" class="ln">    60&nbsp;&nbsp;</span>
+<span id="L61" class="ln">    61&nbsp;&nbsp;</span>	<span class="comment">// OpIndex is the index of an operation within a VLIW</span>
+<span id="L62" class="ln">    62&nbsp;&nbsp;</span>	<span class="comment">// instruction. The index of the first operation is 0. For</span>
+<span id="L63" class="ln">    63&nbsp;&nbsp;</span>	<span class="comment">// non-VLIW architectures, it will always be 0. Address and</span>
+<span id="L64" class="ln">    64&nbsp;&nbsp;</span>	<span class="comment">// OpIndex together form an operation pointer that can</span>
+<span id="L65" class="ln">    65&nbsp;&nbsp;</span>	<span class="comment">// reference any individual operation within the instruction</span>
+<span id="L66" class="ln">    66&nbsp;&nbsp;</span>	<span class="comment">// stream.</span>
+<span id="L67" class="ln">    67&nbsp;&nbsp;</span>	OpIndex int
+<span id="L68" class="ln">    68&nbsp;&nbsp;</span>
+<span id="L69" class="ln">    69&nbsp;&nbsp;</span>	<span class="comment">// File is the source file corresponding to these</span>
+<span id="L70" class="ln">    70&nbsp;&nbsp;</span>	<span class="comment">// instructions.</span>
+<span id="L71" class="ln">    71&nbsp;&nbsp;</span>	File *LineFile
+<span id="L72" class="ln">    72&nbsp;&nbsp;</span>
+<span id="L73" class="ln">    73&nbsp;&nbsp;</span>	<span class="comment">// Line is the source code line number corresponding to these</span>
+<span id="L74" class="ln">    74&nbsp;&nbsp;</span>	<span class="comment">// instructions. Lines are numbered beginning at 1. It may be</span>
+<span id="L75" class="ln">    75&nbsp;&nbsp;</span>	<span class="comment">// 0 if these instructions cannot be attributed to any source</span>
+<span id="L76" class="ln">    76&nbsp;&nbsp;</span>	<span class="comment">// line.</span>
+<span id="L77" class="ln">    77&nbsp;&nbsp;</span>	Line int
+<span id="L78" class="ln">    78&nbsp;&nbsp;</span>
+<span id="L79" class="ln">    79&nbsp;&nbsp;</span>	<span class="comment">// Column is the column number within the source line of these</span>
+<span id="L80" class="ln">    80&nbsp;&nbsp;</span>	<span class="comment">// instructions. Columns are numbered beginning at 1. It may</span>
+<span id="L81" class="ln">    81&nbsp;&nbsp;</span>	<span class="comment">// be 0 to indicate the &#34;left edge&#34; of the line.</span>
+<span id="L82" class="ln">    82&nbsp;&nbsp;</span>	Column int
+<span id="L83" class="ln">    83&nbsp;&nbsp;</span>
+<span id="L84" class="ln">    84&nbsp;&nbsp;</span>	<span class="comment">// IsStmt indicates that Address is a recommended breakpoint</span>
+<span id="L85" class="ln">    85&nbsp;&nbsp;</span>	<span class="comment">// location, such as the beginning of a line, statement, or a</span>
+<span id="L86" class="ln">    86&nbsp;&nbsp;</span>	<span class="comment">// distinct subpart of a statement.</span>
+<span id="L87" class="ln">    87&nbsp;&nbsp;</span>	IsStmt bool
+<span id="L88" class="ln">    88&nbsp;&nbsp;</span>
+<span id="L89" class="ln">    89&nbsp;&nbsp;</span>	<span class="comment">// BasicBlock indicates that Address is the beginning of a</span>
+<span id="L90" class="ln">    90&nbsp;&nbsp;</span>	<span class="comment">// basic block.</span>
+<span id="L91" class="ln">    91&nbsp;&nbsp;</span>	BasicBlock bool
+<span id="L92" class="ln">    92&nbsp;&nbsp;</span>
+<span id="L93" class="ln">    93&nbsp;&nbsp;</span>	<span class="comment">// PrologueEnd indicates that Address is one (of possibly</span>
+<span id="L94" class="ln">    94&nbsp;&nbsp;</span>	<span class="comment">// many) PCs where execution should be suspended for a</span>
+<span id="L95" class="ln">    95&nbsp;&nbsp;</span>	<span class="comment">// breakpoint on entry to the containing function.</span>
+<span id="L96" class="ln">    96&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L97" class="ln">    97&nbsp;&nbsp;</span>	<span class="comment">// Added in DWARF 3.</span>
+<span id="L98" class="ln">    98&nbsp;&nbsp;</span>	PrologueEnd bool
+<span id="L99" class="ln">    99&nbsp;&nbsp;</span>
+<span id="L100" class="ln">   100&nbsp;&nbsp;</span>	<span class="comment">// EpilogueBegin indicates that Address is one (of possibly</span>
+<span id="L101" class="ln">   101&nbsp;&nbsp;</span>	<span class="comment">// many) PCs where execution should be suspended for a</span>
+<span id="L102" class="ln">   102&nbsp;&nbsp;</span>	<span class="comment">// breakpoint on exit from this function.</span>
+<span id="L103" class="ln">   103&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L104" class="ln">   104&nbsp;&nbsp;</span>	<span class="comment">// Added in DWARF 3.</span>
+<span id="L105" class="ln">   105&nbsp;&nbsp;</span>	EpilogueBegin bool
+<span id="L106" class="ln">   106&nbsp;&nbsp;</span>
+<span id="L107" class="ln">   107&nbsp;&nbsp;</span>	<span class="comment">// ISA is the instruction set architecture for these</span>
+<span id="L108" class="ln">   108&nbsp;&nbsp;</span>	<span class="comment">// instructions. Possible ISA values should be defined by the</span>
+<span id="L109" class="ln">   109&nbsp;&nbsp;</span>	<span class="comment">// applicable ABI specification.</span>
+<span id="L110" class="ln">   110&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L111" class="ln">   111&nbsp;&nbsp;</span>	<span class="comment">// Added in DWARF 3.</span>
+<span id="L112" class="ln">   112&nbsp;&nbsp;</span>	ISA int
+<span id="L113" class="ln">   113&nbsp;&nbsp;</span>
+<span id="L114" class="ln">   114&nbsp;&nbsp;</span>	<span class="comment">// Discriminator is an arbitrary integer indicating the block</span>
+<span id="L115" class="ln">   115&nbsp;&nbsp;</span>	<span class="comment">// to which these instructions belong. It serves to</span>
+<span id="L116" class="ln">   116&nbsp;&nbsp;</span>	<span class="comment">// distinguish among multiple blocks that may all have with</span>
+<span id="L117" class="ln">   117&nbsp;&nbsp;</span>	<span class="comment">// the same source file, line, and column. Where only one</span>
+<span id="L118" class="ln">   118&nbsp;&nbsp;</span>	<span class="comment">// block exists for a given source position, it should be 0.</span>
+<span id="L119" class="ln">   119&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L120" class="ln">   120&nbsp;&nbsp;</span>	<span class="comment">// Added in DWARF 3.</span>
+<span id="L121" class="ln">   121&nbsp;&nbsp;</span>	Discriminator int
+<span id="L122" class="ln">   122&nbsp;&nbsp;</span>
+<span id="L123" class="ln">   123&nbsp;&nbsp;</span>	<span class="comment">// EndSequence indicates that Address is the first byte after</span>
+<span id="L124" class="ln">   124&nbsp;&nbsp;</span>	<span class="comment">// the end of a sequence of target machine instructions. If it</span>
+<span id="L125" class="ln">   125&nbsp;&nbsp;</span>	<span class="comment">// is set, only this and the Address field are meaningful. A</span>
+<span id="L126" class="ln">   126&nbsp;&nbsp;</span>	<span class="comment">// line number table may contain information for multiple</span>
+<span id="L127" class="ln">   127&nbsp;&nbsp;</span>	<span class="comment">// potentially disjoint instruction sequences. The last entry</span>
+<span id="L128" class="ln">   128&nbsp;&nbsp;</span>	<span class="comment">// in a line table should always have EndSequence set.</span>
+<span id="L129" class="ln">   129&nbsp;&nbsp;</span>	EndSequence bool
+<span id="L130" class="ln">   130&nbsp;&nbsp;</span>}
+<span id="L131" class="ln">   131&nbsp;&nbsp;</span>
+<span id="L132" class="ln">   132&nbsp;&nbsp;</span><span class="comment">// A LineFile is a source file referenced by a DWARF line table entry.</span>
+<span id="L133" class="ln">   133&nbsp;&nbsp;</span>type LineFile struct {
+<span id="L134" class="ln">   134&nbsp;&nbsp;</span>	Name   string
+<span id="L135" class="ln">   135&nbsp;&nbsp;</span>	Mtime  uint64 <span class="comment">// Implementation defined modification time, or 0 if unknown</span>
+<span id="L136" class="ln">   136&nbsp;&nbsp;</span>	Length int    <span class="comment">// File length, or 0 if unknown</span>
+<span id="L137" class="ln">   137&nbsp;&nbsp;</span>}
+<span id="L138" class="ln">   138&nbsp;&nbsp;</span>
+<span id="L139" class="ln">   139&nbsp;&nbsp;</span><span class="comment">// LineReader returns a new reader for the line table of compilation</span>
+<span id="L140" class="ln">   140&nbsp;&nbsp;</span><span class="comment">// unit cu, which must be an [Entry] with tag [TagCompileUnit].</span>
+<span id="L141" class="ln">   141&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L142" class="ln">   142&nbsp;&nbsp;</span><span class="comment">// If this compilation unit has no line table, it returns nil, nil.</span>
+<span id="L143" class="ln">   143&nbsp;&nbsp;</span>func (d *Data) LineReader(cu *Entry) (*LineReader, error) {
+<span id="L144" class="ln">   144&nbsp;&nbsp;</span>	if d.line == nil {
+<span id="L145" class="ln">   145&nbsp;&nbsp;</span>		<span class="comment">// No line tables available.</span>
+<span id="L146" class="ln">   146&nbsp;&nbsp;</span>		return nil, nil
+<span id="L147" class="ln">   147&nbsp;&nbsp;</span>	}
+<span id="L148" class="ln">   148&nbsp;&nbsp;</span>
+<span id="L149" class="ln">   149&nbsp;&nbsp;</span>	<span class="comment">// Get line table information from cu.</span>
+<span id="L150" class="ln">   150&nbsp;&nbsp;</span>	off, ok := cu.Val(AttrStmtList).(int64)
+<span id="L151" class="ln">   151&nbsp;&nbsp;</span>	if !ok {
+<span id="L152" class="ln">   152&nbsp;&nbsp;</span>		<span class="comment">// cu has no line table.</span>
+<span id="L153" class="ln">   153&nbsp;&nbsp;</span>		return nil, nil
+<span id="L154" class="ln">   154&nbsp;&nbsp;</span>	}
+<span id="L155" class="ln">   155&nbsp;&nbsp;</span>	if off &lt; 0 || off &gt; int64(len(d.line)) {
+<span id="L156" class="ln">   156&nbsp;&nbsp;</span>		return nil, errors.New(&#34;AttrStmtList value out of range&#34;)
+<span id="L157" class="ln">   157&nbsp;&nbsp;</span>	}
+<span id="L158" class="ln">   158&nbsp;&nbsp;</span>	<span class="comment">// AttrCompDir is optional if all file names are absolute. Use</span>
+<span id="L159" class="ln">   159&nbsp;&nbsp;</span>	<span class="comment">// the empty string if it&#39;s not present.</span>
+<span id="L160" class="ln">   160&nbsp;&nbsp;</span>	compDir, _ := cu.Val(AttrCompDir).(string)
+<span id="L161" class="ln">   161&nbsp;&nbsp;</span>
+<span id="L162" class="ln">   162&nbsp;&nbsp;</span>	<span class="comment">// Create the LineReader.</span>
+<span id="L163" class="ln">   163&nbsp;&nbsp;</span>	u := &amp;d.unit[d.offsetToUnit(cu.Offset)]
+<span id="L164" class="ln">   164&nbsp;&nbsp;</span>	buf := makeBuf(d, u, &#34;line&#34;, Offset(off), d.line[off:])
+<span id="L165" class="ln">   165&nbsp;&nbsp;</span>	<span class="comment">// The compilation directory is implicitly directories[0].</span>
+<span id="L166" class="ln">   166&nbsp;&nbsp;</span>	r := LineReader{
+<span id="L167" class="ln">   167&nbsp;&nbsp;</span>		buf:     buf,
+<span id="L168" class="ln">   168&nbsp;&nbsp;</span>		section: d.line,
+<span id="L169" class="ln">   169&nbsp;&nbsp;</span>		str:     d.str,
+<span id="L170" class="ln">   170&nbsp;&nbsp;</span>		lineStr: d.lineStr,
+<span id="L171" class="ln">   171&nbsp;&nbsp;</span>	}
+<span id="L172" class="ln">   172&nbsp;&nbsp;</span>
+<span id="L173" class="ln">   173&nbsp;&nbsp;</span>	<span class="comment">// Read the header.</span>
+<span id="L174" class="ln">   174&nbsp;&nbsp;</span>	if err := r.readHeader(compDir); err != nil {
+<span id="L175" class="ln">   175&nbsp;&nbsp;</span>		return nil, err
+<span id="L176" class="ln">   176&nbsp;&nbsp;</span>	}
+<span id="L177" class="ln">   177&nbsp;&nbsp;</span>
+<span id="L178" class="ln">   178&nbsp;&nbsp;</span>	<span class="comment">// Initialize line reader state.</span>
+<span id="L179" class="ln">   179&nbsp;&nbsp;</span>	r.Reset()
+<span id="L180" class="ln">   180&nbsp;&nbsp;</span>
+<span id="L181" class="ln">   181&nbsp;&nbsp;</span>	return &amp;r, nil
+<span id="L182" class="ln">   182&nbsp;&nbsp;</span>}
+<span id="L183" class="ln">   183&nbsp;&nbsp;</span>
+<span id="L184" class="ln">   184&nbsp;&nbsp;</span><span class="comment">// readHeader reads the line number program header from r.buf and sets</span>
+<span id="L185" class="ln">   185&nbsp;&nbsp;</span><span class="comment">// all of the header fields in r.</span>
+<span id="L186" class="ln">   186&nbsp;&nbsp;</span>func (r *LineReader) readHeader(compDir string) error {
+<span id="L187" class="ln">   187&nbsp;&nbsp;</span>	buf := &amp;r.buf
+<span id="L188" class="ln">   188&nbsp;&nbsp;</span>
+<span id="L189" class="ln">   189&nbsp;&nbsp;</span>	<span class="comment">// Read basic header fields [DWARF2 6.2.4].</span>
+<span id="L190" class="ln">   190&nbsp;&nbsp;</span>	hdrOffset := buf.off
+<span id="L191" class="ln">   191&nbsp;&nbsp;</span>	unitLength, dwarf64 := buf.unitLength()
+<span id="L192" class="ln">   192&nbsp;&nbsp;</span>	r.endOffset = buf.off + unitLength
+<span id="L193" class="ln">   193&nbsp;&nbsp;</span>	if r.endOffset &gt; buf.off+Offset(len(buf.data)) {
+<span id="L194" class="ln">   194&nbsp;&nbsp;</span>		return DecodeError{&#34;line&#34;, hdrOffset, fmt.Sprintf(&#34;line table end %d exceeds section size %d&#34;, r.endOffset, buf.off+Offset(len(buf.data)))}
+<span id="L195" class="ln">   195&nbsp;&nbsp;</span>	}
+<span id="L196" class="ln">   196&nbsp;&nbsp;</span>	r.version = buf.uint16()
+<span id="L197" class="ln">   197&nbsp;&nbsp;</span>	if buf.err == nil &amp;&amp; (r.version &lt; 2 || r.version &gt; 5) {
+<span id="L198" class="ln">   198&nbsp;&nbsp;</span>		<span class="comment">// DWARF goes to all this effort to make new opcodes</span>
+<span id="L199" class="ln">   199&nbsp;&nbsp;</span>		<span class="comment">// backward-compatible, and then adds fields right in</span>
+<span id="L200" class="ln">   200&nbsp;&nbsp;</span>		<span class="comment">// the middle of the header in new versions, so we&#39;re</span>
+<span id="L201" class="ln">   201&nbsp;&nbsp;</span>		<span class="comment">// picky about only supporting known line table</span>
+<span id="L202" class="ln">   202&nbsp;&nbsp;</span>		<span class="comment">// versions.</span>
+<span id="L203" class="ln">   203&nbsp;&nbsp;</span>		return DecodeError{&#34;line&#34;, hdrOffset, fmt.Sprintf(&#34;unknown line table version %d&#34;, r.version)}
+<span id="L204" class="ln">   204&nbsp;&nbsp;</span>	}
+<span id="L205" class="ln">   205&nbsp;&nbsp;</span>	if r.version &gt;= 5 {
+<span id="L206" class="ln">   206&nbsp;&nbsp;</span>		r.addrsize = int(buf.uint8())
+<span id="L207" class="ln">   207&nbsp;&nbsp;</span>		r.segmentSelectorSize = int(buf.uint8())
+<span id="L208" class="ln">   208&nbsp;&nbsp;</span>	} else {
+<span id="L209" class="ln">   209&nbsp;&nbsp;</span>		r.addrsize = buf.format.addrsize()
+<span id="L210" class="ln">   210&nbsp;&nbsp;</span>		r.segmentSelectorSize = 0
+<span id="L211" class="ln">   211&nbsp;&nbsp;</span>	}
+<span id="L212" class="ln">   212&nbsp;&nbsp;</span>	var headerLength Offset
+<span id="L213" class="ln">   213&nbsp;&nbsp;</span>	if dwarf64 {
+<span id="L214" class="ln">   214&nbsp;&nbsp;</span>		headerLength = Offset(buf.uint64())
+<span id="L215" class="ln">   215&nbsp;&nbsp;</span>	} else {
+<span id="L216" class="ln">   216&nbsp;&nbsp;</span>		headerLength = Offset(buf.uint32())
+<span id="L217" class="ln">   217&nbsp;&nbsp;</span>	}
+<span id="L218" class="ln">   218&nbsp;&nbsp;</span>	programOffset := buf.off + headerLength
+<span id="L219" class="ln">   219&nbsp;&nbsp;</span>	if programOffset &gt; r.endOffset {
+<span id="L220" class="ln">   220&nbsp;&nbsp;</span>		return DecodeError{&#34;line&#34;, hdrOffset, fmt.Sprintf(&#34;malformed line table: program offset %d exceeds end offset %d&#34;, programOffset, r.endOffset)}
+<span id="L221" class="ln">   221&nbsp;&nbsp;</span>	}
+<span id="L222" class="ln">   222&nbsp;&nbsp;</span>	r.programOffset = programOffset
+<span id="L223" class="ln">   223&nbsp;&nbsp;</span>	r.minInstructionLength = int(buf.uint8())
+<span id="L224" class="ln">   224&nbsp;&nbsp;</span>	if r.version &gt;= 4 {
+<span id="L225" class="ln">   225&nbsp;&nbsp;</span>		<span class="comment">// [DWARF4 6.2.4]</span>
+<span id="L226" class="ln">   226&nbsp;&nbsp;</span>		r.maxOpsPerInstruction = int(buf.uint8())
+<span id="L227" class="ln">   227&nbsp;&nbsp;</span>	} else {
+<span id="L228" class="ln">   228&nbsp;&nbsp;</span>		r.maxOpsPerInstruction = 1
+<span id="L229" class="ln">   229&nbsp;&nbsp;</span>	}
+<span id="L230" class="ln">   230&nbsp;&nbsp;</span>	r.defaultIsStmt = buf.uint8() != 0
+<span id="L231" class="ln">   231&nbsp;&nbsp;</span>	r.lineBase = int(int8(buf.uint8()))
+<span id="L232" class="ln">   232&nbsp;&nbsp;</span>	r.lineRange = int(buf.uint8())
+<span id="L233" class="ln">   233&nbsp;&nbsp;</span>
+<span id="L234" class="ln">   234&nbsp;&nbsp;</span>	<span class="comment">// Validate header.</span>
+<span id="L235" class="ln">   235&nbsp;&nbsp;</span>	if buf.err != nil {
+<span id="L236" class="ln">   236&nbsp;&nbsp;</span>		return buf.err
+<span id="L237" class="ln">   237&nbsp;&nbsp;</span>	}
+<span id="L238" class="ln">   238&nbsp;&nbsp;</span>	if r.maxOpsPerInstruction == 0 {
+<span id="L239" class="ln">   239&nbsp;&nbsp;</span>		return DecodeError{&#34;line&#34;, hdrOffset, &#34;invalid maximum operations per instruction: 0&#34;}
+<span id="L240" class="ln">   240&nbsp;&nbsp;</span>	}
+<span id="L241" class="ln">   241&nbsp;&nbsp;</span>	if r.lineRange == 0 {
+<span id="L242" class="ln">   242&nbsp;&nbsp;</span>		return DecodeError{&#34;line&#34;, hdrOffset, &#34;invalid line range: 0&#34;}
+<span id="L243" class="ln">   243&nbsp;&nbsp;</span>	}
+<span id="L244" class="ln">   244&nbsp;&nbsp;</span>
+<span id="L245" class="ln">   245&nbsp;&nbsp;</span>	<span class="comment">// Read standard opcode length table. This table starts with opcode 1.</span>
+<span id="L246" class="ln">   246&nbsp;&nbsp;</span>	r.opcodeBase = int(buf.uint8())
+<span id="L247" class="ln">   247&nbsp;&nbsp;</span>	r.opcodeLengths = make([]int, r.opcodeBase)
+<span id="L248" class="ln">   248&nbsp;&nbsp;</span>	for i := 1; i &lt; r.opcodeBase; i++ {
+<span id="L249" class="ln">   249&nbsp;&nbsp;</span>		r.opcodeLengths[i] = int(buf.uint8())
+<span id="L250" class="ln">   250&nbsp;&nbsp;</span>	}
+<span id="L251" class="ln">   251&nbsp;&nbsp;</span>
+<span id="L252" class="ln">   252&nbsp;&nbsp;</span>	<span class="comment">// Validate opcode lengths.</span>
+<span id="L253" class="ln">   253&nbsp;&nbsp;</span>	if buf.err != nil {
+<span id="L254" class="ln">   254&nbsp;&nbsp;</span>		return buf.err
+<span id="L255" class="ln">   255&nbsp;&nbsp;</span>	}
+<span id="L256" class="ln">   256&nbsp;&nbsp;</span>	for i, length := range r.opcodeLengths {
+<span id="L257" class="ln">   257&nbsp;&nbsp;</span>		if known, ok := knownOpcodeLengths[i]; ok &amp;&amp; known != length {
+<span id="L258" class="ln">   258&nbsp;&nbsp;</span>			return DecodeError{&#34;line&#34;, hdrOffset, fmt.Sprintf(&#34;opcode %d expected to have length %d, but has length %d&#34;, i, known, length)}
+<span id="L259" class="ln">   259&nbsp;&nbsp;</span>		}
+<span id="L260" class="ln">   260&nbsp;&nbsp;</span>	}
+<span id="L261" class="ln">   261&nbsp;&nbsp;</span>
+<span id="L262" class="ln">   262&nbsp;&nbsp;</span>	if r.version &lt; 5 {
+<span id="L263" class="ln">   263&nbsp;&nbsp;</span>		<span class="comment">// Read include directories table.</span>
+<span id="L264" class="ln">   264&nbsp;&nbsp;</span>		r.directories = []string{compDir}
+<span id="L265" class="ln">   265&nbsp;&nbsp;</span>		for {
+<span id="L266" class="ln">   266&nbsp;&nbsp;</span>			directory := buf.string()
+<span id="L267" class="ln">   267&nbsp;&nbsp;</span>			if buf.err != nil {
+<span id="L268" class="ln">   268&nbsp;&nbsp;</span>				return buf.err
+<span id="L269" class="ln">   269&nbsp;&nbsp;</span>			}
+<span id="L270" class="ln">   270&nbsp;&nbsp;</span>			if len(directory) == 0 {
+<span id="L271" class="ln">   271&nbsp;&nbsp;</span>				break
+<span id="L272" class="ln">   272&nbsp;&nbsp;</span>			}
+<span id="L273" class="ln">   273&nbsp;&nbsp;</span>			if !pathIsAbs(directory) {
+<span id="L274" class="ln">   274&nbsp;&nbsp;</span>				<span class="comment">// Relative paths are implicitly relative to</span>
+<span id="L275" class="ln">   275&nbsp;&nbsp;</span>				<span class="comment">// the compilation directory.</span>
+<span id="L276" class="ln">   276&nbsp;&nbsp;</span>				directory = pathJoin(compDir, directory)
+<span id="L277" class="ln">   277&nbsp;&nbsp;</span>			}
+<span id="L278" class="ln">   278&nbsp;&nbsp;</span>			r.directories = append(r.directories, directory)
+<span id="L279" class="ln">   279&nbsp;&nbsp;</span>		}
+<span id="L280" class="ln">   280&nbsp;&nbsp;</span>
+<span id="L281" class="ln">   281&nbsp;&nbsp;</span>		<span class="comment">// Read file name list. File numbering starts with 1,</span>
+<span id="L282" class="ln">   282&nbsp;&nbsp;</span>		<span class="comment">// so leave the first entry nil.</span>
+<span id="L283" class="ln">   283&nbsp;&nbsp;</span>		r.fileEntries = make([]*LineFile, 1)
+<span id="L284" class="ln">   284&nbsp;&nbsp;</span>		for {
+<span id="L285" class="ln">   285&nbsp;&nbsp;</span>			if done, err := r.readFileEntry(); err != nil {
+<span id="L286" class="ln">   286&nbsp;&nbsp;</span>				return err
+<span id="L287" class="ln">   287&nbsp;&nbsp;</span>			} else if done {
+<span id="L288" class="ln">   288&nbsp;&nbsp;</span>				break
+<span id="L289" class="ln">   289&nbsp;&nbsp;</span>			}
+<span id="L290" class="ln">   290&nbsp;&nbsp;</span>		}
+<span id="L291" class="ln">   291&nbsp;&nbsp;</span>	} else {
+<span id="L292" class="ln">   292&nbsp;&nbsp;</span>		dirFormat := r.readLNCTFormat()
+<span id="L293" class="ln">   293&nbsp;&nbsp;</span>		c := buf.uint()
+<span id="L294" class="ln">   294&nbsp;&nbsp;</span>		r.directories = make([]string, c)
+<span id="L295" class="ln">   295&nbsp;&nbsp;</span>		for i := range r.directories {
+<span id="L296" class="ln">   296&nbsp;&nbsp;</span>			dir, _, _, err := r.readLNCT(dirFormat, dwarf64)
+<span id="L297" class="ln">   297&nbsp;&nbsp;</span>			if err != nil {
+<span id="L298" class="ln">   298&nbsp;&nbsp;</span>				return err
+<span id="L299" class="ln">   299&nbsp;&nbsp;</span>			}
+<span id="L300" class="ln">   300&nbsp;&nbsp;</span>			r.directories[i] = dir
+<span id="L301" class="ln">   301&nbsp;&nbsp;</span>		}
+<span id="L302" class="ln">   302&nbsp;&nbsp;</span>		fileFormat := r.readLNCTFormat()
+<span id="L303" class="ln">   303&nbsp;&nbsp;</span>		c = buf.uint()
+<span id="L304" class="ln">   304&nbsp;&nbsp;</span>		r.fileEntries = make([]*LineFile, c)
+<span id="L305" class="ln">   305&nbsp;&nbsp;</span>		for i := range r.fileEntries {
+<span id="L306" class="ln">   306&nbsp;&nbsp;</span>			name, mtime, size, err := r.readLNCT(fileFormat, dwarf64)
+<span id="L307" class="ln">   307&nbsp;&nbsp;</span>			if err != nil {
+<span id="L308" class="ln">   308&nbsp;&nbsp;</span>				return err
+<span id="L309" class="ln">   309&nbsp;&nbsp;</span>			}
+<span id="L310" class="ln">   310&nbsp;&nbsp;</span>			r.fileEntries[i] = &amp;LineFile{name, mtime, int(size)}
+<span id="L311" class="ln">   311&nbsp;&nbsp;</span>		}
+<span id="L312" class="ln">   312&nbsp;&nbsp;</span>	}
+<span id="L313" class="ln">   313&nbsp;&nbsp;</span>
+<span id="L314" class="ln">   314&nbsp;&nbsp;</span>	r.initialFileEntries = len(r.fileEntries)
+<span id="L315" class="ln">   315&nbsp;&nbsp;</span>
+<span id="L316" class="ln">   316&nbsp;&nbsp;</span>	return buf.err
+<span id="L317" class="ln">   317&nbsp;&nbsp;</span>}
+<span id="L318" class="ln">   318&nbsp;&nbsp;</span>
+<span id="L319" class="ln">   319&nbsp;&nbsp;</span><span class="comment">// lnctForm is a pair of an LNCT code and a form. This represents an</span>
+<span id="L320" class="ln">   320&nbsp;&nbsp;</span><span class="comment">// entry in the directory name or file name description in the DWARF 5</span>
+<span id="L321" class="ln">   321&nbsp;&nbsp;</span><span class="comment">// line number program header.</span>
+<span id="L322" class="ln">   322&nbsp;&nbsp;</span>type lnctForm struct {
+<span id="L323" class="ln">   323&nbsp;&nbsp;</span>	lnct int
+<span id="L324" class="ln">   324&nbsp;&nbsp;</span>	form format
+<span id="L325" class="ln">   325&nbsp;&nbsp;</span>}
+<span id="L326" class="ln">   326&nbsp;&nbsp;</span>
+<span id="L327" class="ln">   327&nbsp;&nbsp;</span><span class="comment">// readLNCTFormat reads an LNCT format description.</span>
+<span id="L328" class="ln">   328&nbsp;&nbsp;</span>func (r *LineReader) readLNCTFormat() []lnctForm {
+<span id="L329" class="ln">   329&nbsp;&nbsp;</span>	c := r.buf.uint8()
+<span id="L330" class="ln">   330&nbsp;&nbsp;</span>	ret := make([]lnctForm, c)
+<span id="L331" class="ln">   331&nbsp;&nbsp;</span>	for i := range ret {
+<span id="L332" class="ln">   332&nbsp;&nbsp;</span>		ret[i].lnct = int(r.buf.uint())
+<span id="L333" class="ln">   333&nbsp;&nbsp;</span>		ret[i].form = format(r.buf.uint())
+<span id="L334" class="ln">   334&nbsp;&nbsp;</span>	}
+<span id="L335" class="ln">   335&nbsp;&nbsp;</span>	return ret
+<span id="L336" class="ln">   336&nbsp;&nbsp;</span>}
+<span id="L337" class="ln">   337&nbsp;&nbsp;</span>
+<span id="L338" class="ln">   338&nbsp;&nbsp;</span><span class="comment">// readLNCT reads a sequence of LNCT entries and returns path information.</span>
+<span id="L339" class="ln">   339&nbsp;&nbsp;</span>func (r *LineReader) readLNCT(s []lnctForm, dwarf64 bool) (path string, mtime uint64, size uint64, err error) {
+<span id="L340" class="ln">   340&nbsp;&nbsp;</span>	var dir string
+<span id="L341" class="ln">   341&nbsp;&nbsp;</span>	for _, lf := range s {
+<span id="L342" class="ln">   342&nbsp;&nbsp;</span>		var str string
+<span id="L343" class="ln">   343&nbsp;&nbsp;</span>		var val uint64
+<span id="L344" class="ln">   344&nbsp;&nbsp;</span>		switch lf.form {
+<span id="L345" class="ln">   345&nbsp;&nbsp;</span>		case formString:
+<span id="L346" class="ln">   346&nbsp;&nbsp;</span>			str = r.buf.string()
+<span id="L347" class="ln">   347&nbsp;&nbsp;</span>		case formStrp, formLineStrp:
+<span id="L348" class="ln">   348&nbsp;&nbsp;</span>			var off uint64
+<span id="L349" class="ln">   349&nbsp;&nbsp;</span>			if dwarf64 {
+<span id="L350" class="ln">   350&nbsp;&nbsp;</span>				off = r.buf.uint64()
+<span id="L351" class="ln">   351&nbsp;&nbsp;</span>			} else {
+<span id="L352" class="ln">   352&nbsp;&nbsp;</span>				off = uint64(r.buf.uint32())
+<span id="L353" class="ln">   353&nbsp;&nbsp;</span>			}
+<span id="L354" class="ln">   354&nbsp;&nbsp;</span>			if uint64(int(off)) != off {
+<span id="L355" class="ln">   355&nbsp;&nbsp;</span>				return &#34;&#34;, 0, 0, DecodeError{&#34;line&#34;, r.buf.off, &#34;strp/line_strp offset out of range&#34;}
+<span id="L356" class="ln">   356&nbsp;&nbsp;</span>			}
+<span id="L357" class="ln">   357&nbsp;&nbsp;</span>			var b1 buf
+<span id="L358" class="ln">   358&nbsp;&nbsp;</span>			if lf.form == formStrp {
+<span id="L359" class="ln">   359&nbsp;&nbsp;</span>				b1 = makeBuf(r.buf.dwarf, r.buf.format, &#34;str&#34;, 0, r.str)
+<span id="L360" class="ln">   360&nbsp;&nbsp;</span>			} else {
+<span id="L361" class="ln">   361&nbsp;&nbsp;</span>				b1 = makeBuf(r.buf.dwarf, r.buf.format, &#34;line_str&#34;, 0, r.lineStr)
+<span id="L362" class="ln">   362&nbsp;&nbsp;</span>			}
+<span id="L363" class="ln">   363&nbsp;&nbsp;</span>			b1.skip(int(off))
+<span id="L364" class="ln">   364&nbsp;&nbsp;</span>			str = b1.string()
+<span id="L365" class="ln">   365&nbsp;&nbsp;</span>			if b1.err != nil {
+<span id="L366" class="ln">   366&nbsp;&nbsp;</span>				return &#34;&#34;, 0, 0, DecodeError{&#34;line&#34;, r.buf.off, b1.err.Error()}
+<span id="L367" class="ln">   367&nbsp;&nbsp;</span>			}
+<span id="L368" class="ln">   368&nbsp;&nbsp;</span>		case formStrpSup:
+<span id="L369" class="ln">   369&nbsp;&nbsp;</span>			<span class="comment">// Supplemental sections not yet supported.</span>
+<span id="L370" class="ln">   370&nbsp;&nbsp;</span>			if dwarf64 {
+<span id="L371" class="ln">   371&nbsp;&nbsp;</span>				r.buf.uint64()
+<span id="L372" class="ln">   372&nbsp;&nbsp;</span>			} else {
+<span id="L373" class="ln">   373&nbsp;&nbsp;</span>				r.buf.uint32()
+<span id="L374" class="ln">   374&nbsp;&nbsp;</span>			}
+<span id="L375" class="ln">   375&nbsp;&nbsp;</span>		case formStrx:
+<span id="L376" class="ln">   376&nbsp;&nbsp;</span>			<span class="comment">// .debug_line.dwo sections not yet supported.</span>
+<span id="L377" class="ln">   377&nbsp;&nbsp;</span>			r.buf.uint()
+<span id="L378" class="ln">   378&nbsp;&nbsp;</span>		case formStrx1:
+<span id="L379" class="ln">   379&nbsp;&nbsp;</span>			r.buf.uint8()
+<span id="L380" class="ln">   380&nbsp;&nbsp;</span>		case formStrx2:
+<span id="L381" class="ln">   381&nbsp;&nbsp;</span>			r.buf.uint16()
+<span id="L382" class="ln">   382&nbsp;&nbsp;</span>		case formStrx3:
+<span id="L383" class="ln">   383&nbsp;&nbsp;</span>			r.buf.uint24()
+<span id="L384" class="ln">   384&nbsp;&nbsp;</span>		case formStrx4:
+<span id="L385" class="ln">   385&nbsp;&nbsp;</span>			r.buf.uint32()
+<span id="L386" class="ln">   386&nbsp;&nbsp;</span>		case formData1:
+<span id="L387" class="ln">   387&nbsp;&nbsp;</span>			val = uint64(r.buf.uint8())
+<span id="L388" class="ln">   388&nbsp;&nbsp;</span>		case formData2:
+<span id="L389" class="ln">   389&nbsp;&nbsp;</span>			val = uint64(r.buf.uint16())
+<span id="L390" class="ln">   390&nbsp;&nbsp;</span>		case formData4:
+<span id="L391" class="ln">   391&nbsp;&nbsp;</span>			val = uint64(r.buf.uint32())
+<span id="L392" class="ln">   392&nbsp;&nbsp;</span>		case formData8:
+<span id="L393" class="ln">   393&nbsp;&nbsp;</span>			val = r.buf.uint64()
+<span id="L394" class="ln">   394&nbsp;&nbsp;</span>		case formData16:
+<span id="L395" class="ln">   395&nbsp;&nbsp;</span>			r.buf.bytes(16)
+<span id="L396" class="ln">   396&nbsp;&nbsp;</span>		case formDwarfBlock:
+<span id="L397" class="ln">   397&nbsp;&nbsp;</span>			r.buf.bytes(int(r.buf.uint()))
+<span id="L398" class="ln">   398&nbsp;&nbsp;</span>		case formUdata:
+<span id="L399" class="ln">   399&nbsp;&nbsp;</span>			val = r.buf.uint()
+<span id="L400" class="ln">   400&nbsp;&nbsp;</span>		}
+<span id="L401" class="ln">   401&nbsp;&nbsp;</span>
+<span id="L402" class="ln">   402&nbsp;&nbsp;</span>		switch lf.lnct {
+<span id="L403" class="ln">   403&nbsp;&nbsp;</span>		case lnctPath:
+<span id="L404" class="ln">   404&nbsp;&nbsp;</span>			path = str
+<span id="L405" class="ln">   405&nbsp;&nbsp;</span>		case lnctDirectoryIndex:
+<span id="L406" class="ln">   406&nbsp;&nbsp;</span>			if val &gt;= uint64(len(r.directories)) {
+<span id="L407" class="ln">   407&nbsp;&nbsp;</span>				return &#34;&#34;, 0, 0, DecodeError{&#34;line&#34;, r.buf.off, &#34;directory index out of range&#34;}
+<span id="L408" class="ln">   408&nbsp;&nbsp;</span>			}
+<span id="L409" class="ln">   409&nbsp;&nbsp;</span>			dir = r.directories[val]
+<span id="L410" class="ln">   410&nbsp;&nbsp;</span>		case lnctTimestamp:
+<span id="L411" class="ln">   411&nbsp;&nbsp;</span>			mtime = val
+<span id="L412" class="ln">   412&nbsp;&nbsp;</span>		case lnctSize:
+<span id="L413" class="ln">   413&nbsp;&nbsp;</span>			size = val
+<span id="L414" class="ln">   414&nbsp;&nbsp;</span>		case lnctMD5:
+<span id="L415" class="ln">   415&nbsp;&nbsp;</span>			<span class="comment">// Ignored.</span>
+<span id="L416" class="ln">   416&nbsp;&nbsp;</span>		}
+<span id="L417" class="ln">   417&nbsp;&nbsp;</span>	}
+<span id="L418" class="ln">   418&nbsp;&nbsp;</span>
+<span id="L419" class="ln">   419&nbsp;&nbsp;</span>	if dir != &#34;&#34; &amp;&amp; path != &#34;&#34; {
+<span id="L420" class="ln">   420&nbsp;&nbsp;</span>		path = pathJoin(dir, path)
+<span id="L421" class="ln">   421&nbsp;&nbsp;</span>	}
+<span id="L422" class="ln">   422&nbsp;&nbsp;</span>
+<span id="L423" class="ln">   423&nbsp;&nbsp;</span>	return path, mtime, size, nil
+<span id="L424" class="ln">   424&nbsp;&nbsp;</span>}
+<span id="L425" class="ln">   425&nbsp;&nbsp;</span>
+<span id="L426" class="ln">   426&nbsp;&nbsp;</span><span class="comment">// readFileEntry reads a file entry from either the header or a</span>
+<span id="L427" class="ln">   427&nbsp;&nbsp;</span><span class="comment">// DW_LNE_define_file extended opcode and adds it to r.fileEntries. A</span>
+<span id="L428" class="ln">   428&nbsp;&nbsp;</span><span class="comment">// true return value indicates that there are no more entries to read.</span>
+<span id="L429" class="ln">   429&nbsp;&nbsp;</span>func (r *LineReader) readFileEntry() (bool, error) {
+<span id="L430" class="ln">   430&nbsp;&nbsp;</span>	name := r.buf.string()
+<span id="L431" class="ln">   431&nbsp;&nbsp;</span>	if r.buf.err != nil {
+<span id="L432" class="ln">   432&nbsp;&nbsp;</span>		return false, r.buf.err
+<span id="L433" class="ln">   433&nbsp;&nbsp;</span>	}
+<span id="L434" class="ln">   434&nbsp;&nbsp;</span>	if len(name) == 0 {
+<span id="L435" class="ln">   435&nbsp;&nbsp;</span>		return true, nil
+<span id="L436" class="ln">   436&nbsp;&nbsp;</span>	}
+<span id="L437" class="ln">   437&nbsp;&nbsp;</span>	off := r.buf.off
+<span id="L438" class="ln">   438&nbsp;&nbsp;</span>	dirIndex := int(r.buf.uint())
+<span id="L439" class="ln">   439&nbsp;&nbsp;</span>	if !pathIsAbs(name) {
+<span id="L440" class="ln">   440&nbsp;&nbsp;</span>		if dirIndex &gt;= len(r.directories) {
+<span id="L441" class="ln">   441&nbsp;&nbsp;</span>			return false, DecodeError{&#34;line&#34;, off, &#34;directory index too large&#34;}
+<span id="L442" class="ln">   442&nbsp;&nbsp;</span>		}
+<span id="L443" class="ln">   443&nbsp;&nbsp;</span>		name = pathJoin(r.directories[dirIndex], name)
+<span id="L444" class="ln">   444&nbsp;&nbsp;</span>	}
+<span id="L445" class="ln">   445&nbsp;&nbsp;</span>	mtime := r.buf.uint()
+<span id="L446" class="ln">   446&nbsp;&nbsp;</span>	length := int(r.buf.uint())
+<span id="L447" class="ln">   447&nbsp;&nbsp;</span>
+<span id="L448" class="ln">   448&nbsp;&nbsp;</span>	<span class="comment">// If this is a dynamically added path and the cursor was</span>
+<span id="L449" class="ln">   449&nbsp;&nbsp;</span>	<span class="comment">// backed up, we may have already added this entry. Avoid</span>
+<span id="L450" class="ln">   450&nbsp;&nbsp;</span>	<span class="comment">// updating existing line table entries in this case. This</span>
+<span id="L451" class="ln">   451&nbsp;&nbsp;</span>	<span class="comment">// avoids an allocation and potential racy access to the slice</span>
+<span id="L452" class="ln">   452&nbsp;&nbsp;</span>	<span class="comment">// backing store if the user called Files.</span>
+<span id="L453" class="ln">   453&nbsp;&nbsp;</span>	if len(r.fileEntries) &lt; cap(r.fileEntries) {
+<span id="L454" class="ln">   454&nbsp;&nbsp;</span>		fe := r.fileEntries[:len(r.fileEntries)+1]
+<span id="L455" class="ln">   455&nbsp;&nbsp;</span>		if fe[len(fe)-1] != nil {
+<span id="L456" class="ln">   456&nbsp;&nbsp;</span>			<span class="comment">// We already processed this addition.</span>
+<span id="L457" class="ln">   457&nbsp;&nbsp;</span>			r.fileEntries = fe
+<span id="L458" class="ln">   458&nbsp;&nbsp;</span>			return false, nil
+<span id="L459" class="ln">   459&nbsp;&nbsp;</span>		}
+<span id="L460" class="ln">   460&nbsp;&nbsp;</span>	}
+<span id="L461" class="ln">   461&nbsp;&nbsp;</span>	r.fileEntries = append(r.fileEntries, &amp;LineFile{name, mtime, length})
+<span id="L462" class="ln">   462&nbsp;&nbsp;</span>	return false, nil
+<span id="L463" class="ln">   463&nbsp;&nbsp;</span>}
+<span id="L464" class="ln">   464&nbsp;&nbsp;</span>
+<span id="L465" class="ln">   465&nbsp;&nbsp;</span><span class="comment">// updateFile updates r.state.File after r.fileIndex has</span>
+<span id="L466" class="ln">   466&nbsp;&nbsp;</span><span class="comment">// changed or r.fileEntries has changed.</span>
+<span id="L467" class="ln">   467&nbsp;&nbsp;</span>func (r *LineReader) updateFile() {
+<span id="L468" class="ln">   468&nbsp;&nbsp;</span>	if r.fileIndex &lt; len(r.fileEntries) {
+<span id="L469" class="ln">   469&nbsp;&nbsp;</span>		r.state.File = r.fileEntries[r.fileIndex]
+<span id="L470" class="ln">   470&nbsp;&nbsp;</span>	} else {
+<span id="L471" class="ln">   471&nbsp;&nbsp;</span>		r.state.File = nil
+<span id="L472" class="ln">   472&nbsp;&nbsp;</span>	}
+<span id="L473" class="ln">   473&nbsp;&nbsp;</span>}
+<span id="L474" class="ln">   474&nbsp;&nbsp;</span>
+<span id="L475" class="ln">   475&nbsp;&nbsp;</span><span class="comment">// Next sets *entry to the next row in this line table and moves to</span>
+<span id="L476" class="ln">   476&nbsp;&nbsp;</span><span class="comment">// the next row. If there are no more entries and the line table is</span>
+<span id="L477" class="ln">   477&nbsp;&nbsp;</span><span class="comment">// properly terminated, it returns [io.EOF].</span>
+<span id="L478" class="ln">   478&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L479" class="ln">   479&nbsp;&nbsp;</span><span class="comment">// Rows are always in order of increasing entry.Address, but</span>
+<span id="L480" class="ln">   480&nbsp;&nbsp;</span><span class="comment">// entry.Line may go forward or backward.</span>
+<span id="L481" class="ln">   481&nbsp;&nbsp;</span>func (r *LineReader) Next(entry *LineEntry) error {
+<span id="L482" class="ln">   482&nbsp;&nbsp;</span>	if r.buf.err != nil {
+<span id="L483" class="ln">   483&nbsp;&nbsp;</span>		return r.buf.err
+<span id="L484" class="ln">   484&nbsp;&nbsp;</span>	}
+<span id="L485" class="ln">   485&nbsp;&nbsp;</span>
+<span id="L486" class="ln">   486&nbsp;&nbsp;</span>	<span class="comment">// Execute opcodes until we reach an opcode that emits a line</span>
+<span id="L487" class="ln">   487&nbsp;&nbsp;</span>	<span class="comment">// table entry.</span>
+<span id="L488" class="ln">   488&nbsp;&nbsp;</span>	for {
+<span id="L489" class="ln">   489&nbsp;&nbsp;</span>		if len(r.buf.data) == 0 {
+<span id="L490" class="ln">   490&nbsp;&nbsp;</span>			return io.EOF
+<span id="L491" class="ln">   491&nbsp;&nbsp;</span>		}
+<span id="L492" class="ln">   492&nbsp;&nbsp;</span>		emit := r.step(entry)
+<span id="L493" class="ln">   493&nbsp;&nbsp;</span>		if r.buf.err != nil {
+<span id="L494" class="ln">   494&nbsp;&nbsp;</span>			return r.buf.err
+<span id="L495" class="ln">   495&nbsp;&nbsp;</span>		}
+<span id="L496" class="ln">   496&nbsp;&nbsp;</span>		if emit {
+<span id="L497" class="ln">   497&nbsp;&nbsp;</span>			return nil
+<span id="L498" class="ln">   498&nbsp;&nbsp;</span>		}
+<span id="L499" class="ln">   499&nbsp;&nbsp;</span>	}
+<span id="L500" class="ln">   500&nbsp;&nbsp;</span>}
+<span id="L501" class="ln">   501&nbsp;&nbsp;</span>
+<span id="L502" class="ln">   502&nbsp;&nbsp;</span><span class="comment">// knownOpcodeLengths gives the opcode lengths (in varint arguments)</span>
+<span id="L503" class="ln">   503&nbsp;&nbsp;</span><span class="comment">// of known standard opcodes.</span>
+<span id="L504" class="ln">   504&nbsp;&nbsp;</span>var knownOpcodeLengths = map[int]int{
+<span id="L505" class="ln">   505&nbsp;&nbsp;</span>	lnsCopy:             0,
+<span id="L506" class="ln">   506&nbsp;&nbsp;</span>	lnsAdvancePC:        1,
+<span id="L507" class="ln">   507&nbsp;&nbsp;</span>	lnsAdvanceLine:      1,
+<span id="L508" class="ln">   508&nbsp;&nbsp;</span>	lnsSetFile:          1,
+<span id="L509" class="ln">   509&nbsp;&nbsp;</span>	lnsNegateStmt:       0,
+<span id="L510" class="ln">   510&nbsp;&nbsp;</span>	lnsSetBasicBlock:    0,
+<span id="L511" class="ln">   511&nbsp;&nbsp;</span>	lnsConstAddPC:       0,
+<span id="L512" class="ln">   512&nbsp;&nbsp;</span>	lnsSetPrologueEnd:   0,
+<span id="L513" class="ln">   513&nbsp;&nbsp;</span>	lnsSetEpilogueBegin: 0,
+<span id="L514" class="ln">   514&nbsp;&nbsp;</span>	lnsSetISA:           1,
+<span id="L515" class="ln">   515&nbsp;&nbsp;</span>	<span class="comment">// lnsFixedAdvancePC takes a uint8 rather than a varint; it&#39;s</span>
+<span id="L516" class="ln">   516&nbsp;&nbsp;</span>	<span class="comment">// unclear what length the header is supposed to claim, so</span>
+<span id="L517" class="ln">   517&nbsp;&nbsp;</span>	<span class="comment">// ignore it.</span>
+<span id="L518" class="ln">   518&nbsp;&nbsp;</span>}
+<span id="L519" class="ln">   519&nbsp;&nbsp;</span>
+<span id="L520" class="ln">   520&nbsp;&nbsp;</span><span class="comment">// step processes the next opcode and updates r.state. If the opcode</span>
+<span id="L521" class="ln">   521&nbsp;&nbsp;</span><span class="comment">// emits a row in the line table, this updates *entry and returns</span>
+<span id="L522" class="ln">   522&nbsp;&nbsp;</span><span class="comment">// true.</span>
+<span id="L523" class="ln">   523&nbsp;&nbsp;</span>func (r *LineReader) step(entry *LineEntry) bool {
+<span id="L524" class="ln">   524&nbsp;&nbsp;</span>	opcode := int(r.buf.uint8())
+<span id="L525" class="ln">   525&nbsp;&nbsp;</span>
+<span id="L526" class="ln">   526&nbsp;&nbsp;</span>	if opcode &gt;= r.opcodeBase {
+<span id="L527" class="ln">   527&nbsp;&nbsp;</span>		<span class="comment">// Special opcode [DWARF2 6.2.5.1, DWARF4 6.2.5.1]</span>
+<span id="L528" class="ln">   528&nbsp;&nbsp;</span>		adjustedOpcode := opcode - r.opcodeBase
+<span id="L529" class="ln">   529&nbsp;&nbsp;</span>		r.advancePC(adjustedOpcode / r.lineRange)
+<span id="L530" class="ln">   530&nbsp;&nbsp;</span>		lineDelta := r.lineBase + adjustedOpcode%r.lineRange
+<span id="L531" class="ln">   531&nbsp;&nbsp;</span>		r.state.Line += lineDelta
+<span id="L532" class="ln">   532&nbsp;&nbsp;</span>		goto emit
+<span id="L533" class="ln">   533&nbsp;&nbsp;</span>	}
+<span id="L534" class="ln">   534&nbsp;&nbsp;</span>
+<span id="L535" class="ln">   535&nbsp;&nbsp;</span>	switch opcode {
+<span id="L536" class="ln">   536&nbsp;&nbsp;</span>	case 0:
+<span id="L537" class="ln">   537&nbsp;&nbsp;</span>		<span class="comment">// Extended opcode [DWARF2 6.2.5.3]</span>
+<span id="L538" class="ln">   538&nbsp;&nbsp;</span>		length := Offset(r.buf.uint())
+<span id="L539" class="ln">   539&nbsp;&nbsp;</span>		startOff := r.buf.off
+<span id="L540" class="ln">   540&nbsp;&nbsp;</span>		opcode := r.buf.uint8()
+<span id="L541" class="ln">   541&nbsp;&nbsp;</span>
+<span id="L542" class="ln">   542&nbsp;&nbsp;</span>		switch opcode {
+<span id="L543" class="ln">   543&nbsp;&nbsp;</span>		case lneEndSequence:
+<span id="L544" class="ln">   544&nbsp;&nbsp;</span>			r.state.EndSequence = true
+<span id="L545" class="ln">   545&nbsp;&nbsp;</span>			*entry = r.state
+<span id="L546" class="ln">   546&nbsp;&nbsp;</span>			r.resetState()
+<span id="L547" class="ln">   547&nbsp;&nbsp;</span>
+<span id="L548" class="ln">   548&nbsp;&nbsp;</span>		case lneSetAddress:
+<span id="L549" class="ln">   549&nbsp;&nbsp;</span>			switch r.addrsize {
+<span id="L550" class="ln">   550&nbsp;&nbsp;</span>			case 1:
+<span id="L551" class="ln">   551&nbsp;&nbsp;</span>				r.state.Address = uint64(r.buf.uint8())
+<span id="L552" class="ln">   552&nbsp;&nbsp;</span>			case 2:
+<span id="L553" class="ln">   553&nbsp;&nbsp;</span>				r.state.Address = uint64(r.buf.uint16())
+<span id="L554" class="ln">   554&nbsp;&nbsp;</span>			case 4:
+<span id="L555" class="ln">   555&nbsp;&nbsp;</span>				r.state.Address = uint64(r.buf.uint32())
+<span id="L556" class="ln">   556&nbsp;&nbsp;</span>			case 8:
+<span id="L557" class="ln">   557&nbsp;&nbsp;</span>				r.state.Address = r.buf.uint64()
+<span id="L558" class="ln">   558&nbsp;&nbsp;</span>			default:
+<span id="L559" class="ln">   559&nbsp;&nbsp;</span>				r.buf.error(&#34;unknown address size&#34;)
+<span id="L560" class="ln">   560&nbsp;&nbsp;</span>			}
+<span id="L561" class="ln">   561&nbsp;&nbsp;</span>
+<span id="L562" class="ln">   562&nbsp;&nbsp;</span>		case lneDefineFile:
+<span id="L563" class="ln">   563&nbsp;&nbsp;</span>			if done, err := r.readFileEntry(); err != nil {
+<span id="L564" class="ln">   564&nbsp;&nbsp;</span>				r.buf.err = err
+<span id="L565" class="ln">   565&nbsp;&nbsp;</span>				return false
+<span id="L566" class="ln">   566&nbsp;&nbsp;</span>			} else if done {
+<span id="L567" class="ln">   567&nbsp;&nbsp;</span>				r.buf.err = DecodeError{&#34;line&#34;, startOff, &#34;malformed DW_LNE_define_file operation&#34;}
+<span id="L568" class="ln">   568&nbsp;&nbsp;</span>				return false
+<span id="L569" class="ln">   569&nbsp;&nbsp;</span>			}
+<span id="L570" class="ln">   570&nbsp;&nbsp;</span>			r.updateFile()
+<span id="L571" class="ln">   571&nbsp;&nbsp;</span>
+<span id="L572" class="ln">   572&nbsp;&nbsp;</span>		case lneSetDiscriminator:
+<span id="L573" class="ln">   573&nbsp;&nbsp;</span>			<span class="comment">// [DWARF4 6.2.5.3]</span>
+<span id="L574" class="ln">   574&nbsp;&nbsp;</span>			r.state.Discriminator = int(r.buf.uint())
+<span id="L575" class="ln">   575&nbsp;&nbsp;</span>		}
+<span id="L576" class="ln">   576&nbsp;&nbsp;</span>
+<span id="L577" class="ln">   577&nbsp;&nbsp;</span>		r.buf.skip(int(startOff + length - r.buf.off))
+<span id="L578" class="ln">   578&nbsp;&nbsp;</span>
+<span id="L579" class="ln">   579&nbsp;&nbsp;</span>		if opcode == lneEndSequence {
+<span id="L580" class="ln">   580&nbsp;&nbsp;</span>			return true
+<span id="L581" class="ln">   581&nbsp;&nbsp;</span>		}
+<span id="L582" class="ln">   582&nbsp;&nbsp;</span>
+<span id="L583" class="ln">   583&nbsp;&nbsp;</span>	<span class="comment">// Standard opcodes [DWARF2 6.2.5.2]</span>
+<span id="L584" class="ln">   584&nbsp;&nbsp;</span>	case lnsCopy:
+<span id="L585" class="ln">   585&nbsp;&nbsp;</span>		goto emit
+<span id="L586" class="ln">   586&nbsp;&nbsp;</span>
+<span id="L587" class="ln">   587&nbsp;&nbsp;</span>	case lnsAdvancePC:
+<span id="L588" class="ln">   588&nbsp;&nbsp;</span>		r.advancePC(int(r.buf.uint()))
+<span id="L589" class="ln">   589&nbsp;&nbsp;</span>
+<span id="L590" class="ln">   590&nbsp;&nbsp;</span>	case lnsAdvanceLine:
+<span id="L591" class="ln">   591&nbsp;&nbsp;</span>		r.state.Line += int(r.buf.int())
+<span id="L592" class="ln">   592&nbsp;&nbsp;</span>
+<span id="L593" class="ln">   593&nbsp;&nbsp;</span>	case lnsSetFile:
+<span id="L594" class="ln">   594&nbsp;&nbsp;</span>		r.fileIndex = int(r.buf.uint())
+<span id="L595" class="ln">   595&nbsp;&nbsp;</span>		r.updateFile()
+<span id="L596" class="ln">   596&nbsp;&nbsp;</span>
+<span id="L597" class="ln">   597&nbsp;&nbsp;</span>	case lnsSetColumn:
+<span id="L598" class="ln">   598&nbsp;&nbsp;</span>		r.state.Column = int(r.buf.uint())
+<span id="L599" class="ln">   599&nbsp;&nbsp;</span>
+<span id="L600" class="ln">   600&nbsp;&nbsp;</span>	case lnsNegateStmt:
+<span id="L601" class="ln">   601&nbsp;&nbsp;</span>		r.state.IsStmt = !r.state.IsStmt
+<span id="L602" class="ln">   602&nbsp;&nbsp;</span>
+<span id="L603" class="ln">   603&nbsp;&nbsp;</span>	case lnsSetBasicBlock:
+<span id="L604" class="ln">   604&nbsp;&nbsp;</span>		r.state.BasicBlock = true
+<span id="L605" class="ln">   605&nbsp;&nbsp;</span>
+<span id="L606" class="ln">   606&nbsp;&nbsp;</span>	case lnsConstAddPC:
+<span id="L607" class="ln">   607&nbsp;&nbsp;</span>		r.advancePC((255 - r.opcodeBase) / r.lineRange)
+<span id="L608" class="ln">   608&nbsp;&nbsp;</span>
+<span id="L609" class="ln">   609&nbsp;&nbsp;</span>	case lnsFixedAdvancePC:
+<span id="L610" class="ln">   610&nbsp;&nbsp;</span>		r.state.Address += uint64(r.buf.uint16())
+<span id="L611" class="ln">   611&nbsp;&nbsp;</span>
+<span id="L612" class="ln">   612&nbsp;&nbsp;</span>	<span class="comment">// DWARF3 standard opcodes [DWARF3 6.2.5.2]</span>
+<span id="L613" class="ln">   613&nbsp;&nbsp;</span>	case lnsSetPrologueEnd:
+<span id="L614" class="ln">   614&nbsp;&nbsp;</span>		r.state.PrologueEnd = true
+<span id="L615" class="ln">   615&nbsp;&nbsp;</span>
+<span id="L616" class="ln">   616&nbsp;&nbsp;</span>	case lnsSetEpilogueBegin:
+<span id="L617" class="ln">   617&nbsp;&nbsp;</span>		r.state.EpilogueBegin = true
+<span id="L618" class="ln">   618&nbsp;&nbsp;</span>
+<span id="L619" class="ln">   619&nbsp;&nbsp;</span>	case lnsSetISA:
+<span id="L620" class="ln">   620&nbsp;&nbsp;</span>		r.state.ISA = int(r.buf.uint())
+<span id="L621" class="ln">   621&nbsp;&nbsp;</span>
+<span id="L622" class="ln">   622&nbsp;&nbsp;</span>	default:
+<span id="L623" class="ln">   623&nbsp;&nbsp;</span>		<span class="comment">// Unhandled standard opcode. Skip the number of</span>
+<span id="L624" class="ln">   624&nbsp;&nbsp;</span>		<span class="comment">// arguments that the prologue says this opcode has.</span>
+<span id="L625" class="ln">   625&nbsp;&nbsp;</span>		for i := 0; i &lt; r.opcodeLengths[opcode]; i++ {
+<span id="L626" class="ln">   626&nbsp;&nbsp;</span>			r.buf.uint()
+<span id="L627" class="ln">   627&nbsp;&nbsp;</span>		}
+<span id="L628" class="ln">   628&nbsp;&nbsp;</span>	}
+<span id="L629" class="ln">   629&nbsp;&nbsp;</span>	return false
+<span id="L630" class="ln">   630&nbsp;&nbsp;</span>
+<span id="L631" class="ln">   631&nbsp;&nbsp;</span>emit:
+<span id="L632" class="ln">   632&nbsp;&nbsp;</span>	*entry = r.state
+<span id="L633" class="ln">   633&nbsp;&nbsp;</span>	r.state.BasicBlock = false
+<span id="L634" class="ln">   634&nbsp;&nbsp;</span>	r.state.PrologueEnd = false
+<span id="L635" class="ln">   635&nbsp;&nbsp;</span>	r.state.EpilogueBegin = false
+<span id="L636" class="ln">   636&nbsp;&nbsp;</span>	r.state.Discriminator = 0
+<span id="L637" class="ln">   637&nbsp;&nbsp;</span>	return true
+<span id="L638" class="ln">   638&nbsp;&nbsp;</span>}
+<span id="L639" class="ln">   639&nbsp;&nbsp;</span>
+<span id="L640" class="ln">   640&nbsp;&nbsp;</span><span class="comment">// advancePC advances &#34;operation pointer&#34; (the combination of Address</span>
+<span id="L641" class="ln">   641&nbsp;&nbsp;</span><span class="comment">// and OpIndex) in r.state by opAdvance steps.</span>
+<span id="L642" class="ln">   642&nbsp;&nbsp;</span>func (r *LineReader) advancePC(opAdvance int) {
+<span id="L643" class="ln">   643&nbsp;&nbsp;</span>	opIndex := r.state.OpIndex + opAdvance
+<span id="L644" class="ln">   644&nbsp;&nbsp;</span>	r.state.Address += uint64(r.minInstructionLength * (opIndex / r.maxOpsPerInstruction))
+<span id="L645" class="ln">   645&nbsp;&nbsp;</span>	r.state.OpIndex = opIndex % r.maxOpsPerInstruction
+<span id="L646" class="ln">   646&nbsp;&nbsp;</span>}
+<span id="L647" class="ln">   647&nbsp;&nbsp;</span>
+<span id="L648" class="ln">   648&nbsp;&nbsp;</span><span class="comment">// A LineReaderPos represents a position in a line table.</span>
+<span id="L649" class="ln">   649&nbsp;&nbsp;</span>type LineReaderPos struct {
+<span id="L650" class="ln">   650&nbsp;&nbsp;</span>	<span class="comment">// off is the current offset in the DWARF line section.</span>
+<span id="L651" class="ln">   651&nbsp;&nbsp;</span>	off Offset
+<span id="L652" class="ln">   652&nbsp;&nbsp;</span>	<span class="comment">// numFileEntries is the length of fileEntries.</span>
+<span id="L653" class="ln">   653&nbsp;&nbsp;</span>	numFileEntries int
+<span id="L654" class="ln">   654&nbsp;&nbsp;</span>	<span class="comment">// state and fileIndex are the statement machine state at</span>
+<span id="L655" class="ln">   655&nbsp;&nbsp;</span>	<span class="comment">// offset off.</span>
+<span id="L656" class="ln">   656&nbsp;&nbsp;</span>	state     LineEntry
+<span id="L657" class="ln">   657&nbsp;&nbsp;</span>	fileIndex int
+<span id="L658" class="ln">   658&nbsp;&nbsp;</span>}
+<span id="L659" class="ln">   659&nbsp;&nbsp;</span>
+<span id="L660" class="ln">   660&nbsp;&nbsp;</span><span class="comment">// Tell returns the current position in the line table.</span>
+<span id="L661" class="ln">   661&nbsp;&nbsp;</span>func (r *LineReader) Tell() LineReaderPos {
+<span id="L662" class="ln">   662&nbsp;&nbsp;</span>	return LineReaderPos{r.buf.off, len(r.fileEntries), r.state, r.fileIndex}
+<span id="L663" class="ln">   663&nbsp;&nbsp;</span>}
+<span id="L664" class="ln">   664&nbsp;&nbsp;</span>
+<span id="L665" class="ln">   665&nbsp;&nbsp;</span><span class="comment">// Seek restores the line table reader to a position returned by [LineReader.Tell].</span>
+<span id="L666" class="ln">   666&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L667" class="ln">   667&nbsp;&nbsp;</span><span class="comment">// The argument pos must have been returned by a call to [LineReader.Tell] on this</span>
+<span id="L668" class="ln">   668&nbsp;&nbsp;</span><span class="comment">// line table.</span>
+<span id="L669" class="ln">   669&nbsp;&nbsp;</span>func (r *LineReader) Seek(pos LineReaderPos) {
+<span id="L670" class="ln">   670&nbsp;&nbsp;</span>	r.buf.off = pos.off
+<span id="L671" class="ln">   671&nbsp;&nbsp;</span>	r.buf.data = r.section[r.buf.off:r.endOffset]
+<span id="L672" class="ln">   672&nbsp;&nbsp;</span>	r.fileEntries = r.fileEntries[:pos.numFileEntries]
+<span id="L673" class="ln">   673&nbsp;&nbsp;</span>	r.state = pos.state
+<span id="L674" class="ln">   674&nbsp;&nbsp;</span>	r.fileIndex = pos.fileIndex
+<span id="L675" class="ln">   675&nbsp;&nbsp;</span>}
+<span id="L676" class="ln">   676&nbsp;&nbsp;</span>
+<span id="L677" class="ln">   677&nbsp;&nbsp;</span><span class="comment">// Reset repositions the line table reader at the beginning of the</span>
+<span id="L678" class="ln">   678&nbsp;&nbsp;</span><span class="comment">// line table.</span>
+<span id="L679" class="ln">   679&nbsp;&nbsp;</span>func (r *LineReader) Reset() {
+<span id="L680" class="ln">   680&nbsp;&nbsp;</span>	<span class="comment">// Reset buffer to the line number program offset.</span>
+<span id="L681" class="ln">   681&nbsp;&nbsp;</span>	r.buf.off = r.programOffset
+<span id="L682" class="ln">   682&nbsp;&nbsp;</span>	r.buf.data = r.section[r.buf.off:r.endOffset]
+<span id="L683" class="ln">   683&nbsp;&nbsp;</span>
+<span id="L684" class="ln">   684&nbsp;&nbsp;</span>	<span class="comment">// Reset file entries list.</span>
+<span id="L685" class="ln">   685&nbsp;&nbsp;</span>	r.fileEntries = r.fileEntries[:r.initialFileEntries]
+<span id="L686" class="ln">   686&nbsp;&nbsp;</span>
+<span id="L687" class="ln">   687&nbsp;&nbsp;</span>	<span class="comment">// Reset line number program state.</span>
+<span id="L688" class="ln">   688&nbsp;&nbsp;</span>	r.resetState()
+<span id="L689" class="ln">   689&nbsp;&nbsp;</span>}
+<span id="L690" class="ln">   690&nbsp;&nbsp;</span>
+<span id="L691" class="ln">   691&nbsp;&nbsp;</span><span class="comment">// resetState resets r.state to its default values</span>
+<span id="L692" class="ln">   692&nbsp;&nbsp;</span>func (r *LineReader) resetState() {
+<span id="L693" class="ln">   693&nbsp;&nbsp;</span>	<span class="comment">// Reset the state machine registers to the defaults given in</span>
+<span id="L694" class="ln">   694&nbsp;&nbsp;</span>	<span class="comment">// [DWARF4 6.2.2].</span>
+<span id="L695" class="ln">   695&nbsp;&nbsp;</span>	r.state = LineEntry{
+<span id="L696" class="ln">   696&nbsp;&nbsp;</span>		Address:       0,
+<span id="L697" class="ln">   697&nbsp;&nbsp;</span>		OpIndex:       0,
+<span id="L698" class="ln">   698&nbsp;&nbsp;</span>		File:          nil,
+<span id="L699" class="ln">   699&nbsp;&nbsp;</span>		Line:          1,
+<span id="L700" class="ln">   700&nbsp;&nbsp;</span>		Column:        0,
+<span id="L701" class="ln">   701&nbsp;&nbsp;</span>		IsStmt:        r.defaultIsStmt,
+<span id="L702" class="ln">   702&nbsp;&nbsp;</span>		BasicBlock:    false,
+<span id="L703" class="ln">   703&nbsp;&nbsp;</span>		PrologueEnd:   false,
+<span id="L704" class="ln">   704&nbsp;&nbsp;</span>		EpilogueBegin: false,
+<span id="L705" class="ln">   705&nbsp;&nbsp;</span>		ISA:           0,
+<span id="L706" class="ln">   706&nbsp;&nbsp;</span>		Discriminator: 0,
+<span id="L707" class="ln">   707&nbsp;&nbsp;</span>	}
+<span id="L708" class="ln">   708&nbsp;&nbsp;</span>	r.fileIndex = 1
+<span id="L709" class="ln">   709&nbsp;&nbsp;</span>	r.updateFile()
+<span id="L710" class="ln">   710&nbsp;&nbsp;</span>}
+<span id="L711" class="ln">   711&nbsp;&nbsp;</span>
+<span id="L712" class="ln">   712&nbsp;&nbsp;</span><span class="comment">// Files returns the file name table of this compilation unit as of</span>
+<span id="L713" class="ln">   713&nbsp;&nbsp;</span><span class="comment">// the current position in the line table. The file name table may be</span>
+<span id="L714" class="ln">   714&nbsp;&nbsp;</span><span class="comment">// referenced from attributes in this compilation unit such as</span>
+<span id="L715" class="ln">   715&nbsp;&nbsp;</span><span class="comment">// [AttrDeclFile].</span>
+<span id="L716" class="ln">   716&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L717" class="ln">   717&nbsp;&nbsp;</span><span class="comment">// Entry 0 is always nil, since file index 0 represents &#34;no file&#34;.</span>
+<span id="L718" class="ln">   718&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L719" class="ln">   719&nbsp;&nbsp;</span><span class="comment">// The file name table of a compilation unit is not fixed. Files</span>
+<span id="L720" class="ln">   720&nbsp;&nbsp;</span><span class="comment">// returns the file table as of the current position in the line</span>
+<span id="L721" class="ln">   721&nbsp;&nbsp;</span><span class="comment">// table. This may contain more entries than the file table at an</span>
+<span id="L722" class="ln">   722&nbsp;&nbsp;</span><span class="comment">// earlier position in the line table, though existing entries never</span>
+<span id="L723" class="ln">   723&nbsp;&nbsp;</span><span class="comment">// change.</span>
+<span id="L724" class="ln">   724&nbsp;&nbsp;</span>func (r *LineReader) Files() []*LineFile {
+<span id="L725" class="ln">   725&nbsp;&nbsp;</span>	return r.fileEntries
+<span id="L726" class="ln">   726&nbsp;&nbsp;</span>}
+<span id="L727" class="ln">   727&nbsp;&nbsp;</span>
+<span id="L728" class="ln">   728&nbsp;&nbsp;</span><span class="comment">// ErrUnknownPC is the error returned by LineReader.ScanPC when the</span>
+<span id="L729" class="ln">   729&nbsp;&nbsp;</span><span class="comment">// seek PC is not covered by any entry in the line table.</span>
+<span id="L730" class="ln">   730&nbsp;&nbsp;</span>var ErrUnknownPC = errors.New(&#34;ErrUnknownPC&#34;)
+<span id="L731" class="ln">   731&nbsp;&nbsp;</span>
+<span id="L732" class="ln">   732&nbsp;&nbsp;</span><span class="comment">// SeekPC sets *entry to the [LineEntry] that includes pc and positions</span>
+<span id="L733" class="ln">   733&nbsp;&nbsp;</span><span class="comment">// the reader on the next entry in the line table. If necessary, this</span>
+<span id="L734" class="ln">   734&nbsp;&nbsp;</span><span class="comment">// will seek backwards to find pc.</span>
+<span id="L735" class="ln">   735&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L736" class="ln">   736&nbsp;&nbsp;</span><span class="comment">// If pc is not covered by any entry in this line table, SeekPC</span>
+<span id="L737" class="ln">   737&nbsp;&nbsp;</span><span class="comment">// returns [ErrUnknownPC]. In this case, *entry and the final seek</span>
+<span id="L738" class="ln">   738&nbsp;&nbsp;</span><span class="comment">// position are unspecified.</span>
+<span id="L739" class="ln">   739&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L740" class="ln">   740&nbsp;&nbsp;</span><span class="comment">// Note that DWARF line tables only permit sequential, forward scans.</span>
+<span id="L741" class="ln">   741&nbsp;&nbsp;</span><span class="comment">// Hence, in the worst case, this takes time linear in the size of the</span>
+<span id="L742" class="ln">   742&nbsp;&nbsp;</span><span class="comment">// line table. If the caller wishes to do repeated fast PC lookups, it</span>
+<span id="L743" class="ln">   743&nbsp;&nbsp;</span><span class="comment">// should build an appropriate index of the line table.</span>
+<span id="L744" class="ln">   744&nbsp;&nbsp;</span>func (r *LineReader) SeekPC(pc uint64, entry *LineEntry) error {
+<span id="L745" class="ln">   745&nbsp;&nbsp;</span>	if err := r.Next(entry); err != nil {
+<span id="L746" class="ln">   746&nbsp;&nbsp;</span>		return err
+<span id="L747" class="ln">   747&nbsp;&nbsp;</span>	}
+<span id="L748" class="ln">   748&nbsp;&nbsp;</span>	if entry.Address &gt; pc {
+<span id="L749" class="ln">   749&nbsp;&nbsp;</span>		<span class="comment">// We&#39;re too far. Start at the beginning of the table.</span>
+<span id="L750" class="ln">   750&nbsp;&nbsp;</span>		r.Reset()
+<span id="L751" class="ln">   751&nbsp;&nbsp;</span>		if err := r.Next(entry); err != nil {
+<span id="L752" class="ln">   752&nbsp;&nbsp;</span>			return err
+<span id="L753" class="ln">   753&nbsp;&nbsp;</span>		}
+<span id="L754" class="ln">   754&nbsp;&nbsp;</span>		if entry.Address &gt; pc {
+<span id="L755" class="ln">   755&nbsp;&nbsp;</span>			<span class="comment">// The whole table starts after pc.</span>
+<span id="L756" class="ln">   756&nbsp;&nbsp;</span>			r.Reset()
+<span id="L757" class="ln">   757&nbsp;&nbsp;</span>			return ErrUnknownPC
+<span id="L758" class="ln">   758&nbsp;&nbsp;</span>		}
+<span id="L759" class="ln">   759&nbsp;&nbsp;</span>	}
+<span id="L760" class="ln">   760&nbsp;&nbsp;</span>
+<span id="L761" class="ln">   761&nbsp;&nbsp;</span>	<span class="comment">// Scan until we pass pc, then back up one.</span>
+<span id="L762" class="ln">   762&nbsp;&nbsp;</span>	for {
+<span id="L763" class="ln">   763&nbsp;&nbsp;</span>		var next LineEntry
+<span id="L764" class="ln">   764&nbsp;&nbsp;</span>		pos := r.Tell()
+<span id="L765" class="ln">   765&nbsp;&nbsp;</span>		if err := r.Next(&amp;next); err != nil {
+<span id="L766" class="ln">   766&nbsp;&nbsp;</span>			if err == io.EOF {
+<span id="L767" class="ln">   767&nbsp;&nbsp;</span>				return ErrUnknownPC
+<span id="L768" class="ln">   768&nbsp;&nbsp;</span>			}
+<span id="L769" class="ln">   769&nbsp;&nbsp;</span>			return err
+<span id="L770" class="ln">   770&nbsp;&nbsp;</span>		}
+<span id="L771" class="ln">   771&nbsp;&nbsp;</span>		if next.Address &gt; pc {
+<span id="L772" class="ln">   772&nbsp;&nbsp;</span>			if entry.EndSequence {
+<span id="L773" class="ln">   773&nbsp;&nbsp;</span>				<span class="comment">// pc is in a hole in the table.</span>
+<span id="L774" class="ln">   774&nbsp;&nbsp;</span>				return ErrUnknownPC
+<span id="L775" class="ln">   775&nbsp;&nbsp;</span>			}
+<span id="L776" class="ln">   776&nbsp;&nbsp;</span>			<span class="comment">// entry is the desired entry. Back up the</span>
+<span id="L777" class="ln">   777&nbsp;&nbsp;</span>			<span class="comment">// cursor to &#34;next&#34; and return success.</span>
+<span id="L778" class="ln">   778&nbsp;&nbsp;</span>			r.Seek(pos)
+<span id="L779" class="ln">   779&nbsp;&nbsp;</span>			return nil
+<span id="L780" class="ln">   780&nbsp;&nbsp;</span>		}
+<span id="L781" class="ln">   781&nbsp;&nbsp;</span>		*entry = next
+<span id="L782" class="ln">   782&nbsp;&nbsp;</span>	}
+<span id="L783" class="ln">   783&nbsp;&nbsp;</span>}
+<span id="L784" class="ln">   784&nbsp;&nbsp;</span>
+<span id="L785" class="ln">   785&nbsp;&nbsp;</span><span class="comment">// pathIsAbs reports whether path is an absolute path (or &#34;full path</span>
+<span id="L786" class="ln">   786&nbsp;&nbsp;</span><span class="comment">// name&#34; in DWARF parlance). This is in &#34;whatever form makes sense for</span>
+<span id="L787" class="ln">   787&nbsp;&nbsp;</span><span class="comment">// the host system&#34;, so this accepts both UNIX-style and DOS-style</span>
+<span id="L788" class="ln">   788&nbsp;&nbsp;</span><span class="comment">// absolute paths. We avoid the filepath package because we want this</span>
+<span id="L789" class="ln">   789&nbsp;&nbsp;</span><span class="comment">// to behave the same regardless of our host system and because we</span>
+<span id="L790" class="ln">   790&nbsp;&nbsp;</span><span class="comment">// don&#39;t know what system the paths came from.</span>
+<span id="L791" class="ln">   791&nbsp;&nbsp;</span>func pathIsAbs(path string) bool {
+<span id="L792" class="ln">   792&nbsp;&nbsp;</span>	_, path = splitDrive(path)
+<span id="L793" class="ln">   793&nbsp;&nbsp;</span>	return len(path) &gt; 0 &amp;&amp; (path[0] == &#39;/&#39; || path[0] == &#39;\\&#39;)
+<span id="L794" class="ln">   794&nbsp;&nbsp;</span>}
+<span id="L795" class="ln">   795&nbsp;&nbsp;</span>
+<span id="L796" class="ln">   796&nbsp;&nbsp;</span><span class="comment">// pathJoin joins dirname and filename. filename must be relative.</span>
+<span id="L797" class="ln">   797&nbsp;&nbsp;</span><span class="comment">// DWARF paths can be UNIX-style or DOS-style, so this handles both.</span>
+<span id="L798" class="ln">   798&nbsp;&nbsp;</span>func pathJoin(dirname, filename string) string {
+<span id="L799" class="ln">   799&nbsp;&nbsp;</span>	if len(dirname) == 0 {
+<span id="L800" class="ln">   800&nbsp;&nbsp;</span>		return filename
+<span id="L801" class="ln">   801&nbsp;&nbsp;</span>	}
+<span id="L802" class="ln">   802&nbsp;&nbsp;</span>	<span class="comment">// dirname should be absolute, which means we can determine</span>
+<span id="L803" class="ln">   803&nbsp;&nbsp;</span>	<span class="comment">// whether it&#39;s a DOS path reasonably reliably by looking for</span>
+<span id="L804" class="ln">   804&nbsp;&nbsp;</span>	<span class="comment">// a drive letter or UNC path.</span>
+<span id="L805" class="ln">   805&nbsp;&nbsp;</span>	drive, dirname := splitDrive(dirname)
+<span id="L806" class="ln">   806&nbsp;&nbsp;</span>	if drive == &#34;&#34; {
+<span id="L807" class="ln">   807&nbsp;&nbsp;</span>		<span class="comment">// UNIX-style path.</span>
+<span id="L808" class="ln">   808&nbsp;&nbsp;</span>		return path.Join(dirname, filename)
+<span id="L809" class="ln">   809&nbsp;&nbsp;</span>	}
+<span id="L810" class="ln">   810&nbsp;&nbsp;</span>	<span class="comment">// DOS-style path.</span>
+<span id="L811" class="ln">   811&nbsp;&nbsp;</span>	drive2, filename := splitDrive(filename)
+<span id="L812" class="ln">   812&nbsp;&nbsp;</span>	if drive2 != &#34;&#34; {
+<span id="L813" class="ln">   813&nbsp;&nbsp;</span>		if !strings.EqualFold(drive, drive2) {
+<span id="L814" class="ln">   814&nbsp;&nbsp;</span>			<span class="comment">// Different drives. There&#39;s not much we can</span>
+<span id="L815" class="ln">   815&nbsp;&nbsp;</span>			<span class="comment">// do here, so just ignore the directory.</span>
+<span id="L816" class="ln">   816&nbsp;&nbsp;</span>			return drive2 + filename
+<span id="L817" class="ln">   817&nbsp;&nbsp;</span>		}
+<span id="L818" class="ln">   818&nbsp;&nbsp;</span>		<span class="comment">// Drives are the same. Ignore drive on filename.</span>
+<span id="L819" class="ln">   819&nbsp;&nbsp;</span>	}
+<span id="L820" class="ln">   820&nbsp;&nbsp;</span>	if !(strings.HasSuffix(dirname, &#34;/&#34;) || strings.HasSuffix(dirname, `\`)) &amp;&amp; dirname != &#34;&#34; {
+<span id="L821" class="ln">   821&nbsp;&nbsp;</span>		sep := `\`
+<span id="L822" class="ln">   822&nbsp;&nbsp;</span>		if strings.HasPrefix(dirname, &#34;/&#34;) {
+<span id="L823" class="ln">   823&nbsp;&nbsp;</span>			sep = `/`
+<span id="L824" class="ln">   824&nbsp;&nbsp;</span>		}
+<span id="L825" class="ln">   825&nbsp;&nbsp;</span>		dirname += sep
+<span id="L826" class="ln">   826&nbsp;&nbsp;</span>	}
+<span id="L827" class="ln">   827&nbsp;&nbsp;</span>	return drive + dirname + filename
+<span id="L828" class="ln">   828&nbsp;&nbsp;</span>}
+<span id="L829" class="ln">   829&nbsp;&nbsp;</span>
+<span id="L830" class="ln">   830&nbsp;&nbsp;</span><span class="comment">// splitDrive splits the DOS drive letter or UNC share point from</span>
+<span id="L831" class="ln">   831&nbsp;&nbsp;</span><span class="comment">// path, if any. path == drive + rest</span>
+<span id="L832" class="ln">   832&nbsp;&nbsp;</span>func splitDrive(path string) (drive, rest string) {
+<span id="L833" class="ln">   833&nbsp;&nbsp;</span>	if len(path) &gt;= 2 &amp;&amp; path[1] == &#39;:&#39; {
+<span id="L834" class="ln">   834&nbsp;&nbsp;</span>		if c := path[0]; &#39;a&#39; &lt;= c &amp;&amp; c &lt;= &#39;z&#39; || &#39;A&#39; &lt;= c &amp;&amp; c &lt;= &#39;Z&#39; {
+<span id="L835" class="ln">   835&nbsp;&nbsp;</span>			return path[:2], path[2:]
+<span id="L836" class="ln">   836&nbsp;&nbsp;</span>		}
+<span id="L837" class="ln">   837&nbsp;&nbsp;</span>	}
+<span id="L838" class="ln">   838&nbsp;&nbsp;</span>	if len(path) &gt; 3 &amp;&amp; (path[0] == &#39;\\&#39; || path[0] == &#39;/&#39;) &amp;&amp; (path[1] == &#39;\\&#39; || path[1] == &#39;/&#39;) {
+<span id="L839" class="ln">   839&nbsp;&nbsp;</span>		<span class="comment">// Normalize the path so we can search for just \ below.</span>
+<span id="L840" class="ln">   840&nbsp;&nbsp;</span>		npath := strings.Replace(path, &#34;/&#34;, `\`, -1)
+<span id="L841" class="ln">   841&nbsp;&nbsp;</span>		<span class="comment">// Get the host part, which must be non-empty.</span>
+<span id="L842" class="ln">   842&nbsp;&nbsp;</span>		slash1 := strings.IndexByte(npath[2:], &#39;\\&#39;) + 2
+<span id="L843" class="ln">   843&nbsp;&nbsp;</span>		if slash1 &gt; 2 {
+<span id="L844" class="ln">   844&nbsp;&nbsp;</span>			<span class="comment">// Get the mount-point part, which must be non-empty.</span>
+<span id="L845" class="ln">   845&nbsp;&nbsp;</span>			slash2 := strings.IndexByte(npath[slash1+1:], &#39;\\&#39;) + slash1 + 1
+<span id="L846" class="ln">   846&nbsp;&nbsp;</span>			if slash2 &gt; slash1 {
+<span id="L847" class="ln">   847&nbsp;&nbsp;</span>				return path[:slash2], path[slash2:]
+<span id="L848" class="ln">   848&nbsp;&nbsp;</span>			}
+<span id="L849" class="ln">   849&nbsp;&nbsp;</span>		}
+<span id="L850" class="ln">   850&nbsp;&nbsp;</span>	}
+<span id="L851" class="ln">   851&nbsp;&nbsp;</span>	return &#34;&#34;, path
+<span id="L852" class="ln">   852&nbsp;&nbsp;</span>}
+<span id="L853" class="ln">   853&nbsp;&nbsp;</span>
+</pre><p><a href="line.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

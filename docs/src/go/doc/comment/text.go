@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>src/go/doc/comment/text.go - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../../index.html">GoDoc</a></div>
+<a href="text.go#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Source file
+    <a href="http://localhost:8080/src">src</a>/<a href="http://localhost:8080/src/go">go</a>/<a href="http://localhost:8080/src/go/doc">doc</a>/<a href="http://localhost:8080/src/go/doc/comment">comment</a>/<span class="text-muted">text.go</span>
+  </h1>
+
+
+
+
+
+  <h2>
+    Documentation: <a href="http://localhost:8080/pkg/go/doc/comment">go/doc/comment</a>
+  </h2>
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1&nbsp;&nbsp;</span><span class="comment">// Copyright 2022 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2&nbsp;&nbsp;</span><span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3&nbsp;&nbsp;</span><span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4&nbsp;&nbsp;</span>
+<span id="L5" class="ln">     5&nbsp;&nbsp;</span>package comment
+<span id="L6" class="ln">     6&nbsp;&nbsp;</span>
+<span id="L7" class="ln">     7&nbsp;&nbsp;</span>import (
+<span id="L8" class="ln">     8&nbsp;&nbsp;</span>	&#34;bytes&#34;
+<span id="L9" class="ln">     9&nbsp;&nbsp;</span>	&#34;fmt&#34;
+<span id="L10" class="ln">    10&nbsp;&nbsp;</span>	&#34;sort&#34;
+<span id="L11" class="ln">    11&nbsp;&nbsp;</span>	&#34;strings&#34;
+<span id="L12" class="ln">    12&nbsp;&nbsp;</span>	&#34;unicode/utf8&#34;
+<span id="L13" class="ln">    13&nbsp;&nbsp;</span>)
+<span id="L14" class="ln">    14&nbsp;&nbsp;</span>
+<span id="L15" class="ln">    15&nbsp;&nbsp;</span><span class="comment">// A textPrinter holds the state needed for printing a Doc as plain text.</span>
+<span id="L16" class="ln">    16&nbsp;&nbsp;</span>type textPrinter struct {
+<span id="L17" class="ln">    17&nbsp;&nbsp;</span>	*Printer
+<span id="L18" class="ln">    18&nbsp;&nbsp;</span>	long       strings.Builder
+<span id="L19" class="ln">    19&nbsp;&nbsp;</span>	prefix     string
+<span id="L20" class="ln">    20&nbsp;&nbsp;</span>	codePrefix string
+<span id="L21" class="ln">    21&nbsp;&nbsp;</span>	width      int
+<span id="L22" class="ln">    22&nbsp;&nbsp;</span>}
+<span id="L23" class="ln">    23&nbsp;&nbsp;</span>
+<span id="L24" class="ln">    24&nbsp;&nbsp;</span><span class="comment">// Text returns a textual formatting of the [Doc].</span>
+<span id="L25" class="ln">    25&nbsp;&nbsp;</span><span class="comment">// See the [Printer] documentation for ways to customize the text output.</span>
+<span id="L26" class="ln">    26&nbsp;&nbsp;</span>func (p *Printer) Text(d *Doc) []byte {
+<span id="L27" class="ln">    27&nbsp;&nbsp;</span>	tp := &amp;textPrinter{
+<span id="L28" class="ln">    28&nbsp;&nbsp;</span>		Printer:    p,
+<span id="L29" class="ln">    29&nbsp;&nbsp;</span>		prefix:     p.TextPrefix,
+<span id="L30" class="ln">    30&nbsp;&nbsp;</span>		codePrefix: p.TextCodePrefix,
+<span id="L31" class="ln">    31&nbsp;&nbsp;</span>		width:      p.TextWidth,
+<span id="L32" class="ln">    32&nbsp;&nbsp;</span>	}
+<span id="L33" class="ln">    33&nbsp;&nbsp;</span>	if tp.codePrefix == &#34;&#34; {
+<span id="L34" class="ln">    34&nbsp;&nbsp;</span>		tp.codePrefix = p.TextPrefix + &#34;\t&#34;
+<span id="L35" class="ln">    35&nbsp;&nbsp;</span>	}
+<span id="L36" class="ln">    36&nbsp;&nbsp;</span>	if tp.width == 0 {
+<span id="L37" class="ln">    37&nbsp;&nbsp;</span>		tp.width = 80 - utf8.RuneCountInString(tp.prefix)
+<span id="L38" class="ln">    38&nbsp;&nbsp;</span>	}
+<span id="L39" class="ln">    39&nbsp;&nbsp;</span>
+<span id="L40" class="ln">    40&nbsp;&nbsp;</span>	var out bytes.Buffer
+<span id="L41" class="ln">    41&nbsp;&nbsp;</span>	for i, x := range d.Content {
+<span id="L42" class="ln">    42&nbsp;&nbsp;</span>		if i &gt; 0 &amp;&amp; blankBefore(x) {
+<span id="L43" class="ln">    43&nbsp;&nbsp;</span>			out.WriteString(tp.prefix)
+<span id="L44" class="ln">    44&nbsp;&nbsp;</span>			writeNL(&amp;out)
+<span id="L45" class="ln">    45&nbsp;&nbsp;</span>		}
+<span id="L46" class="ln">    46&nbsp;&nbsp;</span>		tp.block(&amp;out, x)
+<span id="L47" class="ln">    47&nbsp;&nbsp;</span>	}
+<span id="L48" class="ln">    48&nbsp;&nbsp;</span>	anyUsed := false
+<span id="L49" class="ln">    49&nbsp;&nbsp;</span>	for _, def := range d.Links {
+<span id="L50" class="ln">    50&nbsp;&nbsp;</span>		if def.Used {
+<span id="L51" class="ln">    51&nbsp;&nbsp;</span>			anyUsed = true
+<span id="L52" class="ln">    52&nbsp;&nbsp;</span>			break
+<span id="L53" class="ln">    53&nbsp;&nbsp;</span>		}
+<span id="L54" class="ln">    54&nbsp;&nbsp;</span>	}
+<span id="L55" class="ln">    55&nbsp;&nbsp;</span>	if anyUsed {
+<span id="L56" class="ln">    56&nbsp;&nbsp;</span>		writeNL(&amp;out)
+<span id="L57" class="ln">    57&nbsp;&nbsp;</span>		for _, def := range d.Links {
+<span id="L58" class="ln">    58&nbsp;&nbsp;</span>			if def.Used {
+<span id="L59" class="ln">    59&nbsp;&nbsp;</span>				fmt.Fprintf(&amp;out, &#34;[%s]: %s\n&#34;, def.Text, def.URL)
+<span id="L60" class="ln">    60&nbsp;&nbsp;</span>			}
+<span id="L61" class="ln">    61&nbsp;&nbsp;</span>		}
+<span id="L62" class="ln">    62&nbsp;&nbsp;</span>	}
+<span id="L63" class="ln">    63&nbsp;&nbsp;</span>	return out.Bytes()
+<span id="L64" class="ln">    64&nbsp;&nbsp;</span>}
+<span id="L65" class="ln">    65&nbsp;&nbsp;</span>
+<span id="L66" class="ln">    66&nbsp;&nbsp;</span><span class="comment">// writeNL calls out.WriteByte(&#39;\n&#39;)</span>
+<span id="L67" class="ln">    67&nbsp;&nbsp;</span><span class="comment">// but first trims trailing spaces on the previous line.</span>
+<span id="L68" class="ln">    68&nbsp;&nbsp;</span>func writeNL(out *bytes.Buffer) {
+<span id="L69" class="ln">    69&nbsp;&nbsp;</span>	<span class="comment">// Trim trailing spaces.</span>
+<span id="L70" class="ln">    70&nbsp;&nbsp;</span>	data := out.Bytes()
+<span id="L71" class="ln">    71&nbsp;&nbsp;</span>	n := 0
+<span id="L72" class="ln">    72&nbsp;&nbsp;</span>	for n &lt; len(data) &amp;&amp; (data[len(data)-n-1] == &#39; &#39; || data[len(data)-n-1] == &#39;\t&#39;) {
+<span id="L73" class="ln">    73&nbsp;&nbsp;</span>		n++
+<span id="L74" class="ln">    74&nbsp;&nbsp;</span>	}
+<span id="L75" class="ln">    75&nbsp;&nbsp;</span>	if n &gt; 0 {
+<span id="L76" class="ln">    76&nbsp;&nbsp;</span>		out.Truncate(len(data) - n)
+<span id="L77" class="ln">    77&nbsp;&nbsp;</span>	}
+<span id="L78" class="ln">    78&nbsp;&nbsp;</span>	out.WriteByte(&#39;\n&#39;)
+<span id="L79" class="ln">    79&nbsp;&nbsp;</span>}
+<span id="L80" class="ln">    80&nbsp;&nbsp;</span>
+<span id="L81" class="ln">    81&nbsp;&nbsp;</span><span class="comment">// block prints the block x to out.</span>
+<span id="L82" class="ln">    82&nbsp;&nbsp;</span>func (p *textPrinter) block(out *bytes.Buffer, x Block) {
+<span id="L83" class="ln">    83&nbsp;&nbsp;</span>	switch x := x.(type) {
+<span id="L84" class="ln">    84&nbsp;&nbsp;</span>	default:
+<span id="L85" class="ln">    85&nbsp;&nbsp;</span>		fmt.Fprintf(out, &#34;?%T\n&#34;, x)
+<span id="L86" class="ln">    86&nbsp;&nbsp;</span>
+<span id="L87" class="ln">    87&nbsp;&nbsp;</span>	case *Paragraph:
+<span id="L88" class="ln">    88&nbsp;&nbsp;</span>		out.WriteString(p.prefix)
+<span id="L89" class="ln">    89&nbsp;&nbsp;</span>		p.text(out, &#34;&#34;, x.Text)
+<span id="L90" class="ln">    90&nbsp;&nbsp;</span>
+<span id="L91" class="ln">    91&nbsp;&nbsp;</span>	case *Heading:
+<span id="L92" class="ln">    92&nbsp;&nbsp;</span>		out.WriteString(p.prefix)
+<span id="L93" class="ln">    93&nbsp;&nbsp;</span>		out.WriteString(&#34;# &#34;)
+<span id="L94" class="ln">    94&nbsp;&nbsp;</span>		p.text(out, &#34;&#34;, x.Text)
+<span id="L95" class="ln">    95&nbsp;&nbsp;</span>
+<span id="L96" class="ln">    96&nbsp;&nbsp;</span>	case *Code:
+<span id="L97" class="ln">    97&nbsp;&nbsp;</span>		text := x.Text
+<span id="L98" class="ln">    98&nbsp;&nbsp;</span>		for text != &#34;&#34; {
+<span id="L99" class="ln">    99&nbsp;&nbsp;</span>			var line string
+<span id="L100" class="ln">   100&nbsp;&nbsp;</span>			line, text, _ = strings.Cut(text, &#34;\n&#34;)
+<span id="L101" class="ln">   101&nbsp;&nbsp;</span>			if line != &#34;&#34; {
+<span id="L102" class="ln">   102&nbsp;&nbsp;</span>				out.WriteString(p.codePrefix)
+<span id="L103" class="ln">   103&nbsp;&nbsp;</span>				out.WriteString(line)
+<span id="L104" class="ln">   104&nbsp;&nbsp;</span>			}
+<span id="L105" class="ln">   105&nbsp;&nbsp;</span>			writeNL(out)
+<span id="L106" class="ln">   106&nbsp;&nbsp;</span>		}
+<span id="L107" class="ln">   107&nbsp;&nbsp;</span>
+<span id="L108" class="ln">   108&nbsp;&nbsp;</span>	case *List:
+<span id="L109" class="ln">   109&nbsp;&nbsp;</span>		loose := x.BlankBetween()
+<span id="L110" class="ln">   110&nbsp;&nbsp;</span>		for i, item := range x.Items {
+<span id="L111" class="ln">   111&nbsp;&nbsp;</span>			if i &gt; 0 &amp;&amp; loose {
+<span id="L112" class="ln">   112&nbsp;&nbsp;</span>				out.WriteString(p.prefix)
+<span id="L113" class="ln">   113&nbsp;&nbsp;</span>				writeNL(out)
+<span id="L114" class="ln">   114&nbsp;&nbsp;</span>			}
+<span id="L115" class="ln">   115&nbsp;&nbsp;</span>			out.WriteString(p.prefix)
+<span id="L116" class="ln">   116&nbsp;&nbsp;</span>			out.WriteString(&#34; &#34;)
+<span id="L117" class="ln">   117&nbsp;&nbsp;</span>			if item.Number == &#34;&#34; {
+<span id="L118" class="ln">   118&nbsp;&nbsp;</span>				out.WriteString(&#34; - &#34;)
+<span id="L119" class="ln">   119&nbsp;&nbsp;</span>			} else {
+<span id="L120" class="ln">   120&nbsp;&nbsp;</span>				out.WriteString(item.Number)
+<span id="L121" class="ln">   121&nbsp;&nbsp;</span>				out.WriteString(&#34;. &#34;)
+<span id="L122" class="ln">   122&nbsp;&nbsp;</span>			}
+<span id="L123" class="ln">   123&nbsp;&nbsp;</span>			for i, blk := range item.Content {
+<span id="L124" class="ln">   124&nbsp;&nbsp;</span>				const fourSpace = &#34;    &#34;
+<span id="L125" class="ln">   125&nbsp;&nbsp;</span>				if i &gt; 0 {
+<span id="L126" class="ln">   126&nbsp;&nbsp;</span>					writeNL(out)
+<span id="L127" class="ln">   127&nbsp;&nbsp;</span>					out.WriteString(p.prefix)
+<span id="L128" class="ln">   128&nbsp;&nbsp;</span>					out.WriteString(fourSpace)
+<span id="L129" class="ln">   129&nbsp;&nbsp;</span>				}
+<span id="L130" class="ln">   130&nbsp;&nbsp;</span>				p.text(out, fourSpace, blk.(*Paragraph).Text)
+<span id="L131" class="ln">   131&nbsp;&nbsp;</span>			}
+<span id="L132" class="ln">   132&nbsp;&nbsp;</span>		}
+<span id="L133" class="ln">   133&nbsp;&nbsp;</span>	}
+<span id="L134" class="ln">   134&nbsp;&nbsp;</span>}
+<span id="L135" class="ln">   135&nbsp;&nbsp;</span>
+<span id="L136" class="ln">   136&nbsp;&nbsp;</span><span class="comment">// text prints the text sequence x to out.</span>
+<span id="L137" class="ln">   137&nbsp;&nbsp;</span>func (p *textPrinter) text(out *bytes.Buffer, indent string, x []Text) {
+<span id="L138" class="ln">   138&nbsp;&nbsp;</span>	p.oneLongLine(&amp;p.long, x)
+<span id="L139" class="ln">   139&nbsp;&nbsp;</span>	words := strings.Fields(p.long.String())
+<span id="L140" class="ln">   140&nbsp;&nbsp;</span>	p.long.Reset()
+<span id="L141" class="ln">   141&nbsp;&nbsp;</span>
+<span id="L142" class="ln">   142&nbsp;&nbsp;</span>	var seq []int
+<span id="L143" class="ln">   143&nbsp;&nbsp;</span>	if p.width &lt; 0 || len(words) == 0 {
+<span id="L144" class="ln">   144&nbsp;&nbsp;</span>		seq = []int{0, len(words)} <span class="comment">// one long line</span>
+<span id="L145" class="ln">   145&nbsp;&nbsp;</span>	} else {
+<span id="L146" class="ln">   146&nbsp;&nbsp;</span>		seq = wrap(words, p.width-utf8.RuneCountInString(indent))
+<span id="L147" class="ln">   147&nbsp;&nbsp;</span>	}
+<span id="L148" class="ln">   148&nbsp;&nbsp;</span>	for i := 0; i+1 &lt; len(seq); i++ {
+<span id="L149" class="ln">   149&nbsp;&nbsp;</span>		if i &gt; 0 {
+<span id="L150" class="ln">   150&nbsp;&nbsp;</span>			out.WriteString(p.prefix)
+<span id="L151" class="ln">   151&nbsp;&nbsp;</span>			out.WriteString(indent)
+<span id="L152" class="ln">   152&nbsp;&nbsp;</span>		}
+<span id="L153" class="ln">   153&nbsp;&nbsp;</span>		for j, w := range words[seq[i]:seq[i+1]] {
+<span id="L154" class="ln">   154&nbsp;&nbsp;</span>			if j &gt; 0 {
+<span id="L155" class="ln">   155&nbsp;&nbsp;</span>				out.WriteString(&#34; &#34;)
+<span id="L156" class="ln">   156&nbsp;&nbsp;</span>			}
+<span id="L157" class="ln">   157&nbsp;&nbsp;</span>			out.WriteString(w)
+<span id="L158" class="ln">   158&nbsp;&nbsp;</span>		}
+<span id="L159" class="ln">   159&nbsp;&nbsp;</span>		writeNL(out)
+<span id="L160" class="ln">   160&nbsp;&nbsp;</span>	}
+<span id="L161" class="ln">   161&nbsp;&nbsp;</span>}
+<span id="L162" class="ln">   162&nbsp;&nbsp;</span>
+<span id="L163" class="ln">   163&nbsp;&nbsp;</span><span class="comment">// oneLongLine prints the text sequence x to out as one long line,</span>
+<span id="L164" class="ln">   164&nbsp;&nbsp;</span><span class="comment">// without worrying about line wrapping.</span>
+<span id="L165" class="ln">   165&nbsp;&nbsp;</span><span class="comment">// Explicit links have the [ ] dropped to improve readability.</span>
+<span id="L166" class="ln">   166&nbsp;&nbsp;</span>func (p *textPrinter) oneLongLine(out *strings.Builder, x []Text) {
+<span id="L167" class="ln">   167&nbsp;&nbsp;</span>	for _, t := range x {
+<span id="L168" class="ln">   168&nbsp;&nbsp;</span>		switch t := t.(type) {
+<span id="L169" class="ln">   169&nbsp;&nbsp;</span>		case Plain:
+<span id="L170" class="ln">   170&nbsp;&nbsp;</span>			out.WriteString(string(t))
+<span id="L171" class="ln">   171&nbsp;&nbsp;</span>		case Italic:
+<span id="L172" class="ln">   172&nbsp;&nbsp;</span>			out.WriteString(string(t))
+<span id="L173" class="ln">   173&nbsp;&nbsp;</span>		case *Link:
+<span id="L174" class="ln">   174&nbsp;&nbsp;</span>			p.oneLongLine(out, t.Text)
+<span id="L175" class="ln">   175&nbsp;&nbsp;</span>		case *DocLink:
+<span id="L176" class="ln">   176&nbsp;&nbsp;</span>			p.oneLongLine(out, t.Text)
+<span id="L177" class="ln">   177&nbsp;&nbsp;</span>		}
+<span id="L178" class="ln">   178&nbsp;&nbsp;</span>	}
+<span id="L179" class="ln">   179&nbsp;&nbsp;</span>}
+<span id="L180" class="ln">   180&nbsp;&nbsp;</span>
+<span id="L181" class="ln">   181&nbsp;&nbsp;</span><span class="comment">// wrap wraps words into lines of at most max runes,</span>
+<span id="L182" class="ln">   182&nbsp;&nbsp;</span><span class="comment">// minimizing the sum of the squares of the leftover lengths</span>
+<span id="L183" class="ln">   183&nbsp;&nbsp;</span><span class="comment">// at the end of each line (except the last, of course),</span>
+<span id="L184" class="ln">   184&nbsp;&nbsp;</span><span class="comment">// with a preference for ending lines at punctuation (.,:;).</span>
+<span id="L185" class="ln">   185&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L186" class="ln">   186&nbsp;&nbsp;</span><span class="comment">// The returned slice gives the indexes of the first words</span>
+<span id="L187" class="ln">   187&nbsp;&nbsp;</span><span class="comment">// on each line in the wrapped text with a final entry of len(words).</span>
+<span id="L188" class="ln">   188&nbsp;&nbsp;</span><span class="comment">// Thus the lines are words[seq[0]:seq[1]], words[seq[1]:seq[2]],</span>
+<span id="L189" class="ln">   189&nbsp;&nbsp;</span><span class="comment">// ..., words[seq[len(seq)-2]:seq[len(seq)-1]].</span>
+<span id="L190" class="ln">   190&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L191" class="ln">   191&nbsp;&nbsp;</span><span class="comment">// The implementation runs in O(n log n) time, where n = len(words),</span>
+<span id="L192" class="ln">   192&nbsp;&nbsp;</span><span class="comment">// using the algorithm described in D. S. Hirschberg and L. L. Larmore,</span>
+<span id="L193" class="ln">   193&nbsp;&nbsp;</span><span class="comment">// “[The least weight subsequence problem],” FOCS 1985, pp. 137-143.</span>
+<span id="L194" class="ln">   194&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L195" class="ln">   195&nbsp;&nbsp;</span><span class="comment">// [The least weight subsequence problem]: https://doi.org/10.1109/SFCS.1985.60</span>
+<span id="L196" class="ln">   196&nbsp;&nbsp;</span>func wrap(words []string, max int) (seq []int) {
+<span id="L197" class="ln">   197&nbsp;&nbsp;</span>	<span class="comment">// The algorithm requires that our scoring function be concave,</span>
+<span id="L198" class="ln">   198&nbsp;&nbsp;</span>	<span class="comment">// meaning that for all i₀ ≤ i₁ &lt; j₀ ≤ j₁,</span>
+<span id="L199" class="ln">   199&nbsp;&nbsp;</span>	<span class="comment">// weight(i₀, j₀) + weight(i₁, j₁) ≤ weight(i₀, j₁) + weight(i₁, j₀).</span>
+<span id="L200" class="ln">   200&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L201" class="ln">   201&nbsp;&nbsp;</span>	<span class="comment">// Our weights are two-element pairs [hi, lo]</span>
+<span id="L202" class="ln">   202&nbsp;&nbsp;</span>	<span class="comment">// ordered by elementwise comparison.</span>
+<span id="L203" class="ln">   203&nbsp;&nbsp;</span>	<span class="comment">// The hi entry counts the weight for lines that are longer than max,</span>
+<span id="L204" class="ln">   204&nbsp;&nbsp;</span>	<span class="comment">// and the lo entry counts the weight for lines that are not.</span>
+<span id="L205" class="ln">   205&nbsp;&nbsp;</span>	<span class="comment">// This forces the algorithm to first minimize the number of lines</span>
+<span id="L206" class="ln">   206&nbsp;&nbsp;</span>	<span class="comment">// that are longer than max, which correspond to lines with</span>
+<span id="L207" class="ln">   207&nbsp;&nbsp;</span>	<span class="comment">// single very long words. Having done that, it can move on to</span>
+<span id="L208" class="ln">   208&nbsp;&nbsp;</span>	<span class="comment">// minimizing the lo score, which is more interesting.</span>
+<span id="L209" class="ln">   209&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L210" class="ln">   210&nbsp;&nbsp;</span>	<span class="comment">// The lo score is the sum for each line of the square of the</span>
+<span id="L211" class="ln">   211&nbsp;&nbsp;</span>	<span class="comment">// number of spaces remaining at the end of the line and a</span>
+<span id="L212" class="ln">   212&nbsp;&nbsp;</span>	<span class="comment">// penalty of 64 given out for not ending the line in a</span>
+<span id="L213" class="ln">   213&nbsp;&nbsp;</span>	<span class="comment">// punctuation character (.,:;).</span>
+<span id="L214" class="ln">   214&nbsp;&nbsp;</span>	<span class="comment">// The penalty is somewhat arbitrarily chosen by trying</span>
+<span id="L215" class="ln">   215&nbsp;&nbsp;</span>	<span class="comment">// different amounts and judging how nice the wrapped text looks.</span>
+<span id="L216" class="ln">   216&nbsp;&nbsp;</span>	<span class="comment">// Roughly speaking, using 64 means that we are willing to</span>
+<span id="L217" class="ln">   217&nbsp;&nbsp;</span>	<span class="comment">// end a line with eight blank spaces in order to end at a</span>
+<span id="L218" class="ln">   218&nbsp;&nbsp;</span>	<span class="comment">// punctuation character, even if the next word would fit in</span>
+<span id="L219" class="ln">   219&nbsp;&nbsp;</span>	<span class="comment">// those spaces.</span>
+<span id="L220" class="ln">   220&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L221" class="ln">   221&nbsp;&nbsp;</span>	<span class="comment">// We care about ending in punctuation characters because</span>
+<span id="L222" class="ln">   222&nbsp;&nbsp;</span>	<span class="comment">// it makes the text easier to skim if not too many sentences</span>
+<span id="L223" class="ln">   223&nbsp;&nbsp;</span>	<span class="comment">// or phrases begin with a single word on the previous line.</span>
+<span id="L224" class="ln">   224&nbsp;&nbsp;</span>
+<span id="L225" class="ln">   225&nbsp;&nbsp;</span>	<span class="comment">// A score is the score (also called weight) for a given line.</span>
+<span id="L226" class="ln">   226&nbsp;&nbsp;</span>	<span class="comment">// add and cmp add and compare scores.</span>
+<span id="L227" class="ln">   227&nbsp;&nbsp;</span>	type score struct {
+<span id="L228" class="ln">   228&nbsp;&nbsp;</span>		hi int64
+<span id="L229" class="ln">   229&nbsp;&nbsp;</span>		lo int64
+<span id="L230" class="ln">   230&nbsp;&nbsp;</span>	}
+<span id="L231" class="ln">   231&nbsp;&nbsp;</span>	add := func(s, t score) score { return score{s.hi + t.hi, s.lo + t.lo} }
+<span id="L232" class="ln">   232&nbsp;&nbsp;</span>	cmp := func(s, t score) int {
+<span id="L233" class="ln">   233&nbsp;&nbsp;</span>		switch {
+<span id="L234" class="ln">   234&nbsp;&nbsp;</span>		case s.hi &lt; t.hi:
+<span id="L235" class="ln">   235&nbsp;&nbsp;</span>			return -1
+<span id="L236" class="ln">   236&nbsp;&nbsp;</span>		case s.hi &gt; t.hi:
+<span id="L237" class="ln">   237&nbsp;&nbsp;</span>			return +1
+<span id="L238" class="ln">   238&nbsp;&nbsp;</span>		case s.lo &lt; t.lo:
+<span id="L239" class="ln">   239&nbsp;&nbsp;</span>			return -1
+<span id="L240" class="ln">   240&nbsp;&nbsp;</span>		case s.lo &gt; t.lo:
+<span id="L241" class="ln">   241&nbsp;&nbsp;</span>			return +1
+<span id="L242" class="ln">   242&nbsp;&nbsp;</span>		}
+<span id="L243" class="ln">   243&nbsp;&nbsp;</span>		return 0
+<span id="L244" class="ln">   244&nbsp;&nbsp;</span>	}
+<span id="L245" class="ln">   245&nbsp;&nbsp;</span>
+<span id="L246" class="ln">   246&nbsp;&nbsp;</span>	<span class="comment">// total[j] is the total number of runes</span>
+<span id="L247" class="ln">   247&nbsp;&nbsp;</span>	<span class="comment">// (including separating spaces) in words[:j].</span>
+<span id="L248" class="ln">   248&nbsp;&nbsp;</span>	total := make([]int, len(words)+1)
+<span id="L249" class="ln">   249&nbsp;&nbsp;</span>	total[0] = 0
+<span id="L250" class="ln">   250&nbsp;&nbsp;</span>	for i, s := range words {
+<span id="L251" class="ln">   251&nbsp;&nbsp;</span>		total[1+i] = total[i] + utf8.RuneCountInString(s) + 1
+<span id="L252" class="ln">   252&nbsp;&nbsp;</span>	}
+<span id="L253" class="ln">   253&nbsp;&nbsp;</span>
+<span id="L254" class="ln">   254&nbsp;&nbsp;</span>	<span class="comment">// weight returns weight(i, j).</span>
+<span id="L255" class="ln">   255&nbsp;&nbsp;</span>	weight := func(i, j int) score {
+<span id="L256" class="ln">   256&nbsp;&nbsp;</span>		<span class="comment">// On the last line, there is zero weight for being too short.</span>
+<span id="L257" class="ln">   257&nbsp;&nbsp;</span>		n := total[j] - 1 - total[i]
+<span id="L258" class="ln">   258&nbsp;&nbsp;</span>		if j == len(words) &amp;&amp; n &lt;= max {
+<span id="L259" class="ln">   259&nbsp;&nbsp;</span>			return score{0, 0}
+<span id="L260" class="ln">   260&nbsp;&nbsp;</span>		}
+<span id="L261" class="ln">   261&nbsp;&nbsp;</span>
+<span id="L262" class="ln">   262&nbsp;&nbsp;</span>		<span class="comment">// Otherwise the weight is the penalty plus the square of the number of</span>
+<span id="L263" class="ln">   263&nbsp;&nbsp;</span>		<span class="comment">// characters remaining on the line or by which the line goes over.</span>
+<span id="L264" class="ln">   264&nbsp;&nbsp;</span>		<span class="comment">// In the latter case, that value goes in the hi part of the score.</span>
+<span id="L265" class="ln">   265&nbsp;&nbsp;</span>		<span class="comment">// (See note above.)</span>
+<span id="L266" class="ln">   266&nbsp;&nbsp;</span>		p := wrapPenalty(words[j-1])
+<span id="L267" class="ln">   267&nbsp;&nbsp;</span>		v := int64(max-n) * int64(max-n)
+<span id="L268" class="ln">   268&nbsp;&nbsp;</span>		if n &gt; max {
+<span id="L269" class="ln">   269&nbsp;&nbsp;</span>			return score{v, p}
+<span id="L270" class="ln">   270&nbsp;&nbsp;</span>		}
+<span id="L271" class="ln">   271&nbsp;&nbsp;</span>		return score{0, v + p}
+<span id="L272" class="ln">   272&nbsp;&nbsp;</span>	}
+<span id="L273" class="ln">   273&nbsp;&nbsp;</span>
+<span id="L274" class="ln">   274&nbsp;&nbsp;</span>	<span class="comment">// The rest of this function is “The Basic Algorithm” from</span>
+<span id="L275" class="ln">   275&nbsp;&nbsp;</span>	<span class="comment">// Hirschberg and Larmore&#39;s conference paper,</span>
+<span id="L276" class="ln">   276&nbsp;&nbsp;</span>	<span class="comment">// using the same names as in the paper.</span>
+<span id="L277" class="ln">   277&nbsp;&nbsp;</span>	f := []score{{0, 0}}
+<span id="L278" class="ln">   278&nbsp;&nbsp;</span>	g := func(i, j int) score { return add(f[i], weight(i, j)) }
+<span id="L279" class="ln">   279&nbsp;&nbsp;</span>
+<span id="L280" class="ln">   280&nbsp;&nbsp;</span>	bridge := func(a, b, c int) bool {
+<span id="L281" class="ln">   281&nbsp;&nbsp;</span>		k := c + sort.Search(len(words)+1-c, func(k int) bool {
+<span id="L282" class="ln">   282&nbsp;&nbsp;</span>			k += c
+<span id="L283" class="ln">   283&nbsp;&nbsp;</span>			return cmp(g(a, k), g(b, k)) &gt; 0
+<span id="L284" class="ln">   284&nbsp;&nbsp;</span>		})
+<span id="L285" class="ln">   285&nbsp;&nbsp;</span>		if k &gt; len(words) {
+<span id="L286" class="ln">   286&nbsp;&nbsp;</span>			return true
+<span id="L287" class="ln">   287&nbsp;&nbsp;</span>		}
+<span id="L288" class="ln">   288&nbsp;&nbsp;</span>		return cmp(g(c, k), g(b, k)) &lt;= 0
+<span id="L289" class="ln">   289&nbsp;&nbsp;</span>	}
+<span id="L290" class="ln">   290&nbsp;&nbsp;</span>
+<span id="L291" class="ln">   291&nbsp;&nbsp;</span>	<span class="comment">// d is a one-ended deque implemented as a slice.</span>
+<span id="L292" class="ln">   292&nbsp;&nbsp;</span>	d := make([]int, 1, len(words))
+<span id="L293" class="ln">   293&nbsp;&nbsp;</span>	d[0] = 0
+<span id="L294" class="ln">   294&nbsp;&nbsp;</span>	bestleft := make([]int, 1, len(words))
+<span id="L295" class="ln">   295&nbsp;&nbsp;</span>	bestleft[0] = -1
+<span id="L296" class="ln">   296&nbsp;&nbsp;</span>	for m := 1; m &lt; len(words); m++ {
+<span id="L297" class="ln">   297&nbsp;&nbsp;</span>		f = append(f, g(d[0], m))
+<span id="L298" class="ln">   298&nbsp;&nbsp;</span>		bestleft = append(bestleft, d[0])
+<span id="L299" class="ln">   299&nbsp;&nbsp;</span>		for len(d) &gt; 1 &amp;&amp; cmp(g(d[1], m+1), g(d[0], m+1)) &lt;= 0 {
+<span id="L300" class="ln">   300&nbsp;&nbsp;</span>			d = d[1:] <span class="comment">// “Retire”</span>
+<span id="L301" class="ln">   301&nbsp;&nbsp;</span>		}
+<span id="L302" class="ln">   302&nbsp;&nbsp;</span>		for len(d) &gt; 1 &amp;&amp; bridge(d[len(d)-2], d[len(d)-1], m) {
+<span id="L303" class="ln">   303&nbsp;&nbsp;</span>			d = d[:len(d)-1] <span class="comment">// “Fire”</span>
+<span id="L304" class="ln">   304&nbsp;&nbsp;</span>		}
+<span id="L305" class="ln">   305&nbsp;&nbsp;</span>		if cmp(g(m, len(words)), g(d[len(d)-1], len(words))) &lt; 0 {
+<span id="L306" class="ln">   306&nbsp;&nbsp;</span>			d = append(d, m) <span class="comment">// “Hire”</span>
+<span id="L307" class="ln">   307&nbsp;&nbsp;</span>			<span class="comment">// The next few lines are not in the paper but are necessary</span>
+<span id="L308" class="ln">   308&nbsp;&nbsp;</span>			<span class="comment">// to handle two-word inputs correctly. It appears to be</span>
+<span id="L309" class="ln">   309&nbsp;&nbsp;</span>			<span class="comment">// just a bug in the paper&#39;s pseudocode.</span>
+<span id="L310" class="ln">   310&nbsp;&nbsp;</span>			if len(d) == 2 &amp;&amp; cmp(g(d[1], m+1), g(d[0], m+1)) &lt;= 0 {
+<span id="L311" class="ln">   311&nbsp;&nbsp;</span>				d = d[1:]
+<span id="L312" class="ln">   312&nbsp;&nbsp;</span>			}
+<span id="L313" class="ln">   313&nbsp;&nbsp;</span>		}
+<span id="L314" class="ln">   314&nbsp;&nbsp;</span>	}
+<span id="L315" class="ln">   315&nbsp;&nbsp;</span>	bestleft = append(bestleft, d[0])
+<span id="L316" class="ln">   316&nbsp;&nbsp;</span>
+<span id="L317" class="ln">   317&nbsp;&nbsp;</span>	<span class="comment">// Recover least weight sequence from bestleft.</span>
+<span id="L318" class="ln">   318&nbsp;&nbsp;</span>	n := 1
+<span id="L319" class="ln">   319&nbsp;&nbsp;</span>	for m := len(words); m &gt; 0; m = bestleft[m] {
+<span id="L320" class="ln">   320&nbsp;&nbsp;</span>		n++
+<span id="L321" class="ln">   321&nbsp;&nbsp;</span>	}
+<span id="L322" class="ln">   322&nbsp;&nbsp;</span>	seq = make([]int, n)
+<span id="L323" class="ln">   323&nbsp;&nbsp;</span>	for m := len(words); m &gt; 0; m = bestleft[m] {
+<span id="L324" class="ln">   324&nbsp;&nbsp;</span>		n--
+<span id="L325" class="ln">   325&nbsp;&nbsp;</span>		seq[n] = m
+<span id="L326" class="ln">   326&nbsp;&nbsp;</span>	}
+<span id="L327" class="ln">   327&nbsp;&nbsp;</span>	return seq
+<span id="L328" class="ln">   328&nbsp;&nbsp;</span>}
+<span id="L329" class="ln">   329&nbsp;&nbsp;</span>
+<span id="L330" class="ln">   330&nbsp;&nbsp;</span><span class="comment">// wrapPenalty is the penalty for inserting a line break after word s.</span>
+<span id="L331" class="ln">   331&nbsp;&nbsp;</span>func wrapPenalty(s string) int64 {
+<span id="L332" class="ln">   332&nbsp;&nbsp;</span>	switch s[len(s)-1] {
+<span id="L333" class="ln">   333&nbsp;&nbsp;</span>	case &#39;.&#39;, &#39;,&#39;, &#39;:&#39;, &#39;;&#39;:
+<span id="L334" class="ln">   334&nbsp;&nbsp;</span>		return 0
+<span id="L335" class="ln">   335&nbsp;&nbsp;</span>	}
+<span id="L336" class="ln">   336&nbsp;&nbsp;</span>	return 64
+<span id="L337" class="ln">   337&nbsp;&nbsp;</span>}
+<span id="L338" class="ln">   338&nbsp;&nbsp;</span>
+</pre><p><a href="text.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

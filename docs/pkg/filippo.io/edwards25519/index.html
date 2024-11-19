@@ -1,0 +1,830 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>edwards25519 - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package edwards25519
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "filippo.io/edwards25519"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+			
+				<dd><a href="index.html#pkg-subdirectories">Subdirectories</a></dd>
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>Package edwards25519 implements group logic for the twisted Edwards curve
+<pre>-x^2 + y^2 = 1 + -(121665/121666)*x^2*y^2
+</pre>
+<p>This is better known as the Edwards curve equivalent to Curve25519, and is
+the curve used by the Ed25519 signature scheme.
+<p>Most users don&apos;t need this package, and should instead use crypto/ed25519 for
+signatures, golang.org/x/crypto/curve25519 for Diffie-Hellman, or
+github.com/gtank/ristretto255 for prime order group logic.
+<p>However, developers who do need to interact with low-level edwards25519
+operations can use this package, which is an extended version of
+crypto/internal/edwards25519 from the standard library repackaged as
+an importable module.
+
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+			
+			
+			
+				
+				<dd><a href="index.html#Point">type Point</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewGeneratorPoint">func NewGeneratorPoint() *Point</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewIdentityPoint">func NewIdentityPoint() *Point</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Point.Add">func (v *Point) Add(p, q *Point) *Point</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Point.Bytes">func (v *Point) Bytes() []byte</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Point.BytesMontgomery">func (v *Point) BytesMontgomery() []byte</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Point.Equal">func (v *Point) Equal(u *Point) int</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Point.ExtendedCoordinates">func (v *Point) ExtendedCoordinates() (X, Y, Z, T *field.Element)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Point.MultByCofactor">func (v *Point) MultByCofactor(p *Point) *Point</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Point.MultiScalarMult">func (v *Point) MultiScalarMult(scalars []*Scalar, points []*Point) *Point</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Point.Negate">func (v *Point) Negate(p *Point) *Point</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Point.ScalarBaseMult">func (v *Point) ScalarBaseMult(x *Scalar) *Point</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Point.ScalarMult">func (v *Point) ScalarMult(x *Scalar, q *Point) *Point</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Point.Set">func (v *Point) Set(u *Point) *Point</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Point.SetBytes">func (v *Point) SetBytes(x []byte) (*Point, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Point.SetExtendedCoordinates">func (v *Point) SetExtendedCoordinates(X, Y, Z, T *field.Element) (*Point, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Point.Subtract">func (v *Point) Subtract(p, q *Point) *Point</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Point.VarTimeDoubleScalarBaseMult">func (v *Point) VarTimeDoubleScalarBaseMult(a *Scalar, A *Point, b *Scalar) *Point</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Point.VarTimeMultiScalarMult">func (v *Point) VarTimeMultiScalarMult(scalars []*Scalar, points []*Point) *Point</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Scalar">type Scalar</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewScalar">func NewScalar() *Scalar</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Scalar.Add">func (s *Scalar) Add(x, y *Scalar) *Scalar</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Scalar.Bytes">func (s *Scalar) Bytes() []byte</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Scalar.Equal">func (s *Scalar) Equal(t *Scalar) int</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Scalar.Invert">func (s *Scalar) Invert(t *Scalar) *Scalar</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Scalar.Multiply">func (s *Scalar) Multiply(x, y *Scalar) *Scalar</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Scalar.MultiplyAdd">func (s *Scalar) MultiplyAdd(x, y, z *Scalar) *Scalar</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Scalar.Negate">func (s *Scalar) Negate(x *Scalar) *Scalar</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Scalar.Set">func (s *Scalar) Set(x *Scalar) *Scalar</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Scalar.SetBytesWithClamping">func (s *Scalar) SetBytesWithClamping(x []byte) (*Scalar, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Scalar.SetCanonicalBytes">func (s *Scalar) SetCanonicalBytes(x []byte) (*Scalar, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Scalar.SetUniformBytes">func (s *Scalar) SetUniformBytes(x []byte) (*Scalar, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Scalar.Subtract">func (s *Scalar) Subtract(x, y *Scalar) *Scalar</a></dd>
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../../src/filippo.io/edwards25519/doc.go">doc.go</a>
+			
+				<a href="../../../src/filippo.io/edwards25519/edwards25519.go">edwards25519.go</a>
+			
+				<a href="../../../src/filippo.io/edwards25519/extra.go">extra.go</a>
+			
+				<a href="../../../src/filippo.io/edwards25519/scalar.go">scalar.go</a>
+			
+				<a href="../../../src/filippo.io/edwards25519/scalar_fiat.go">scalar_fiat.go</a>
+			
+				<a href="../../../src/filippo.io/edwards25519/scalarmult.go">scalarmult.go</a>
+			
+				<a href="../../../src/filippo.io/edwards25519/tables.go">tables.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+		
+		
+		
+			
+			
+			<h2 id="Point">type <a href="../../../src/filippo.io/edwards25519/edwards25519.go?s=594:952#L19">Point</a>
+				<a class="permalink" href="index.html#Point">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Point represents a point on the edwards25519 curve.
+<p>This type works similarly to math/big.Int, and all arguments and receivers
+are allowed to alias.
+<p>The zero value is NOT valid, and it may be used only as a receiver.
+
+			<pre>type Point struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="NewGeneratorPoint">func <a href="../../../src/filippo.io/edwards25519/edwards25519.go?s=2177:2208#L75">NewGeneratorPoint</a>
+					<a class="permalink" href="index.html#NewGeneratorPoint">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func NewGeneratorPoint() *<a href="index.html#Point">Point</a></pre>
+				<p>NewGeneratorPoint returns a new Point set to the canonical generator.
+
+				
+				
+			
+				
+				<h3 id="NewIdentityPoint">func <a href="../../../src/filippo.io/edwards25519/edwards25519.go?s=1653:1683#L62">NewIdentityPoint</a>
+					<a class="permalink" href="index.html#NewIdentityPoint">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func NewIdentityPoint() *<a href="index.html#Point">Point</a></pre>
+				<p>NewIdentityPoint returns a new Point set to the identity.
+
+				
+				
+			
+
+			
+				
+				<h3 id="Point.Add">func (*Point) <a href="../../../src/filippo.io/edwards25519/edwards25519.go?s=6416:6455#L248">Add</a>
+					<a class="permalink" href="index.html#Point.Add">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v *<a href="index.html#Point">Point</a>) Add(p, q *<a href="index.html#Point">Point</a>) *<a href="index.html#Point">Point</a></pre>
+				<p>Add sets v = p + q, and returns v.
+
+				
+				
+				
+			
+				
+				<h3 id="Point.Bytes">func (*Point) <a href="../../../src/filippo.io/edwards25519/edwards25519.go?s=2688:2718#L106">Bytes</a>
+					<a class="permalink" href="index.html#Point.Bytes">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v *<a href="index.html#Point">Point</a>) Bytes() []<a href="../../builtin/index.html#byte">byte</a></pre>
+				<p>Bytes returns the canonical 32-byte encoding of v, according to RFC 8032,
+Section 5.1.2.
+
+				
+				
+				
+			
+				
+				<h3 id="Point.BytesMontgomery">func (*Point) <a href="../../../src/filippo.io/edwards25519/extra.go?s=2926:2966#L78">BytesMontgomery</a>
+					<a class="permalink" href="index.html#Point.BytesMontgomery">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v *<a href="index.html#Point">Point</a>) BytesMontgomery() []<a href="../../builtin/index.html#byte">byte</a></pre>
+				<p>BytesMontgomery converts v to a point on the birationally-equivalent
+Curve25519 Montgomery curve, and returns its canonical 32 bytes encoding
+according to RFC 7748.
+<p>Note that BytesMontgomery only encodes the u-coordinate, so v and -v encode
+to the same value. If v is the identity point, BytesMontgomery returns 32
+zero bytes, analogously to the X25519 function.
+<p>The lack of an inverse operation (such as SetMontgomeryBytes) is deliberate:
+while every valid edwards25519 point has a unique u-coordinate Montgomery
+encoding, X25519 accepts inputs on the quadratic twist, which don&apos;t correspond
+to any edwards25519 point, and every other X25519 input corresponds to two
+edwards25519 points.
+
+				
+				
+				
+			
+				
+				<h3 id="Point.Equal">func (*Point) <a href="../../../src/filippo.io/edwards25519/edwards25519.go?s=9208:9243#L374">Equal</a>
+					<a class="permalink" href="index.html#Point.Equal">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v *<a href="index.html#Point">Point</a>) Equal(u *<a href="index.html#Point">Point</a>) <a href="../../builtin/index.html#int">int</a></pre>
+				<p>Equal returns 1 if v is equivalent to u, and 0 otherwise.
+
+				
+				
+				
+			
+				
+				<h3 id="Point.ExtendedCoordinates">func (*Point) <a href="../../../src/filippo.io/edwards25519/extra.go?s=515:580#L8">ExtendedCoordinates</a>
+					<a class="permalink" href="index.html#Point.ExtendedCoordinates">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v *<a href="index.html#Point">Point</a>) ExtendedCoordinates() (X, Y, Z, T *<a href="field/index.html">field</a>.<a href="field/index.html#Element">Element</a>)</pre>
+				<p>ExtendedCoordinates returns v in extended coordinates (X:Y:Z:T) where
+x = X/Z, y = Y/Z, and xy = T/Z as in <a href="https://eprint.iacr.org/2008/522">https://eprint.iacr.org/2008/522</a>.
+
+				
+				
+				
+			
+				
+				<h3 id="Point.MultByCofactor">func (*Point) <a href="../../../src/filippo.io/edwards25519/extra.go?s=3666:3713#L105">MultByCofactor</a>
+					<a class="permalink" href="index.html#Point.MultByCofactor">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v *<a href="index.html#Point">Point</a>) MultByCofactor(p *<a href="index.html#Point">Point</a>) *<a href="index.html#Point">Point</a></pre>
+				<p>MultByCofactor sets v = 8 * p, and returns v.
+
+				
+				
+				
+			
+				
+				<h3 id="Point.MultiScalarMult">func (*Point) <a href="../../../src/filippo.io/edwards25519/extra.go?s=6957:7031#L233">MultiScalarMult</a>
+					<a class="permalink" href="index.html#Point.MultiScalarMult">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v *<a href="index.html#Point">Point</a>) MultiScalarMult(scalars []*<a href="index.html#Scalar">Scalar</a>, points []*<a href="index.html#Point">Point</a>) *<a href="index.html#Point">Point</a></pre>
+				<p>MultiScalarMult sets v = sum(scalars[i] * points[i]), and returns v.
+<p>Execution time depends only on the lengths of the two slices, which must match.
+
+				
+				
+				
+			
+				
+				<h3 id="Point.Negate">func (*Point) <a href="../../../src/filippo.io/edwards25519/edwards25519.go?s=9005:9044#L364">Negate</a>
+					<a class="permalink" href="index.html#Point.Negate">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v *<a href="index.html#Point">Point</a>) Negate(p *<a href="index.html#Point">Point</a>) *<a href="index.html#Point">Point</a></pre>
+				<p>Negate sets v = -p, and returns v.
+
+				
+				
+				
+			
+				
+				<h3 id="Point.ScalarBaseMult">func (*Point) <a href="../../../src/filippo.io/edwards25519/scalarmult.go?s=874:922#L23">ScalarBaseMult</a>
+					<a class="permalink" href="index.html#Point.ScalarBaseMult">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v *<a href="index.html#Point">Point</a>) ScalarBaseMult(x *<a href="index.html#Scalar">Scalar</a>) *<a href="index.html#Point">Point</a></pre>
+				<p>ScalarBaseMult sets v = x * B, where B is the canonical generator, and
+returns v.
+<p>The scalar multiplication is done in constant time.
+
+				
+				
+				
+			
+				
+				<h3 id="Point.ScalarMult">func (*Point) <a href="../../../src/filippo.io/edwards25519/scalarmult.go?s=2523:2577#L75">ScalarMult</a>
+					<a class="permalink" href="index.html#Point.ScalarMult">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v *<a href="index.html#Point">Point</a>) ScalarMult(x *<a href="index.html#Scalar">Scalar</a>, q *<a href="index.html#Point">Point</a>) *<a href="index.html#Point">Point</a></pre>
+				<p>ScalarMult sets v = x * q, and returns v.
+<p>The scalar multiplication is done in constant time.
+
+				
+				
+				
+			
+				
+				<h3 id="Point.Set">func (*Point) <a href="../../../src/filippo.io/edwards25519/edwards25519.go?s=2518:2554#L97">Set</a>
+					<a class="permalink" href="index.html#Point.Set">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v *<a href="index.html#Point">Point</a>) Set(u *<a href="index.html#Point">Point</a>) *<a href="index.html#Point">Point</a></pre>
+				<p>Set sets v = u, and returns v.
+
+				
+				
+				
+			
+				
+				<h3 id="Point.SetBytes">func (*Point) <a href="../../../src/filippo.io/edwards25519/edwards25519.go?s=3620:3670#L135">SetBytes</a>
+					<a class="permalink" href="index.html#Point.SetBytes">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v *<a href="index.html#Point">Point</a>) SetBytes(x []<a href="../../builtin/index.html#byte">byte</a>) (*<a href="index.html#Point">Point</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+				<p>SetBytes sets v = x, where x is a 32-byte encoding of v. If x does not
+represent a valid point on the curve, SetBytes returns nil and an error and
+the receiver is unchanged. Otherwise, SetBytes returns v.
+<p>Note that SetBytes accepts all non-canonical encodings of valid points.
+That is, it follows decoding rules that match most implementations in
+the ecosystem rather than RFC 8032.
+
+				
+				
+				
+			
+				
+				<h3 id="Point.SetExtendedCoordinates">func (*Point) <a href="../../../src/filippo.io/edwards25519/extra.go?s=1416:1497#L32">SetExtendedCoordinates</a>
+					<a class="permalink" href="index.html#Point.SetExtendedCoordinates">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v *<a href="index.html#Point">Point</a>) SetExtendedCoordinates(X, Y, Z, T *<a href="field/index.html">field</a>.<a href="field/index.html#Element">Element</a>) (*<a href="index.html#Point">Point</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+				<p>SetExtendedCoordinates sets v = (X:Y:Z:T) in extended coordinates where
+x = X/Z, y = Y/Z, and xy = T/Z as in <a href="https://eprint.iacr.org/2008/522">https://eprint.iacr.org/2008/522</a>.
+<p>If the coordinates are invalid or don&apos;t represent a valid point on the curve,
+SetExtendedCoordinates returns nil and an error and the receiver is
+unchanged. Otherwise, SetExtendedCoordinates returns v.
+
+				
+				
+				
+			
+				
+				<h3 id="Point.Subtract">func (*Point) <a href="../../../src/filippo.io/edwards25519/edwards25519.go?s=6636:6680#L256">Subtract</a>
+					<a class="permalink" href="index.html#Point.Subtract">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v *<a href="index.html#Point">Point</a>) Subtract(p, q *<a href="index.html#Point">Point</a>) *<a href="index.html#Point">Point</a></pre>
+				<p>Subtract sets v = p - q, and returns v.
+
+				
+				
+				
+			
+				
+				<h3 id="Point.VarTimeDoubleScalarBaseMult">func (*Point) <a href="../../../src/filippo.io/edwards25519/scalarmult.go?s=4435:4517#L133">VarTimeDoubleScalarBaseMult</a>
+					<a class="permalink" href="index.html#Point.VarTimeDoubleScalarBaseMult">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v *<a href="index.html#Point">Point</a>) VarTimeDoubleScalarBaseMult(a *<a href="index.html#Scalar">Scalar</a>, A *<a href="index.html#Point">Point</a>, b *<a href="index.html#Scalar">Scalar</a>) *<a href="index.html#Point">Point</a></pre>
+				<p>VarTimeDoubleScalarBaseMult sets v = a * A + b * B, where B is the canonical
+generator, and returns v.
+<p>Execution time depends on the inputs.
+
+				
+				
+				
+			
+				
+				<h3 id="Point.VarTimeMultiScalarMult">func (*Point) <a href="../../../src/filippo.io/edwards25519/extra.go?s=8975:9056#L287">VarTimeMultiScalarMult</a>
+					<a class="permalink" href="index.html#Point.VarTimeMultiScalarMult">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v *<a href="index.html#Point">Point</a>) VarTimeMultiScalarMult(scalars []*<a href="index.html#Scalar">Scalar</a>, points []*<a href="index.html#Point">Point</a>) *<a href="index.html#Point">Point</a></pre>
+				<p>VarTimeMultiScalarMult sets v = sum(scalars[i] * points[i]), and returns v.
+<p>Execution time depends on the inputs.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Scalar">type <a href="../../../src/filippo.io/edwards25519/scalar.go?s=527:690#L12">Scalar</a>
+				<a class="permalink" href="index.html#Scalar">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A Scalar is an integer modulo
+<pre>l = 2^252 + 27742317777372353535851937790883648493
+</pre>
+<p>which is the prime order of the edwards25519 group.
+<p>This type works similarly to math/big.Int, and all arguments and
+receivers are allowed to alias.
+<p>The zero value is a valid zero element.
+
+			<pre>type Scalar struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="NewScalar">func <a href="../../../src/filippo.io/edwards25519/scalar.go?s=2202:2226#L47">NewScalar</a>
+					<a class="permalink" href="index.html#NewScalar">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func NewScalar() *<a href="index.html#Scalar">Scalar</a></pre>
+				<p>NewScalar returns a new zero Scalar.
+
+				
+				
+			
+
+			
+				
+				<h3 id="Scalar.Add">func (*Scalar) <a href="../../../src/filippo.io/edwards25519/scalar.go?s=2572:2614#L60">Add</a>
+					<a class="permalink" href="index.html#Scalar.Add">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (s *<a href="index.html#Scalar">Scalar</a>) Add(x, y *<a href="index.html#Scalar">Scalar</a>) *<a href="index.html#Scalar">Scalar</a></pre>
+				<p>Add sets s = x + y mod l, and returns s.
+
+				
+				
+				
+			
+				
+				<h3 id="Scalar.Bytes">func (*Scalar) <a href="../../../src/filippo.io/edwards25519/scalar.go?s=8028:8059#L214">Bytes</a>
+					<a class="permalink" href="index.html#Scalar.Bytes">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (s *<a href="index.html#Scalar">Scalar</a>) Bytes() []<a href="../../builtin/index.html#byte">byte</a></pre>
+				<p>Bytes returns the canonical 32-byte little-endian encoding of s.
+
+				
+				
+				
+			
+				
+				<h3 id="Scalar.Equal">func (*Scalar) <a href="../../../src/filippo.io/edwards25519/scalar.go?s=8477:8514#L229">Equal</a>
+					<a class="permalink" href="index.html#Scalar.Equal">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (s *<a href="index.html#Scalar">Scalar</a>) Equal(t *<a href="index.html#Scalar">Scalar</a>) <a href="../../builtin/index.html#int">int</a></pre>
+				<p>Equal returns 1 if s and t are equal, and 0 otherwise.
+
+				
+				
+				
+			
+				
+				<h3 id="Scalar.Invert">func (*Scalar) <a href="../../../src/filippo.io/edwards25519/extra.go?s=4152:4194#L127">Invert</a>
+					<a class="permalink" href="index.html#Scalar.Invert">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (s *<a href="index.html#Scalar">Scalar</a>) Invert(t *<a href="index.html#Scalar">Scalar</a>) *<a href="index.html#Scalar">Scalar</a></pre>
+				<p>Invert sets s to the inverse of a nonzero scalar v, and returns s.
+<p>If t is zero, Invert returns zero.
+
+				
+				
+				
+			
+				
+				<h3 id="Scalar.Multiply">func (*Scalar) <a href="../../../src/filippo.io/edwards25519/scalar.go?s=3060:3107#L81">Multiply</a>
+					<a class="permalink" href="index.html#Scalar.Multiply">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (s *<a href="index.html#Scalar">Scalar</a>) Multiply(x, y *<a href="index.html#Scalar">Scalar</a>) *<a href="index.html#Scalar">Scalar</a></pre>
+				<p>Multiply sets s = x * y mod l, and returns s.
+
+				
+				
+				
+			
+				
+				<h3 id="Scalar.MultiplyAdd">func (*Scalar) <a href="../../../src/filippo.io/edwards25519/scalar.go?s=2358:2411#L53">MultiplyAdd</a>
+					<a class="permalink" href="index.html#Scalar.MultiplyAdd">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (s *<a href="index.html#Scalar">Scalar</a>) MultiplyAdd(x, y, z *<a href="index.html#Scalar">Scalar</a>) *<a href="index.html#Scalar">Scalar</a></pre>
+				<p>MultiplyAdd sets s = x * y + z mod l, and returns s. It is equivalent to
+using Multiply and then Add.
+
+				
+				
+				
+			
+				
+				<h3 id="Scalar.Negate">func (*Scalar) <a href="../../../src/filippo.io/edwards25519/scalar.go?s=2901:2943#L74">Negate</a>
+					<a class="permalink" href="index.html#Scalar.Negate">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (s *<a href="index.html#Scalar">Scalar</a>) Negate(x *<a href="index.html#Scalar">Scalar</a>) *<a href="index.html#Scalar">Scalar</a></pre>
+				<p>Negate sets s = -x mod l, and returns s.
+
+				
+				
+				
+			
+				
+				<h3 id="Scalar.Set">func (*Scalar) <a href="../../../src/filippo.io/edwards25519/scalar.go?s=3214:3253#L88">Set</a>
+					<a class="permalink" href="index.html#Scalar.Set">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (s *<a href="index.html#Scalar">Scalar</a>) Set(x *<a href="index.html#Scalar">Scalar</a>) *<a href="index.html#Scalar">Scalar</a></pre>
+				<p>Set sets s = x, and returns s.
+
+				
+				
+				
+			
+				
+				<h3 id="Scalar.SetBytesWithClamping">func (*Scalar) <a href="../../../src/filippo.io/edwards25519/scalar.go?s=7201:7265#L194">SetBytesWithClamping</a>
+					<a class="permalink" href="index.html#Scalar.SetBytesWithClamping">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (s *<a href="index.html#Scalar">Scalar</a>) SetBytesWithClamping(x []<a href="../../builtin/index.html#byte">byte</a>) (*<a href="index.html#Scalar">Scalar</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+				<p>SetBytesWithClamping applies the buffer pruning described in RFC 8032,
+Section 5.1.5 (also known as clamping) and sets s to the result. The input
+must be 32 bytes, and it is not modified. If x is not of the right length,
+SetBytesWithClamping returns nil and an error, and the receiver is unchanged.
+<p>Note that since Scalar values are always reduced modulo the prime order of
+the curve, the resulting value will not preserve any of the cofactor-clearing
+properties that clamping is meant to provide. It will however work as
+expected as long as it is applied to points on the prime order subgroup, like
+in Ed25519. In fact, it is lost to history why RFC 8032 adopted the
+irrelevant RFC 7748 clamping, but it is now required for compatibility.
+
+				
+				
+				
+			
+				
+				<h3 id="Scalar.SetCanonicalBytes">func (*Scalar) <a href="../../../src/filippo.io/edwards25519/scalar.go?s=5494:5555#L148">SetCanonicalBytes</a>
+					<a class="permalink" href="index.html#Scalar.SetCanonicalBytes">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (s *<a href="index.html#Scalar">Scalar</a>) SetCanonicalBytes(x []<a href="../../builtin/index.html#byte">byte</a>) (*<a href="index.html#Scalar">Scalar</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+				<p>SetCanonicalBytes sets s = x, where x is a 32-byte little-endian encoding of
+s, and returns s. If x is not a canonical encoding of s, SetCanonicalBytes
+returns nil and an error, and the receiver is unchanged.
+
+				
+				
+				
+			
+				
+				<h3 id="Scalar.SetUniformBytes">func (*Scalar) <a href="../../../src/filippo.io/edwards25519/scalar.go?s=3595:3654#L99">SetUniformBytes</a>
+					<a class="permalink" href="index.html#Scalar.SetUniformBytes">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (s *<a href="index.html#Scalar">Scalar</a>) SetUniformBytes(x []<a href="../../builtin/index.html#byte">byte</a>) (*<a href="index.html#Scalar">Scalar</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+				<p>SetUniformBytes sets s = x mod l, where x is a 64-byte little-endian integer.
+If x is not of the right length, SetUniformBytes returns nil and an error,
+and the receiver is unchanged.
+<p>SetUniformBytes can be used to set s to a uniformly distributed value given
+64 uniformly distributed random bytes.
+
+				
+				
+				
+			
+				
+				<h3 id="Scalar.Subtract">func (*Scalar) <a href="../../../src/filippo.io/edwards25519/scalar.go?s=2736:2783#L67">Subtract</a>
+					<a class="permalink" href="index.html#Scalar.Subtract">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (s *<a href="index.html#Scalar">Scalar</a>) Subtract(x, y *<a href="index.html#Scalar">Scalar</a>) *<a href="index.html#Scalar">Scalar</a></pre>
+				<p>Subtract sets s = x - y mod l, and returns s.
+
+				
+				
+				
+			
+		
+	
+
+	
+
+
+
+
+
+	
+	
+		<h2 id="pkg-subdirectories">Subdirectories</h2>
+	
+	<div class="pkg-dir">
+		<table>
+			<tr>
+				<th class="pkg-name">Name</th>
+				<th class="pkg-synopsis">Synopsis</th>
+			</tr>
+
+			
+			<tr>
+				<td colspan="2"><a href="http://localhost:8080/pkg/filippo.io/">..</a></td>
+			</tr>
+			
+
+			
+				<tr>
+				
+					<td class="pkg-name" style="padding-left: 0px;">
+						<a href="field/index.html">field</a>
+					</td>
+				
+					<td class="pkg-synopsis">
+						Package field implements fast arithmetic modulo 2^255-19.
+					</td>
+				</tr>
+			
+		</table>
+	</div>
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

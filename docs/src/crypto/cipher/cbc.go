@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>src/crypto/cipher/cbc.go - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="cbc.go#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Source file
+    <a href="http://localhost:8080/src">src</a>/<a href="http://localhost:8080/src/crypto">crypto</a>/<a href="http://localhost:8080/src/crypto/cipher">cipher</a>/<span class="text-muted">cbc.go</span>
+  </h1>
+
+
+
+
+
+  <h2>
+    Documentation: <a href="http://localhost:8080/pkg/crypto/cipher">crypto/cipher</a>
+  </h2>
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1&nbsp;&nbsp;</span><span class="comment">// Copyright 2009 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2&nbsp;&nbsp;</span><span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3&nbsp;&nbsp;</span><span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4&nbsp;&nbsp;</span>
+<span id="L5" class="ln">     5&nbsp;&nbsp;</span><span class="comment">// Cipher block chaining (CBC) mode.</span>
+<span id="L6" class="ln">     6&nbsp;&nbsp;</span>
+<span id="L7" class="ln">     7&nbsp;&nbsp;</span><span class="comment">// CBC provides confidentiality by xoring (chaining) each plaintext block</span>
+<span id="L8" class="ln">     8&nbsp;&nbsp;</span><span class="comment">// with the previous ciphertext block before applying the block cipher.</span>
+<span id="L9" class="ln">     9&nbsp;&nbsp;</span>
+<span id="L10" class="ln">    10&nbsp;&nbsp;</span><span class="comment">// See NIST SP 800-38A, pp 10-11</span>
+<span id="L11" class="ln">    11&nbsp;&nbsp;</span>
+<span id="L12" class="ln">    12&nbsp;&nbsp;</span>package cipher
+<span id="L13" class="ln">    13&nbsp;&nbsp;</span>
+<span id="L14" class="ln">    14&nbsp;&nbsp;</span>import (
+<span id="L15" class="ln">    15&nbsp;&nbsp;</span>	&#34;bytes&#34;
+<span id="L16" class="ln">    16&nbsp;&nbsp;</span>	&#34;crypto/internal/alias&#34;
+<span id="L17" class="ln">    17&nbsp;&nbsp;</span>	&#34;crypto/subtle&#34;
+<span id="L18" class="ln">    18&nbsp;&nbsp;</span>)
+<span id="L19" class="ln">    19&nbsp;&nbsp;</span>
+<span id="L20" class="ln">    20&nbsp;&nbsp;</span>type cbc struct {
+<span id="L21" class="ln">    21&nbsp;&nbsp;</span>	b         Block
+<span id="L22" class="ln">    22&nbsp;&nbsp;</span>	blockSize int
+<span id="L23" class="ln">    23&nbsp;&nbsp;</span>	iv        []byte
+<span id="L24" class="ln">    24&nbsp;&nbsp;</span>	tmp       []byte
+<span id="L25" class="ln">    25&nbsp;&nbsp;</span>}
+<span id="L26" class="ln">    26&nbsp;&nbsp;</span>
+<span id="L27" class="ln">    27&nbsp;&nbsp;</span>func newCBC(b Block, iv []byte) *cbc {
+<span id="L28" class="ln">    28&nbsp;&nbsp;</span>	return &amp;cbc{
+<span id="L29" class="ln">    29&nbsp;&nbsp;</span>		b:         b,
+<span id="L30" class="ln">    30&nbsp;&nbsp;</span>		blockSize: b.BlockSize(),
+<span id="L31" class="ln">    31&nbsp;&nbsp;</span>		iv:        bytes.Clone(iv),
+<span id="L32" class="ln">    32&nbsp;&nbsp;</span>		tmp:       make([]byte, b.BlockSize()),
+<span id="L33" class="ln">    33&nbsp;&nbsp;</span>	}
+<span id="L34" class="ln">    34&nbsp;&nbsp;</span>}
+<span id="L35" class="ln">    35&nbsp;&nbsp;</span>
+<span id="L36" class="ln">    36&nbsp;&nbsp;</span>type cbcEncrypter cbc
+<span id="L37" class="ln">    37&nbsp;&nbsp;</span>
+<span id="L38" class="ln">    38&nbsp;&nbsp;</span><span class="comment">// cbcEncAble is an interface implemented by ciphers that have a specific</span>
+<span id="L39" class="ln">    39&nbsp;&nbsp;</span><span class="comment">// optimized implementation of CBC encryption, like crypto/aes.</span>
+<span id="L40" class="ln">    40&nbsp;&nbsp;</span><span class="comment">// NewCBCEncrypter will check for this interface and return the specific</span>
+<span id="L41" class="ln">    41&nbsp;&nbsp;</span><span class="comment">// BlockMode if found.</span>
+<span id="L42" class="ln">    42&nbsp;&nbsp;</span>type cbcEncAble interface {
+<span id="L43" class="ln">    43&nbsp;&nbsp;</span>	NewCBCEncrypter(iv []byte) BlockMode
+<span id="L44" class="ln">    44&nbsp;&nbsp;</span>}
+<span id="L45" class="ln">    45&nbsp;&nbsp;</span>
+<span id="L46" class="ln">    46&nbsp;&nbsp;</span><span class="comment">// NewCBCEncrypter returns a BlockMode which encrypts in cipher block chaining</span>
+<span id="L47" class="ln">    47&nbsp;&nbsp;</span><span class="comment">// mode, using the given Block. The length of iv must be the same as the</span>
+<span id="L48" class="ln">    48&nbsp;&nbsp;</span><span class="comment">// Block&#39;s block size.</span>
+<span id="L49" class="ln">    49&nbsp;&nbsp;</span>func NewCBCEncrypter(b Block, iv []byte) BlockMode {
+<span id="L50" class="ln">    50&nbsp;&nbsp;</span>	if len(iv) != b.BlockSize() {
+<span id="L51" class="ln">    51&nbsp;&nbsp;</span>		panic(&#34;cipher.NewCBCEncrypter: IV length must equal block size&#34;)
+<span id="L52" class="ln">    52&nbsp;&nbsp;</span>	}
+<span id="L53" class="ln">    53&nbsp;&nbsp;</span>	if cbc, ok := b.(cbcEncAble); ok {
+<span id="L54" class="ln">    54&nbsp;&nbsp;</span>		return cbc.NewCBCEncrypter(iv)
+<span id="L55" class="ln">    55&nbsp;&nbsp;</span>	}
+<span id="L56" class="ln">    56&nbsp;&nbsp;</span>	return (*cbcEncrypter)(newCBC(b, iv))
+<span id="L57" class="ln">    57&nbsp;&nbsp;</span>}
+<span id="L58" class="ln">    58&nbsp;&nbsp;</span>
+<span id="L59" class="ln">    59&nbsp;&nbsp;</span><span class="comment">// newCBCGenericEncrypter returns a BlockMode which encrypts in cipher block chaining</span>
+<span id="L60" class="ln">    60&nbsp;&nbsp;</span><span class="comment">// mode, using the given Block. The length of iv must be the same as the</span>
+<span id="L61" class="ln">    61&nbsp;&nbsp;</span><span class="comment">// Block&#39;s block size. This always returns the generic non-asm encrypter for use</span>
+<span id="L62" class="ln">    62&nbsp;&nbsp;</span><span class="comment">// in fuzz testing.</span>
+<span id="L63" class="ln">    63&nbsp;&nbsp;</span>func newCBCGenericEncrypter(b Block, iv []byte) BlockMode {
+<span id="L64" class="ln">    64&nbsp;&nbsp;</span>	if len(iv) != b.BlockSize() {
+<span id="L65" class="ln">    65&nbsp;&nbsp;</span>		panic(&#34;cipher.NewCBCEncrypter: IV length must equal block size&#34;)
+<span id="L66" class="ln">    66&nbsp;&nbsp;</span>	}
+<span id="L67" class="ln">    67&nbsp;&nbsp;</span>	return (*cbcEncrypter)(newCBC(b, iv))
+<span id="L68" class="ln">    68&nbsp;&nbsp;</span>}
+<span id="L69" class="ln">    69&nbsp;&nbsp;</span>
+<span id="L70" class="ln">    70&nbsp;&nbsp;</span>func (x *cbcEncrypter) BlockSize() int { return x.blockSize }
+<span id="L71" class="ln">    71&nbsp;&nbsp;</span>
+<span id="L72" class="ln">    72&nbsp;&nbsp;</span>func (x *cbcEncrypter) CryptBlocks(dst, src []byte) {
+<span id="L73" class="ln">    73&nbsp;&nbsp;</span>	if len(src)%x.blockSize != 0 {
+<span id="L74" class="ln">    74&nbsp;&nbsp;</span>		panic(&#34;crypto/cipher: input not full blocks&#34;)
+<span id="L75" class="ln">    75&nbsp;&nbsp;</span>	}
+<span id="L76" class="ln">    76&nbsp;&nbsp;</span>	if len(dst) &lt; len(src) {
+<span id="L77" class="ln">    77&nbsp;&nbsp;</span>		panic(&#34;crypto/cipher: output smaller than input&#34;)
+<span id="L78" class="ln">    78&nbsp;&nbsp;</span>	}
+<span id="L79" class="ln">    79&nbsp;&nbsp;</span>	if alias.InexactOverlap(dst[:len(src)], src) {
+<span id="L80" class="ln">    80&nbsp;&nbsp;</span>		panic(&#34;crypto/cipher: invalid buffer overlap&#34;)
+<span id="L81" class="ln">    81&nbsp;&nbsp;</span>	}
+<span id="L82" class="ln">    82&nbsp;&nbsp;</span>
+<span id="L83" class="ln">    83&nbsp;&nbsp;</span>	iv := x.iv
+<span id="L84" class="ln">    84&nbsp;&nbsp;</span>
+<span id="L85" class="ln">    85&nbsp;&nbsp;</span>	for len(src) &gt; 0 {
+<span id="L86" class="ln">    86&nbsp;&nbsp;</span>		<span class="comment">// Write the xor to dst, then encrypt in place.</span>
+<span id="L87" class="ln">    87&nbsp;&nbsp;</span>		subtle.XORBytes(dst[:x.blockSize], src[:x.blockSize], iv)
+<span id="L88" class="ln">    88&nbsp;&nbsp;</span>		x.b.Encrypt(dst[:x.blockSize], dst[:x.blockSize])
+<span id="L89" class="ln">    89&nbsp;&nbsp;</span>
+<span id="L90" class="ln">    90&nbsp;&nbsp;</span>		<span class="comment">// Move to the next block with this block as the next iv.</span>
+<span id="L91" class="ln">    91&nbsp;&nbsp;</span>		iv = dst[:x.blockSize]
+<span id="L92" class="ln">    92&nbsp;&nbsp;</span>		src = src[x.blockSize:]
+<span id="L93" class="ln">    93&nbsp;&nbsp;</span>		dst = dst[x.blockSize:]
+<span id="L94" class="ln">    94&nbsp;&nbsp;</span>	}
+<span id="L95" class="ln">    95&nbsp;&nbsp;</span>
+<span id="L96" class="ln">    96&nbsp;&nbsp;</span>	<span class="comment">// Save the iv for the next CryptBlocks call.</span>
+<span id="L97" class="ln">    97&nbsp;&nbsp;</span>	copy(x.iv, iv)
+<span id="L98" class="ln">    98&nbsp;&nbsp;</span>}
+<span id="L99" class="ln">    99&nbsp;&nbsp;</span>
+<span id="L100" class="ln">   100&nbsp;&nbsp;</span>func (x *cbcEncrypter) SetIV(iv []byte) {
+<span id="L101" class="ln">   101&nbsp;&nbsp;</span>	if len(iv) != len(x.iv) {
+<span id="L102" class="ln">   102&nbsp;&nbsp;</span>		panic(&#34;cipher: incorrect length IV&#34;)
+<span id="L103" class="ln">   103&nbsp;&nbsp;</span>	}
+<span id="L104" class="ln">   104&nbsp;&nbsp;</span>	copy(x.iv, iv)
+<span id="L105" class="ln">   105&nbsp;&nbsp;</span>}
+<span id="L106" class="ln">   106&nbsp;&nbsp;</span>
+<span id="L107" class="ln">   107&nbsp;&nbsp;</span>type cbcDecrypter cbc
+<span id="L108" class="ln">   108&nbsp;&nbsp;</span>
+<span id="L109" class="ln">   109&nbsp;&nbsp;</span><span class="comment">// cbcDecAble is an interface implemented by ciphers that have a specific</span>
+<span id="L110" class="ln">   110&nbsp;&nbsp;</span><span class="comment">// optimized implementation of CBC decryption, like crypto/aes.</span>
+<span id="L111" class="ln">   111&nbsp;&nbsp;</span><span class="comment">// NewCBCDecrypter will check for this interface and return the specific</span>
+<span id="L112" class="ln">   112&nbsp;&nbsp;</span><span class="comment">// BlockMode if found.</span>
+<span id="L113" class="ln">   113&nbsp;&nbsp;</span>type cbcDecAble interface {
+<span id="L114" class="ln">   114&nbsp;&nbsp;</span>	NewCBCDecrypter(iv []byte) BlockMode
+<span id="L115" class="ln">   115&nbsp;&nbsp;</span>}
+<span id="L116" class="ln">   116&nbsp;&nbsp;</span>
+<span id="L117" class="ln">   117&nbsp;&nbsp;</span><span class="comment">// NewCBCDecrypter returns a BlockMode which decrypts in cipher block chaining</span>
+<span id="L118" class="ln">   118&nbsp;&nbsp;</span><span class="comment">// mode, using the given Block. The length of iv must be the same as the</span>
+<span id="L119" class="ln">   119&nbsp;&nbsp;</span><span class="comment">// Block&#39;s block size and must match the iv used to encrypt the data.</span>
+<span id="L120" class="ln">   120&nbsp;&nbsp;</span>func NewCBCDecrypter(b Block, iv []byte) BlockMode {
+<span id="L121" class="ln">   121&nbsp;&nbsp;</span>	if len(iv) != b.BlockSize() {
+<span id="L122" class="ln">   122&nbsp;&nbsp;</span>		panic(&#34;cipher.NewCBCDecrypter: IV length must equal block size&#34;)
+<span id="L123" class="ln">   123&nbsp;&nbsp;</span>	}
+<span id="L124" class="ln">   124&nbsp;&nbsp;</span>	if cbc, ok := b.(cbcDecAble); ok {
+<span id="L125" class="ln">   125&nbsp;&nbsp;</span>		return cbc.NewCBCDecrypter(iv)
+<span id="L126" class="ln">   126&nbsp;&nbsp;</span>	}
+<span id="L127" class="ln">   127&nbsp;&nbsp;</span>	return (*cbcDecrypter)(newCBC(b, iv))
+<span id="L128" class="ln">   128&nbsp;&nbsp;</span>}
+<span id="L129" class="ln">   129&nbsp;&nbsp;</span>
+<span id="L130" class="ln">   130&nbsp;&nbsp;</span><span class="comment">// newCBCGenericDecrypter returns a BlockMode which encrypts in cipher block chaining</span>
+<span id="L131" class="ln">   131&nbsp;&nbsp;</span><span class="comment">// mode, using the given Block. The length of iv must be the same as the</span>
+<span id="L132" class="ln">   132&nbsp;&nbsp;</span><span class="comment">// Block&#39;s block size. This always returns the generic non-asm decrypter for use in</span>
+<span id="L133" class="ln">   133&nbsp;&nbsp;</span><span class="comment">// fuzz testing.</span>
+<span id="L134" class="ln">   134&nbsp;&nbsp;</span>func newCBCGenericDecrypter(b Block, iv []byte) BlockMode {
+<span id="L135" class="ln">   135&nbsp;&nbsp;</span>	if len(iv) != b.BlockSize() {
+<span id="L136" class="ln">   136&nbsp;&nbsp;</span>		panic(&#34;cipher.NewCBCDecrypter: IV length must equal block size&#34;)
+<span id="L137" class="ln">   137&nbsp;&nbsp;</span>	}
+<span id="L138" class="ln">   138&nbsp;&nbsp;</span>	return (*cbcDecrypter)(newCBC(b, iv))
+<span id="L139" class="ln">   139&nbsp;&nbsp;</span>}
+<span id="L140" class="ln">   140&nbsp;&nbsp;</span>
+<span id="L141" class="ln">   141&nbsp;&nbsp;</span>func (x *cbcDecrypter) BlockSize() int { return x.blockSize }
+<span id="L142" class="ln">   142&nbsp;&nbsp;</span>
+<span id="L143" class="ln">   143&nbsp;&nbsp;</span>func (x *cbcDecrypter) CryptBlocks(dst, src []byte) {
+<span id="L144" class="ln">   144&nbsp;&nbsp;</span>	if len(src)%x.blockSize != 0 {
+<span id="L145" class="ln">   145&nbsp;&nbsp;</span>		panic(&#34;crypto/cipher: input not full blocks&#34;)
+<span id="L146" class="ln">   146&nbsp;&nbsp;</span>	}
+<span id="L147" class="ln">   147&nbsp;&nbsp;</span>	if len(dst) &lt; len(src) {
+<span id="L148" class="ln">   148&nbsp;&nbsp;</span>		panic(&#34;crypto/cipher: output smaller than input&#34;)
+<span id="L149" class="ln">   149&nbsp;&nbsp;</span>	}
+<span id="L150" class="ln">   150&nbsp;&nbsp;</span>	if alias.InexactOverlap(dst[:len(src)], src) {
+<span id="L151" class="ln">   151&nbsp;&nbsp;</span>		panic(&#34;crypto/cipher: invalid buffer overlap&#34;)
+<span id="L152" class="ln">   152&nbsp;&nbsp;</span>	}
+<span id="L153" class="ln">   153&nbsp;&nbsp;</span>	if len(src) == 0 {
+<span id="L154" class="ln">   154&nbsp;&nbsp;</span>		return
+<span id="L155" class="ln">   155&nbsp;&nbsp;</span>	}
+<span id="L156" class="ln">   156&nbsp;&nbsp;</span>
+<span id="L157" class="ln">   157&nbsp;&nbsp;</span>	<span class="comment">// For each block, we need to xor the decrypted data with the previous block&#39;s ciphertext (the iv).</span>
+<span id="L158" class="ln">   158&nbsp;&nbsp;</span>	<span class="comment">// To avoid making a copy each time, we loop over the blocks BACKWARDS.</span>
+<span id="L159" class="ln">   159&nbsp;&nbsp;</span>	end := len(src)
+<span id="L160" class="ln">   160&nbsp;&nbsp;</span>	start := end - x.blockSize
+<span id="L161" class="ln">   161&nbsp;&nbsp;</span>	prev := start - x.blockSize
+<span id="L162" class="ln">   162&nbsp;&nbsp;</span>
+<span id="L163" class="ln">   163&nbsp;&nbsp;</span>	<span class="comment">// Copy the last block of ciphertext in preparation as the new iv.</span>
+<span id="L164" class="ln">   164&nbsp;&nbsp;</span>	copy(x.tmp, src[start:end])
+<span id="L165" class="ln">   165&nbsp;&nbsp;</span>
+<span id="L166" class="ln">   166&nbsp;&nbsp;</span>	<span class="comment">// Loop over all but the first block.</span>
+<span id="L167" class="ln">   167&nbsp;&nbsp;</span>	for start &gt; 0 {
+<span id="L168" class="ln">   168&nbsp;&nbsp;</span>		x.b.Decrypt(dst[start:end], src[start:end])
+<span id="L169" class="ln">   169&nbsp;&nbsp;</span>		subtle.XORBytes(dst[start:end], dst[start:end], src[prev:start])
+<span id="L170" class="ln">   170&nbsp;&nbsp;</span>
+<span id="L171" class="ln">   171&nbsp;&nbsp;</span>		end = start
+<span id="L172" class="ln">   172&nbsp;&nbsp;</span>		start = prev
+<span id="L173" class="ln">   173&nbsp;&nbsp;</span>		prev -= x.blockSize
+<span id="L174" class="ln">   174&nbsp;&nbsp;</span>	}
+<span id="L175" class="ln">   175&nbsp;&nbsp;</span>
+<span id="L176" class="ln">   176&nbsp;&nbsp;</span>	<span class="comment">// The first block is special because it uses the saved iv.</span>
+<span id="L177" class="ln">   177&nbsp;&nbsp;</span>	x.b.Decrypt(dst[start:end], src[start:end])
+<span id="L178" class="ln">   178&nbsp;&nbsp;</span>	subtle.XORBytes(dst[start:end], dst[start:end], x.iv)
+<span id="L179" class="ln">   179&nbsp;&nbsp;</span>
+<span id="L180" class="ln">   180&nbsp;&nbsp;</span>	<span class="comment">// Set the new iv to the first block we copied earlier.</span>
+<span id="L181" class="ln">   181&nbsp;&nbsp;</span>	x.iv, x.tmp = x.tmp, x.iv
+<span id="L182" class="ln">   182&nbsp;&nbsp;</span>}
+<span id="L183" class="ln">   183&nbsp;&nbsp;</span>
+<span id="L184" class="ln">   184&nbsp;&nbsp;</span>func (x *cbcDecrypter) SetIV(iv []byte) {
+<span id="L185" class="ln">   185&nbsp;&nbsp;</span>	if len(iv) != len(x.iv) {
+<span id="L186" class="ln">   186&nbsp;&nbsp;</span>		panic(&#34;cipher: incorrect length IV&#34;)
+<span id="L187" class="ln">   187&nbsp;&nbsp;</span>	}
+<span id="L188" class="ln">   188&nbsp;&nbsp;</span>	copy(x.iv, iv)
+<span id="L189" class="ln">   189&nbsp;&nbsp;</span>}
+<span id="L190" class="ln">   190&nbsp;&nbsp;</span>
+</pre><p><a href="cbc.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

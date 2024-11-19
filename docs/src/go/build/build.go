@@ -1,0 +1,2121 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>src/go/build/build.go - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="build.go#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Source file
+    <a href="http://localhost:8080/src">src</a>/<a href="http://localhost:8080/src/go">go</a>/<a href="http://localhost:8080/src/go/build">build</a>/<span class="text-muted">build.go</span>
+  </h1>
+
+
+
+
+
+  <h2>
+    Documentation: <a href="http://localhost:8080/pkg/go/build">go/build</a>
+  </h2>
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1&nbsp;&nbsp;</span><span class="comment">// Copyright 2011 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2&nbsp;&nbsp;</span><span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3&nbsp;&nbsp;</span><span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4&nbsp;&nbsp;</span>
+<span id="L5" class="ln">     5&nbsp;&nbsp;</span>package build
+<span id="L6" class="ln">     6&nbsp;&nbsp;</span>
+<span id="L7" class="ln">     7&nbsp;&nbsp;</span>import (
+<span id="L8" class="ln">     8&nbsp;&nbsp;</span>	&#34;bytes&#34;
+<span id="L9" class="ln">     9&nbsp;&nbsp;</span>	&#34;errors&#34;
+<span id="L10" class="ln">    10&nbsp;&nbsp;</span>	&#34;fmt&#34;
+<span id="L11" class="ln">    11&nbsp;&nbsp;</span>	&#34;go/ast&#34;
+<span id="L12" class="ln">    12&nbsp;&nbsp;</span>	&#34;go/build/constraint&#34;
+<span id="L13" class="ln">    13&nbsp;&nbsp;</span>	&#34;go/doc&#34;
+<span id="L14" class="ln">    14&nbsp;&nbsp;</span>	&#34;go/token&#34;
+<span id="L15" class="ln">    15&nbsp;&nbsp;</span>	&#34;internal/buildcfg&#34;
+<span id="L16" class="ln">    16&nbsp;&nbsp;</span>	&#34;internal/godebug&#34;
+<span id="L17" class="ln">    17&nbsp;&nbsp;</span>	&#34;internal/goroot&#34;
+<span id="L18" class="ln">    18&nbsp;&nbsp;</span>	&#34;internal/goversion&#34;
+<span id="L19" class="ln">    19&nbsp;&nbsp;</span>	&#34;internal/platform&#34;
+<span id="L20" class="ln">    20&nbsp;&nbsp;</span>	&#34;io&#34;
+<span id="L21" class="ln">    21&nbsp;&nbsp;</span>	&#34;io/fs&#34;
+<span id="L22" class="ln">    22&nbsp;&nbsp;</span>	&#34;os&#34;
+<span id="L23" class="ln">    23&nbsp;&nbsp;</span>	&#34;os/exec&#34;
+<span id="L24" class="ln">    24&nbsp;&nbsp;</span>	pathpkg &#34;path&#34;
+<span id="L25" class="ln">    25&nbsp;&nbsp;</span>	&#34;path/filepath&#34;
+<span id="L26" class="ln">    26&nbsp;&nbsp;</span>	&#34;runtime&#34;
+<span id="L27" class="ln">    27&nbsp;&nbsp;</span>	&#34;sort&#34;
+<span id="L28" class="ln">    28&nbsp;&nbsp;</span>	&#34;strconv&#34;
+<span id="L29" class="ln">    29&nbsp;&nbsp;</span>	&#34;strings&#34;
+<span id="L30" class="ln">    30&nbsp;&nbsp;</span>	&#34;unicode&#34;
+<span id="L31" class="ln">    31&nbsp;&nbsp;</span>	&#34;unicode/utf8&#34;
+<span id="L32" class="ln">    32&nbsp;&nbsp;</span>)
+<span id="L33" class="ln">    33&nbsp;&nbsp;</span>
+<span id="L34" class="ln">    34&nbsp;&nbsp;</span><span class="comment">// A Context specifies the supporting context for a build.</span>
+<span id="L35" class="ln">    35&nbsp;&nbsp;</span>type Context struct {
+<span id="L36" class="ln">    36&nbsp;&nbsp;</span>	GOARCH string <span class="comment">// target architecture</span>
+<span id="L37" class="ln">    37&nbsp;&nbsp;</span>	GOOS   string <span class="comment">// target operating system</span>
+<span id="L38" class="ln">    38&nbsp;&nbsp;</span>	GOROOT string <span class="comment">// Go root</span>
+<span id="L39" class="ln">    39&nbsp;&nbsp;</span>	GOPATH string <span class="comment">// Go paths</span>
+<span id="L40" class="ln">    40&nbsp;&nbsp;</span>
+<span id="L41" class="ln">    41&nbsp;&nbsp;</span>	<span class="comment">// Dir is the caller&#39;s working directory, or the empty string to use</span>
+<span id="L42" class="ln">    42&nbsp;&nbsp;</span>	<span class="comment">// the current directory of the running process. In module mode, this is used</span>
+<span id="L43" class="ln">    43&nbsp;&nbsp;</span>	<span class="comment">// to locate the main module.</span>
+<span id="L44" class="ln">    44&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L45" class="ln">    45&nbsp;&nbsp;</span>	<span class="comment">// If Dir is non-empty, directories passed to Import and ImportDir must</span>
+<span id="L46" class="ln">    46&nbsp;&nbsp;</span>	<span class="comment">// be absolute.</span>
+<span id="L47" class="ln">    47&nbsp;&nbsp;</span>	Dir string
+<span id="L48" class="ln">    48&nbsp;&nbsp;</span>
+<span id="L49" class="ln">    49&nbsp;&nbsp;</span>	CgoEnabled  bool   <span class="comment">// whether cgo files are included</span>
+<span id="L50" class="ln">    50&nbsp;&nbsp;</span>	UseAllFiles bool   <span class="comment">// use files regardless of go:build lines, file names</span>
+<span id="L51" class="ln">    51&nbsp;&nbsp;</span>	Compiler    string <span class="comment">// compiler to assume when computing target paths</span>
+<span id="L52" class="ln">    52&nbsp;&nbsp;</span>
+<span id="L53" class="ln">    53&nbsp;&nbsp;</span>	<span class="comment">// The build, tool, and release tags specify build constraints</span>
+<span id="L54" class="ln">    54&nbsp;&nbsp;</span>	<span class="comment">// that should be considered satisfied when processing go:build lines.</span>
+<span id="L55" class="ln">    55&nbsp;&nbsp;</span>	<span class="comment">// Clients creating a new context may customize BuildTags, which</span>
+<span id="L56" class="ln">    56&nbsp;&nbsp;</span>	<span class="comment">// defaults to empty, but it is usually an error to customize ToolTags or ReleaseTags.</span>
+<span id="L57" class="ln">    57&nbsp;&nbsp;</span>	<span class="comment">// ToolTags defaults to build tags appropriate to the current Go toolchain configuration.</span>
+<span id="L58" class="ln">    58&nbsp;&nbsp;</span>	<span class="comment">// ReleaseTags defaults to the list of Go releases the current release is compatible with.</span>
+<span id="L59" class="ln">    59&nbsp;&nbsp;</span>	<span class="comment">// BuildTags is not set for the Default build Context.</span>
+<span id="L60" class="ln">    60&nbsp;&nbsp;</span>	<span class="comment">// In addition to the BuildTags, ToolTags, and ReleaseTags, build constraints</span>
+<span id="L61" class="ln">    61&nbsp;&nbsp;</span>	<span class="comment">// consider the values of GOARCH and GOOS as satisfied tags.</span>
+<span id="L62" class="ln">    62&nbsp;&nbsp;</span>	<span class="comment">// The last element in ReleaseTags is assumed to be the current release.</span>
+<span id="L63" class="ln">    63&nbsp;&nbsp;</span>	BuildTags   []string
+<span id="L64" class="ln">    64&nbsp;&nbsp;</span>	ToolTags    []string
+<span id="L65" class="ln">    65&nbsp;&nbsp;</span>	ReleaseTags []string
+<span id="L66" class="ln">    66&nbsp;&nbsp;</span>
+<span id="L67" class="ln">    67&nbsp;&nbsp;</span>	<span class="comment">// The install suffix specifies a suffix to use in the name of the installation</span>
+<span id="L68" class="ln">    68&nbsp;&nbsp;</span>	<span class="comment">// directory. By default it is empty, but custom builds that need to keep</span>
+<span id="L69" class="ln">    69&nbsp;&nbsp;</span>	<span class="comment">// their outputs separate can set InstallSuffix to do so. For example, when</span>
+<span id="L70" class="ln">    70&nbsp;&nbsp;</span>	<span class="comment">// using the race detector, the go command uses InstallSuffix = &#34;race&#34;, so</span>
+<span id="L71" class="ln">    71&nbsp;&nbsp;</span>	<span class="comment">// that on a Linux/386 system, packages are written to a directory named</span>
+<span id="L72" class="ln">    72&nbsp;&nbsp;</span>	<span class="comment">// &#34;linux_386_race&#34; instead of the usual &#34;linux_386&#34;.</span>
+<span id="L73" class="ln">    73&nbsp;&nbsp;</span>	InstallSuffix string
+<span id="L74" class="ln">    74&nbsp;&nbsp;</span>
+<span id="L75" class="ln">    75&nbsp;&nbsp;</span>	<span class="comment">// By default, Import uses the operating system&#39;s file system calls</span>
+<span id="L76" class="ln">    76&nbsp;&nbsp;</span>	<span class="comment">// to read directories and files. To read from other sources,</span>
+<span id="L77" class="ln">    77&nbsp;&nbsp;</span>	<span class="comment">// callers can set the following functions. They all have default</span>
+<span id="L78" class="ln">    78&nbsp;&nbsp;</span>	<span class="comment">// behaviors that use the local file system, so clients need only set</span>
+<span id="L79" class="ln">    79&nbsp;&nbsp;</span>	<span class="comment">// the functions whose behaviors they wish to change.</span>
+<span id="L80" class="ln">    80&nbsp;&nbsp;</span>
+<span id="L81" class="ln">    81&nbsp;&nbsp;</span>	<span class="comment">// JoinPath joins the sequence of path fragments into a single path.</span>
+<span id="L82" class="ln">    82&nbsp;&nbsp;</span>	<span class="comment">// If JoinPath is nil, Import uses filepath.Join.</span>
+<span id="L83" class="ln">    83&nbsp;&nbsp;</span>	JoinPath func(elem ...string) string
+<span id="L84" class="ln">    84&nbsp;&nbsp;</span>
+<span id="L85" class="ln">    85&nbsp;&nbsp;</span>	<span class="comment">// SplitPathList splits the path list into a slice of individual paths.</span>
+<span id="L86" class="ln">    86&nbsp;&nbsp;</span>	<span class="comment">// If SplitPathList is nil, Import uses filepath.SplitList.</span>
+<span id="L87" class="ln">    87&nbsp;&nbsp;</span>	SplitPathList func(list string) []string
+<span id="L88" class="ln">    88&nbsp;&nbsp;</span>
+<span id="L89" class="ln">    89&nbsp;&nbsp;</span>	<span class="comment">// IsAbsPath reports whether path is an absolute path.</span>
+<span id="L90" class="ln">    90&nbsp;&nbsp;</span>	<span class="comment">// If IsAbsPath is nil, Import uses filepath.IsAbs.</span>
+<span id="L91" class="ln">    91&nbsp;&nbsp;</span>	IsAbsPath func(path string) bool
+<span id="L92" class="ln">    92&nbsp;&nbsp;</span>
+<span id="L93" class="ln">    93&nbsp;&nbsp;</span>	<span class="comment">// IsDir reports whether the path names a directory.</span>
+<span id="L94" class="ln">    94&nbsp;&nbsp;</span>	<span class="comment">// If IsDir is nil, Import calls os.Stat and uses the result&#39;s IsDir method.</span>
+<span id="L95" class="ln">    95&nbsp;&nbsp;</span>	IsDir func(path string) bool
+<span id="L96" class="ln">    96&nbsp;&nbsp;</span>
+<span id="L97" class="ln">    97&nbsp;&nbsp;</span>	<span class="comment">// HasSubdir reports whether dir is lexically a subdirectory of</span>
+<span id="L98" class="ln">    98&nbsp;&nbsp;</span>	<span class="comment">// root, perhaps multiple levels below. It does not try to check</span>
+<span id="L99" class="ln">    99&nbsp;&nbsp;</span>	<span class="comment">// whether dir exists.</span>
+<span id="L100" class="ln">   100&nbsp;&nbsp;</span>	<span class="comment">// If so, HasSubdir sets rel to a slash-separated path that</span>
+<span id="L101" class="ln">   101&nbsp;&nbsp;</span>	<span class="comment">// can be joined to root to produce a path equivalent to dir.</span>
+<span id="L102" class="ln">   102&nbsp;&nbsp;</span>	<span class="comment">// If HasSubdir is nil, Import uses an implementation built on</span>
+<span id="L103" class="ln">   103&nbsp;&nbsp;</span>	<span class="comment">// filepath.EvalSymlinks.</span>
+<span id="L104" class="ln">   104&nbsp;&nbsp;</span>	HasSubdir func(root, dir string) (rel string, ok bool)
+<span id="L105" class="ln">   105&nbsp;&nbsp;</span>
+<span id="L106" class="ln">   106&nbsp;&nbsp;</span>	<span class="comment">// ReadDir returns a slice of fs.FileInfo, sorted by Name,</span>
+<span id="L107" class="ln">   107&nbsp;&nbsp;</span>	<span class="comment">// describing the content of the named directory.</span>
+<span id="L108" class="ln">   108&nbsp;&nbsp;</span>	<span class="comment">// If ReadDir is nil, Import uses os.ReadDir.</span>
+<span id="L109" class="ln">   109&nbsp;&nbsp;</span>	ReadDir func(dir string) ([]fs.FileInfo, error)
+<span id="L110" class="ln">   110&nbsp;&nbsp;</span>
+<span id="L111" class="ln">   111&nbsp;&nbsp;</span>	<span class="comment">// OpenFile opens a file (not a directory) for reading.</span>
+<span id="L112" class="ln">   112&nbsp;&nbsp;</span>	<span class="comment">// If OpenFile is nil, Import uses os.Open.</span>
+<span id="L113" class="ln">   113&nbsp;&nbsp;</span>	OpenFile func(path string) (io.ReadCloser, error)
+<span id="L114" class="ln">   114&nbsp;&nbsp;</span>}
+<span id="L115" class="ln">   115&nbsp;&nbsp;</span>
+<span id="L116" class="ln">   116&nbsp;&nbsp;</span><span class="comment">// joinPath calls ctxt.JoinPath (if not nil) or else filepath.Join.</span>
+<span id="L117" class="ln">   117&nbsp;&nbsp;</span>func (ctxt *Context) joinPath(elem ...string) string {
+<span id="L118" class="ln">   118&nbsp;&nbsp;</span>	if f := ctxt.JoinPath; f != nil {
+<span id="L119" class="ln">   119&nbsp;&nbsp;</span>		return f(elem...)
+<span id="L120" class="ln">   120&nbsp;&nbsp;</span>	}
+<span id="L121" class="ln">   121&nbsp;&nbsp;</span>	return filepath.Join(elem...)
+<span id="L122" class="ln">   122&nbsp;&nbsp;</span>}
+<span id="L123" class="ln">   123&nbsp;&nbsp;</span>
+<span id="L124" class="ln">   124&nbsp;&nbsp;</span><span class="comment">// splitPathList calls ctxt.SplitPathList (if not nil) or else filepath.SplitList.</span>
+<span id="L125" class="ln">   125&nbsp;&nbsp;</span>func (ctxt *Context) splitPathList(s string) []string {
+<span id="L126" class="ln">   126&nbsp;&nbsp;</span>	if f := ctxt.SplitPathList; f != nil {
+<span id="L127" class="ln">   127&nbsp;&nbsp;</span>		return f(s)
+<span id="L128" class="ln">   128&nbsp;&nbsp;</span>	}
+<span id="L129" class="ln">   129&nbsp;&nbsp;</span>	return filepath.SplitList(s)
+<span id="L130" class="ln">   130&nbsp;&nbsp;</span>}
+<span id="L131" class="ln">   131&nbsp;&nbsp;</span>
+<span id="L132" class="ln">   132&nbsp;&nbsp;</span><span class="comment">// isAbsPath calls ctxt.IsAbsPath (if not nil) or else filepath.IsAbs.</span>
+<span id="L133" class="ln">   133&nbsp;&nbsp;</span>func (ctxt *Context) isAbsPath(path string) bool {
+<span id="L134" class="ln">   134&nbsp;&nbsp;</span>	if f := ctxt.IsAbsPath; f != nil {
+<span id="L135" class="ln">   135&nbsp;&nbsp;</span>		return f(path)
+<span id="L136" class="ln">   136&nbsp;&nbsp;</span>	}
+<span id="L137" class="ln">   137&nbsp;&nbsp;</span>	return filepath.IsAbs(path)
+<span id="L138" class="ln">   138&nbsp;&nbsp;</span>}
+<span id="L139" class="ln">   139&nbsp;&nbsp;</span>
+<span id="L140" class="ln">   140&nbsp;&nbsp;</span><span class="comment">// isDir calls ctxt.IsDir (if not nil) or else uses os.Stat.</span>
+<span id="L141" class="ln">   141&nbsp;&nbsp;</span>func (ctxt *Context) isDir(path string) bool {
+<span id="L142" class="ln">   142&nbsp;&nbsp;</span>	if f := ctxt.IsDir; f != nil {
+<span id="L143" class="ln">   143&nbsp;&nbsp;</span>		return f(path)
+<span id="L144" class="ln">   144&nbsp;&nbsp;</span>	}
+<span id="L145" class="ln">   145&nbsp;&nbsp;</span>	fi, err := os.Stat(path)
+<span id="L146" class="ln">   146&nbsp;&nbsp;</span>	return err == nil &amp;&amp; fi.IsDir()
+<span id="L147" class="ln">   147&nbsp;&nbsp;</span>}
+<span id="L148" class="ln">   148&nbsp;&nbsp;</span>
+<span id="L149" class="ln">   149&nbsp;&nbsp;</span><span class="comment">// hasSubdir calls ctxt.HasSubdir (if not nil) or else uses</span>
+<span id="L150" class="ln">   150&nbsp;&nbsp;</span><span class="comment">// the local file system to answer the question.</span>
+<span id="L151" class="ln">   151&nbsp;&nbsp;</span>func (ctxt *Context) hasSubdir(root, dir string) (rel string, ok bool) {
+<span id="L152" class="ln">   152&nbsp;&nbsp;</span>	if f := ctxt.HasSubdir; f != nil {
+<span id="L153" class="ln">   153&nbsp;&nbsp;</span>		return f(root, dir)
+<span id="L154" class="ln">   154&nbsp;&nbsp;</span>	}
+<span id="L155" class="ln">   155&nbsp;&nbsp;</span>
+<span id="L156" class="ln">   156&nbsp;&nbsp;</span>	<span class="comment">// Try using paths we received.</span>
+<span id="L157" class="ln">   157&nbsp;&nbsp;</span>	if rel, ok = hasSubdir(root, dir); ok {
+<span id="L158" class="ln">   158&nbsp;&nbsp;</span>		return
+<span id="L159" class="ln">   159&nbsp;&nbsp;</span>	}
+<span id="L160" class="ln">   160&nbsp;&nbsp;</span>
+<span id="L161" class="ln">   161&nbsp;&nbsp;</span>	<span class="comment">// Try expanding symlinks and comparing</span>
+<span id="L162" class="ln">   162&nbsp;&nbsp;</span>	<span class="comment">// expanded against unexpanded and</span>
+<span id="L163" class="ln">   163&nbsp;&nbsp;</span>	<span class="comment">// expanded against expanded.</span>
+<span id="L164" class="ln">   164&nbsp;&nbsp;</span>	rootSym, _ := filepath.EvalSymlinks(root)
+<span id="L165" class="ln">   165&nbsp;&nbsp;</span>	dirSym, _ := filepath.EvalSymlinks(dir)
+<span id="L166" class="ln">   166&nbsp;&nbsp;</span>
+<span id="L167" class="ln">   167&nbsp;&nbsp;</span>	if rel, ok = hasSubdir(rootSym, dir); ok {
+<span id="L168" class="ln">   168&nbsp;&nbsp;</span>		return
+<span id="L169" class="ln">   169&nbsp;&nbsp;</span>	}
+<span id="L170" class="ln">   170&nbsp;&nbsp;</span>	if rel, ok = hasSubdir(root, dirSym); ok {
+<span id="L171" class="ln">   171&nbsp;&nbsp;</span>		return
+<span id="L172" class="ln">   172&nbsp;&nbsp;</span>	}
+<span id="L173" class="ln">   173&nbsp;&nbsp;</span>	return hasSubdir(rootSym, dirSym)
+<span id="L174" class="ln">   174&nbsp;&nbsp;</span>}
+<span id="L175" class="ln">   175&nbsp;&nbsp;</span>
+<span id="L176" class="ln">   176&nbsp;&nbsp;</span><span class="comment">// hasSubdir reports if dir is within root by performing lexical analysis only.</span>
+<span id="L177" class="ln">   177&nbsp;&nbsp;</span>func hasSubdir(root, dir string) (rel string, ok bool) {
+<span id="L178" class="ln">   178&nbsp;&nbsp;</span>	const sep = string(filepath.Separator)
+<span id="L179" class="ln">   179&nbsp;&nbsp;</span>	root = filepath.Clean(root)
+<span id="L180" class="ln">   180&nbsp;&nbsp;</span>	if !strings.HasSuffix(root, sep) {
+<span id="L181" class="ln">   181&nbsp;&nbsp;</span>		root += sep
+<span id="L182" class="ln">   182&nbsp;&nbsp;</span>	}
+<span id="L183" class="ln">   183&nbsp;&nbsp;</span>	dir = filepath.Clean(dir)
+<span id="L184" class="ln">   184&nbsp;&nbsp;</span>	after, found := strings.CutPrefix(dir, root)
+<span id="L185" class="ln">   185&nbsp;&nbsp;</span>	if !found {
+<span id="L186" class="ln">   186&nbsp;&nbsp;</span>		return &#34;&#34;, false
+<span id="L187" class="ln">   187&nbsp;&nbsp;</span>	}
+<span id="L188" class="ln">   188&nbsp;&nbsp;</span>	return filepath.ToSlash(after), true
+<span id="L189" class="ln">   189&nbsp;&nbsp;</span>}
+<span id="L190" class="ln">   190&nbsp;&nbsp;</span>
+<span id="L191" class="ln">   191&nbsp;&nbsp;</span><span class="comment">// readDir calls ctxt.ReadDir (if not nil) or else os.ReadDir.</span>
+<span id="L192" class="ln">   192&nbsp;&nbsp;</span>func (ctxt *Context) readDir(path string) ([]fs.DirEntry, error) {
+<span id="L193" class="ln">   193&nbsp;&nbsp;</span>	<span class="comment">// TODO: add a fs.DirEntry version of Context.ReadDir</span>
+<span id="L194" class="ln">   194&nbsp;&nbsp;</span>	if f := ctxt.ReadDir; f != nil {
+<span id="L195" class="ln">   195&nbsp;&nbsp;</span>		fis, err := f(path)
+<span id="L196" class="ln">   196&nbsp;&nbsp;</span>		if err != nil {
+<span id="L197" class="ln">   197&nbsp;&nbsp;</span>			return nil, err
+<span id="L198" class="ln">   198&nbsp;&nbsp;</span>		}
+<span id="L199" class="ln">   199&nbsp;&nbsp;</span>		des := make([]fs.DirEntry, len(fis))
+<span id="L200" class="ln">   200&nbsp;&nbsp;</span>		for i, fi := range fis {
+<span id="L201" class="ln">   201&nbsp;&nbsp;</span>			des[i] = fs.FileInfoToDirEntry(fi)
+<span id="L202" class="ln">   202&nbsp;&nbsp;</span>		}
+<span id="L203" class="ln">   203&nbsp;&nbsp;</span>		return des, nil
+<span id="L204" class="ln">   204&nbsp;&nbsp;</span>	}
+<span id="L205" class="ln">   205&nbsp;&nbsp;</span>	return os.ReadDir(path)
+<span id="L206" class="ln">   206&nbsp;&nbsp;</span>}
+<span id="L207" class="ln">   207&nbsp;&nbsp;</span>
+<span id="L208" class="ln">   208&nbsp;&nbsp;</span><span class="comment">// openFile calls ctxt.OpenFile (if not nil) or else os.Open.</span>
+<span id="L209" class="ln">   209&nbsp;&nbsp;</span>func (ctxt *Context) openFile(path string) (io.ReadCloser, error) {
+<span id="L210" class="ln">   210&nbsp;&nbsp;</span>	if fn := ctxt.OpenFile; fn != nil {
+<span id="L211" class="ln">   211&nbsp;&nbsp;</span>		return fn(path)
+<span id="L212" class="ln">   212&nbsp;&nbsp;</span>	}
+<span id="L213" class="ln">   213&nbsp;&nbsp;</span>
+<span id="L214" class="ln">   214&nbsp;&nbsp;</span>	f, err := os.Open(path)
+<span id="L215" class="ln">   215&nbsp;&nbsp;</span>	if err != nil {
+<span id="L216" class="ln">   216&nbsp;&nbsp;</span>		return nil, err <span class="comment">// nil interface</span>
+<span id="L217" class="ln">   217&nbsp;&nbsp;</span>	}
+<span id="L218" class="ln">   218&nbsp;&nbsp;</span>	return f, nil
+<span id="L219" class="ln">   219&nbsp;&nbsp;</span>}
+<span id="L220" class="ln">   220&nbsp;&nbsp;</span>
+<span id="L221" class="ln">   221&nbsp;&nbsp;</span><span class="comment">// isFile determines whether path is a file by trying to open it.</span>
+<span id="L222" class="ln">   222&nbsp;&nbsp;</span><span class="comment">// It reuses openFile instead of adding another function to the</span>
+<span id="L223" class="ln">   223&nbsp;&nbsp;</span><span class="comment">// list in Context.</span>
+<span id="L224" class="ln">   224&nbsp;&nbsp;</span>func (ctxt *Context) isFile(path string) bool {
+<span id="L225" class="ln">   225&nbsp;&nbsp;</span>	f, err := ctxt.openFile(path)
+<span id="L226" class="ln">   226&nbsp;&nbsp;</span>	if err != nil {
+<span id="L227" class="ln">   227&nbsp;&nbsp;</span>		return false
+<span id="L228" class="ln">   228&nbsp;&nbsp;</span>	}
+<span id="L229" class="ln">   229&nbsp;&nbsp;</span>	f.Close()
+<span id="L230" class="ln">   230&nbsp;&nbsp;</span>	return true
+<span id="L231" class="ln">   231&nbsp;&nbsp;</span>}
+<span id="L232" class="ln">   232&nbsp;&nbsp;</span>
+<span id="L233" class="ln">   233&nbsp;&nbsp;</span><span class="comment">// gopath returns the list of Go path directories.</span>
+<span id="L234" class="ln">   234&nbsp;&nbsp;</span>func (ctxt *Context) gopath() []string {
+<span id="L235" class="ln">   235&nbsp;&nbsp;</span>	var all []string
+<span id="L236" class="ln">   236&nbsp;&nbsp;</span>	for _, p := range ctxt.splitPathList(ctxt.GOPATH) {
+<span id="L237" class="ln">   237&nbsp;&nbsp;</span>		if p == &#34;&#34; || p == ctxt.GOROOT {
+<span id="L238" class="ln">   238&nbsp;&nbsp;</span>			<span class="comment">// Empty paths are uninteresting.</span>
+<span id="L239" class="ln">   239&nbsp;&nbsp;</span>			<span class="comment">// If the path is the GOROOT, ignore it.</span>
+<span id="L240" class="ln">   240&nbsp;&nbsp;</span>			<span class="comment">// People sometimes set GOPATH=$GOROOT.</span>
+<span id="L241" class="ln">   241&nbsp;&nbsp;</span>			<span class="comment">// Do not get confused by this common mistake.</span>
+<span id="L242" class="ln">   242&nbsp;&nbsp;</span>			continue
+<span id="L243" class="ln">   243&nbsp;&nbsp;</span>		}
+<span id="L244" class="ln">   244&nbsp;&nbsp;</span>		if strings.HasPrefix(p, &#34;~&#34;) {
+<span id="L245" class="ln">   245&nbsp;&nbsp;</span>			<span class="comment">// Path segments starting with ~ on Unix are almost always</span>
+<span id="L246" class="ln">   246&nbsp;&nbsp;</span>			<span class="comment">// users who have incorrectly quoted ~ while setting GOPATH,</span>
+<span id="L247" class="ln">   247&nbsp;&nbsp;</span>			<span class="comment">// preventing it from expanding to $HOME.</span>
+<span id="L248" class="ln">   248&nbsp;&nbsp;</span>			<span class="comment">// The situation is made more confusing by the fact that</span>
+<span id="L249" class="ln">   249&nbsp;&nbsp;</span>			<span class="comment">// bash allows quoted ~ in $PATH (most shells do not).</span>
+<span id="L250" class="ln">   250&nbsp;&nbsp;</span>			<span class="comment">// Do not get confused by this, and do not try to use the path.</span>
+<span id="L251" class="ln">   251&nbsp;&nbsp;</span>			<span class="comment">// It does not exist, and printing errors about it confuses</span>
+<span id="L252" class="ln">   252&nbsp;&nbsp;</span>			<span class="comment">// those users even more, because they think &#34;sure ~ exists!&#34;.</span>
+<span id="L253" class="ln">   253&nbsp;&nbsp;</span>			<span class="comment">// The go command diagnoses this situation and prints a</span>
+<span id="L254" class="ln">   254&nbsp;&nbsp;</span>			<span class="comment">// useful error.</span>
+<span id="L255" class="ln">   255&nbsp;&nbsp;</span>			<span class="comment">// On Windows, ~ is used in short names, such as c:\progra~1</span>
+<span id="L256" class="ln">   256&nbsp;&nbsp;</span>			<span class="comment">// for c:\program files.</span>
+<span id="L257" class="ln">   257&nbsp;&nbsp;</span>			continue
+<span id="L258" class="ln">   258&nbsp;&nbsp;</span>		}
+<span id="L259" class="ln">   259&nbsp;&nbsp;</span>		all = append(all, p)
+<span id="L260" class="ln">   260&nbsp;&nbsp;</span>	}
+<span id="L261" class="ln">   261&nbsp;&nbsp;</span>	return all
+<span id="L262" class="ln">   262&nbsp;&nbsp;</span>}
+<span id="L263" class="ln">   263&nbsp;&nbsp;</span>
+<span id="L264" class="ln">   264&nbsp;&nbsp;</span><span class="comment">// SrcDirs returns a list of package source root directories.</span>
+<span id="L265" class="ln">   265&nbsp;&nbsp;</span><span class="comment">// It draws from the current Go root and Go path but omits directories</span>
+<span id="L266" class="ln">   266&nbsp;&nbsp;</span><span class="comment">// that do not exist.</span>
+<span id="L267" class="ln">   267&nbsp;&nbsp;</span>func (ctxt *Context) SrcDirs() []string {
+<span id="L268" class="ln">   268&nbsp;&nbsp;</span>	var all []string
+<span id="L269" class="ln">   269&nbsp;&nbsp;</span>	if ctxt.GOROOT != &#34;&#34; &amp;&amp; ctxt.Compiler != &#34;gccgo&#34; {
+<span id="L270" class="ln">   270&nbsp;&nbsp;</span>		dir := ctxt.joinPath(ctxt.GOROOT, &#34;src&#34;)
+<span id="L271" class="ln">   271&nbsp;&nbsp;</span>		if ctxt.isDir(dir) {
+<span id="L272" class="ln">   272&nbsp;&nbsp;</span>			all = append(all, dir)
+<span id="L273" class="ln">   273&nbsp;&nbsp;</span>		}
+<span id="L274" class="ln">   274&nbsp;&nbsp;</span>	}
+<span id="L275" class="ln">   275&nbsp;&nbsp;</span>	for _, p := range ctxt.gopath() {
+<span id="L276" class="ln">   276&nbsp;&nbsp;</span>		dir := ctxt.joinPath(p, &#34;src&#34;)
+<span id="L277" class="ln">   277&nbsp;&nbsp;</span>		if ctxt.isDir(dir) {
+<span id="L278" class="ln">   278&nbsp;&nbsp;</span>			all = append(all, dir)
+<span id="L279" class="ln">   279&nbsp;&nbsp;</span>		}
+<span id="L280" class="ln">   280&nbsp;&nbsp;</span>	}
+<span id="L281" class="ln">   281&nbsp;&nbsp;</span>	return all
+<span id="L282" class="ln">   282&nbsp;&nbsp;</span>}
+<span id="L283" class="ln">   283&nbsp;&nbsp;</span>
+<span id="L284" class="ln">   284&nbsp;&nbsp;</span><span class="comment">// Default is the default Context for builds.</span>
+<span id="L285" class="ln">   285&nbsp;&nbsp;</span><span class="comment">// It uses the GOARCH, GOOS, GOROOT, and GOPATH environment variables</span>
+<span id="L286" class="ln">   286&nbsp;&nbsp;</span><span class="comment">// if set, or else the compiled code&#39;s GOARCH, GOOS, and GOROOT.</span>
+<span id="L287" class="ln">   287&nbsp;&nbsp;</span>var Default Context = defaultContext()
+<span id="L288" class="ln">   288&nbsp;&nbsp;</span>
+<span id="L289" class="ln">   289&nbsp;&nbsp;</span>func defaultGOPATH() string {
+<span id="L290" class="ln">   290&nbsp;&nbsp;</span>	env := &#34;HOME&#34;
+<span id="L291" class="ln">   291&nbsp;&nbsp;</span>	if runtime.GOOS == &#34;windows&#34; {
+<span id="L292" class="ln">   292&nbsp;&nbsp;</span>		env = &#34;USERPROFILE&#34;
+<span id="L293" class="ln">   293&nbsp;&nbsp;</span>	} else if runtime.GOOS == &#34;plan9&#34; {
+<span id="L294" class="ln">   294&nbsp;&nbsp;</span>		env = &#34;home&#34;
+<span id="L295" class="ln">   295&nbsp;&nbsp;</span>	}
+<span id="L296" class="ln">   296&nbsp;&nbsp;</span>	if home := os.Getenv(env); home != &#34;&#34; {
+<span id="L297" class="ln">   297&nbsp;&nbsp;</span>		def := filepath.Join(home, &#34;go&#34;)
+<span id="L298" class="ln">   298&nbsp;&nbsp;</span>		if filepath.Clean(def) == filepath.Clean(runtime.GOROOT()) {
+<span id="L299" class="ln">   299&nbsp;&nbsp;</span>			<span class="comment">// Don&#39;t set the default GOPATH to GOROOT,</span>
+<span id="L300" class="ln">   300&nbsp;&nbsp;</span>			<span class="comment">// as that will trigger warnings from the go tool.</span>
+<span id="L301" class="ln">   301&nbsp;&nbsp;</span>			return &#34;&#34;
+<span id="L302" class="ln">   302&nbsp;&nbsp;</span>		}
+<span id="L303" class="ln">   303&nbsp;&nbsp;</span>		return def
+<span id="L304" class="ln">   304&nbsp;&nbsp;</span>	}
+<span id="L305" class="ln">   305&nbsp;&nbsp;</span>	return &#34;&#34;
+<span id="L306" class="ln">   306&nbsp;&nbsp;</span>}
+<span id="L307" class="ln">   307&nbsp;&nbsp;</span>
+<span id="L308" class="ln">   308&nbsp;&nbsp;</span>var defaultToolTags, defaultReleaseTags []string
+<span id="L309" class="ln">   309&nbsp;&nbsp;</span>
+<span id="L310" class="ln">   310&nbsp;&nbsp;</span>func defaultContext() Context {
+<span id="L311" class="ln">   311&nbsp;&nbsp;</span>	var c Context
+<span id="L312" class="ln">   312&nbsp;&nbsp;</span>
+<span id="L313" class="ln">   313&nbsp;&nbsp;</span>	c.GOARCH = buildcfg.GOARCH
+<span id="L314" class="ln">   314&nbsp;&nbsp;</span>	c.GOOS = buildcfg.GOOS
+<span id="L315" class="ln">   315&nbsp;&nbsp;</span>	if goroot := runtime.GOROOT(); goroot != &#34;&#34; {
+<span id="L316" class="ln">   316&nbsp;&nbsp;</span>		c.GOROOT = filepath.Clean(goroot)
+<span id="L317" class="ln">   317&nbsp;&nbsp;</span>	}
+<span id="L318" class="ln">   318&nbsp;&nbsp;</span>	c.GOPATH = envOr(&#34;GOPATH&#34;, defaultGOPATH())
+<span id="L319" class="ln">   319&nbsp;&nbsp;</span>	c.Compiler = runtime.Compiler
+<span id="L320" class="ln">   320&nbsp;&nbsp;</span>	c.ToolTags = append(c.ToolTags, buildcfg.ToolTags...)
+<span id="L321" class="ln">   321&nbsp;&nbsp;</span>
+<span id="L322" class="ln">   322&nbsp;&nbsp;</span>	defaultToolTags = append([]string{}, c.ToolTags...) <span class="comment">// our own private copy</span>
+<span id="L323" class="ln">   323&nbsp;&nbsp;</span>
+<span id="L324" class="ln">   324&nbsp;&nbsp;</span>	<span class="comment">// Each major Go release in the Go 1.x series adds a new</span>
+<span id="L325" class="ln">   325&nbsp;&nbsp;</span>	<span class="comment">// &#34;go1.x&#34; release tag. That is, the go1.x tag is present in</span>
+<span id="L326" class="ln">   326&nbsp;&nbsp;</span>	<span class="comment">// all releases &gt;= Go 1.x. Code that requires Go 1.x or later</span>
+<span id="L327" class="ln">   327&nbsp;&nbsp;</span>	<span class="comment">// should say &#34;go:build go1.x&#34;, and code that should only be</span>
+<span id="L328" class="ln">   328&nbsp;&nbsp;</span>	<span class="comment">// built before Go 1.x (perhaps it is the stub to use in that</span>
+<span id="L329" class="ln">   329&nbsp;&nbsp;</span>	<span class="comment">// case) should say &#34;go:build !go1.x&#34;.</span>
+<span id="L330" class="ln">   330&nbsp;&nbsp;</span>	<span class="comment">// The last element in ReleaseTags is the current release.</span>
+<span id="L331" class="ln">   331&nbsp;&nbsp;</span>	for i := 1; i &lt;= goversion.Version; i++ {
+<span id="L332" class="ln">   332&nbsp;&nbsp;</span>		c.ReleaseTags = append(c.ReleaseTags, &#34;go1.&#34;+strconv.Itoa(i))
+<span id="L333" class="ln">   333&nbsp;&nbsp;</span>	}
+<span id="L334" class="ln">   334&nbsp;&nbsp;</span>
+<span id="L335" class="ln">   335&nbsp;&nbsp;</span>	defaultReleaseTags = append([]string{}, c.ReleaseTags...) <span class="comment">// our own private copy</span>
+<span id="L336" class="ln">   336&nbsp;&nbsp;</span>
+<span id="L337" class="ln">   337&nbsp;&nbsp;</span>	env := os.Getenv(&#34;CGO_ENABLED&#34;)
+<span id="L338" class="ln">   338&nbsp;&nbsp;</span>	if env == &#34;&#34; {
+<span id="L339" class="ln">   339&nbsp;&nbsp;</span>		env = defaultCGO_ENABLED
+<span id="L340" class="ln">   340&nbsp;&nbsp;</span>	}
+<span id="L341" class="ln">   341&nbsp;&nbsp;</span>	switch env {
+<span id="L342" class="ln">   342&nbsp;&nbsp;</span>	case &#34;1&#34;:
+<span id="L343" class="ln">   343&nbsp;&nbsp;</span>		c.CgoEnabled = true
+<span id="L344" class="ln">   344&nbsp;&nbsp;</span>	case &#34;0&#34;:
+<span id="L345" class="ln">   345&nbsp;&nbsp;</span>		c.CgoEnabled = false
+<span id="L346" class="ln">   346&nbsp;&nbsp;</span>	default:
+<span id="L347" class="ln">   347&nbsp;&nbsp;</span>		<span class="comment">// cgo must be explicitly enabled for cross compilation builds</span>
+<span id="L348" class="ln">   348&nbsp;&nbsp;</span>		if runtime.GOARCH == c.GOARCH &amp;&amp; runtime.GOOS == c.GOOS {
+<span id="L349" class="ln">   349&nbsp;&nbsp;</span>			c.CgoEnabled = platform.CgoSupported(c.GOOS, c.GOARCH)
+<span id="L350" class="ln">   350&nbsp;&nbsp;</span>			break
+<span id="L351" class="ln">   351&nbsp;&nbsp;</span>		}
+<span id="L352" class="ln">   352&nbsp;&nbsp;</span>		c.CgoEnabled = false
+<span id="L353" class="ln">   353&nbsp;&nbsp;</span>	}
+<span id="L354" class="ln">   354&nbsp;&nbsp;</span>
+<span id="L355" class="ln">   355&nbsp;&nbsp;</span>	return c
+<span id="L356" class="ln">   356&nbsp;&nbsp;</span>}
+<span id="L357" class="ln">   357&nbsp;&nbsp;</span>
+<span id="L358" class="ln">   358&nbsp;&nbsp;</span>func envOr(name, def string) string {
+<span id="L359" class="ln">   359&nbsp;&nbsp;</span>	s := os.Getenv(name)
+<span id="L360" class="ln">   360&nbsp;&nbsp;</span>	if s == &#34;&#34; {
+<span id="L361" class="ln">   361&nbsp;&nbsp;</span>		return def
+<span id="L362" class="ln">   362&nbsp;&nbsp;</span>	}
+<span id="L363" class="ln">   363&nbsp;&nbsp;</span>	return s
+<span id="L364" class="ln">   364&nbsp;&nbsp;</span>}
+<span id="L365" class="ln">   365&nbsp;&nbsp;</span>
+<span id="L366" class="ln">   366&nbsp;&nbsp;</span><span class="comment">// An ImportMode controls the behavior of the Import method.</span>
+<span id="L367" class="ln">   367&nbsp;&nbsp;</span>type ImportMode uint
+<span id="L368" class="ln">   368&nbsp;&nbsp;</span>
+<span id="L369" class="ln">   369&nbsp;&nbsp;</span>const (
+<span id="L370" class="ln">   370&nbsp;&nbsp;</span>	<span class="comment">// If FindOnly is set, Import stops after locating the directory</span>
+<span id="L371" class="ln">   371&nbsp;&nbsp;</span>	<span class="comment">// that should contain the sources for a package. It does not</span>
+<span id="L372" class="ln">   372&nbsp;&nbsp;</span>	<span class="comment">// read any files in the directory.</span>
+<span id="L373" class="ln">   373&nbsp;&nbsp;</span>	FindOnly ImportMode = 1 &lt;&lt; iota
+<span id="L374" class="ln">   374&nbsp;&nbsp;</span>
+<span id="L375" class="ln">   375&nbsp;&nbsp;</span>	<span class="comment">// If AllowBinary is set, Import can be satisfied by a compiled</span>
+<span id="L376" class="ln">   376&nbsp;&nbsp;</span>	<span class="comment">// package object without corresponding sources.</span>
+<span id="L377" class="ln">   377&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L378" class="ln">   378&nbsp;&nbsp;</span>	<span class="comment">// Deprecated:</span>
+<span id="L379" class="ln">   379&nbsp;&nbsp;</span>	<span class="comment">// The supported way to create a compiled-only package is to</span>
+<span id="L380" class="ln">   380&nbsp;&nbsp;</span>	<span class="comment">// write source code containing a //go:binary-only-package comment at</span>
+<span id="L381" class="ln">   381&nbsp;&nbsp;</span>	<span class="comment">// the top of the file. Such a package will be recognized</span>
+<span id="L382" class="ln">   382&nbsp;&nbsp;</span>	<span class="comment">// regardless of this flag setting (because it has source code)</span>
+<span id="L383" class="ln">   383&nbsp;&nbsp;</span>	<span class="comment">// and will have BinaryOnly set to true in the returned Package.</span>
+<span id="L384" class="ln">   384&nbsp;&nbsp;</span>	AllowBinary
+<span id="L385" class="ln">   385&nbsp;&nbsp;</span>
+<span id="L386" class="ln">   386&nbsp;&nbsp;</span>	<span class="comment">// If ImportComment is set, parse import comments on package statements.</span>
+<span id="L387" class="ln">   387&nbsp;&nbsp;</span>	<span class="comment">// Import returns an error if it finds a comment it cannot understand</span>
+<span id="L388" class="ln">   388&nbsp;&nbsp;</span>	<span class="comment">// or finds conflicting comments in multiple source files.</span>
+<span id="L389" class="ln">   389&nbsp;&nbsp;</span>	<span class="comment">// See golang.org/s/go14customimport for more information.</span>
+<span id="L390" class="ln">   390&nbsp;&nbsp;</span>	ImportComment
+<span id="L391" class="ln">   391&nbsp;&nbsp;</span>
+<span id="L392" class="ln">   392&nbsp;&nbsp;</span>	<span class="comment">// By default, Import searches vendor directories</span>
+<span id="L393" class="ln">   393&nbsp;&nbsp;</span>	<span class="comment">// that apply in the given source directory before searching</span>
+<span id="L394" class="ln">   394&nbsp;&nbsp;</span>	<span class="comment">// the GOROOT and GOPATH roots.</span>
+<span id="L395" class="ln">   395&nbsp;&nbsp;</span>	<span class="comment">// If an Import finds and returns a package using a vendor</span>
+<span id="L396" class="ln">   396&nbsp;&nbsp;</span>	<span class="comment">// directory, the resulting ImportPath is the complete path</span>
+<span id="L397" class="ln">   397&nbsp;&nbsp;</span>	<span class="comment">// to the package, including the path elements leading up</span>
+<span id="L398" class="ln">   398&nbsp;&nbsp;</span>	<span class="comment">// to and including &#34;vendor&#34;.</span>
+<span id="L399" class="ln">   399&nbsp;&nbsp;</span>	<span class="comment">// For example, if Import(&#34;y&#34;, &#34;x/subdir&#34;, 0) finds</span>
+<span id="L400" class="ln">   400&nbsp;&nbsp;</span>	<span class="comment">// &#34;x/vendor/y&#34;, the returned package&#39;s ImportPath is &#34;x/vendor/y&#34;,</span>
+<span id="L401" class="ln">   401&nbsp;&nbsp;</span>	<span class="comment">// not plain &#34;y&#34;.</span>
+<span id="L402" class="ln">   402&nbsp;&nbsp;</span>	<span class="comment">// See golang.org/s/go15vendor for more information.</span>
+<span id="L403" class="ln">   403&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L404" class="ln">   404&nbsp;&nbsp;</span>	<span class="comment">// Setting IgnoreVendor ignores vendor directories.</span>
+<span id="L405" class="ln">   405&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L406" class="ln">   406&nbsp;&nbsp;</span>	<span class="comment">// In contrast to the package&#39;s ImportPath,</span>
+<span id="L407" class="ln">   407&nbsp;&nbsp;</span>	<span class="comment">// the returned package&#39;s Imports, TestImports, and XTestImports</span>
+<span id="L408" class="ln">   408&nbsp;&nbsp;</span>	<span class="comment">// are always the exact import paths from the source files:</span>
+<span id="L409" class="ln">   409&nbsp;&nbsp;</span>	<span class="comment">// Import makes no attempt to resolve or check those paths.</span>
+<span id="L410" class="ln">   410&nbsp;&nbsp;</span>	IgnoreVendor
+<span id="L411" class="ln">   411&nbsp;&nbsp;</span>)
+<span id="L412" class="ln">   412&nbsp;&nbsp;</span>
+<span id="L413" class="ln">   413&nbsp;&nbsp;</span><span class="comment">// A Package describes the Go package found in a directory.</span>
+<span id="L414" class="ln">   414&nbsp;&nbsp;</span>type Package struct {
+<span id="L415" class="ln">   415&nbsp;&nbsp;</span>	Dir           string   <span class="comment">// directory containing package sources</span>
+<span id="L416" class="ln">   416&nbsp;&nbsp;</span>	Name          string   <span class="comment">// package name</span>
+<span id="L417" class="ln">   417&nbsp;&nbsp;</span>	ImportComment string   <span class="comment">// path in import comment on package statement</span>
+<span id="L418" class="ln">   418&nbsp;&nbsp;</span>	Doc           string   <span class="comment">// documentation synopsis</span>
+<span id="L419" class="ln">   419&nbsp;&nbsp;</span>	ImportPath    string   <span class="comment">// import path of package (&#34;&#34; if unknown)</span>
+<span id="L420" class="ln">   420&nbsp;&nbsp;</span>	Root          string   <span class="comment">// root of Go tree where this package lives</span>
+<span id="L421" class="ln">   421&nbsp;&nbsp;</span>	SrcRoot       string   <span class="comment">// package source root directory (&#34;&#34; if unknown)</span>
+<span id="L422" class="ln">   422&nbsp;&nbsp;</span>	PkgRoot       string   <span class="comment">// package install root directory (&#34;&#34; if unknown)</span>
+<span id="L423" class="ln">   423&nbsp;&nbsp;</span>	PkgTargetRoot string   <span class="comment">// architecture dependent install root directory (&#34;&#34; if unknown)</span>
+<span id="L424" class="ln">   424&nbsp;&nbsp;</span>	BinDir        string   <span class="comment">// command install directory (&#34;&#34; if unknown)</span>
+<span id="L425" class="ln">   425&nbsp;&nbsp;</span>	Goroot        bool     <span class="comment">// package found in Go root</span>
+<span id="L426" class="ln">   426&nbsp;&nbsp;</span>	PkgObj        string   <span class="comment">// installed .a file</span>
+<span id="L427" class="ln">   427&nbsp;&nbsp;</span>	AllTags       []string <span class="comment">// tags that can influence file selection in this directory</span>
+<span id="L428" class="ln">   428&nbsp;&nbsp;</span>	ConflictDir   string   <span class="comment">// this directory shadows Dir in $GOPATH</span>
+<span id="L429" class="ln">   429&nbsp;&nbsp;</span>	BinaryOnly    bool     <span class="comment">// cannot be rebuilt from source (has //go:binary-only-package comment)</span>
+<span id="L430" class="ln">   430&nbsp;&nbsp;</span>
+<span id="L431" class="ln">   431&nbsp;&nbsp;</span>	<span class="comment">// Source files</span>
+<span id="L432" class="ln">   432&nbsp;&nbsp;</span>	GoFiles           []string <span class="comment">// .go source files (excluding CgoFiles, TestGoFiles, XTestGoFiles)</span>
+<span id="L433" class="ln">   433&nbsp;&nbsp;</span>	CgoFiles          []string <span class="comment">// .go source files that import &#34;C&#34;</span>
+<span id="L434" class="ln">   434&nbsp;&nbsp;</span>	IgnoredGoFiles    []string <span class="comment">// .go source files ignored for this build (including ignored _test.go files)</span>
+<span id="L435" class="ln">   435&nbsp;&nbsp;</span>	InvalidGoFiles    []string <span class="comment">// .go source files with detected problems (parse error, wrong package name, and so on)</span>
+<span id="L436" class="ln">   436&nbsp;&nbsp;</span>	IgnoredOtherFiles []string <span class="comment">// non-.go source files ignored for this build</span>
+<span id="L437" class="ln">   437&nbsp;&nbsp;</span>	CFiles            []string <span class="comment">// .c source files</span>
+<span id="L438" class="ln">   438&nbsp;&nbsp;</span>	CXXFiles          []string <span class="comment">// .cc, .cpp and .cxx source files</span>
+<span id="L439" class="ln">   439&nbsp;&nbsp;</span>	MFiles            []string <span class="comment">// .m (Objective-C) source files</span>
+<span id="L440" class="ln">   440&nbsp;&nbsp;</span>	HFiles            []string <span class="comment">// .h, .hh, .hpp and .hxx source files</span>
+<span id="L441" class="ln">   441&nbsp;&nbsp;</span>	FFiles            []string <span class="comment">// .f, .F, .for and .f90 Fortran source files</span>
+<span id="L442" class="ln">   442&nbsp;&nbsp;</span>	SFiles            []string <span class="comment">// .s source files</span>
+<span id="L443" class="ln">   443&nbsp;&nbsp;</span>	SwigFiles         []string <span class="comment">// .swig files</span>
+<span id="L444" class="ln">   444&nbsp;&nbsp;</span>	SwigCXXFiles      []string <span class="comment">// .swigcxx files</span>
+<span id="L445" class="ln">   445&nbsp;&nbsp;</span>	SysoFiles         []string <span class="comment">// .syso system object files to add to archive</span>
+<span id="L446" class="ln">   446&nbsp;&nbsp;</span>
+<span id="L447" class="ln">   447&nbsp;&nbsp;</span>	<span class="comment">// Cgo directives</span>
+<span id="L448" class="ln">   448&nbsp;&nbsp;</span>	CgoCFLAGS    []string <span class="comment">// Cgo CFLAGS directives</span>
+<span id="L449" class="ln">   449&nbsp;&nbsp;</span>	CgoCPPFLAGS  []string <span class="comment">// Cgo CPPFLAGS directives</span>
+<span id="L450" class="ln">   450&nbsp;&nbsp;</span>	CgoCXXFLAGS  []string <span class="comment">// Cgo CXXFLAGS directives</span>
+<span id="L451" class="ln">   451&nbsp;&nbsp;</span>	CgoFFLAGS    []string <span class="comment">// Cgo FFLAGS directives</span>
+<span id="L452" class="ln">   452&nbsp;&nbsp;</span>	CgoLDFLAGS   []string <span class="comment">// Cgo LDFLAGS directives</span>
+<span id="L453" class="ln">   453&nbsp;&nbsp;</span>	CgoPkgConfig []string <span class="comment">// Cgo pkg-config directives</span>
+<span id="L454" class="ln">   454&nbsp;&nbsp;</span>
+<span id="L455" class="ln">   455&nbsp;&nbsp;</span>	<span class="comment">// Test information</span>
+<span id="L456" class="ln">   456&nbsp;&nbsp;</span>	TestGoFiles  []string <span class="comment">// _test.go files in package</span>
+<span id="L457" class="ln">   457&nbsp;&nbsp;</span>	XTestGoFiles []string <span class="comment">// _test.go files outside package</span>
+<span id="L458" class="ln">   458&nbsp;&nbsp;</span>
+<span id="L459" class="ln">   459&nbsp;&nbsp;</span>	<span class="comment">// Go directive comments (//go:zzz...) found in source files.</span>
+<span id="L460" class="ln">   460&nbsp;&nbsp;</span>	Directives      []Directive
+<span id="L461" class="ln">   461&nbsp;&nbsp;</span>	TestDirectives  []Directive
+<span id="L462" class="ln">   462&nbsp;&nbsp;</span>	XTestDirectives []Directive
+<span id="L463" class="ln">   463&nbsp;&nbsp;</span>
+<span id="L464" class="ln">   464&nbsp;&nbsp;</span>	<span class="comment">// Dependency information</span>
+<span id="L465" class="ln">   465&nbsp;&nbsp;</span>	Imports        []string                    <span class="comment">// import paths from GoFiles, CgoFiles</span>
+<span id="L466" class="ln">   466&nbsp;&nbsp;</span>	ImportPos      map[string][]token.Position <span class="comment">// line information for Imports</span>
+<span id="L467" class="ln">   467&nbsp;&nbsp;</span>	TestImports    []string                    <span class="comment">// import paths from TestGoFiles</span>
+<span id="L468" class="ln">   468&nbsp;&nbsp;</span>	TestImportPos  map[string][]token.Position <span class="comment">// line information for TestImports</span>
+<span id="L469" class="ln">   469&nbsp;&nbsp;</span>	XTestImports   []string                    <span class="comment">// import paths from XTestGoFiles</span>
+<span id="L470" class="ln">   470&nbsp;&nbsp;</span>	XTestImportPos map[string][]token.Position <span class="comment">// line information for XTestImports</span>
+<span id="L471" class="ln">   471&nbsp;&nbsp;</span>
+<span id="L472" class="ln">   472&nbsp;&nbsp;</span>	<span class="comment">// //go:embed patterns found in Go source files</span>
+<span id="L473" class="ln">   473&nbsp;&nbsp;</span>	<span class="comment">// For example, if a source file says</span>
+<span id="L474" class="ln">   474&nbsp;&nbsp;</span>	<span class="comment">//	//go:embed a* b.c</span>
+<span id="L475" class="ln">   475&nbsp;&nbsp;</span>	<span class="comment">// then the list will contain those two strings as separate entries.</span>
+<span id="L476" class="ln">   476&nbsp;&nbsp;</span>	<span class="comment">// (See package embed for more details about //go:embed.)</span>
+<span id="L477" class="ln">   477&nbsp;&nbsp;</span>	EmbedPatterns        []string                    <span class="comment">// patterns from GoFiles, CgoFiles</span>
+<span id="L478" class="ln">   478&nbsp;&nbsp;</span>	EmbedPatternPos      map[string][]token.Position <span class="comment">// line information for EmbedPatterns</span>
+<span id="L479" class="ln">   479&nbsp;&nbsp;</span>	TestEmbedPatterns    []string                    <span class="comment">// patterns from TestGoFiles</span>
+<span id="L480" class="ln">   480&nbsp;&nbsp;</span>	TestEmbedPatternPos  map[string][]token.Position <span class="comment">// line information for TestEmbedPatterns</span>
+<span id="L481" class="ln">   481&nbsp;&nbsp;</span>	XTestEmbedPatterns   []string                    <span class="comment">// patterns from XTestGoFiles</span>
+<span id="L482" class="ln">   482&nbsp;&nbsp;</span>	XTestEmbedPatternPos map[string][]token.Position <span class="comment">// line information for XTestEmbedPatternPos</span>
+<span id="L483" class="ln">   483&nbsp;&nbsp;</span>}
+<span id="L484" class="ln">   484&nbsp;&nbsp;</span>
+<span id="L485" class="ln">   485&nbsp;&nbsp;</span><span class="comment">// A Directive is a Go directive comment (//go:zzz...) found in a source file.</span>
+<span id="L486" class="ln">   486&nbsp;&nbsp;</span>type Directive struct {
+<span id="L487" class="ln">   487&nbsp;&nbsp;</span>	Text string         <span class="comment">// full line comment including leading slashes</span>
+<span id="L488" class="ln">   488&nbsp;&nbsp;</span>	Pos  token.Position <span class="comment">// position of comment</span>
+<span id="L489" class="ln">   489&nbsp;&nbsp;</span>}
+<span id="L490" class="ln">   490&nbsp;&nbsp;</span>
+<span id="L491" class="ln">   491&nbsp;&nbsp;</span><span class="comment">// IsCommand reports whether the package is considered a</span>
+<span id="L492" class="ln">   492&nbsp;&nbsp;</span><span class="comment">// command to be installed (not just a library).</span>
+<span id="L493" class="ln">   493&nbsp;&nbsp;</span><span class="comment">// Packages named &#34;main&#34; are treated as commands.</span>
+<span id="L494" class="ln">   494&nbsp;&nbsp;</span>func (p *Package) IsCommand() bool {
+<span id="L495" class="ln">   495&nbsp;&nbsp;</span>	return p.Name == &#34;main&#34;
+<span id="L496" class="ln">   496&nbsp;&nbsp;</span>}
+<span id="L497" class="ln">   497&nbsp;&nbsp;</span>
+<span id="L498" class="ln">   498&nbsp;&nbsp;</span><span class="comment">// ImportDir is like [Import] but processes the Go package found in</span>
+<span id="L499" class="ln">   499&nbsp;&nbsp;</span><span class="comment">// the named directory.</span>
+<span id="L500" class="ln">   500&nbsp;&nbsp;</span>func (ctxt *Context) ImportDir(dir string, mode ImportMode) (*Package, error) {
+<span id="L501" class="ln">   501&nbsp;&nbsp;</span>	return ctxt.Import(&#34;.&#34;, dir, mode)
+<span id="L502" class="ln">   502&nbsp;&nbsp;</span>}
+<span id="L503" class="ln">   503&nbsp;&nbsp;</span>
+<span id="L504" class="ln">   504&nbsp;&nbsp;</span><span class="comment">// NoGoError is the error used by [Import] to describe a directory</span>
+<span id="L505" class="ln">   505&nbsp;&nbsp;</span><span class="comment">// containing no buildable Go source files. (It may still contain</span>
+<span id="L506" class="ln">   506&nbsp;&nbsp;</span><span class="comment">// test files, files hidden by build tags, and so on.)</span>
+<span id="L507" class="ln">   507&nbsp;&nbsp;</span>type NoGoError struct {
+<span id="L508" class="ln">   508&nbsp;&nbsp;</span>	Dir string
+<span id="L509" class="ln">   509&nbsp;&nbsp;</span>}
+<span id="L510" class="ln">   510&nbsp;&nbsp;</span>
+<span id="L511" class="ln">   511&nbsp;&nbsp;</span>func (e *NoGoError) Error() string {
+<span id="L512" class="ln">   512&nbsp;&nbsp;</span>	return &#34;no buildable Go source files in &#34; + e.Dir
+<span id="L513" class="ln">   513&nbsp;&nbsp;</span>}
+<span id="L514" class="ln">   514&nbsp;&nbsp;</span>
+<span id="L515" class="ln">   515&nbsp;&nbsp;</span><span class="comment">// MultiplePackageError describes a directory containing</span>
+<span id="L516" class="ln">   516&nbsp;&nbsp;</span><span class="comment">// multiple buildable Go source files for multiple packages.</span>
+<span id="L517" class="ln">   517&nbsp;&nbsp;</span>type MultiplePackageError struct {
+<span id="L518" class="ln">   518&nbsp;&nbsp;</span>	Dir      string   <span class="comment">// directory containing files</span>
+<span id="L519" class="ln">   519&nbsp;&nbsp;</span>	Packages []string <span class="comment">// package names found</span>
+<span id="L520" class="ln">   520&nbsp;&nbsp;</span>	Files    []string <span class="comment">// corresponding files: Files[i] declares package Packages[i]</span>
+<span id="L521" class="ln">   521&nbsp;&nbsp;</span>}
+<span id="L522" class="ln">   522&nbsp;&nbsp;</span>
+<span id="L523" class="ln">   523&nbsp;&nbsp;</span>func (e *MultiplePackageError) Error() string {
+<span id="L524" class="ln">   524&nbsp;&nbsp;</span>	<span class="comment">// Error string limited to two entries for compatibility.</span>
+<span id="L525" class="ln">   525&nbsp;&nbsp;</span>	return fmt.Sprintf(&#34;found packages %s (%s) and %s (%s) in %s&#34;, e.Packages[0], e.Files[0], e.Packages[1], e.Files[1], e.Dir)
+<span id="L526" class="ln">   526&nbsp;&nbsp;</span>}
+<span id="L527" class="ln">   527&nbsp;&nbsp;</span>
+<span id="L528" class="ln">   528&nbsp;&nbsp;</span>func nameExt(name string) string {
+<span id="L529" class="ln">   529&nbsp;&nbsp;</span>	i := strings.LastIndex(name, &#34;.&#34;)
+<span id="L530" class="ln">   530&nbsp;&nbsp;</span>	if i &lt; 0 {
+<span id="L531" class="ln">   531&nbsp;&nbsp;</span>		return &#34;&#34;
+<span id="L532" class="ln">   532&nbsp;&nbsp;</span>	}
+<span id="L533" class="ln">   533&nbsp;&nbsp;</span>	return name[i:]
+<span id="L534" class="ln">   534&nbsp;&nbsp;</span>}
+<span id="L535" class="ln">   535&nbsp;&nbsp;</span>
+<span id="L536" class="ln">   536&nbsp;&nbsp;</span>var installgoroot = godebug.New(&#34;installgoroot&#34;)
+<span id="L537" class="ln">   537&nbsp;&nbsp;</span>
+<span id="L538" class="ln">   538&nbsp;&nbsp;</span><span class="comment">// Import returns details about the Go package named by the import path,</span>
+<span id="L539" class="ln">   539&nbsp;&nbsp;</span><span class="comment">// interpreting local import paths relative to the srcDir directory.</span>
+<span id="L540" class="ln">   540&nbsp;&nbsp;</span><span class="comment">// If the path is a local import path naming a package that can be imported</span>
+<span id="L541" class="ln">   541&nbsp;&nbsp;</span><span class="comment">// using a standard import path, the returned package will set p.ImportPath</span>
+<span id="L542" class="ln">   542&nbsp;&nbsp;</span><span class="comment">// to that path.</span>
+<span id="L543" class="ln">   543&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L544" class="ln">   544&nbsp;&nbsp;</span><span class="comment">// In the directory containing the package, .go, .c, .h, and .s files are</span>
+<span id="L545" class="ln">   545&nbsp;&nbsp;</span><span class="comment">// considered part of the package except for:</span>
+<span id="L546" class="ln">   546&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L547" class="ln">   547&nbsp;&nbsp;</span><span class="comment">//   - .go files in package documentation</span>
+<span id="L548" class="ln">   548&nbsp;&nbsp;</span><span class="comment">//   - files starting with _ or . (likely editor temporary files)</span>
+<span id="L549" class="ln">   549&nbsp;&nbsp;</span><span class="comment">//   - files with build constraints not satisfied by the context</span>
+<span id="L550" class="ln">   550&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L551" class="ln">   551&nbsp;&nbsp;</span><span class="comment">// If an error occurs, Import returns a non-nil error and a non-nil</span>
+<span id="L552" class="ln">   552&nbsp;&nbsp;</span><span class="comment">// *[Package] containing partial information.</span>
+<span id="L553" class="ln">   553&nbsp;&nbsp;</span>func (ctxt *Context) Import(path string, srcDir string, mode ImportMode) (*Package, error) {
+<span id="L554" class="ln">   554&nbsp;&nbsp;</span>	p := &amp;Package{
+<span id="L555" class="ln">   555&nbsp;&nbsp;</span>		ImportPath: path,
+<span id="L556" class="ln">   556&nbsp;&nbsp;</span>	}
+<span id="L557" class="ln">   557&nbsp;&nbsp;</span>	if path == &#34;&#34; {
+<span id="L558" class="ln">   558&nbsp;&nbsp;</span>		return p, fmt.Errorf(&#34;import %q: invalid import path&#34;, path)
+<span id="L559" class="ln">   559&nbsp;&nbsp;</span>	}
+<span id="L560" class="ln">   560&nbsp;&nbsp;</span>
+<span id="L561" class="ln">   561&nbsp;&nbsp;</span>	var pkgtargetroot string
+<span id="L562" class="ln">   562&nbsp;&nbsp;</span>	var pkga string
+<span id="L563" class="ln">   563&nbsp;&nbsp;</span>	var pkgerr error
+<span id="L564" class="ln">   564&nbsp;&nbsp;</span>	suffix := &#34;&#34;
+<span id="L565" class="ln">   565&nbsp;&nbsp;</span>	if ctxt.InstallSuffix != &#34;&#34; {
+<span id="L566" class="ln">   566&nbsp;&nbsp;</span>		suffix = &#34;_&#34; + ctxt.InstallSuffix
+<span id="L567" class="ln">   567&nbsp;&nbsp;</span>	}
+<span id="L568" class="ln">   568&nbsp;&nbsp;</span>	switch ctxt.Compiler {
+<span id="L569" class="ln">   569&nbsp;&nbsp;</span>	case &#34;gccgo&#34;:
+<span id="L570" class="ln">   570&nbsp;&nbsp;</span>		pkgtargetroot = &#34;pkg/gccgo_&#34; + ctxt.GOOS + &#34;_&#34; + ctxt.GOARCH + suffix
+<span id="L571" class="ln">   571&nbsp;&nbsp;</span>	case &#34;gc&#34;:
+<span id="L572" class="ln">   572&nbsp;&nbsp;</span>		pkgtargetroot = &#34;pkg/&#34; + ctxt.GOOS + &#34;_&#34; + ctxt.GOARCH + suffix
+<span id="L573" class="ln">   573&nbsp;&nbsp;</span>	default:
+<span id="L574" class="ln">   574&nbsp;&nbsp;</span>		<span class="comment">// Save error for end of function.</span>
+<span id="L575" class="ln">   575&nbsp;&nbsp;</span>		pkgerr = fmt.Errorf(&#34;import %q: unknown compiler %q&#34;, path, ctxt.Compiler)
+<span id="L576" class="ln">   576&nbsp;&nbsp;</span>	}
+<span id="L577" class="ln">   577&nbsp;&nbsp;</span>	setPkga := func() {
+<span id="L578" class="ln">   578&nbsp;&nbsp;</span>		switch ctxt.Compiler {
+<span id="L579" class="ln">   579&nbsp;&nbsp;</span>		case &#34;gccgo&#34;:
+<span id="L580" class="ln">   580&nbsp;&nbsp;</span>			dir, elem := pathpkg.Split(p.ImportPath)
+<span id="L581" class="ln">   581&nbsp;&nbsp;</span>			pkga = pkgtargetroot + &#34;/&#34; + dir + &#34;lib&#34; + elem + &#34;.a&#34;
+<span id="L582" class="ln">   582&nbsp;&nbsp;</span>		case &#34;gc&#34;:
+<span id="L583" class="ln">   583&nbsp;&nbsp;</span>			pkga = pkgtargetroot + &#34;/&#34; + p.ImportPath + &#34;.a&#34;
+<span id="L584" class="ln">   584&nbsp;&nbsp;</span>		}
+<span id="L585" class="ln">   585&nbsp;&nbsp;</span>	}
+<span id="L586" class="ln">   586&nbsp;&nbsp;</span>	setPkga()
+<span id="L587" class="ln">   587&nbsp;&nbsp;</span>
+<span id="L588" class="ln">   588&nbsp;&nbsp;</span>	binaryOnly := false
+<span id="L589" class="ln">   589&nbsp;&nbsp;</span>	if IsLocalImport(path) {
+<span id="L590" class="ln">   590&nbsp;&nbsp;</span>		pkga = &#34;&#34; <span class="comment">// local imports have no installed path</span>
+<span id="L591" class="ln">   591&nbsp;&nbsp;</span>		if srcDir == &#34;&#34; {
+<span id="L592" class="ln">   592&nbsp;&nbsp;</span>			return p, fmt.Errorf(&#34;import %q: import relative to unknown directory&#34;, path)
+<span id="L593" class="ln">   593&nbsp;&nbsp;</span>		}
+<span id="L594" class="ln">   594&nbsp;&nbsp;</span>		if !ctxt.isAbsPath(path) {
+<span id="L595" class="ln">   595&nbsp;&nbsp;</span>			p.Dir = ctxt.joinPath(srcDir, path)
+<span id="L596" class="ln">   596&nbsp;&nbsp;</span>		}
+<span id="L597" class="ln">   597&nbsp;&nbsp;</span>		<span class="comment">// p.Dir directory may or may not exist. Gather partial information first, check if it exists later.</span>
+<span id="L598" class="ln">   598&nbsp;&nbsp;</span>		<span class="comment">// Determine canonical import path, if any.</span>
+<span id="L599" class="ln">   599&nbsp;&nbsp;</span>		<span class="comment">// Exclude results where the import path would include /testdata/.</span>
+<span id="L600" class="ln">   600&nbsp;&nbsp;</span>		inTestdata := func(sub string) bool {
+<span id="L601" class="ln">   601&nbsp;&nbsp;</span>			return strings.Contains(sub, &#34;/testdata/&#34;) || strings.HasSuffix(sub, &#34;/testdata&#34;) || strings.HasPrefix(sub, &#34;testdata/&#34;) || sub == &#34;testdata&#34;
+<span id="L602" class="ln">   602&nbsp;&nbsp;</span>		}
+<span id="L603" class="ln">   603&nbsp;&nbsp;</span>		if ctxt.GOROOT != &#34;&#34; {
+<span id="L604" class="ln">   604&nbsp;&nbsp;</span>			root := ctxt.joinPath(ctxt.GOROOT, &#34;src&#34;)
+<span id="L605" class="ln">   605&nbsp;&nbsp;</span>			if sub, ok := ctxt.hasSubdir(root, p.Dir); ok &amp;&amp; !inTestdata(sub) {
+<span id="L606" class="ln">   606&nbsp;&nbsp;</span>				p.Goroot = true
+<span id="L607" class="ln">   607&nbsp;&nbsp;</span>				p.ImportPath = sub
+<span id="L608" class="ln">   608&nbsp;&nbsp;</span>				p.Root = ctxt.GOROOT
+<span id="L609" class="ln">   609&nbsp;&nbsp;</span>				setPkga() <span class="comment">// p.ImportPath changed</span>
+<span id="L610" class="ln">   610&nbsp;&nbsp;</span>				goto Found
+<span id="L611" class="ln">   611&nbsp;&nbsp;</span>			}
+<span id="L612" class="ln">   612&nbsp;&nbsp;</span>		}
+<span id="L613" class="ln">   613&nbsp;&nbsp;</span>		all := ctxt.gopath()
+<span id="L614" class="ln">   614&nbsp;&nbsp;</span>		for i, root := range all {
+<span id="L615" class="ln">   615&nbsp;&nbsp;</span>			rootsrc := ctxt.joinPath(root, &#34;src&#34;)
+<span id="L616" class="ln">   616&nbsp;&nbsp;</span>			if sub, ok := ctxt.hasSubdir(rootsrc, p.Dir); ok &amp;&amp; !inTestdata(sub) {
+<span id="L617" class="ln">   617&nbsp;&nbsp;</span>				<span class="comment">// We found a potential import path for dir,</span>
+<span id="L618" class="ln">   618&nbsp;&nbsp;</span>				<span class="comment">// but check that using it wouldn&#39;t find something</span>
+<span id="L619" class="ln">   619&nbsp;&nbsp;</span>				<span class="comment">// else first.</span>
+<span id="L620" class="ln">   620&nbsp;&nbsp;</span>				if ctxt.GOROOT != &#34;&#34; &amp;&amp; ctxt.Compiler != &#34;gccgo&#34; {
+<span id="L621" class="ln">   621&nbsp;&nbsp;</span>					if dir := ctxt.joinPath(ctxt.GOROOT, &#34;src&#34;, sub); ctxt.isDir(dir) {
+<span id="L622" class="ln">   622&nbsp;&nbsp;</span>						p.ConflictDir = dir
+<span id="L623" class="ln">   623&nbsp;&nbsp;</span>						goto Found
+<span id="L624" class="ln">   624&nbsp;&nbsp;</span>					}
+<span id="L625" class="ln">   625&nbsp;&nbsp;</span>				}
+<span id="L626" class="ln">   626&nbsp;&nbsp;</span>				for _, earlyRoot := range all[:i] {
+<span id="L627" class="ln">   627&nbsp;&nbsp;</span>					if dir := ctxt.joinPath(earlyRoot, &#34;src&#34;, sub); ctxt.isDir(dir) {
+<span id="L628" class="ln">   628&nbsp;&nbsp;</span>						p.ConflictDir = dir
+<span id="L629" class="ln">   629&nbsp;&nbsp;</span>						goto Found
+<span id="L630" class="ln">   630&nbsp;&nbsp;</span>					}
+<span id="L631" class="ln">   631&nbsp;&nbsp;</span>				}
+<span id="L632" class="ln">   632&nbsp;&nbsp;</span>
+<span id="L633" class="ln">   633&nbsp;&nbsp;</span>				<span class="comment">// sub would not name some other directory instead of this one.</span>
+<span id="L634" class="ln">   634&nbsp;&nbsp;</span>				<span class="comment">// Record it.</span>
+<span id="L635" class="ln">   635&nbsp;&nbsp;</span>				p.ImportPath = sub
+<span id="L636" class="ln">   636&nbsp;&nbsp;</span>				p.Root = root
+<span id="L637" class="ln">   637&nbsp;&nbsp;</span>				setPkga() <span class="comment">// p.ImportPath changed</span>
+<span id="L638" class="ln">   638&nbsp;&nbsp;</span>				goto Found
+<span id="L639" class="ln">   639&nbsp;&nbsp;</span>			}
+<span id="L640" class="ln">   640&nbsp;&nbsp;</span>		}
+<span id="L641" class="ln">   641&nbsp;&nbsp;</span>		<span class="comment">// It&#39;s okay that we didn&#39;t find a root containing dir.</span>
+<span id="L642" class="ln">   642&nbsp;&nbsp;</span>		<span class="comment">// Keep going with the information we have.</span>
+<span id="L643" class="ln">   643&nbsp;&nbsp;</span>	} else {
+<span id="L644" class="ln">   644&nbsp;&nbsp;</span>		if strings.HasPrefix(path, &#34;/&#34;) {
+<span id="L645" class="ln">   645&nbsp;&nbsp;</span>			return p, fmt.Errorf(&#34;import %q: cannot import absolute path&#34;, path)
+<span id="L646" class="ln">   646&nbsp;&nbsp;</span>		}
+<span id="L647" class="ln">   647&nbsp;&nbsp;</span>
+<span id="L648" class="ln">   648&nbsp;&nbsp;</span>		if err := ctxt.importGo(p, path, srcDir, mode); err == nil {
+<span id="L649" class="ln">   649&nbsp;&nbsp;</span>			goto Found
+<span id="L650" class="ln">   650&nbsp;&nbsp;</span>		} else if err != errNoModules {
+<span id="L651" class="ln">   651&nbsp;&nbsp;</span>			return p, err
+<span id="L652" class="ln">   652&nbsp;&nbsp;</span>		}
+<span id="L653" class="ln">   653&nbsp;&nbsp;</span>
+<span id="L654" class="ln">   654&nbsp;&nbsp;</span>		gopath := ctxt.gopath() <span class="comment">// needed twice below; avoid computing many times</span>
+<span id="L655" class="ln">   655&nbsp;&nbsp;</span>
+<span id="L656" class="ln">   656&nbsp;&nbsp;</span>		<span class="comment">// tried records the location of unsuccessful package lookups</span>
+<span id="L657" class="ln">   657&nbsp;&nbsp;</span>		var tried struct {
+<span id="L658" class="ln">   658&nbsp;&nbsp;</span>			vendor []string
+<span id="L659" class="ln">   659&nbsp;&nbsp;</span>			goroot string
+<span id="L660" class="ln">   660&nbsp;&nbsp;</span>			gopath []string
+<span id="L661" class="ln">   661&nbsp;&nbsp;</span>		}
+<span id="L662" class="ln">   662&nbsp;&nbsp;</span>
+<span id="L663" class="ln">   663&nbsp;&nbsp;</span>		<span class="comment">// Vendor directories get first chance to satisfy import.</span>
+<span id="L664" class="ln">   664&nbsp;&nbsp;</span>		if mode&amp;IgnoreVendor == 0 &amp;&amp; srcDir != &#34;&#34; {
+<span id="L665" class="ln">   665&nbsp;&nbsp;</span>			searchVendor := func(root string, isGoroot bool) bool {
+<span id="L666" class="ln">   666&nbsp;&nbsp;</span>				sub, ok := ctxt.hasSubdir(root, srcDir)
+<span id="L667" class="ln">   667&nbsp;&nbsp;</span>				if !ok || !strings.HasPrefix(sub, &#34;src/&#34;) || strings.Contains(sub, &#34;/testdata/&#34;) {
+<span id="L668" class="ln">   668&nbsp;&nbsp;</span>					return false
+<span id="L669" class="ln">   669&nbsp;&nbsp;</span>				}
+<span id="L670" class="ln">   670&nbsp;&nbsp;</span>				for {
+<span id="L671" class="ln">   671&nbsp;&nbsp;</span>					vendor := ctxt.joinPath(root, sub, &#34;vendor&#34;)
+<span id="L672" class="ln">   672&nbsp;&nbsp;</span>					if ctxt.isDir(vendor) {
+<span id="L673" class="ln">   673&nbsp;&nbsp;</span>						dir := ctxt.joinPath(vendor, path)
+<span id="L674" class="ln">   674&nbsp;&nbsp;</span>						if ctxt.isDir(dir) &amp;&amp; hasGoFiles(ctxt, dir) {
+<span id="L675" class="ln">   675&nbsp;&nbsp;</span>							p.Dir = dir
+<span id="L676" class="ln">   676&nbsp;&nbsp;</span>							p.ImportPath = strings.TrimPrefix(pathpkg.Join(sub, &#34;vendor&#34;, path), &#34;src/&#34;)
+<span id="L677" class="ln">   677&nbsp;&nbsp;</span>							p.Goroot = isGoroot
+<span id="L678" class="ln">   678&nbsp;&nbsp;</span>							p.Root = root
+<span id="L679" class="ln">   679&nbsp;&nbsp;</span>							setPkga() <span class="comment">// p.ImportPath changed</span>
+<span id="L680" class="ln">   680&nbsp;&nbsp;</span>							return true
+<span id="L681" class="ln">   681&nbsp;&nbsp;</span>						}
+<span id="L682" class="ln">   682&nbsp;&nbsp;</span>						tried.vendor = append(tried.vendor, dir)
+<span id="L683" class="ln">   683&nbsp;&nbsp;</span>					}
+<span id="L684" class="ln">   684&nbsp;&nbsp;</span>					i := strings.LastIndex(sub, &#34;/&#34;)
+<span id="L685" class="ln">   685&nbsp;&nbsp;</span>					if i &lt; 0 {
+<span id="L686" class="ln">   686&nbsp;&nbsp;</span>						break
+<span id="L687" class="ln">   687&nbsp;&nbsp;</span>					}
+<span id="L688" class="ln">   688&nbsp;&nbsp;</span>					sub = sub[:i]
+<span id="L689" class="ln">   689&nbsp;&nbsp;</span>				}
+<span id="L690" class="ln">   690&nbsp;&nbsp;</span>				return false
+<span id="L691" class="ln">   691&nbsp;&nbsp;</span>			}
+<span id="L692" class="ln">   692&nbsp;&nbsp;</span>			if ctxt.Compiler != &#34;gccgo&#34; &amp;&amp; ctxt.GOROOT != &#34;&#34; &amp;&amp; searchVendor(ctxt.GOROOT, true) {
+<span id="L693" class="ln">   693&nbsp;&nbsp;</span>				goto Found
+<span id="L694" class="ln">   694&nbsp;&nbsp;</span>			}
+<span id="L695" class="ln">   695&nbsp;&nbsp;</span>			for _, root := range gopath {
+<span id="L696" class="ln">   696&nbsp;&nbsp;</span>				if searchVendor(root, false) {
+<span id="L697" class="ln">   697&nbsp;&nbsp;</span>					goto Found
+<span id="L698" class="ln">   698&nbsp;&nbsp;</span>				}
+<span id="L699" class="ln">   699&nbsp;&nbsp;</span>			}
+<span id="L700" class="ln">   700&nbsp;&nbsp;</span>		}
+<span id="L701" class="ln">   701&nbsp;&nbsp;</span>
+<span id="L702" class="ln">   702&nbsp;&nbsp;</span>		<span class="comment">// Determine directory from import path.</span>
+<span id="L703" class="ln">   703&nbsp;&nbsp;</span>		if ctxt.GOROOT != &#34;&#34; {
+<span id="L704" class="ln">   704&nbsp;&nbsp;</span>			<span class="comment">// If the package path starts with &#34;vendor/&#34;, only search GOROOT before</span>
+<span id="L705" class="ln">   705&nbsp;&nbsp;</span>			<span class="comment">// GOPATH if the importer is also within GOROOT. That way, if the user has</span>
+<span id="L706" class="ln">   706&nbsp;&nbsp;</span>			<span class="comment">// vendored in a package that is subsequently included in the standard</span>
+<span id="L707" class="ln">   707&nbsp;&nbsp;</span>			<span class="comment">// distribution, they&#39;ll continue to pick up their own vendored copy.</span>
+<span id="L708" class="ln">   708&nbsp;&nbsp;</span>			gorootFirst := srcDir == &#34;&#34; || !strings.HasPrefix(path, &#34;vendor/&#34;)
+<span id="L709" class="ln">   709&nbsp;&nbsp;</span>			if !gorootFirst {
+<span id="L710" class="ln">   710&nbsp;&nbsp;</span>				_, gorootFirst = ctxt.hasSubdir(ctxt.GOROOT, srcDir)
+<span id="L711" class="ln">   711&nbsp;&nbsp;</span>			}
+<span id="L712" class="ln">   712&nbsp;&nbsp;</span>			if gorootFirst {
+<span id="L713" class="ln">   713&nbsp;&nbsp;</span>				dir := ctxt.joinPath(ctxt.GOROOT, &#34;src&#34;, path)
+<span id="L714" class="ln">   714&nbsp;&nbsp;</span>				if ctxt.Compiler != &#34;gccgo&#34; {
+<span id="L715" class="ln">   715&nbsp;&nbsp;</span>					isDir := ctxt.isDir(dir)
+<span id="L716" class="ln">   716&nbsp;&nbsp;</span>					binaryOnly = !isDir &amp;&amp; mode&amp;AllowBinary != 0 &amp;&amp; pkga != &#34;&#34; &amp;&amp; ctxt.isFile(ctxt.joinPath(ctxt.GOROOT, pkga))
+<span id="L717" class="ln">   717&nbsp;&nbsp;</span>					if isDir || binaryOnly {
+<span id="L718" class="ln">   718&nbsp;&nbsp;</span>						p.Dir = dir
+<span id="L719" class="ln">   719&nbsp;&nbsp;</span>						p.Goroot = true
+<span id="L720" class="ln">   720&nbsp;&nbsp;</span>						p.Root = ctxt.GOROOT
+<span id="L721" class="ln">   721&nbsp;&nbsp;</span>						goto Found
+<span id="L722" class="ln">   722&nbsp;&nbsp;</span>					}
+<span id="L723" class="ln">   723&nbsp;&nbsp;</span>				}
+<span id="L724" class="ln">   724&nbsp;&nbsp;</span>				tried.goroot = dir
+<span id="L725" class="ln">   725&nbsp;&nbsp;</span>			}
+<span id="L726" class="ln">   726&nbsp;&nbsp;</span>			if ctxt.Compiler == &#34;gccgo&#34; &amp;&amp; goroot.IsStandardPackage(ctxt.GOROOT, ctxt.Compiler, path) {
+<span id="L727" class="ln">   727&nbsp;&nbsp;</span>				<span class="comment">// TODO(bcmills): Setting p.Dir here is misleading, because gccgo</span>
+<span id="L728" class="ln">   728&nbsp;&nbsp;</span>				<span class="comment">// doesn&#39;t actually load its standard-library packages from this</span>
+<span id="L729" class="ln">   729&nbsp;&nbsp;</span>				<span class="comment">// directory. See if we can leave it unset.</span>
+<span id="L730" class="ln">   730&nbsp;&nbsp;</span>				p.Dir = ctxt.joinPath(ctxt.GOROOT, &#34;src&#34;, path)
+<span id="L731" class="ln">   731&nbsp;&nbsp;</span>				p.Goroot = true
+<span id="L732" class="ln">   732&nbsp;&nbsp;</span>				p.Root = ctxt.GOROOT
+<span id="L733" class="ln">   733&nbsp;&nbsp;</span>				goto Found
+<span id="L734" class="ln">   734&nbsp;&nbsp;</span>			}
+<span id="L735" class="ln">   735&nbsp;&nbsp;</span>		}
+<span id="L736" class="ln">   736&nbsp;&nbsp;</span>		for _, root := range gopath {
+<span id="L737" class="ln">   737&nbsp;&nbsp;</span>			dir := ctxt.joinPath(root, &#34;src&#34;, path)
+<span id="L738" class="ln">   738&nbsp;&nbsp;</span>			isDir := ctxt.isDir(dir)
+<span id="L739" class="ln">   739&nbsp;&nbsp;</span>			binaryOnly = !isDir &amp;&amp; mode&amp;AllowBinary != 0 &amp;&amp; pkga != &#34;&#34; &amp;&amp; ctxt.isFile(ctxt.joinPath(root, pkga))
+<span id="L740" class="ln">   740&nbsp;&nbsp;</span>			if isDir || binaryOnly {
+<span id="L741" class="ln">   741&nbsp;&nbsp;</span>				p.Dir = dir
+<span id="L742" class="ln">   742&nbsp;&nbsp;</span>				p.Root = root
+<span id="L743" class="ln">   743&nbsp;&nbsp;</span>				goto Found
+<span id="L744" class="ln">   744&nbsp;&nbsp;</span>			}
+<span id="L745" class="ln">   745&nbsp;&nbsp;</span>			tried.gopath = append(tried.gopath, dir)
+<span id="L746" class="ln">   746&nbsp;&nbsp;</span>		}
+<span id="L747" class="ln">   747&nbsp;&nbsp;</span>
+<span id="L748" class="ln">   748&nbsp;&nbsp;</span>		<span class="comment">// If we tried GOPATH first due to a &#34;vendor/&#34; prefix, fall back to GOPATH.</span>
+<span id="L749" class="ln">   749&nbsp;&nbsp;</span>		<span class="comment">// That way, the user can still get useful results from &#39;go list&#39; for</span>
+<span id="L750" class="ln">   750&nbsp;&nbsp;</span>		<span class="comment">// standard-vendored paths passed on the command line.</span>
+<span id="L751" class="ln">   751&nbsp;&nbsp;</span>		if ctxt.GOROOT != &#34;&#34; &amp;&amp; tried.goroot == &#34;&#34; {
+<span id="L752" class="ln">   752&nbsp;&nbsp;</span>			dir := ctxt.joinPath(ctxt.GOROOT, &#34;src&#34;, path)
+<span id="L753" class="ln">   753&nbsp;&nbsp;</span>			if ctxt.Compiler != &#34;gccgo&#34; {
+<span id="L754" class="ln">   754&nbsp;&nbsp;</span>				isDir := ctxt.isDir(dir)
+<span id="L755" class="ln">   755&nbsp;&nbsp;</span>				binaryOnly = !isDir &amp;&amp; mode&amp;AllowBinary != 0 &amp;&amp; pkga != &#34;&#34; &amp;&amp; ctxt.isFile(ctxt.joinPath(ctxt.GOROOT, pkga))
+<span id="L756" class="ln">   756&nbsp;&nbsp;</span>				if isDir || binaryOnly {
+<span id="L757" class="ln">   757&nbsp;&nbsp;</span>					p.Dir = dir
+<span id="L758" class="ln">   758&nbsp;&nbsp;</span>					p.Goroot = true
+<span id="L759" class="ln">   759&nbsp;&nbsp;</span>					p.Root = ctxt.GOROOT
+<span id="L760" class="ln">   760&nbsp;&nbsp;</span>					goto Found
+<span id="L761" class="ln">   761&nbsp;&nbsp;</span>				}
+<span id="L762" class="ln">   762&nbsp;&nbsp;</span>			}
+<span id="L763" class="ln">   763&nbsp;&nbsp;</span>			tried.goroot = dir
+<span id="L764" class="ln">   764&nbsp;&nbsp;</span>		}
+<span id="L765" class="ln">   765&nbsp;&nbsp;</span>
+<span id="L766" class="ln">   766&nbsp;&nbsp;</span>		<span class="comment">// package was not found</span>
+<span id="L767" class="ln">   767&nbsp;&nbsp;</span>		var paths []string
+<span id="L768" class="ln">   768&nbsp;&nbsp;</span>		format := &#34;\t%s (vendor tree)&#34;
+<span id="L769" class="ln">   769&nbsp;&nbsp;</span>		for _, dir := range tried.vendor {
+<span id="L770" class="ln">   770&nbsp;&nbsp;</span>			paths = append(paths, fmt.Sprintf(format, dir))
+<span id="L771" class="ln">   771&nbsp;&nbsp;</span>			format = &#34;\t%s&#34;
+<span id="L772" class="ln">   772&nbsp;&nbsp;</span>		}
+<span id="L773" class="ln">   773&nbsp;&nbsp;</span>		if tried.goroot != &#34;&#34; {
+<span id="L774" class="ln">   774&nbsp;&nbsp;</span>			paths = append(paths, fmt.Sprintf(&#34;\t%s (from $GOROOT)&#34;, tried.goroot))
+<span id="L775" class="ln">   775&nbsp;&nbsp;</span>		} else {
+<span id="L776" class="ln">   776&nbsp;&nbsp;</span>			paths = append(paths, &#34;\t($GOROOT not set)&#34;)
+<span id="L777" class="ln">   777&nbsp;&nbsp;</span>		}
+<span id="L778" class="ln">   778&nbsp;&nbsp;</span>		format = &#34;\t%s (from $GOPATH)&#34;
+<span id="L779" class="ln">   779&nbsp;&nbsp;</span>		for _, dir := range tried.gopath {
+<span id="L780" class="ln">   780&nbsp;&nbsp;</span>			paths = append(paths, fmt.Sprintf(format, dir))
+<span id="L781" class="ln">   781&nbsp;&nbsp;</span>			format = &#34;\t%s&#34;
+<span id="L782" class="ln">   782&nbsp;&nbsp;</span>		}
+<span id="L783" class="ln">   783&nbsp;&nbsp;</span>		if len(tried.gopath) == 0 {
+<span id="L784" class="ln">   784&nbsp;&nbsp;</span>			paths = append(paths, &#34;\t($GOPATH not set. For more details see: &#39;go help gopath&#39;)&#34;)
+<span id="L785" class="ln">   785&nbsp;&nbsp;</span>		}
+<span id="L786" class="ln">   786&nbsp;&nbsp;</span>		return p, fmt.Errorf(&#34;cannot find package %q in any of:\n%s&#34;, path, strings.Join(paths, &#34;\n&#34;))
+<span id="L787" class="ln">   787&nbsp;&nbsp;</span>	}
+<span id="L788" class="ln">   788&nbsp;&nbsp;</span>
+<span id="L789" class="ln">   789&nbsp;&nbsp;</span>Found:
+<span id="L790" class="ln">   790&nbsp;&nbsp;</span>	if p.Root != &#34;&#34; {
+<span id="L791" class="ln">   791&nbsp;&nbsp;</span>		p.SrcRoot = ctxt.joinPath(p.Root, &#34;src&#34;)
+<span id="L792" class="ln">   792&nbsp;&nbsp;</span>		p.PkgRoot = ctxt.joinPath(p.Root, &#34;pkg&#34;)
+<span id="L793" class="ln">   793&nbsp;&nbsp;</span>		p.BinDir = ctxt.joinPath(p.Root, &#34;bin&#34;)
+<span id="L794" class="ln">   794&nbsp;&nbsp;</span>		if pkga != &#34;&#34; {
+<span id="L795" class="ln">   795&nbsp;&nbsp;</span>			<span class="comment">// Always set PkgTargetRoot. It might be used when building in shared</span>
+<span id="L796" class="ln">   796&nbsp;&nbsp;</span>			<span class="comment">// mode.</span>
+<span id="L797" class="ln">   797&nbsp;&nbsp;</span>			p.PkgTargetRoot = ctxt.joinPath(p.Root, pkgtargetroot)
+<span id="L798" class="ln">   798&nbsp;&nbsp;</span>
+<span id="L799" class="ln">   799&nbsp;&nbsp;</span>			<span class="comment">// Set the install target if applicable.</span>
+<span id="L800" class="ln">   800&nbsp;&nbsp;</span>			if !p.Goroot || (installgoroot.Value() == &#34;all&#34; &amp;&amp; p.ImportPath != &#34;unsafe&#34; &amp;&amp; p.ImportPath != &#34;builtin&#34;) {
+<span id="L801" class="ln">   801&nbsp;&nbsp;</span>				if p.Goroot {
+<span id="L802" class="ln">   802&nbsp;&nbsp;</span>					installgoroot.IncNonDefault()
+<span id="L803" class="ln">   803&nbsp;&nbsp;</span>				}
+<span id="L804" class="ln">   804&nbsp;&nbsp;</span>				p.PkgObj = ctxt.joinPath(p.Root, pkga)
+<span id="L805" class="ln">   805&nbsp;&nbsp;</span>			}
+<span id="L806" class="ln">   806&nbsp;&nbsp;</span>		}
+<span id="L807" class="ln">   807&nbsp;&nbsp;</span>	}
+<span id="L808" class="ln">   808&nbsp;&nbsp;</span>
+<span id="L809" class="ln">   809&nbsp;&nbsp;</span>	<span class="comment">// If it&#39;s a local import path, by the time we get here, we still haven&#39;t checked</span>
+<span id="L810" class="ln">   810&nbsp;&nbsp;</span>	<span class="comment">// that p.Dir directory exists. This is the right time to do that check.</span>
+<span id="L811" class="ln">   811&nbsp;&nbsp;</span>	<span class="comment">// We can&#39;t do it earlier, because we want to gather partial information for the</span>
+<span id="L812" class="ln">   812&nbsp;&nbsp;</span>	<span class="comment">// non-nil *Package returned when an error occurs.</span>
+<span id="L813" class="ln">   813&nbsp;&nbsp;</span>	<span class="comment">// We need to do this before we return early on FindOnly flag.</span>
+<span id="L814" class="ln">   814&nbsp;&nbsp;</span>	if IsLocalImport(path) &amp;&amp; !ctxt.isDir(p.Dir) {
+<span id="L815" class="ln">   815&nbsp;&nbsp;</span>		if ctxt.Compiler == &#34;gccgo&#34; &amp;&amp; p.Goroot {
+<span id="L816" class="ln">   816&nbsp;&nbsp;</span>			<span class="comment">// gccgo has no sources for GOROOT packages.</span>
+<span id="L817" class="ln">   817&nbsp;&nbsp;</span>			return p, nil
+<span id="L818" class="ln">   818&nbsp;&nbsp;</span>		}
+<span id="L819" class="ln">   819&nbsp;&nbsp;</span>
+<span id="L820" class="ln">   820&nbsp;&nbsp;</span>		<span class="comment">// package was not found</span>
+<span id="L821" class="ln">   821&nbsp;&nbsp;</span>		return p, fmt.Errorf(&#34;cannot find package %q in:\n\t%s&#34;, p.ImportPath, p.Dir)
+<span id="L822" class="ln">   822&nbsp;&nbsp;</span>	}
+<span id="L823" class="ln">   823&nbsp;&nbsp;</span>
+<span id="L824" class="ln">   824&nbsp;&nbsp;</span>	if mode&amp;FindOnly != 0 {
+<span id="L825" class="ln">   825&nbsp;&nbsp;</span>		return p, pkgerr
+<span id="L826" class="ln">   826&nbsp;&nbsp;</span>	}
+<span id="L827" class="ln">   827&nbsp;&nbsp;</span>	if binaryOnly &amp;&amp; (mode&amp;AllowBinary) != 0 {
+<span id="L828" class="ln">   828&nbsp;&nbsp;</span>		return p, pkgerr
+<span id="L829" class="ln">   829&nbsp;&nbsp;</span>	}
+<span id="L830" class="ln">   830&nbsp;&nbsp;</span>
+<span id="L831" class="ln">   831&nbsp;&nbsp;</span>	if ctxt.Compiler == &#34;gccgo&#34; &amp;&amp; p.Goroot {
+<span id="L832" class="ln">   832&nbsp;&nbsp;</span>		<span class="comment">// gccgo has no sources for GOROOT packages.</span>
+<span id="L833" class="ln">   833&nbsp;&nbsp;</span>		return p, nil
+<span id="L834" class="ln">   834&nbsp;&nbsp;</span>	}
+<span id="L835" class="ln">   835&nbsp;&nbsp;</span>
+<span id="L836" class="ln">   836&nbsp;&nbsp;</span>	dirs, err := ctxt.readDir(p.Dir)
+<span id="L837" class="ln">   837&nbsp;&nbsp;</span>	if err != nil {
+<span id="L838" class="ln">   838&nbsp;&nbsp;</span>		return p, err
+<span id="L839" class="ln">   839&nbsp;&nbsp;</span>	}
+<span id="L840" class="ln">   840&nbsp;&nbsp;</span>
+<span id="L841" class="ln">   841&nbsp;&nbsp;</span>	var badGoError error
+<span id="L842" class="ln">   842&nbsp;&nbsp;</span>	badGoFiles := make(map[string]bool)
+<span id="L843" class="ln">   843&nbsp;&nbsp;</span>	badGoFile := func(name string, err error) {
+<span id="L844" class="ln">   844&nbsp;&nbsp;</span>		if badGoError == nil {
+<span id="L845" class="ln">   845&nbsp;&nbsp;</span>			badGoError = err
+<span id="L846" class="ln">   846&nbsp;&nbsp;</span>		}
+<span id="L847" class="ln">   847&nbsp;&nbsp;</span>		if !badGoFiles[name] {
+<span id="L848" class="ln">   848&nbsp;&nbsp;</span>			p.InvalidGoFiles = append(p.InvalidGoFiles, name)
+<span id="L849" class="ln">   849&nbsp;&nbsp;</span>			badGoFiles[name] = true
+<span id="L850" class="ln">   850&nbsp;&nbsp;</span>		}
+<span id="L851" class="ln">   851&nbsp;&nbsp;</span>	}
+<span id="L852" class="ln">   852&nbsp;&nbsp;</span>
+<span id="L853" class="ln">   853&nbsp;&nbsp;</span>	var Sfiles []string <span class="comment">// files with &#34;.S&#34;(capital S)/.sx(capital s equivalent for case insensitive filesystems)</span>
+<span id="L854" class="ln">   854&nbsp;&nbsp;</span>	var firstFile, firstCommentFile string
+<span id="L855" class="ln">   855&nbsp;&nbsp;</span>	embedPos := make(map[string][]token.Position)
+<span id="L856" class="ln">   856&nbsp;&nbsp;</span>	testEmbedPos := make(map[string][]token.Position)
+<span id="L857" class="ln">   857&nbsp;&nbsp;</span>	xTestEmbedPos := make(map[string][]token.Position)
+<span id="L858" class="ln">   858&nbsp;&nbsp;</span>	importPos := make(map[string][]token.Position)
+<span id="L859" class="ln">   859&nbsp;&nbsp;</span>	testImportPos := make(map[string][]token.Position)
+<span id="L860" class="ln">   860&nbsp;&nbsp;</span>	xTestImportPos := make(map[string][]token.Position)
+<span id="L861" class="ln">   861&nbsp;&nbsp;</span>	allTags := make(map[string]bool)
+<span id="L862" class="ln">   862&nbsp;&nbsp;</span>	fset := token.NewFileSet()
+<span id="L863" class="ln">   863&nbsp;&nbsp;</span>	for _, d := range dirs {
+<span id="L864" class="ln">   864&nbsp;&nbsp;</span>		if d.IsDir() {
+<span id="L865" class="ln">   865&nbsp;&nbsp;</span>			continue
+<span id="L866" class="ln">   866&nbsp;&nbsp;</span>		}
+<span id="L867" class="ln">   867&nbsp;&nbsp;</span>		if d.Type() == fs.ModeSymlink {
+<span id="L868" class="ln">   868&nbsp;&nbsp;</span>			if ctxt.isDir(ctxt.joinPath(p.Dir, d.Name())) {
+<span id="L869" class="ln">   869&nbsp;&nbsp;</span>				<span class="comment">// Symlinks to directories are not source files.</span>
+<span id="L870" class="ln">   870&nbsp;&nbsp;</span>				continue
+<span id="L871" class="ln">   871&nbsp;&nbsp;</span>			}
+<span id="L872" class="ln">   872&nbsp;&nbsp;</span>		}
+<span id="L873" class="ln">   873&nbsp;&nbsp;</span>
+<span id="L874" class="ln">   874&nbsp;&nbsp;</span>		name := d.Name()
+<span id="L875" class="ln">   875&nbsp;&nbsp;</span>		ext := nameExt(name)
+<span id="L876" class="ln">   876&nbsp;&nbsp;</span>
+<span id="L877" class="ln">   877&nbsp;&nbsp;</span>		info, err := ctxt.matchFile(p.Dir, name, allTags, &amp;p.BinaryOnly, fset)
+<span id="L878" class="ln">   878&nbsp;&nbsp;</span>		if err != nil &amp;&amp; strings.HasSuffix(name, &#34;.go&#34;) {
+<span id="L879" class="ln">   879&nbsp;&nbsp;</span>			badGoFile(name, err)
+<span id="L880" class="ln">   880&nbsp;&nbsp;</span>			continue
+<span id="L881" class="ln">   881&nbsp;&nbsp;</span>		}
+<span id="L882" class="ln">   882&nbsp;&nbsp;</span>		if info == nil {
+<span id="L883" class="ln">   883&nbsp;&nbsp;</span>			if strings.HasPrefix(name, &#34;_&#34;) || strings.HasPrefix(name, &#34;.&#34;) {
+<span id="L884" class="ln">   884&nbsp;&nbsp;</span>				<span class="comment">// not due to build constraints - don&#39;t report</span>
+<span id="L885" class="ln">   885&nbsp;&nbsp;</span>			} else if ext == &#34;.go&#34; {
+<span id="L886" class="ln">   886&nbsp;&nbsp;</span>				p.IgnoredGoFiles = append(p.IgnoredGoFiles, name)
+<span id="L887" class="ln">   887&nbsp;&nbsp;</span>			} else if fileListForExt(p, ext) != nil {
+<span id="L888" class="ln">   888&nbsp;&nbsp;</span>				p.IgnoredOtherFiles = append(p.IgnoredOtherFiles, name)
+<span id="L889" class="ln">   889&nbsp;&nbsp;</span>			}
+<span id="L890" class="ln">   890&nbsp;&nbsp;</span>			continue
+<span id="L891" class="ln">   891&nbsp;&nbsp;</span>		}
+<span id="L892" class="ln">   892&nbsp;&nbsp;</span>
+<span id="L893" class="ln">   893&nbsp;&nbsp;</span>		<span class="comment">// Going to save the file. For non-Go files, can stop here.</span>
+<span id="L894" class="ln">   894&nbsp;&nbsp;</span>		switch ext {
+<span id="L895" class="ln">   895&nbsp;&nbsp;</span>		case &#34;.go&#34;:
+<span id="L896" class="ln">   896&nbsp;&nbsp;</span>			<span class="comment">// keep going</span>
+<span id="L897" class="ln">   897&nbsp;&nbsp;</span>		case &#34;.S&#34;, &#34;.sx&#34;:
+<span id="L898" class="ln">   898&nbsp;&nbsp;</span>			<span class="comment">// special case for cgo, handled at end</span>
+<span id="L899" class="ln">   899&nbsp;&nbsp;</span>			Sfiles = append(Sfiles, name)
+<span id="L900" class="ln">   900&nbsp;&nbsp;</span>			continue
+<span id="L901" class="ln">   901&nbsp;&nbsp;</span>		default:
+<span id="L902" class="ln">   902&nbsp;&nbsp;</span>			if list := fileListForExt(p, ext); list != nil {
+<span id="L903" class="ln">   903&nbsp;&nbsp;</span>				*list = append(*list, name)
+<span id="L904" class="ln">   904&nbsp;&nbsp;</span>			}
+<span id="L905" class="ln">   905&nbsp;&nbsp;</span>			continue
+<span id="L906" class="ln">   906&nbsp;&nbsp;</span>		}
+<span id="L907" class="ln">   907&nbsp;&nbsp;</span>
+<span id="L908" class="ln">   908&nbsp;&nbsp;</span>		data, filename := info.header, info.name
+<span id="L909" class="ln">   909&nbsp;&nbsp;</span>
+<span id="L910" class="ln">   910&nbsp;&nbsp;</span>		if info.parseErr != nil {
+<span id="L911" class="ln">   911&nbsp;&nbsp;</span>			badGoFile(name, info.parseErr)
+<span id="L912" class="ln">   912&nbsp;&nbsp;</span>			<span class="comment">// Fall through: we might still have a partial AST in info.parsed,</span>
+<span id="L913" class="ln">   913&nbsp;&nbsp;</span>			<span class="comment">// and we want to list files with parse errors anyway.</span>
+<span id="L914" class="ln">   914&nbsp;&nbsp;</span>		}
+<span id="L915" class="ln">   915&nbsp;&nbsp;</span>
+<span id="L916" class="ln">   916&nbsp;&nbsp;</span>		var pkg string
+<span id="L917" class="ln">   917&nbsp;&nbsp;</span>		if info.parsed != nil {
+<span id="L918" class="ln">   918&nbsp;&nbsp;</span>			pkg = info.parsed.Name.Name
+<span id="L919" class="ln">   919&nbsp;&nbsp;</span>			if pkg == &#34;documentation&#34; {
+<span id="L920" class="ln">   920&nbsp;&nbsp;</span>				p.IgnoredGoFiles = append(p.IgnoredGoFiles, name)
+<span id="L921" class="ln">   921&nbsp;&nbsp;</span>				continue
+<span id="L922" class="ln">   922&nbsp;&nbsp;</span>			}
+<span id="L923" class="ln">   923&nbsp;&nbsp;</span>		}
+<span id="L924" class="ln">   924&nbsp;&nbsp;</span>
+<span id="L925" class="ln">   925&nbsp;&nbsp;</span>		isTest := strings.HasSuffix(name, &#34;_test.go&#34;)
+<span id="L926" class="ln">   926&nbsp;&nbsp;</span>		isXTest := false
+<span id="L927" class="ln">   927&nbsp;&nbsp;</span>		if isTest &amp;&amp; strings.HasSuffix(pkg, &#34;_test&#34;) &amp;&amp; p.Name != pkg {
+<span id="L928" class="ln">   928&nbsp;&nbsp;</span>			isXTest = true
+<span id="L929" class="ln">   929&nbsp;&nbsp;</span>			pkg = pkg[:len(pkg)-len(&#34;_test&#34;)]
+<span id="L930" class="ln">   930&nbsp;&nbsp;</span>		}
+<span id="L931" class="ln">   931&nbsp;&nbsp;</span>
+<span id="L932" class="ln">   932&nbsp;&nbsp;</span>		if p.Name == &#34;&#34; {
+<span id="L933" class="ln">   933&nbsp;&nbsp;</span>			p.Name = pkg
+<span id="L934" class="ln">   934&nbsp;&nbsp;</span>			firstFile = name
+<span id="L935" class="ln">   935&nbsp;&nbsp;</span>		} else if pkg != p.Name {
+<span id="L936" class="ln">   936&nbsp;&nbsp;</span>			<span class="comment">// TODO(#45999): The choice of p.Name is arbitrary based on file iteration</span>
+<span id="L937" class="ln">   937&nbsp;&nbsp;</span>			<span class="comment">// order. Instead of resolving p.Name arbitrarily, we should clear out the</span>
+<span id="L938" class="ln">   938&nbsp;&nbsp;</span>			<span class="comment">// existing name and mark the existing files as also invalid.</span>
+<span id="L939" class="ln">   939&nbsp;&nbsp;</span>			badGoFile(name, &amp;MultiplePackageError{
+<span id="L940" class="ln">   940&nbsp;&nbsp;</span>				Dir:      p.Dir,
+<span id="L941" class="ln">   941&nbsp;&nbsp;</span>				Packages: []string{p.Name, pkg},
+<span id="L942" class="ln">   942&nbsp;&nbsp;</span>				Files:    []string{firstFile, name},
+<span id="L943" class="ln">   943&nbsp;&nbsp;</span>			})
+<span id="L944" class="ln">   944&nbsp;&nbsp;</span>		}
+<span id="L945" class="ln">   945&nbsp;&nbsp;</span>		<span class="comment">// Grab the first package comment as docs, provided it is not from a test file.</span>
+<span id="L946" class="ln">   946&nbsp;&nbsp;</span>		if info.parsed != nil &amp;&amp; info.parsed.Doc != nil &amp;&amp; p.Doc == &#34;&#34; &amp;&amp; !isTest &amp;&amp; !isXTest {
+<span id="L947" class="ln">   947&nbsp;&nbsp;</span>			p.Doc = doc.Synopsis(info.parsed.Doc.Text())
+<span id="L948" class="ln">   948&nbsp;&nbsp;</span>		}
+<span id="L949" class="ln">   949&nbsp;&nbsp;</span>
+<span id="L950" class="ln">   950&nbsp;&nbsp;</span>		if mode&amp;ImportComment != 0 {
+<span id="L951" class="ln">   951&nbsp;&nbsp;</span>			qcom, line := findImportComment(data)
+<span id="L952" class="ln">   952&nbsp;&nbsp;</span>			if line != 0 {
+<span id="L953" class="ln">   953&nbsp;&nbsp;</span>				com, err := strconv.Unquote(qcom)
+<span id="L954" class="ln">   954&nbsp;&nbsp;</span>				if err != nil {
+<span id="L955" class="ln">   955&nbsp;&nbsp;</span>					badGoFile(name, fmt.Errorf(&#34;%s:%d: cannot parse import comment&#34;, filename, line))
+<span id="L956" class="ln">   956&nbsp;&nbsp;</span>				} else if p.ImportComment == &#34;&#34; {
+<span id="L957" class="ln">   957&nbsp;&nbsp;</span>					p.ImportComment = com
+<span id="L958" class="ln">   958&nbsp;&nbsp;</span>					firstCommentFile = name
+<span id="L959" class="ln">   959&nbsp;&nbsp;</span>				} else if p.ImportComment != com {
+<span id="L960" class="ln">   960&nbsp;&nbsp;</span>					badGoFile(name, fmt.Errorf(&#34;found import comments %q (%s) and %q (%s) in %s&#34;, p.ImportComment, firstCommentFile, com, name, p.Dir))
+<span id="L961" class="ln">   961&nbsp;&nbsp;</span>				}
+<span id="L962" class="ln">   962&nbsp;&nbsp;</span>			}
+<span id="L963" class="ln">   963&nbsp;&nbsp;</span>		}
+<span id="L964" class="ln">   964&nbsp;&nbsp;</span>
+<span id="L965" class="ln">   965&nbsp;&nbsp;</span>		<span class="comment">// Record imports and information about cgo.</span>
+<span id="L966" class="ln">   966&nbsp;&nbsp;</span>		isCgo := false
+<span id="L967" class="ln">   967&nbsp;&nbsp;</span>		for _, imp := range info.imports {
+<span id="L968" class="ln">   968&nbsp;&nbsp;</span>			if imp.path == &#34;C&#34; {
+<span id="L969" class="ln">   969&nbsp;&nbsp;</span>				if isTest {
+<span id="L970" class="ln">   970&nbsp;&nbsp;</span>					badGoFile(name, fmt.Errorf(&#34;use of cgo in test %s not supported&#34;, filename))
+<span id="L971" class="ln">   971&nbsp;&nbsp;</span>					continue
+<span id="L972" class="ln">   972&nbsp;&nbsp;</span>				}
+<span id="L973" class="ln">   973&nbsp;&nbsp;</span>				isCgo = true
+<span id="L974" class="ln">   974&nbsp;&nbsp;</span>				if imp.doc != nil {
+<span id="L975" class="ln">   975&nbsp;&nbsp;</span>					if err := ctxt.saveCgo(filename, p, imp.doc); err != nil {
+<span id="L976" class="ln">   976&nbsp;&nbsp;</span>						badGoFile(name, err)
+<span id="L977" class="ln">   977&nbsp;&nbsp;</span>					}
+<span id="L978" class="ln">   978&nbsp;&nbsp;</span>				}
+<span id="L979" class="ln">   979&nbsp;&nbsp;</span>			}
+<span id="L980" class="ln">   980&nbsp;&nbsp;</span>		}
+<span id="L981" class="ln">   981&nbsp;&nbsp;</span>
+<span id="L982" class="ln">   982&nbsp;&nbsp;</span>		var fileList *[]string
+<span id="L983" class="ln">   983&nbsp;&nbsp;</span>		var importMap, embedMap map[string][]token.Position
+<span id="L984" class="ln">   984&nbsp;&nbsp;</span>		var directives *[]Directive
+<span id="L985" class="ln">   985&nbsp;&nbsp;</span>		switch {
+<span id="L986" class="ln">   986&nbsp;&nbsp;</span>		case isCgo:
+<span id="L987" class="ln">   987&nbsp;&nbsp;</span>			allTags[&#34;cgo&#34;] = true
+<span id="L988" class="ln">   988&nbsp;&nbsp;</span>			if ctxt.CgoEnabled {
+<span id="L989" class="ln">   989&nbsp;&nbsp;</span>				fileList = &amp;p.CgoFiles
+<span id="L990" class="ln">   990&nbsp;&nbsp;</span>				importMap = importPos
+<span id="L991" class="ln">   991&nbsp;&nbsp;</span>				embedMap = embedPos
+<span id="L992" class="ln">   992&nbsp;&nbsp;</span>				directives = &amp;p.Directives
+<span id="L993" class="ln">   993&nbsp;&nbsp;</span>			} else {
+<span id="L994" class="ln">   994&nbsp;&nbsp;</span>				<span class="comment">// Ignore imports and embeds from cgo files if cgo is disabled.</span>
+<span id="L995" class="ln">   995&nbsp;&nbsp;</span>				fileList = &amp;p.IgnoredGoFiles
+<span id="L996" class="ln">   996&nbsp;&nbsp;</span>			}
+<span id="L997" class="ln">   997&nbsp;&nbsp;</span>		case isXTest:
+<span id="L998" class="ln">   998&nbsp;&nbsp;</span>			fileList = &amp;p.XTestGoFiles
+<span id="L999" class="ln">   999&nbsp;&nbsp;</span>			importMap = xTestImportPos
+<span id="L1000" class="ln">  1000&nbsp;&nbsp;</span>			embedMap = xTestEmbedPos
+<span id="L1001" class="ln">  1001&nbsp;&nbsp;</span>			directives = &amp;p.XTestDirectives
+<span id="L1002" class="ln">  1002&nbsp;&nbsp;</span>		case isTest:
+<span id="L1003" class="ln">  1003&nbsp;&nbsp;</span>			fileList = &amp;p.TestGoFiles
+<span id="L1004" class="ln">  1004&nbsp;&nbsp;</span>			importMap = testImportPos
+<span id="L1005" class="ln">  1005&nbsp;&nbsp;</span>			embedMap = testEmbedPos
+<span id="L1006" class="ln">  1006&nbsp;&nbsp;</span>			directives = &amp;p.TestDirectives
+<span id="L1007" class="ln">  1007&nbsp;&nbsp;</span>		default:
+<span id="L1008" class="ln">  1008&nbsp;&nbsp;</span>			fileList = &amp;p.GoFiles
+<span id="L1009" class="ln">  1009&nbsp;&nbsp;</span>			importMap = importPos
+<span id="L1010" class="ln">  1010&nbsp;&nbsp;</span>			embedMap = embedPos
+<span id="L1011" class="ln">  1011&nbsp;&nbsp;</span>			directives = &amp;p.Directives
+<span id="L1012" class="ln">  1012&nbsp;&nbsp;</span>		}
+<span id="L1013" class="ln">  1013&nbsp;&nbsp;</span>		*fileList = append(*fileList, name)
+<span id="L1014" class="ln">  1014&nbsp;&nbsp;</span>		if importMap != nil {
+<span id="L1015" class="ln">  1015&nbsp;&nbsp;</span>			for _, imp := range info.imports {
+<span id="L1016" class="ln">  1016&nbsp;&nbsp;</span>				importMap[imp.path] = append(importMap[imp.path], fset.Position(imp.pos))
+<span id="L1017" class="ln">  1017&nbsp;&nbsp;</span>			}
+<span id="L1018" class="ln">  1018&nbsp;&nbsp;</span>		}
+<span id="L1019" class="ln">  1019&nbsp;&nbsp;</span>		if embedMap != nil {
+<span id="L1020" class="ln">  1020&nbsp;&nbsp;</span>			for _, emb := range info.embeds {
+<span id="L1021" class="ln">  1021&nbsp;&nbsp;</span>				embedMap[emb.pattern] = append(embedMap[emb.pattern], emb.pos)
+<span id="L1022" class="ln">  1022&nbsp;&nbsp;</span>			}
+<span id="L1023" class="ln">  1023&nbsp;&nbsp;</span>		}
+<span id="L1024" class="ln">  1024&nbsp;&nbsp;</span>		if directives != nil {
+<span id="L1025" class="ln">  1025&nbsp;&nbsp;</span>			*directives = append(*directives, info.directives...)
+<span id="L1026" class="ln">  1026&nbsp;&nbsp;</span>		}
+<span id="L1027" class="ln">  1027&nbsp;&nbsp;</span>	}
+<span id="L1028" class="ln">  1028&nbsp;&nbsp;</span>
+<span id="L1029" class="ln">  1029&nbsp;&nbsp;</span>	for tag := range allTags {
+<span id="L1030" class="ln">  1030&nbsp;&nbsp;</span>		p.AllTags = append(p.AllTags, tag)
+<span id="L1031" class="ln">  1031&nbsp;&nbsp;</span>	}
+<span id="L1032" class="ln">  1032&nbsp;&nbsp;</span>	sort.Strings(p.AllTags)
+<span id="L1033" class="ln">  1033&nbsp;&nbsp;</span>
+<span id="L1034" class="ln">  1034&nbsp;&nbsp;</span>	p.EmbedPatterns, p.EmbedPatternPos = cleanDecls(embedPos)
+<span id="L1035" class="ln">  1035&nbsp;&nbsp;</span>	p.TestEmbedPatterns, p.TestEmbedPatternPos = cleanDecls(testEmbedPos)
+<span id="L1036" class="ln">  1036&nbsp;&nbsp;</span>	p.XTestEmbedPatterns, p.XTestEmbedPatternPos = cleanDecls(xTestEmbedPos)
+<span id="L1037" class="ln">  1037&nbsp;&nbsp;</span>
+<span id="L1038" class="ln">  1038&nbsp;&nbsp;</span>	p.Imports, p.ImportPos = cleanDecls(importPos)
+<span id="L1039" class="ln">  1039&nbsp;&nbsp;</span>	p.TestImports, p.TestImportPos = cleanDecls(testImportPos)
+<span id="L1040" class="ln">  1040&nbsp;&nbsp;</span>	p.XTestImports, p.XTestImportPos = cleanDecls(xTestImportPos)
+<span id="L1041" class="ln">  1041&nbsp;&nbsp;</span>
+<span id="L1042" class="ln">  1042&nbsp;&nbsp;</span>	<span class="comment">// add the .S/.sx files only if we are using cgo</span>
+<span id="L1043" class="ln">  1043&nbsp;&nbsp;</span>	<span class="comment">// (which means gcc will compile them).</span>
+<span id="L1044" class="ln">  1044&nbsp;&nbsp;</span>	<span class="comment">// The standard assemblers expect .s files.</span>
+<span id="L1045" class="ln">  1045&nbsp;&nbsp;</span>	if len(p.CgoFiles) &gt; 0 {
+<span id="L1046" class="ln">  1046&nbsp;&nbsp;</span>		p.SFiles = append(p.SFiles, Sfiles...)
+<span id="L1047" class="ln">  1047&nbsp;&nbsp;</span>		sort.Strings(p.SFiles)
+<span id="L1048" class="ln">  1048&nbsp;&nbsp;</span>	} else {
+<span id="L1049" class="ln">  1049&nbsp;&nbsp;</span>		p.IgnoredOtherFiles = append(p.IgnoredOtherFiles, Sfiles...)
+<span id="L1050" class="ln">  1050&nbsp;&nbsp;</span>		sort.Strings(p.IgnoredOtherFiles)
+<span id="L1051" class="ln">  1051&nbsp;&nbsp;</span>	}
+<span id="L1052" class="ln">  1052&nbsp;&nbsp;</span>
+<span id="L1053" class="ln">  1053&nbsp;&nbsp;</span>	if badGoError != nil {
+<span id="L1054" class="ln">  1054&nbsp;&nbsp;</span>		return p, badGoError
+<span id="L1055" class="ln">  1055&nbsp;&nbsp;</span>	}
+<span id="L1056" class="ln">  1056&nbsp;&nbsp;</span>	if len(p.GoFiles)+len(p.CgoFiles)+len(p.TestGoFiles)+len(p.XTestGoFiles) == 0 {
+<span id="L1057" class="ln">  1057&nbsp;&nbsp;</span>		return p, &amp;NoGoError{p.Dir}
+<span id="L1058" class="ln">  1058&nbsp;&nbsp;</span>	}
+<span id="L1059" class="ln">  1059&nbsp;&nbsp;</span>	return p, pkgerr
+<span id="L1060" class="ln">  1060&nbsp;&nbsp;</span>}
+<span id="L1061" class="ln">  1061&nbsp;&nbsp;</span>
+<span id="L1062" class="ln">  1062&nbsp;&nbsp;</span>func fileListForExt(p *Package, ext string) *[]string {
+<span id="L1063" class="ln">  1063&nbsp;&nbsp;</span>	switch ext {
+<span id="L1064" class="ln">  1064&nbsp;&nbsp;</span>	case &#34;.c&#34;:
+<span id="L1065" class="ln">  1065&nbsp;&nbsp;</span>		return &amp;p.CFiles
+<span id="L1066" class="ln">  1066&nbsp;&nbsp;</span>	case &#34;.cc&#34;, &#34;.cpp&#34;, &#34;.cxx&#34;:
+<span id="L1067" class="ln">  1067&nbsp;&nbsp;</span>		return &amp;p.CXXFiles
+<span id="L1068" class="ln">  1068&nbsp;&nbsp;</span>	case &#34;.m&#34;:
+<span id="L1069" class="ln">  1069&nbsp;&nbsp;</span>		return &amp;p.MFiles
+<span id="L1070" class="ln">  1070&nbsp;&nbsp;</span>	case &#34;.h&#34;, &#34;.hh&#34;, &#34;.hpp&#34;, &#34;.hxx&#34;:
+<span id="L1071" class="ln">  1071&nbsp;&nbsp;</span>		return &amp;p.HFiles
+<span id="L1072" class="ln">  1072&nbsp;&nbsp;</span>	case &#34;.f&#34;, &#34;.F&#34;, &#34;.for&#34;, &#34;.f90&#34;:
+<span id="L1073" class="ln">  1073&nbsp;&nbsp;</span>		return &amp;p.FFiles
+<span id="L1074" class="ln">  1074&nbsp;&nbsp;</span>	case &#34;.s&#34;, &#34;.S&#34;, &#34;.sx&#34;:
+<span id="L1075" class="ln">  1075&nbsp;&nbsp;</span>		return &amp;p.SFiles
+<span id="L1076" class="ln">  1076&nbsp;&nbsp;</span>	case &#34;.swig&#34;:
+<span id="L1077" class="ln">  1077&nbsp;&nbsp;</span>		return &amp;p.SwigFiles
+<span id="L1078" class="ln">  1078&nbsp;&nbsp;</span>	case &#34;.swigcxx&#34;:
+<span id="L1079" class="ln">  1079&nbsp;&nbsp;</span>		return &amp;p.SwigCXXFiles
+<span id="L1080" class="ln">  1080&nbsp;&nbsp;</span>	case &#34;.syso&#34;:
+<span id="L1081" class="ln">  1081&nbsp;&nbsp;</span>		return &amp;p.SysoFiles
+<span id="L1082" class="ln">  1082&nbsp;&nbsp;</span>	}
+<span id="L1083" class="ln">  1083&nbsp;&nbsp;</span>	return nil
+<span id="L1084" class="ln">  1084&nbsp;&nbsp;</span>}
+<span id="L1085" class="ln">  1085&nbsp;&nbsp;</span>
+<span id="L1086" class="ln">  1086&nbsp;&nbsp;</span>func uniq(list []string) []string {
+<span id="L1087" class="ln">  1087&nbsp;&nbsp;</span>	if list == nil {
+<span id="L1088" class="ln">  1088&nbsp;&nbsp;</span>		return nil
+<span id="L1089" class="ln">  1089&nbsp;&nbsp;</span>	}
+<span id="L1090" class="ln">  1090&nbsp;&nbsp;</span>	out := make([]string, len(list))
+<span id="L1091" class="ln">  1091&nbsp;&nbsp;</span>	copy(out, list)
+<span id="L1092" class="ln">  1092&nbsp;&nbsp;</span>	sort.Strings(out)
+<span id="L1093" class="ln">  1093&nbsp;&nbsp;</span>	uniq := out[:0]
+<span id="L1094" class="ln">  1094&nbsp;&nbsp;</span>	for _, x := range out {
+<span id="L1095" class="ln">  1095&nbsp;&nbsp;</span>		if len(uniq) == 0 || uniq[len(uniq)-1] != x {
+<span id="L1096" class="ln">  1096&nbsp;&nbsp;</span>			uniq = append(uniq, x)
+<span id="L1097" class="ln">  1097&nbsp;&nbsp;</span>		}
+<span id="L1098" class="ln">  1098&nbsp;&nbsp;</span>	}
+<span id="L1099" class="ln">  1099&nbsp;&nbsp;</span>	return uniq
+<span id="L1100" class="ln">  1100&nbsp;&nbsp;</span>}
+<span id="L1101" class="ln">  1101&nbsp;&nbsp;</span>
+<span id="L1102" class="ln">  1102&nbsp;&nbsp;</span>var errNoModules = errors.New(&#34;not using modules&#34;)
+<span id="L1103" class="ln">  1103&nbsp;&nbsp;</span>
+<span id="L1104" class="ln">  1104&nbsp;&nbsp;</span><span class="comment">// importGo checks whether it can use the go command to find the directory for path.</span>
+<span id="L1105" class="ln">  1105&nbsp;&nbsp;</span><span class="comment">// If using the go command is not appropriate, importGo returns errNoModules.</span>
+<span id="L1106" class="ln">  1106&nbsp;&nbsp;</span><span class="comment">// Otherwise, importGo tries using the go command and reports whether that succeeded.</span>
+<span id="L1107" class="ln">  1107&nbsp;&nbsp;</span><span class="comment">// Using the go command lets build.Import and build.Context.Import find code</span>
+<span id="L1108" class="ln">  1108&nbsp;&nbsp;</span><span class="comment">// in Go modules. In the long term we want tools to use go/packages (currently golang.org/x/tools/go/packages),</span>
+<span id="L1109" class="ln">  1109&nbsp;&nbsp;</span><span class="comment">// which will also use the go command.</span>
+<span id="L1110" class="ln">  1110&nbsp;&nbsp;</span><span class="comment">// Invoking the go command here is not very efficient in that it computes information</span>
+<span id="L1111" class="ln">  1111&nbsp;&nbsp;</span><span class="comment">// about the requested package and all dependencies and then only reports about the requested package.</span>
+<span id="L1112" class="ln">  1112&nbsp;&nbsp;</span><span class="comment">// Then we reinvoke it for every dependency. But this is still better than not working at all.</span>
+<span id="L1113" class="ln">  1113&nbsp;&nbsp;</span><span class="comment">// See golang.org/issue/26504.</span>
+<span id="L1114" class="ln">  1114&nbsp;&nbsp;</span>func (ctxt *Context) importGo(p *Package, path, srcDir string, mode ImportMode) error {
+<span id="L1115" class="ln">  1115&nbsp;&nbsp;</span>	<span class="comment">// To invoke the go command,</span>
+<span id="L1116" class="ln">  1116&nbsp;&nbsp;</span>	<span class="comment">// we must not being doing special things like AllowBinary or IgnoreVendor,</span>
+<span id="L1117" class="ln">  1117&nbsp;&nbsp;</span>	<span class="comment">// and all the file system callbacks must be nil (we&#39;re meant to use the local file system).</span>
+<span id="L1118" class="ln">  1118&nbsp;&nbsp;</span>	if mode&amp;AllowBinary != 0 || mode&amp;IgnoreVendor != 0 ||
+<span id="L1119" class="ln">  1119&nbsp;&nbsp;</span>		ctxt.JoinPath != nil || ctxt.SplitPathList != nil || ctxt.IsAbsPath != nil || ctxt.IsDir != nil || ctxt.HasSubdir != nil || ctxt.ReadDir != nil || ctxt.OpenFile != nil || !equal(ctxt.ToolTags, defaultToolTags) || !equal(ctxt.ReleaseTags, defaultReleaseTags) {
+<span id="L1120" class="ln">  1120&nbsp;&nbsp;</span>		return errNoModules
+<span id="L1121" class="ln">  1121&nbsp;&nbsp;</span>	}
+<span id="L1122" class="ln">  1122&nbsp;&nbsp;</span>
+<span id="L1123" class="ln">  1123&nbsp;&nbsp;</span>	<span class="comment">// If ctxt.GOROOT is not set, we don&#39;t know which go command to invoke,</span>
+<span id="L1124" class="ln">  1124&nbsp;&nbsp;</span>	<span class="comment">// and even if we did we might return packages in GOROOT that we wouldn&#39;t otherwise find</span>
+<span id="L1125" class="ln">  1125&nbsp;&nbsp;</span>	<span class="comment">// (because we don&#39;t know to search in &#39;go env GOROOT&#39; otherwise).</span>
+<span id="L1126" class="ln">  1126&nbsp;&nbsp;</span>	if ctxt.GOROOT == &#34;&#34; {
+<span id="L1127" class="ln">  1127&nbsp;&nbsp;</span>		return errNoModules
+<span id="L1128" class="ln">  1128&nbsp;&nbsp;</span>	}
+<span id="L1129" class="ln">  1129&nbsp;&nbsp;</span>
+<span id="L1130" class="ln">  1130&nbsp;&nbsp;</span>	<span class="comment">// Predict whether module aware mode is enabled by checking the value of</span>
+<span id="L1131" class="ln">  1131&nbsp;&nbsp;</span>	<span class="comment">// GO111MODULE and looking for a go.mod file in the source directory or</span>
+<span id="L1132" class="ln">  1132&nbsp;&nbsp;</span>	<span class="comment">// one of its parents. Running &#39;go env GOMOD&#39; in the source directory would</span>
+<span id="L1133" class="ln">  1133&nbsp;&nbsp;</span>	<span class="comment">// give a canonical answer, but we&#39;d prefer not to execute another command.</span>
+<span id="L1134" class="ln">  1134&nbsp;&nbsp;</span>	go111Module := os.Getenv(&#34;GO111MODULE&#34;)
+<span id="L1135" class="ln">  1135&nbsp;&nbsp;</span>	switch go111Module {
+<span id="L1136" class="ln">  1136&nbsp;&nbsp;</span>	case &#34;off&#34;:
+<span id="L1137" class="ln">  1137&nbsp;&nbsp;</span>		return errNoModules
+<span id="L1138" class="ln">  1138&nbsp;&nbsp;</span>	default: <span class="comment">// &#34;&#34;, &#34;on&#34;, &#34;auto&#34;, anything else</span>
+<span id="L1139" class="ln">  1139&nbsp;&nbsp;</span>		<span class="comment">// Maybe use modules.</span>
+<span id="L1140" class="ln">  1140&nbsp;&nbsp;</span>	}
+<span id="L1141" class="ln">  1141&nbsp;&nbsp;</span>
+<span id="L1142" class="ln">  1142&nbsp;&nbsp;</span>	if srcDir != &#34;&#34; {
+<span id="L1143" class="ln">  1143&nbsp;&nbsp;</span>		var absSrcDir string
+<span id="L1144" class="ln">  1144&nbsp;&nbsp;</span>		if filepath.IsAbs(srcDir) {
+<span id="L1145" class="ln">  1145&nbsp;&nbsp;</span>			absSrcDir = srcDir
+<span id="L1146" class="ln">  1146&nbsp;&nbsp;</span>		} else if ctxt.Dir != &#34;&#34; {
+<span id="L1147" class="ln">  1147&nbsp;&nbsp;</span>			return fmt.Errorf(&#34;go/build: Dir is non-empty, so relative srcDir is not allowed: %v&#34;, srcDir)
+<span id="L1148" class="ln">  1148&nbsp;&nbsp;</span>		} else {
+<span id="L1149" class="ln">  1149&nbsp;&nbsp;</span>			<span class="comment">// Find the absolute source directory. hasSubdir does not handle</span>
+<span id="L1150" class="ln">  1150&nbsp;&nbsp;</span>			<span class="comment">// relative paths (and can&#39;t because the callbacks don&#39;t support this).</span>
+<span id="L1151" class="ln">  1151&nbsp;&nbsp;</span>			var err error
+<span id="L1152" class="ln">  1152&nbsp;&nbsp;</span>			absSrcDir, err = filepath.Abs(srcDir)
+<span id="L1153" class="ln">  1153&nbsp;&nbsp;</span>			if err != nil {
+<span id="L1154" class="ln">  1154&nbsp;&nbsp;</span>				return errNoModules
+<span id="L1155" class="ln">  1155&nbsp;&nbsp;</span>			}
+<span id="L1156" class="ln">  1156&nbsp;&nbsp;</span>		}
+<span id="L1157" class="ln">  1157&nbsp;&nbsp;</span>
+<span id="L1158" class="ln">  1158&nbsp;&nbsp;</span>		<span class="comment">// If the source directory is in GOROOT, then the in-process code works fine</span>
+<span id="L1159" class="ln">  1159&nbsp;&nbsp;</span>		<span class="comment">// and we should keep using it. Moreover, the &#39;go list&#39; approach below doesn&#39;t</span>
+<span id="L1160" class="ln">  1160&nbsp;&nbsp;</span>		<span class="comment">// take standard-library vendoring into account and will fail.</span>
+<span id="L1161" class="ln">  1161&nbsp;&nbsp;</span>		if _, ok := ctxt.hasSubdir(filepath.Join(ctxt.GOROOT, &#34;src&#34;), absSrcDir); ok {
+<span id="L1162" class="ln">  1162&nbsp;&nbsp;</span>			return errNoModules
+<span id="L1163" class="ln">  1163&nbsp;&nbsp;</span>		}
+<span id="L1164" class="ln">  1164&nbsp;&nbsp;</span>	}
+<span id="L1165" class="ln">  1165&nbsp;&nbsp;</span>
+<span id="L1166" class="ln">  1166&nbsp;&nbsp;</span>	<span class="comment">// For efficiency, if path is a standard library package, let the usual lookup code handle it.</span>
+<span id="L1167" class="ln">  1167&nbsp;&nbsp;</span>	if dir := ctxt.joinPath(ctxt.GOROOT, &#34;src&#34;, path); ctxt.isDir(dir) {
+<span id="L1168" class="ln">  1168&nbsp;&nbsp;</span>		return errNoModules
+<span id="L1169" class="ln">  1169&nbsp;&nbsp;</span>	}
+<span id="L1170" class="ln">  1170&nbsp;&nbsp;</span>
+<span id="L1171" class="ln">  1171&nbsp;&nbsp;</span>	<span class="comment">// If GO111MODULE=auto, look to see if there is a go.mod.</span>
+<span id="L1172" class="ln">  1172&nbsp;&nbsp;</span>	<span class="comment">// Since go1.13, it doesn&#39;t matter if we&#39;re inside GOPATH.</span>
+<span id="L1173" class="ln">  1173&nbsp;&nbsp;</span>	if go111Module == &#34;auto&#34; {
+<span id="L1174" class="ln">  1174&nbsp;&nbsp;</span>		var (
+<span id="L1175" class="ln">  1175&nbsp;&nbsp;</span>			parent string
+<span id="L1176" class="ln">  1176&nbsp;&nbsp;</span>			err    error
+<span id="L1177" class="ln">  1177&nbsp;&nbsp;</span>		)
+<span id="L1178" class="ln">  1178&nbsp;&nbsp;</span>		if ctxt.Dir == &#34;&#34; {
+<span id="L1179" class="ln">  1179&nbsp;&nbsp;</span>			parent, err = os.Getwd()
+<span id="L1180" class="ln">  1180&nbsp;&nbsp;</span>			if err != nil {
+<span id="L1181" class="ln">  1181&nbsp;&nbsp;</span>				<span class="comment">// A nonexistent working directory can&#39;t be in a module.</span>
+<span id="L1182" class="ln">  1182&nbsp;&nbsp;</span>				return errNoModules
+<span id="L1183" class="ln">  1183&nbsp;&nbsp;</span>			}
+<span id="L1184" class="ln">  1184&nbsp;&nbsp;</span>		} else {
+<span id="L1185" class="ln">  1185&nbsp;&nbsp;</span>			parent, err = filepath.Abs(ctxt.Dir)
+<span id="L1186" class="ln">  1186&nbsp;&nbsp;</span>			if err != nil {
+<span id="L1187" class="ln">  1187&nbsp;&nbsp;</span>				<span class="comment">// If the caller passed a bogus Dir explicitly, that&#39;s materially</span>
+<span id="L1188" class="ln">  1188&nbsp;&nbsp;</span>				<span class="comment">// different from not having modules enabled.</span>
+<span id="L1189" class="ln">  1189&nbsp;&nbsp;</span>				return err
+<span id="L1190" class="ln">  1190&nbsp;&nbsp;</span>			}
+<span id="L1191" class="ln">  1191&nbsp;&nbsp;</span>		}
+<span id="L1192" class="ln">  1192&nbsp;&nbsp;</span>		for {
+<span id="L1193" class="ln">  1193&nbsp;&nbsp;</span>			if f, err := ctxt.openFile(ctxt.joinPath(parent, &#34;go.mod&#34;)); err == nil {
+<span id="L1194" class="ln">  1194&nbsp;&nbsp;</span>				buf := make([]byte, 100)
+<span id="L1195" class="ln">  1195&nbsp;&nbsp;</span>				_, err := f.Read(buf)
+<span id="L1196" class="ln">  1196&nbsp;&nbsp;</span>				f.Close()
+<span id="L1197" class="ln">  1197&nbsp;&nbsp;</span>				if err == nil || err == io.EOF {
+<span id="L1198" class="ln">  1198&nbsp;&nbsp;</span>					<span class="comment">// go.mod exists and is readable (is a file, not a directory).</span>
+<span id="L1199" class="ln">  1199&nbsp;&nbsp;</span>					break
+<span id="L1200" class="ln">  1200&nbsp;&nbsp;</span>				}
+<span id="L1201" class="ln">  1201&nbsp;&nbsp;</span>			}
+<span id="L1202" class="ln">  1202&nbsp;&nbsp;</span>			d := filepath.Dir(parent)
+<span id="L1203" class="ln">  1203&nbsp;&nbsp;</span>			if len(d) &gt;= len(parent) {
+<span id="L1204" class="ln">  1204&nbsp;&nbsp;</span>				return errNoModules <span class="comment">// reached top of file system, no go.mod</span>
+<span id="L1205" class="ln">  1205&nbsp;&nbsp;</span>			}
+<span id="L1206" class="ln">  1206&nbsp;&nbsp;</span>			parent = d
+<span id="L1207" class="ln">  1207&nbsp;&nbsp;</span>		}
+<span id="L1208" class="ln">  1208&nbsp;&nbsp;</span>	}
+<span id="L1209" class="ln">  1209&nbsp;&nbsp;</span>
+<span id="L1210" class="ln">  1210&nbsp;&nbsp;</span>	goCmd := filepath.Join(ctxt.GOROOT, &#34;bin&#34;, &#34;go&#34;)
+<span id="L1211" class="ln">  1211&nbsp;&nbsp;</span>	cmd := exec.Command(goCmd, &#34;list&#34;, &#34;-e&#34;, &#34;-compiler=&#34;+ctxt.Compiler, &#34;-tags=&#34;+strings.Join(ctxt.BuildTags, &#34;,&#34;), &#34;-installsuffix=&#34;+ctxt.InstallSuffix, &#34;-f={{.Dir}}\n{{.ImportPath}}\n{{.Root}}\n{{.Goroot}}\n{{if .Error}}{{.Error}}{{end}}\n&#34;, &#34;--&#34;, path)
+<span id="L1212" class="ln">  1212&nbsp;&nbsp;</span>
+<span id="L1213" class="ln">  1213&nbsp;&nbsp;</span>	if ctxt.Dir != &#34;&#34; {
+<span id="L1214" class="ln">  1214&nbsp;&nbsp;</span>		cmd.Dir = ctxt.Dir
+<span id="L1215" class="ln">  1215&nbsp;&nbsp;</span>	}
+<span id="L1216" class="ln">  1216&nbsp;&nbsp;</span>
+<span id="L1217" class="ln">  1217&nbsp;&nbsp;</span>	var stdout, stderr strings.Builder
+<span id="L1218" class="ln">  1218&nbsp;&nbsp;</span>	cmd.Stdout = &amp;stdout
+<span id="L1219" class="ln">  1219&nbsp;&nbsp;</span>	cmd.Stderr = &amp;stderr
+<span id="L1220" class="ln">  1220&nbsp;&nbsp;</span>
+<span id="L1221" class="ln">  1221&nbsp;&nbsp;</span>	cgo := &#34;0&#34;
+<span id="L1222" class="ln">  1222&nbsp;&nbsp;</span>	if ctxt.CgoEnabled {
+<span id="L1223" class="ln">  1223&nbsp;&nbsp;</span>		cgo = &#34;1&#34;
+<span id="L1224" class="ln">  1224&nbsp;&nbsp;</span>	}
+<span id="L1225" class="ln">  1225&nbsp;&nbsp;</span>	cmd.Env = append(cmd.Environ(),
+<span id="L1226" class="ln">  1226&nbsp;&nbsp;</span>		&#34;GOOS=&#34;+ctxt.GOOS,
+<span id="L1227" class="ln">  1227&nbsp;&nbsp;</span>		&#34;GOARCH=&#34;+ctxt.GOARCH,
+<span id="L1228" class="ln">  1228&nbsp;&nbsp;</span>		&#34;GOROOT=&#34;+ctxt.GOROOT,
+<span id="L1229" class="ln">  1229&nbsp;&nbsp;</span>		&#34;GOPATH=&#34;+ctxt.GOPATH,
+<span id="L1230" class="ln">  1230&nbsp;&nbsp;</span>		&#34;CGO_ENABLED=&#34;+cgo,
+<span id="L1231" class="ln">  1231&nbsp;&nbsp;</span>	)
+<span id="L1232" class="ln">  1232&nbsp;&nbsp;</span>
+<span id="L1233" class="ln">  1233&nbsp;&nbsp;</span>	if err := cmd.Run(); err != nil {
+<span id="L1234" class="ln">  1234&nbsp;&nbsp;</span>		return fmt.Errorf(&#34;go/build: go list %s: %v\n%s\n&#34;, path, err, stderr.String())
+<span id="L1235" class="ln">  1235&nbsp;&nbsp;</span>	}
+<span id="L1236" class="ln">  1236&nbsp;&nbsp;</span>
+<span id="L1237" class="ln">  1237&nbsp;&nbsp;</span>	f := strings.SplitN(stdout.String(), &#34;\n&#34;, 5)
+<span id="L1238" class="ln">  1238&nbsp;&nbsp;</span>	if len(f) != 5 {
+<span id="L1239" class="ln">  1239&nbsp;&nbsp;</span>		return fmt.Errorf(&#34;go/build: importGo %s: unexpected output:\n%s\n&#34;, path, stdout.String())
+<span id="L1240" class="ln">  1240&nbsp;&nbsp;</span>	}
+<span id="L1241" class="ln">  1241&nbsp;&nbsp;</span>	dir := f[0]
+<span id="L1242" class="ln">  1242&nbsp;&nbsp;</span>	errStr := strings.TrimSpace(f[4])
+<span id="L1243" class="ln">  1243&nbsp;&nbsp;</span>	if errStr != &#34;&#34; &amp;&amp; dir == &#34;&#34; {
+<span id="L1244" class="ln">  1244&nbsp;&nbsp;</span>		<span class="comment">// If &#39;go list&#39; could not locate the package (dir is empty),</span>
+<span id="L1245" class="ln">  1245&nbsp;&nbsp;</span>		<span class="comment">// return the same error that &#39;go list&#39; reported.</span>
+<span id="L1246" class="ln">  1246&nbsp;&nbsp;</span>		return errors.New(errStr)
+<span id="L1247" class="ln">  1247&nbsp;&nbsp;</span>	}
+<span id="L1248" class="ln">  1248&nbsp;&nbsp;</span>
+<span id="L1249" class="ln">  1249&nbsp;&nbsp;</span>	<span class="comment">// If &#39;go list&#39; did locate the package, ignore the error.</span>
+<span id="L1250" class="ln">  1250&nbsp;&nbsp;</span>	<span class="comment">// It was probably related to loading source files, and we&#39;ll</span>
+<span id="L1251" class="ln">  1251&nbsp;&nbsp;</span>	<span class="comment">// encounter it ourselves shortly if the FindOnly flag isn&#39;t set.</span>
+<span id="L1252" class="ln">  1252&nbsp;&nbsp;</span>	p.Dir = dir
+<span id="L1253" class="ln">  1253&nbsp;&nbsp;</span>	p.ImportPath = f[1]
+<span id="L1254" class="ln">  1254&nbsp;&nbsp;</span>	p.Root = f[2]
+<span id="L1255" class="ln">  1255&nbsp;&nbsp;</span>	p.Goroot = f[3] == &#34;true&#34;
+<span id="L1256" class="ln">  1256&nbsp;&nbsp;</span>	return nil
+<span id="L1257" class="ln">  1257&nbsp;&nbsp;</span>}
+<span id="L1258" class="ln">  1258&nbsp;&nbsp;</span>
+<span id="L1259" class="ln">  1259&nbsp;&nbsp;</span>func equal(x, y []string) bool {
+<span id="L1260" class="ln">  1260&nbsp;&nbsp;</span>	if len(x) != len(y) {
+<span id="L1261" class="ln">  1261&nbsp;&nbsp;</span>		return false
+<span id="L1262" class="ln">  1262&nbsp;&nbsp;</span>	}
+<span id="L1263" class="ln">  1263&nbsp;&nbsp;</span>	for i, xi := range x {
+<span id="L1264" class="ln">  1264&nbsp;&nbsp;</span>		if xi != y[i] {
+<span id="L1265" class="ln">  1265&nbsp;&nbsp;</span>			return false
+<span id="L1266" class="ln">  1266&nbsp;&nbsp;</span>		}
+<span id="L1267" class="ln">  1267&nbsp;&nbsp;</span>	}
+<span id="L1268" class="ln">  1268&nbsp;&nbsp;</span>	return true
+<span id="L1269" class="ln">  1269&nbsp;&nbsp;</span>}
+<span id="L1270" class="ln">  1270&nbsp;&nbsp;</span>
+<span id="L1271" class="ln">  1271&nbsp;&nbsp;</span><span class="comment">// hasGoFiles reports whether dir contains any files with names ending in .go.</span>
+<span id="L1272" class="ln">  1272&nbsp;&nbsp;</span><span class="comment">// For a vendor check we must exclude directories that contain no .go files.</span>
+<span id="L1273" class="ln">  1273&nbsp;&nbsp;</span><span class="comment">// Otherwise it is not possible to vendor just a/b/c and still import the</span>
+<span id="L1274" class="ln">  1274&nbsp;&nbsp;</span><span class="comment">// non-vendored a/b. See golang.org/issue/13832.</span>
+<span id="L1275" class="ln">  1275&nbsp;&nbsp;</span>func hasGoFiles(ctxt *Context, dir string) bool {
+<span id="L1276" class="ln">  1276&nbsp;&nbsp;</span>	ents, _ := ctxt.readDir(dir)
+<span id="L1277" class="ln">  1277&nbsp;&nbsp;</span>	for _, ent := range ents {
+<span id="L1278" class="ln">  1278&nbsp;&nbsp;</span>		if !ent.IsDir() &amp;&amp; strings.HasSuffix(ent.Name(), &#34;.go&#34;) {
+<span id="L1279" class="ln">  1279&nbsp;&nbsp;</span>			return true
+<span id="L1280" class="ln">  1280&nbsp;&nbsp;</span>		}
+<span id="L1281" class="ln">  1281&nbsp;&nbsp;</span>	}
+<span id="L1282" class="ln">  1282&nbsp;&nbsp;</span>	return false
+<span id="L1283" class="ln">  1283&nbsp;&nbsp;</span>}
+<span id="L1284" class="ln">  1284&nbsp;&nbsp;</span>
+<span id="L1285" class="ln">  1285&nbsp;&nbsp;</span>func findImportComment(data []byte) (s string, line int) {
+<span id="L1286" class="ln">  1286&nbsp;&nbsp;</span>	<span class="comment">// expect keyword package</span>
+<span id="L1287" class="ln">  1287&nbsp;&nbsp;</span>	word, data := parseWord(data)
+<span id="L1288" class="ln">  1288&nbsp;&nbsp;</span>	if string(word) != &#34;package&#34; {
+<span id="L1289" class="ln">  1289&nbsp;&nbsp;</span>		return &#34;&#34;, 0
+<span id="L1290" class="ln">  1290&nbsp;&nbsp;</span>	}
+<span id="L1291" class="ln">  1291&nbsp;&nbsp;</span>
+<span id="L1292" class="ln">  1292&nbsp;&nbsp;</span>	<span class="comment">// expect package name</span>
+<span id="L1293" class="ln">  1293&nbsp;&nbsp;</span>	_, data = parseWord(data)
+<span id="L1294" class="ln">  1294&nbsp;&nbsp;</span>
+<span id="L1295" class="ln">  1295&nbsp;&nbsp;</span>	<span class="comment">// now ready for import comment, a // or /* */ comment</span>
+<span id="L1296" class="ln">  1296&nbsp;&nbsp;</span>	<span class="comment">// beginning and ending on the current line.</span>
+<span id="L1297" class="ln">  1297&nbsp;&nbsp;</span>	for len(data) &gt; 0 &amp;&amp; (data[0] == &#39; &#39; || data[0] == &#39;\t&#39; || data[0] == &#39;\r&#39;) {
+<span id="L1298" class="ln">  1298&nbsp;&nbsp;</span>		data = data[1:]
+<span id="L1299" class="ln">  1299&nbsp;&nbsp;</span>	}
+<span id="L1300" class="ln">  1300&nbsp;&nbsp;</span>
+<span id="L1301" class="ln">  1301&nbsp;&nbsp;</span>	var comment []byte
+<span id="L1302" class="ln">  1302&nbsp;&nbsp;</span>	switch {
+<span id="L1303" class="ln">  1303&nbsp;&nbsp;</span>	case bytes.HasPrefix(data, slashSlash):
+<span id="L1304" class="ln">  1304&nbsp;&nbsp;</span>		comment, _, _ = bytes.Cut(data[2:], newline)
+<span id="L1305" class="ln">  1305&nbsp;&nbsp;</span>	case bytes.HasPrefix(data, slashStar):
+<span id="L1306" class="ln">  1306&nbsp;&nbsp;</span>		var ok bool
+<span id="L1307" class="ln">  1307&nbsp;&nbsp;</span>		comment, _, ok = bytes.Cut(data[2:], starSlash)
+<span id="L1308" class="ln">  1308&nbsp;&nbsp;</span>		if !ok {
+<span id="L1309" class="ln">  1309&nbsp;&nbsp;</span>			<span class="comment">// malformed comment</span>
+<span id="L1310" class="ln">  1310&nbsp;&nbsp;</span>			return &#34;&#34;, 0
+<span id="L1311" class="ln">  1311&nbsp;&nbsp;</span>		}
+<span id="L1312" class="ln">  1312&nbsp;&nbsp;</span>		if bytes.Contains(comment, newline) {
+<span id="L1313" class="ln">  1313&nbsp;&nbsp;</span>			return &#34;&#34;, 0
+<span id="L1314" class="ln">  1314&nbsp;&nbsp;</span>		}
+<span id="L1315" class="ln">  1315&nbsp;&nbsp;</span>	}
+<span id="L1316" class="ln">  1316&nbsp;&nbsp;</span>	comment = bytes.TrimSpace(comment)
+<span id="L1317" class="ln">  1317&nbsp;&nbsp;</span>
+<span id="L1318" class="ln">  1318&nbsp;&nbsp;</span>	<span class="comment">// split comment into `import`, `&#34;pkg&#34;`</span>
+<span id="L1319" class="ln">  1319&nbsp;&nbsp;</span>	word, arg := parseWord(comment)
+<span id="L1320" class="ln">  1320&nbsp;&nbsp;</span>	if string(word) != &#34;import&#34; {
+<span id="L1321" class="ln">  1321&nbsp;&nbsp;</span>		return &#34;&#34;, 0
+<span id="L1322" class="ln">  1322&nbsp;&nbsp;</span>	}
+<span id="L1323" class="ln">  1323&nbsp;&nbsp;</span>
+<span id="L1324" class="ln">  1324&nbsp;&nbsp;</span>	line = 1 + bytes.Count(data[:cap(data)-cap(arg)], newline)
+<span id="L1325" class="ln">  1325&nbsp;&nbsp;</span>	return strings.TrimSpace(string(arg)), line
+<span id="L1326" class="ln">  1326&nbsp;&nbsp;</span>}
+<span id="L1327" class="ln">  1327&nbsp;&nbsp;</span>
+<span id="L1328" class="ln">  1328&nbsp;&nbsp;</span>var (
+<span id="L1329" class="ln">  1329&nbsp;&nbsp;</span>	slashSlash = []byte(&#34;//&#34;)
+<span id="L1330" class="ln">  1330&nbsp;&nbsp;</span>	slashStar  = []byte(&#34;/*&#34;)
+<span id="L1331" class="ln">  1331&nbsp;&nbsp;</span>	starSlash  = []byte(&#34;*/&#34;)
+<span id="L1332" class="ln">  1332&nbsp;&nbsp;</span>	newline    = []byte(&#34;\n&#34;)
+<span id="L1333" class="ln">  1333&nbsp;&nbsp;</span>)
+<span id="L1334" class="ln">  1334&nbsp;&nbsp;</span>
+<span id="L1335" class="ln">  1335&nbsp;&nbsp;</span><span class="comment">// skipSpaceOrComment returns data with any leading spaces or comments removed.</span>
+<span id="L1336" class="ln">  1336&nbsp;&nbsp;</span>func skipSpaceOrComment(data []byte) []byte {
+<span id="L1337" class="ln">  1337&nbsp;&nbsp;</span>	for len(data) &gt; 0 {
+<span id="L1338" class="ln">  1338&nbsp;&nbsp;</span>		switch data[0] {
+<span id="L1339" class="ln">  1339&nbsp;&nbsp;</span>		case &#39; &#39;, &#39;\t&#39;, &#39;\r&#39;, &#39;\n&#39;:
+<span id="L1340" class="ln">  1340&nbsp;&nbsp;</span>			data = data[1:]
+<span id="L1341" class="ln">  1341&nbsp;&nbsp;</span>			continue
+<span id="L1342" class="ln">  1342&nbsp;&nbsp;</span>		case &#39;/&#39;:
+<span id="L1343" class="ln">  1343&nbsp;&nbsp;</span>			if bytes.HasPrefix(data, slashSlash) {
+<span id="L1344" class="ln">  1344&nbsp;&nbsp;</span>				i := bytes.Index(data, newline)
+<span id="L1345" class="ln">  1345&nbsp;&nbsp;</span>				if i &lt; 0 {
+<span id="L1346" class="ln">  1346&nbsp;&nbsp;</span>					return nil
+<span id="L1347" class="ln">  1347&nbsp;&nbsp;</span>				}
+<span id="L1348" class="ln">  1348&nbsp;&nbsp;</span>				data = data[i+1:]
+<span id="L1349" class="ln">  1349&nbsp;&nbsp;</span>				continue
+<span id="L1350" class="ln">  1350&nbsp;&nbsp;</span>			}
+<span id="L1351" class="ln">  1351&nbsp;&nbsp;</span>			if bytes.HasPrefix(data, slashStar) {
+<span id="L1352" class="ln">  1352&nbsp;&nbsp;</span>				data = data[2:]
+<span id="L1353" class="ln">  1353&nbsp;&nbsp;</span>				i := bytes.Index(data, starSlash)
+<span id="L1354" class="ln">  1354&nbsp;&nbsp;</span>				if i &lt; 0 {
+<span id="L1355" class="ln">  1355&nbsp;&nbsp;</span>					return nil
+<span id="L1356" class="ln">  1356&nbsp;&nbsp;</span>				}
+<span id="L1357" class="ln">  1357&nbsp;&nbsp;</span>				data = data[i+2:]
+<span id="L1358" class="ln">  1358&nbsp;&nbsp;</span>				continue
+<span id="L1359" class="ln">  1359&nbsp;&nbsp;</span>			}
+<span id="L1360" class="ln">  1360&nbsp;&nbsp;</span>		}
+<span id="L1361" class="ln">  1361&nbsp;&nbsp;</span>		break
+<span id="L1362" class="ln">  1362&nbsp;&nbsp;</span>	}
+<span id="L1363" class="ln">  1363&nbsp;&nbsp;</span>	return data
+<span id="L1364" class="ln">  1364&nbsp;&nbsp;</span>}
+<span id="L1365" class="ln">  1365&nbsp;&nbsp;</span>
+<span id="L1366" class="ln">  1366&nbsp;&nbsp;</span><span class="comment">// parseWord skips any leading spaces or comments in data</span>
+<span id="L1367" class="ln">  1367&nbsp;&nbsp;</span><span class="comment">// and then parses the beginning of data as an identifier or keyword,</span>
+<span id="L1368" class="ln">  1368&nbsp;&nbsp;</span><span class="comment">// returning that word and what remains after the word.</span>
+<span id="L1369" class="ln">  1369&nbsp;&nbsp;</span>func parseWord(data []byte) (word, rest []byte) {
+<span id="L1370" class="ln">  1370&nbsp;&nbsp;</span>	data = skipSpaceOrComment(data)
+<span id="L1371" class="ln">  1371&nbsp;&nbsp;</span>
+<span id="L1372" class="ln">  1372&nbsp;&nbsp;</span>	<span class="comment">// Parse past leading word characters.</span>
+<span id="L1373" class="ln">  1373&nbsp;&nbsp;</span>	rest = data
+<span id="L1374" class="ln">  1374&nbsp;&nbsp;</span>	for {
+<span id="L1375" class="ln">  1375&nbsp;&nbsp;</span>		r, size := utf8.DecodeRune(rest)
+<span id="L1376" class="ln">  1376&nbsp;&nbsp;</span>		if unicode.IsLetter(r) || &#39;0&#39; &lt;= r &amp;&amp; r &lt;= &#39;9&#39; || r == &#39;_&#39; {
+<span id="L1377" class="ln">  1377&nbsp;&nbsp;</span>			rest = rest[size:]
+<span id="L1378" class="ln">  1378&nbsp;&nbsp;</span>			continue
+<span id="L1379" class="ln">  1379&nbsp;&nbsp;</span>		}
+<span id="L1380" class="ln">  1380&nbsp;&nbsp;</span>		break
+<span id="L1381" class="ln">  1381&nbsp;&nbsp;</span>	}
+<span id="L1382" class="ln">  1382&nbsp;&nbsp;</span>
+<span id="L1383" class="ln">  1383&nbsp;&nbsp;</span>	word = data[:len(data)-len(rest)]
+<span id="L1384" class="ln">  1384&nbsp;&nbsp;</span>	if len(word) == 0 {
+<span id="L1385" class="ln">  1385&nbsp;&nbsp;</span>		return nil, nil
+<span id="L1386" class="ln">  1386&nbsp;&nbsp;</span>	}
+<span id="L1387" class="ln">  1387&nbsp;&nbsp;</span>
+<span id="L1388" class="ln">  1388&nbsp;&nbsp;</span>	return word, rest
+<span id="L1389" class="ln">  1389&nbsp;&nbsp;</span>}
+<span id="L1390" class="ln">  1390&nbsp;&nbsp;</span>
+<span id="L1391" class="ln">  1391&nbsp;&nbsp;</span><span class="comment">// MatchFile reports whether the file with the given name in the given directory</span>
+<span id="L1392" class="ln">  1392&nbsp;&nbsp;</span><span class="comment">// matches the context and would be included in a [Package] created by [ImportDir]</span>
+<span id="L1393" class="ln">  1393&nbsp;&nbsp;</span><span class="comment">// of that directory.</span>
+<span id="L1394" class="ln">  1394&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L1395" class="ln">  1395&nbsp;&nbsp;</span><span class="comment">// MatchFile considers the name of the file and may use ctxt.OpenFile to</span>
+<span id="L1396" class="ln">  1396&nbsp;&nbsp;</span><span class="comment">// read some or all of the file&#39;s content.</span>
+<span id="L1397" class="ln">  1397&nbsp;&nbsp;</span>func (ctxt *Context) MatchFile(dir, name string) (match bool, err error) {
+<span id="L1398" class="ln">  1398&nbsp;&nbsp;</span>	info, err := ctxt.matchFile(dir, name, nil, nil, nil)
+<span id="L1399" class="ln">  1399&nbsp;&nbsp;</span>	return info != nil, err
+<span id="L1400" class="ln">  1400&nbsp;&nbsp;</span>}
+<span id="L1401" class="ln">  1401&nbsp;&nbsp;</span>
+<span id="L1402" class="ln">  1402&nbsp;&nbsp;</span>var dummyPkg Package
+<span id="L1403" class="ln">  1403&nbsp;&nbsp;</span>
+<span id="L1404" class="ln">  1404&nbsp;&nbsp;</span><span class="comment">// fileInfo records information learned about a file included in a build.</span>
+<span id="L1405" class="ln">  1405&nbsp;&nbsp;</span>type fileInfo struct {
+<span id="L1406" class="ln">  1406&nbsp;&nbsp;</span>	name       string <span class="comment">// full name including dir</span>
+<span id="L1407" class="ln">  1407&nbsp;&nbsp;</span>	header     []byte
+<span id="L1408" class="ln">  1408&nbsp;&nbsp;</span>	fset       *token.FileSet
+<span id="L1409" class="ln">  1409&nbsp;&nbsp;</span>	parsed     *ast.File
+<span id="L1410" class="ln">  1410&nbsp;&nbsp;</span>	parseErr   error
+<span id="L1411" class="ln">  1411&nbsp;&nbsp;</span>	imports    []fileImport
+<span id="L1412" class="ln">  1412&nbsp;&nbsp;</span>	embeds     []fileEmbed
+<span id="L1413" class="ln">  1413&nbsp;&nbsp;</span>	directives []Directive
+<span id="L1414" class="ln">  1414&nbsp;&nbsp;</span>}
+<span id="L1415" class="ln">  1415&nbsp;&nbsp;</span>
+<span id="L1416" class="ln">  1416&nbsp;&nbsp;</span>type fileImport struct {
+<span id="L1417" class="ln">  1417&nbsp;&nbsp;</span>	path string
+<span id="L1418" class="ln">  1418&nbsp;&nbsp;</span>	pos  token.Pos
+<span id="L1419" class="ln">  1419&nbsp;&nbsp;</span>	doc  *ast.CommentGroup
+<span id="L1420" class="ln">  1420&nbsp;&nbsp;</span>}
+<span id="L1421" class="ln">  1421&nbsp;&nbsp;</span>
+<span id="L1422" class="ln">  1422&nbsp;&nbsp;</span>type fileEmbed struct {
+<span id="L1423" class="ln">  1423&nbsp;&nbsp;</span>	pattern string
+<span id="L1424" class="ln">  1424&nbsp;&nbsp;</span>	pos     token.Position
+<span id="L1425" class="ln">  1425&nbsp;&nbsp;</span>}
+<span id="L1426" class="ln">  1426&nbsp;&nbsp;</span>
+<span id="L1427" class="ln">  1427&nbsp;&nbsp;</span><span class="comment">// matchFile determines whether the file with the given name in the given directory</span>
+<span id="L1428" class="ln">  1428&nbsp;&nbsp;</span><span class="comment">// should be included in the package being constructed.</span>
+<span id="L1429" class="ln">  1429&nbsp;&nbsp;</span><span class="comment">// If the file should be included, matchFile returns a non-nil *fileInfo (and a nil error).</span>
+<span id="L1430" class="ln">  1430&nbsp;&nbsp;</span><span class="comment">// Non-nil errors are reserved for unexpected problems.</span>
+<span id="L1431" class="ln">  1431&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L1432" class="ln">  1432&nbsp;&nbsp;</span><span class="comment">// If name denotes a Go program, matchFile reads until the end of the</span>
+<span id="L1433" class="ln">  1433&nbsp;&nbsp;</span><span class="comment">// imports and returns that section of the file in the fileInfo&#39;s header field,</span>
+<span id="L1434" class="ln">  1434&nbsp;&nbsp;</span><span class="comment">// even though it only considers text until the first non-comment</span>
+<span id="L1435" class="ln">  1435&nbsp;&nbsp;</span><span class="comment">// for go:build lines.</span>
+<span id="L1436" class="ln">  1436&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L1437" class="ln">  1437&nbsp;&nbsp;</span><span class="comment">// If allTags is non-nil, matchFile records any encountered build tag</span>
+<span id="L1438" class="ln">  1438&nbsp;&nbsp;</span><span class="comment">// by setting allTags[tag] = true.</span>
+<span id="L1439" class="ln">  1439&nbsp;&nbsp;</span>func (ctxt *Context) matchFile(dir, name string, allTags map[string]bool, binaryOnly *bool, fset *token.FileSet) (*fileInfo, error) {
+<span id="L1440" class="ln">  1440&nbsp;&nbsp;</span>	if strings.HasPrefix(name, &#34;_&#34;) ||
+<span id="L1441" class="ln">  1441&nbsp;&nbsp;</span>		strings.HasPrefix(name, &#34;.&#34;) {
+<span id="L1442" class="ln">  1442&nbsp;&nbsp;</span>		return nil, nil
+<span id="L1443" class="ln">  1443&nbsp;&nbsp;</span>	}
+<span id="L1444" class="ln">  1444&nbsp;&nbsp;</span>
+<span id="L1445" class="ln">  1445&nbsp;&nbsp;</span>	i := strings.LastIndex(name, &#34;.&#34;)
+<span id="L1446" class="ln">  1446&nbsp;&nbsp;</span>	if i &lt; 0 {
+<span id="L1447" class="ln">  1447&nbsp;&nbsp;</span>		i = len(name)
+<span id="L1448" class="ln">  1448&nbsp;&nbsp;</span>	}
+<span id="L1449" class="ln">  1449&nbsp;&nbsp;</span>	ext := name[i:]
+<span id="L1450" class="ln">  1450&nbsp;&nbsp;</span>
+<span id="L1451" class="ln">  1451&nbsp;&nbsp;</span>	if ext != &#34;.go&#34; &amp;&amp; fileListForExt(&amp;dummyPkg, ext) == nil {
+<span id="L1452" class="ln">  1452&nbsp;&nbsp;</span>		<span class="comment">// skip</span>
+<span id="L1453" class="ln">  1453&nbsp;&nbsp;</span>		return nil, nil
+<span id="L1454" class="ln">  1454&nbsp;&nbsp;</span>	}
+<span id="L1455" class="ln">  1455&nbsp;&nbsp;</span>
+<span id="L1456" class="ln">  1456&nbsp;&nbsp;</span>	if !ctxt.goodOSArchFile(name, allTags) &amp;&amp; !ctxt.UseAllFiles {
+<span id="L1457" class="ln">  1457&nbsp;&nbsp;</span>		return nil, nil
+<span id="L1458" class="ln">  1458&nbsp;&nbsp;</span>	}
+<span id="L1459" class="ln">  1459&nbsp;&nbsp;</span>
+<span id="L1460" class="ln">  1460&nbsp;&nbsp;</span>	info := &amp;fileInfo{name: ctxt.joinPath(dir, name), fset: fset}
+<span id="L1461" class="ln">  1461&nbsp;&nbsp;</span>	if ext == &#34;.syso&#34; {
+<span id="L1462" class="ln">  1462&nbsp;&nbsp;</span>		<span class="comment">// binary, no reading</span>
+<span id="L1463" class="ln">  1463&nbsp;&nbsp;</span>		return info, nil
+<span id="L1464" class="ln">  1464&nbsp;&nbsp;</span>	}
+<span id="L1465" class="ln">  1465&nbsp;&nbsp;</span>
+<span id="L1466" class="ln">  1466&nbsp;&nbsp;</span>	f, err := ctxt.openFile(info.name)
+<span id="L1467" class="ln">  1467&nbsp;&nbsp;</span>	if err != nil {
+<span id="L1468" class="ln">  1468&nbsp;&nbsp;</span>		return nil, err
+<span id="L1469" class="ln">  1469&nbsp;&nbsp;</span>	}
+<span id="L1470" class="ln">  1470&nbsp;&nbsp;</span>
+<span id="L1471" class="ln">  1471&nbsp;&nbsp;</span>	if strings.HasSuffix(name, &#34;.go&#34;) {
+<span id="L1472" class="ln">  1472&nbsp;&nbsp;</span>		err = readGoInfo(f, info)
+<span id="L1473" class="ln">  1473&nbsp;&nbsp;</span>		if strings.HasSuffix(name, &#34;_test.go&#34;) {
+<span id="L1474" class="ln">  1474&nbsp;&nbsp;</span>			binaryOnly = nil <span class="comment">// ignore //go:binary-only-package comments in _test.go files</span>
+<span id="L1475" class="ln">  1475&nbsp;&nbsp;</span>		}
+<span id="L1476" class="ln">  1476&nbsp;&nbsp;</span>	} else {
+<span id="L1477" class="ln">  1477&nbsp;&nbsp;</span>		binaryOnly = nil <span class="comment">// ignore //go:binary-only-package comments in non-Go sources</span>
+<span id="L1478" class="ln">  1478&nbsp;&nbsp;</span>		info.header, err = readComments(f)
+<span id="L1479" class="ln">  1479&nbsp;&nbsp;</span>	}
+<span id="L1480" class="ln">  1480&nbsp;&nbsp;</span>	f.Close()
+<span id="L1481" class="ln">  1481&nbsp;&nbsp;</span>	if err != nil {
+<span id="L1482" class="ln">  1482&nbsp;&nbsp;</span>		return info, fmt.Errorf(&#34;read %s: %v&#34;, info.name, err)
+<span id="L1483" class="ln">  1483&nbsp;&nbsp;</span>	}
+<span id="L1484" class="ln">  1484&nbsp;&nbsp;</span>
+<span id="L1485" class="ln">  1485&nbsp;&nbsp;</span>	<span class="comment">// Look for go:build comments to accept or reject the file.</span>
+<span id="L1486" class="ln">  1486&nbsp;&nbsp;</span>	ok, sawBinaryOnly, err := ctxt.shouldBuild(info.header, allTags)
+<span id="L1487" class="ln">  1487&nbsp;&nbsp;</span>	if err != nil {
+<span id="L1488" class="ln">  1488&nbsp;&nbsp;</span>		return nil, fmt.Errorf(&#34;%s: %v&#34;, name, err)
+<span id="L1489" class="ln">  1489&nbsp;&nbsp;</span>	}
+<span id="L1490" class="ln">  1490&nbsp;&nbsp;</span>	if !ok &amp;&amp; !ctxt.UseAllFiles {
+<span id="L1491" class="ln">  1491&nbsp;&nbsp;</span>		return nil, nil
+<span id="L1492" class="ln">  1492&nbsp;&nbsp;</span>	}
+<span id="L1493" class="ln">  1493&nbsp;&nbsp;</span>
+<span id="L1494" class="ln">  1494&nbsp;&nbsp;</span>	if binaryOnly != nil &amp;&amp; sawBinaryOnly {
+<span id="L1495" class="ln">  1495&nbsp;&nbsp;</span>		*binaryOnly = true
+<span id="L1496" class="ln">  1496&nbsp;&nbsp;</span>	}
+<span id="L1497" class="ln">  1497&nbsp;&nbsp;</span>
+<span id="L1498" class="ln">  1498&nbsp;&nbsp;</span>	return info, nil
+<span id="L1499" class="ln">  1499&nbsp;&nbsp;</span>}
+<span id="L1500" class="ln">  1500&nbsp;&nbsp;</span>
+<span id="L1501" class="ln">  1501&nbsp;&nbsp;</span>func cleanDecls(m map[string][]token.Position) ([]string, map[string][]token.Position) {
+<span id="L1502" class="ln">  1502&nbsp;&nbsp;</span>	all := make([]string, 0, len(m))
+<span id="L1503" class="ln">  1503&nbsp;&nbsp;</span>	for path := range m {
+<span id="L1504" class="ln">  1504&nbsp;&nbsp;</span>		all = append(all, path)
+<span id="L1505" class="ln">  1505&nbsp;&nbsp;</span>	}
+<span id="L1506" class="ln">  1506&nbsp;&nbsp;</span>	sort.Strings(all)
+<span id="L1507" class="ln">  1507&nbsp;&nbsp;</span>	return all, m
+<span id="L1508" class="ln">  1508&nbsp;&nbsp;</span>}
+<span id="L1509" class="ln">  1509&nbsp;&nbsp;</span>
+<span id="L1510" class="ln">  1510&nbsp;&nbsp;</span><span class="comment">// Import is shorthand for Default.Import.</span>
+<span id="L1511" class="ln">  1511&nbsp;&nbsp;</span>func Import(path, srcDir string, mode ImportMode) (*Package, error) {
+<span id="L1512" class="ln">  1512&nbsp;&nbsp;</span>	return Default.Import(path, srcDir, mode)
+<span id="L1513" class="ln">  1513&nbsp;&nbsp;</span>}
+<span id="L1514" class="ln">  1514&nbsp;&nbsp;</span>
+<span id="L1515" class="ln">  1515&nbsp;&nbsp;</span><span class="comment">// ImportDir is shorthand for Default.ImportDir.</span>
+<span id="L1516" class="ln">  1516&nbsp;&nbsp;</span>func ImportDir(dir string, mode ImportMode) (*Package, error) {
+<span id="L1517" class="ln">  1517&nbsp;&nbsp;</span>	return Default.ImportDir(dir, mode)
+<span id="L1518" class="ln">  1518&nbsp;&nbsp;</span>}
+<span id="L1519" class="ln">  1519&nbsp;&nbsp;</span>
+<span id="L1520" class="ln">  1520&nbsp;&nbsp;</span>var (
+<span id="L1521" class="ln">  1521&nbsp;&nbsp;</span>	plusBuild = []byte(&#34;+build&#34;)
+<span id="L1522" class="ln">  1522&nbsp;&nbsp;</span>
+<span id="L1523" class="ln">  1523&nbsp;&nbsp;</span>	goBuildComment = []byte(&#34;//go:build&#34;)
+<span id="L1524" class="ln">  1524&nbsp;&nbsp;</span>
+<span id="L1525" class="ln">  1525&nbsp;&nbsp;</span>	errMultipleGoBuild = errors.New(&#34;multiple //go:build comments&#34;)
+<span id="L1526" class="ln">  1526&nbsp;&nbsp;</span>)
+<span id="L1527" class="ln">  1527&nbsp;&nbsp;</span>
+<span id="L1528" class="ln">  1528&nbsp;&nbsp;</span>func isGoBuildComment(line []byte) bool {
+<span id="L1529" class="ln">  1529&nbsp;&nbsp;</span>	if !bytes.HasPrefix(line, goBuildComment) {
+<span id="L1530" class="ln">  1530&nbsp;&nbsp;</span>		return false
+<span id="L1531" class="ln">  1531&nbsp;&nbsp;</span>	}
+<span id="L1532" class="ln">  1532&nbsp;&nbsp;</span>	line = bytes.TrimSpace(line)
+<span id="L1533" class="ln">  1533&nbsp;&nbsp;</span>	rest := line[len(goBuildComment):]
+<span id="L1534" class="ln">  1534&nbsp;&nbsp;</span>	return len(rest) == 0 || len(bytes.TrimSpace(rest)) &lt; len(rest)
+<span id="L1535" class="ln">  1535&nbsp;&nbsp;</span>}
+<span id="L1536" class="ln">  1536&nbsp;&nbsp;</span>
+<span id="L1537" class="ln">  1537&nbsp;&nbsp;</span><span class="comment">// Special comment denoting a binary-only package.</span>
+<span id="L1538" class="ln">  1538&nbsp;&nbsp;</span><span class="comment">// See https://golang.org/design/2775-binary-only-packages</span>
+<span id="L1539" class="ln">  1539&nbsp;&nbsp;</span><span class="comment">// for more about the design of binary-only packages.</span>
+<span id="L1540" class="ln">  1540&nbsp;&nbsp;</span>var binaryOnlyComment = []byte(&#34;//go:binary-only-package&#34;)
+<span id="L1541" class="ln">  1541&nbsp;&nbsp;</span>
+<span id="L1542" class="ln">  1542&nbsp;&nbsp;</span><span class="comment">// shouldBuild reports whether it is okay to use this file,</span>
+<span id="L1543" class="ln">  1543&nbsp;&nbsp;</span><span class="comment">// The rule is that in the file&#39;s leading run of // comments</span>
+<span id="L1544" class="ln">  1544&nbsp;&nbsp;</span><span class="comment">// and blank lines, which must be followed by a blank line</span>
+<span id="L1545" class="ln">  1545&nbsp;&nbsp;</span><span class="comment">// (to avoid including a Go package clause doc comment),</span>
+<span id="L1546" class="ln">  1546&nbsp;&nbsp;</span><span class="comment">// lines beginning with &#39;//go:build&#39; are taken as build directives.</span>
+<span id="L1547" class="ln">  1547&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L1548" class="ln">  1548&nbsp;&nbsp;</span><span class="comment">// The file is accepted only if each such line lists something</span>
+<span id="L1549" class="ln">  1549&nbsp;&nbsp;</span><span class="comment">// matching the file. For example:</span>
+<span id="L1550" class="ln">  1550&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L1551" class="ln">  1551&nbsp;&nbsp;</span><span class="comment">//	//go:build windows linux</span>
+<span id="L1552" class="ln">  1552&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L1553" class="ln">  1553&nbsp;&nbsp;</span><span class="comment">// marks the file as applicable only on Windows and Linux.</span>
+<span id="L1554" class="ln">  1554&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L1555" class="ln">  1555&nbsp;&nbsp;</span><span class="comment">// For each build tag it consults, shouldBuild sets allTags[tag] = true.</span>
+<span id="L1556" class="ln">  1556&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L1557" class="ln">  1557&nbsp;&nbsp;</span><span class="comment">// shouldBuild reports whether the file should be built</span>
+<span id="L1558" class="ln">  1558&nbsp;&nbsp;</span><span class="comment">// and whether a //go:binary-only-package comment was found.</span>
+<span id="L1559" class="ln">  1559&nbsp;&nbsp;</span>func (ctxt *Context) shouldBuild(content []byte, allTags map[string]bool) (shouldBuild, binaryOnly bool, err error) {
+<span id="L1560" class="ln">  1560&nbsp;&nbsp;</span>	<span class="comment">// Identify leading run of // comments and blank lines,</span>
+<span id="L1561" class="ln">  1561&nbsp;&nbsp;</span>	<span class="comment">// which must be followed by a blank line.</span>
+<span id="L1562" class="ln">  1562&nbsp;&nbsp;</span>	<span class="comment">// Also identify any //go:build comments.</span>
+<span id="L1563" class="ln">  1563&nbsp;&nbsp;</span>	content, goBuild, sawBinaryOnly, err := parseFileHeader(content)
+<span id="L1564" class="ln">  1564&nbsp;&nbsp;</span>	if err != nil {
+<span id="L1565" class="ln">  1565&nbsp;&nbsp;</span>		return false, false, err
+<span id="L1566" class="ln">  1566&nbsp;&nbsp;</span>	}
+<span id="L1567" class="ln">  1567&nbsp;&nbsp;</span>
+<span id="L1568" class="ln">  1568&nbsp;&nbsp;</span>	<span class="comment">// If //go:build line is present, it controls.</span>
+<span id="L1569" class="ln">  1569&nbsp;&nbsp;</span>	<span class="comment">// Otherwise fall back to +build processing.</span>
+<span id="L1570" class="ln">  1570&nbsp;&nbsp;</span>	switch {
+<span id="L1571" class="ln">  1571&nbsp;&nbsp;</span>	case goBuild != nil:
+<span id="L1572" class="ln">  1572&nbsp;&nbsp;</span>		x, err := constraint.Parse(string(goBuild))
+<span id="L1573" class="ln">  1573&nbsp;&nbsp;</span>		if err != nil {
+<span id="L1574" class="ln">  1574&nbsp;&nbsp;</span>			return false, false, fmt.Errorf(&#34;parsing //go:build line: %v&#34;, err)
+<span id="L1575" class="ln">  1575&nbsp;&nbsp;</span>		}
+<span id="L1576" class="ln">  1576&nbsp;&nbsp;</span>		shouldBuild = ctxt.eval(x, allTags)
+<span id="L1577" class="ln">  1577&nbsp;&nbsp;</span>
+<span id="L1578" class="ln">  1578&nbsp;&nbsp;</span>	default:
+<span id="L1579" class="ln">  1579&nbsp;&nbsp;</span>		shouldBuild = true
+<span id="L1580" class="ln">  1580&nbsp;&nbsp;</span>		p := content
+<span id="L1581" class="ln">  1581&nbsp;&nbsp;</span>		for len(p) &gt; 0 {
+<span id="L1582" class="ln">  1582&nbsp;&nbsp;</span>			line := p
+<span id="L1583" class="ln">  1583&nbsp;&nbsp;</span>			if i := bytes.IndexByte(line, &#39;\n&#39;); i &gt;= 0 {
+<span id="L1584" class="ln">  1584&nbsp;&nbsp;</span>				line, p = line[:i], p[i+1:]
+<span id="L1585" class="ln">  1585&nbsp;&nbsp;</span>			} else {
+<span id="L1586" class="ln">  1586&nbsp;&nbsp;</span>				p = p[len(p):]
+<span id="L1587" class="ln">  1587&nbsp;&nbsp;</span>			}
+<span id="L1588" class="ln">  1588&nbsp;&nbsp;</span>			line = bytes.TrimSpace(line)
+<span id="L1589" class="ln">  1589&nbsp;&nbsp;</span>			if !bytes.HasPrefix(line, slashSlash) || !bytes.Contains(line, plusBuild) {
+<span id="L1590" class="ln">  1590&nbsp;&nbsp;</span>				continue
+<span id="L1591" class="ln">  1591&nbsp;&nbsp;</span>			}
+<span id="L1592" class="ln">  1592&nbsp;&nbsp;</span>			text := string(line)
+<span id="L1593" class="ln">  1593&nbsp;&nbsp;</span>			if !constraint.IsPlusBuild(text) {
+<span id="L1594" class="ln">  1594&nbsp;&nbsp;</span>				continue
+<span id="L1595" class="ln">  1595&nbsp;&nbsp;</span>			}
+<span id="L1596" class="ln">  1596&nbsp;&nbsp;</span>			if x, err := constraint.Parse(text); err == nil {
+<span id="L1597" class="ln">  1597&nbsp;&nbsp;</span>				if !ctxt.eval(x, allTags) {
+<span id="L1598" class="ln">  1598&nbsp;&nbsp;</span>					shouldBuild = false
+<span id="L1599" class="ln">  1599&nbsp;&nbsp;</span>				}
+<span id="L1600" class="ln">  1600&nbsp;&nbsp;</span>			}
+<span id="L1601" class="ln">  1601&nbsp;&nbsp;</span>		}
+<span id="L1602" class="ln">  1602&nbsp;&nbsp;</span>	}
+<span id="L1603" class="ln">  1603&nbsp;&nbsp;</span>
+<span id="L1604" class="ln">  1604&nbsp;&nbsp;</span>	return shouldBuild, sawBinaryOnly, nil
+<span id="L1605" class="ln">  1605&nbsp;&nbsp;</span>}
+<span id="L1606" class="ln">  1606&nbsp;&nbsp;</span>
+<span id="L1607" class="ln">  1607&nbsp;&nbsp;</span>func parseFileHeader(content []byte) (trimmed, goBuild []byte, sawBinaryOnly bool, err error) {
+<span id="L1608" class="ln">  1608&nbsp;&nbsp;</span>	end := 0
+<span id="L1609" class="ln">  1609&nbsp;&nbsp;</span>	p := content
+<span id="L1610" class="ln">  1610&nbsp;&nbsp;</span>	ended := false       <span class="comment">// found non-blank, non-// line, so stopped accepting //go:build lines</span>
+<span id="L1611" class="ln">  1611&nbsp;&nbsp;</span>	inSlashStar := false <span class="comment">// in /* */ comment</span>
+<span id="L1612" class="ln">  1612&nbsp;&nbsp;</span>
+<span id="L1613" class="ln">  1613&nbsp;&nbsp;</span>Lines:
+<span id="L1614" class="ln">  1614&nbsp;&nbsp;</span>	for len(p) &gt; 0 {
+<span id="L1615" class="ln">  1615&nbsp;&nbsp;</span>		line := p
+<span id="L1616" class="ln">  1616&nbsp;&nbsp;</span>		if i := bytes.IndexByte(line, &#39;\n&#39;); i &gt;= 0 {
+<span id="L1617" class="ln">  1617&nbsp;&nbsp;</span>			line, p = line[:i], p[i+1:]
+<span id="L1618" class="ln">  1618&nbsp;&nbsp;</span>		} else {
+<span id="L1619" class="ln">  1619&nbsp;&nbsp;</span>			p = p[len(p):]
+<span id="L1620" class="ln">  1620&nbsp;&nbsp;</span>		}
+<span id="L1621" class="ln">  1621&nbsp;&nbsp;</span>		line = bytes.TrimSpace(line)
+<span id="L1622" class="ln">  1622&nbsp;&nbsp;</span>		if len(line) == 0 &amp;&amp; !ended { <span class="comment">// Blank line</span>
+<span id="L1623" class="ln">  1623&nbsp;&nbsp;</span>			<span class="comment">// Remember position of most recent blank line.</span>
+<span id="L1624" class="ln">  1624&nbsp;&nbsp;</span>			<span class="comment">// When we find the first non-blank, non-// line,</span>
+<span id="L1625" class="ln">  1625&nbsp;&nbsp;</span>			<span class="comment">// this &#34;end&#34; position marks the latest file position</span>
+<span id="L1626" class="ln">  1626&nbsp;&nbsp;</span>			<span class="comment">// where a //go:build line can appear.</span>
+<span id="L1627" class="ln">  1627&nbsp;&nbsp;</span>			<span class="comment">// (It must appear _before_ a blank line before the non-blank, non-// line.</span>
+<span id="L1628" class="ln">  1628&nbsp;&nbsp;</span>			<span class="comment">// Yes, that&#39;s confusing, which is part of why we moved to //go:build lines.)</span>
+<span id="L1629" class="ln">  1629&nbsp;&nbsp;</span>			<span class="comment">// Note that ended==false here means that inSlashStar==false,</span>
+<span id="L1630" class="ln">  1630&nbsp;&nbsp;</span>			<span class="comment">// since seeing a /* would have set ended==true.</span>
+<span id="L1631" class="ln">  1631&nbsp;&nbsp;</span>			end = len(content) - len(p)
+<span id="L1632" class="ln">  1632&nbsp;&nbsp;</span>			continue Lines
+<span id="L1633" class="ln">  1633&nbsp;&nbsp;</span>		}
+<span id="L1634" class="ln">  1634&nbsp;&nbsp;</span>		if !bytes.HasPrefix(line, slashSlash) { <span class="comment">// Not comment line</span>
+<span id="L1635" class="ln">  1635&nbsp;&nbsp;</span>			ended = true
+<span id="L1636" class="ln">  1636&nbsp;&nbsp;</span>		}
+<span id="L1637" class="ln">  1637&nbsp;&nbsp;</span>
+<span id="L1638" class="ln">  1638&nbsp;&nbsp;</span>		if !inSlashStar &amp;&amp; isGoBuildComment(line) {
+<span id="L1639" class="ln">  1639&nbsp;&nbsp;</span>			if goBuild != nil {
+<span id="L1640" class="ln">  1640&nbsp;&nbsp;</span>				return nil, nil, false, errMultipleGoBuild
+<span id="L1641" class="ln">  1641&nbsp;&nbsp;</span>			}
+<span id="L1642" class="ln">  1642&nbsp;&nbsp;</span>			goBuild = line
+<span id="L1643" class="ln">  1643&nbsp;&nbsp;</span>		}
+<span id="L1644" class="ln">  1644&nbsp;&nbsp;</span>		if !inSlashStar &amp;&amp; bytes.Equal(line, binaryOnlyComment) {
+<span id="L1645" class="ln">  1645&nbsp;&nbsp;</span>			sawBinaryOnly = true
+<span id="L1646" class="ln">  1646&nbsp;&nbsp;</span>		}
+<span id="L1647" class="ln">  1647&nbsp;&nbsp;</span>
+<span id="L1648" class="ln">  1648&nbsp;&nbsp;</span>	Comments:
+<span id="L1649" class="ln">  1649&nbsp;&nbsp;</span>		for len(line) &gt; 0 {
+<span id="L1650" class="ln">  1650&nbsp;&nbsp;</span>			if inSlashStar {
+<span id="L1651" class="ln">  1651&nbsp;&nbsp;</span>				if i := bytes.Index(line, starSlash); i &gt;= 0 {
+<span id="L1652" class="ln">  1652&nbsp;&nbsp;</span>					inSlashStar = false
+<span id="L1653" class="ln">  1653&nbsp;&nbsp;</span>					line = bytes.TrimSpace(line[i+len(starSlash):])
+<span id="L1654" class="ln">  1654&nbsp;&nbsp;</span>					continue Comments
+<span id="L1655" class="ln">  1655&nbsp;&nbsp;</span>				}
+<span id="L1656" class="ln">  1656&nbsp;&nbsp;</span>				continue Lines
+<span id="L1657" class="ln">  1657&nbsp;&nbsp;</span>			}
+<span id="L1658" class="ln">  1658&nbsp;&nbsp;</span>			if bytes.HasPrefix(line, slashSlash) {
+<span id="L1659" class="ln">  1659&nbsp;&nbsp;</span>				continue Lines
+<span id="L1660" class="ln">  1660&nbsp;&nbsp;</span>			}
+<span id="L1661" class="ln">  1661&nbsp;&nbsp;</span>			if bytes.HasPrefix(line, slashStar) {
+<span id="L1662" class="ln">  1662&nbsp;&nbsp;</span>				inSlashStar = true
+<span id="L1663" class="ln">  1663&nbsp;&nbsp;</span>				line = bytes.TrimSpace(line[len(slashStar):])
+<span id="L1664" class="ln">  1664&nbsp;&nbsp;</span>				continue Comments
+<span id="L1665" class="ln">  1665&nbsp;&nbsp;</span>			}
+<span id="L1666" class="ln">  1666&nbsp;&nbsp;</span>			<span class="comment">// Found non-comment text.</span>
+<span id="L1667" class="ln">  1667&nbsp;&nbsp;</span>			break Lines
+<span id="L1668" class="ln">  1668&nbsp;&nbsp;</span>		}
+<span id="L1669" class="ln">  1669&nbsp;&nbsp;</span>	}
+<span id="L1670" class="ln">  1670&nbsp;&nbsp;</span>
+<span id="L1671" class="ln">  1671&nbsp;&nbsp;</span>	return content[:end], goBuild, sawBinaryOnly, nil
+<span id="L1672" class="ln">  1672&nbsp;&nbsp;</span>}
+<span id="L1673" class="ln">  1673&nbsp;&nbsp;</span>
+<span id="L1674" class="ln">  1674&nbsp;&nbsp;</span><span class="comment">// saveCgo saves the information from the #cgo lines in the import &#34;C&#34; comment.</span>
+<span id="L1675" class="ln">  1675&nbsp;&nbsp;</span><span class="comment">// These lines set CFLAGS, CPPFLAGS, CXXFLAGS and LDFLAGS and pkg-config directives</span>
+<span id="L1676" class="ln">  1676&nbsp;&nbsp;</span><span class="comment">// that affect the way cgo&#39;s C code is built.</span>
+<span id="L1677" class="ln">  1677&nbsp;&nbsp;</span>func (ctxt *Context) saveCgo(filename string, di *Package, cg *ast.CommentGroup) error {
+<span id="L1678" class="ln">  1678&nbsp;&nbsp;</span>	text := cg.Text()
+<span id="L1679" class="ln">  1679&nbsp;&nbsp;</span>	for _, line := range strings.Split(text, &#34;\n&#34;) {
+<span id="L1680" class="ln">  1680&nbsp;&nbsp;</span>		orig := line
+<span id="L1681" class="ln">  1681&nbsp;&nbsp;</span>
+<span id="L1682" class="ln">  1682&nbsp;&nbsp;</span>		<span class="comment">// Line is</span>
+<span id="L1683" class="ln">  1683&nbsp;&nbsp;</span>		<span class="comment">//	#cgo [GOOS/GOARCH...] LDFLAGS: stuff</span>
+<span id="L1684" class="ln">  1684&nbsp;&nbsp;</span>		<span class="comment">//</span>
+<span id="L1685" class="ln">  1685&nbsp;&nbsp;</span>		line = strings.TrimSpace(line)
+<span id="L1686" class="ln">  1686&nbsp;&nbsp;</span>		if len(line) &lt; 5 || line[:4] != &#34;#cgo&#34; || (line[4] != &#39; &#39; &amp;&amp; line[4] != &#39;\t&#39;) {
+<span id="L1687" class="ln">  1687&nbsp;&nbsp;</span>			continue
+<span id="L1688" class="ln">  1688&nbsp;&nbsp;</span>		}
+<span id="L1689" class="ln">  1689&nbsp;&nbsp;</span>
+<span id="L1690" class="ln">  1690&nbsp;&nbsp;</span>		<span class="comment">// #cgo (nocallback|noescape) &lt;function name&gt;</span>
+<span id="L1691" class="ln">  1691&nbsp;&nbsp;</span>		if fields := strings.Fields(line); len(fields) == 3 &amp;&amp; (fields[1] == &#34;nocallback&#34; || fields[1] == &#34;noescape&#34;) {
+<span id="L1692" class="ln">  1692&nbsp;&nbsp;</span>			continue
+<span id="L1693" class="ln">  1693&nbsp;&nbsp;</span>		}
+<span id="L1694" class="ln">  1694&nbsp;&nbsp;</span>
+<span id="L1695" class="ln">  1695&nbsp;&nbsp;</span>		<span class="comment">// Split at colon.</span>
+<span id="L1696" class="ln">  1696&nbsp;&nbsp;</span>		line, argstr, ok := strings.Cut(strings.TrimSpace(line[4:]), &#34;:&#34;)
+<span id="L1697" class="ln">  1697&nbsp;&nbsp;</span>		if !ok {
+<span id="L1698" class="ln">  1698&nbsp;&nbsp;</span>			return fmt.Errorf(&#34;%s: invalid #cgo line: %s&#34;, filename, orig)
+<span id="L1699" class="ln">  1699&nbsp;&nbsp;</span>		}
+<span id="L1700" class="ln">  1700&nbsp;&nbsp;</span>
+<span id="L1701" class="ln">  1701&nbsp;&nbsp;</span>		<span class="comment">// Parse GOOS/GOARCH stuff.</span>
+<span id="L1702" class="ln">  1702&nbsp;&nbsp;</span>		f := strings.Fields(line)
+<span id="L1703" class="ln">  1703&nbsp;&nbsp;</span>		if len(f) &lt; 1 {
+<span id="L1704" class="ln">  1704&nbsp;&nbsp;</span>			return fmt.Errorf(&#34;%s: invalid #cgo line: %s&#34;, filename, orig)
+<span id="L1705" class="ln">  1705&nbsp;&nbsp;</span>		}
+<span id="L1706" class="ln">  1706&nbsp;&nbsp;</span>
+<span id="L1707" class="ln">  1707&nbsp;&nbsp;</span>		cond, verb := f[:len(f)-1], f[len(f)-1]
+<span id="L1708" class="ln">  1708&nbsp;&nbsp;</span>		if len(cond) &gt; 0 {
+<span id="L1709" class="ln">  1709&nbsp;&nbsp;</span>			ok := false
+<span id="L1710" class="ln">  1710&nbsp;&nbsp;</span>			for _, c := range cond {
+<span id="L1711" class="ln">  1711&nbsp;&nbsp;</span>				if ctxt.matchAuto(c, nil) {
+<span id="L1712" class="ln">  1712&nbsp;&nbsp;</span>					ok = true
+<span id="L1713" class="ln">  1713&nbsp;&nbsp;</span>					break
+<span id="L1714" class="ln">  1714&nbsp;&nbsp;</span>				}
+<span id="L1715" class="ln">  1715&nbsp;&nbsp;</span>			}
+<span id="L1716" class="ln">  1716&nbsp;&nbsp;</span>			if !ok {
+<span id="L1717" class="ln">  1717&nbsp;&nbsp;</span>				continue
+<span id="L1718" class="ln">  1718&nbsp;&nbsp;</span>			}
+<span id="L1719" class="ln">  1719&nbsp;&nbsp;</span>		}
+<span id="L1720" class="ln">  1720&nbsp;&nbsp;</span>
+<span id="L1721" class="ln">  1721&nbsp;&nbsp;</span>		args, err := splitQuoted(argstr)
+<span id="L1722" class="ln">  1722&nbsp;&nbsp;</span>		if err != nil {
+<span id="L1723" class="ln">  1723&nbsp;&nbsp;</span>			return fmt.Errorf(&#34;%s: invalid #cgo line: %s&#34;, filename, orig)
+<span id="L1724" class="ln">  1724&nbsp;&nbsp;</span>		}
+<span id="L1725" class="ln">  1725&nbsp;&nbsp;</span>		for i, arg := range args {
+<span id="L1726" class="ln">  1726&nbsp;&nbsp;</span>			if arg, ok = expandSrcDir(arg, di.Dir); !ok {
+<span id="L1727" class="ln">  1727&nbsp;&nbsp;</span>				return fmt.Errorf(&#34;%s: malformed #cgo argument: %s&#34;, filename, arg)
+<span id="L1728" class="ln">  1728&nbsp;&nbsp;</span>			}
+<span id="L1729" class="ln">  1729&nbsp;&nbsp;</span>			args[i] = arg
+<span id="L1730" class="ln">  1730&nbsp;&nbsp;</span>		}
+<span id="L1731" class="ln">  1731&nbsp;&nbsp;</span>
+<span id="L1732" class="ln">  1732&nbsp;&nbsp;</span>		switch verb {
+<span id="L1733" class="ln">  1733&nbsp;&nbsp;</span>		case &#34;CFLAGS&#34;, &#34;CPPFLAGS&#34;, &#34;CXXFLAGS&#34;, &#34;FFLAGS&#34;, &#34;LDFLAGS&#34;:
+<span id="L1734" class="ln">  1734&nbsp;&nbsp;</span>			<span class="comment">// Change relative paths to absolute.</span>
+<span id="L1735" class="ln">  1735&nbsp;&nbsp;</span>			ctxt.makePathsAbsolute(args, di.Dir)
+<span id="L1736" class="ln">  1736&nbsp;&nbsp;</span>		}
+<span id="L1737" class="ln">  1737&nbsp;&nbsp;</span>
+<span id="L1738" class="ln">  1738&nbsp;&nbsp;</span>		switch verb {
+<span id="L1739" class="ln">  1739&nbsp;&nbsp;</span>		case &#34;CFLAGS&#34;:
+<span id="L1740" class="ln">  1740&nbsp;&nbsp;</span>			di.CgoCFLAGS = append(di.CgoCFLAGS, args...)
+<span id="L1741" class="ln">  1741&nbsp;&nbsp;</span>		case &#34;CPPFLAGS&#34;:
+<span id="L1742" class="ln">  1742&nbsp;&nbsp;</span>			di.CgoCPPFLAGS = append(di.CgoCPPFLAGS, args...)
+<span id="L1743" class="ln">  1743&nbsp;&nbsp;</span>		case &#34;CXXFLAGS&#34;:
+<span id="L1744" class="ln">  1744&nbsp;&nbsp;</span>			di.CgoCXXFLAGS = append(di.CgoCXXFLAGS, args...)
+<span id="L1745" class="ln">  1745&nbsp;&nbsp;</span>		case &#34;FFLAGS&#34;:
+<span id="L1746" class="ln">  1746&nbsp;&nbsp;</span>			di.CgoFFLAGS = append(di.CgoFFLAGS, args...)
+<span id="L1747" class="ln">  1747&nbsp;&nbsp;</span>		case &#34;LDFLAGS&#34;:
+<span id="L1748" class="ln">  1748&nbsp;&nbsp;</span>			di.CgoLDFLAGS = append(di.CgoLDFLAGS, args...)
+<span id="L1749" class="ln">  1749&nbsp;&nbsp;</span>		case &#34;pkg-config&#34;:
+<span id="L1750" class="ln">  1750&nbsp;&nbsp;</span>			di.CgoPkgConfig = append(di.CgoPkgConfig, args...)
+<span id="L1751" class="ln">  1751&nbsp;&nbsp;</span>		default:
+<span id="L1752" class="ln">  1752&nbsp;&nbsp;</span>			return fmt.Errorf(&#34;%s: invalid #cgo verb: %s&#34;, filename, orig)
+<span id="L1753" class="ln">  1753&nbsp;&nbsp;</span>		}
+<span id="L1754" class="ln">  1754&nbsp;&nbsp;</span>	}
+<span id="L1755" class="ln">  1755&nbsp;&nbsp;</span>	return nil
+<span id="L1756" class="ln">  1756&nbsp;&nbsp;</span>}
+<span id="L1757" class="ln">  1757&nbsp;&nbsp;</span>
+<span id="L1758" class="ln">  1758&nbsp;&nbsp;</span><span class="comment">// expandSrcDir expands any occurrence of ${SRCDIR}, making sure</span>
+<span id="L1759" class="ln">  1759&nbsp;&nbsp;</span><span class="comment">// the result is safe for the shell.</span>
+<span id="L1760" class="ln">  1760&nbsp;&nbsp;</span>func expandSrcDir(str string, srcdir string) (string, bool) {
+<span id="L1761" class="ln">  1761&nbsp;&nbsp;</span>	<span class="comment">// &#34;\&#34; delimited paths cause safeCgoName to fail</span>
+<span id="L1762" class="ln">  1762&nbsp;&nbsp;</span>	<span class="comment">// so convert native paths with a different delimiter</span>
+<span id="L1763" class="ln">  1763&nbsp;&nbsp;</span>	<span class="comment">// to &#34;/&#34; before starting (eg: on windows).</span>
+<span id="L1764" class="ln">  1764&nbsp;&nbsp;</span>	srcdir = filepath.ToSlash(srcdir)
+<span id="L1765" class="ln">  1765&nbsp;&nbsp;</span>
+<span id="L1766" class="ln">  1766&nbsp;&nbsp;</span>	chunks := strings.Split(str, &#34;${SRCDIR}&#34;)
+<span id="L1767" class="ln">  1767&nbsp;&nbsp;</span>	if len(chunks) &lt; 2 {
+<span id="L1768" class="ln">  1768&nbsp;&nbsp;</span>		return str, safeCgoName(str)
+<span id="L1769" class="ln">  1769&nbsp;&nbsp;</span>	}
+<span id="L1770" class="ln">  1770&nbsp;&nbsp;</span>	ok := true
+<span id="L1771" class="ln">  1771&nbsp;&nbsp;</span>	for _, chunk := range chunks {
+<span id="L1772" class="ln">  1772&nbsp;&nbsp;</span>		ok = ok &amp;&amp; (chunk == &#34;&#34; || safeCgoName(chunk))
+<span id="L1773" class="ln">  1773&nbsp;&nbsp;</span>	}
+<span id="L1774" class="ln">  1774&nbsp;&nbsp;</span>	ok = ok &amp;&amp; (srcdir == &#34;&#34; || safeCgoName(srcdir))
+<span id="L1775" class="ln">  1775&nbsp;&nbsp;</span>	res := strings.Join(chunks, srcdir)
+<span id="L1776" class="ln">  1776&nbsp;&nbsp;</span>	return res, ok &amp;&amp; res != &#34;&#34;
+<span id="L1777" class="ln">  1777&nbsp;&nbsp;</span>}
+<span id="L1778" class="ln">  1778&nbsp;&nbsp;</span>
+<span id="L1779" class="ln">  1779&nbsp;&nbsp;</span><span class="comment">// makePathsAbsolute looks for compiler options that take paths and</span>
+<span id="L1780" class="ln">  1780&nbsp;&nbsp;</span><span class="comment">// makes them absolute. We do this because through the 1.8 release we</span>
+<span id="L1781" class="ln">  1781&nbsp;&nbsp;</span><span class="comment">// ran the compiler in the package directory, so any relative -I or -L</span>
+<span id="L1782" class="ln">  1782&nbsp;&nbsp;</span><span class="comment">// options would be relative to that directory. In 1.9 we changed to</span>
+<span id="L1783" class="ln">  1783&nbsp;&nbsp;</span><span class="comment">// running the compiler in the build directory, to get consistent</span>
+<span id="L1784" class="ln">  1784&nbsp;&nbsp;</span><span class="comment">// build results (issue #19964). To keep builds working, we change any</span>
+<span id="L1785" class="ln">  1785&nbsp;&nbsp;</span><span class="comment">// relative -I or -L options to be absolute.</span>
+<span id="L1786" class="ln">  1786&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L1787" class="ln">  1787&nbsp;&nbsp;</span><span class="comment">// Using filepath.IsAbs and filepath.Join here means the results will be</span>
+<span id="L1788" class="ln">  1788&nbsp;&nbsp;</span><span class="comment">// different on different systems, but that&#39;s OK: -I and -L options are</span>
+<span id="L1789" class="ln">  1789&nbsp;&nbsp;</span><span class="comment">// inherently system-dependent.</span>
+<span id="L1790" class="ln">  1790&nbsp;&nbsp;</span>func (ctxt *Context) makePathsAbsolute(args []string, srcDir string) {
+<span id="L1791" class="ln">  1791&nbsp;&nbsp;</span>	nextPath := false
+<span id="L1792" class="ln">  1792&nbsp;&nbsp;</span>	for i, arg := range args {
+<span id="L1793" class="ln">  1793&nbsp;&nbsp;</span>		if nextPath {
+<span id="L1794" class="ln">  1794&nbsp;&nbsp;</span>			if !filepath.IsAbs(arg) {
+<span id="L1795" class="ln">  1795&nbsp;&nbsp;</span>				args[i] = filepath.Join(srcDir, arg)
+<span id="L1796" class="ln">  1796&nbsp;&nbsp;</span>			}
+<span id="L1797" class="ln">  1797&nbsp;&nbsp;</span>			nextPath = false
+<span id="L1798" class="ln">  1798&nbsp;&nbsp;</span>		} else if strings.HasPrefix(arg, &#34;-I&#34;) || strings.HasPrefix(arg, &#34;-L&#34;) {
+<span id="L1799" class="ln">  1799&nbsp;&nbsp;</span>			if len(arg) == 2 {
+<span id="L1800" class="ln">  1800&nbsp;&nbsp;</span>				nextPath = true
+<span id="L1801" class="ln">  1801&nbsp;&nbsp;</span>			} else {
+<span id="L1802" class="ln">  1802&nbsp;&nbsp;</span>				if !filepath.IsAbs(arg[2:]) {
+<span id="L1803" class="ln">  1803&nbsp;&nbsp;</span>					args[i] = arg[:2] + filepath.Join(srcDir, arg[2:])
+<span id="L1804" class="ln">  1804&nbsp;&nbsp;</span>				}
+<span id="L1805" class="ln">  1805&nbsp;&nbsp;</span>			}
+<span id="L1806" class="ln">  1806&nbsp;&nbsp;</span>		}
+<span id="L1807" class="ln">  1807&nbsp;&nbsp;</span>	}
+<span id="L1808" class="ln">  1808&nbsp;&nbsp;</span>}
+<span id="L1809" class="ln">  1809&nbsp;&nbsp;</span>
+<span id="L1810" class="ln">  1810&nbsp;&nbsp;</span><span class="comment">// NOTE: $ is not safe for the shell, but it is allowed here because of linker options like -Wl,$ORIGIN.</span>
+<span id="L1811" class="ln">  1811&nbsp;&nbsp;</span><span class="comment">// We never pass these arguments to a shell (just to programs we construct argv for), so this should be okay.</span>
+<span id="L1812" class="ln">  1812&nbsp;&nbsp;</span><span class="comment">// See golang.org/issue/6038.</span>
+<span id="L1813" class="ln">  1813&nbsp;&nbsp;</span><span class="comment">// The @ is for OS X. See golang.org/issue/13720.</span>
+<span id="L1814" class="ln">  1814&nbsp;&nbsp;</span><span class="comment">// The % is for Jenkins. See golang.org/issue/16959.</span>
+<span id="L1815" class="ln">  1815&nbsp;&nbsp;</span><span class="comment">// The ! is because module paths may use them. See golang.org/issue/26716.</span>
+<span id="L1816" class="ln">  1816&nbsp;&nbsp;</span><span class="comment">// The ~ and ^ are for sr.ht. See golang.org/issue/32260.</span>
+<span id="L1817" class="ln">  1817&nbsp;&nbsp;</span>const safeString = &#34;+-.,/0123456789=ABCDEFGHIJKLMNOPQRSTUVWXYZ_abcdefghijklmnopqrstuvwxyz:$@%! ~^&#34;
+<span id="L1818" class="ln">  1818&nbsp;&nbsp;</span>
+<span id="L1819" class="ln">  1819&nbsp;&nbsp;</span>func safeCgoName(s string) bool {
+<span id="L1820" class="ln">  1820&nbsp;&nbsp;</span>	if s == &#34;&#34; {
+<span id="L1821" class="ln">  1821&nbsp;&nbsp;</span>		return false
+<span id="L1822" class="ln">  1822&nbsp;&nbsp;</span>	}
+<span id="L1823" class="ln">  1823&nbsp;&nbsp;</span>	for i := 0; i &lt; len(s); i++ {
+<span id="L1824" class="ln">  1824&nbsp;&nbsp;</span>		if c := s[i]; c &lt; utf8.RuneSelf &amp;&amp; strings.IndexByte(safeString, c) &lt; 0 {
+<span id="L1825" class="ln">  1825&nbsp;&nbsp;</span>			return false
+<span id="L1826" class="ln">  1826&nbsp;&nbsp;</span>		}
+<span id="L1827" class="ln">  1827&nbsp;&nbsp;</span>	}
+<span id="L1828" class="ln">  1828&nbsp;&nbsp;</span>	return true
+<span id="L1829" class="ln">  1829&nbsp;&nbsp;</span>}
+<span id="L1830" class="ln">  1830&nbsp;&nbsp;</span>
+<span id="L1831" class="ln">  1831&nbsp;&nbsp;</span><span class="comment">// splitQuoted splits the string s around each instance of one or more consecutive</span>
+<span id="L1832" class="ln">  1832&nbsp;&nbsp;</span><span class="comment">// white space characters while taking into account quotes and escaping, and</span>
+<span id="L1833" class="ln">  1833&nbsp;&nbsp;</span><span class="comment">// returns an array of substrings of s or an empty list if s contains only white space.</span>
+<span id="L1834" class="ln">  1834&nbsp;&nbsp;</span><span class="comment">// Single quotes and double quotes are recognized to prevent splitting within the</span>
+<span id="L1835" class="ln">  1835&nbsp;&nbsp;</span><span class="comment">// quoted region, and are removed from the resulting substrings. If a quote in s</span>
+<span id="L1836" class="ln">  1836&nbsp;&nbsp;</span><span class="comment">// isn&#39;t closed err will be set and r will have the unclosed argument as the</span>
+<span id="L1837" class="ln">  1837&nbsp;&nbsp;</span><span class="comment">// last element. The backslash is used for escaping.</span>
+<span id="L1838" class="ln">  1838&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L1839" class="ln">  1839&nbsp;&nbsp;</span><span class="comment">// For example, the following string:</span>
+<span id="L1840" class="ln">  1840&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L1841" class="ln">  1841&nbsp;&nbsp;</span><span class="comment">//	a b:&#34;c d&#34; &#39;e&#39;&#39;f&#39;  &#34;g\&#34;&#34;</span>
+<span id="L1842" class="ln">  1842&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L1843" class="ln">  1843&nbsp;&nbsp;</span><span class="comment">// Would be parsed as:</span>
+<span id="L1844" class="ln">  1844&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L1845" class="ln">  1845&nbsp;&nbsp;</span><span class="comment">//	[]string{&#34;a&#34;, &#34;b:c d&#34;, &#34;ef&#34;, `g&#34;`}</span>
+<span id="L1846" class="ln">  1846&nbsp;&nbsp;</span>func splitQuoted(s string) (r []string, err error) {
+<span id="L1847" class="ln">  1847&nbsp;&nbsp;</span>	var args []string
+<span id="L1848" class="ln">  1848&nbsp;&nbsp;</span>	arg := make([]rune, len(s))
+<span id="L1849" class="ln">  1849&nbsp;&nbsp;</span>	escaped := false
+<span id="L1850" class="ln">  1850&nbsp;&nbsp;</span>	quoted := false
+<span id="L1851" class="ln">  1851&nbsp;&nbsp;</span>	quote := &#39;\x00&#39;
+<span id="L1852" class="ln">  1852&nbsp;&nbsp;</span>	i := 0
+<span id="L1853" class="ln">  1853&nbsp;&nbsp;</span>	for _, rune := range s {
+<span id="L1854" class="ln">  1854&nbsp;&nbsp;</span>		switch {
+<span id="L1855" class="ln">  1855&nbsp;&nbsp;</span>		case escaped:
+<span id="L1856" class="ln">  1856&nbsp;&nbsp;</span>			escaped = false
+<span id="L1857" class="ln">  1857&nbsp;&nbsp;</span>		case rune == &#39;\\&#39;:
+<span id="L1858" class="ln">  1858&nbsp;&nbsp;</span>			escaped = true
+<span id="L1859" class="ln">  1859&nbsp;&nbsp;</span>			continue
+<span id="L1860" class="ln">  1860&nbsp;&nbsp;</span>		case quote != &#39;\x00&#39;:
+<span id="L1861" class="ln">  1861&nbsp;&nbsp;</span>			if rune == quote {
+<span id="L1862" class="ln">  1862&nbsp;&nbsp;</span>				quote = &#39;\x00&#39;
+<span id="L1863" class="ln">  1863&nbsp;&nbsp;</span>				continue
+<span id="L1864" class="ln">  1864&nbsp;&nbsp;</span>			}
+<span id="L1865" class="ln">  1865&nbsp;&nbsp;</span>		case rune == &#39;&#34;&#39; || rune == &#39;\&#39;&#39;:
+<span id="L1866" class="ln">  1866&nbsp;&nbsp;</span>			quoted = true
+<span id="L1867" class="ln">  1867&nbsp;&nbsp;</span>			quote = rune
+<span id="L1868" class="ln">  1868&nbsp;&nbsp;</span>			continue
+<span id="L1869" class="ln">  1869&nbsp;&nbsp;</span>		case unicode.IsSpace(rune):
+<span id="L1870" class="ln">  1870&nbsp;&nbsp;</span>			if quoted || i &gt; 0 {
+<span id="L1871" class="ln">  1871&nbsp;&nbsp;</span>				quoted = false
+<span id="L1872" class="ln">  1872&nbsp;&nbsp;</span>				args = append(args, string(arg[:i]))
+<span id="L1873" class="ln">  1873&nbsp;&nbsp;</span>				i = 0
+<span id="L1874" class="ln">  1874&nbsp;&nbsp;</span>			}
+<span id="L1875" class="ln">  1875&nbsp;&nbsp;</span>			continue
+<span id="L1876" class="ln">  1876&nbsp;&nbsp;</span>		}
+<span id="L1877" class="ln">  1877&nbsp;&nbsp;</span>		arg[i] = rune
+<span id="L1878" class="ln">  1878&nbsp;&nbsp;</span>		i++
+<span id="L1879" class="ln">  1879&nbsp;&nbsp;</span>	}
+<span id="L1880" class="ln">  1880&nbsp;&nbsp;</span>	if quoted || i &gt; 0 {
+<span id="L1881" class="ln">  1881&nbsp;&nbsp;</span>		args = append(args, string(arg[:i]))
+<span id="L1882" class="ln">  1882&nbsp;&nbsp;</span>	}
+<span id="L1883" class="ln">  1883&nbsp;&nbsp;</span>	if quote != 0 {
+<span id="L1884" class="ln">  1884&nbsp;&nbsp;</span>		err = errors.New(&#34;unclosed quote&#34;)
+<span id="L1885" class="ln">  1885&nbsp;&nbsp;</span>	} else if escaped {
+<span id="L1886" class="ln">  1886&nbsp;&nbsp;</span>		err = errors.New(&#34;unfinished escaping&#34;)
+<span id="L1887" class="ln">  1887&nbsp;&nbsp;</span>	}
+<span id="L1888" class="ln">  1888&nbsp;&nbsp;</span>	return args, err
+<span id="L1889" class="ln">  1889&nbsp;&nbsp;</span>}
+<span id="L1890" class="ln">  1890&nbsp;&nbsp;</span>
+<span id="L1891" class="ln">  1891&nbsp;&nbsp;</span><span class="comment">// matchAuto interprets text as either a +build or //go:build expression (whichever works),</span>
+<span id="L1892" class="ln">  1892&nbsp;&nbsp;</span><span class="comment">// reporting whether the expression matches the build context.</span>
+<span id="L1893" class="ln">  1893&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L1894" class="ln">  1894&nbsp;&nbsp;</span><span class="comment">// matchAuto is only used for testing of tag evaluation</span>
+<span id="L1895" class="ln">  1895&nbsp;&nbsp;</span><span class="comment">// and in #cgo lines, which accept either syntax.</span>
+<span id="L1896" class="ln">  1896&nbsp;&nbsp;</span>func (ctxt *Context) matchAuto(text string, allTags map[string]bool) bool {
+<span id="L1897" class="ln">  1897&nbsp;&nbsp;</span>	if strings.ContainsAny(text, &#34;&amp;|()&#34;) {
+<span id="L1898" class="ln">  1898&nbsp;&nbsp;</span>		text = &#34;//go:build &#34; + text
+<span id="L1899" class="ln">  1899&nbsp;&nbsp;</span>	} else {
+<span id="L1900" class="ln">  1900&nbsp;&nbsp;</span>		text = &#34;// +build &#34; + text
+<span id="L1901" class="ln">  1901&nbsp;&nbsp;</span>	}
+<span id="L1902" class="ln">  1902&nbsp;&nbsp;</span>	x, err := constraint.Parse(text)
+<span id="L1903" class="ln">  1903&nbsp;&nbsp;</span>	if err != nil {
+<span id="L1904" class="ln">  1904&nbsp;&nbsp;</span>		return false
+<span id="L1905" class="ln">  1905&nbsp;&nbsp;</span>	}
+<span id="L1906" class="ln">  1906&nbsp;&nbsp;</span>	return ctxt.eval(x, allTags)
+<span id="L1907" class="ln">  1907&nbsp;&nbsp;</span>}
+<span id="L1908" class="ln">  1908&nbsp;&nbsp;</span>
+<span id="L1909" class="ln">  1909&nbsp;&nbsp;</span>func (ctxt *Context) eval(x constraint.Expr, allTags map[string]bool) bool {
+<span id="L1910" class="ln">  1910&nbsp;&nbsp;</span>	return x.Eval(func(tag string) bool { return ctxt.matchTag(tag, allTags) })
+<span id="L1911" class="ln">  1911&nbsp;&nbsp;</span>}
+<span id="L1912" class="ln">  1912&nbsp;&nbsp;</span>
+<span id="L1913" class="ln">  1913&nbsp;&nbsp;</span><span class="comment">// matchTag reports whether the name is one of:</span>
+<span id="L1914" class="ln">  1914&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L1915" class="ln">  1915&nbsp;&nbsp;</span><span class="comment">//	cgo (if cgo is enabled)</span>
+<span id="L1916" class="ln">  1916&nbsp;&nbsp;</span><span class="comment">//	$GOOS</span>
+<span id="L1917" class="ln">  1917&nbsp;&nbsp;</span><span class="comment">//	$GOARCH</span>
+<span id="L1918" class="ln">  1918&nbsp;&nbsp;</span><span class="comment">//	ctxt.Compiler</span>
+<span id="L1919" class="ln">  1919&nbsp;&nbsp;</span><span class="comment">//	linux (if GOOS = android)</span>
+<span id="L1920" class="ln">  1920&nbsp;&nbsp;</span><span class="comment">//	solaris (if GOOS = illumos)</span>
+<span id="L1921" class="ln">  1921&nbsp;&nbsp;</span><span class="comment">//	darwin (if GOOS = ios)</span>
+<span id="L1922" class="ln">  1922&nbsp;&nbsp;</span><span class="comment">//	unix (if this is a Unix GOOS)</span>
+<span id="L1923" class="ln">  1923&nbsp;&nbsp;</span><span class="comment">//	boringcrypto (if GOEXPERIMENT=boringcrypto is enabled)</span>
+<span id="L1924" class="ln">  1924&nbsp;&nbsp;</span><span class="comment">//	tag (if tag is listed in ctxt.BuildTags, ctxt.ToolTags, or ctxt.ReleaseTags)</span>
+<span id="L1925" class="ln">  1925&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L1926" class="ln">  1926&nbsp;&nbsp;</span><span class="comment">// It records all consulted tags in allTags.</span>
+<span id="L1927" class="ln">  1927&nbsp;&nbsp;</span>func (ctxt *Context) matchTag(name string, allTags map[string]bool) bool {
+<span id="L1928" class="ln">  1928&nbsp;&nbsp;</span>	if allTags != nil {
+<span id="L1929" class="ln">  1929&nbsp;&nbsp;</span>		allTags[name] = true
+<span id="L1930" class="ln">  1930&nbsp;&nbsp;</span>	}
+<span id="L1931" class="ln">  1931&nbsp;&nbsp;</span>
+<span id="L1932" class="ln">  1932&nbsp;&nbsp;</span>	<span class="comment">// special tags</span>
+<span id="L1933" class="ln">  1933&nbsp;&nbsp;</span>	if ctxt.CgoEnabled &amp;&amp; name == &#34;cgo&#34; {
+<span id="L1934" class="ln">  1934&nbsp;&nbsp;</span>		return true
+<span id="L1935" class="ln">  1935&nbsp;&nbsp;</span>	}
+<span id="L1936" class="ln">  1936&nbsp;&nbsp;</span>	if name == ctxt.GOOS || name == ctxt.GOARCH || name == ctxt.Compiler {
+<span id="L1937" class="ln">  1937&nbsp;&nbsp;</span>		return true
+<span id="L1938" class="ln">  1938&nbsp;&nbsp;</span>	}
+<span id="L1939" class="ln">  1939&nbsp;&nbsp;</span>	if ctxt.GOOS == &#34;android&#34; &amp;&amp; name == &#34;linux&#34; {
+<span id="L1940" class="ln">  1940&nbsp;&nbsp;</span>		return true
+<span id="L1941" class="ln">  1941&nbsp;&nbsp;</span>	}
+<span id="L1942" class="ln">  1942&nbsp;&nbsp;</span>	if ctxt.GOOS == &#34;illumos&#34; &amp;&amp; name == &#34;solaris&#34; {
+<span id="L1943" class="ln">  1943&nbsp;&nbsp;</span>		return true
+<span id="L1944" class="ln">  1944&nbsp;&nbsp;</span>	}
+<span id="L1945" class="ln">  1945&nbsp;&nbsp;</span>	if ctxt.GOOS == &#34;ios&#34; &amp;&amp; name == &#34;darwin&#34; {
+<span id="L1946" class="ln">  1946&nbsp;&nbsp;</span>		return true
+<span id="L1947" class="ln">  1947&nbsp;&nbsp;</span>	}
+<span id="L1948" class="ln">  1948&nbsp;&nbsp;</span>	if name == &#34;unix&#34; &amp;&amp; unixOS[ctxt.GOOS] {
+<span id="L1949" class="ln">  1949&nbsp;&nbsp;</span>		return true
+<span id="L1950" class="ln">  1950&nbsp;&nbsp;</span>	}
+<span id="L1951" class="ln">  1951&nbsp;&nbsp;</span>	if name == &#34;boringcrypto&#34; {
+<span id="L1952" class="ln">  1952&nbsp;&nbsp;</span>		name = &#34;goexperiment.boringcrypto&#34; <span class="comment">// boringcrypto is an old name for goexperiment.boringcrypto</span>
+<span id="L1953" class="ln">  1953&nbsp;&nbsp;</span>	}
+<span id="L1954" class="ln">  1954&nbsp;&nbsp;</span>
+<span id="L1955" class="ln">  1955&nbsp;&nbsp;</span>	<span class="comment">// other tags</span>
+<span id="L1956" class="ln">  1956&nbsp;&nbsp;</span>	for _, tag := range ctxt.BuildTags {
+<span id="L1957" class="ln">  1957&nbsp;&nbsp;</span>		if tag == name {
+<span id="L1958" class="ln">  1958&nbsp;&nbsp;</span>			return true
+<span id="L1959" class="ln">  1959&nbsp;&nbsp;</span>		}
+<span id="L1960" class="ln">  1960&nbsp;&nbsp;</span>	}
+<span id="L1961" class="ln">  1961&nbsp;&nbsp;</span>	for _, tag := range ctxt.ToolTags {
+<span id="L1962" class="ln">  1962&nbsp;&nbsp;</span>		if tag == name {
+<span id="L1963" class="ln">  1963&nbsp;&nbsp;</span>			return true
+<span id="L1964" class="ln">  1964&nbsp;&nbsp;</span>		}
+<span id="L1965" class="ln">  1965&nbsp;&nbsp;</span>	}
+<span id="L1966" class="ln">  1966&nbsp;&nbsp;</span>	for _, tag := range ctxt.ReleaseTags {
+<span id="L1967" class="ln">  1967&nbsp;&nbsp;</span>		if tag == name {
+<span id="L1968" class="ln">  1968&nbsp;&nbsp;</span>			return true
+<span id="L1969" class="ln">  1969&nbsp;&nbsp;</span>		}
+<span id="L1970" class="ln">  1970&nbsp;&nbsp;</span>	}
+<span id="L1971" class="ln">  1971&nbsp;&nbsp;</span>
+<span id="L1972" class="ln">  1972&nbsp;&nbsp;</span>	return false
+<span id="L1973" class="ln">  1973&nbsp;&nbsp;</span>}
+<span id="L1974" class="ln">  1974&nbsp;&nbsp;</span>
+<span id="L1975" class="ln">  1975&nbsp;&nbsp;</span><span class="comment">// goodOSArchFile returns false if the name contains a $GOOS or $GOARCH</span>
+<span id="L1976" class="ln">  1976&nbsp;&nbsp;</span><span class="comment">// suffix which does not match the current system.</span>
+<span id="L1977" class="ln">  1977&nbsp;&nbsp;</span><span class="comment">// The recognized name formats are:</span>
+<span id="L1978" class="ln">  1978&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L1979" class="ln">  1979&nbsp;&nbsp;</span><span class="comment">//	name_$(GOOS).*</span>
+<span id="L1980" class="ln">  1980&nbsp;&nbsp;</span><span class="comment">//	name_$(GOARCH).*</span>
+<span id="L1981" class="ln">  1981&nbsp;&nbsp;</span><span class="comment">//	name_$(GOOS)_$(GOARCH).*</span>
+<span id="L1982" class="ln">  1982&nbsp;&nbsp;</span><span class="comment">//	name_$(GOOS)_test.*</span>
+<span id="L1983" class="ln">  1983&nbsp;&nbsp;</span><span class="comment">//	name_$(GOARCH)_test.*</span>
+<span id="L1984" class="ln">  1984&nbsp;&nbsp;</span><span class="comment">//	name_$(GOOS)_$(GOARCH)_test.*</span>
+<span id="L1985" class="ln">  1985&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L1986" class="ln">  1986&nbsp;&nbsp;</span><span class="comment">// Exceptions:</span>
+<span id="L1987" class="ln">  1987&nbsp;&nbsp;</span><span class="comment">// if GOOS=android, then files with GOOS=linux are also matched.</span>
+<span id="L1988" class="ln">  1988&nbsp;&nbsp;</span><span class="comment">// if GOOS=illumos, then files with GOOS=solaris are also matched.</span>
+<span id="L1989" class="ln">  1989&nbsp;&nbsp;</span><span class="comment">// if GOOS=ios, then files with GOOS=darwin are also matched.</span>
+<span id="L1990" class="ln">  1990&nbsp;&nbsp;</span>func (ctxt *Context) goodOSArchFile(name string, allTags map[string]bool) bool {
+<span id="L1991" class="ln">  1991&nbsp;&nbsp;</span>	name, _, _ = strings.Cut(name, &#34;.&#34;)
+<span id="L1992" class="ln">  1992&nbsp;&nbsp;</span>
+<span id="L1993" class="ln">  1993&nbsp;&nbsp;</span>	<span class="comment">// Before Go 1.4, a file called &#34;linux.go&#34; would be equivalent to having a</span>
+<span id="L1994" class="ln">  1994&nbsp;&nbsp;</span>	<span class="comment">// build tag &#34;linux&#34; in that file. For Go 1.4 and beyond, we require this</span>
+<span id="L1995" class="ln">  1995&nbsp;&nbsp;</span>	<span class="comment">// auto-tagging to apply only to files with a non-empty prefix, so</span>
+<span id="L1996" class="ln">  1996&nbsp;&nbsp;</span>	<span class="comment">// &#34;foo_linux.go&#34; is tagged but &#34;linux.go&#34; is not. This allows new operating</span>
+<span id="L1997" class="ln">  1997&nbsp;&nbsp;</span>	<span class="comment">// systems, such as android, to arrive without breaking existing code with</span>
+<span id="L1998" class="ln">  1998&nbsp;&nbsp;</span>	<span class="comment">// innocuous source code in &#34;android.go&#34;. The easiest fix: cut everything</span>
+<span id="L1999" class="ln">  1999&nbsp;&nbsp;</span>	<span class="comment">// in the name before the initial _.</span>
+<span id="L2000" class="ln">  2000&nbsp;&nbsp;</span>	i := strings.Index(name, &#34;_&#34;)
+<span id="L2001" class="ln">  2001&nbsp;&nbsp;</span>	if i &lt; 0 {
+<span id="L2002" class="ln">  2002&nbsp;&nbsp;</span>		return true
+<span id="L2003" class="ln">  2003&nbsp;&nbsp;</span>	}
+<span id="L2004" class="ln">  2004&nbsp;&nbsp;</span>	name = name[i:] <span class="comment">// ignore everything before first _</span>
+<span id="L2005" class="ln">  2005&nbsp;&nbsp;</span>
+<span id="L2006" class="ln">  2006&nbsp;&nbsp;</span>	l := strings.Split(name, &#34;_&#34;)
+<span id="L2007" class="ln">  2007&nbsp;&nbsp;</span>	if n := len(l); n &gt; 0 &amp;&amp; l[n-1] == &#34;test&#34; {
+<span id="L2008" class="ln">  2008&nbsp;&nbsp;</span>		l = l[:n-1]
+<span id="L2009" class="ln">  2009&nbsp;&nbsp;</span>	}
+<span id="L2010" class="ln">  2010&nbsp;&nbsp;</span>	n := len(l)
+<span id="L2011" class="ln">  2011&nbsp;&nbsp;</span>	if n &gt;= 2 &amp;&amp; knownOS[l[n-2]] &amp;&amp; knownArch[l[n-1]] {
+<span id="L2012" class="ln">  2012&nbsp;&nbsp;</span>		if allTags != nil {
+<span id="L2013" class="ln">  2013&nbsp;&nbsp;</span>			<span class="comment">// In case we short-circuit on l[n-1].</span>
+<span id="L2014" class="ln">  2014&nbsp;&nbsp;</span>			allTags[l[n-2]] = true
+<span id="L2015" class="ln">  2015&nbsp;&nbsp;</span>		}
+<span id="L2016" class="ln">  2016&nbsp;&nbsp;</span>		return ctxt.matchTag(l[n-1], allTags) &amp;&amp; ctxt.matchTag(l[n-2], allTags)
+<span id="L2017" class="ln">  2017&nbsp;&nbsp;</span>	}
+<span id="L2018" class="ln">  2018&nbsp;&nbsp;</span>	if n &gt;= 1 &amp;&amp; (knownOS[l[n-1]] || knownArch[l[n-1]]) {
+<span id="L2019" class="ln">  2019&nbsp;&nbsp;</span>		return ctxt.matchTag(l[n-1], allTags)
+<span id="L2020" class="ln">  2020&nbsp;&nbsp;</span>	}
+<span id="L2021" class="ln">  2021&nbsp;&nbsp;</span>	return true
+<span id="L2022" class="ln">  2022&nbsp;&nbsp;</span>}
+<span id="L2023" class="ln">  2023&nbsp;&nbsp;</span>
+<span id="L2024" class="ln">  2024&nbsp;&nbsp;</span><span class="comment">// ToolDir is the directory containing build tools.</span>
+<span id="L2025" class="ln">  2025&nbsp;&nbsp;</span>var ToolDir = getToolDir()
+<span id="L2026" class="ln">  2026&nbsp;&nbsp;</span>
+<span id="L2027" class="ln">  2027&nbsp;&nbsp;</span><span class="comment">// IsLocalImport reports whether the import path is</span>
+<span id="L2028" class="ln">  2028&nbsp;&nbsp;</span><span class="comment">// a local import path, like &#34;.&#34;, &#34;..&#34;, &#34;./foo&#34;, or &#34;../foo&#34;.</span>
+<span id="L2029" class="ln">  2029&nbsp;&nbsp;</span>func IsLocalImport(path string) bool {
+<span id="L2030" class="ln">  2030&nbsp;&nbsp;</span>	return path == &#34;.&#34; || path == &#34;..&#34; ||
+<span id="L2031" class="ln">  2031&nbsp;&nbsp;</span>		strings.HasPrefix(path, &#34;./&#34;) || strings.HasPrefix(path, &#34;../&#34;)
+<span id="L2032" class="ln">  2032&nbsp;&nbsp;</span>}
+<span id="L2033" class="ln">  2033&nbsp;&nbsp;</span>
+<span id="L2034" class="ln">  2034&nbsp;&nbsp;</span><span class="comment">// ArchChar returns &#34;?&#34; and an error.</span>
+<span id="L2035" class="ln">  2035&nbsp;&nbsp;</span><span class="comment">// In earlier versions of Go, the returned string was used to derive</span>
+<span id="L2036" class="ln">  2036&nbsp;&nbsp;</span><span class="comment">// the compiler and linker tool names, the default object file suffix,</span>
+<span id="L2037" class="ln">  2037&nbsp;&nbsp;</span><span class="comment">// and the default linker output name. As of Go 1.5, those strings</span>
+<span id="L2038" class="ln">  2038&nbsp;&nbsp;</span><span class="comment">// no longer vary by architecture; they are compile, link, .o, and a.out, respectively.</span>
+<span id="L2039" class="ln">  2039&nbsp;&nbsp;</span>func ArchChar(goarch string) (string, error) {
+<span id="L2040" class="ln">  2040&nbsp;&nbsp;</span>	return &#34;?&#34;, errors.New(&#34;architecture letter no longer used&#34;)
+<span id="L2041" class="ln">  2041&nbsp;&nbsp;</span>}
+<span id="L2042" class="ln">  2042&nbsp;&nbsp;</span>
+</pre><p><a href="build.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

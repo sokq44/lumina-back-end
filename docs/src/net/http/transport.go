@@ -1,0 +1,3059 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>src/net/http/transport.go - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="transport.go#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Source file
+    <a href="http://localhost:8080/src">src</a>/<a href="http://localhost:8080/src/net">net</a>/<a href="http://localhost:8080/src/net/http">http</a>/<span class="text-muted">transport.go</span>
+  </h1>
+
+
+
+
+
+  <h2>
+    Documentation: <a href="http://localhost:8080/pkg/net/http">net/http</a>
+  </h2>
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1&nbsp;&nbsp;</span><span class="comment">// Copyright 2011 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2&nbsp;&nbsp;</span><span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3&nbsp;&nbsp;</span><span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4&nbsp;&nbsp;</span>
+<span id="L5" class="ln">     5&nbsp;&nbsp;</span><span class="comment">// HTTP client implementation. See RFC 7230 through 7235.</span>
+<span id="L6" class="ln">     6&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L7" class="ln">     7&nbsp;&nbsp;</span><span class="comment">// This is the low-level Transport implementation of RoundTripper.</span>
+<span id="L8" class="ln">     8&nbsp;&nbsp;</span><span class="comment">// The high-level interface is in client.go.</span>
+<span id="L9" class="ln">     9&nbsp;&nbsp;</span>
+<span id="L10" class="ln">    10&nbsp;&nbsp;</span>package http
+<span id="L11" class="ln">    11&nbsp;&nbsp;</span>
+<span id="L12" class="ln">    12&nbsp;&nbsp;</span>import (
+<span id="L13" class="ln">    13&nbsp;&nbsp;</span>	&#34;bufio&#34;
+<span id="L14" class="ln">    14&nbsp;&nbsp;</span>	&#34;compress/gzip&#34;
+<span id="L15" class="ln">    15&nbsp;&nbsp;</span>	&#34;container/list&#34;
+<span id="L16" class="ln">    16&nbsp;&nbsp;</span>	&#34;context&#34;
+<span id="L17" class="ln">    17&nbsp;&nbsp;</span>	&#34;crypto/tls&#34;
+<span id="L18" class="ln">    18&nbsp;&nbsp;</span>	&#34;errors&#34;
+<span id="L19" class="ln">    19&nbsp;&nbsp;</span>	&#34;fmt&#34;
+<span id="L20" class="ln">    20&nbsp;&nbsp;</span>	&#34;internal/godebug&#34;
+<span id="L21" class="ln">    21&nbsp;&nbsp;</span>	&#34;io&#34;
+<span id="L22" class="ln">    22&nbsp;&nbsp;</span>	&#34;log&#34;
+<span id="L23" class="ln">    23&nbsp;&nbsp;</span>	&#34;net&#34;
+<span id="L24" class="ln">    24&nbsp;&nbsp;</span>	&#34;net/http/httptrace&#34;
+<span id="L25" class="ln">    25&nbsp;&nbsp;</span>	&#34;net/http/internal/ascii&#34;
+<span id="L26" class="ln">    26&nbsp;&nbsp;</span>	&#34;net/textproto&#34;
+<span id="L27" class="ln">    27&nbsp;&nbsp;</span>	&#34;net/url&#34;
+<span id="L28" class="ln">    28&nbsp;&nbsp;</span>	&#34;reflect&#34;
+<span id="L29" class="ln">    29&nbsp;&nbsp;</span>	&#34;strings&#34;
+<span id="L30" class="ln">    30&nbsp;&nbsp;</span>	&#34;sync&#34;
+<span id="L31" class="ln">    31&nbsp;&nbsp;</span>	&#34;sync/atomic&#34;
+<span id="L32" class="ln">    32&nbsp;&nbsp;</span>	&#34;time&#34;
+<span id="L33" class="ln">    33&nbsp;&nbsp;</span>
+<span id="L34" class="ln">    34&nbsp;&nbsp;</span>	&#34;golang.org/x/net/http/httpguts&#34;
+<span id="L35" class="ln">    35&nbsp;&nbsp;</span>	&#34;golang.org/x/net/http/httpproxy&#34;
+<span id="L36" class="ln">    36&nbsp;&nbsp;</span>)
+<span id="L37" class="ln">    37&nbsp;&nbsp;</span>
+<span id="L38" class="ln">    38&nbsp;&nbsp;</span><span class="comment">// DefaultTransport is the default implementation of [Transport] and is</span>
+<span id="L39" class="ln">    39&nbsp;&nbsp;</span><span class="comment">// used by [DefaultClient]. It establishes network connections as needed</span>
+<span id="L40" class="ln">    40&nbsp;&nbsp;</span><span class="comment">// and caches them for reuse by subsequent calls. It uses HTTP proxies</span>
+<span id="L41" class="ln">    41&nbsp;&nbsp;</span><span class="comment">// as directed by the environment variables HTTP_PROXY, HTTPS_PROXY</span>
+<span id="L42" class="ln">    42&nbsp;&nbsp;</span><span class="comment">// and NO_PROXY (or the lowercase versions thereof).</span>
+<span id="L43" class="ln">    43&nbsp;&nbsp;</span>var DefaultTransport RoundTripper = &amp;Transport{
+<span id="L44" class="ln">    44&nbsp;&nbsp;</span>	Proxy: ProxyFromEnvironment,
+<span id="L45" class="ln">    45&nbsp;&nbsp;</span>	DialContext: defaultTransportDialContext(&amp;net.Dialer{
+<span id="L46" class="ln">    46&nbsp;&nbsp;</span>		Timeout:   30 * time.Second,
+<span id="L47" class="ln">    47&nbsp;&nbsp;</span>		KeepAlive: 30 * time.Second,
+<span id="L48" class="ln">    48&nbsp;&nbsp;</span>	}),
+<span id="L49" class="ln">    49&nbsp;&nbsp;</span>	ForceAttemptHTTP2:     true,
+<span id="L50" class="ln">    50&nbsp;&nbsp;</span>	MaxIdleConns:          100,
+<span id="L51" class="ln">    51&nbsp;&nbsp;</span>	IdleConnTimeout:       90 * time.Second,
+<span id="L52" class="ln">    52&nbsp;&nbsp;</span>	TLSHandshakeTimeout:   10 * time.Second,
+<span id="L53" class="ln">    53&nbsp;&nbsp;</span>	ExpectContinueTimeout: 1 * time.Second,
+<span id="L54" class="ln">    54&nbsp;&nbsp;</span>}
+<span id="L55" class="ln">    55&nbsp;&nbsp;</span>
+<span id="L56" class="ln">    56&nbsp;&nbsp;</span><span class="comment">// DefaultMaxIdleConnsPerHost is the default value of [Transport]&#39;s</span>
+<span id="L57" class="ln">    57&nbsp;&nbsp;</span><span class="comment">// MaxIdleConnsPerHost.</span>
+<span id="L58" class="ln">    58&nbsp;&nbsp;</span>const DefaultMaxIdleConnsPerHost = 2
+<span id="L59" class="ln">    59&nbsp;&nbsp;</span>
+<span id="L60" class="ln">    60&nbsp;&nbsp;</span><span class="comment">// Transport is an implementation of [RoundTripper] that supports HTTP,</span>
+<span id="L61" class="ln">    61&nbsp;&nbsp;</span><span class="comment">// HTTPS, and HTTP proxies (for either HTTP or HTTPS with CONNECT).</span>
+<span id="L62" class="ln">    62&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L63" class="ln">    63&nbsp;&nbsp;</span><span class="comment">// By default, Transport caches connections for future re-use.</span>
+<span id="L64" class="ln">    64&nbsp;&nbsp;</span><span class="comment">// This may leave many open connections when accessing many hosts.</span>
+<span id="L65" class="ln">    65&nbsp;&nbsp;</span><span class="comment">// This behavior can be managed using [Transport.CloseIdleConnections] method</span>
+<span id="L66" class="ln">    66&nbsp;&nbsp;</span><span class="comment">// and the [Transport.MaxIdleConnsPerHost] and [Transport.DisableKeepAlives] fields.</span>
+<span id="L67" class="ln">    67&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L68" class="ln">    68&nbsp;&nbsp;</span><span class="comment">// Transports should be reused instead of created as needed.</span>
+<span id="L69" class="ln">    69&nbsp;&nbsp;</span><span class="comment">// Transports are safe for concurrent use by multiple goroutines.</span>
+<span id="L70" class="ln">    70&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L71" class="ln">    71&nbsp;&nbsp;</span><span class="comment">// A Transport is a low-level primitive for making HTTP and HTTPS requests.</span>
+<span id="L72" class="ln">    72&nbsp;&nbsp;</span><span class="comment">// For high-level functionality, such as cookies and redirects, see [Client].</span>
+<span id="L73" class="ln">    73&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L74" class="ln">    74&nbsp;&nbsp;</span><span class="comment">// Transport uses HTTP/1.1 for HTTP URLs and either HTTP/1.1 or HTTP/2</span>
+<span id="L75" class="ln">    75&nbsp;&nbsp;</span><span class="comment">// for HTTPS URLs, depending on whether the server supports HTTP/2,</span>
+<span id="L76" class="ln">    76&nbsp;&nbsp;</span><span class="comment">// and how the Transport is configured. The [DefaultTransport] supports HTTP/2.</span>
+<span id="L77" class="ln">    77&nbsp;&nbsp;</span><span class="comment">// To explicitly enable HTTP/2 on a transport, use golang.org/x/net/http2</span>
+<span id="L78" class="ln">    78&nbsp;&nbsp;</span><span class="comment">// and call ConfigureTransport. See the package docs for more about HTTP/2.</span>
+<span id="L79" class="ln">    79&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L80" class="ln">    80&nbsp;&nbsp;</span><span class="comment">// Responses with status codes in the 1xx range are either handled</span>
+<span id="L81" class="ln">    81&nbsp;&nbsp;</span><span class="comment">// automatically (100 expect-continue) or ignored. The one</span>
+<span id="L82" class="ln">    82&nbsp;&nbsp;</span><span class="comment">// exception is HTTP status code 101 (Switching Protocols), which is</span>
+<span id="L83" class="ln">    83&nbsp;&nbsp;</span><span class="comment">// considered a terminal status and returned by [Transport.RoundTrip]. To see the</span>
+<span id="L84" class="ln">    84&nbsp;&nbsp;</span><span class="comment">// ignored 1xx responses, use the httptrace trace package&#39;s</span>
+<span id="L85" class="ln">    85&nbsp;&nbsp;</span><span class="comment">// ClientTrace.Got1xxResponse.</span>
+<span id="L86" class="ln">    86&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L87" class="ln">    87&nbsp;&nbsp;</span><span class="comment">// Transport only retries a request upon encountering a network error</span>
+<span id="L88" class="ln">    88&nbsp;&nbsp;</span><span class="comment">// if the connection has been already been used successfully and if the</span>
+<span id="L89" class="ln">    89&nbsp;&nbsp;</span><span class="comment">// request is idempotent and either has no body or has its [Request.GetBody]</span>
+<span id="L90" class="ln">    90&nbsp;&nbsp;</span><span class="comment">// defined. HTTP requests are considered idempotent if they have HTTP methods</span>
+<span id="L91" class="ln">    91&nbsp;&nbsp;</span><span class="comment">// GET, HEAD, OPTIONS, or TRACE; or if their [Header] map contains an</span>
+<span id="L92" class="ln">    92&nbsp;&nbsp;</span><span class="comment">// &#34;Idempotency-Key&#34; or &#34;X-Idempotency-Key&#34; entry. If the idempotency key</span>
+<span id="L93" class="ln">    93&nbsp;&nbsp;</span><span class="comment">// value is a zero-length slice, the request is treated as idempotent but the</span>
+<span id="L94" class="ln">    94&nbsp;&nbsp;</span><span class="comment">// header is not sent on the wire.</span>
+<span id="L95" class="ln">    95&nbsp;&nbsp;</span>type Transport struct {
+<span id="L96" class="ln">    96&nbsp;&nbsp;</span>	idleMu       sync.Mutex
+<span id="L97" class="ln">    97&nbsp;&nbsp;</span>	closeIdle    bool                                <span class="comment">// user has requested to close all idle conns</span>
+<span id="L98" class="ln">    98&nbsp;&nbsp;</span>	idleConn     map[connectMethodKey][]*persistConn <span class="comment">// most recently used at end</span>
+<span id="L99" class="ln">    99&nbsp;&nbsp;</span>	idleConnWait map[connectMethodKey]wantConnQueue  <span class="comment">// waiting getConns</span>
+<span id="L100" class="ln">   100&nbsp;&nbsp;</span>	idleLRU      connLRU
+<span id="L101" class="ln">   101&nbsp;&nbsp;</span>
+<span id="L102" class="ln">   102&nbsp;&nbsp;</span>	reqMu       sync.Mutex
+<span id="L103" class="ln">   103&nbsp;&nbsp;</span>	reqCanceler map[cancelKey]func(error)
+<span id="L104" class="ln">   104&nbsp;&nbsp;</span>
+<span id="L105" class="ln">   105&nbsp;&nbsp;</span>	altMu    sync.Mutex   <span class="comment">// guards changing altProto only</span>
+<span id="L106" class="ln">   106&nbsp;&nbsp;</span>	altProto atomic.Value <span class="comment">// of nil or map[string]RoundTripper, key is URI scheme</span>
+<span id="L107" class="ln">   107&nbsp;&nbsp;</span>
+<span id="L108" class="ln">   108&nbsp;&nbsp;</span>	connsPerHostMu   sync.Mutex
+<span id="L109" class="ln">   109&nbsp;&nbsp;</span>	connsPerHost     map[connectMethodKey]int
+<span id="L110" class="ln">   110&nbsp;&nbsp;</span>	connsPerHostWait map[connectMethodKey]wantConnQueue <span class="comment">// waiting getConns</span>
+<span id="L111" class="ln">   111&nbsp;&nbsp;</span>
+<span id="L112" class="ln">   112&nbsp;&nbsp;</span>	<span class="comment">// Proxy specifies a function to return a proxy for a given</span>
+<span id="L113" class="ln">   113&nbsp;&nbsp;</span>	<span class="comment">// Request. If the function returns a non-nil error, the</span>
+<span id="L114" class="ln">   114&nbsp;&nbsp;</span>	<span class="comment">// request is aborted with the provided error.</span>
+<span id="L115" class="ln">   115&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L116" class="ln">   116&nbsp;&nbsp;</span>	<span class="comment">// The proxy type is determined by the URL scheme. &#34;http&#34;,</span>
+<span id="L117" class="ln">   117&nbsp;&nbsp;</span>	<span class="comment">// &#34;https&#34;, and &#34;socks5&#34; are supported. If the scheme is empty,</span>
+<span id="L118" class="ln">   118&nbsp;&nbsp;</span>	<span class="comment">// &#34;http&#34; is assumed.</span>
+<span id="L119" class="ln">   119&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L120" class="ln">   120&nbsp;&nbsp;</span>	<span class="comment">// If the proxy URL contains a userinfo subcomponent,</span>
+<span id="L121" class="ln">   121&nbsp;&nbsp;</span>	<span class="comment">// the proxy request will pass the username and password</span>
+<span id="L122" class="ln">   122&nbsp;&nbsp;</span>	<span class="comment">// in a Proxy-Authorization header.</span>
+<span id="L123" class="ln">   123&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L124" class="ln">   124&nbsp;&nbsp;</span>	<span class="comment">// If Proxy is nil or returns a nil *URL, no proxy is used.</span>
+<span id="L125" class="ln">   125&nbsp;&nbsp;</span>	Proxy func(*Request) (*url.URL, error)
+<span id="L126" class="ln">   126&nbsp;&nbsp;</span>
+<span id="L127" class="ln">   127&nbsp;&nbsp;</span>	<span class="comment">// OnProxyConnectResponse is called when the Transport gets an HTTP response from</span>
+<span id="L128" class="ln">   128&nbsp;&nbsp;</span>	<span class="comment">// a proxy for a CONNECT request. It&#39;s called before the check for a 200 OK response.</span>
+<span id="L129" class="ln">   129&nbsp;&nbsp;</span>	<span class="comment">// If it returns an error, the request fails with that error.</span>
+<span id="L130" class="ln">   130&nbsp;&nbsp;</span>	OnProxyConnectResponse func(ctx context.Context, proxyURL *url.URL, connectReq *Request, connectRes *Response) error
+<span id="L131" class="ln">   131&nbsp;&nbsp;</span>
+<span id="L132" class="ln">   132&nbsp;&nbsp;</span>	<span class="comment">// DialContext specifies the dial function for creating unencrypted TCP connections.</span>
+<span id="L133" class="ln">   133&nbsp;&nbsp;</span>	<span class="comment">// If DialContext is nil (and the deprecated Dial below is also nil),</span>
+<span id="L134" class="ln">   134&nbsp;&nbsp;</span>	<span class="comment">// then the transport dials using package net.</span>
+<span id="L135" class="ln">   135&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L136" class="ln">   136&nbsp;&nbsp;</span>	<span class="comment">// DialContext runs concurrently with calls to RoundTrip.</span>
+<span id="L137" class="ln">   137&nbsp;&nbsp;</span>	<span class="comment">// A RoundTrip call that initiates a dial may end up using</span>
+<span id="L138" class="ln">   138&nbsp;&nbsp;</span>	<span class="comment">// a connection dialed previously when the earlier connection</span>
+<span id="L139" class="ln">   139&nbsp;&nbsp;</span>	<span class="comment">// becomes idle before the later DialContext completes.</span>
+<span id="L140" class="ln">   140&nbsp;&nbsp;</span>	DialContext func(ctx context.Context, network, addr string) (net.Conn, error)
+<span id="L141" class="ln">   141&nbsp;&nbsp;</span>
+<span id="L142" class="ln">   142&nbsp;&nbsp;</span>	<span class="comment">// Dial specifies the dial function for creating unencrypted TCP connections.</span>
+<span id="L143" class="ln">   143&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L144" class="ln">   144&nbsp;&nbsp;</span>	<span class="comment">// Dial runs concurrently with calls to RoundTrip.</span>
+<span id="L145" class="ln">   145&nbsp;&nbsp;</span>	<span class="comment">// A RoundTrip call that initiates a dial may end up using</span>
+<span id="L146" class="ln">   146&nbsp;&nbsp;</span>	<span class="comment">// a connection dialed previously when the earlier connection</span>
+<span id="L147" class="ln">   147&nbsp;&nbsp;</span>	<span class="comment">// becomes idle before the later Dial completes.</span>
+<span id="L148" class="ln">   148&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L149" class="ln">   149&nbsp;&nbsp;</span>	<span class="comment">// Deprecated: Use DialContext instead, which allows the transport</span>
+<span id="L150" class="ln">   150&nbsp;&nbsp;</span>	<span class="comment">// to cancel dials as soon as they are no longer needed.</span>
+<span id="L151" class="ln">   151&nbsp;&nbsp;</span>	<span class="comment">// If both are set, DialContext takes priority.</span>
+<span id="L152" class="ln">   152&nbsp;&nbsp;</span>	Dial func(network, addr string) (net.Conn, error)
+<span id="L153" class="ln">   153&nbsp;&nbsp;</span>
+<span id="L154" class="ln">   154&nbsp;&nbsp;</span>	<span class="comment">// DialTLSContext specifies an optional dial function for creating</span>
+<span id="L155" class="ln">   155&nbsp;&nbsp;</span>	<span class="comment">// TLS connections for non-proxied HTTPS requests.</span>
+<span id="L156" class="ln">   156&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L157" class="ln">   157&nbsp;&nbsp;</span>	<span class="comment">// If DialTLSContext is nil (and the deprecated DialTLS below is also nil),</span>
+<span id="L158" class="ln">   158&nbsp;&nbsp;</span>	<span class="comment">// DialContext and TLSClientConfig are used.</span>
+<span id="L159" class="ln">   159&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L160" class="ln">   160&nbsp;&nbsp;</span>	<span class="comment">// If DialTLSContext is set, the Dial and DialContext hooks are not used for HTTPS</span>
+<span id="L161" class="ln">   161&nbsp;&nbsp;</span>	<span class="comment">// requests and the TLSClientConfig and TLSHandshakeTimeout</span>
+<span id="L162" class="ln">   162&nbsp;&nbsp;</span>	<span class="comment">// are ignored. The returned net.Conn is assumed to already be</span>
+<span id="L163" class="ln">   163&nbsp;&nbsp;</span>	<span class="comment">// past the TLS handshake.</span>
+<span id="L164" class="ln">   164&nbsp;&nbsp;</span>	DialTLSContext func(ctx context.Context, network, addr string) (net.Conn, error)
+<span id="L165" class="ln">   165&nbsp;&nbsp;</span>
+<span id="L166" class="ln">   166&nbsp;&nbsp;</span>	<span class="comment">// DialTLS specifies an optional dial function for creating</span>
+<span id="L167" class="ln">   167&nbsp;&nbsp;</span>	<span class="comment">// TLS connections for non-proxied HTTPS requests.</span>
+<span id="L168" class="ln">   168&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L169" class="ln">   169&nbsp;&nbsp;</span>	<span class="comment">// Deprecated: Use DialTLSContext instead, which allows the transport</span>
+<span id="L170" class="ln">   170&nbsp;&nbsp;</span>	<span class="comment">// to cancel dials as soon as they are no longer needed.</span>
+<span id="L171" class="ln">   171&nbsp;&nbsp;</span>	<span class="comment">// If both are set, DialTLSContext takes priority.</span>
+<span id="L172" class="ln">   172&nbsp;&nbsp;</span>	DialTLS func(network, addr string) (net.Conn, error)
+<span id="L173" class="ln">   173&nbsp;&nbsp;</span>
+<span id="L174" class="ln">   174&nbsp;&nbsp;</span>	<span class="comment">// TLSClientConfig specifies the TLS configuration to use with</span>
+<span id="L175" class="ln">   175&nbsp;&nbsp;</span>	<span class="comment">// tls.Client.</span>
+<span id="L176" class="ln">   176&nbsp;&nbsp;</span>	<span class="comment">// If nil, the default configuration is used.</span>
+<span id="L177" class="ln">   177&nbsp;&nbsp;</span>	<span class="comment">// If non-nil, HTTP/2 support may not be enabled by default.</span>
+<span id="L178" class="ln">   178&nbsp;&nbsp;</span>	TLSClientConfig *tls.Config
+<span id="L179" class="ln">   179&nbsp;&nbsp;</span>
+<span id="L180" class="ln">   180&nbsp;&nbsp;</span>	<span class="comment">// TLSHandshakeTimeout specifies the maximum amount of time to</span>
+<span id="L181" class="ln">   181&nbsp;&nbsp;</span>	<span class="comment">// wait for a TLS handshake. Zero means no timeout.</span>
+<span id="L182" class="ln">   182&nbsp;&nbsp;</span>	TLSHandshakeTimeout time.Duration
+<span id="L183" class="ln">   183&nbsp;&nbsp;</span>
+<span id="L184" class="ln">   184&nbsp;&nbsp;</span>	<span class="comment">// DisableKeepAlives, if true, disables HTTP keep-alives and</span>
+<span id="L185" class="ln">   185&nbsp;&nbsp;</span>	<span class="comment">// will only use the connection to the server for a single</span>
+<span id="L186" class="ln">   186&nbsp;&nbsp;</span>	<span class="comment">// HTTP request.</span>
+<span id="L187" class="ln">   187&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L188" class="ln">   188&nbsp;&nbsp;</span>	<span class="comment">// This is unrelated to the similarly named TCP keep-alives.</span>
+<span id="L189" class="ln">   189&nbsp;&nbsp;</span>	DisableKeepAlives bool
+<span id="L190" class="ln">   190&nbsp;&nbsp;</span>
+<span id="L191" class="ln">   191&nbsp;&nbsp;</span>	<span class="comment">// DisableCompression, if true, prevents the Transport from</span>
+<span id="L192" class="ln">   192&nbsp;&nbsp;</span>	<span class="comment">// requesting compression with an &#34;Accept-Encoding: gzip&#34;</span>
+<span id="L193" class="ln">   193&nbsp;&nbsp;</span>	<span class="comment">// request header when the Request contains no existing</span>
+<span id="L194" class="ln">   194&nbsp;&nbsp;</span>	<span class="comment">// Accept-Encoding value. If the Transport requests gzip on</span>
+<span id="L195" class="ln">   195&nbsp;&nbsp;</span>	<span class="comment">// its own and gets a gzipped response, it&#39;s transparently</span>
+<span id="L196" class="ln">   196&nbsp;&nbsp;</span>	<span class="comment">// decoded in the Response.Body. However, if the user</span>
+<span id="L197" class="ln">   197&nbsp;&nbsp;</span>	<span class="comment">// explicitly requested gzip it is not automatically</span>
+<span id="L198" class="ln">   198&nbsp;&nbsp;</span>	<span class="comment">// uncompressed.</span>
+<span id="L199" class="ln">   199&nbsp;&nbsp;</span>	DisableCompression bool
+<span id="L200" class="ln">   200&nbsp;&nbsp;</span>
+<span id="L201" class="ln">   201&nbsp;&nbsp;</span>	<span class="comment">// MaxIdleConns controls the maximum number of idle (keep-alive)</span>
+<span id="L202" class="ln">   202&nbsp;&nbsp;</span>	<span class="comment">// connections across all hosts. Zero means no limit.</span>
+<span id="L203" class="ln">   203&nbsp;&nbsp;</span>	MaxIdleConns int
+<span id="L204" class="ln">   204&nbsp;&nbsp;</span>
+<span id="L205" class="ln">   205&nbsp;&nbsp;</span>	<span class="comment">// MaxIdleConnsPerHost, if non-zero, controls the maximum idle</span>
+<span id="L206" class="ln">   206&nbsp;&nbsp;</span>	<span class="comment">// (keep-alive) connections to keep per-host. If zero,</span>
+<span id="L207" class="ln">   207&nbsp;&nbsp;</span>	<span class="comment">// DefaultMaxIdleConnsPerHost is used.</span>
+<span id="L208" class="ln">   208&nbsp;&nbsp;</span>	MaxIdleConnsPerHost int
+<span id="L209" class="ln">   209&nbsp;&nbsp;</span>
+<span id="L210" class="ln">   210&nbsp;&nbsp;</span>	<span class="comment">// MaxConnsPerHost optionally limits the total number of</span>
+<span id="L211" class="ln">   211&nbsp;&nbsp;</span>	<span class="comment">// connections per host, including connections in the dialing,</span>
+<span id="L212" class="ln">   212&nbsp;&nbsp;</span>	<span class="comment">// active, and idle states. On limit violation, dials will block.</span>
+<span id="L213" class="ln">   213&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L214" class="ln">   214&nbsp;&nbsp;</span>	<span class="comment">// Zero means no limit.</span>
+<span id="L215" class="ln">   215&nbsp;&nbsp;</span>	MaxConnsPerHost int
+<span id="L216" class="ln">   216&nbsp;&nbsp;</span>
+<span id="L217" class="ln">   217&nbsp;&nbsp;</span>	<span class="comment">// IdleConnTimeout is the maximum amount of time an idle</span>
+<span id="L218" class="ln">   218&nbsp;&nbsp;</span>	<span class="comment">// (keep-alive) connection will remain idle before closing</span>
+<span id="L219" class="ln">   219&nbsp;&nbsp;</span>	<span class="comment">// itself.</span>
+<span id="L220" class="ln">   220&nbsp;&nbsp;</span>	<span class="comment">// Zero means no limit.</span>
+<span id="L221" class="ln">   221&nbsp;&nbsp;</span>	IdleConnTimeout time.Duration
+<span id="L222" class="ln">   222&nbsp;&nbsp;</span>
+<span id="L223" class="ln">   223&nbsp;&nbsp;</span>	<span class="comment">// ResponseHeaderTimeout, if non-zero, specifies the amount of</span>
+<span id="L224" class="ln">   224&nbsp;&nbsp;</span>	<span class="comment">// time to wait for a server&#39;s response headers after fully</span>
+<span id="L225" class="ln">   225&nbsp;&nbsp;</span>	<span class="comment">// writing the request (including its body, if any). This</span>
+<span id="L226" class="ln">   226&nbsp;&nbsp;</span>	<span class="comment">// time does not include the time to read the response body.</span>
+<span id="L227" class="ln">   227&nbsp;&nbsp;</span>	ResponseHeaderTimeout time.Duration
+<span id="L228" class="ln">   228&nbsp;&nbsp;</span>
+<span id="L229" class="ln">   229&nbsp;&nbsp;</span>	<span class="comment">// ExpectContinueTimeout, if non-zero, specifies the amount of</span>
+<span id="L230" class="ln">   230&nbsp;&nbsp;</span>	<span class="comment">// time to wait for a server&#39;s first response headers after fully</span>
+<span id="L231" class="ln">   231&nbsp;&nbsp;</span>	<span class="comment">// writing the request headers if the request has an</span>
+<span id="L232" class="ln">   232&nbsp;&nbsp;</span>	<span class="comment">// &#34;Expect: 100-continue&#34; header. Zero means no timeout and</span>
+<span id="L233" class="ln">   233&nbsp;&nbsp;</span>	<span class="comment">// causes the body to be sent immediately, without</span>
+<span id="L234" class="ln">   234&nbsp;&nbsp;</span>	<span class="comment">// waiting for the server to approve.</span>
+<span id="L235" class="ln">   235&nbsp;&nbsp;</span>	<span class="comment">// This time does not include the time to send the request header.</span>
+<span id="L236" class="ln">   236&nbsp;&nbsp;</span>	ExpectContinueTimeout time.Duration
+<span id="L237" class="ln">   237&nbsp;&nbsp;</span>
+<span id="L238" class="ln">   238&nbsp;&nbsp;</span>	<span class="comment">// TLSNextProto specifies how the Transport switches to an</span>
+<span id="L239" class="ln">   239&nbsp;&nbsp;</span>	<span class="comment">// alternate protocol (such as HTTP/2) after a TLS ALPN</span>
+<span id="L240" class="ln">   240&nbsp;&nbsp;</span>	<span class="comment">// protocol negotiation. If Transport dials a TLS connection</span>
+<span id="L241" class="ln">   241&nbsp;&nbsp;</span>	<span class="comment">// with a non-empty protocol name and TLSNextProto contains a</span>
+<span id="L242" class="ln">   242&nbsp;&nbsp;</span>	<span class="comment">// map entry for that key (such as &#34;h2&#34;), then the func is</span>
+<span id="L243" class="ln">   243&nbsp;&nbsp;</span>	<span class="comment">// called with the request&#39;s authority (such as &#34;example.com&#34;</span>
+<span id="L244" class="ln">   244&nbsp;&nbsp;</span>	<span class="comment">// or &#34;example.com:1234&#34;) and the TLS connection. The function</span>
+<span id="L245" class="ln">   245&nbsp;&nbsp;</span>	<span class="comment">// must return a RoundTripper that then handles the request.</span>
+<span id="L246" class="ln">   246&nbsp;&nbsp;</span>	<span class="comment">// If TLSNextProto is not nil, HTTP/2 support is not enabled</span>
+<span id="L247" class="ln">   247&nbsp;&nbsp;</span>	<span class="comment">// automatically.</span>
+<span id="L248" class="ln">   248&nbsp;&nbsp;</span>	TLSNextProto map[string]func(authority string, c *tls.Conn) RoundTripper
+<span id="L249" class="ln">   249&nbsp;&nbsp;</span>
+<span id="L250" class="ln">   250&nbsp;&nbsp;</span>	<span class="comment">// ProxyConnectHeader optionally specifies headers to send to</span>
+<span id="L251" class="ln">   251&nbsp;&nbsp;</span>	<span class="comment">// proxies during CONNECT requests.</span>
+<span id="L252" class="ln">   252&nbsp;&nbsp;</span>	<span class="comment">// To set the header dynamically, see GetProxyConnectHeader.</span>
+<span id="L253" class="ln">   253&nbsp;&nbsp;</span>	ProxyConnectHeader Header
+<span id="L254" class="ln">   254&nbsp;&nbsp;</span>
+<span id="L255" class="ln">   255&nbsp;&nbsp;</span>	<span class="comment">// GetProxyConnectHeader optionally specifies a func to return</span>
+<span id="L256" class="ln">   256&nbsp;&nbsp;</span>	<span class="comment">// headers to send to proxyURL during a CONNECT request to the</span>
+<span id="L257" class="ln">   257&nbsp;&nbsp;</span>	<span class="comment">// ip:port target.</span>
+<span id="L258" class="ln">   258&nbsp;&nbsp;</span>	<span class="comment">// If it returns an error, the Transport&#39;s RoundTrip fails with</span>
+<span id="L259" class="ln">   259&nbsp;&nbsp;</span>	<span class="comment">// that error. It can return (nil, nil) to not add headers.</span>
+<span id="L260" class="ln">   260&nbsp;&nbsp;</span>	<span class="comment">// If GetProxyConnectHeader is non-nil, ProxyConnectHeader is</span>
+<span id="L261" class="ln">   261&nbsp;&nbsp;</span>	<span class="comment">// ignored.</span>
+<span id="L262" class="ln">   262&nbsp;&nbsp;</span>	GetProxyConnectHeader func(ctx context.Context, proxyURL *url.URL, target string) (Header, error)
+<span id="L263" class="ln">   263&nbsp;&nbsp;</span>
+<span id="L264" class="ln">   264&nbsp;&nbsp;</span>	<span class="comment">// MaxResponseHeaderBytes specifies a limit on how many</span>
+<span id="L265" class="ln">   265&nbsp;&nbsp;</span>	<span class="comment">// response bytes are allowed in the server&#39;s response</span>
+<span id="L266" class="ln">   266&nbsp;&nbsp;</span>	<span class="comment">// header.</span>
+<span id="L267" class="ln">   267&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L268" class="ln">   268&nbsp;&nbsp;</span>	<span class="comment">// Zero means to use a default limit.</span>
+<span id="L269" class="ln">   269&nbsp;&nbsp;</span>	MaxResponseHeaderBytes int64
+<span id="L270" class="ln">   270&nbsp;&nbsp;</span>
+<span id="L271" class="ln">   271&nbsp;&nbsp;</span>	<span class="comment">// WriteBufferSize specifies the size of the write buffer used</span>
+<span id="L272" class="ln">   272&nbsp;&nbsp;</span>	<span class="comment">// when writing to the transport.</span>
+<span id="L273" class="ln">   273&nbsp;&nbsp;</span>	<span class="comment">// If zero, a default (currently 4KB) is used.</span>
+<span id="L274" class="ln">   274&nbsp;&nbsp;</span>	WriteBufferSize int
+<span id="L275" class="ln">   275&nbsp;&nbsp;</span>
+<span id="L276" class="ln">   276&nbsp;&nbsp;</span>	<span class="comment">// ReadBufferSize specifies the size of the read buffer used</span>
+<span id="L277" class="ln">   277&nbsp;&nbsp;</span>	<span class="comment">// when reading from the transport.</span>
+<span id="L278" class="ln">   278&nbsp;&nbsp;</span>	<span class="comment">// If zero, a default (currently 4KB) is used.</span>
+<span id="L279" class="ln">   279&nbsp;&nbsp;</span>	ReadBufferSize int
+<span id="L280" class="ln">   280&nbsp;&nbsp;</span>
+<span id="L281" class="ln">   281&nbsp;&nbsp;</span>	<span class="comment">// nextProtoOnce guards initialization of TLSNextProto and</span>
+<span id="L282" class="ln">   282&nbsp;&nbsp;</span>	<span class="comment">// h2transport (via onceSetNextProtoDefaults)</span>
+<span id="L283" class="ln">   283&nbsp;&nbsp;</span>	nextProtoOnce      sync.Once
+<span id="L284" class="ln">   284&nbsp;&nbsp;</span>	h2transport        h2Transport <span class="comment">// non-nil if http2 wired up</span>
+<span id="L285" class="ln">   285&nbsp;&nbsp;</span>	tlsNextProtoWasNil bool        <span class="comment">// whether TLSNextProto was nil when the Once fired</span>
+<span id="L286" class="ln">   286&nbsp;&nbsp;</span>
+<span id="L287" class="ln">   287&nbsp;&nbsp;</span>	<span class="comment">// ForceAttemptHTTP2 controls whether HTTP/2 is enabled when a non-zero</span>
+<span id="L288" class="ln">   288&nbsp;&nbsp;</span>	<span class="comment">// Dial, DialTLS, or DialContext func or TLSClientConfig is provided.</span>
+<span id="L289" class="ln">   289&nbsp;&nbsp;</span>	<span class="comment">// By default, use of any those fields conservatively disables HTTP/2.</span>
+<span id="L290" class="ln">   290&nbsp;&nbsp;</span>	<span class="comment">// To use a custom dialer or TLS config and still attempt HTTP/2</span>
+<span id="L291" class="ln">   291&nbsp;&nbsp;</span>	<span class="comment">// upgrades, set this to true.</span>
+<span id="L292" class="ln">   292&nbsp;&nbsp;</span>	ForceAttemptHTTP2 bool
+<span id="L293" class="ln">   293&nbsp;&nbsp;</span>}
+<span id="L294" class="ln">   294&nbsp;&nbsp;</span>
+<span id="L295" class="ln">   295&nbsp;&nbsp;</span><span class="comment">// A cancelKey is the key of the reqCanceler map.</span>
+<span id="L296" class="ln">   296&nbsp;&nbsp;</span><span class="comment">// We wrap the *Request in this type since we want to use the original request,</span>
+<span id="L297" class="ln">   297&nbsp;&nbsp;</span><span class="comment">// not any transient one created by roundTrip.</span>
+<span id="L298" class="ln">   298&nbsp;&nbsp;</span>type cancelKey struct {
+<span id="L299" class="ln">   299&nbsp;&nbsp;</span>	req *Request
+<span id="L300" class="ln">   300&nbsp;&nbsp;</span>}
+<span id="L301" class="ln">   301&nbsp;&nbsp;</span>
+<span id="L302" class="ln">   302&nbsp;&nbsp;</span>func (t *Transport) writeBufferSize() int {
+<span id="L303" class="ln">   303&nbsp;&nbsp;</span>	if t.WriteBufferSize &gt; 0 {
+<span id="L304" class="ln">   304&nbsp;&nbsp;</span>		return t.WriteBufferSize
+<span id="L305" class="ln">   305&nbsp;&nbsp;</span>	}
+<span id="L306" class="ln">   306&nbsp;&nbsp;</span>	return 4 &lt;&lt; 10
+<span id="L307" class="ln">   307&nbsp;&nbsp;</span>}
+<span id="L308" class="ln">   308&nbsp;&nbsp;</span>
+<span id="L309" class="ln">   309&nbsp;&nbsp;</span>func (t *Transport) readBufferSize() int {
+<span id="L310" class="ln">   310&nbsp;&nbsp;</span>	if t.ReadBufferSize &gt; 0 {
+<span id="L311" class="ln">   311&nbsp;&nbsp;</span>		return t.ReadBufferSize
+<span id="L312" class="ln">   312&nbsp;&nbsp;</span>	}
+<span id="L313" class="ln">   313&nbsp;&nbsp;</span>	return 4 &lt;&lt; 10
+<span id="L314" class="ln">   314&nbsp;&nbsp;</span>}
+<span id="L315" class="ln">   315&nbsp;&nbsp;</span>
+<span id="L316" class="ln">   316&nbsp;&nbsp;</span><span class="comment">// Clone returns a deep copy of t&#39;s exported fields.</span>
+<span id="L317" class="ln">   317&nbsp;&nbsp;</span>func (t *Transport) Clone() *Transport {
+<span id="L318" class="ln">   318&nbsp;&nbsp;</span>	t.nextProtoOnce.Do(t.onceSetNextProtoDefaults)
+<span id="L319" class="ln">   319&nbsp;&nbsp;</span>	t2 := &amp;Transport{
+<span id="L320" class="ln">   320&nbsp;&nbsp;</span>		Proxy:                  t.Proxy,
+<span id="L321" class="ln">   321&nbsp;&nbsp;</span>		OnProxyConnectResponse: t.OnProxyConnectResponse,
+<span id="L322" class="ln">   322&nbsp;&nbsp;</span>		DialContext:            t.DialContext,
+<span id="L323" class="ln">   323&nbsp;&nbsp;</span>		Dial:                   t.Dial,
+<span id="L324" class="ln">   324&nbsp;&nbsp;</span>		DialTLS:                t.DialTLS,
+<span id="L325" class="ln">   325&nbsp;&nbsp;</span>		DialTLSContext:         t.DialTLSContext,
+<span id="L326" class="ln">   326&nbsp;&nbsp;</span>		TLSHandshakeTimeout:    t.TLSHandshakeTimeout,
+<span id="L327" class="ln">   327&nbsp;&nbsp;</span>		DisableKeepAlives:      t.DisableKeepAlives,
+<span id="L328" class="ln">   328&nbsp;&nbsp;</span>		DisableCompression:     t.DisableCompression,
+<span id="L329" class="ln">   329&nbsp;&nbsp;</span>		MaxIdleConns:           t.MaxIdleConns,
+<span id="L330" class="ln">   330&nbsp;&nbsp;</span>		MaxIdleConnsPerHost:    t.MaxIdleConnsPerHost,
+<span id="L331" class="ln">   331&nbsp;&nbsp;</span>		MaxConnsPerHost:        t.MaxConnsPerHost,
+<span id="L332" class="ln">   332&nbsp;&nbsp;</span>		IdleConnTimeout:        t.IdleConnTimeout,
+<span id="L333" class="ln">   333&nbsp;&nbsp;</span>		ResponseHeaderTimeout:  t.ResponseHeaderTimeout,
+<span id="L334" class="ln">   334&nbsp;&nbsp;</span>		ExpectContinueTimeout:  t.ExpectContinueTimeout,
+<span id="L335" class="ln">   335&nbsp;&nbsp;</span>		ProxyConnectHeader:     t.ProxyConnectHeader.Clone(),
+<span id="L336" class="ln">   336&nbsp;&nbsp;</span>		GetProxyConnectHeader:  t.GetProxyConnectHeader,
+<span id="L337" class="ln">   337&nbsp;&nbsp;</span>		MaxResponseHeaderBytes: t.MaxResponseHeaderBytes,
+<span id="L338" class="ln">   338&nbsp;&nbsp;</span>		ForceAttemptHTTP2:      t.ForceAttemptHTTP2,
+<span id="L339" class="ln">   339&nbsp;&nbsp;</span>		WriteBufferSize:        t.WriteBufferSize,
+<span id="L340" class="ln">   340&nbsp;&nbsp;</span>		ReadBufferSize:         t.ReadBufferSize,
+<span id="L341" class="ln">   341&nbsp;&nbsp;</span>	}
+<span id="L342" class="ln">   342&nbsp;&nbsp;</span>	if t.TLSClientConfig != nil {
+<span id="L343" class="ln">   343&nbsp;&nbsp;</span>		t2.TLSClientConfig = t.TLSClientConfig.Clone()
+<span id="L344" class="ln">   344&nbsp;&nbsp;</span>	}
+<span id="L345" class="ln">   345&nbsp;&nbsp;</span>	if !t.tlsNextProtoWasNil {
+<span id="L346" class="ln">   346&nbsp;&nbsp;</span>		npm := map[string]func(authority string, c *tls.Conn) RoundTripper{}
+<span id="L347" class="ln">   347&nbsp;&nbsp;</span>		for k, v := range t.TLSNextProto {
+<span id="L348" class="ln">   348&nbsp;&nbsp;</span>			npm[k] = v
+<span id="L349" class="ln">   349&nbsp;&nbsp;</span>		}
+<span id="L350" class="ln">   350&nbsp;&nbsp;</span>		t2.TLSNextProto = npm
+<span id="L351" class="ln">   351&nbsp;&nbsp;</span>	}
+<span id="L352" class="ln">   352&nbsp;&nbsp;</span>	return t2
+<span id="L353" class="ln">   353&nbsp;&nbsp;</span>}
+<span id="L354" class="ln">   354&nbsp;&nbsp;</span>
+<span id="L355" class="ln">   355&nbsp;&nbsp;</span><span class="comment">// h2Transport is the interface we expect to be able to call from</span>
+<span id="L356" class="ln">   356&nbsp;&nbsp;</span><span class="comment">// net/http against an *http2.Transport that&#39;s either bundled into</span>
+<span id="L357" class="ln">   357&nbsp;&nbsp;</span><span class="comment">// h2_bundle.go or supplied by the user via x/net/http2.</span>
+<span id="L358" class="ln">   358&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L359" class="ln">   359&nbsp;&nbsp;</span><span class="comment">// We name it with the &#34;h2&#34; prefix to stay out of the &#34;http2&#34; prefix</span>
+<span id="L360" class="ln">   360&nbsp;&nbsp;</span><span class="comment">// namespace used by x/tools/cmd/bundle for h2_bundle.go.</span>
+<span id="L361" class="ln">   361&nbsp;&nbsp;</span>type h2Transport interface {
+<span id="L362" class="ln">   362&nbsp;&nbsp;</span>	CloseIdleConnections()
+<span id="L363" class="ln">   363&nbsp;&nbsp;</span>}
+<span id="L364" class="ln">   364&nbsp;&nbsp;</span>
+<span id="L365" class="ln">   365&nbsp;&nbsp;</span>func (t *Transport) hasCustomTLSDialer() bool {
+<span id="L366" class="ln">   366&nbsp;&nbsp;</span>	return t.DialTLS != nil || t.DialTLSContext != nil
+<span id="L367" class="ln">   367&nbsp;&nbsp;</span>}
+<span id="L368" class="ln">   368&nbsp;&nbsp;</span>
+<span id="L369" class="ln">   369&nbsp;&nbsp;</span>var http2client = godebug.New(&#34;http2client&#34;)
+<span id="L370" class="ln">   370&nbsp;&nbsp;</span>
+<span id="L371" class="ln">   371&nbsp;&nbsp;</span><span class="comment">// onceSetNextProtoDefaults initializes TLSNextProto.</span>
+<span id="L372" class="ln">   372&nbsp;&nbsp;</span><span class="comment">// It must be called via t.nextProtoOnce.Do.</span>
+<span id="L373" class="ln">   373&nbsp;&nbsp;</span>func (t *Transport) onceSetNextProtoDefaults() {
+<span id="L374" class="ln">   374&nbsp;&nbsp;</span>	t.tlsNextProtoWasNil = (t.TLSNextProto == nil)
+<span id="L375" class="ln">   375&nbsp;&nbsp;</span>	if http2client.Value() == &#34;0&#34; {
+<span id="L376" class="ln">   376&nbsp;&nbsp;</span>		http2client.IncNonDefault()
+<span id="L377" class="ln">   377&nbsp;&nbsp;</span>		return
+<span id="L378" class="ln">   378&nbsp;&nbsp;</span>	}
+<span id="L379" class="ln">   379&nbsp;&nbsp;</span>
+<span id="L380" class="ln">   380&nbsp;&nbsp;</span>	<span class="comment">// If they&#39;ve already configured http2 with</span>
+<span id="L381" class="ln">   381&nbsp;&nbsp;</span>	<span class="comment">// golang.org/x/net/http2 instead of the bundled copy, try to</span>
+<span id="L382" class="ln">   382&nbsp;&nbsp;</span>	<span class="comment">// get at its http2.Transport value (via the &#34;https&#34;</span>
+<span id="L383" class="ln">   383&nbsp;&nbsp;</span>	<span class="comment">// altproto map) so we can call CloseIdleConnections on it if</span>
+<span id="L384" class="ln">   384&nbsp;&nbsp;</span>	<span class="comment">// requested. (Issue 22891)</span>
+<span id="L385" class="ln">   385&nbsp;&nbsp;</span>	altProto, _ := t.altProto.Load().(map[string]RoundTripper)
+<span id="L386" class="ln">   386&nbsp;&nbsp;</span>	if rv := reflect.ValueOf(altProto[&#34;https&#34;]); rv.IsValid() &amp;&amp; rv.Type().Kind() == reflect.Struct &amp;&amp; rv.Type().NumField() == 1 {
+<span id="L387" class="ln">   387&nbsp;&nbsp;</span>		if v := rv.Field(0); v.CanInterface() {
+<span id="L388" class="ln">   388&nbsp;&nbsp;</span>			if h2i, ok := v.Interface().(h2Transport); ok {
+<span id="L389" class="ln">   389&nbsp;&nbsp;</span>				t.h2transport = h2i
+<span id="L390" class="ln">   390&nbsp;&nbsp;</span>				return
+<span id="L391" class="ln">   391&nbsp;&nbsp;</span>			}
+<span id="L392" class="ln">   392&nbsp;&nbsp;</span>		}
+<span id="L393" class="ln">   393&nbsp;&nbsp;</span>	}
+<span id="L394" class="ln">   394&nbsp;&nbsp;</span>
+<span id="L395" class="ln">   395&nbsp;&nbsp;</span>	if t.TLSNextProto != nil {
+<span id="L396" class="ln">   396&nbsp;&nbsp;</span>		<span class="comment">// This is the documented way to disable http2 on a</span>
+<span id="L397" class="ln">   397&nbsp;&nbsp;</span>		<span class="comment">// Transport.</span>
+<span id="L398" class="ln">   398&nbsp;&nbsp;</span>		return
+<span id="L399" class="ln">   399&nbsp;&nbsp;</span>	}
+<span id="L400" class="ln">   400&nbsp;&nbsp;</span>	if !t.ForceAttemptHTTP2 &amp;&amp; (t.TLSClientConfig != nil || t.Dial != nil || t.DialContext != nil || t.hasCustomTLSDialer()) {
+<span id="L401" class="ln">   401&nbsp;&nbsp;</span>		<span class="comment">// Be conservative and don&#39;t automatically enable</span>
+<span id="L402" class="ln">   402&nbsp;&nbsp;</span>		<span class="comment">// http2 if they&#39;ve specified a custom TLS config or</span>
+<span id="L403" class="ln">   403&nbsp;&nbsp;</span>		<span class="comment">// custom dialers. Let them opt-in themselves via</span>
+<span id="L404" class="ln">   404&nbsp;&nbsp;</span>		<span class="comment">// http2.ConfigureTransport so we don&#39;t surprise them</span>
+<span id="L405" class="ln">   405&nbsp;&nbsp;</span>		<span class="comment">// by modifying their tls.Config. Issue 14275.</span>
+<span id="L406" class="ln">   406&nbsp;&nbsp;</span>		<span class="comment">// However, if ForceAttemptHTTP2 is true, it overrides the above checks.</span>
+<span id="L407" class="ln">   407&nbsp;&nbsp;</span>		return
+<span id="L408" class="ln">   408&nbsp;&nbsp;</span>	}
+<span id="L409" class="ln">   409&nbsp;&nbsp;</span>	if omitBundledHTTP2 {
+<span id="L410" class="ln">   410&nbsp;&nbsp;</span>		return
+<span id="L411" class="ln">   411&nbsp;&nbsp;</span>	}
+<span id="L412" class="ln">   412&nbsp;&nbsp;</span>	t2, err := http2configureTransports(t)
+<span id="L413" class="ln">   413&nbsp;&nbsp;</span>	if err != nil {
+<span id="L414" class="ln">   414&nbsp;&nbsp;</span>		log.Printf(&#34;Error enabling Transport HTTP/2 support: %v&#34;, err)
+<span id="L415" class="ln">   415&nbsp;&nbsp;</span>		return
+<span id="L416" class="ln">   416&nbsp;&nbsp;</span>	}
+<span id="L417" class="ln">   417&nbsp;&nbsp;</span>	t.h2transport = t2
+<span id="L418" class="ln">   418&nbsp;&nbsp;</span>
+<span id="L419" class="ln">   419&nbsp;&nbsp;</span>	<span class="comment">// Auto-configure the http2.Transport&#39;s MaxHeaderListSize from</span>
+<span id="L420" class="ln">   420&nbsp;&nbsp;</span>	<span class="comment">// the http.Transport&#39;s MaxResponseHeaderBytes. They don&#39;t</span>
+<span id="L421" class="ln">   421&nbsp;&nbsp;</span>	<span class="comment">// exactly mean the same thing, but they&#39;re close.</span>
+<span id="L422" class="ln">   422&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L423" class="ln">   423&nbsp;&nbsp;</span>	<span class="comment">// TODO: also add this to x/net/http2.Configure Transport, behind</span>
+<span id="L424" class="ln">   424&nbsp;&nbsp;</span>	<span class="comment">// a +build go1.7 build tag:</span>
+<span id="L425" class="ln">   425&nbsp;&nbsp;</span>	if limit1 := t.MaxResponseHeaderBytes; limit1 != 0 &amp;&amp; t2.MaxHeaderListSize == 0 {
+<span id="L426" class="ln">   426&nbsp;&nbsp;</span>		const h2max = 1&lt;&lt;32 - 1
+<span id="L427" class="ln">   427&nbsp;&nbsp;</span>		if limit1 &gt;= h2max {
+<span id="L428" class="ln">   428&nbsp;&nbsp;</span>			t2.MaxHeaderListSize = h2max
+<span id="L429" class="ln">   429&nbsp;&nbsp;</span>		} else {
+<span id="L430" class="ln">   430&nbsp;&nbsp;</span>			t2.MaxHeaderListSize = uint32(limit1)
+<span id="L431" class="ln">   431&nbsp;&nbsp;</span>		}
+<span id="L432" class="ln">   432&nbsp;&nbsp;</span>	}
+<span id="L433" class="ln">   433&nbsp;&nbsp;</span>}
+<span id="L434" class="ln">   434&nbsp;&nbsp;</span>
+<span id="L435" class="ln">   435&nbsp;&nbsp;</span><span class="comment">// ProxyFromEnvironment returns the URL of the proxy to use for a</span>
+<span id="L436" class="ln">   436&nbsp;&nbsp;</span><span class="comment">// given request, as indicated by the environment variables</span>
+<span id="L437" class="ln">   437&nbsp;&nbsp;</span><span class="comment">// HTTP_PROXY, HTTPS_PROXY and NO_PROXY (or the lowercase versions</span>
+<span id="L438" class="ln">   438&nbsp;&nbsp;</span><span class="comment">// thereof). Requests use the proxy from the environment variable</span>
+<span id="L439" class="ln">   439&nbsp;&nbsp;</span><span class="comment">// matching their scheme, unless excluded by NO_PROXY.</span>
+<span id="L440" class="ln">   440&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L441" class="ln">   441&nbsp;&nbsp;</span><span class="comment">// The environment values may be either a complete URL or a</span>
+<span id="L442" class="ln">   442&nbsp;&nbsp;</span><span class="comment">// &#34;host[:port]&#34;, in which case the &#34;http&#34; scheme is assumed.</span>
+<span id="L443" class="ln">   443&nbsp;&nbsp;</span><span class="comment">// The schemes &#34;http&#34;, &#34;https&#34;, and &#34;socks5&#34; are supported.</span>
+<span id="L444" class="ln">   444&nbsp;&nbsp;</span><span class="comment">// An error is returned if the value is a different form.</span>
+<span id="L445" class="ln">   445&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L446" class="ln">   446&nbsp;&nbsp;</span><span class="comment">// A nil URL and nil error are returned if no proxy is defined in the</span>
+<span id="L447" class="ln">   447&nbsp;&nbsp;</span><span class="comment">// environment, or a proxy should not be used for the given request,</span>
+<span id="L448" class="ln">   448&nbsp;&nbsp;</span><span class="comment">// as defined by NO_PROXY.</span>
+<span id="L449" class="ln">   449&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L450" class="ln">   450&nbsp;&nbsp;</span><span class="comment">// As a special case, if req.URL.Host is &#34;localhost&#34; (with or without</span>
+<span id="L451" class="ln">   451&nbsp;&nbsp;</span><span class="comment">// a port number), then a nil URL and nil error will be returned.</span>
+<span id="L452" class="ln">   452&nbsp;&nbsp;</span>func ProxyFromEnvironment(req *Request) (*url.URL, error) {
+<span id="L453" class="ln">   453&nbsp;&nbsp;</span>	return envProxyFunc()(req.URL)
+<span id="L454" class="ln">   454&nbsp;&nbsp;</span>}
+<span id="L455" class="ln">   455&nbsp;&nbsp;</span>
+<span id="L456" class="ln">   456&nbsp;&nbsp;</span><span class="comment">// ProxyURL returns a proxy function (for use in a [Transport])</span>
+<span id="L457" class="ln">   457&nbsp;&nbsp;</span><span class="comment">// that always returns the same URL.</span>
+<span id="L458" class="ln">   458&nbsp;&nbsp;</span>func ProxyURL(fixedURL *url.URL) func(*Request) (*url.URL, error) {
+<span id="L459" class="ln">   459&nbsp;&nbsp;</span>	return func(*Request) (*url.URL, error) {
+<span id="L460" class="ln">   460&nbsp;&nbsp;</span>		return fixedURL, nil
+<span id="L461" class="ln">   461&nbsp;&nbsp;</span>	}
+<span id="L462" class="ln">   462&nbsp;&nbsp;</span>}
+<span id="L463" class="ln">   463&nbsp;&nbsp;</span>
+<span id="L464" class="ln">   464&nbsp;&nbsp;</span><span class="comment">// transportRequest is a wrapper around a *Request that adds</span>
+<span id="L465" class="ln">   465&nbsp;&nbsp;</span><span class="comment">// optional extra headers to write and stores any error to return</span>
+<span id="L466" class="ln">   466&nbsp;&nbsp;</span><span class="comment">// from roundTrip.</span>
+<span id="L467" class="ln">   467&nbsp;&nbsp;</span>type transportRequest struct {
+<span id="L468" class="ln">   468&nbsp;&nbsp;</span>	*Request                         <span class="comment">// original request, not to be mutated</span>
+<span id="L469" class="ln">   469&nbsp;&nbsp;</span>	extra     Header                 <span class="comment">// extra headers to write, or nil</span>
+<span id="L470" class="ln">   470&nbsp;&nbsp;</span>	trace     *httptrace.ClientTrace <span class="comment">// optional</span>
+<span id="L471" class="ln">   471&nbsp;&nbsp;</span>	cancelKey cancelKey
+<span id="L472" class="ln">   472&nbsp;&nbsp;</span>
+<span id="L473" class="ln">   473&nbsp;&nbsp;</span>	mu  sync.Mutex <span class="comment">// guards err</span>
+<span id="L474" class="ln">   474&nbsp;&nbsp;</span>	err error      <span class="comment">// first setError value for mapRoundTripError to consider</span>
+<span id="L475" class="ln">   475&nbsp;&nbsp;</span>}
+<span id="L476" class="ln">   476&nbsp;&nbsp;</span>
+<span id="L477" class="ln">   477&nbsp;&nbsp;</span>func (tr *transportRequest) extraHeaders() Header {
+<span id="L478" class="ln">   478&nbsp;&nbsp;</span>	if tr.extra == nil {
+<span id="L479" class="ln">   479&nbsp;&nbsp;</span>		tr.extra = make(Header)
+<span id="L480" class="ln">   480&nbsp;&nbsp;</span>	}
+<span id="L481" class="ln">   481&nbsp;&nbsp;</span>	return tr.extra
+<span id="L482" class="ln">   482&nbsp;&nbsp;</span>}
+<span id="L483" class="ln">   483&nbsp;&nbsp;</span>
+<span id="L484" class="ln">   484&nbsp;&nbsp;</span>func (tr *transportRequest) setError(err error) {
+<span id="L485" class="ln">   485&nbsp;&nbsp;</span>	tr.mu.Lock()
+<span id="L486" class="ln">   486&nbsp;&nbsp;</span>	if tr.err == nil {
+<span id="L487" class="ln">   487&nbsp;&nbsp;</span>		tr.err = err
+<span id="L488" class="ln">   488&nbsp;&nbsp;</span>	}
+<span id="L489" class="ln">   489&nbsp;&nbsp;</span>	tr.mu.Unlock()
+<span id="L490" class="ln">   490&nbsp;&nbsp;</span>}
+<span id="L491" class="ln">   491&nbsp;&nbsp;</span>
+<span id="L492" class="ln">   492&nbsp;&nbsp;</span><span class="comment">// useRegisteredProtocol reports whether an alternate protocol (as registered</span>
+<span id="L493" class="ln">   493&nbsp;&nbsp;</span><span class="comment">// with Transport.RegisterProtocol) should be respected for this request.</span>
+<span id="L494" class="ln">   494&nbsp;&nbsp;</span>func (t *Transport) useRegisteredProtocol(req *Request) bool {
+<span id="L495" class="ln">   495&nbsp;&nbsp;</span>	if req.URL.Scheme == &#34;https&#34; &amp;&amp; req.requiresHTTP1() {
+<span id="L496" class="ln">   496&nbsp;&nbsp;</span>		<span class="comment">// If this request requires HTTP/1, don&#39;t use the</span>
+<span id="L497" class="ln">   497&nbsp;&nbsp;</span>		<span class="comment">// &#34;https&#34; alternate protocol, which is used by the</span>
+<span id="L498" class="ln">   498&nbsp;&nbsp;</span>		<span class="comment">// HTTP/2 code to take over requests if there&#39;s an</span>
+<span id="L499" class="ln">   499&nbsp;&nbsp;</span>		<span class="comment">// existing cached HTTP/2 connection.</span>
+<span id="L500" class="ln">   500&nbsp;&nbsp;</span>		return false
+<span id="L501" class="ln">   501&nbsp;&nbsp;</span>	}
+<span id="L502" class="ln">   502&nbsp;&nbsp;</span>	return true
+<span id="L503" class="ln">   503&nbsp;&nbsp;</span>}
+<span id="L504" class="ln">   504&nbsp;&nbsp;</span>
+<span id="L505" class="ln">   505&nbsp;&nbsp;</span><span class="comment">// alternateRoundTripper returns the alternate RoundTripper to use</span>
+<span id="L506" class="ln">   506&nbsp;&nbsp;</span><span class="comment">// for this request if the Request&#39;s URL scheme requires one,</span>
+<span id="L507" class="ln">   507&nbsp;&nbsp;</span><span class="comment">// or nil for the normal case of using the Transport.</span>
+<span id="L508" class="ln">   508&nbsp;&nbsp;</span>func (t *Transport) alternateRoundTripper(req *Request) RoundTripper {
+<span id="L509" class="ln">   509&nbsp;&nbsp;</span>	if !t.useRegisteredProtocol(req) {
+<span id="L510" class="ln">   510&nbsp;&nbsp;</span>		return nil
+<span id="L511" class="ln">   511&nbsp;&nbsp;</span>	}
+<span id="L512" class="ln">   512&nbsp;&nbsp;</span>	altProto, _ := t.altProto.Load().(map[string]RoundTripper)
+<span id="L513" class="ln">   513&nbsp;&nbsp;</span>	return altProto[req.URL.Scheme]
+<span id="L514" class="ln">   514&nbsp;&nbsp;</span>}
+<span id="L515" class="ln">   515&nbsp;&nbsp;</span>
+<span id="L516" class="ln">   516&nbsp;&nbsp;</span><span class="comment">// roundTrip implements a RoundTripper over HTTP.</span>
+<span id="L517" class="ln">   517&nbsp;&nbsp;</span>func (t *Transport) roundTrip(req *Request) (*Response, error) {
+<span id="L518" class="ln">   518&nbsp;&nbsp;</span>	t.nextProtoOnce.Do(t.onceSetNextProtoDefaults)
+<span id="L519" class="ln">   519&nbsp;&nbsp;</span>	ctx := req.Context()
+<span id="L520" class="ln">   520&nbsp;&nbsp;</span>	trace := httptrace.ContextClientTrace(ctx)
+<span id="L521" class="ln">   521&nbsp;&nbsp;</span>
+<span id="L522" class="ln">   522&nbsp;&nbsp;</span>	if req.URL == nil {
+<span id="L523" class="ln">   523&nbsp;&nbsp;</span>		req.closeBody()
+<span id="L524" class="ln">   524&nbsp;&nbsp;</span>		return nil, errors.New(&#34;http: nil Request.URL&#34;)
+<span id="L525" class="ln">   525&nbsp;&nbsp;</span>	}
+<span id="L526" class="ln">   526&nbsp;&nbsp;</span>	if req.Header == nil {
+<span id="L527" class="ln">   527&nbsp;&nbsp;</span>		req.closeBody()
+<span id="L528" class="ln">   528&nbsp;&nbsp;</span>		return nil, errors.New(&#34;http: nil Request.Header&#34;)
+<span id="L529" class="ln">   529&nbsp;&nbsp;</span>	}
+<span id="L530" class="ln">   530&nbsp;&nbsp;</span>	scheme := req.URL.Scheme
+<span id="L531" class="ln">   531&nbsp;&nbsp;</span>	isHTTP := scheme == &#34;http&#34; || scheme == &#34;https&#34;
+<span id="L532" class="ln">   532&nbsp;&nbsp;</span>	if isHTTP {
+<span id="L533" class="ln">   533&nbsp;&nbsp;</span>		for k, vv := range req.Header {
+<span id="L534" class="ln">   534&nbsp;&nbsp;</span>			if !httpguts.ValidHeaderFieldName(k) {
+<span id="L535" class="ln">   535&nbsp;&nbsp;</span>				req.closeBody()
+<span id="L536" class="ln">   536&nbsp;&nbsp;</span>				return nil, fmt.Errorf(&#34;net/http: invalid header field name %q&#34;, k)
+<span id="L537" class="ln">   537&nbsp;&nbsp;</span>			}
+<span id="L538" class="ln">   538&nbsp;&nbsp;</span>			for _, v := range vv {
+<span id="L539" class="ln">   539&nbsp;&nbsp;</span>				if !httpguts.ValidHeaderFieldValue(v) {
+<span id="L540" class="ln">   540&nbsp;&nbsp;</span>					req.closeBody()
+<span id="L541" class="ln">   541&nbsp;&nbsp;</span>					<span class="comment">// Don&#39;t include the value in the error, because it may be sensitive.</span>
+<span id="L542" class="ln">   542&nbsp;&nbsp;</span>					return nil, fmt.Errorf(&#34;net/http: invalid header field value for %q&#34;, k)
+<span id="L543" class="ln">   543&nbsp;&nbsp;</span>				}
+<span id="L544" class="ln">   544&nbsp;&nbsp;</span>			}
+<span id="L545" class="ln">   545&nbsp;&nbsp;</span>		}
+<span id="L546" class="ln">   546&nbsp;&nbsp;</span>	}
+<span id="L547" class="ln">   547&nbsp;&nbsp;</span>
+<span id="L548" class="ln">   548&nbsp;&nbsp;</span>	origReq := req
+<span id="L549" class="ln">   549&nbsp;&nbsp;</span>	cancelKey := cancelKey{origReq}
+<span id="L550" class="ln">   550&nbsp;&nbsp;</span>	req = setupRewindBody(req)
+<span id="L551" class="ln">   551&nbsp;&nbsp;</span>
+<span id="L552" class="ln">   552&nbsp;&nbsp;</span>	if altRT := t.alternateRoundTripper(req); altRT != nil {
+<span id="L553" class="ln">   553&nbsp;&nbsp;</span>		if resp, err := altRT.RoundTrip(req); err != ErrSkipAltProtocol {
+<span id="L554" class="ln">   554&nbsp;&nbsp;</span>			return resp, err
+<span id="L555" class="ln">   555&nbsp;&nbsp;</span>		}
+<span id="L556" class="ln">   556&nbsp;&nbsp;</span>		var err error
+<span id="L557" class="ln">   557&nbsp;&nbsp;</span>		req, err = rewindBody(req)
+<span id="L558" class="ln">   558&nbsp;&nbsp;</span>		if err != nil {
+<span id="L559" class="ln">   559&nbsp;&nbsp;</span>			return nil, err
+<span id="L560" class="ln">   560&nbsp;&nbsp;</span>		}
+<span id="L561" class="ln">   561&nbsp;&nbsp;</span>	}
+<span id="L562" class="ln">   562&nbsp;&nbsp;</span>	if !isHTTP {
+<span id="L563" class="ln">   563&nbsp;&nbsp;</span>		req.closeBody()
+<span id="L564" class="ln">   564&nbsp;&nbsp;</span>		return nil, badStringError(&#34;unsupported protocol scheme&#34;, scheme)
+<span id="L565" class="ln">   565&nbsp;&nbsp;</span>	}
+<span id="L566" class="ln">   566&nbsp;&nbsp;</span>	if req.Method != &#34;&#34; &amp;&amp; !validMethod(req.Method) {
+<span id="L567" class="ln">   567&nbsp;&nbsp;</span>		req.closeBody()
+<span id="L568" class="ln">   568&nbsp;&nbsp;</span>		return nil, fmt.Errorf(&#34;net/http: invalid method %q&#34;, req.Method)
+<span id="L569" class="ln">   569&nbsp;&nbsp;</span>	}
+<span id="L570" class="ln">   570&nbsp;&nbsp;</span>	if req.URL.Host == &#34;&#34; {
+<span id="L571" class="ln">   571&nbsp;&nbsp;</span>		req.closeBody()
+<span id="L572" class="ln">   572&nbsp;&nbsp;</span>		return nil, errors.New(&#34;http: no Host in request URL&#34;)
+<span id="L573" class="ln">   573&nbsp;&nbsp;</span>	}
+<span id="L574" class="ln">   574&nbsp;&nbsp;</span>
+<span id="L575" class="ln">   575&nbsp;&nbsp;</span>	for {
+<span id="L576" class="ln">   576&nbsp;&nbsp;</span>		select {
+<span id="L577" class="ln">   577&nbsp;&nbsp;</span>		case &lt;-ctx.Done():
+<span id="L578" class="ln">   578&nbsp;&nbsp;</span>			req.closeBody()
+<span id="L579" class="ln">   579&nbsp;&nbsp;</span>			return nil, ctx.Err()
+<span id="L580" class="ln">   580&nbsp;&nbsp;</span>		default:
+<span id="L581" class="ln">   581&nbsp;&nbsp;</span>		}
+<span id="L582" class="ln">   582&nbsp;&nbsp;</span>
+<span id="L583" class="ln">   583&nbsp;&nbsp;</span>		<span class="comment">// treq gets modified by roundTrip, so we need to recreate for each retry.</span>
+<span id="L584" class="ln">   584&nbsp;&nbsp;</span>		treq := &amp;transportRequest{Request: req, trace: trace, cancelKey: cancelKey}
+<span id="L585" class="ln">   585&nbsp;&nbsp;</span>		cm, err := t.connectMethodForRequest(treq)
+<span id="L586" class="ln">   586&nbsp;&nbsp;</span>		if err != nil {
+<span id="L587" class="ln">   587&nbsp;&nbsp;</span>			req.closeBody()
+<span id="L588" class="ln">   588&nbsp;&nbsp;</span>			return nil, err
+<span id="L589" class="ln">   589&nbsp;&nbsp;</span>		}
+<span id="L590" class="ln">   590&nbsp;&nbsp;</span>
+<span id="L591" class="ln">   591&nbsp;&nbsp;</span>		<span class="comment">// Get the cached or newly-created connection to either the</span>
+<span id="L592" class="ln">   592&nbsp;&nbsp;</span>		<span class="comment">// host (for http or https), the http proxy, or the http proxy</span>
+<span id="L593" class="ln">   593&nbsp;&nbsp;</span>		<span class="comment">// pre-CONNECTed to https server. In any case, we&#39;ll be ready</span>
+<span id="L594" class="ln">   594&nbsp;&nbsp;</span>		<span class="comment">// to send it requests.</span>
+<span id="L595" class="ln">   595&nbsp;&nbsp;</span>		pconn, err := t.getConn(treq, cm)
+<span id="L596" class="ln">   596&nbsp;&nbsp;</span>		if err != nil {
+<span id="L597" class="ln">   597&nbsp;&nbsp;</span>			t.setReqCanceler(cancelKey, nil)
+<span id="L598" class="ln">   598&nbsp;&nbsp;</span>			req.closeBody()
+<span id="L599" class="ln">   599&nbsp;&nbsp;</span>			return nil, err
+<span id="L600" class="ln">   600&nbsp;&nbsp;</span>		}
+<span id="L601" class="ln">   601&nbsp;&nbsp;</span>
+<span id="L602" class="ln">   602&nbsp;&nbsp;</span>		var resp *Response
+<span id="L603" class="ln">   603&nbsp;&nbsp;</span>		if pconn.alt != nil {
+<span id="L604" class="ln">   604&nbsp;&nbsp;</span>			<span class="comment">// HTTP/2 path.</span>
+<span id="L605" class="ln">   605&nbsp;&nbsp;</span>			t.setReqCanceler(cancelKey, nil) <span class="comment">// not cancelable with CancelRequest</span>
+<span id="L606" class="ln">   606&nbsp;&nbsp;</span>			resp, err = pconn.alt.RoundTrip(req)
+<span id="L607" class="ln">   607&nbsp;&nbsp;</span>		} else {
+<span id="L608" class="ln">   608&nbsp;&nbsp;</span>			resp, err = pconn.roundTrip(treq)
+<span id="L609" class="ln">   609&nbsp;&nbsp;</span>		}
+<span id="L610" class="ln">   610&nbsp;&nbsp;</span>		if err == nil {
+<span id="L611" class="ln">   611&nbsp;&nbsp;</span>			resp.Request = origReq
+<span id="L612" class="ln">   612&nbsp;&nbsp;</span>			return resp, nil
+<span id="L613" class="ln">   613&nbsp;&nbsp;</span>		}
+<span id="L614" class="ln">   614&nbsp;&nbsp;</span>
+<span id="L615" class="ln">   615&nbsp;&nbsp;</span>		<span class="comment">// Failed. Clean up and determine whether to retry.</span>
+<span id="L616" class="ln">   616&nbsp;&nbsp;</span>		if http2isNoCachedConnError(err) {
+<span id="L617" class="ln">   617&nbsp;&nbsp;</span>			if t.removeIdleConn(pconn) {
+<span id="L618" class="ln">   618&nbsp;&nbsp;</span>				t.decConnsPerHost(pconn.cacheKey)
+<span id="L619" class="ln">   619&nbsp;&nbsp;</span>			}
+<span id="L620" class="ln">   620&nbsp;&nbsp;</span>		} else if !pconn.shouldRetryRequest(req, err) {
+<span id="L621" class="ln">   621&nbsp;&nbsp;</span>			<span class="comment">// Issue 16465: return underlying net.Conn.Read error from peek,</span>
+<span id="L622" class="ln">   622&nbsp;&nbsp;</span>			<span class="comment">// as we&#39;ve historically done.</span>
+<span id="L623" class="ln">   623&nbsp;&nbsp;</span>			if e, ok := err.(nothingWrittenError); ok {
+<span id="L624" class="ln">   624&nbsp;&nbsp;</span>				err = e.error
+<span id="L625" class="ln">   625&nbsp;&nbsp;</span>			}
+<span id="L626" class="ln">   626&nbsp;&nbsp;</span>			if e, ok := err.(transportReadFromServerError); ok {
+<span id="L627" class="ln">   627&nbsp;&nbsp;</span>				err = e.err
+<span id="L628" class="ln">   628&nbsp;&nbsp;</span>			}
+<span id="L629" class="ln">   629&nbsp;&nbsp;</span>			if b, ok := req.Body.(*readTrackingBody); ok &amp;&amp; !b.didClose {
+<span id="L630" class="ln">   630&nbsp;&nbsp;</span>				<span class="comment">// Issue 49621: Close the request body if pconn.roundTrip</span>
+<span id="L631" class="ln">   631&nbsp;&nbsp;</span>				<span class="comment">// didn&#39;t do so already. This can happen if the pconn</span>
+<span id="L632" class="ln">   632&nbsp;&nbsp;</span>				<span class="comment">// write loop exits without reading the write request.</span>
+<span id="L633" class="ln">   633&nbsp;&nbsp;</span>				req.closeBody()
+<span id="L634" class="ln">   634&nbsp;&nbsp;</span>			}
+<span id="L635" class="ln">   635&nbsp;&nbsp;</span>			return nil, err
+<span id="L636" class="ln">   636&nbsp;&nbsp;</span>		}
+<span id="L637" class="ln">   637&nbsp;&nbsp;</span>		testHookRoundTripRetried()
+<span id="L638" class="ln">   638&nbsp;&nbsp;</span>
+<span id="L639" class="ln">   639&nbsp;&nbsp;</span>		<span class="comment">// Rewind the body if we&#39;re able to.</span>
+<span id="L640" class="ln">   640&nbsp;&nbsp;</span>		req, err = rewindBody(req)
+<span id="L641" class="ln">   641&nbsp;&nbsp;</span>		if err != nil {
+<span id="L642" class="ln">   642&nbsp;&nbsp;</span>			return nil, err
+<span id="L643" class="ln">   643&nbsp;&nbsp;</span>		}
+<span id="L644" class="ln">   644&nbsp;&nbsp;</span>	}
+<span id="L645" class="ln">   645&nbsp;&nbsp;</span>}
+<span id="L646" class="ln">   646&nbsp;&nbsp;</span>
+<span id="L647" class="ln">   647&nbsp;&nbsp;</span>var errCannotRewind = errors.New(&#34;net/http: cannot rewind body after connection loss&#34;)
+<span id="L648" class="ln">   648&nbsp;&nbsp;</span>
+<span id="L649" class="ln">   649&nbsp;&nbsp;</span>type readTrackingBody struct {
+<span id="L650" class="ln">   650&nbsp;&nbsp;</span>	io.ReadCloser
+<span id="L651" class="ln">   651&nbsp;&nbsp;</span>	didRead  bool
+<span id="L652" class="ln">   652&nbsp;&nbsp;</span>	didClose bool
+<span id="L653" class="ln">   653&nbsp;&nbsp;</span>}
+<span id="L654" class="ln">   654&nbsp;&nbsp;</span>
+<span id="L655" class="ln">   655&nbsp;&nbsp;</span>func (r *readTrackingBody) Read(data []byte) (int, error) {
+<span id="L656" class="ln">   656&nbsp;&nbsp;</span>	r.didRead = true
+<span id="L657" class="ln">   657&nbsp;&nbsp;</span>	return r.ReadCloser.Read(data)
+<span id="L658" class="ln">   658&nbsp;&nbsp;</span>}
+<span id="L659" class="ln">   659&nbsp;&nbsp;</span>
+<span id="L660" class="ln">   660&nbsp;&nbsp;</span>func (r *readTrackingBody) Close() error {
+<span id="L661" class="ln">   661&nbsp;&nbsp;</span>	r.didClose = true
+<span id="L662" class="ln">   662&nbsp;&nbsp;</span>	return r.ReadCloser.Close()
+<span id="L663" class="ln">   663&nbsp;&nbsp;</span>}
+<span id="L664" class="ln">   664&nbsp;&nbsp;</span>
+<span id="L665" class="ln">   665&nbsp;&nbsp;</span><span class="comment">// setupRewindBody returns a new request with a custom body wrapper</span>
+<span id="L666" class="ln">   666&nbsp;&nbsp;</span><span class="comment">// that can report whether the body needs rewinding.</span>
+<span id="L667" class="ln">   667&nbsp;&nbsp;</span><span class="comment">// This lets rewindBody avoid an error result when the request</span>
+<span id="L668" class="ln">   668&nbsp;&nbsp;</span><span class="comment">// does not have GetBody but the body hasn&#39;t been read at all yet.</span>
+<span id="L669" class="ln">   669&nbsp;&nbsp;</span>func setupRewindBody(req *Request) *Request {
+<span id="L670" class="ln">   670&nbsp;&nbsp;</span>	if req.Body == nil || req.Body == NoBody {
+<span id="L671" class="ln">   671&nbsp;&nbsp;</span>		return req
+<span id="L672" class="ln">   672&nbsp;&nbsp;</span>	}
+<span id="L673" class="ln">   673&nbsp;&nbsp;</span>	newReq := *req
+<span id="L674" class="ln">   674&nbsp;&nbsp;</span>	newReq.Body = &amp;readTrackingBody{ReadCloser: req.Body}
+<span id="L675" class="ln">   675&nbsp;&nbsp;</span>	return &amp;newReq
+<span id="L676" class="ln">   676&nbsp;&nbsp;</span>}
+<span id="L677" class="ln">   677&nbsp;&nbsp;</span>
+<span id="L678" class="ln">   678&nbsp;&nbsp;</span><span class="comment">// rewindBody returns a new request with the body rewound.</span>
+<span id="L679" class="ln">   679&nbsp;&nbsp;</span><span class="comment">// It returns req unmodified if the body does not need rewinding.</span>
+<span id="L680" class="ln">   680&nbsp;&nbsp;</span><span class="comment">// rewindBody takes care of closing req.Body when appropriate</span>
+<span id="L681" class="ln">   681&nbsp;&nbsp;</span><span class="comment">// (in all cases except when rewindBody returns req unmodified).</span>
+<span id="L682" class="ln">   682&nbsp;&nbsp;</span>func rewindBody(req *Request) (rewound *Request, err error) {
+<span id="L683" class="ln">   683&nbsp;&nbsp;</span>	if req.Body == nil || req.Body == NoBody || (!req.Body.(*readTrackingBody).didRead &amp;&amp; !req.Body.(*readTrackingBody).didClose) {
+<span id="L684" class="ln">   684&nbsp;&nbsp;</span>		return req, nil <span class="comment">// nothing to rewind</span>
+<span id="L685" class="ln">   685&nbsp;&nbsp;</span>	}
+<span id="L686" class="ln">   686&nbsp;&nbsp;</span>	if !req.Body.(*readTrackingBody).didClose {
+<span id="L687" class="ln">   687&nbsp;&nbsp;</span>		req.closeBody()
+<span id="L688" class="ln">   688&nbsp;&nbsp;</span>	}
+<span id="L689" class="ln">   689&nbsp;&nbsp;</span>	if req.GetBody == nil {
+<span id="L690" class="ln">   690&nbsp;&nbsp;</span>		return nil, errCannotRewind
+<span id="L691" class="ln">   691&nbsp;&nbsp;</span>	}
+<span id="L692" class="ln">   692&nbsp;&nbsp;</span>	body, err := req.GetBody()
+<span id="L693" class="ln">   693&nbsp;&nbsp;</span>	if err != nil {
+<span id="L694" class="ln">   694&nbsp;&nbsp;</span>		return nil, err
+<span id="L695" class="ln">   695&nbsp;&nbsp;</span>	}
+<span id="L696" class="ln">   696&nbsp;&nbsp;</span>	newReq := *req
+<span id="L697" class="ln">   697&nbsp;&nbsp;</span>	newReq.Body = &amp;readTrackingBody{ReadCloser: body}
+<span id="L698" class="ln">   698&nbsp;&nbsp;</span>	return &amp;newReq, nil
+<span id="L699" class="ln">   699&nbsp;&nbsp;</span>}
+<span id="L700" class="ln">   700&nbsp;&nbsp;</span>
+<span id="L701" class="ln">   701&nbsp;&nbsp;</span><span class="comment">// shouldRetryRequest reports whether we should retry sending a failed</span>
+<span id="L702" class="ln">   702&nbsp;&nbsp;</span><span class="comment">// HTTP request on a new connection. The non-nil input error is the</span>
+<span id="L703" class="ln">   703&nbsp;&nbsp;</span><span class="comment">// error from roundTrip.</span>
+<span id="L704" class="ln">   704&nbsp;&nbsp;</span>func (pc *persistConn) shouldRetryRequest(req *Request, err error) bool {
+<span id="L705" class="ln">   705&nbsp;&nbsp;</span>	if http2isNoCachedConnError(err) {
+<span id="L706" class="ln">   706&nbsp;&nbsp;</span>		<span class="comment">// Issue 16582: if the user started a bunch of</span>
+<span id="L707" class="ln">   707&nbsp;&nbsp;</span>		<span class="comment">// requests at once, they can all pick the same conn</span>
+<span id="L708" class="ln">   708&nbsp;&nbsp;</span>		<span class="comment">// and violate the server&#39;s max concurrent streams.</span>
+<span id="L709" class="ln">   709&nbsp;&nbsp;</span>		<span class="comment">// Instead, match the HTTP/1 behavior for now and dial</span>
+<span id="L710" class="ln">   710&nbsp;&nbsp;</span>		<span class="comment">// again to get a new TCP connection, rather than failing</span>
+<span id="L711" class="ln">   711&nbsp;&nbsp;</span>		<span class="comment">// this request.</span>
+<span id="L712" class="ln">   712&nbsp;&nbsp;</span>		return true
+<span id="L713" class="ln">   713&nbsp;&nbsp;</span>	}
+<span id="L714" class="ln">   714&nbsp;&nbsp;</span>	if err == errMissingHost {
+<span id="L715" class="ln">   715&nbsp;&nbsp;</span>		<span class="comment">// User error.</span>
+<span id="L716" class="ln">   716&nbsp;&nbsp;</span>		return false
+<span id="L717" class="ln">   717&nbsp;&nbsp;</span>	}
+<span id="L718" class="ln">   718&nbsp;&nbsp;</span>	if !pc.isReused() {
+<span id="L719" class="ln">   719&nbsp;&nbsp;</span>		<span class="comment">// This was a fresh connection. There&#39;s no reason the server</span>
+<span id="L720" class="ln">   720&nbsp;&nbsp;</span>		<span class="comment">// should&#39;ve hung up on us.</span>
+<span id="L721" class="ln">   721&nbsp;&nbsp;</span>		<span class="comment">//</span>
+<span id="L722" class="ln">   722&nbsp;&nbsp;</span>		<span class="comment">// Also, if we retried now, we could loop forever</span>
+<span id="L723" class="ln">   723&nbsp;&nbsp;</span>		<span class="comment">// creating new connections and retrying if the server</span>
+<span id="L724" class="ln">   724&nbsp;&nbsp;</span>		<span class="comment">// is just hanging up on us because it doesn&#39;t like</span>
+<span id="L725" class="ln">   725&nbsp;&nbsp;</span>		<span class="comment">// our request (as opposed to sending an error).</span>
+<span id="L726" class="ln">   726&nbsp;&nbsp;</span>		return false
+<span id="L727" class="ln">   727&nbsp;&nbsp;</span>	}
+<span id="L728" class="ln">   728&nbsp;&nbsp;</span>	if _, ok := err.(nothingWrittenError); ok {
+<span id="L729" class="ln">   729&nbsp;&nbsp;</span>		<span class="comment">// We never wrote anything, so it&#39;s safe to retry, if there&#39;s no body or we</span>
+<span id="L730" class="ln">   730&nbsp;&nbsp;</span>		<span class="comment">// can &#34;rewind&#34; the body with GetBody.</span>
+<span id="L731" class="ln">   731&nbsp;&nbsp;</span>		return req.outgoingLength() == 0 || req.GetBody != nil
+<span id="L732" class="ln">   732&nbsp;&nbsp;</span>	}
+<span id="L733" class="ln">   733&nbsp;&nbsp;</span>	if !req.isReplayable() {
+<span id="L734" class="ln">   734&nbsp;&nbsp;</span>		<span class="comment">// Don&#39;t retry non-idempotent requests.</span>
+<span id="L735" class="ln">   735&nbsp;&nbsp;</span>		return false
+<span id="L736" class="ln">   736&nbsp;&nbsp;</span>	}
+<span id="L737" class="ln">   737&nbsp;&nbsp;</span>	if _, ok := err.(transportReadFromServerError); ok {
+<span id="L738" class="ln">   738&nbsp;&nbsp;</span>		<span class="comment">// We got some non-EOF net.Conn.Read failure reading</span>
+<span id="L739" class="ln">   739&nbsp;&nbsp;</span>		<span class="comment">// the 1st response byte from the server.</span>
+<span id="L740" class="ln">   740&nbsp;&nbsp;</span>		return true
+<span id="L741" class="ln">   741&nbsp;&nbsp;</span>	}
+<span id="L742" class="ln">   742&nbsp;&nbsp;</span>	if err == errServerClosedIdle {
+<span id="L743" class="ln">   743&nbsp;&nbsp;</span>		<span class="comment">// The server replied with io.EOF while we were trying to</span>
+<span id="L744" class="ln">   744&nbsp;&nbsp;</span>		<span class="comment">// read the response. Probably an unfortunately keep-alive</span>
+<span id="L745" class="ln">   745&nbsp;&nbsp;</span>		<span class="comment">// timeout, just as the client was writing a request.</span>
+<span id="L746" class="ln">   746&nbsp;&nbsp;</span>		return true
+<span id="L747" class="ln">   747&nbsp;&nbsp;</span>	}
+<span id="L748" class="ln">   748&nbsp;&nbsp;</span>	return false <span class="comment">// conservatively</span>
+<span id="L749" class="ln">   749&nbsp;&nbsp;</span>}
+<span id="L750" class="ln">   750&nbsp;&nbsp;</span>
+<span id="L751" class="ln">   751&nbsp;&nbsp;</span><span class="comment">// ErrSkipAltProtocol is a sentinel error value defined by Transport.RegisterProtocol.</span>
+<span id="L752" class="ln">   752&nbsp;&nbsp;</span>var ErrSkipAltProtocol = errors.New(&#34;net/http: skip alternate protocol&#34;)
+<span id="L753" class="ln">   753&nbsp;&nbsp;</span>
+<span id="L754" class="ln">   754&nbsp;&nbsp;</span><span class="comment">// RegisterProtocol registers a new protocol with scheme.</span>
+<span id="L755" class="ln">   755&nbsp;&nbsp;</span><span class="comment">// The [Transport] will pass requests using the given scheme to rt.</span>
+<span id="L756" class="ln">   756&nbsp;&nbsp;</span><span class="comment">// It is rt&#39;s responsibility to simulate HTTP request semantics.</span>
+<span id="L757" class="ln">   757&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L758" class="ln">   758&nbsp;&nbsp;</span><span class="comment">// RegisterProtocol can be used by other packages to provide</span>
+<span id="L759" class="ln">   759&nbsp;&nbsp;</span><span class="comment">// implementations of protocol schemes like &#34;ftp&#34; or &#34;file&#34;.</span>
+<span id="L760" class="ln">   760&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L761" class="ln">   761&nbsp;&nbsp;</span><span class="comment">// If rt.RoundTrip returns [ErrSkipAltProtocol], the Transport will</span>
+<span id="L762" class="ln">   762&nbsp;&nbsp;</span><span class="comment">// handle the [Transport.RoundTrip] itself for that one request, as if the</span>
+<span id="L763" class="ln">   763&nbsp;&nbsp;</span><span class="comment">// protocol were not registered.</span>
+<span id="L764" class="ln">   764&nbsp;&nbsp;</span>func (t *Transport) RegisterProtocol(scheme string, rt RoundTripper) {
+<span id="L765" class="ln">   765&nbsp;&nbsp;</span>	t.altMu.Lock()
+<span id="L766" class="ln">   766&nbsp;&nbsp;</span>	defer t.altMu.Unlock()
+<span id="L767" class="ln">   767&nbsp;&nbsp;</span>	oldMap, _ := t.altProto.Load().(map[string]RoundTripper)
+<span id="L768" class="ln">   768&nbsp;&nbsp;</span>	if _, exists := oldMap[scheme]; exists {
+<span id="L769" class="ln">   769&nbsp;&nbsp;</span>		panic(&#34;protocol &#34; + scheme + &#34; already registered&#34;)
+<span id="L770" class="ln">   770&nbsp;&nbsp;</span>	}
+<span id="L771" class="ln">   771&nbsp;&nbsp;</span>	newMap := make(map[string]RoundTripper)
+<span id="L772" class="ln">   772&nbsp;&nbsp;</span>	for k, v := range oldMap {
+<span id="L773" class="ln">   773&nbsp;&nbsp;</span>		newMap[k] = v
+<span id="L774" class="ln">   774&nbsp;&nbsp;</span>	}
+<span id="L775" class="ln">   775&nbsp;&nbsp;</span>	newMap[scheme] = rt
+<span id="L776" class="ln">   776&nbsp;&nbsp;</span>	t.altProto.Store(newMap)
+<span id="L777" class="ln">   777&nbsp;&nbsp;</span>}
+<span id="L778" class="ln">   778&nbsp;&nbsp;</span>
+<span id="L779" class="ln">   779&nbsp;&nbsp;</span><span class="comment">// CloseIdleConnections closes any connections which were previously</span>
+<span id="L780" class="ln">   780&nbsp;&nbsp;</span><span class="comment">// connected from previous requests but are now sitting idle in</span>
+<span id="L781" class="ln">   781&nbsp;&nbsp;</span><span class="comment">// a &#34;keep-alive&#34; state. It does not interrupt any connections currently</span>
+<span id="L782" class="ln">   782&nbsp;&nbsp;</span><span class="comment">// in use.</span>
+<span id="L783" class="ln">   783&nbsp;&nbsp;</span>func (t *Transport) CloseIdleConnections() {
+<span id="L784" class="ln">   784&nbsp;&nbsp;</span>	t.nextProtoOnce.Do(t.onceSetNextProtoDefaults)
+<span id="L785" class="ln">   785&nbsp;&nbsp;</span>	t.idleMu.Lock()
+<span id="L786" class="ln">   786&nbsp;&nbsp;</span>	m := t.idleConn
+<span id="L787" class="ln">   787&nbsp;&nbsp;</span>	t.idleConn = nil
+<span id="L788" class="ln">   788&nbsp;&nbsp;</span>	t.closeIdle = true <span class="comment">// close newly idle connections</span>
+<span id="L789" class="ln">   789&nbsp;&nbsp;</span>	t.idleLRU = connLRU{}
+<span id="L790" class="ln">   790&nbsp;&nbsp;</span>	t.idleMu.Unlock()
+<span id="L791" class="ln">   791&nbsp;&nbsp;</span>	for _, conns := range m {
+<span id="L792" class="ln">   792&nbsp;&nbsp;</span>		for _, pconn := range conns {
+<span id="L793" class="ln">   793&nbsp;&nbsp;</span>			pconn.close(errCloseIdleConns)
+<span id="L794" class="ln">   794&nbsp;&nbsp;</span>		}
+<span id="L795" class="ln">   795&nbsp;&nbsp;</span>	}
+<span id="L796" class="ln">   796&nbsp;&nbsp;</span>	if t2 := t.h2transport; t2 != nil {
+<span id="L797" class="ln">   797&nbsp;&nbsp;</span>		t2.CloseIdleConnections()
+<span id="L798" class="ln">   798&nbsp;&nbsp;</span>	}
+<span id="L799" class="ln">   799&nbsp;&nbsp;</span>}
+<span id="L800" class="ln">   800&nbsp;&nbsp;</span>
+<span id="L801" class="ln">   801&nbsp;&nbsp;</span><span class="comment">// CancelRequest cancels an in-flight request by closing its connection.</span>
+<span id="L802" class="ln">   802&nbsp;&nbsp;</span><span class="comment">// CancelRequest should only be called after [Transport.RoundTrip] has returned.</span>
+<span id="L803" class="ln">   803&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L804" class="ln">   804&nbsp;&nbsp;</span><span class="comment">// Deprecated: Use [Request.WithContext] to create a request with a</span>
+<span id="L805" class="ln">   805&nbsp;&nbsp;</span><span class="comment">// cancelable context instead. CancelRequest cannot cancel HTTP/2</span>
+<span id="L806" class="ln">   806&nbsp;&nbsp;</span><span class="comment">// requests.</span>
+<span id="L807" class="ln">   807&nbsp;&nbsp;</span>func (t *Transport) CancelRequest(req *Request) {
+<span id="L808" class="ln">   808&nbsp;&nbsp;</span>	t.cancelRequest(cancelKey{req}, errRequestCanceled)
+<span id="L809" class="ln">   809&nbsp;&nbsp;</span>}
+<span id="L810" class="ln">   810&nbsp;&nbsp;</span>
+<span id="L811" class="ln">   811&nbsp;&nbsp;</span><span class="comment">// Cancel an in-flight request, recording the error value.</span>
+<span id="L812" class="ln">   812&nbsp;&nbsp;</span><span class="comment">// Returns whether the request was canceled.</span>
+<span id="L813" class="ln">   813&nbsp;&nbsp;</span>func (t *Transport) cancelRequest(key cancelKey, err error) bool {
+<span id="L814" class="ln">   814&nbsp;&nbsp;</span>	<span class="comment">// This function must not return until the cancel func has completed.</span>
+<span id="L815" class="ln">   815&nbsp;&nbsp;</span>	<span class="comment">// See: https://golang.org/issue/34658</span>
+<span id="L816" class="ln">   816&nbsp;&nbsp;</span>	t.reqMu.Lock()
+<span id="L817" class="ln">   817&nbsp;&nbsp;</span>	defer t.reqMu.Unlock()
+<span id="L818" class="ln">   818&nbsp;&nbsp;</span>	cancel := t.reqCanceler[key]
+<span id="L819" class="ln">   819&nbsp;&nbsp;</span>	delete(t.reqCanceler, key)
+<span id="L820" class="ln">   820&nbsp;&nbsp;</span>	if cancel != nil {
+<span id="L821" class="ln">   821&nbsp;&nbsp;</span>		cancel(err)
+<span id="L822" class="ln">   822&nbsp;&nbsp;</span>	}
+<span id="L823" class="ln">   823&nbsp;&nbsp;</span>
+<span id="L824" class="ln">   824&nbsp;&nbsp;</span>	return cancel != nil
+<span id="L825" class="ln">   825&nbsp;&nbsp;</span>}
+<span id="L826" class="ln">   826&nbsp;&nbsp;</span>
+<span id="L827" class="ln">   827&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L828" class="ln">   828&nbsp;&nbsp;</span><span class="comment">// Private implementation past this point.</span>
+<span id="L829" class="ln">   829&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L830" class="ln">   830&nbsp;&nbsp;</span>
+<span id="L831" class="ln">   831&nbsp;&nbsp;</span>var (
+<span id="L832" class="ln">   832&nbsp;&nbsp;</span>	envProxyOnce      sync.Once
+<span id="L833" class="ln">   833&nbsp;&nbsp;</span>	envProxyFuncValue func(*url.URL) (*url.URL, error)
+<span id="L834" class="ln">   834&nbsp;&nbsp;</span>)
+<span id="L835" class="ln">   835&nbsp;&nbsp;</span>
+<span id="L836" class="ln">   836&nbsp;&nbsp;</span><span class="comment">// envProxyFunc returns a function that reads the</span>
+<span id="L837" class="ln">   837&nbsp;&nbsp;</span><span class="comment">// environment variable to determine the proxy address.</span>
+<span id="L838" class="ln">   838&nbsp;&nbsp;</span>func envProxyFunc() func(*url.URL) (*url.URL, error) {
+<span id="L839" class="ln">   839&nbsp;&nbsp;</span>	envProxyOnce.Do(func() {
+<span id="L840" class="ln">   840&nbsp;&nbsp;</span>		envProxyFuncValue = httpproxy.FromEnvironment().ProxyFunc()
+<span id="L841" class="ln">   841&nbsp;&nbsp;</span>	})
+<span id="L842" class="ln">   842&nbsp;&nbsp;</span>	return envProxyFuncValue
+<span id="L843" class="ln">   843&nbsp;&nbsp;</span>}
+<span id="L844" class="ln">   844&nbsp;&nbsp;</span>
+<span id="L845" class="ln">   845&nbsp;&nbsp;</span><span class="comment">// resetProxyConfig is used by tests.</span>
+<span id="L846" class="ln">   846&nbsp;&nbsp;</span>func resetProxyConfig() {
+<span id="L847" class="ln">   847&nbsp;&nbsp;</span>	envProxyOnce = sync.Once{}
+<span id="L848" class="ln">   848&nbsp;&nbsp;</span>	envProxyFuncValue = nil
+<span id="L849" class="ln">   849&nbsp;&nbsp;</span>}
+<span id="L850" class="ln">   850&nbsp;&nbsp;</span>
+<span id="L851" class="ln">   851&nbsp;&nbsp;</span>func (t *Transport) connectMethodForRequest(treq *transportRequest) (cm connectMethod, err error) {
+<span id="L852" class="ln">   852&nbsp;&nbsp;</span>	cm.targetScheme = treq.URL.Scheme
+<span id="L853" class="ln">   853&nbsp;&nbsp;</span>	cm.targetAddr = canonicalAddr(treq.URL)
+<span id="L854" class="ln">   854&nbsp;&nbsp;</span>	if t.Proxy != nil {
+<span id="L855" class="ln">   855&nbsp;&nbsp;</span>		cm.proxyURL, err = t.Proxy(treq.Request)
+<span id="L856" class="ln">   856&nbsp;&nbsp;</span>	}
+<span id="L857" class="ln">   857&nbsp;&nbsp;</span>	cm.onlyH1 = treq.requiresHTTP1()
+<span id="L858" class="ln">   858&nbsp;&nbsp;</span>	return cm, err
+<span id="L859" class="ln">   859&nbsp;&nbsp;</span>}
+<span id="L860" class="ln">   860&nbsp;&nbsp;</span>
+<span id="L861" class="ln">   861&nbsp;&nbsp;</span><span class="comment">// proxyAuth returns the Proxy-Authorization header to set</span>
+<span id="L862" class="ln">   862&nbsp;&nbsp;</span><span class="comment">// on requests, if applicable.</span>
+<span id="L863" class="ln">   863&nbsp;&nbsp;</span>func (cm *connectMethod) proxyAuth() string {
+<span id="L864" class="ln">   864&nbsp;&nbsp;</span>	if cm.proxyURL == nil {
+<span id="L865" class="ln">   865&nbsp;&nbsp;</span>		return &#34;&#34;
+<span id="L866" class="ln">   866&nbsp;&nbsp;</span>	}
+<span id="L867" class="ln">   867&nbsp;&nbsp;</span>	if u := cm.proxyURL.User; u != nil {
+<span id="L868" class="ln">   868&nbsp;&nbsp;</span>		username := u.Username()
+<span id="L869" class="ln">   869&nbsp;&nbsp;</span>		password, _ := u.Password()
+<span id="L870" class="ln">   870&nbsp;&nbsp;</span>		return &#34;Basic &#34; + basicAuth(username, password)
+<span id="L871" class="ln">   871&nbsp;&nbsp;</span>	}
+<span id="L872" class="ln">   872&nbsp;&nbsp;</span>	return &#34;&#34;
+<span id="L873" class="ln">   873&nbsp;&nbsp;</span>}
+<span id="L874" class="ln">   874&nbsp;&nbsp;</span>
+<span id="L875" class="ln">   875&nbsp;&nbsp;</span><span class="comment">// error values for debugging and testing, not seen by users.</span>
+<span id="L876" class="ln">   876&nbsp;&nbsp;</span>var (
+<span id="L877" class="ln">   877&nbsp;&nbsp;</span>	errKeepAlivesDisabled = errors.New(&#34;http: putIdleConn: keep alives disabled&#34;)
+<span id="L878" class="ln">   878&nbsp;&nbsp;</span>	errConnBroken         = errors.New(&#34;http: putIdleConn: connection is in bad state&#34;)
+<span id="L879" class="ln">   879&nbsp;&nbsp;</span>	errCloseIdle          = errors.New(&#34;http: putIdleConn: CloseIdleConnections was called&#34;)
+<span id="L880" class="ln">   880&nbsp;&nbsp;</span>	errTooManyIdle        = errors.New(&#34;http: putIdleConn: too many idle connections&#34;)
+<span id="L881" class="ln">   881&nbsp;&nbsp;</span>	errTooManyIdleHost    = errors.New(&#34;http: putIdleConn: too many idle connections for host&#34;)
+<span id="L882" class="ln">   882&nbsp;&nbsp;</span>	errCloseIdleConns     = errors.New(&#34;http: CloseIdleConnections called&#34;)
+<span id="L883" class="ln">   883&nbsp;&nbsp;</span>	errReadLoopExiting    = errors.New(&#34;http: persistConn.readLoop exiting&#34;)
+<span id="L884" class="ln">   884&nbsp;&nbsp;</span>	errIdleConnTimeout    = errors.New(&#34;http: idle connection timeout&#34;)
+<span id="L885" class="ln">   885&nbsp;&nbsp;</span>
+<span id="L886" class="ln">   886&nbsp;&nbsp;</span>	<span class="comment">// errServerClosedIdle is not seen by users for idempotent requests, but may be</span>
+<span id="L887" class="ln">   887&nbsp;&nbsp;</span>	<span class="comment">// seen by a user if the server shuts down an idle connection and sends its FIN</span>
+<span id="L888" class="ln">   888&nbsp;&nbsp;</span>	<span class="comment">// in flight with already-written POST body bytes from the client.</span>
+<span id="L889" class="ln">   889&nbsp;&nbsp;</span>	<span class="comment">// See https://github.com/golang/go/issues/19943#issuecomment-355607646</span>
+<span id="L890" class="ln">   890&nbsp;&nbsp;</span>	errServerClosedIdle = errors.New(&#34;http: server closed idle connection&#34;)
+<span id="L891" class="ln">   891&nbsp;&nbsp;</span>)
+<span id="L892" class="ln">   892&nbsp;&nbsp;</span>
+<span id="L893" class="ln">   893&nbsp;&nbsp;</span><span class="comment">// transportReadFromServerError is used by Transport.readLoop when the</span>
+<span id="L894" class="ln">   894&nbsp;&nbsp;</span><span class="comment">// 1 byte peek read fails and we&#39;re actually anticipating a response.</span>
+<span id="L895" class="ln">   895&nbsp;&nbsp;</span><span class="comment">// Usually this is just due to the inherent keep-alive shut down race,</span>
+<span id="L896" class="ln">   896&nbsp;&nbsp;</span><span class="comment">// where the server closed the connection at the same time the client</span>
+<span id="L897" class="ln">   897&nbsp;&nbsp;</span><span class="comment">// wrote. The underlying err field is usually io.EOF or some</span>
+<span id="L898" class="ln">   898&nbsp;&nbsp;</span><span class="comment">// ECONNRESET sort of thing which varies by platform. But it might be</span>
+<span id="L899" class="ln">   899&nbsp;&nbsp;</span><span class="comment">// the user&#39;s custom net.Conn.Read error too, so we carry it along for</span>
+<span id="L900" class="ln">   900&nbsp;&nbsp;</span><span class="comment">// them to return from Transport.RoundTrip.</span>
+<span id="L901" class="ln">   901&nbsp;&nbsp;</span>type transportReadFromServerError struct {
+<span id="L902" class="ln">   902&nbsp;&nbsp;</span>	err error
+<span id="L903" class="ln">   903&nbsp;&nbsp;</span>}
+<span id="L904" class="ln">   904&nbsp;&nbsp;</span>
+<span id="L905" class="ln">   905&nbsp;&nbsp;</span>func (e transportReadFromServerError) Unwrap() error { return e.err }
+<span id="L906" class="ln">   906&nbsp;&nbsp;</span>
+<span id="L907" class="ln">   907&nbsp;&nbsp;</span>func (e transportReadFromServerError) Error() string {
+<span id="L908" class="ln">   908&nbsp;&nbsp;</span>	return fmt.Sprintf(&#34;net/http: Transport failed to read from server: %v&#34;, e.err)
+<span id="L909" class="ln">   909&nbsp;&nbsp;</span>}
+<span id="L910" class="ln">   910&nbsp;&nbsp;</span>
+<span id="L911" class="ln">   911&nbsp;&nbsp;</span>func (t *Transport) putOrCloseIdleConn(pconn *persistConn) {
+<span id="L912" class="ln">   912&nbsp;&nbsp;</span>	if err := t.tryPutIdleConn(pconn); err != nil {
+<span id="L913" class="ln">   913&nbsp;&nbsp;</span>		pconn.close(err)
+<span id="L914" class="ln">   914&nbsp;&nbsp;</span>	}
+<span id="L915" class="ln">   915&nbsp;&nbsp;</span>}
+<span id="L916" class="ln">   916&nbsp;&nbsp;</span>
+<span id="L917" class="ln">   917&nbsp;&nbsp;</span>func (t *Transport) maxIdleConnsPerHost() int {
+<span id="L918" class="ln">   918&nbsp;&nbsp;</span>	if v := t.MaxIdleConnsPerHost; v != 0 {
+<span id="L919" class="ln">   919&nbsp;&nbsp;</span>		return v
+<span id="L920" class="ln">   920&nbsp;&nbsp;</span>	}
+<span id="L921" class="ln">   921&nbsp;&nbsp;</span>	return DefaultMaxIdleConnsPerHost
+<span id="L922" class="ln">   922&nbsp;&nbsp;</span>}
+<span id="L923" class="ln">   923&nbsp;&nbsp;</span>
+<span id="L924" class="ln">   924&nbsp;&nbsp;</span><span class="comment">// tryPutIdleConn adds pconn to the list of idle persistent connections awaiting</span>
+<span id="L925" class="ln">   925&nbsp;&nbsp;</span><span class="comment">// a new request.</span>
+<span id="L926" class="ln">   926&nbsp;&nbsp;</span><span class="comment">// If pconn is no longer needed or not in a good state, tryPutIdleConn returns</span>
+<span id="L927" class="ln">   927&nbsp;&nbsp;</span><span class="comment">// an error explaining why it wasn&#39;t registered.</span>
+<span id="L928" class="ln">   928&nbsp;&nbsp;</span><span class="comment">// tryPutIdleConn does not close pconn. Use putOrCloseIdleConn instead for that.</span>
+<span id="L929" class="ln">   929&nbsp;&nbsp;</span>func (t *Transport) tryPutIdleConn(pconn *persistConn) error {
+<span id="L930" class="ln">   930&nbsp;&nbsp;</span>	if t.DisableKeepAlives || t.MaxIdleConnsPerHost &lt; 0 {
+<span id="L931" class="ln">   931&nbsp;&nbsp;</span>		return errKeepAlivesDisabled
+<span id="L932" class="ln">   932&nbsp;&nbsp;</span>	}
+<span id="L933" class="ln">   933&nbsp;&nbsp;</span>	if pconn.isBroken() {
+<span id="L934" class="ln">   934&nbsp;&nbsp;</span>		return errConnBroken
+<span id="L935" class="ln">   935&nbsp;&nbsp;</span>	}
+<span id="L936" class="ln">   936&nbsp;&nbsp;</span>	pconn.markReused()
+<span id="L937" class="ln">   937&nbsp;&nbsp;</span>
+<span id="L938" class="ln">   938&nbsp;&nbsp;</span>	t.idleMu.Lock()
+<span id="L939" class="ln">   939&nbsp;&nbsp;</span>	defer t.idleMu.Unlock()
+<span id="L940" class="ln">   940&nbsp;&nbsp;</span>
+<span id="L941" class="ln">   941&nbsp;&nbsp;</span>	<span class="comment">// HTTP/2 (pconn.alt != nil) connections do not come out of the idle list,</span>
+<span id="L942" class="ln">   942&nbsp;&nbsp;</span>	<span class="comment">// because multiple goroutines can use them simultaneously.</span>
+<span id="L943" class="ln">   943&nbsp;&nbsp;</span>	<span class="comment">// If this is an HTTP/2 connection being “returned,” we&#39;re done.</span>
+<span id="L944" class="ln">   944&nbsp;&nbsp;</span>	if pconn.alt != nil &amp;&amp; t.idleLRU.m[pconn] != nil {
+<span id="L945" class="ln">   945&nbsp;&nbsp;</span>		return nil
+<span id="L946" class="ln">   946&nbsp;&nbsp;</span>	}
+<span id="L947" class="ln">   947&nbsp;&nbsp;</span>
+<span id="L948" class="ln">   948&nbsp;&nbsp;</span>	<span class="comment">// Deliver pconn to goroutine waiting for idle connection, if any.</span>
+<span id="L949" class="ln">   949&nbsp;&nbsp;</span>	<span class="comment">// (They may be actively dialing, but this conn is ready first.</span>
+<span id="L950" class="ln">   950&nbsp;&nbsp;</span>	<span class="comment">// Chrome calls this socket late binding.</span>
+<span id="L951" class="ln">   951&nbsp;&nbsp;</span>	<span class="comment">// See https://www.chromium.org/developers/design-documents/network-stack#TOC-Connection-Management.)</span>
+<span id="L952" class="ln">   952&nbsp;&nbsp;</span>	key := pconn.cacheKey
+<span id="L953" class="ln">   953&nbsp;&nbsp;</span>	if q, ok := t.idleConnWait[key]; ok {
+<span id="L954" class="ln">   954&nbsp;&nbsp;</span>		done := false
+<span id="L955" class="ln">   955&nbsp;&nbsp;</span>		if pconn.alt == nil {
+<span id="L956" class="ln">   956&nbsp;&nbsp;</span>			<span class="comment">// HTTP/1.</span>
+<span id="L957" class="ln">   957&nbsp;&nbsp;</span>			<span class="comment">// Loop over the waiting list until we find a w that isn&#39;t done already, and hand it pconn.</span>
+<span id="L958" class="ln">   958&nbsp;&nbsp;</span>			for q.len() &gt; 0 {
+<span id="L959" class="ln">   959&nbsp;&nbsp;</span>				w := q.popFront()
+<span id="L960" class="ln">   960&nbsp;&nbsp;</span>				if w.tryDeliver(pconn, nil) {
+<span id="L961" class="ln">   961&nbsp;&nbsp;</span>					done = true
+<span id="L962" class="ln">   962&nbsp;&nbsp;</span>					break
+<span id="L963" class="ln">   963&nbsp;&nbsp;</span>				}
+<span id="L964" class="ln">   964&nbsp;&nbsp;</span>			}
+<span id="L965" class="ln">   965&nbsp;&nbsp;</span>		} else {
+<span id="L966" class="ln">   966&nbsp;&nbsp;</span>			<span class="comment">// HTTP/2.</span>
+<span id="L967" class="ln">   967&nbsp;&nbsp;</span>			<span class="comment">// Can hand the same pconn to everyone in the waiting list,</span>
+<span id="L968" class="ln">   968&nbsp;&nbsp;</span>			<span class="comment">// and we still won&#39;t be done: we want to put it in the idle</span>
+<span id="L969" class="ln">   969&nbsp;&nbsp;</span>			<span class="comment">// list unconditionally, for any future clients too.</span>
+<span id="L970" class="ln">   970&nbsp;&nbsp;</span>			for q.len() &gt; 0 {
+<span id="L971" class="ln">   971&nbsp;&nbsp;</span>				w := q.popFront()
+<span id="L972" class="ln">   972&nbsp;&nbsp;</span>				w.tryDeliver(pconn, nil)
+<span id="L973" class="ln">   973&nbsp;&nbsp;</span>			}
+<span id="L974" class="ln">   974&nbsp;&nbsp;</span>		}
+<span id="L975" class="ln">   975&nbsp;&nbsp;</span>		if q.len() == 0 {
+<span id="L976" class="ln">   976&nbsp;&nbsp;</span>			delete(t.idleConnWait, key)
+<span id="L977" class="ln">   977&nbsp;&nbsp;</span>		} else {
+<span id="L978" class="ln">   978&nbsp;&nbsp;</span>			t.idleConnWait[key] = q
+<span id="L979" class="ln">   979&nbsp;&nbsp;</span>		}
+<span id="L980" class="ln">   980&nbsp;&nbsp;</span>		if done {
+<span id="L981" class="ln">   981&nbsp;&nbsp;</span>			return nil
+<span id="L982" class="ln">   982&nbsp;&nbsp;</span>		}
+<span id="L983" class="ln">   983&nbsp;&nbsp;</span>	}
+<span id="L984" class="ln">   984&nbsp;&nbsp;</span>
+<span id="L985" class="ln">   985&nbsp;&nbsp;</span>	if t.closeIdle {
+<span id="L986" class="ln">   986&nbsp;&nbsp;</span>		return errCloseIdle
+<span id="L987" class="ln">   987&nbsp;&nbsp;</span>	}
+<span id="L988" class="ln">   988&nbsp;&nbsp;</span>	if t.idleConn == nil {
+<span id="L989" class="ln">   989&nbsp;&nbsp;</span>		t.idleConn = make(map[connectMethodKey][]*persistConn)
+<span id="L990" class="ln">   990&nbsp;&nbsp;</span>	}
+<span id="L991" class="ln">   991&nbsp;&nbsp;</span>	idles := t.idleConn[key]
+<span id="L992" class="ln">   992&nbsp;&nbsp;</span>	if len(idles) &gt;= t.maxIdleConnsPerHost() {
+<span id="L993" class="ln">   993&nbsp;&nbsp;</span>		return errTooManyIdleHost
+<span id="L994" class="ln">   994&nbsp;&nbsp;</span>	}
+<span id="L995" class="ln">   995&nbsp;&nbsp;</span>	for _, exist := range idles {
+<span id="L996" class="ln">   996&nbsp;&nbsp;</span>		if exist == pconn {
+<span id="L997" class="ln">   997&nbsp;&nbsp;</span>			log.Fatalf(&#34;dup idle pconn %p in freelist&#34;, pconn)
+<span id="L998" class="ln">   998&nbsp;&nbsp;</span>		}
+<span id="L999" class="ln">   999&nbsp;&nbsp;</span>	}
+<span id="L1000" class="ln">  1000&nbsp;&nbsp;</span>	t.idleConn[key] = append(idles, pconn)
+<span id="L1001" class="ln">  1001&nbsp;&nbsp;</span>	t.idleLRU.add(pconn)
+<span id="L1002" class="ln">  1002&nbsp;&nbsp;</span>	if t.MaxIdleConns != 0 &amp;&amp; t.idleLRU.len() &gt; t.MaxIdleConns {
+<span id="L1003" class="ln">  1003&nbsp;&nbsp;</span>		oldest := t.idleLRU.removeOldest()
+<span id="L1004" class="ln">  1004&nbsp;&nbsp;</span>		oldest.close(errTooManyIdle)
+<span id="L1005" class="ln">  1005&nbsp;&nbsp;</span>		t.removeIdleConnLocked(oldest)
+<span id="L1006" class="ln">  1006&nbsp;&nbsp;</span>	}
+<span id="L1007" class="ln">  1007&nbsp;&nbsp;</span>
+<span id="L1008" class="ln">  1008&nbsp;&nbsp;</span>	<span class="comment">// Set idle timer, but only for HTTP/1 (pconn.alt == nil).</span>
+<span id="L1009" class="ln">  1009&nbsp;&nbsp;</span>	<span class="comment">// The HTTP/2 implementation manages the idle timer itself</span>
+<span id="L1010" class="ln">  1010&nbsp;&nbsp;</span>	<span class="comment">// (see idleConnTimeout in h2_bundle.go).</span>
+<span id="L1011" class="ln">  1011&nbsp;&nbsp;</span>	if t.IdleConnTimeout &gt; 0 &amp;&amp; pconn.alt == nil {
+<span id="L1012" class="ln">  1012&nbsp;&nbsp;</span>		if pconn.idleTimer != nil {
+<span id="L1013" class="ln">  1013&nbsp;&nbsp;</span>			pconn.idleTimer.Reset(t.IdleConnTimeout)
+<span id="L1014" class="ln">  1014&nbsp;&nbsp;</span>		} else {
+<span id="L1015" class="ln">  1015&nbsp;&nbsp;</span>			pconn.idleTimer = time.AfterFunc(t.IdleConnTimeout, pconn.closeConnIfStillIdle)
+<span id="L1016" class="ln">  1016&nbsp;&nbsp;</span>		}
+<span id="L1017" class="ln">  1017&nbsp;&nbsp;</span>	}
+<span id="L1018" class="ln">  1018&nbsp;&nbsp;</span>	pconn.idleAt = time.Now()
+<span id="L1019" class="ln">  1019&nbsp;&nbsp;</span>	return nil
+<span id="L1020" class="ln">  1020&nbsp;&nbsp;</span>}
+<span id="L1021" class="ln">  1021&nbsp;&nbsp;</span>
+<span id="L1022" class="ln">  1022&nbsp;&nbsp;</span><span class="comment">// queueForIdleConn queues w to receive the next idle connection for w.cm.</span>
+<span id="L1023" class="ln">  1023&nbsp;&nbsp;</span><span class="comment">// As an optimization hint to the caller, queueForIdleConn reports whether</span>
+<span id="L1024" class="ln">  1024&nbsp;&nbsp;</span><span class="comment">// it successfully delivered an already-idle connection.</span>
+<span id="L1025" class="ln">  1025&nbsp;&nbsp;</span>func (t *Transport) queueForIdleConn(w *wantConn) (delivered bool) {
+<span id="L1026" class="ln">  1026&nbsp;&nbsp;</span>	if t.DisableKeepAlives {
+<span id="L1027" class="ln">  1027&nbsp;&nbsp;</span>		return false
+<span id="L1028" class="ln">  1028&nbsp;&nbsp;</span>	}
+<span id="L1029" class="ln">  1029&nbsp;&nbsp;</span>
+<span id="L1030" class="ln">  1030&nbsp;&nbsp;</span>	t.idleMu.Lock()
+<span id="L1031" class="ln">  1031&nbsp;&nbsp;</span>	defer t.idleMu.Unlock()
+<span id="L1032" class="ln">  1032&nbsp;&nbsp;</span>
+<span id="L1033" class="ln">  1033&nbsp;&nbsp;</span>	<span class="comment">// Stop closing connections that become idle - we might want one.</span>
+<span id="L1034" class="ln">  1034&nbsp;&nbsp;</span>	<span class="comment">// (That is, undo the effect of t.CloseIdleConnections.)</span>
+<span id="L1035" class="ln">  1035&nbsp;&nbsp;</span>	t.closeIdle = false
+<span id="L1036" class="ln">  1036&nbsp;&nbsp;</span>
+<span id="L1037" class="ln">  1037&nbsp;&nbsp;</span>	if w == nil {
+<span id="L1038" class="ln">  1038&nbsp;&nbsp;</span>		<span class="comment">// Happens in test hook.</span>
+<span id="L1039" class="ln">  1039&nbsp;&nbsp;</span>		return false
+<span id="L1040" class="ln">  1040&nbsp;&nbsp;</span>	}
+<span id="L1041" class="ln">  1041&nbsp;&nbsp;</span>
+<span id="L1042" class="ln">  1042&nbsp;&nbsp;</span>	<span class="comment">// If IdleConnTimeout is set, calculate the oldest</span>
+<span id="L1043" class="ln">  1043&nbsp;&nbsp;</span>	<span class="comment">// persistConn.idleAt time we&#39;re willing to use a cached idle</span>
+<span id="L1044" class="ln">  1044&nbsp;&nbsp;</span>	<span class="comment">// conn.</span>
+<span id="L1045" class="ln">  1045&nbsp;&nbsp;</span>	var oldTime time.Time
+<span id="L1046" class="ln">  1046&nbsp;&nbsp;</span>	if t.IdleConnTimeout &gt; 0 {
+<span id="L1047" class="ln">  1047&nbsp;&nbsp;</span>		oldTime = time.Now().Add(-t.IdleConnTimeout)
+<span id="L1048" class="ln">  1048&nbsp;&nbsp;</span>	}
+<span id="L1049" class="ln">  1049&nbsp;&nbsp;</span>
+<span id="L1050" class="ln">  1050&nbsp;&nbsp;</span>	<span class="comment">// Look for most recently-used idle connection.</span>
+<span id="L1051" class="ln">  1051&nbsp;&nbsp;</span>	if list, ok := t.idleConn[w.key]; ok {
+<span id="L1052" class="ln">  1052&nbsp;&nbsp;</span>		stop := false
+<span id="L1053" class="ln">  1053&nbsp;&nbsp;</span>		delivered := false
+<span id="L1054" class="ln">  1054&nbsp;&nbsp;</span>		for len(list) &gt; 0 &amp;&amp; !stop {
+<span id="L1055" class="ln">  1055&nbsp;&nbsp;</span>			pconn := list[len(list)-1]
+<span id="L1056" class="ln">  1056&nbsp;&nbsp;</span>
+<span id="L1057" class="ln">  1057&nbsp;&nbsp;</span>			<span class="comment">// See whether this connection has been idle too long, considering</span>
+<span id="L1058" class="ln">  1058&nbsp;&nbsp;</span>			<span class="comment">// only the wall time (the Round(0)), in case this is a laptop or VM</span>
+<span id="L1059" class="ln">  1059&nbsp;&nbsp;</span>			<span class="comment">// coming out of suspend with previously cached idle connections.</span>
+<span id="L1060" class="ln">  1060&nbsp;&nbsp;</span>			tooOld := !oldTime.IsZero() &amp;&amp; pconn.idleAt.Round(0).Before(oldTime)
+<span id="L1061" class="ln">  1061&nbsp;&nbsp;</span>			if tooOld {
+<span id="L1062" class="ln">  1062&nbsp;&nbsp;</span>				<span class="comment">// Async cleanup. Launch in its own goroutine (as if a</span>
+<span id="L1063" class="ln">  1063&nbsp;&nbsp;</span>				<span class="comment">// time.AfterFunc called it); it acquires idleMu, which we&#39;re</span>
+<span id="L1064" class="ln">  1064&nbsp;&nbsp;</span>				<span class="comment">// holding, and does a synchronous net.Conn.Close.</span>
+<span id="L1065" class="ln">  1065&nbsp;&nbsp;</span>				go pconn.closeConnIfStillIdle()
+<span id="L1066" class="ln">  1066&nbsp;&nbsp;</span>			}
+<span id="L1067" class="ln">  1067&nbsp;&nbsp;</span>			if pconn.isBroken() || tooOld {
+<span id="L1068" class="ln">  1068&nbsp;&nbsp;</span>				<span class="comment">// If either persistConn.readLoop has marked the connection</span>
+<span id="L1069" class="ln">  1069&nbsp;&nbsp;</span>				<span class="comment">// broken, but Transport.removeIdleConn has not yet removed it</span>
+<span id="L1070" class="ln">  1070&nbsp;&nbsp;</span>				<span class="comment">// from the idle list, or if this persistConn is too old (it was</span>
+<span id="L1071" class="ln">  1071&nbsp;&nbsp;</span>				<span class="comment">// idle too long), then ignore it and look for another. In both</span>
+<span id="L1072" class="ln">  1072&nbsp;&nbsp;</span>				<span class="comment">// cases it&#39;s already in the process of being closed.</span>
+<span id="L1073" class="ln">  1073&nbsp;&nbsp;</span>				list = list[:len(list)-1]
+<span id="L1074" class="ln">  1074&nbsp;&nbsp;</span>				continue
+<span id="L1075" class="ln">  1075&nbsp;&nbsp;</span>			}
+<span id="L1076" class="ln">  1076&nbsp;&nbsp;</span>			delivered = w.tryDeliver(pconn, nil)
+<span id="L1077" class="ln">  1077&nbsp;&nbsp;</span>			if delivered {
+<span id="L1078" class="ln">  1078&nbsp;&nbsp;</span>				if pconn.alt != nil {
+<span id="L1079" class="ln">  1079&nbsp;&nbsp;</span>					<span class="comment">// HTTP/2: multiple clients can share pconn.</span>
+<span id="L1080" class="ln">  1080&nbsp;&nbsp;</span>					<span class="comment">// Leave it in the list.</span>
+<span id="L1081" class="ln">  1081&nbsp;&nbsp;</span>				} else {
+<span id="L1082" class="ln">  1082&nbsp;&nbsp;</span>					<span class="comment">// HTTP/1: only one client can use pconn.</span>
+<span id="L1083" class="ln">  1083&nbsp;&nbsp;</span>					<span class="comment">// Remove it from the list.</span>
+<span id="L1084" class="ln">  1084&nbsp;&nbsp;</span>					t.idleLRU.remove(pconn)
+<span id="L1085" class="ln">  1085&nbsp;&nbsp;</span>					list = list[:len(list)-1]
+<span id="L1086" class="ln">  1086&nbsp;&nbsp;</span>				}
+<span id="L1087" class="ln">  1087&nbsp;&nbsp;</span>			}
+<span id="L1088" class="ln">  1088&nbsp;&nbsp;</span>			stop = true
+<span id="L1089" class="ln">  1089&nbsp;&nbsp;</span>		}
+<span id="L1090" class="ln">  1090&nbsp;&nbsp;</span>		if len(list) &gt; 0 {
+<span id="L1091" class="ln">  1091&nbsp;&nbsp;</span>			t.idleConn[w.key] = list
+<span id="L1092" class="ln">  1092&nbsp;&nbsp;</span>		} else {
+<span id="L1093" class="ln">  1093&nbsp;&nbsp;</span>			delete(t.idleConn, w.key)
+<span id="L1094" class="ln">  1094&nbsp;&nbsp;</span>		}
+<span id="L1095" class="ln">  1095&nbsp;&nbsp;</span>		if stop {
+<span id="L1096" class="ln">  1096&nbsp;&nbsp;</span>			return delivered
+<span id="L1097" class="ln">  1097&nbsp;&nbsp;</span>		}
+<span id="L1098" class="ln">  1098&nbsp;&nbsp;</span>	}
+<span id="L1099" class="ln">  1099&nbsp;&nbsp;</span>
+<span id="L1100" class="ln">  1100&nbsp;&nbsp;</span>	<span class="comment">// Register to receive next connection that becomes idle.</span>
+<span id="L1101" class="ln">  1101&nbsp;&nbsp;</span>	if t.idleConnWait == nil {
+<span id="L1102" class="ln">  1102&nbsp;&nbsp;</span>		t.idleConnWait = make(map[connectMethodKey]wantConnQueue)
+<span id="L1103" class="ln">  1103&nbsp;&nbsp;</span>	}
+<span id="L1104" class="ln">  1104&nbsp;&nbsp;</span>	q := t.idleConnWait[w.key]
+<span id="L1105" class="ln">  1105&nbsp;&nbsp;</span>	q.cleanFront()
+<span id="L1106" class="ln">  1106&nbsp;&nbsp;</span>	q.pushBack(w)
+<span id="L1107" class="ln">  1107&nbsp;&nbsp;</span>	t.idleConnWait[w.key] = q
+<span id="L1108" class="ln">  1108&nbsp;&nbsp;</span>	return false
+<span id="L1109" class="ln">  1109&nbsp;&nbsp;</span>}
+<span id="L1110" class="ln">  1110&nbsp;&nbsp;</span>
+<span id="L1111" class="ln">  1111&nbsp;&nbsp;</span><span class="comment">// removeIdleConn marks pconn as dead.</span>
+<span id="L1112" class="ln">  1112&nbsp;&nbsp;</span>func (t *Transport) removeIdleConn(pconn *persistConn) bool {
+<span id="L1113" class="ln">  1113&nbsp;&nbsp;</span>	t.idleMu.Lock()
+<span id="L1114" class="ln">  1114&nbsp;&nbsp;</span>	defer t.idleMu.Unlock()
+<span id="L1115" class="ln">  1115&nbsp;&nbsp;</span>	return t.removeIdleConnLocked(pconn)
+<span id="L1116" class="ln">  1116&nbsp;&nbsp;</span>}
+<span id="L1117" class="ln">  1117&nbsp;&nbsp;</span>
+<span id="L1118" class="ln">  1118&nbsp;&nbsp;</span><span class="comment">// t.idleMu must be held.</span>
+<span id="L1119" class="ln">  1119&nbsp;&nbsp;</span>func (t *Transport) removeIdleConnLocked(pconn *persistConn) bool {
+<span id="L1120" class="ln">  1120&nbsp;&nbsp;</span>	if pconn.idleTimer != nil {
+<span id="L1121" class="ln">  1121&nbsp;&nbsp;</span>		pconn.idleTimer.Stop()
+<span id="L1122" class="ln">  1122&nbsp;&nbsp;</span>	}
+<span id="L1123" class="ln">  1123&nbsp;&nbsp;</span>	t.idleLRU.remove(pconn)
+<span id="L1124" class="ln">  1124&nbsp;&nbsp;</span>	key := pconn.cacheKey
+<span id="L1125" class="ln">  1125&nbsp;&nbsp;</span>	pconns := t.idleConn[key]
+<span id="L1126" class="ln">  1126&nbsp;&nbsp;</span>	var removed bool
+<span id="L1127" class="ln">  1127&nbsp;&nbsp;</span>	switch len(pconns) {
+<span id="L1128" class="ln">  1128&nbsp;&nbsp;</span>	case 0:
+<span id="L1129" class="ln">  1129&nbsp;&nbsp;</span>		<span class="comment">// Nothing</span>
+<span id="L1130" class="ln">  1130&nbsp;&nbsp;</span>	case 1:
+<span id="L1131" class="ln">  1131&nbsp;&nbsp;</span>		if pconns[0] == pconn {
+<span id="L1132" class="ln">  1132&nbsp;&nbsp;</span>			delete(t.idleConn, key)
+<span id="L1133" class="ln">  1133&nbsp;&nbsp;</span>			removed = true
+<span id="L1134" class="ln">  1134&nbsp;&nbsp;</span>		}
+<span id="L1135" class="ln">  1135&nbsp;&nbsp;</span>	default:
+<span id="L1136" class="ln">  1136&nbsp;&nbsp;</span>		for i, v := range pconns {
+<span id="L1137" class="ln">  1137&nbsp;&nbsp;</span>			if v != pconn {
+<span id="L1138" class="ln">  1138&nbsp;&nbsp;</span>				continue
+<span id="L1139" class="ln">  1139&nbsp;&nbsp;</span>			}
+<span id="L1140" class="ln">  1140&nbsp;&nbsp;</span>			<span class="comment">// Slide down, keeping most recently-used</span>
+<span id="L1141" class="ln">  1141&nbsp;&nbsp;</span>			<span class="comment">// conns at the end.</span>
+<span id="L1142" class="ln">  1142&nbsp;&nbsp;</span>			copy(pconns[i:], pconns[i+1:])
+<span id="L1143" class="ln">  1143&nbsp;&nbsp;</span>			t.idleConn[key] = pconns[:len(pconns)-1]
+<span id="L1144" class="ln">  1144&nbsp;&nbsp;</span>			removed = true
+<span id="L1145" class="ln">  1145&nbsp;&nbsp;</span>			break
+<span id="L1146" class="ln">  1146&nbsp;&nbsp;</span>		}
+<span id="L1147" class="ln">  1147&nbsp;&nbsp;</span>	}
+<span id="L1148" class="ln">  1148&nbsp;&nbsp;</span>	return removed
+<span id="L1149" class="ln">  1149&nbsp;&nbsp;</span>}
+<span id="L1150" class="ln">  1150&nbsp;&nbsp;</span>
+<span id="L1151" class="ln">  1151&nbsp;&nbsp;</span>func (t *Transport) setReqCanceler(key cancelKey, fn func(error)) {
+<span id="L1152" class="ln">  1152&nbsp;&nbsp;</span>	t.reqMu.Lock()
+<span id="L1153" class="ln">  1153&nbsp;&nbsp;</span>	defer t.reqMu.Unlock()
+<span id="L1154" class="ln">  1154&nbsp;&nbsp;</span>	if t.reqCanceler == nil {
+<span id="L1155" class="ln">  1155&nbsp;&nbsp;</span>		t.reqCanceler = make(map[cancelKey]func(error))
+<span id="L1156" class="ln">  1156&nbsp;&nbsp;</span>	}
+<span id="L1157" class="ln">  1157&nbsp;&nbsp;</span>	if fn != nil {
+<span id="L1158" class="ln">  1158&nbsp;&nbsp;</span>		t.reqCanceler[key] = fn
+<span id="L1159" class="ln">  1159&nbsp;&nbsp;</span>	} else {
+<span id="L1160" class="ln">  1160&nbsp;&nbsp;</span>		delete(t.reqCanceler, key)
+<span id="L1161" class="ln">  1161&nbsp;&nbsp;</span>	}
+<span id="L1162" class="ln">  1162&nbsp;&nbsp;</span>}
+<span id="L1163" class="ln">  1163&nbsp;&nbsp;</span>
+<span id="L1164" class="ln">  1164&nbsp;&nbsp;</span><span class="comment">// replaceReqCanceler replaces an existing cancel function. If there is no cancel function</span>
+<span id="L1165" class="ln">  1165&nbsp;&nbsp;</span><span class="comment">// for the request, we don&#39;t set the function and return false.</span>
+<span id="L1166" class="ln">  1166&nbsp;&nbsp;</span><span class="comment">// Since CancelRequest will clear the canceler, we can use the return value to detect if</span>
+<span id="L1167" class="ln">  1167&nbsp;&nbsp;</span><span class="comment">// the request was canceled since the last setReqCancel call.</span>
+<span id="L1168" class="ln">  1168&nbsp;&nbsp;</span>func (t *Transport) replaceReqCanceler(key cancelKey, fn func(error)) bool {
+<span id="L1169" class="ln">  1169&nbsp;&nbsp;</span>	t.reqMu.Lock()
+<span id="L1170" class="ln">  1170&nbsp;&nbsp;</span>	defer t.reqMu.Unlock()
+<span id="L1171" class="ln">  1171&nbsp;&nbsp;</span>	_, ok := t.reqCanceler[key]
+<span id="L1172" class="ln">  1172&nbsp;&nbsp;</span>	if !ok {
+<span id="L1173" class="ln">  1173&nbsp;&nbsp;</span>		return false
+<span id="L1174" class="ln">  1174&nbsp;&nbsp;</span>	}
+<span id="L1175" class="ln">  1175&nbsp;&nbsp;</span>	if fn != nil {
+<span id="L1176" class="ln">  1176&nbsp;&nbsp;</span>		t.reqCanceler[key] = fn
+<span id="L1177" class="ln">  1177&nbsp;&nbsp;</span>	} else {
+<span id="L1178" class="ln">  1178&nbsp;&nbsp;</span>		delete(t.reqCanceler, key)
+<span id="L1179" class="ln">  1179&nbsp;&nbsp;</span>	}
+<span id="L1180" class="ln">  1180&nbsp;&nbsp;</span>	return true
+<span id="L1181" class="ln">  1181&nbsp;&nbsp;</span>}
+<span id="L1182" class="ln">  1182&nbsp;&nbsp;</span>
+<span id="L1183" class="ln">  1183&nbsp;&nbsp;</span>var zeroDialer net.Dialer
+<span id="L1184" class="ln">  1184&nbsp;&nbsp;</span>
+<span id="L1185" class="ln">  1185&nbsp;&nbsp;</span>func (t *Transport) dial(ctx context.Context, network, addr string) (net.Conn, error) {
+<span id="L1186" class="ln">  1186&nbsp;&nbsp;</span>	if t.DialContext != nil {
+<span id="L1187" class="ln">  1187&nbsp;&nbsp;</span>		c, err := t.DialContext(ctx, network, addr)
+<span id="L1188" class="ln">  1188&nbsp;&nbsp;</span>		if c == nil &amp;&amp; err == nil {
+<span id="L1189" class="ln">  1189&nbsp;&nbsp;</span>			err = errors.New(&#34;net/http: Transport.DialContext hook returned (nil, nil)&#34;)
+<span id="L1190" class="ln">  1190&nbsp;&nbsp;</span>		}
+<span id="L1191" class="ln">  1191&nbsp;&nbsp;</span>		return c, err
+<span id="L1192" class="ln">  1192&nbsp;&nbsp;</span>	}
+<span id="L1193" class="ln">  1193&nbsp;&nbsp;</span>	if t.Dial != nil {
+<span id="L1194" class="ln">  1194&nbsp;&nbsp;</span>		c, err := t.Dial(network, addr)
+<span id="L1195" class="ln">  1195&nbsp;&nbsp;</span>		if c == nil &amp;&amp; err == nil {
+<span id="L1196" class="ln">  1196&nbsp;&nbsp;</span>			err = errors.New(&#34;net/http: Transport.Dial hook returned (nil, nil)&#34;)
+<span id="L1197" class="ln">  1197&nbsp;&nbsp;</span>		}
+<span id="L1198" class="ln">  1198&nbsp;&nbsp;</span>		return c, err
+<span id="L1199" class="ln">  1199&nbsp;&nbsp;</span>	}
+<span id="L1200" class="ln">  1200&nbsp;&nbsp;</span>	return zeroDialer.DialContext(ctx, network, addr)
+<span id="L1201" class="ln">  1201&nbsp;&nbsp;</span>}
+<span id="L1202" class="ln">  1202&nbsp;&nbsp;</span>
+<span id="L1203" class="ln">  1203&nbsp;&nbsp;</span><span class="comment">// A wantConn records state about a wanted connection</span>
+<span id="L1204" class="ln">  1204&nbsp;&nbsp;</span><span class="comment">// (that is, an active call to getConn).</span>
+<span id="L1205" class="ln">  1205&nbsp;&nbsp;</span><span class="comment">// The conn may be gotten by dialing or by finding an idle connection,</span>
+<span id="L1206" class="ln">  1206&nbsp;&nbsp;</span><span class="comment">// or a cancellation may make the conn no longer wanted.</span>
+<span id="L1207" class="ln">  1207&nbsp;&nbsp;</span><span class="comment">// These three options are racing against each other and use</span>
+<span id="L1208" class="ln">  1208&nbsp;&nbsp;</span><span class="comment">// wantConn to coordinate and agree about the winning outcome.</span>
+<span id="L1209" class="ln">  1209&nbsp;&nbsp;</span>type wantConn struct {
+<span id="L1210" class="ln">  1210&nbsp;&nbsp;</span>	cm    connectMethod
+<span id="L1211" class="ln">  1211&nbsp;&nbsp;</span>	key   connectMethodKey <span class="comment">// cm.key()</span>
+<span id="L1212" class="ln">  1212&nbsp;&nbsp;</span>	ready chan struct{}    <span class="comment">// closed when pc, err pair is delivered</span>
+<span id="L1213" class="ln">  1213&nbsp;&nbsp;</span>
+<span id="L1214" class="ln">  1214&nbsp;&nbsp;</span>	<span class="comment">// hooks for testing to know when dials are done</span>
+<span id="L1215" class="ln">  1215&nbsp;&nbsp;</span>	<span class="comment">// beforeDial is called in the getConn goroutine when the dial is queued.</span>
+<span id="L1216" class="ln">  1216&nbsp;&nbsp;</span>	<span class="comment">// afterDial is called when the dial is completed or canceled.</span>
+<span id="L1217" class="ln">  1217&nbsp;&nbsp;</span>	beforeDial func()
+<span id="L1218" class="ln">  1218&nbsp;&nbsp;</span>	afterDial  func()
+<span id="L1219" class="ln">  1219&nbsp;&nbsp;</span>
+<span id="L1220" class="ln">  1220&nbsp;&nbsp;</span>	mu  sync.Mutex      <span class="comment">// protects ctx, pc, err, close(ready)</span>
+<span id="L1221" class="ln">  1221&nbsp;&nbsp;</span>	ctx context.Context <span class="comment">// context for dial, cleared after delivered or canceled</span>
+<span id="L1222" class="ln">  1222&nbsp;&nbsp;</span>	pc  *persistConn
+<span id="L1223" class="ln">  1223&nbsp;&nbsp;</span>	err error
+<span id="L1224" class="ln">  1224&nbsp;&nbsp;</span>}
+<span id="L1225" class="ln">  1225&nbsp;&nbsp;</span>
+<span id="L1226" class="ln">  1226&nbsp;&nbsp;</span><span class="comment">// waiting reports whether w is still waiting for an answer (connection or error).</span>
+<span id="L1227" class="ln">  1227&nbsp;&nbsp;</span>func (w *wantConn) waiting() bool {
+<span id="L1228" class="ln">  1228&nbsp;&nbsp;</span>	select {
+<span id="L1229" class="ln">  1229&nbsp;&nbsp;</span>	case &lt;-w.ready:
+<span id="L1230" class="ln">  1230&nbsp;&nbsp;</span>		return false
+<span id="L1231" class="ln">  1231&nbsp;&nbsp;</span>	default:
+<span id="L1232" class="ln">  1232&nbsp;&nbsp;</span>		return true
+<span id="L1233" class="ln">  1233&nbsp;&nbsp;</span>	}
+<span id="L1234" class="ln">  1234&nbsp;&nbsp;</span>}
+<span id="L1235" class="ln">  1235&nbsp;&nbsp;</span>
+<span id="L1236" class="ln">  1236&nbsp;&nbsp;</span><span class="comment">// getCtxForDial returns context for dial or nil if connection was delivered or canceled.</span>
+<span id="L1237" class="ln">  1237&nbsp;&nbsp;</span>func (w *wantConn) getCtxForDial() context.Context {
+<span id="L1238" class="ln">  1238&nbsp;&nbsp;</span>	w.mu.Lock()
+<span id="L1239" class="ln">  1239&nbsp;&nbsp;</span>	defer w.mu.Unlock()
+<span id="L1240" class="ln">  1240&nbsp;&nbsp;</span>	return w.ctx
+<span id="L1241" class="ln">  1241&nbsp;&nbsp;</span>}
+<span id="L1242" class="ln">  1242&nbsp;&nbsp;</span>
+<span id="L1243" class="ln">  1243&nbsp;&nbsp;</span><span class="comment">// tryDeliver attempts to deliver pc, err to w and reports whether it succeeded.</span>
+<span id="L1244" class="ln">  1244&nbsp;&nbsp;</span>func (w *wantConn) tryDeliver(pc *persistConn, err error) bool {
+<span id="L1245" class="ln">  1245&nbsp;&nbsp;</span>	w.mu.Lock()
+<span id="L1246" class="ln">  1246&nbsp;&nbsp;</span>	defer w.mu.Unlock()
+<span id="L1247" class="ln">  1247&nbsp;&nbsp;</span>
+<span id="L1248" class="ln">  1248&nbsp;&nbsp;</span>	if w.pc != nil || w.err != nil {
+<span id="L1249" class="ln">  1249&nbsp;&nbsp;</span>		return false
+<span id="L1250" class="ln">  1250&nbsp;&nbsp;</span>	}
+<span id="L1251" class="ln">  1251&nbsp;&nbsp;</span>
+<span id="L1252" class="ln">  1252&nbsp;&nbsp;</span>	w.ctx = nil
+<span id="L1253" class="ln">  1253&nbsp;&nbsp;</span>	w.pc = pc
+<span id="L1254" class="ln">  1254&nbsp;&nbsp;</span>	w.err = err
+<span id="L1255" class="ln">  1255&nbsp;&nbsp;</span>	if w.pc == nil &amp;&amp; w.err == nil {
+<span id="L1256" class="ln">  1256&nbsp;&nbsp;</span>		panic(&#34;net/http: internal error: misuse of tryDeliver&#34;)
+<span id="L1257" class="ln">  1257&nbsp;&nbsp;</span>	}
+<span id="L1258" class="ln">  1258&nbsp;&nbsp;</span>	close(w.ready)
+<span id="L1259" class="ln">  1259&nbsp;&nbsp;</span>	return true
+<span id="L1260" class="ln">  1260&nbsp;&nbsp;</span>}
+<span id="L1261" class="ln">  1261&nbsp;&nbsp;</span>
+<span id="L1262" class="ln">  1262&nbsp;&nbsp;</span><span class="comment">// cancel marks w as no longer wanting a result (for example, due to cancellation).</span>
+<span id="L1263" class="ln">  1263&nbsp;&nbsp;</span><span class="comment">// If a connection has been delivered already, cancel returns it with t.putOrCloseIdleConn.</span>
+<span id="L1264" class="ln">  1264&nbsp;&nbsp;</span>func (w *wantConn) cancel(t *Transport, err error) {
+<span id="L1265" class="ln">  1265&nbsp;&nbsp;</span>	w.mu.Lock()
+<span id="L1266" class="ln">  1266&nbsp;&nbsp;</span>	if w.pc == nil &amp;&amp; w.err == nil {
+<span id="L1267" class="ln">  1267&nbsp;&nbsp;</span>		close(w.ready) <span class="comment">// catch misbehavior in future delivery</span>
+<span id="L1268" class="ln">  1268&nbsp;&nbsp;</span>	}
+<span id="L1269" class="ln">  1269&nbsp;&nbsp;</span>	pc := w.pc
+<span id="L1270" class="ln">  1270&nbsp;&nbsp;</span>	w.ctx = nil
+<span id="L1271" class="ln">  1271&nbsp;&nbsp;</span>	w.pc = nil
+<span id="L1272" class="ln">  1272&nbsp;&nbsp;</span>	w.err = err
+<span id="L1273" class="ln">  1273&nbsp;&nbsp;</span>	w.mu.Unlock()
+<span id="L1274" class="ln">  1274&nbsp;&nbsp;</span>
+<span id="L1275" class="ln">  1275&nbsp;&nbsp;</span>	if pc != nil {
+<span id="L1276" class="ln">  1276&nbsp;&nbsp;</span>		t.putOrCloseIdleConn(pc)
+<span id="L1277" class="ln">  1277&nbsp;&nbsp;</span>	}
+<span id="L1278" class="ln">  1278&nbsp;&nbsp;</span>}
+<span id="L1279" class="ln">  1279&nbsp;&nbsp;</span>
+<span id="L1280" class="ln">  1280&nbsp;&nbsp;</span><span class="comment">// A wantConnQueue is a queue of wantConns.</span>
+<span id="L1281" class="ln">  1281&nbsp;&nbsp;</span>type wantConnQueue struct {
+<span id="L1282" class="ln">  1282&nbsp;&nbsp;</span>	<span class="comment">// This is a queue, not a deque.</span>
+<span id="L1283" class="ln">  1283&nbsp;&nbsp;</span>	<span class="comment">// It is split into two stages - head[headPos:] and tail.</span>
+<span id="L1284" class="ln">  1284&nbsp;&nbsp;</span>	<span class="comment">// popFront is trivial (headPos++) on the first stage, and</span>
+<span id="L1285" class="ln">  1285&nbsp;&nbsp;</span>	<span class="comment">// pushBack is trivial (append) on the second stage.</span>
+<span id="L1286" class="ln">  1286&nbsp;&nbsp;</span>	<span class="comment">// If the first stage is empty, popFront can swap the</span>
+<span id="L1287" class="ln">  1287&nbsp;&nbsp;</span>	<span class="comment">// first and second stages to remedy the situation.</span>
+<span id="L1288" class="ln">  1288&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L1289" class="ln">  1289&nbsp;&nbsp;</span>	<span class="comment">// This two-stage split is analogous to the use of two lists</span>
+<span id="L1290" class="ln">  1290&nbsp;&nbsp;</span>	<span class="comment">// in Okasaki&#39;s purely functional queue but without the</span>
+<span id="L1291" class="ln">  1291&nbsp;&nbsp;</span>	<span class="comment">// overhead of reversing the list when swapping stages.</span>
+<span id="L1292" class="ln">  1292&nbsp;&nbsp;</span>	head    []*wantConn
+<span id="L1293" class="ln">  1293&nbsp;&nbsp;</span>	headPos int
+<span id="L1294" class="ln">  1294&nbsp;&nbsp;</span>	tail    []*wantConn
+<span id="L1295" class="ln">  1295&nbsp;&nbsp;</span>}
+<span id="L1296" class="ln">  1296&nbsp;&nbsp;</span>
+<span id="L1297" class="ln">  1297&nbsp;&nbsp;</span><span class="comment">// len returns the number of items in the queue.</span>
+<span id="L1298" class="ln">  1298&nbsp;&nbsp;</span>func (q *wantConnQueue) len() int {
+<span id="L1299" class="ln">  1299&nbsp;&nbsp;</span>	return len(q.head) - q.headPos + len(q.tail)
+<span id="L1300" class="ln">  1300&nbsp;&nbsp;</span>}
+<span id="L1301" class="ln">  1301&nbsp;&nbsp;</span>
+<span id="L1302" class="ln">  1302&nbsp;&nbsp;</span><span class="comment">// pushBack adds w to the back of the queue.</span>
+<span id="L1303" class="ln">  1303&nbsp;&nbsp;</span>func (q *wantConnQueue) pushBack(w *wantConn) {
+<span id="L1304" class="ln">  1304&nbsp;&nbsp;</span>	q.tail = append(q.tail, w)
+<span id="L1305" class="ln">  1305&nbsp;&nbsp;</span>}
+<span id="L1306" class="ln">  1306&nbsp;&nbsp;</span>
+<span id="L1307" class="ln">  1307&nbsp;&nbsp;</span><span class="comment">// popFront removes and returns the wantConn at the front of the queue.</span>
+<span id="L1308" class="ln">  1308&nbsp;&nbsp;</span>func (q *wantConnQueue) popFront() *wantConn {
+<span id="L1309" class="ln">  1309&nbsp;&nbsp;</span>	if q.headPos &gt;= len(q.head) {
+<span id="L1310" class="ln">  1310&nbsp;&nbsp;</span>		if len(q.tail) == 0 {
+<span id="L1311" class="ln">  1311&nbsp;&nbsp;</span>			return nil
+<span id="L1312" class="ln">  1312&nbsp;&nbsp;</span>		}
+<span id="L1313" class="ln">  1313&nbsp;&nbsp;</span>		<span class="comment">// Pick up tail as new head, clear tail.</span>
+<span id="L1314" class="ln">  1314&nbsp;&nbsp;</span>		q.head, q.headPos, q.tail = q.tail, 0, q.head[:0]
+<span id="L1315" class="ln">  1315&nbsp;&nbsp;</span>	}
+<span id="L1316" class="ln">  1316&nbsp;&nbsp;</span>	w := q.head[q.headPos]
+<span id="L1317" class="ln">  1317&nbsp;&nbsp;</span>	q.head[q.headPos] = nil
+<span id="L1318" class="ln">  1318&nbsp;&nbsp;</span>	q.headPos++
+<span id="L1319" class="ln">  1319&nbsp;&nbsp;</span>	return w
+<span id="L1320" class="ln">  1320&nbsp;&nbsp;</span>}
+<span id="L1321" class="ln">  1321&nbsp;&nbsp;</span>
+<span id="L1322" class="ln">  1322&nbsp;&nbsp;</span><span class="comment">// peekFront returns the wantConn at the front of the queue without removing it.</span>
+<span id="L1323" class="ln">  1323&nbsp;&nbsp;</span>func (q *wantConnQueue) peekFront() *wantConn {
+<span id="L1324" class="ln">  1324&nbsp;&nbsp;</span>	if q.headPos &lt; len(q.head) {
+<span id="L1325" class="ln">  1325&nbsp;&nbsp;</span>		return q.head[q.headPos]
+<span id="L1326" class="ln">  1326&nbsp;&nbsp;</span>	}
+<span id="L1327" class="ln">  1327&nbsp;&nbsp;</span>	if len(q.tail) &gt; 0 {
+<span id="L1328" class="ln">  1328&nbsp;&nbsp;</span>		return q.tail[0]
+<span id="L1329" class="ln">  1329&nbsp;&nbsp;</span>	}
+<span id="L1330" class="ln">  1330&nbsp;&nbsp;</span>	return nil
+<span id="L1331" class="ln">  1331&nbsp;&nbsp;</span>}
+<span id="L1332" class="ln">  1332&nbsp;&nbsp;</span>
+<span id="L1333" class="ln">  1333&nbsp;&nbsp;</span><span class="comment">// cleanFront pops any wantConns that are no longer waiting from the head of the</span>
+<span id="L1334" class="ln">  1334&nbsp;&nbsp;</span><span class="comment">// queue, reporting whether any were popped.</span>
+<span id="L1335" class="ln">  1335&nbsp;&nbsp;</span>func (q *wantConnQueue) cleanFront() (cleaned bool) {
+<span id="L1336" class="ln">  1336&nbsp;&nbsp;</span>	for {
+<span id="L1337" class="ln">  1337&nbsp;&nbsp;</span>		w := q.peekFront()
+<span id="L1338" class="ln">  1338&nbsp;&nbsp;</span>		if w == nil || w.waiting() {
+<span id="L1339" class="ln">  1339&nbsp;&nbsp;</span>			return cleaned
+<span id="L1340" class="ln">  1340&nbsp;&nbsp;</span>		}
+<span id="L1341" class="ln">  1341&nbsp;&nbsp;</span>		q.popFront()
+<span id="L1342" class="ln">  1342&nbsp;&nbsp;</span>		cleaned = true
+<span id="L1343" class="ln">  1343&nbsp;&nbsp;</span>	}
+<span id="L1344" class="ln">  1344&nbsp;&nbsp;</span>}
+<span id="L1345" class="ln">  1345&nbsp;&nbsp;</span>
+<span id="L1346" class="ln">  1346&nbsp;&nbsp;</span>func (t *Transport) customDialTLS(ctx context.Context, network, addr string) (conn net.Conn, err error) {
+<span id="L1347" class="ln">  1347&nbsp;&nbsp;</span>	if t.DialTLSContext != nil {
+<span id="L1348" class="ln">  1348&nbsp;&nbsp;</span>		conn, err = t.DialTLSContext(ctx, network, addr)
+<span id="L1349" class="ln">  1349&nbsp;&nbsp;</span>	} else {
+<span id="L1350" class="ln">  1350&nbsp;&nbsp;</span>		conn, err = t.DialTLS(network, addr)
+<span id="L1351" class="ln">  1351&nbsp;&nbsp;</span>	}
+<span id="L1352" class="ln">  1352&nbsp;&nbsp;</span>	if conn == nil &amp;&amp; err == nil {
+<span id="L1353" class="ln">  1353&nbsp;&nbsp;</span>		err = errors.New(&#34;net/http: Transport.DialTLS or DialTLSContext returned (nil, nil)&#34;)
+<span id="L1354" class="ln">  1354&nbsp;&nbsp;</span>	}
+<span id="L1355" class="ln">  1355&nbsp;&nbsp;</span>	return
+<span id="L1356" class="ln">  1356&nbsp;&nbsp;</span>}
+<span id="L1357" class="ln">  1357&nbsp;&nbsp;</span>
+<span id="L1358" class="ln">  1358&nbsp;&nbsp;</span><span class="comment">// getConn dials and creates a new persistConn to the target as</span>
+<span id="L1359" class="ln">  1359&nbsp;&nbsp;</span><span class="comment">// specified in the connectMethod. This includes doing a proxy CONNECT</span>
+<span id="L1360" class="ln">  1360&nbsp;&nbsp;</span><span class="comment">// and/or setting up TLS.  If this doesn&#39;t return an error, the persistConn</span>
+<span id="L1361" class="ln">  1361&nbsp;&nbsp;</span><span class="comment">// is ready to write requests to.</span>
+<span id="L1362" class="ln">  1362&nbsp;&nbsp;</span>func (t *Transport) getConn(treq *transportRequest, cm connectMethod) (pc *persistConn, err error) {
+<span id="L1363" class="ln">  1363&nbsp;&nbsp;</span>	req := treq.Request
+<span id="L1364" class="ln">  1364&nbsp;&nbsp;</span>	trace := treq.trace
+<span id="L1365" class="ln">  1365&nbsp;&nbsp;</span>	ctx := req.Context()
+<span id="L1366" class="ln">  1366&nbsp;&nbsp;</span>	if trace != nil &amp;&amp; trace.GetConn != nil {
+<span id="L1367" class="ln">  1367&nbsp;&nbsp;</span>		trace.GetConn(cm.addr())
+<span id="L1368" class="ln">  1368&nbsp;&nbsp;</span>	}
+<span id="L1369" class="ln">  1369&nbsp;&nbsp;</span>
+<span id="L1370" class="ln">  1370&nbsp;&nbsp;</span>	w := &amp;wantConn{
+<span id="L1371" class="ln">  1371&nbsp;&nbsp;</span>		cm:         cm,
+<span id="L1372" class="ln">  1372&nbsp;&nbsp;</span>		key:        cm.key(),
+<span id="L1373" class="ln">  1373&nbsp;&nbsp;</span>		ctx:        ctx,
+<span id="L1374" class="ln">  1374&nbsp;&nbsp;</span>		ready:      make(chan struct{}, 1),
+<span id="L1375" class="ln">  1375&nbsp;&nbsp;</span>		beforeDial: testHookPrePendingDial,
+<span id="L1376" class="ln">  1376&nbsp;&nbsp;</span>		afterDial:  testHookPostPendingDial,
+<span id="L1377" class="ln">  1377&nbsp;&nbsp;</span>	}
+<span id="L1378" class="ln">  1378&nbsp;&nbsp;</span>	defer func() {
+<span id="L1379" class="ln">  1379&nbsp;&nbsp;</span>		if err != nil {
+<span id="L1380" class="ln">  1380&nbsp;&nbsp;</span>			w.cancel(t, err)
+<span id="L1381" class="ln">  1381&nbsp;&nbsp;</span>		}
+<span id="L1382" class="ln">  1382&nbsp;&nbsp;</span>	}()
+<span id="L1383" class="ln">  1383&nbsp;&nbsp;</span>
+<span id="L1384" class="ln">  1384&nbsp;&nbsp;</span>	<span class="comment">// Queue for idle connection.</span>
+<span id="L1385" class="ln">  1385&nbsp;&nbsp;</span>	if delivered := t.queueForIdleConn(w); delivered {
+<span id="L1386" class="ln">  1386&nbsp;&nbsp;</span>		pc := w.pc
+<span id="L1387" class="ln">  1387&nbsp;&nbsp;</span>		<span class="comment">// Trace only for HTTP/1.</span>
+<span id="L1388" class="ln">  1388&nbsp;&nbsp;</span>		<span class="comment">// HTTP/2 calls trace.GotConn itself.</span>
+<span id="L1389" class="ln">  1389&nbsp;&nbsp;</span>		if pc.alt == nil &amp;&amp; trace != nil &amp;&amp; trace.GotConn != nil {
+<span id="L1390" class="ln">  1390&nbsp;&nbsp;</span>			trace.GotConn(pc.gotIdleConnTrace(pc.idleAt))
+<span id="L1391" class="ln">  1391&nbsp;&nbsp;</span>		}
+<span id="L1392" class="ln">  1392&nbsp;&nbsp;</span>		<span class="comment">// set request canceler to some non-nil function so we</span>
+<span id="L1393" class="ln">  1393&nbsp;&nbsp;</span>		<span class="comment">// can detect whether it was cleared between now and when</span>
+<span id="L1394" class="ln">  1394&nbsp;&nbsp;</span>		<span class="comment">// we enter roundTrip</span>
+<span id="L1395" class="ln">  1395&nbsp;&nbsp;</span>		t.setReqCanceler(treq.cancelKey, func(error) {})
+<span id="L1396" class="ln">  1396&nbsp;&nbsp;</span>		return pc, nil
+<span id="L1397" class="ln">  1397&nbsp;&nbsp;</span>	}
+<span id="L1398" class="ln">  1398&nbsp;&nbsp;</span>
+<span id="L1399" class="ln">  1399&nbsp;&nbsp;</span>	cancelc := make(chan error, 1)
+<span id="L1400" class="ln">  1400&nbsp;&nbsp;</span>	t.setReqCanceler(treq.cancelKey, func(err error) { cancelc &lt;- err })
+<span id="L1401" class="ln">  1401&nbsp;&nbsp;</span>
+<span id="L1402" class="ln">  1402&nbsp;&nbsp;</span>	<span class="comment">// Queue for permission to dial.</span>
+<span id="L1403" class="ln">  1403&nbsp;&nbsp;</span>	t.queueForDial(w)
+<span id="L1404" class="ln">  1404&nbsp;&nbsp;</span>
+<span id="L1405" class="ln">  1405&nbsp;&nbsp;</span>	<span class="comment">// Wait for completion or cancellation.</span>
+<span id="L1406" class="ln">  1406&nbsp;&nbsp;</span>	select {
+<span id="L1407" class="ln">  1407&nbsp;&nbsp;</span>	case &lt;-w.ready:
+<span id="L1408" class="ln">  1408&nbsp;&nbsp;</span>		<span class="comment">// Trace success but only for HTTP/1.</span>
+<span id="L1409" class="ln">  1409&nbsp;&nbsp;</span>		<span class="comment">// HTTP/2 calls trace.GotConn itself.</span>
+<span id="L1410" class="ln">  1410&nbsp;&nbsp;</span>		if w.pc != nil &amp;&amp; w.pc.alt == nil &amp;&amp; trace != nil &amp;&amp; trace.GotConn != nil {
+<span id="L1411" class="ln">  1411&nbsp;&nbsp;</span>			trace.GotConn(httptrace.GotConnInfo{Conn: w.pc.conn, Reused: w.pc.isReused()})
+<span id="L1412" class="ln">  1412&nbsp;&nbsp;</span>		}
+<span id="L1413" class="ln">  1413&nbsp;&nbsp;</span>		if w.err != nil {
+<span id="L1414" class="ln">  1414&nbsp;&nbsp;</span>			<span class="comment">// If the request has been canceled, that&#39;s probably</span>
+<span id="L1415" class="ln">  1415&nbsp;&nbsp;</span>			<span class="comment">// what caused w.err; if so, prefer to return the</span>
+<span id="L1416" class="ln">  1416&nbsp;&nbsp;</span>			<span class="comment">// cancellation error (see golang.org/issue/16049).</span>
+<span id="L1417" class="ln">  1417&nbsp;&nbsp;</span>			select {
+<span id="L1418" class="ln">  1418&nbsp;&nbsp;</span>			case &lt;-req.Cancel:
+<span id="L1419" class="ln">  1419&nbsp;&nbsp;</span>				return nil, errRequestCanceledConn
+<span id="L1420" class="ln">  1420&nbsp;&nbsp;</span>			case &lt;-req.Context().Done():
+<span id="L1421" class="ln">  1421&nbsp;&nbsp;</span>				return nil, req.Context().Err()
+<span id="L1422" class="ln">  1422&nbsp;&nbsp;</span>			case err := &lt;-cancelc:
+<span id="L1423" class="ln">  1423&nbsp;&nbsp;</span>				if err == errRequestCanceled {
+<span id="L1424" class="ln">  1424&nbsp;&nbsp;</span>					err = errRequestCanceledConn
+<span id="L1425" class="ln">  1425&nbsp;&nbsp;</span>				}
+<span id="L1426" class="ln">  1426&nbsp;&nbsp;</span>				return nil, err
+<span id="L1427" class="ln">  1427&nbsp;&nbsp;</span>			default:
+<span id="L1428" class="ln">  1428&nbsp;&nbsp;</span>				<span class="comment">// return below</span>
+<span id="L1429" class="ln">  1429&nbsp;&nbsp;</span>			}
+<span id="L1430" class="ln">  1430&nbsp;&nbsp;</span>		}
+<span id="L1431" class="ln">  1431&nbsp;&nbsp;</span>		return w.pc, w.err
+<span id="L1432" class="ln">  1432&nbsp;&nbsp;</span>	case &lt;-req.Cancel:
+<span id="L1433" class="ln">  1433&nbsp;&nbsp;</span>		return nil, errRequestCanceledConn
+<span id="L1434" class="ln">  1434&nbsp;&nbsp;</span>	case &lt;-req.Context().Done():
+<span id="L1435" class="ln">  1435&nbsp;&nbsp;</span>		return nil, req.Context().Err()
+<span id="L1436" class="ln">  1436&nbsp;&nbsp;</span>	case err := &lt;-cancelc:
+<span id="L1437" class="ln">  1437&nbsp;&nbsp;</span>		if err == errRequestCanceled {
+<span id="L1438" class="ln">  1438&nbsp;&nbsp;</span>			err = errRequestCanceledConn
+<span id="L1439" class="ln">  1439&nbsp;&nbsp;</span>		}
+<span id="L1440" class="ln">  1440&nbsp;&nbsp;</span>		return nil, err
+<span id="L1441" class="ln">  1441&nbsp;&nbsp;</span>	}
+<span id="L1442" class="ln">  1442&nbsp;&nbsp;</span>}
+<span id="L1443" class="ln">  1443&nbsp;&nbsp;</span>
+<span id="L1444" class="ln">  1444&nbsp;&nbsp;</span><span class="comment">// queueForDial queues w to wait for permission to begin dialing.</span>
+<span id="L1445" class="ln">  1445&nbsp;&nbsp;</span><span class="comment">// Once w receives permission to dial, it will do so in a separate goroutine.</span>
+<span id="L1446" class="ln">  1446&nbsp;&nbsp;</span>func (t *Transport) queueForDial(w *wantConn) {
+<span id="L1447" class="ln">  1447&nbsp;&nbsp;</span>	w.beforeDial()
+<span id="L1448" class="ln">  1448&nbsp;&nbsp;</span>	if t.MaxConnsPerHost &lt;= 0 {
+<span id="L1449" class="ln">  1449&nbsp;&nbsp;</span>		go t.dialConnFor(w)
+<span id="L1450" class="ln">  1450&nbsp;&nbsp;</span>		return
+<span id="L1451" class="ln">  1451&nbsp;&nbsp;</span>	}
+<span id="L1452" class="ln">  1452&nbsp;&nbsp;</span>
+<span id="L1453" class="ln">  1453&nbsp;&nbsp;</span>	t.connsPerHostMu.Lock()
+<span id="L1454" class="ln">  1454&nbsp;&nbsp;</span>	defer t.connsPerHostMu.Unlock()
+<span id="L1455" class="ln">  1455&nbsp;&nbsp;</span>
+<span id="L1456" class="ln">  1456&nbsp;&nbsp;</span>	if n := t.connsPerHost[w.key]; n &lt; t.MaxConnsPerHost {
+<span id="L1457" class="ln">  1457&nbsp;&nbsp;</span>		if t.connsPerHost == nil {
+<span id="L1458" class="ln">  1458&nbsp;&nbsp;</span>			t.connsPerHost = make(map[connectMethodKey]int)
+<span id="L1459" class="ln">  1459&nbsp;&nbsp;</span>		}
+<span id="L1460" class="ln">  1460&nbsp;&nbsp;</span>		t.connsPerHost[w.key] = n + 1
+<span id="L1461" class="ln">  1461&nbsp;&nbsp;</span>		go t.dialConnFor(w)
+<span id="L1462" class="ln">  1462&nbsp;&nbsp;</span>		return
+<span id="L1463" class="ln">  1463&nbsp;&nbsp;</span>	}
+<span id="L1464" class="ln">  1464&nbsp;&nbsp;</span>
+<span id="L1465" class="ln">  1465&nbsp;&nbsp;</span>	if t.connsPerHostWait == nil {
+<span id="L1466" class="ln">  1466&nbsp;&nbsp;</span>		t.connsPerHostWait = make(map[connectMethodKey]wantConnQueue)
+<span id="L1467" class="ln">  1467&nbsp;&nbsp;</span>	}
+<span id="L1468" class="ln">  1468&nbsp;&nbsp;</span>	q := t.connsPerHostWait[w.key]
+<span id="L1469" class="ln">  1469&nbsp;&nbsp;</span>	q.cleanFront()
+<span id="L1470" class="ln">  1470&nbsp;&nbsp;</span>	q.pushBack(w)
+<span id="L1471" class="ln">  1471&nbsp;&nbsp;</span>	t.connsPerHostWait[w.key] = q
+<span id="L1472" class="ln">  1472&nbsp;&nbsp;</span>}
+<span id="L1473" class="ln">  1473&nbsp;&nbsp;</span>
+<span id="L1474" class="ln">  1474&nbsp;&nbsp;</span><span class="comment">// dialConnFor dials on behalf of w and delivers the result to w.</span>
+<span id="L1475" class="ln">  1475&nbsp;&nbsp;</span><span class="comment">// dialConnFor has received permission to dial w.cm and is counted in t.connCount[w.cm.key()].</span>
+<span id="L1476" class="ln">  1476&nbsp;&nbsp;</span><span class="comment">// If the dial is canceled or unsuccessful, dialConnFor decrements t.connCount[w.cm.key()].</span>
+<span id="L1477" class="ln">  1477&nbsp;&nbsp;</span>func (t *Transport) dialConnFor(w *wantConn) {
+<span id="L1478" class="ln">  1478&nbsp;&nbsp;</span>	defer w.afterDial()
+<span id="L1479" class="ln">  1479&nbsp;&nbsp;</span>	ctx := w.getCtxForDial()
+<span id="L1480" class="ln">  1480&nbsp;&nbsp;</span>	if ctx == nil {
+<span id="L1481" class="ln">  1481&nbsp;&nbsp;</span>		t.decConnsPerHost(w.key)
+<span id="L1482" class="ln">  1482&nbsp;&nbsp;</span>		return
+<span id="L1483" class="ln">  1483&nbsp;&nbsp;</span>	}
+<span id="L1484" class="ln">  1484&nbsp;&nbsp;</span>
+<span id="L1485" class="ln">  1485&nbsp;&nbsp;</span>	pc, err := t.dialConn(ctx, w.cm)
+<span id="L1486" class="ln">  1486&nbsp;&nbsp;</span>	delivered := w.tryDeliver(pc, err)
+<span id="L1487" class="ln">  1487&nbsp;&nbsp;</span>	if err == nil &amp;&amp; (!delivered || pc.alt != nil) {
+<span id="L1488" class="ln">  1488&nbsp;&nbsp;</span>		<span class="comment">// pconn was not passed to w,</span>
+<span id="L1489" class="ln">  1489&nbsp;&nbsp;</span>		<span class="comment">// or it is HTTP/2 and can be shared.</span>
+<span id="L1490" class="ln">  1490&nbsp;&nbsp;</span>		<span class="comment">// Add to the idle connection pool.</span>
+<span id="L1491" class="ln">  1491&nbsp;&nbsp;</span>		t.putOrCloseIdleConn(pc)
+<span id="L1492" class="ln">  1492&nbsp;&nbsp;</span>	}
+<span id="L1493" class="ln">  1493&nbsp;&nbsp;</span>	if err != nil {
+<span id="L1494" class="ln">  1494&nbsp;&nbsp;</span>		t.decConnsPerHost(w.key)
+<span id="L1495" class="ln">  1495&nbsp;&nbsp;</span>	}
+<span id="L1496" class="ln">  1496&nbsp;&nbsp;</span>}
+<span id="L1497" class="ln">  1497&nbsp;&nbsp;</span>
+<span id="L1498" class="ln">  1498&nbsp;&nbsp;</span><span class="comment">// decConnsPerHost decrements the per-host connection count for key,</span>
+<span id="L1499" class="ln">  1499&nbsp;&nbsp;</span><span class="comment">// which may in turn give a different waiting goroutine permission to dial.</span>
+<span id="L1500" class="ln">  1500&nbsp;&nbsp;</span>func (t *Transport) decConnsPerHost(key connectMethodKey) {
+<span id="L1501" class="ln">  1501&nbsp;&nbsp;</span>	if t.MaxConnsPerHost &lt;= 0 {
+<span id="L1502" class="ln">  1502&nbsp;&nbsp;</span>		return
+<span id="L1503" class="ln">  1503&nbsp;&nbsp;</span>	}
+<span id="L1504" class="ln">  1504&nbsp;&nbsp;</span>
+<span id="L1505" class="ln">  1505&nbsp;&nbsp;</span>	t.connsPerHostMu.Lock()
+<span id="L1506" class="ln">  1506&nbsp;&nbsp;</span>	defer t.connsPerHostMu.Unlock()
+<span id="L1507" class="ln">  1507&nbsp;&nbsp;</span>	n := t.connsPerHost[key]
+<span id="L1508" class="ln">  1508&nbsp;&nbsp;</span>	if n == 0 {
+<span id="L1509" class="ln">  1509&nbsp;&nbsp;</span>		<span class="comment">// Shouldn&#39;t happen, but if it does, the counting is buggy and could</span>
+<span id="L1510" class="ln">  1510&nbsp;&nbsp;</span>		<span class="comment">// easily lead to a silent deadlock, so report the problem loudly.</span>
+<span id="L1511" class="ln">  1511&nbsp;&nbsp;</span>		panic(&#34;net/http: internal error: connCount underflow&#34;)
+<span id="L1512" class="ln">  1512&nbsp;&nbsp;</span>	}
+<span id="L1513" class="ln">  1513&nbsp;&nbsp;</span>
+<span id="L1514" class="ln">  1514&nbsp;&nbsp;</span>	<span class="comment">// Can we hand this count to a goroutine still waiting to dial?</span>
+<span id="L1515" class="ln">  1515&nbsp;&nbsp;</span>	<span class="comment">// (Some goroutines on the wait list may have timed out or</span>
+<span id="L1516" class="ln">  1516&nbsp;&nbsp;</span>	<span class="comment">// gotten a connection another way. If they&#39;re all gone,</span>
+<span id="L1517" class="ln">  1517&nbsp;&nbsp;</span>	<span class="comment">// we don&#39;t want to kick off any spurious dial operations.)</span>
+<span id="L1518" class="ln">  1518&nbsp;&nbsp;</span>	if q := t.connsPerHostWait[key]; q.len() &gt; 0 {
+<span id="L1519" class="ln">  1519&nbsp;&nbsp;</span>		done := false
+<span id="L1520" class="ln">  1520&nbsp;&nbsp;</span>		for q.len() &gt; 0 {
+<span id="L1521" class="ln">  1521&nbsp;&nbsp;</span>			w := q.popFront()
+<span id="L1522" class="ln">  1522&nbsp;&nbsp;</span>			if w.waiting() {
+<span id="L1523" class="ln">  1523&nbsp;&nbsp;</span>				go t.dialConnFor(w)
+<span id="L1524" class="ln">  1524&nbsp;&nbsp;</span>				done = true
+<span id="L1525" class="ln">  1525&nbsp;&nbsp;</span>				break
+<span id="L1526" class="ln">  1526&nbsp;&nbsp;</span>			}
+<span id="L1527" class="ln">  1527&nbsp;&nbsp;</span>		}
+<span id="L1528" class="ln">  1528&nbsp;&nbsp;</span>		if q.len() == 0 {
+<span id="L1529" class="ln">  1529&nbsp;&nbsp;</span>			delete(t.connsPerHostWait, key)
+<span id="L1530" class="ln">  1530&nbsp;&nbsp;</span>		} else {
+<span id="L1531" class="ln">  1531&nbsp;&nbsp;</span>			<span class="comment">// q is a value (like a slice), so we have to store</span>
+<span id="L1532" class="ln">  1532&nbsp;&nbsp;</span>			<span class="comment">// the updated q back into the map.</span>
+<span id="L1533" class="ln">  1533&nbsp;&nbsp;</span>			t.connsPerHostWait[key] = q
+<span id="L1534" class="ln">  1534&nbsp;&nbsp;</span>		}
+<span id="L1535" class="ln">  1535&nbsp;&nbsp;</span>		if done {
+<span id="L1536" class="ln">  1536&nbsp;&nbsp;</span>			return
+<span id="L1537" class="ln">  1537&nbsp;&nbsp;</span>		}
+<span id="L1538" class="ln">  1538&nbsp;&nbsp;</span>	}
+<span id="L1539" class="ln">  1539&nbsp;&nbsp;</span>
+<span id="L1540" class="ln">  1540&nbsp;&nbsp;</span>	<span class="comment">// Otherwise, decrement the recorded count.</span>
+<span id="L1541" class="ln">  1541&nbsp;&nbsp;</span>	if n--; n == 0 {
+<span id="L1542" class="ln">  1542&nbsp;&nbsp;</span>		delete(t.connsPerHost, key)
+<span id="L1543" class="ln">  1543&nbsp;&nbsp;</span>	} else {
+<span id="L1544" class="ln">  1544&nbsp;&nbsp;</span>		t.connsPerHost[key] = n
+<span id="L1545" class="ln">  1545&nbsp;&nbsp;</span>	}
+<span id="L1546" class="ln">  1546&nbsp;&nbsp;</span>}
+<span id="L1547" class="ln">  1547&nbsp;&nbsp;</span>
+<span id="L1548" class="ln">  1548&nbsp;&nbsp;</span><span class="comment">// Add TLS to a persistent connection, i.e. negotiate a TLS session. If pconn is already a TLS</span>
+<span id="L1549" class="ln">  1549&nbsp;&nbsp;</span><span class="comment">// tunnel, this function establishes a nested TLS session inside the encrypted channel.</span>
+<span id="L1550" class="ln">  1550&nbsp;&nbsp;</span><span class="comment">// The remote endpoint&#39;s name may be overridden by TLSClientConfig.ServerName.</span>
+<span id="L1551" class="ln">  1551&nbsp;&nbsp;</span>func (pconn *persistConn) addTLS(ctx context.Context, name string, trace *httptrace.ClientTrace) error {
+<span id="L1552" class="ln">  1552&nbsp;&nbsp;</span>	<span class="comment">// Initiate TLS and check remote host name against certificate.</span>
+<span id="L1553" class="ln">  1553&nbsp;&nbsp;</span>	cfg := cloneTLSConfig(pconn.t.TLSClientConfig)
+<span id="L1554" class="ln">  1554&nbsp;&nbsp;</span>	if cfg.ServerName == &#34;&#34; {
+<span id="L1555" class="ln">  1555&nbsp;&nbsp;</span>		cfg.ServerName = name
+<span id="L1556" class="ln">  1556&nbsp;&nbsp;</span>	}
+<span id="L1557" class="ln">  1557&nbsp;&nbsp;</span>	if pconn.cacheKey.onlyH1 {
+<span id="L1558" class="ln">  1558&nbsp;&nbsp;</span>		cfg.NextProtos = nil
+<span id="L1559" class="ln">  1559&nbsp;&nbsp;</span>	}
+<span id="L1560" class="ln">  1560&nbsp;&nbsp;</span>	plainConn := pconn.conn
+<span id="L1561" class="ln">  1561&nbsp;&nbsp;</span>	tlsConn := tls.Client(plainConn, cfg)
+<span id="L1562" class="ln">  1562&nbsp;&nbsp;</span>	errc := make(chan error, 2)
+<span id="L1563" class="ln">  1563&nbsp;&nbsp;</span>	var timer *time.Timer <span class="comment">// for canceling TLS handshake</span>
+<span id="L1564" class="ln">  1564&nbsp;&nbsp;</span>	if d := pconn.t.TLSHandshakeTimeout; d != 0 {
+<span id="L1565" class="ln">  1565&nbsp;&nbsp;</span>		timer = time.AfterFunc(d, func() {
+<span id="L1566" class="ln">  1566&nbsp;&nbsp;</span>			errc &lt;- tlsHandshakeTimeoutError{}
+<span id="L1567" class="ln">  1567&nbsp;&nbsp;</span>		})
+<span id="L1568" class="ln">  1568&nbsp;&nbsp;</span>	}
+<span id="L1569" class="ln">  1569&nbsp;&nbsp;</span>	go func() {
+<span id="L1570" class="ln">  1570&nbsp;&nbsp;</span>		if trace != nil &amp;&amp; trace.TLSHandshakeStart != nil {
+<span id="L1571" class="ln">  1571&nbsp;&nbsp;</span>			trace.TLSHandshakeStart()
+<span id="L1572" class="ln">  1572&nbsp;&nbsp;</span>		}
+<span id="L1573" class="ln">  1573&nbsp;&nbsp;</span>		err := tlsConn.HandshakeContext(ctx)
+<span id="L1574" class="ln">  1574&nbsp;&nbsp;</span>		if timer != nil {
+<span id="L1575" class="ln">  1575&nbsp;&nbsp;</span>			timer.Stop()
+<span id="L1576" class="ln">  1576&nbsp;&nbsp;</span>		}
+<span id="L1577" class="ln">  1577&nbsp;&nbsp;</span>		errc &lt;- err
+<span id="L1578" class="ln">  1578&nbsp;&nbsp;</span>	}()
+<span id="L1579" class="ln">  1579&nbsp;&nbsp;</span>	if err := &lt;-errc; err != nil {
+<span id="L1580" class="ln">  1580&nbsp;&nbsp;</span>		plainConn.Close()
+<span id="L1581" class="ln">  1581&nbsp;&nbsp;</span>		if err == (tlsHandshakeTimeoutError{}) {
+<span id="L1582" class="ln">  1582&nbsp;&nbsp;</span>			<span class="comment">// Now that we have closed the connection,</span>
+<span id="L1583" class="ln">  1583&nbsp;&nbsp;</span>			<span class="comment">// wait for the call to HandshakeContext to return.</span>
+<span id="L1584" class="ln">  1584&nbsp;&nbsp;</span>			&lt;-errc
+<span id="L1585" class="ln">  1585&nbsp;&nbsp;</span>		}
+<span id="L1586" class="ln">  1586&nbsp;&nbsp;</span>		if trace != nil &amp;&amp; trace.TLSHandshakeDone != nil {
+<span id="L1587" class="ln">  1587&nbsp;&nbsp;</span>			trace.TLSHandshakeDone(tls.ConnectionState{}, err)
+<span id="L1588" class="ln">  1588&nbsp;&nbsp;</span>		}
+<span id="L1589" class="ln">  1589&nbsp;&nbsp;</span>		return err
+<span id="L1590" class="ln">  1590&nbsp;&nbsp;</span>	}
+<span id="L1591" class="ln">  1591&nbsp;&nbsp;</span>	cs := tlsConn.ConnectionState()
+<span id="L1592" class="ln">  1592&nbsp;&nbsp;</span>	if trace != nil &amp;&amp; trace.TLSHandshakeDone != nil {
+<span id="L1593" class="ln">  1593&nbsp;&nbsp;</span>		trace.TLSHandshakeDone(cs, nil)
+<span id="L1594" class="ln">  1594&nbsp;&nbsp;</span>	}
+<span id="L1595" class="ln">  1595&nbsp;&nbsp;</span>	pconn.tlsState = &amp;cs
+<span id="L1596" class="ln">  1596&nbsp;&nbsp;</span>	pconn.conn = tlsConn
+<span id="L1597" class="ln">  1597&nbsp;&nbsp;</span>	return nil
+<span id="L1598" class="ln">  1598&nbsp;&nbsp;</span>}
+<span id="L1599" class="ln">  1599&nbsp;&nbsp;</span>
+<span id="L1600" class="ln">  1600&nbsp;&nbsp;</span>type erringRoundTripper interface {
+<span id="L1601" class="ln">  1601&nbsp;&nbsp;</span>	RoundTripErr() error
+<span id="L1602" class="ln">  1602&nbsp;&nbsp;</span>}
+<span id="L1603" class="ln">  1603&nbsp;&nbsp;</span>
+<span id="L1604" class="ln">  1604&nbsp;&nbsp;</span>func (t *Transport) dialConn(ctx context.Context, cm connectMethod) (pconn *persistConn, err error) {
+<span id="L1605" class="ln">  1605&nbsp;&nbsp;</span>	pconn = &amp;persistConn{
+<span id="L1606" class="ln">  1606&nbsp;&nbsp;</span>		t:             t,
+<span id="L1607" class="ln">  1607&nbsp;&nbsp;</span>		cacheKey:      cm.key(),
+<span id="L1608" class="ln">  1608&nbsp;&nbsp;</span>		reqch:         make(chan requestAndChan, 1),
+<span id="L1609" class="ln">  1609&nbsp;&nbsp;</span>		writech:       make(chan writeRequest, 1),
+<span id="L1610" class="ln">  1610&nbsp;&nbsp;</span>		closech:       make(chan struct{}),
+<span id="L1611" class="ln">  1611&nbsp;&nbsp;</span>		writeErrCh:    make(chan error, 1),
+<span id="L1612" class="ln">  1612&nbsp;&nbsp;</span>		writeLoopDone: make(chan struct{}),
+<span id="L1613" class="ln">  1613&nbsp;&nbsp;</span>	}
+<span id="L1614" class="ln">  1614&nbsp;&nbsp;</span>	trace := httptrace.ContextClientTrace(ctx)
+<span id="L1615" class="ln">  1615&nbsp;&nbsp;</span>	wrapErr := func(err error) error {
+<span id="L1616" class="ln">  1616&nbsp;&nbsp;</span>		if cm.proxyURL != nil {
+<span id="L1617" class="ln">  1617&nbsp;&nbsp;</span>			<span class="comment">// Return a typed error, per Issue 16997</span>
+<span id="L1618" class="ln">  1618&nbsp;&nbsp;</span>			return &amp;net.OpError{Op: &#34;proxyconnect&#34;, Net: &#34;tcp&#34;, Err: err}
+<span id="L1619" class="ln">  1619&nbsp;&nbsp;</span>		}
+<span id="L1620" class="ln">  1620&nbsp;&nbsp;</span>		return err
+<span id="L1621" class="ln">  1621&nbsp;&nbsp;</span>	}
+<span id="L1622" class="ln">  1622&nbsp;&nbsp;</span>	if cm.scheme() == &#34;https&#34; &amp;&amp; t.hasCustomTLSDialer() {
+<span id="L1623" class="ln">  1623&nbsp;&nbsp;</span>		var err error
+<span id="L1624" class="ln">  1624&nbsp;&nbsp;</span>		pconn.conn, err = t.customDialTLS(ctx, &#34;tcp&#34;, cm.addr())
+<span id="L1625" class="ln">  1625&nbsp;&nbsp;</span>		if err != nil {
+<span id="L1626" class="ln">  1626&nbsp;&nbsp;</span>			return nil, wrapErr(err)
+<span id="L1627" class="ln">  1627&nbsp;&nbsp;</span>		}
+<span id="L1628" class="ln">  1628&nbsp;&nbsp;</span>		if tc, ok := pconn.conn.(*tls.Conn); ok {
+<span id="L1629" class="ln">  1629&nbsp;&nbsp;</span>			<span class="comment">// Handshake here, in case DialTLS didn&#39;t. TLSNextProto below</span>
+<span id="L1630" class="ln">  1630&nbsp;&nbsp;</span>			<span class="comment">// depends on it for knowing the connection state.</span>
+<span id="L1631" class="ln">  1631&nbsp;&nbsp;</span>			if trace != nil &amp;&amp; trace.TLSHandshakeStart != nil {
+<span id="L1632" class="ln">  1632&nbsp;&nbsp;</span>				trace.TLSHandshakeStart()
+<span id="L1633" class="ln">  1633&nbsp;&nbsp;</span>			}
+<span id="L1634" class="ln">  1634&nbsp;&nbsp;</span>			if err := tc.HandshakeContext(ctx); err != nil {
+<span id="L1635" class="ln">  1635&nbsp;&nbsp;</span>				go pconn.conn.Close()
+<span id="L1636" class="ln">  1636&nbsp;&nbsp;</span>				if trace != nil &amp;&amp; trace.TLSHandshakeDone != nil {
+<span id="L1637" class="ln">  1637&nbsp;&nbsp;</span>					trace.TLSHandshakeDone(tls.ConnectionState{}, err)
+<span id="L1638" class="ln">  1638&nbsp;&nbsp;</span>				}
+<span id="L1639" class="ln">  1639&nbsp;&nbsp;</span>				return nil, err
+<span id="L1640" class="ln">  1640&nbsp;&nbsp;</span>			}
+<span id="L1641" class="ln">  1641&nbsp;&nbsp;</span>			cs := tc.ConnectionState()
+<span id="L1642" class="ln">  1642&nbsp;&nbsp;</span>			if trace != nil &amp;&amp; trace.TLSHandshakeDone != nil {
+<span id="L1643" class="ln">  1643&nbsp;&nbsp;</span>				trace.TLSHandshakeDone(cs, nil)
+<span id="L1644" class="ln">  1644&nbsp;&nbsp;</span>			}
+<span id="L1645" class="ln">  1645&nbsp;&nbsp;</span>			pconn.tlsState = &amp;cs
+<span id="L1646" class="ln">  1646&nbsp;&nbsp;</span>		}
+<span id="L1647" class="ln">  1647&nbsp;&nbsp;</span>	} else {
+<span id="L1648" class="ln">  1648&nbsp;&nbsp;</span>		conn, err := t.dial(ctx, &#34;tcp&#34;, cm.addr())
+<span id="L1649" class="ln">  1649&nbsp;&nbsp;</span>		if err != nil {
+<span id="L1650" class="ln">  1650&nbsp;&nbsp;</span>			return nil, wrapErr(err)
+<span id="L1651" class="ln">  1651&nbsp;&nbsp;</span>		}
+<span id="L1652" class="ln">  1652&nbsp;&nbsp;</span>		pconn.conn = conn
+<span id="L1653" class="ln">  1653&nbsp;&nbsp;</span>		if cm.scheme() == &#34;https&#34; {
+<span id="L1654" class="ln">  1654&nbsp;&nbsp;</span>			var firstTLSHost string
+<span id="L1655" class="ln">  1655&nbsp;&nbsp;</span>			if firstTLSHost, _, err = net.SplitHostPort(cm.addr()); err != nil {
+<span id="L1656" class="ln">  1656&nbsp;&nbsp;</span>				return nil, wrapErr(err)
+<span id="L1657" class="ln">  1657&nbsp;&nbsp;</span>			}
+<span id="L1658" class="ln">  1658&nbsp;&nbsp;</span>			if err = pconn.addTLS(ctx, firstTLSHost, trace); err != nil {
+<span id="L1659" class="ln">  1659&nbsp;&nbsp;</span>				return nil, wrapErr(err)
+<span id="L1660" class="ln">  1660&nbsp;&nbsp;</span>			}
+<span id="L1661" class="ln">  1661&nbsp;&nbsp;</span>		}
+<span id="L1662" class="ln">  1662&nbsp;&nbsp;</span>	}
+<span id="L1663" class="ln">  1663&nbsp;&nbsp;</span>
+<span id="L1664" class="ln">  1664&nbsp;&nbsp;</span>	<span class="comment">// Proxy setup.</span>
+<span id="L1665" class="ln">  1665&nbsp;&nbsp;</span>	switch {
+<span id="L1666" class="ln">  1666&nbsp;&nbsp;</span>	case cm.proxyURL == nil:
+<span id="L1667" class="ln">  1667&nbsp;&nbsp;</span>		<span class="comment">// Do nothing. Not using a proxy.</span>
+<span id="L1668" class="ln">  1668&nbsp;&nbsp;</span>	case cm.proxyURL.Scheme == &#34;socks5&#34;:
+<span id="L1669" class="ln">  1669&nbsp;&nbsp;</span>		conn := pconn.conn
+<span id="L1670" class="ln">  1670&nbsp;&nbsp;</span>		d := socksNewDialer(&#34;tcp&#34;, conn.RemoteAddr().String())
+<span id="L1671" class="ln">  1671&nbsp;&nbsp;</span>		if u := cm.proxyURL.User; u != nil {
+<span id="L1672" class="ln">  1672&nbsp;&nbsp;</span>			auth := &amp;socksUsernamePassword{
+<span id="L1673" class="ln">  1673&nbsp;&nbsp;</span>				Username: u.Username(),
+<span id="L1674" class="ln">  1674&nbsp;&nbsp;</span>			}
+<span id="L1675" class="ln">  1675&nbsp;&nbsp;</span>			auth.Password, _ = u.Password()
+<span id="L1676" class="ln">  1676&nbsp;&nbsp;</span>			d.AuthMethods = []socksAuthMethod{
+<span id="L1677" class="ln">  1677&nbsp;&nbsp;</span>				socksAuthMethodNotRequired,
+<span id="L1678" class="ln">  1678&nbsp;&nbsp;</span>				socksAuthMethodUsernamePassword,
+<span id="L1679" class="ln">  1679&nbsp;&nbsp;</span>			}
+<span id="L1680" class="ln">  1680&nbsp;&nbsp;</span>			d.Authenticate = auth.Authenticate
+<span id="L1681" class="ln">  1681&nbsp;&nbsp;</span>		}
+<span id="L1682" class="ln">  1682&nbsp;&nbsp;</span>		if _, err := d.DialWithConn(ctx, conn, &#34;tcp&#34;, cm.targetAddr); err != nil {
+<span id="L1683" class="ln">  1683&nbsp;&nbsp;</span>			conn.Close()
+<span id="L1684" class="ln">  1684&nbsp;&nbsp;</span>			return nil, err
+<span id="L1685" class="ln">  1685&nbsp;&nbsp;</span>		}
+<span id="L1686" class="ln">  1686&nbsp;&nbsp;</span>	case cm.targetScheme == &#34;http&#34;:
+<span id="L1687" class="ln">  1687&nbsp;&nbsp;</span>		pconn.isProxy = true
+<span id="L1688" class="ln">  1688&nbsp;&nbsp;</span>		if pa := cm.proxyAuth(); pa != &#34;&#34; {
+<span id="L1689" class="ln">  1689&nbsp;&nbsp;</span>			pconn.mutateHeaderFunc = func(h Header) {
+<span id="L1690" class="ln">  1690&nbsp;&nbsp;</span>				h.Set(&#34;Proxy-Authorization&#34;, pa)
+<span id="L1691" class="ln">  1691&nbsp;&nbsp;</span>			}
+<span id="L1692" class="ln">  1692&nbsp;&nbsp;</span>		}
+<span id="L1693" class="ln">  1693&nbsp;&nbsp;</span>	case cm.targetScheme == &#34;https&#34;:
+<span id="L1694" class="ln">  1694&nbsp;&nbsp;</span>		conn := pconn.conn
+<span id="L1695" class="ln">  1695&nbsp;&nbsp;</span>		var hdr Header
+<span id="L1696" class="ln">  1696&nbsp;&nbsp;</span>		if t.GetProxyConnectHeader != nil {
+<span id="L1697" class="ln">  1697&nbsp;&nbsp;</span>			var err error
+<span id="L1698" class="ln">  1698&nbsp;&nbsp;</span>			hdr, err = t.GetProxyConnectHeader(ctx, cm.proxyURL, cm.targetAddr)
+<span id="L1699" class="ln">  1699&nbsp;&nbsp;</span>			if err != nil {
+<span id="L1700" class="ln">  1700&nbsp;&nbsp;</span>				conn.Close()
+<span id="L1701" class="ln">  1701&nbsp;&nbsp;</span>				return nil, err
+<span id="L1702" class="ln">  1702&nbsp;&nbsp;</span>			}
+<span id="L1703" class="ln">  1703&nbsp;&nbsp;</span>		} else {
+<span id="L1704" class="ln">  1704&nbsp;&nbsp;</span>			hdr = t.ProxyConnectHeader
+<span id="L1705" class="ln">  1705&nbsp;&nbsp;</span>		}
+<span id="L1706" class="ln">  1706&nbsp;&nbsp;</span>		if hdr == nil {
+<span id="L1707" class="ln">  1707&nbsp;&nbsp;</span>			hdr = make(Header)
+<span id="L1708" class="ln">  1708&nbsp;&nbsp;</span>		}
+<span id="L1709" class="ln">  1709&nbsp;&nbsp;</span>		if pa := cm.proxyAuth(); pa != &#34;&#34; {
+<span id="L1710" class="ln">  1710&nbsp;&nbsp;</span>			hdr = hdr.Clone()
+<span id="L1711" class="ln">  1711&nbsp;&nbsp;</span>			hdr.Set(&#34;Proxy-Authorization&#34;, pa)
+<span id="L1712" class="ln">  1712&nbsp;&nbsp;</span>		}
+<span id="L1713" class="ln">  1713&nbsp;&nbsp;</span>		connectReq := &amp;Request{
+<span id="L1714" class="ln">  1714&nbsp;&nbsp;</span>			Method: &#34;CONNECT&#34;,
+<span id="L1715" class="ln">  1715&nbsp;&nbsp;</span>			URL:    &amp;url.URL{Opaque: cm.targetAddr},
+<span id="L1716" class="ln">  1716&nbsp;&nbsp;</span>			Host:   cm.targetAddr,
+<span id="L1717" class="ln">  1717&nbsp;&nbsp;</span>			Header: hdr,
+<span id="L1718" class="ln">  1718&nbsp;&nbsp;</span>		}
+<span id="L1719" class="ln">  1719&nbsp;&nbsp;</span>
+<span id="L1720" class="ln">  1720&nbsp;&nbsp;</span>		<span class="comment">// If there&#39;s no done channel (no deadline or cancellation</span>
+<span id="L1721" class="ln">  1721&nbsp;&nbsp;</span>		<span class="comment">// from the caller possible), at least set some (long)</span>
+<span id="L1722" class="ln">  1722&nbsp;&nbsp;</span>		<span class="comment">// timeout here. This will make sure we don&#39;t block forever</span>
+<span id="L1723" class="ln">  1723&nbsp;&nbsp;</span>		<span class="comment">// and leak a goroutine if the connection stops replying</span>
+<span id="L1724" class="ln">  1724&nbsp;&nbsp;</span>		<span class="comment">// after the TCP connect.</span>
+<span id="L1725" class="ln">  1725&nbsp;&nbsp;</span>		connectCtx := ctx
+<span id="L1726" class="ln">  1726&nbsp;&nbsp;</span>		if ctx.Done() == nil {
+<span id="L1727" class="ln">  1727&nbsp;&nbsp;</span>			newCtx, cancel := context.WithTimeout(ctx, 1*time.Minute)
+<span id="L1728" class="ln">  1728&nbsp;&nbsp;</span>			defer cancel()
+<span id="L1729" class="ln">  1729&nbsp;&nbsp;</span>			connectCtx = newCtx
+<span id="L1730" class="ln">  1730&nbsp;&nbsp;</span>		}
+<span id="L1731" class="ln">  1731&nbsp;&nbsp;</span>
+<span id="L1732" class="ln">  1732&nbsp;&nbsp;</span>		didReadResponse := make(chan struct{}) <span class="comment">// closed after CONNECT write+read is done or fails</span>
+<span id="L1733" class="ln">  1733&nbsp;&nbsp;</span>		var (
+<span id="L1734" class="ln">  1734&nbsp;&nbsp;</span>			resp *Response
+<span id="L1735" class="ln">  1735&nbsp;&nbsp;</span>			err  error <span class="comment">// write or read error</span>
+<span id="L1736" class="ln">  1736&nbsp;&nbsp;</span>		)
+<span id="L1737" class="ln">  1737&nbsp;&nbsp;</span>		<span class="comment">// Write the CONNECT request &amp; read the response.</span>
+<span id="L1738" class="ln">  1738&nbsp;&nbsp;</span>		go func() {
+<span id="L1739" class="ln">  1739&nbsp;&nbsp;</span>			defer close(didReadResponse)
+<span id="L1740" class="ln">  1740&nbsp;&nbsp;</span>			err = connectReq.Write(conn)
+<span id="L1741" class="ln">  1741&nbsp;&nbsp;</span>			if err != nil {
+<span id="L1742" class="ln">  1742&nbsp;&nbsp;</span>				return
+<span id="L1743" class="ln">  1743&nbsp;&nbsp;</span>			}
+<span id="L1744" class="ln">  1744&nbsp;&nbsp;</span>			<span class="comment">// Okay to use and discard buffered reader here, because</span>
+<span id="L1745" class="ln">  1745&nbsp;&nbsp;</span>			<span class="comment">// TLS server will not speak until spoken to.</span>
+<span id="L1746" class="ln">  1746&nbsp;&nbsp;</span>			br := bufio.NewReader(conn)
+<span id="L1747" class="ln">  1747&nbsp;&nbsp;</span>			resp, err = ReadResponse(br, connectReq)
+<span id="L1748" class="ln">  1748&nbsp;&nbsp;</span>		}()
+<span id="L1749" class="ln">  1749&nbsp;&nbsp;</span>		select {
+<span id="L1750" class="ln">  1750&nbsp;&nbsp;</span>		case &lt;-connectCtx.Done():
+<span id="L1751" class="ln">  1751&nbsp;&nbsp;</span>			conn.Close()
+<span id="L1752" class="ln">  1752&nbsp;&nbsp;</span>			&lt;-didReadResponse
+<span id="L1753" class="ln">  1753&nbsp;&nbsp;</span>			return nil, connectCtx.Err()
+<span id="L1754" class="ln">  1754&nbsp;&nbsp;</span>		case &lt;-didReadResponse:
+<span id="L1755" class="ln">  1755&nbsp;&nbsp;</span>			<span class="comment">// resp or err now set</span>
+<span id="L1756" class="ln">  1756&nbsp;&nbsp;</span>		}
+<span id="L1757" class="ln">  1757&nbsp;&nbsp;</span>		if err != nil {
+<span id="L1758" class="ln">  1758&nbsp;&nbsp;</span>			conn.Close()
+<span id="L1759" class="ln">  1759&nbsp;&nbsp;</span>			return nil, err
+<span id="L1760" class="ln">  1760&nbsp;&nbsp;</span>		}
+<span id="L1761" class="ln">  1761&nbsp;&nbsp;</span>
+<span id="L1762" class="ln">  1762&nbsp;&nbsp;</span>		if t.OnProxyConnectResponse != nil {
+<span id="L1763" class="ln">  1763&nbsp;&nbsp;</span>			err = t.OnProxyConnectResponse(ctx, cm.proxyURL, connectReq, resp)
+<span id="L1764" class="ln">  1764&nbsp;&nbsp;</span>			if err != nil {
+<span id="L1765" class="ln">  1765&nbsp;&nbsp;</span>				return nil, err
+<span id="L1766" class="ln">  1766&nbsp;&nbsp;</span>			}
+<span id="L1767" class="ln">  1767&nbsp;&nbsp;</span>		}
+<span id="L1768" class="ln">  1768&nbsp;&nbsp;</span>
+<span id="L1769" class="ln">  1769&nbsp;&nbsp;</span>		if resp.StatusCode != 200 {
+<span id="L1770" class="ln">  1770&nbsp;&nbsp;</span>			_, text, ok := strings.Cut(resp.Status, &#34; &#34;)
+<span id="L1771" class="ln">  1771&nbsp;&nbsp;</span>			conn.Close()
+<span id="L1772" class="ln">  1772&nbsp;&nbsp;</span>			if !ok {
+<span id="L1773" class="ln">  1773&nbsp;&nbsp;</span>				return nil, errors.New(&#34;unknown status code&#34;)
+<span id="L1774" class="ln">  1774&nbsp;&nbsp;</span>			}
+<span id="L1775" class="ln">  1775&nbsp;&nbsp;</span>			return nil, errors.New(text)
+<span id="L1776" class="ln">  1776&nbsp;&nbsp;</span>		}
+<span id="L1777" class="ln">  1777&nbsp;&nbsp;</span>	}
+<span id="L1778" class="ln">  1778&nbsp;&nbsp;</span>
+<span id="L1779" class="ln">  1779&nbsp;&nbsp;</span>	if cm.proxyURL != nil &amp;&amp; cm.targetScheme == &#34;https&#34; {
+<span id="L1780" class="ln">  1780&nbsp;&nbsp;</span>		if err := pconn.addTLS(ctx, cm.tlsHost(), trace); err != nil {
+<span id="L1781" class="ln">  1781&nbsp;&nbsp;</span>			return nil, err
+<span id="L1782" class="ln">  1782&nbsp;&nbsp;</span>		}
+<span id="L1783" class="ln">  1783&nbsp;&nbsp;</span>	}
+<span id="L1784" class="ln">  1784&nbsp;&nbsp;</span>
+<span id="L1785" class="ln">  1785&nbsp;&nbsp;</span>	if s := pconn.tlsState; s != nil &amp;&amp; s.NegotiatedProtocolIsMutual &amp;&amp; s.NegotiatedProtocol != &#34;&#34; {
+<span id="L1786" class="ln">  1786&nbsp;&nbsp;</span>		if next, ok := t.TLSNextProto[s.NegotiatedProtocol]; ok {
+<span id="L1787" class="ln">  1787&nbsp;&nbsp;</span>			alt := next(cm.targetAddr, pconn.conn.(*tls.Conn))
+<span id="L1788" class="ln">  1788&nbsp;&nbsp;</span>			if e, ok := alt.(erringRoundTripper); ok {
+<span id="L1789" class="ln">  1789&nbsp;&nbsp;</span>				<span class="comment">// pconn.conn was closed by next (http2configureTransports.upgradeFn).</span>
+<span id="L1790" class="ln">  1790&nbsp;&nbsp;</span>				return nil, e.RoundTripErr()
+<span id="L1791" class="ln">  1791&nbsp;&nbsp;</span>			}
+<span id="L1792" class="ln">  1792&nbsp;&nbsp;</span>			return &amp;persistConn{t: t, cacheKey: pconn.cacheKey, alt: alt}, nil
+<span id="L1793" class="ln">  1793&nbsp;&nbsp;</span>		}
+<span id="L1794" class="ln">  1794&nbsp;&nbsp;</span>	}
+<span id="L1795" class="ln">  1795&nbsp;&nbsp;</span>
+<span id="L1796" class="ln">  1796&nbsp;&nbsp;</span>	pconn.br = bufio.NewReaderSize(pconn, t.readBufferSize())
+<span id="L1797" class="ln">  1797&nbsp;&nbsp;</span>	pconn.bw = bufio.NewWriterSize(persistConnWriter{pconn}, t.writeBufferSize())
+<span id="L1798" class="ln">  1798&nbsp;&nbsp;</span>
+<span id="L1799" class="ln">  1799&nbsp;&nbsp;</span>	go pconn.readLoop()
+<span id="L1800" class="ln">  1800&nbsp;&nbsp;</span>	go pconn.writeLoop()
+<span id="L1801" class="ln">  1801&nbsp;&nbsp;</span>	return pconn, nil
+<span id="L1802" class="ln">  1802&nbsp;&nbsp;</span>}
+<span id="L1803" class="ln">  1803&nbsp;&nbsp;</span>
+<span id="L1804" class="ln">  1804&nbsp;&nbsp;</span><span class="comment">// persistConnWriter is the io.Writer written to by pc.bw.</span>
+<span id="L1805" class="ln">  1805&nbsp;&nbsp;</span><span class="comment">// It accumulates the number of bytes written to the underlying conn,</span>
+<span id="L1806" class="ln">  1806&nbsp;&nbsp;</span><span class="comment">// so the retry logic can determine whether any bytes made it across</span>
+<span id="L1807" class="ln">  1807&nbsp;&nbsp;</span><span class="comment">// the wire.</span>
+<span id="L1808" class="ln">  1808&nbsp;&nbsp;</span><span class="comment">// This is exactly 1 pointer field wide so it can go into an interface</span>
+<span id="L1809" class="ln">  1809&nbsp;&nbsp;</span><span class="comment">// without allocation.</span>
+<span id="L1810" class="ln">  1810&nbsp;&nbsp;</span>type persistConnWriter struct {
+<span id="L1811" class="ln">  1811&nbsp;&nbsp;</span>	pc *persistConn
+<span id="L1812" class="ln">  1812&nbsp;&nbsp;</span>}
+<span id="L1813" class="ln">  1813&nbsp;&nbsp;</span>
+<span id="L1814" class="ln">  1814&nbsp;&nbsp;</span>func (w persistConnWriter) Write(p []byte) (n int, err error) {
+<span id="L1815" class="ln">  1815&nbsp;&nbsp;</span>	n, err = w.pc.conn.Write(p)
+<span id="L1816" class="ln">  1816&nbsp;&nbsp;</span>	w.pc.nwrite += int64(n)
+<span id="L1817" class="ln">  1817&nbsp;&nbsp;</span>	return
+<span id="L1818" class="ln">  1818&nbsp;&nbsp;</span>}
+<span id="L1819" class="ln">  1819&nbsp;&nbsp;</span>
+<span id="L1820" class="ln">  1820&nbsp;&nbsp;</span><span class="comment">// ReadFrom exposes persistConnWriter&#39;s underlying Conn to io.Copy and if</span>
+<span id="L1821" class="ln">  1821&nbsp;&nbsp;</span><span class="comment">// the Conn implements io.ReaderFrom, it can take advantage of optimizations</span>
+<span id="L1822" class="ln">  1822&nbsp;&nbsp;</span><span class="comment">// such as sendfile.</span>
+<span id="L1823" class="ln">  1823&nbsp;&nbsp;</span>func (w persistConnWriter) ReadFrom(r io.Reader) (n int64, err error) {
+<span id="L1824" class="ln">  1824&nbsp;&nbsp;</span>	n, err = io.Copy(w.pc.conn, r)
+<span id="L1825" class="ln">  1825&nbsp;&nbsp;</span>	w.pc.nwrite += n
+<span id="L1826" class="ln">  1826&nbsp;&nbsp;</span>	return
+<span id="L1827" class="ln">  1827&nbsp;&nbsp;</span>}
+<span id="L1828" class="ln">  1828&nbsp;&nbsp;</span>
+<span id="L1829" class="ln">  1829&nbsp;&nbsp;</span>var _ io.ReaderFrom = (*persistConnWriter)(nil)
+<span id="L1830" class="ln">  1830&nbsp;&nbsp;</span>
+<span id="L1831" class="ln">  1831&nbsp;&nbsp;</span><span class="comment">// connectMethod is the map key (in its String form) for keeping persistent</span>
+<span id="L1832" class="ln">  1832&nbsp;&nbsp;</span><span class="comment">// TCP connections alive for subsequent HTTP requests.</span>
+<span id="L1833" class="ln">  1833&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L1834" class="ln">  1834&nbsp;&nbsp;</span><span class="comment">// A connect method may be of the following types:</span>
+<span id="L1835" class="ln">  1835&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L1836" class="ln">  1836&nbsp;&nbsp;</span><span class="comment">//	connectMethod.key().String()      Description</span>
+<span id="L1837" class="ln">  1837&nbsp;&nbsp;</span><span class="comment">//	------------------------------    -------------------------</span>
+<span id="L1838" class="ln">  1838&nbsp;&nbsp;</span><span class="comment">//	|http|foo.com                     http directly to server, no proxy</span>
+<span id="L1839" class="ln">  1839&nbsp;&nbsp;</span><span class="comment">//	|https|foo.com                    https directly to server, no proxy</span>
+<span id="L1840" class="ln">  1840&nbsp;&nbsp;</span><span class="comment">//	|https,h1|foo.com                 https directly to server w/o HTTP/2, no proxy</span>
+<span id="L1841" class="ln">  1841&nbsp;&nbsp;</span><span class="comment">//	http://proxy.com|https|foo.com    http to proxy, then CONNECT to foo.com</span>
+<span id="L1842" class="ln">  1842&nbsp;&nbsp;</span><span class="comment">//	http://proxy.com|http             http to proxy, http to anywhere after that</span>
+<span id="L1843" class="ln">  1843&nbsp;&nbsp;</span><span class="comment">//	socks5://proxy.com|http|foo.com   socks5 to proxy, then http to foo.com</span>
+<span id="L1844" class="ln">  1844&nbsp;&nbsp;</span><span class="comment">//	socks5://proxy.com|https|foo.com  socks5 to proxy, then https to foo.com</span>
+<span id="L1845" class="ln">  1845&nbsp;&nbsp;</span><span class="comment">//	https://proxy.com|https|foo.com   https to proxy, then CONNECT to foo.com</span>
+<span id="L1846" class="ln">  1846&nbsp;&nbsp;</span><span class="comment">//	https://proxy.com|http            https to proxy, http to anywhere after that</span>
+<span id="L1847" class="ln">  1847&nbsp;&nbsp;</span>type connectMethod struct {
+<span id="L1848" class="ln">  1848&nbsp;&nbsp;</span>	_            incomparable
+<span id="L1849" class="ln">  1849&nbsp;&nbsp;</span>	proxyURL     *url.URL <span class="comment">// nil for no proxy, else full proxy URL</span>
+<span id="L1850" class="ln">  1850&nbsp;&nbsp;</span>	targetScheme string   <span class="comment">// &#34;http&#34; or &#34;https&#34;</span>
+<span id="L1851" class="ln">  1851&nbsp;&nbsp;</span>	<span class="comment">// If proxyURL specifies an http or https proxy, and targetScheme is http (not https),</span>
+<span id="L1852" class="ln">  1852&nbsp;&nbsp;</span>	<span class="comment">// then targetAddr is not included in the connect method key, because the socket can</span>
+<span id="L1853" class="ln">  1853&nbsp;&nbsp;</span>	<span class="comment">// be reused for different targetAddr values.</span>
+<span id="L1854" class="ln">  1854&nbsp;&nbsp;</span>	targetAddr string
+<span id="L1855" class="ln">  1855&nbsp;&nbsp;</span>	onlyH1     bool <span class="comment">// whether to disable HTTP/2 and force HTTP/1</span>
+<span id="L1856" class="ln">  1856&nbsp;&nbsp;</span>}
+<span id="L1857" class="ln">  1857&nbsp;&nbsp;</span>
+<span id="L1858" class="ln">  1858&nbsp;&nbsp;</span>func (cm *connectMethod) key() connectMethodKey {
+<span id="L1859" class="ln">  1859&nbsp;&nbsp;</span>	proxyStr := &#34;&#34;
+<span id="L1860" class="ln">  1860&nbsp;&nbsp;</span>	targetAddr := cm.targetAddr
+<span id="L1861" class="ln">  1861&nbsp;&nbsp;</span>	if cm.proxyURL != nil {
+<span id="L1862" class="ln">  1862&nbsp;&nbsp;</span>		proxyStr = cm.proxyURL.String()
+<span id="L1863" class="ln">  1863&nbsp;&nbsp;</span>		if (cm.proxyURL.Scheme == &#34;http&#34; || cm.proxyURL.Scheme == &#34;https&#34;) &amp;&amp; cm.targetScheme == &#34;http&#34; {
+<span id="L1864" class="ln">  1864&nbsp;&nbsp;</span>			targetAddr = &#34;&#34;
+<span id="L1865" class="ln">  1865&nbsp;&nbsp;</span>		}
+<span id="L1866" class="ln">  1866&nbsp;&nbsp;</span>	}
+<span id="L1867" class="ln">  1867&nbsp;&nbsp;</span>	return connectMethodKey{
+<span id="L1868" class="ln">  1868&nbsp;&nbsp;</span>		proxy:  proxyStr,
+<span id="L1869" class="ln">  1869&nbsp;&nbsp;</span>		scheme: cm.targetScheme,
+<span id="L1870" class="ln">  1870&nbsp;&nbsp;</span>		addr:   targetAddr,
+<span id="L1871" class="ln">  1871&nbsp;&nbsp;</span>		onlyH1: cm.onlyH1,
+<span id="L1872" class="ln">  1872&nbsp;&nbsp;</span>	}
+<span id="L1873" class="ln">  1873&nbsp;&nbsp;</span>}
+<span id="L1874" class="ln">  1874&nbsp;&nbsp;</span>
+<span id="L1875" class="ln">  1875&nbsp;&nbsp;</span><span class="comment">// scheme returns the first hop scheme: http, https, or socks5</span>
+<span id="L1876" class="ln">  1876&nbsp;&nbsp;</span>func (cm *connectMethod) scheme() string {
+<span id="L1877" class="ln">  1877&nbsp;&nbsp;</span>	if cm.proxyURL != nil {
+<span id="L1878" class="ln">  1878&nbsp;&nbsp;</span>		return cm.proxyURL.Scheme
+<span id="L1879" class="ln">  1879&nbsp;&nbsp;</span>	}
+<span id="L1880" class="ln">  1880&nbsp;&nbsp;</span>	return cm.targetScheme
+<span id="L1881" class="ln">  1881&nbsp;&nbsp;</span>}
+<span id="L1882" class="ln">  1882&nbsp;&nbsp;</span>
+<span id="L1883" class="ln">  1883&nbsp;&nbsp;</span><span class="comment">// addr returns the first hop &#34;host:port&#34; to which we need to TCP connect.</span>
+<span id="L1884" class="ln">  1884&nbsp;&nbsp;</span>func (cm *connectMethod) addr() string {
+<span id="L1885" class="ln">  1885&nbsp;&nbsp;</span>	if cm.proxyURL != nil {
+<span id="L1886" class="ln">  1886&nbsp;&nbsp;</span>		return canonicalAddr(cm.proxyURL)
+<span id="L1887" class="ln">  1887&nbsp;&nbsp;</span>	}
+<span id="L1888" class="ln">  1888&nbsp;&nbsp;</span>	return cm.targetAddr
+<span id="L1889" class="ln">  1889&nbsp;&nbsp;</span>}
+<span id="L1890" class="ln">  1890&nbsp;&nbsp;</span>
+<span id="L1891" class="ln">  1891&nbsp;&nbsp;</span><span class="comment">// tlsHost returns the host name to match against the peer&#39;s</span>
+<span id="L1892" class="ln">  1892&nbsp;&nbsp;</span><span class="comment">// TLS certificate.</span>
+<span id="L1893" class="ln">  1893&nbsp;&nbsp;</span>func (cm *connectMethod) tlsHost() string {
+<span id="L1894" class="ln">  1894&nbsp;&nbsp;</span>	h := cm.targetAddr
+<span id="L1895" class="ln">  1895&nbsp;&nbsp;</span>	if hasPort(h) {
+<span id="L1896" class="ln">  1896&nbsp;&nbsp;</span>		h = h[:strings.LastIndex(h, &#34;:&#34;)]
+<span id="L1897" class="ln">  1897&nbsp;&nbsp;</span>	}
+<span id="L1898" class="ln">  1898&nbsp;&nbsp;</span>	return h
+<span id="L1899" class="ln">  1899&nbsp;&nbsp;</span>}
+<span id="L1900" class="ln">  1900&nbsp;&nbsp;</span>
+<span id="L1901" class="ln">  1901&nbsp;&nbsp;</span><span class="comment">// connectMethodKey is the map key version of connectMethod, with a</span>
+<span id="L1902" class="ln">  1902&nbsp;&nbsp;</span><span class="comment">// stringified proxy URL (or the empty string) instead of a pointer to</span>
+<span id="L1903" class="ln">  1903&nbsp;&nbsp;</span><span class="comment">// a URL.</span>
+<span id="L1904" class="ln">  1904&nbsp;&nbsp;</span>type connectMethodKey struct {
+<span id="L1905" class="ln">  1905&nbsp;&nbsp;</span>	proxy, scheme, addr string
+<span id="L1906" class="ln">  1906&nbsp;&nbsp;</span>	onlyH1              bool
+<span id="L1907" class="ln">  1907&nbsp;&nbsp;</span>}
+<span id="L1908" class="ln">  1908&nbsp;&nbsp;</span>
+<span id="L1909" class="ln">  1909&nbsp;&nbsp;</span>func (k connectMethodKey) String() string {
+<span id="L1910" class="ln">  1910&nbsp;&nbsp;</span>	<span class="comment">// Only used by tests.</span>
+<span id="L1911" class="ln">  1911&nbsp;&nbsp;</span>	var h1 string
+<span id="L1912" class="ln">  1912&nbsp;&nbsp;</span>	if k.onlyH1 {
+<span id="L1913" class="ln">  1913&nbsp;&nbsp;</span>		h1 = &#34;,h1&#34;
+<span id="L1914" class="ln">  1914&nbsp;&nbsp;</span>	}
+<span id="L1915" class="ln">  1915&nbsp;&nbsp;</span>	return fmt.Sprintf(&#34;%s|%s%s|%s&#34;, k.proxy, k.scheme, h1, k.addr)
+<span id="L1916" class="ln">  1916&nbsp;&nbsp;</span>}
+<span id="L1917" class="ln">  1917&nbsp;&nbsp;</span>
+<span id="L1918" class="ln">  1918&nbsp;&nbsp;</span><span class="comment">// persistConn wraps a connection, usually a persistent one</span>
+<span id="L1919" class="ln">  1919&nbsp;&nbsp;</span><span class="comment">// (but may be used for non-keep-alive requests as well)</span>
+<span id="L1920" class="ln">  1920&nbsp;&nbsp;</span>type persistConn struct {
+<span id="L1921" class="ln">  1921&nbsp;&nbsp;</span>	<span class="comment">// alt optionally specifies the TLS NextProto RoundTripper.</span>
+<span id="L1922" class="ln">  1922&nbsp;&nbsp;</span>	<span class="comment">// This is used for HTTP/2 today and future protocols later.</span>
+<span id="L1923" class="ln">  1923&nbsp;&nbsp;</span>	<span class="comment">// If it&#39;s non-nil, the rest of the fields are unused.</span>
+<span id="L1924" class="ln">  1924&nbsp;&nbsp;</span>	alt RoundTripper
+<span id="L1925" class="ln">  1925&nbsp;&nbsp;</span>
+<span id="L1926" class="ln">  1926&nbsp;&nbsp;</span>	t         *Transport
+<span id="L1927" class="ln">  1927&nbsp;&nbsp;</span>	cacheKey  connectMethodKey
+<span id="L1928" class="ln">  1928&nbsp;&nbsp;</span>	conn      net.Conn
+<span id="L1929" class="ln">  1929&nbsp;&nbsp;</span>	tlsState  *tls.ConnectionState
+<span id="L1930" class="ln">  1930&nbsp;&nbsp;</span>	br        *bufio.Reader       <span class="comment">// from conn</span>
+<span id="L1931" class="ln">  1931&nbsp;&nbsp;</span>	bw        *bufio.Writer       <span class="comment">// to conn</span>
+<span id="L1932" class="ln">  1932&nbsp;&nbsp;</span>	nwrite    int64               <span class="comment">// bytes written</span>
+<span id="L1933" class="ln">  1933&nbsp;&nbsp;</span>	reqch     chan requestAndChan <span class="comment">// written by roundTrip; read by readLoop</span>
+<span id="L1934" class="ln">  1934&nbsp;&nbsp;</span>	writech   chan writeRequest   <span class="comment">// written by roundTrip; read by writeLoop</span>
+<span id="L1935" class="ln">  1935&nbsp;&nbsp;</span>	closech   chan struct{}       <span class="comment">// closed when conn closed</span>
+<span id="L1936" class="ln">  1936&nbsp;&nbsp;</span>	isProxy   bool
+<span id="L1937" class="ln">  1937&nbsp;&nbsp;</span>	sawEOF    bool  <span class="comment">// whether we&#39;ve seen EOF from conn; owned by readLoop</span>
+<span id="L1938" class="ln">  1938&nbsp;&nbsp;</span>	readLimit int64 <span class="comment">// bytes allowed to be read; owned by readLoop</span>
+<span id="L1939" class="ln">  1939&nbsp;&nbsp;</span>	<span class="comment">// writeErrCh passes the request write error (usually nil)</span>
+<span id="L1940" class="ln">  1940&nbsp;&nbsp;</span>	<span class="comment">// from the writeLoop goroutine to the readLoop which passes</span>
+<span id="L1941" class="ln">  1941&nbsp;&nbsp;</span>	<span class="comment">// it off to the res.Body reader, which then uses it to decide</span>
+<span id="L1942" class="ln">  1942&nbsp;&nbsp;</span>	<span class="comment">// whether or not a connection can be reused. Issue 7569.</span>
+<span id="L1943" class="ln">  1943&nbsp;&nbsp;</span>	writeErrCh chan error
+<span id="L1944" class="ln">  1944&nbsp;&nbsp;</span>
+<span id="L1945" class="ln">  1945&nbsp;&nbsp;</span>	writeLoopDone chan struct{} <span class="comment">// closed when write loop ends</span>
+<span id="L1946" class="ln">  1946&nbsp;&nbsp;</span>
+<span id="L1947" class="ln">  1947&nbsp;&nbsp;</span>	<span class="comment">// Both guarded by Transport.idleMu:</span>
+<span id="L1948" class="ln">  1948&nbsp;&nbsp;</span>	idleAt    time.Time   <span class="comment">// time it last become idle</span>
+<span id="L1949" class="ln">  1949&nbsp;&nbsp;</span>	idleTimer *time.Timer <span class="comment">// holding an AfterFunc to close it</span>
+<span id="L1950" class="ln">  1950&nbsp;&nbsp;</span>
+<span id="L1951" class="ln">  1951&nbsp;&nbsp;</span>	mu                   sync.Mutex <span class="comment">// guards following fields</span>
+<span id="L1952" class="ln">  1952&nbsp;&nbsp;</span>	numExpectedResponses int
+<span id="L1953" class="ln">  1953&nbsp;&nbsp;</span>	closed               error <span class="comment">// set non-nil when conn is closed, before closech is closed</span>
+<span id="L1954" class="ln">  1954&nbsp;&nbsp;</span>	canceledErr          error <span class="comment">// set non-nil if conn is canceled</span>
+<span id="L1955" class="ln">  1955&nbsp;&nbsp;</span>	broken               bool  <span class="comment">// an error has happened on this connection; marked broken so it&#39;s not reused.</span>
+<span id="L1956" class="ln">  1956&nbsp;&nbsp;</span>	reused               bool  <span class="comment">// whether conn has had successful request/response and is being reused.</span>
+<span id="L1957" class="ln">  1957&nbsp;&nbsp;</span>	<span class="comment">// mutateHeaderFunc is an optional func to modify extra</span>
+<span id="L1958" class="ln">  1958&nbsp;&nbsp;</span>	<span class="comment">// headers on each outbound request before it&#39;s written. (the</span>
+<span id="L1959" class="ln">  1959&nbsp;&nbsp;</span>	<span class="comment">// original Request given to RoundTrip is not modified)</span>
+<span id="L1960" class="ln">  1960&nbsp;&nbsp;</span>	mutateHeaderFunc func(Header)
+<span id="L1961" class="ln">  1961&nbsp;&nbsp;</span>}
+<span id="L1962" class="ln">  1962&nbsp;&nbsp;</span>
+<span id="L1963" class="ln">  1963&nbsp;&nbsp;</span>func (pc *persistConn) maxHeaderResponseSize() int64 {
+<span id="L1964" class="ln">  1964&nbsp;&nbsp;</span>	if v := pc.t.MaxResponseHeaderBytes; v != 0 {
+<span id="L1965" class="ln">  1965&nbsp;&nbsp;</span>		return v
+<span id="L1966" class="ln">  1966&nbsp;&nbsp;</span>	}
+<span id="L1967" class="ln">  1967&nbsp;&nbsp;</span>	return 10 &lt;&lt; 20 <span class="comment">// conservative default; same as http2</span>
+<span id="L1968" class="ln">  1968&nbsp;&nbsp;</span>}
+<span id="L1969" class="ln">  1969&nbsp;&nbsp;</span>
+<span id="L1970" class="ln">  1970&nbsp;&nbsp;</span>func (pc *persistConn) Read(p []byte) (n int, err error) {
+<span id="L1971" class="ln">  1971&nbsp;&nbsp;</span>	if pc.readLimit &lt;= 0 {
+<span id="L1972" class="ln">  1972&nbsp;&nbsp;</span>		return 0, fmt.Errorf(&#34;read limit of %d bytes exhausted&#34;, pc.maxHeaderResponseSize())
+<span id="L1973" class="ln">  1973&nbsp;&nbsp;</span>	}
+<span id="L1974" class="ln">  1974&nbsp;&nbsp;</span>	if int64(len(p)) &gt; pc.readLimit {
+<span id="L1975" class="ln">  1975&nbsp;&nbsp;</span>		p = p[:pc.readLimit]
+<span id="L1976" class="ln">  1976&nbsp;&nbsp;</span>	}
+<span id="L1977" class="ln">  1977&nbsp;&nbsp;</span>	n, err = pc.conn.Read(p)
+<span id="L1978" class="ln">  1978&nbsp;&nbsp;</span>	if err == io.EOF {
+<span id="L1979" class="ln">  1979&nbsp;&nbsp;</span>		pc.sawEOF = true
+<span id="L1980" class="ln">  1980&nbsp;&nbsp;</span>	}
+<span id="L1981" class="ln">  1981&nbsp;&nbsp;</span>	pc.readLimit -= int64(n)
+<span id="L1982" class="ln">  1982&nbsp;&nbsp;</span>	return
+<span id="L1983" class="ln">  1983&nbsp;&nbsp;</span>}
+<span id="L1984" class="ln">  1984&nbsp;&nbsp;</span>
+<span id="L1985" class="ln">  1985&nbsp;&nbsp;</span><span class="comment">// isBroken reports whether this connection is in a known broken state.</span>
+<span id="L1986" class="ln">  1986&nbsp;&nbsp;</span>func (pc *persistConn) isBroken() bool {
+<span id="L1987" class="ln">  1987&nbsp;&nbsp;</span>	pc.mu.Lock()
+<span id="L1988" class="ln">  1988&nbsp;&nbsp;</span>	b := pc.closed != nil
+<span id="L1989" class="ln">  1989&nbsp;&nbsp;</span>	pc.mu.Unlock()
+<span id="L1990" class="ln">  1990&nbsp;&nbsp;</span>	return b
+<span id="L1991" class="ln">  1991&nbsp;&nbsp;</span>}
+<span id="L1992" class="ln">  1992&nbsp;&nbsp;</span>
+<span id="L1993" class="ln">  1993&nbsp;&nbsp;</span><span class="comment">// canceled returns non-nil if the connection was closed due to</span>
+<span id="L1994" class="ln">  1994&nbsp;&nbsp;</span><span class="comment">// CancelRequest or due to context cancellation.</span>
+<span id="L1995" class="ln">  1995&nbsp;&nbsp;</span>func (pc *persistConn) canceled() error {
+<span id="L1996" class="ln">  1996&nbsp;&nbsp;</span>	pc.mu.Lock()
+<span id="L1997" class="ln">  1997&nbsp;&nbsp;</span>	defer pc.mu.Unlock()
+<span id="L1998" class="ln">  1998&nbsp;&nbsp;</span>	return pc.canceledErr
+<span id="L1999" class="ln">  1999&nbsp;&nbsp;</span>}
+<span id="L2000" class="ln">  2000&nbsp;&nbsp;</span>
+<span id="L2001" class="ln">  2001&nbsp;&nbsp;</span><span class="comment">// isReused reports whether this connection has been used before.</span>
+<span id="L2002" class="ln">  2002&nbsp;&nbsp;</span>func (pc *persistConn) isReused() bool {
+<span id="L2003" class="ln">  2003&nbsp;&nbsp;</span>	pc.mu.Lock()
+<span id="L2004" class="ln">  2004&nbsp;&nbsp;</span>	r := pc.reused
+<span id="L2005" class="ln">  2005&nbsp;&nbsp;</span>	pc.mu.Unlock()
+<span id="L2006" class="ln">  2006&nbsp;&nbsp;</span>	return r
+<span id="L2007" class="ln">  2007&nbsp;&nbsp;</span>}
+<span id="L2008" class="ln">  2008&nbsp;&nbsp;</span>
+<span id="L2009" class="ln">  2009&nbsp;&nbsp;</span>func (pc *persistConn) gotIdleConnTrace(idleAt time.Time) (t httptrace.GotConnInfo) {
+<span id="L2010" class="ln">  2010&nbsp;&nbsp;</span>	pc.mu.Lock()
+<span id="L2011" class="ln">  2011&nbsp;&nbsp;</span>	defer pc.mu.Unlock()
+<span id="L2012" class="ln">  2012&nbsp;&nbsp;</span>	t.Reused = pc.reused
+<span id="L2013" class="ln">  2013&nbsp;&nbsp;</span>	t.Conn = pc.conn
+<span id="L2014" class="ln">  2014&nbsp;&nbsp;</span>	t.WasIdle = true
+<span id="L2015" class="ln">  2015&nbsp;&nbsp;</span>	if !idleAt.IsZero() {
+<span id="L2016" class="ln">  2016&nbsp;&nbsp;</span>		t.IdleTime = time.Since(idleAt)
+<span id="L2017" class="ln">  2017&nbsp;&nbsp;</span>	}
+<span id="L2018" class="ln">  2018&nbsp;&nbsp;</span>	return
+<span id="L2019" class="ln">  2019&nbsp;&nbsp;</span>}
+<span id="L2020" class="ln">  2020&nbsp;&nbsp;</span>
+<span id="L2021" class="ln">  2021&nbsp;&nbsp;</span>func (pc *persistConn) cancelRequest(err error) {
+<span id="L2022" class="ln">  2022&nbsp;&nbsp;</span>	pc.mu.Lock()
+<span id="L2023" class="ln">  2023&nbsp;&nbsp;</span>	defer pc.mu.Unlock()
+<span id="L2024" class="ln">  2024&nbsp;&nbsp;</span>	pc.canceledErr = err
+<span id="L2025" class="ln">  2025&nbsp;&nbsp;</span>	pc.closeLocked(errRequestCanceled)
+<span id="L2026" class="ln">  2026&nbsp;&nbsp;</span>}
+<span id="L2027" class="ln">  2027&nbsp;&nbsp;</span>
+<span id="L2028" class="ln">  2028&nbsp;&nbsp;</span><span class="comment">// closeConnIfStillIdle closes the connection if it&#39;s still sitting idle.</span>
+<span id="L2029" class="ln">  2029&nbsp;&nbsp;</span><span class="comment">// This is what&#39;s called by the persistConn&#39;s idleTimer, and is run in its</span>
+<span id="L2030" class="ln">  2030&nbsp;&nbsp;</span><span class="comment">// own goroutine.</span>
+<span id="L2031" class="ln">  2031&nbsp;&nbsp;</span>func (pc *persistConn) closeConnIfStillIdle() {
+<span id="L2032" class="ln">  2032&nbsp;&nbsp;</span>	t := pc.t
+<span id="L2033" class="ln">  2033&nbsp;&nbsp;</span>	t.idleMu.Lock()
+<span id="L2034" class="ln">  2034&nbsp;&nbsp;</span>	defer t.idleMu.Unlock()
+<span id="L2035" class="ln">  2035&nbsp;&nbsp;</span>	if _, ok := t.idleLRU.m[pc]; !ok {
+<span id="L2036" class="ln">  2036&nbsp;&nbsp;</span>		<span class="comment">// Not idle.</span>
+<span id="L2037" class="ln">  2037&nbsp;&nbsp;</span>		return
+<span id="L2038" class="ln">  2038&nbsp;&nbsp;</span>	}
+<span id="L2039" class="ln">  2039&nbsp;&nbsp;</span>	t.removeIdleConnLocked(pc)
+<span id="L2040" class="ln">  2040&nbsp;&nbsp;</span>	pc.close(errIdleConnTimeout)
+<span id="L2041" class="ln">  2041&nbsp;&nbsp;</span>}
+<span id="L2042" class="ln">  2042&nbsp;&nbsp;</span>
+<span id="L2043" class="ln">  2043&nbsp;&nbsp;</span><span class="comment">// mapRoundTripError returns the appropriate error value for</span>
+<span id="L2044" class="ln">  2044&nbsp;&nbsp;</span><span class="comment">// persistConn.roundTrip.</span>
+<span id="L2045" class="ln">  2045&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L2046" class="ln">  2046&nbsp;&nbsp;</span><span class="comment">// The provided err is the first error that (*persistConn).roundTrip</span>
+<span id="L2047" class="ln">  2047&nbsp;&nbsp;</span><span class="comment">// happened to receive from its select statement.</span>
+<span id="L2048" class="ln">  2048&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L2049" class="ln">  2049&nbsp;&nbsp;</span><span class="comment">// The startBytesWritten value should be the value of pc.nwrite before the roundTrip</span>
+<span id="L2050" class="ln">  2050&nbsp;&nbsp;</span><span class="comment">// started writing the request.</span>
+<span id="L2051" class="ln">  2051&nbsp;&nbsp;</span>func (pc *persistConn) mapRoundTripError(req *transportRequest, startBytesWritten int64, err error) error {
+<span id="L2052" class="ln">  2052&nbsp;&nbsp;</span>	if err == nil {
+<span id="L2053" class="ln">  2053&nbsp;&nbsp;</span>		return nil
+<span id="L2054" class="ln">  2054&nbsp;&nbsp;</span>	}
+<span id="L2055" class="ln">  2055&nbsp;&nbsp;</span>
+<span id="L2056" class="ln">  2056&nbsp;&nbsp;</span>	<span class="comment">// Wait for the writeLoop goroutine to terminate to avoid data</span>
+<span id="L2057" class="ln">  2057&nbsp;&nbsp;</span>	<span class="comment">// races on callers who mutate the request on failure.</span>
+<span id="L2058" class="ln">  2058&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L2059" class="ln">  2059&nbsp;&nbsp;</span>	<span class="comment">// When resc in pc.roundTrip and hence rc.ch receives a responseAndError</span>
+<span id="L2060" class="ln">  2060&nbsp;&nbsp;</span>	<span class="comment">// with a non-nil error it implies that the persistConn is either closed</span>
+<span id="L2061" class="ln">  2061&nbsp;&nbsp;</span>	<span class="comment">// or closing. Waiting on pc.writeLoopDone is hence safe as all callers</span>
+<span id="L2062" class="ln">  2062&nbsp;&nbsp;</span>	<span class="comment">// close closech which in turn ensures writeLoop returns.</span>
+<span id="L2063" class="ln">  2063&nbsp;&nbsp;</span>	&lt;-pc.writeLoopDone
+<span id="L2064" class="ln">  2064&nbsp;&nbsp;</span>
+<span id="L2065" class="ln">  2065&nbsp;&nbsp;</span>	<span class="comment">// If the request was canceled, that&#39;s better than network</span>
+<span id="L2066" class="ln">  2066&nbsp;&nbsp;</span>	<span class="comment">// failures that were likely the result of tearing down the</span>
+<span id="L2067" class="ln">  2067&nbsp;&nbsp;</span>	<span class="comment">// connection.</span>
+<span id="L2068" class="ln">  2068&nbsp;&nbsp;</span>	if cerr := pc.canceled(); cerr != nil {
+<span id="L2069" class="ln">  2069&nbsp;&nbsp;</span>		return cerr
+<span id="L2070" class="ln">  2070&nbsp;&nbsp;</span>	}
+<span id="L2071" class="ln">  2071&nbsp;&nbsp;</span>
+<span id="L2072" class="ln">  2072&nbsp;&nbsp;</span>	<span class="comment">// See if an error was set explicitly.</span>
+<span id="L2073" class="ln">  2073&nbsp;&nbsp;</span>	req.mu.Lock()
+<span id="L2074" class="ln">  2074&nbsp;&nbsp;</span>	reqErr := req.err
+<span id="L2075" class="ln">  2075&nbsp;&nbsp;</span>	req.mu.Unlock()
+<span id="L2076" class="ln">  2076&nbsp;&nbsp;</span>	if reqErr != nil {
+<span id="L2077" class="ln">  2077&nbsp;&nbsp;</span>		return reqErr
+<span id="L2078" class="ln">  2078&nbsp;&nbsp;</span>	}
+<span id="L2079" class="ln">  2079&nbsp;&nbsp;</span>
+<span id="L2080" class="ln">  2080&nbsp;&nbsp;</span>	if err == errServerClosedIdle {
+<span id="L2081" class="ln">  2081&nbsp;&nbsp;</span>		<span class="comment">// Don&#39;t decorate</span>
+<span id="L2082" class="ln">  2082&nbsp;&nbsp;</span>		return err
+<span id="L2083" class="ln">  2083&nbsp;&nbsp;</span>	}
+<span id="L2084" class="ln">  2084&nbsp;&nbsp;</span>
+<span id="L2085" class="ln">  2085&nbsp;&nbsp;</span>	if _, ok := err.(transportReadFromServerError); ok {
+<span id="L2086" class="ln">  2086&nbsp;&nbsp;</span>		if pc.nwrite == startBytesWritten {
+<span id="L2087" class="ln">  2087&nbsp;&nbsp;</span>			return nothingWrittenError{err}
+<span id="L2088" class="ln">  2088&nbsp;&nbsp;</span>		}
+<span id="L2089" class="ln">  2089&nbsp;&nbsp;</span>		<span class="comment">// Don&#39;t decorate</span>
+<span id="L2090" class="ln">  2090&nbsp;&nbsp;</span>		return err
+<span id="L2091" class="ln">  2091&nbsp;&nbsp;</span>	}
+<span id="L2092" class="ln">  2092&nbsp;&nbsp;</span>	if pc.isBroken() {
+<span id="L2093" class="ln">  2093&nbsp;&nbsp;</span>		if pc.nwrite == startBytesWritten {
+<span id="L2094" class="ln">  2094&nbsp;&nbsp;</span>			return nothingWrittenError{err}
+<span id="L2095" class="ln">  2095&nbsp;&nbsp;</span>		}
+<span id="L2096" class="ln">  2096&nbsp;&nbsp;</span>		return fmt.Errorf(&#34;net/http: HTTP/1.x transport connection broken: %w&#34;, err)
+<span id="L2097" class="ln">  2097&nbsp;&nbsp;</span>	}
+<span id="L2098" class="ln">  2098&nbsp;&nbsp;</span>	return err
+<span id="L2099" class="ln">  2099&nbsp;&nbsp;</span>}
+<span id="L2100" class="ln">  2100&nbsp;&nbsp;</span>
+<span id="L2101" class="ln">  2101&nbsp;&nbsp;</span><span class="comment">// errCallerOwnsConn is an internal sentinel error used when we hand</span>
+<span id="L2102" class="ln">  2102&nbsp;&nbsp;</span><span class="comment">// off a writable response.Body to the caller. We use this to prevent</span>
+<span id="L2103" class="ln">  2103&nbsp;&nbsp;</span><span class="comment">// closing a net.Conn that is now owned by the caller.</span>
+<span id="L2104" class="ln">  2104&nbsp;&nbsp;</span>var errCallerOwnsConn = errors.New(&#34;read loop ending; caller owns writable underlying conn&#34;)
+<span id="L2105" class="ln">  2105&nbsp;&nbsp;</span>
+<span id="L2106" class="ln">  2106&nbsp;&nbsp;</span>func (pc *persistConn) readLoop() {
+<span id="L2107" class="ln">  2107&nbsp;&nbsp;</span>	closeErr := errReadLoopExiting <span class="comment">// default value, if not changed below</span>
+<span id="L2108" class="ln">  2108&nbsp;&nbsp;</span>	defer func() {
+<span id="L2109" class="ln">  2109&nbsp;&nbsp;</span>		pc.close(closeErr)
+<span id="L2110" class="ln">  2110&nbsp;&nbsp;</span>		pc.t.removeIdleConn(pc)
+<span id="L2111" class="ln">  2111&nbsp;&nbsp;</span>	}()
+<span id="L2112" class="ln">  2112&nbsp;&nbsp;</span>
+<span id="L2113" class="ln">  2113&nbsp;&nbsp;</span>	tryPutIdleConn := func(trace *httptrace.ClientTrace) bool {
+<span id="L2114" class="ln">  2114&nbsp;&nbsp;</span>		if err := pc.t.tryPutIdleConn(pc); err != nil {
+<span id="L2115" class="ln">  2115&nbsp;&nbsp;</span>			closeErr = err
+<span id="L2116" class="ln">  2116&nbsp;&nbsp;</span>			if trace != nil &amp;&amp; trace.PutIdleConn != nil &amp;&amp; err != errKeepAlivesDisabled {
+<span id="L2117" class="ln">  2117&nbsp;&nbsp;</span>				trace.PutIdleConn(err)
+<span id="L2118" class="ln">  2118&nbsp;&nbsp;</span>			}
+<span id="L2119" class="ln">  2119&nbsp;&nbsp;</span>			return false
+<span id="L2120" class="ln">  2120&nbsp;&nbsp;</span>		}
+<span id="L2121" class="ln">  2121&nbsp;&nbsp;</span>		if trace != nil &amp;&amp; trace.PutIdleConn != nil {
+<span id="L2122" class="ln">  2122&nbsp;&nbsp;</span>			trace.PutIdleConn(nil)
+<span id="L2123" class="ln">  2123&nbsp;&nbsp;</span>		}
+<span id="L2124" class="ln">  2124&nbsp;&nbsp;</span>		return true
+<span id="L2125" class="ln">  2125&nbsp;&nbsp;</span>	}
+<span id="L2126" class="ln">  2126&nbsp;&nbsp;</span>
+<span id="L2127" class="ln">  2127&nbsp;&nbsp;</span>	<span class="comment">// eofc is used to block caller goroutines reading from Response.Body</span>
+<span id="L2128" class="ln">  2128&nbsp;&nbsp;</span>	<span class="comment">// at EOF until this goroutines has (potentially) added the connection</span>
+<span id="L2129" class="ln">  2129&nbsp;&nbsp;</span>	<span class="comment">// back to the idle pool.</span>
+<span id="L2130" class="ln">  2130&nbsp;&nbsp;</span>	eofc := make(chan struct{})
+<span id="L2131" class="ln">  2131&nbsp;&nbsp;</span>	defer close(eofc) <span class="comment">// unblock reader on errors</span>
+<span id="L2132" class="ln">  2132&nbsp;&nbsp;</span>
+<span id="L2133" class="ln">  2133&nbsp;&nbsp;</span>	<span class="comment">// Read this once, before loop starts. (to avoid races in tests)</span>
+<span id="L2134" class="ln">  2134&nbsp;&nbsp;</span>	testHookMu.Lock()
+<span id="L2135" class="ln">  2135&nbsp;&nbsp;</span>	testHookReadLoopBeforeNextRead := testHookReadLoopBeforeNextRead
+<span id="L2136" class="ln">  2136&nbsp;&nbsp;</span>	testHookMu.Unlock()
+<span id="L2137" class="ln">  2137&nbsp;&nbsp;</span>
+<span id="L2138" class="ln">  2138&nbsp;&nbsp;</span>	alive := true
+<span id="L2139" class="ln">  2139&nbsp;&nbsp;</span>	for alive {
+<span id="L2140" class="ln">  2140&nbsp;&nbsp;</span>		pc.readLimit = pc.maxHeaderResponseSize()
+<span id="L2141" class="ln">  2141&nbsp;&nbsp;</span>		_, err := pc.br.Peek(1)
+<span id="L2142" class="ln">  2142&nbsp;&nbsp;</span>
+<span id="L2143" class="ln">  2143&nbsp;&nbsp;</span>		pc.mu.Lock()
+<span id="L2144" class="ln">  2144&nbsp;&nbsp;</span>		if pc.numExpectedResponses == 0 {
+<span id="L2145" class="ln">  2145&nbsp;&nbsp;</span>			pc.readLoopPeekFailLocked(err)
+<span id="L2146" class="ln">  2146&nbsp;&nbsp;</span>			pc.mu.Unlock()
+<span id="L2147" class="ln">  2147&nbsp;&nbsp;</span>			return
+<span id="L2148" class="ln">  2148&nbsp;&nbsp;</span>		}
+<span id="L2149" class="ln">  2149&nbsp;&nbsp;</span>		pc.mu.Unlock()
+<span id="L2150" class="ln">  2150&nbsp;&nbsp;</span>
+<span id="L2151" class="ln">  2151&nbsp;&nbsp;</span>		rc := &lt;-pc.reqch
+<span id="L2152" class="ln">  2152&nbsp;&nbsp;</span>		trace := httptrace.ContextClientTrace(rc.req.Context())
+<span id="L2153" class="ln">  2153&nbsp;&nbsp;</span>
+<span id="L2154" class="ln">  2154&nbsp;&nbsp;</span>		var resp *Response
+<span id="L2155" class="ln">  2155&nbsp;&nbsp;</span>		if err == nil {
+<span id="L2156" class="ln">  2156&nbsp;&nbsp;</span>			resp, err = pc.readResponse(rc, trace)
+<span id="L2157" class="ln">  2157&nbsp;&nbsp;</span>		} else {
+<span id="L2158" class="ln">  2158&nbsp;&nbsp;</span>			err = transportReadFromServerError{err}
+<span id="L2159" class="ln">  2159&nbsp;&nbsp;</span>			closeErr = err
+<span id="L2160" class="ln">  2160&nbsp;&nbsp;</span>		}
+<span id="L2161" class="ln">  2161&nbsp;&nbsp;</span>
+<span id="L2162" class="ln">  2162&nbsp;&nbsp;</span>		if err != nil {
+<span id="L2163" class="ln">  2163&nbsp;&nbsp;</span>			if pc.readLimit &lt;= 0 {
+<span id="L2164" class="ln">  2164&nbsp;&nbsp;</span>				err = fmt.Errorf(&#34;net/http: server response headers exceeded %d bytes; aborted&#34;, pc.maxHeaderResponseSize())
+<span id="L2165" class="ln">  2165&nbsp;&nbsp;</span>			}
+<span id="L2166" class="ln">  2166&nbsp;&nbsp;</span>
+<span id="L2167" class="ln">  2167&nbsp;&nbsp;</span>			select {
+<span id="L2168" class="ln">  2168&nbsp;&nbsp;</span>			case rc.ch &lt;- responseAndError{err: err}:
+<span id="L2169" class="ln">  2169&nbsp;&nbsp;</span>			case &lt;-rc.callerGone:
+<span id="L2170" class="ln">  2170&nbsp;&nbsp;</span>				return
+<span id="L2171" class="ln">  2171&nbsp;&nbsp;</span>			}
+<span id="L2172" class="ln">  2172&nbsp;&nbsp;</span>			return
+<span id="L2173" class="ln">  2173&nbsp;&nbsp;</span>		}
+<span id="L2174" class="ln">  2174&nbsp;&nbsp;</span>		pc.readLimit = maxInt64 <span class="comment">// effectively no limit for response bodies</span>
+<span id="L2175" class="ln">  2175&nbsp;&nbsp;</span>
+<span id="L2176" class="ln">  2176&nbsp;&nbsp;</span>		pc.mu.Lock()
+<span id="L2177" class="ln">  2177&nbsp;&nbsp;</span>		pc.numExpectedResponses--
+<span id="L2178" class="ln">  2178&nbsp;&nbsp;</span>		pc.mu.Unlock()
+<span id="L2179" class="ln">  2179&nbsp;&nbsp;</span>
+<span id="L2180" class="ln">  2180&nbsp;&nbsp;</span>		bodyWritable := resp.bodyIsWritable()
+<span id="L2181" class="ln">  2181&nbsp;&nbsp;</span>		hasBody := rc.req.Method != &#34;HEAD&#34; &amp;&amp; resp.ContentLength != 0
+<span id="L2182" class="ln">  2182&nbsp;&nbsp;</span>
+<span id="L2183" class="ln">  2183&nbsp;&nbsp;</span>		if resp.Close || rc.req.Close || resp.StatusCode &lt;= 199 || bodyWritable {
+<span id="L2184" class="ln">  2184&nbsp;&nbsp;</span>			<span class="comment">// Don&#39;t do keep-alive on error if either party requested a close</span>
+<span id="L2185" class="ln">  2185&nbsp;&nbsp;</span>			<span class="comment">// or we get an unexpected informational (1xx) response.</span>
+<span id="L2186" class="ln">  2186&nbsp;&nbsp;</span>			<span class="comment">// StatusCode 100 is already handled above.</span>
+<span id="L2187" class="ln">  2187&nbsp;&nbsp;</span>			alive = false
+<span id="L2188" class="ln">  2188&nbsp;&nbsp;</span>		}
+<span id="L2189" class="ln">  2189&nbsp;&nbsp;</span>
+<span id="L2190" class="ln">  2190&nbsp;&nbsp;</span>		if !hasBody || bodyWritable {
+<span id="L2191" class="ln">  2191&nbsp;&nbsp;</span>			replaced := pc.t.replaceReqCanceler(rc.cancelKey, nil)
+<span id="L2192" class="ln">  2192&nbsp;&nbsp;</span>
+<span id="L2193" class="ln">  2193&nbsp;&nbsp;</span>			<span class="comment">// Put the idle conn back into the pool before we send the response</span>
+<span id="L2194" class="ln">  2194&nbsp;&nbsp;</span>			<span class="comment">// so if they process it quickly and make another request, they&#39;ll</span>
+<span id="L2195" class="ln">  2195&nbsp;&nbsp;</span>			<span class="comment">// get this same conn. But we use the unbuffered channel &#39;rc&#39;</span>
+<span id="L2196" class="ln">  2196&nbsp;&nbsp;</span>			<span class="comment">// to guarantee that persistConn.roundTrip got out of its select</span>
+<span id="L2197" class="ln">  2197&nbsp;&nbsp;</span>			<span class="comment">// potentially waiting for this persistConn to close.</span>
+<span id="L2198" class="ln">  2198&nbsp;&nbsp;</span>			alive = alive &amp;&amp;
+<span id="L2199" class="ln">  2199&nbsp;&nbsp;</span>				!pc.sawEOF &amp;&amp;
+<span id="L2200" class="ln">  2200&nbsp;&nbsp;</span>				pc.wroteRequest() &amp;&amp;
+<span id="L2201" class="ln">  2201&nbsp;&nbsp;</span>				replaced &amp;&amp; tryPutIdleConn(trace)
+<span id="L2202" class="ln">  2202&nbsp;&nbsp;</span>
+<span id="L2203" class="ln">  2203&nbsp;&nbsp;</span>			if bodyWritable {
+<span id="L2204" class="ln">  2204&nbsp;&nbsp;</span>				closeErr = errCallerOwnsConn
+<span id="L2205" class="ln">  2205&nbsp;&nbsp;</span>			}
+<span id="L2206" class="ln">  2206&nbsp;&nbsp;</span>
+<span id="L2207" class="ln">  2207&nbsp;&nbsp;</span>			select {
+<span id="L2208" class="ln">  2208&nbsp;&nbsp;</span>			case rc.ch &lt;- responseAndError{res: resp}:
+<span id="L2209" class="ln">  2209&nbsp;&nbsp;</span>			case &lt;-rc.callerGone:
+<span id="L2210" class="ln">  2210&nbsp;&nbsp;</span>				return
+<span id="L2211" class="ln">  2211&nbsp;&nbsp;</span>			}
+<span id="L2212" class="ln">  2212&nbsp;&nbsp;</span>
+<span id="L2213" class="ln">  2213&nbsp;&nbsp;</span>			<span class="comment">// Now that they&#39;ve read from the unbuffered channel, they&#39;re safely</span>
+<span id="L2214" class="ln">  2214&nbsp;&nbsp;</span>			<span class="comment">// out of the select that also waits on this goroutine to die, so</span>
+<span id="L2215" class="ln">  2215&nbsp;&nbsp;</span>			<span class="comment">// we&#39;re allowed to exit now if needed (if alive is false)</span>
+<span id="L2216" class="ln">  2216&nbsp;&nbsp;</span>			testHookReadLoopBeforeNextRead()
+<span id="L2217" class="ln">  2217&nbsp;&nbsp;</span>			continue
+<span id="L2218" class="ln">  2218&nbsp;&nbsp;</span>		}
+<span id="L2219" class="ln">  2219&nbsp;&nbsp;</span>
+<span id="L2220" class="ln">  2220&nbsp;&nbsp;</span>		waitForBodyRead := make(chan bool, 2)
+<span id="L2221" class="ln">  2221&nbsp;&nbsp;</span>		body := &amp;bodyEOFSignal{
+<span id="L2222" class="ln">  2222&nbsp;&nbsp;</span>			body: resp.Body,
+<span id="L2223" class="ln">  2223&nbsp;&nbsp;</span>			earlyCloseFn: func() error {
+<span id="L2224" class="ln">  2224&nbsp;&nbsp;</span>				waitForBodyRead &lt;- false
+<span id="L2225" class="ln">  2225&nbsp;&nbsp;</span>				&lt;-eofc <span class="comment">// will be closed by deferred call at the end of the function</span>
+<span id="L2226" class="ln">  2226&nbsp;&nbsp;</span>				return nil
+<span id="L2227" class="ln">  2227&nbsp;&nbsp;</span>
+<span id="L2228" class="ln">  2228&nbsp;&nbsp;</span>			},
+<span id="L2229" class="ln">  2229&nbsp;&nbsp;</span>			fn: func(err error) error {
+<span id="L2230" class="ln">  2230&nbsp;&nbsp;</span>				isEOF := err == io.EOF
+<span id="L2231" class="ln">  2231&nbsp;&nbsp;</span>				waitForBodyRead &lt;- isEOF
+<span id="L2232" class="ln">  2232&nbsp;&nbsp;</span>				if isEOF {
+<span id="L2233" class="ln">  2233&nbsp;&nbsp;</span>					&lt;-eofc <span class="comment">// see comment above eofc declaration</span>
+<span id="L2234" class="ln">  2234&nbsp;&nbsp;</span>				} else if err != nil {
+<span id="L2235" class="ln">  2235&nbsp;&nbsp;</span>					if cerr := pc.canceled(); cerr != nil {
+<span id="L2236" class="ln">  2236&nbsp;&nbsp;</span>						return cerr
+<span id="L2237" class="ln">  2237&nbsp;&nbsp;</span>					}
+<span id="L2238" class="ln">  2238&nbsp;&nbsp;</span>				}
+<span id="L2239" class="ln">  2239&nbsp;&nbsp;</span>				return err
+<span id="L2240" class="ln">  2240&nbsp;&nbsp;</span>			},
+<span id="L2241" class="ln">  2241&nbsp;&nbsp;</span>		}
+<span id="L2242" class="ln">  2242&nbsp;&nbsp;</span>
+<span id="L2243" class="ln">  2243&nbsp;&nbsp;</span>		resp.Body = body
+<span id="L2244" class="ln">  2244&nbsp;&nbsp;</span>		if rc.addedGzip &amp;&amp; ascii.EqualFold(resp.Header.Get(&#34;Content-Encoding&#34;), &#34;gzip&#34;) {
+<span id="L2245" class="ln">  2245&nbsp;&nbsp;</span>			resp.Body = &amp;gzipReader{body: body}
+<span id="L2246" class="ln">  2246&nbsp;&nbsp;</span>			resp.Header.Del(&#34;Content-Encoding&#34;)
+<span id="L2247" class="ln">  2247&nbsp;&nbsp;</span>			resp.Header.Del(&#34;Content-Length&#34;)
+<span id="L2248" class="ln">  2248&nbsp;&nbsp;</span>			resp.ContentLength = -1
+<span id="L2249" class="ln">  2249&nbsp;&nbsp;</span>			resp.Uncompressed = true
+<span id="L2250" class="ln">  2250&nbsp;&nbsp;</span>		}
+<span id="L2251" class="ln">  2251&nbsp;&nbsp;</span>
+<span id="L2252" class="ln">  2252&nbsp;&nbsp;</span>		select {
+<span id="L2253" class="ln">  2253&nbsp;&nbsp;</span>		case rc.ch &lt;- responseAndError{res: resp}:
+<span id="L2254" class="ln">  2254&nbsp;&nbsp;</span>		case &lt;-rc.callerGone:
+<span id="L2255" class="ln">  2255&nbsp;&nbsp;</span>			return
+<span id="L2256" class="ln">  2256&nbsp;&nbsp;</span>		}
+<span id="L2257" class="ln">  2257&nbsp;&nbsp;</span>
+<span id="L2258" class="ln">  2258&nbsp;&nbsp;</span>		<span class="comment">// Before looping back to the top of this function and peeking on</span>
+<span id="L2259" class="ln">  2259&nbsp;&nbsp;</span>		<span class="comment">// the bufio.Reader, wait for the caller goroutine to finish</span>
+<span id="L2260" class="ln">  2260&nbsp;&nbsp;</span>		<span class="comment">// reading the response body. (or for cancellation or death)</span>
+<span id="L2261" class="ln">  2261&nbsp;&nbsp;</span>		select {
+<span id="L2262" class="ln">  2262&nbsp;&nbsp;</span>		case bodyEOF := &lt;-waitForBodyRead:
+<span id="L2263" class="ln">  2263&nbsp;&nbsp;</span>			replaced := pc.t.replaceReqCanceler(rc.cancelKey, nil) <span class="comment">// before pc might return to idle pool</span>
+<span id="L2264" class="ln">  2264&nbsp;&nbsp;</span>			alive = alive &amp;&amp;
+<span id="L2265" class="ln">  2265&nbsp;&nbsp;</span>				bodyEOF &amp;&amp;
+<span id="L2266" class="ln">  2266&nbsp;&nbsp;</span>				!pc.sawEOF &amp;&amp;
+<span id="L2267" class="ln">  2267&nbsp;&nbsp;</span>				pc.wroteRequest() &amp;&amp;
+<span id="L2268" class="ln">  2268&nbsp;&nbsp;</span>				replaced &amp;&amp; tryPutIdleConn(trace)
+<span id="L2269" class="ln">  2269&nbsp;&nbsp;</span>			if bodyEOF {
+<span id="L2270" class="ln">  2270&nbsp;&nbsp;</span>				eofc &lt;- struct{}{}
+<span id="L2271" class="ln">  2271&nbsp;&nbsp;</span>			}
+<span id="L2272" class="ln">  2272&nbsp;&nbsp;</span>		case &lt;-rc.req.Cancel:
+<span id="L2273" class="ln">  2273&nbsp;&nbsp;</span>			alive = false
+<span id="L2274" class="ln">  2274&nbsp;&nbsp;</span>			pc.t.cancelRequest(rc.cancelKey, errRequestCanceled)
+<span id="L2275" class="ln">  2275&nbsp;&nbsp;</span>		case &lt;-rc.req.Context().Done():
+<span id="L2276" class="ln">  2276&nbsp;&nbsp;</span>			alive = false
+<span id="L2277" class="ln">  2277&nbsp;&nbsp;</span>			pc.t.cancelRequest(rc.cancelKey, rc.req.Context().Err())
+<span id="L2278" class="ln">  2278&nbsp;&nbsp;</span>		case &lt;-pc.closech:
+<span id="L2279" class="ln">  2279&nbsp;&nbsp;</span>			alive = false
+<span id="L2280" class="ln">  2280&nbsp;&nbsp;</span>		}
+<span id="L2281" class="ln">  2281&nbsp;&nbsp;</span>
+<span id="L2282" class="ln">  2282&nbsp;&nbsp;</span>		testHookReadLoopBeforeNextRead()
+<span id="L2283" class="ln">  2283&nbsp;&nbsp;</span>	}
+<span id="L2284" class="ln">  2284&nbsp;&nbsp;</span>}
+<span id="L2285" class="ln">  2285&nbsp;&nbsp;</span>
+<span id="L2286" class="ln">  2286&nbsp;&nbsp;</span>func (pc *persistConn) readLoopPeekFailLocked(peekErr error) {
+<span id="L2287" class="ln">  2287&nbsp;&nbsp;</span>	if pc.closed != nil {
+<span id="L2288" class="ln">  2288&nbsp;&nbsp;</span>		return
+<span id="L2289" class="ln">  2289&nbsp;&nbsp;</span>	}
+<span id="L2290" class="ln">  2290&nbsp;&nbsp;</span>	if n := pc.br.Buffered(); n &gt; 0 {
+<span id="L2291" class="ln">  2291&nbsp;&nbsp;</span>		buf, _ := pc.br.Peek(n)
+<span id="L2292" class="ln">  2292&nbsp;&nbsp;</span>		if is408Message(buf) {
+<span id="L2293" class="ln">  2293&nbsp;&nbsp;</span>			pc.closeLocked(errServerClosedIdle)
+<span id="L2294" class="ln">  2294&nbsp;&nbsp;</span>			return
+<span id="L2295" class="ln">  2295&nbsp;&nbsp;</span>		} else {
+<span id="L2296" class="ln">  2296&nbsp;&nbsp;</span>			log.Printf(&#34;Unsolicited response received on idle HTTP channel starting with %q; err=%v&#34;, buf, peekErr)
+<span id="L2297" class="ln">  2297&nbsp;&nbsp;</span>		}
+<span id="L2298" class="ln">  2298&nbsp;&nbsp;</span>	}
+<span id="L2299" class="ln">  2299&nbsp;&nbsp;</span>	if peekErr == io.EOF {
+<span id="L2300" class="ln">  2300&nbsp;&nbsp;</span>		<span class="comment">// common case.</span>
+<span id="L2301" class="ln">  2301&nbsp;&nbsp;</span>		pc.closeLocked(errServerClosedIdle)
+<span id="L2302" class="ln">  2302&nbsp;&nbsp;</span>	} else {
+<span id="L2303" class="ln">  2303&nbsp;&nbsp;</span>		pc.closeLocked(fmt.Errorf(&#34;readLoopPeekFailLocked: %w&#34;, peekErr))
+<span id="L2304" class="ln">  2304&nbsp;&nbsp;</span>	}
+<span id="L2305" class="ln">  2305&nbsp;&nbsp;</span>}
+<span id="L2306" class="ln">  2306&nbsp;&nbsp;</span>
+<span id="L2307" class="ln">  2307&nbsp;&nbsp;</span><span class="comment">// is408Message reports whether buf has the prefix of an</span>
+<span id="L2308" class="ln">  2308&nbsp;&nbsp;</span><span class="comment">// HTTP 408 Request Timeout response.</span>
+<span id="L2309" class="ln">  2309&nbsp;&nbsp;</span><span class="comment">// See golang.org/issue/32310.</span>
+<span id="L2310" class="ln">  2310&nbsp;&nbsp;</span>func is408Message(buf []byte) bool {
+<span id="L2311" class="ln">  2311&nbsp;&nbsp;</span>	if len(buf) &lt; len(&#34;HTTP/1.x 408&#34;) {
+<span id="L2312" class="ln">  2312&nbsp;&nbsp;</span>		return false
+<span id="L2313" class="ln">  2313&nbsp;&nbsp;</span>	}
+<span id="L2314" class="ln">  2314&nbsp;&nbsp;</span>	if string(buf[:7]) != &#34;HTTP/1.&#34; {
+<span id="L2315" class="ln">  2315&nbsp;&nbsp;</span>		return false
+<span id="L2316" class="ln">  2316&nbsp;&nbsp;</span>	}
+<span id="L2317" class="ln">  2317&nbsp;&nbsp;</span>	return string(buf[8:12]) == &#34; 408&#34;
+<span id="L2318" class="ln">  2318&nbsp;&nbsp;</span>}
+<span id="L2319" class="ln">  2319&nbsp;&nbsp;</span>
+<span id="L2320" class="ln">  2320&nbsp;&nbsp;</span><span class="comment">// readResponse reads an HTTP response (or two, in the case of &#34;Expect:</span>
+<span id="L2321" class="ln">  2321&nbsp;&nbsp;</span><span class="comment">// 100-continue&#34;) from the server. It returns the final non-100 one.</span>
+<span id="L2322" class="ln">  2322&nbsp;&nbsp;</span><span class="comment">// trace is optional.</span>
+<span id="L2323" class="ln">  2323&nbsp;&nbsp;</span>func (pc *persistConn) readResponse(rc requestAndChan, trace *httptrace.ClientTrace) (resp *Response, err error) {
+<span id="L2324" class="ln">  2324&nbsp;&nbsp;</span>	if trace != nil &amp;&amp; trace.GotFirstResponseByte != nil {
+<span id="L2325" class="ln">  2325&nbsp;&nbsp;</span>		if peek, err := pc.br.Peek(1); err == nil &amp;&amp; len(peek) == 1 {
+<span id="L2326" class="ln">  2326&nbsp;&nbsp;</span>			trace.GotFirstResponseByte()
+<span id="L2327" class="ln">  2327&nbsp;&nbsp;</span>		}
+<span id="L2328" class="ln">  2328&nbsp;&nbsp;</span>	}
+<span id="L2329" class="ln">  2329&nbsp;&nbsp;</span>	num1xx := 0               <span class="comment">// number of informational 1xx headers received</span>
+<span id="L2330" class="ln">  2330&nbsp;&nbsp;</span>	const max1xxResponses = 5 <span class="comment">// arbitrary bound on number of informational responses</span>
+<span id="L2331" class="ln">  2331&nbsp;&nbsp;</span>
+<span id="L2332" class="ln">  2332&nbsp;&nbsp;</span>	continueCh := rc.continueCh
+<span id="L2333" class="ln">  2333&nbsp;&nbsp;</span>	for {
+<span id="L2334" class="ln">  2334&nbsp;&nbsp;</span>		resp, err = ReadResponse(pc.br, rc.req)
+<span id="L2335" class="ln">  2335&nbsp;&nbsp;</span>		if err != nil {
+<span id="L2336" class="ln">  2336&nbsp;&nbsp;</span>			return
+<span id="L2337" class="ln">  2337&nbsp;&nbsp;</span>		}
+<span id="L2338" class="ln">  2338&nbsp;&nbsp;</span>		resCode := resp.StatusCode
+<span id="L2339" class="ln">  2339&nbsp;&nbsp;</span>		if continueCh != nil &amp;&amp; resCode == StatusContinue {
+<span id="L2340" class="ln">  2340&nbsp;&nbsp;</span>			if trace != nil &amp;&amp; trace.Got100Continue != nil {
+<span id="L2341" class="ln">  2341&nbsp;&nbsp;</span>				trace.Got100Continue()
+<span id="L2342" class="ln">  2342&nbsp;&nbsp;</span>			}
+<span id="L2343" class="ln">  2343&nbsp;&nbsp;</span>			continueCh &lt;- struct{}{}
+<span id="L2344" class="ln">  2344&nbsp;&nbsp;</span>			continueCh = nil
+<span id="L2345" class="ln">  2345&nbsp;&nbsp;</span>		}
+<span id="L2346" class="ln">  2346&nbsp;&nbsp;</span>		is1xx := 100 &lt;= resCode &amp;&amp; resCode &lt;= 199
+<span id="L2347" class="ln">  2347&nbsp;&nbsp;</span>		<span class="comment">// treat 101 as a terminal status, see issue 26161</span>
+<span id="L2348" class="ln">  2348&nbsp;&nbsp;</span>		is1xxNonTerminal := is1xx &amp;&amp; resCode != StatusSwitchingProtocols
+<span id="L2349" class="ln">  2349&nbsp;&nbsp;</span>		if is1xxNonTerminal {
+<span id="L2350" class="ln">  2350&nbsp;&nbsp;</span>			num1xx++
+<span id="L2351" class="ln">  2351&nbsp;&nbsp;</span>			if num1xx &gt; max1xxResponses {
+<span id="L2352" class="ln">  2352&nbsp;&nbsp;</span>				return nil, errors.New(&#34;net/http: too many 1xx informational responses&#34;)
+<span id="L2353" class="ln">  2353&nbsp;&nbsp;</span>			}
+<span id="L2354" class="ln">  2354&nbsp;&nbsp;</span>			pc.readLimit = pc.maxHeaderResponseSize() <span class="comment">// reset the limit</span>
+<span id="L2355" class="ln">  2355&nbsp;&nbsp;</span>			if trace != nil &amp;&amp; trace.Got1xxResponse != nil {
+<span id="L2356" class="ln">  2356&nbsp;&nbsp;</span>				if err := trace.Got1xxResponse(resCode, textproto.MIMEHeader(resp.Header)); err != nil {
+<span id="L2357" class="ln">  2357&nbsp;&nbsp;</span>					return nil, err
+<span id="L2358" class="ln">  2358&nbsp;&nbsp;</span>				}
+<span id="L2359" class="ln">  2359&nbsp;&nbsp;</span>			}
+<span id="L2360" class="ln">  2360&nbsp;&nbsp;</span>			continue
+<span id="L2361" class="ln">  2361&nbsp;&nbsp;</span>		}
+<span id="L2362" class="ln">  2362&nbsp;&nbsp;</span>		break
+<span id="L2363" class="ln">  2363&nbsp;&nbsp;</span>	}
+<span id="L2364" class="ln">  2364&nbsp;&nbsp;</span>	if resp.isProtocolSwitch() {
+<span id="L2365" class="ln">  2365&nbsp;&nbsp;</span>		resp.Body = newReadWriteCloserBody(pc.br, pc.conn)
+<span id="L2366" class="ln">  2366&nbsp;&nbsp;</span>	}
+<span id="L2367" class="ln">  2367&nbsp;&nbsp;</span>	if continueCh != nil {
+<span id="L2368" class="ln">  2368&nbsp;&nbsp;</span>		<span class="comment">// We send an &#34;Expect: 100-continue&#34; header, but the server</span>
+<span id="L2369" class="ln">  2369&nbsp;&nbsp;</span>		<span class="comment">// responded with a terminal status and no 100 Continue.</span>
+<span id="L2370" class="ln">  2370&nbsp;&nbsp;</span>		<span class="comment">//</span>
+<span id="L2371" class="ln">  2371&nbsp;&nbsp;</span>		<span class="comment">// If we&#39;re going to keep using the connection, we need to send the request body.</span>
+<span id="L2372" class="ln">  2372&nbsp;&nbsp;</span>		<span class="comment">// Tell writeLoop to skip sending the body if we&#39;re going to close the connection,</span>
+<span id="L2373" class="ln">  2373&nbsp;&nbsp;</span>		<span class="comment">// or to send it otherwise.</span>
+<span id="L2374" class="ln">  2374&nbsp;&nbsp;</span>		<span class="comment">//</span>
+<span id="L2375" class="ln">  2375&nbsp;&nbsp;</span>		<span class="comment">// The case where we receive a 101 Switching Protocols response is a bit</span>
+<span id="L2376" class="ln">  2376&nbsp;&nbsp;</span>		<span class="comment">// ambiguous, since we don&#39;t know what protocol we&#39;re switching to.</span>
+<span id="L2377" class="ln">  2377&nbsp;&nbsp;</span>		<span class="comment">// Conceivably, it&#39;s one that doesn&#39;t need us to send the body.</span>
+<span id="L2378" class="ln">  2378&nbsp;&nbsp;</span>		<span class="comment">// Given that we&#39;ll send the body if ExpectContinueTimeout expires,</span>
+<span id="L2379" class="ln">  2379&nbsp;&nbsp;</span>		<span class="comment">// be consistent and always send it if we aren&#39;t closing the connection.</span>
+<span id="L2380" class="ln">  2380&nbsp;&nbsp;</span>		if resp.Close || rc.req.Close {
+<span id="L2381" class="ln">  2381&nbsp;&nbsp;</span>			close(continueCh) <span class="comment">// don&#39;t send the body; the connection will close</span>
+<span id="L2382" class="ln">  2382&nbsp;&nbsp;</span>		} else {
+<span id="L2383" class="ln">  2383&nbsp;&nbsp;</span>			continueCh &lt;- struct{}{} <span class="comment">// send the body</span>
+<span id="L2384" class="ln">  2384&nbsp;&nbsp;</span>		}
+<span id="L2385" class="ln">  2385&nbsp;&nbsp;</span>	}
+<span id="L2386" class="ln">  2386&nbsp;&nbsp;</span>
+<span id="L2387" class="ln">  2387&nbsp;&nbsp;</span>	resp.TLS = pc.tlsState
+<span id="L2388" class="ln">  2388&nbsp;&nbsp;</span>	return
+<span id="L2389" class="ln">  2389&nbsp;&nbsp;</span>}
+<span id="L2390" class="ln">  2390&nbsp;&nbsp;</span>
+<span id="L2391" class="ln">  2391&nbsp;&nbsp;</span><span class="comment">// waitForContinue returns the function to block until</span>
+<span id="L2392" class="ln">  2392&nbsp;&nbsp;</span><span class="comment">// any response, timeout or connection close. After any of them,</span>
+<span id="L2393" class="ln">  2393&nbsp;&nbsp;</span><span class="comment">// the function returns a bool which indicates if the body should be sent.</span>
+<span id="L2394" class="ln">  2394&nbsp;&nbsp;</span>func (pc *persistConn) waitForContinue(continueCh &lt;-chan struct{}) func() bool {
+<span id="L2395" class="ln">  2395&nbsp;&nbsp;</span>	if continueCh == nil {
+<span id="L2396" class="ln">  2396&nbsp;&nbsp;</span>		return nil
+<span id="L2397" class="ln">  2397&nbsp;&nbsp;</span>	}
+<span id="L2398" class="ln">  2398&nbsp;&nbsp;</span>	return func() bool {
+<span id="L2399" class="ln">  2399&nbsp;&nbsp;</span>		timer := time.NewTimer(pc.t.ExpectContinueTimeout)
+<span id="L2400" class="ln">  2400&nbsp;&nbsp;</span>		defer timer.Stop()
+<span id="L2401" class="ln">  2401&nbsp;&nbsp;</span>
+<span id="L2402" class="ln">  2402&nbsp;&nbsp;</span>		select {
+<span id="L2403" class="ln">  2403&nbsp;&nbsp;</span>		case _, ok := &lt;-continueCh:
+<span id="L2404" class="ln">  2404&nbsp;&nbsp;</span>			return ok
+<span id="L2405" class="ln">  2405&nbsp;&nbsp;</span>		case &lt;-timer.C:
+<span id="L2406" class="ln">  2406&nbsp;&nbsp;</span>			return true
+<span id="L2407" class="ln">  2407&nbsp;&nbsp;</span>		case &lt;-pc.closech:
+<span id="L2408" class="ln">  2408&nbsp;&nbsp;</span>			return false
+<span id="L2409" class="ln">  2409&nbsp;&nbsp;</span>		}
+<span id="L2410" class="ln">  2410&nbsp;&nbsp;</span>	}
+<span id="L2411" class="ln">  2411&nbsp;&nbsp;</span>}
+<span id="L2412" class="ln">  2412&nbsp;&nbsp;</span>
+<span id="L2413" class="ln">  2413&nbsp;&nbsp;</span>func newReadWriteCloserBody(br *bufio.Reader, rwc io.ReadWriteCloser) io.ReadWriteCloser {
+<span id="L2414" class="ln">  2414&nbsp;&nbsp;</span>	body := &amp;readWriteCloserBody{ReadWriteCloser: rwc}
+<span id="L2415" class="ln">  2415&nbsp;&nbsp;</span>	if br.Buffered() != 0 {
+<span id="L2416" class="ln">  2416&nbsp;&nbsp;</span>		body.br = br
+<span id="L2417" class="ln">  2417&nbsp;&nbsp;</span>	}
+<span id="L2418" class="ln">  2418&nbsp;&nbsp;</span>	return body
+<span id="L2419" class="ln">  2419&nbsp;&nbsp;</span>}
+<span id="L2420" class="ln">  2420&nbsp;&nbsp;</span>
+<span id="L2421" class="ln">  2421&nbsp;&nbsp;</span><span class="comment">// readWriteCloserBody is the Response.Body type used when we want to</span>
+<span id="L2422" class="ln">  2422&nbsp;&nbsp;</span><span class="comment">// give users write access to the Body through the underlying</span>
+<span id="L2423" class="ln">  2423&nbsp;&nbsp;</span><span class="comment">// connection (TCP, unless using custom dialers). This is then</span>
+<span id="L2424" class="ln">  2424&nbsp;&nbsp;</span><span class="comment">// the concrete type for a Response.Body on the 101 Switching</span>
+<span id="L2425" class="ln">  2425&nbsp;&nbsp;</span><span class="comment">// Protocols response, as used by WebSockets, h2c, etc.</span>
+<span id="L2426" class="ln">  2426&nbsp;&nbsp;</span>type readWriteCloserBody struct {
+<span id="L2427" class="ln">  2427&nbsp;&nbsp;</span>	_  incomparable
+<span id="L2428" class="ln">  2428&nbsp;&nbsp;</span>	br *bufio.Reader <span class="comment">// used until empty</span>
+<span id="L2429" class="ln">  2429&nbsp;&nbsp;</span>	io.ReadWriteCloser
+<span id="L2430" class="ln">  2430&nbsp;&nbsp;</span>}
+<span id="L2431" class="ln">  2431&nbsp;&nbsp;</span>
+<span id="L2432" class="ln">  2432&nbsp;&nbsp;</span>func (b *readWriteCloserBody) Read(p []byte) (n int, err error) {
+<span id="L2433" class="ln">  2433&nbsp;&nbsp;</span>	if b.br != nil {
+<span id="L2434" class="ln">  2434&nbsp;&nbsp;</span>		if n := b.br.Buffered(); len(p) &gt; n {
+<span id="L2435" class="ln">  2435&nbsp;&nbsp;</span>			p = p[:n]
+<span id="L2436" class="ln">  2436&nbsp;&nbsp;</span>		}
+<span id="L2437" class="ln">  2437&nbsp;&nbsp;</span>		n, err = b.br.Read(p)
+<span id="L2438" class="ln">  2438&nbsp;&nbsp;</span>		if b.br.Buffered() == 0 {
+<span id="L2439" class="ln">  2439&nbsp;&nbsp;</span>			b.br = nil
+<span id="L2440" class="ln">  2440&nbsp;&nbsp;</span>		}
+<span id="L2441" class="ln">  2441&nbsp;&nbsp;</span>		return n, err
+<span id="L2442" class="ln">  2442&nbsp;&nbsp;</span>	}
+<span id="L2443" class="ln">  2443&nbsp;&nbsp;</span>	return b.ReadWriteCloser.Read(p)
+<span id="L2444" class="ln">  2444&nbsp;&nbsp;</span>}
+<span id="L2445" class="ln">  2445&nbsp;&nbsp;</span>
+<span id="L2446" class="ln">  2446&nbsp;&nbsp;</span><span class="comment">// nothingWrittenError wraps a write errors which ended up writing zero bytes.</span>
+<span id="L2447" class="ln">  2447&nbsp;&nbsp;</span>type nothingWrittenError struct {
+<span id="L2448" class="ln">  2448&nbsp;&nbsp;</span>	error
+<span id="L2449" class="ln">  2449&nbsp;&nbsp;</span>}
+<span id="L2450" class="ln">  2450&nbsp;&nbsp;</span>
+<span id="L2451" class="ln">  2451&nbsp;&nbsp;</span>func (nwe nothingWrittenError) Unwrap() error {
+<span id="L2452" class="ln">  2452&nbsp;&nbsp;</span>	return nwe.error
+<span id="L2453" class="ln">  2453&nbsp;&nbsp;</span>}
+<span id="L2454" class="ln">  2454&nbsp;&nbsp;</span>
+<span id="L2455" class="ln">  2455&nbsp;&nbsp;</span>func (pc *persistConn) writeLoop() {
+<span id="L2456" class="ln">  2456&nbsp;&nbsp;</span>	defer close(pc.writeLoopDone)
+<span id="L2457" class="ln">  2457&nbsp;&nbsp;</span>	for {
+<span id="L2458" class="ln">  2458&nbsp;&nbsp;</span>		select {
+<span id="L2459" class="ln">  2459&nbsp;&nbsp;</span>		case wr := &lt;-pc.writech:
+<span id="L2460" class="ln">  2460&nbsp;&nbsp;</span>			startBytesWritten := pc.nwrite
+<span id="L2461" class="ln">  2461&nbsp;&nbsp;</span>			err := wr.req.Request.write(pc.bw, pc.isProxy, wr.req.extra, pc.waitForContinue(wr.continueCh))
+<span id="L2462" class="ln">  2462&nbsp;&nbsp;</span>			if bre, ok := err.(requestBodyReadError); ok {
+<span id="L2463" class="ln">  2463&nbsp;&nbsp;</span>				err = bre.error
+<span id="L2464" class="ln">  2464&nbsp;&nbsp;</span>				<span class="comment">// Errors reading from the user&#39;s</span>
+<span id="L2465" class="ln">  2465&nbsp;&nbsp;</span>				<span class="comment">// Request.Body are high priority.</span>
+<span id="L2466" class="ln">  2466&nbsp;&nbsp;</span>				<span class="comment">// Set it here before sending on the</span>
+<span id="L2467" class="ln">  2467&nbsp;&nbsp;</span>				<span class="comment">// channels below or calling</span>
+<span id="L2468" class="ln">  2468&nbsp;&nbsp;</span>				<span class="comment">// pc.close() which tears down</span>
+<span id="L2469" class="ln">  2469&nbsp;&nbsp;</span>				<span class="comment">// connections and causes other</span>
+<span id="L2470" class="ln">  2470&nbsp;&nbsp;</span>				<span class="comment">// errors.</span>
+<span id="L2471" class="ln">  2471&nbsp;&nbsp;</span>				wr.req.setError(err)
+<span id="L2472" class="ln">  2472&nbsp;&nbsp;</span>			}
+<span id="L2473" class="ln">  2473&nbsp;&nbsp;</span>			if err == nil {
+<span id="L2474" class="ln">  2474&nbsp;&nbsp;</span>				err = pc.bw.Flush()
+<span id="L2475" class="ln">  2475&nbsp;&nbsp;</span>			}
+<span id="L2476" class="ln">  2476&nbsp;&nbsp;</span>			if err != nil {
+<span id="L2477" class="ln">  2477&nbsp;&nbsp;</span>				if pc.nwrite == startBytesWritten {
+<span id="L2478" class="ln">  2478&nbsp;&nbsp;</span>					err = nothingWrittenError{err}
+<span id="L2479" class="ln">  2479&nbsp;&nbsp;</span>				}
+<span id="L2480" class="ln">  2480&nbsp;&nbsp;</span>			}
+<span id="L2481" class="ln">  2481&nbsp;&nbsp;</span>			pc.writeErrCh &lt;- err <span class="comment">// to the body reader, which might recycle us</span>
+<span id="L2482" class="ln">  2482&nbsp;&nbsp;</span>			wr.ch &lt;- err         <span class="comment">// to the roundTrip function</span>
+<span id="L2483" class="ln">  2483&nbsp;&nbsp;</span>			if err != nil {
+<span id="L2484" class="ln">  2484&nbsp;&nbsp;</span>				pc.close(err)
+<span id="L2485" class="ln">  2485&nbsp;&nbsp;</span>				return
+<span id="L2486" class="ln">  2486&nbsp;&nbsp;</span>			}
+<span id="L2487" class="ln">  2487&nbsp;&nbsp;</span>		case &lt;-pc.closech:
+<span id="L2488" class="ln">  2488&nbsp;&nbsp;</span>			return
+<span id="L2489" class="ln">  2489&nbsp;&nbsp;</span>		}
+<span id="L2490" class="ln">  2490&nbsp;&nbsp;</span>	}
+<span id="L2491" class="ln">  2491&nbsp;&nbsp;</span>}
+<span id="L2492" class="ln">  2492&nbsp;&nbsp;</span>
+<span id="L2493" class="ln">  2493&nbsp;&nbsp;</span><span class="comment">// maxWriteWaitBeforeConnReuse is how long the a Transport RoundTrip</span>
+<span id="L2494" class="ln">  2494&nbsp;&nbsp;</span><span class="comment">// will wait to see the Request&#39;s Body.Write result after getting a</span>
+<span id="L2495" class="ln">  2495&nbsp;&nbsp;</span><span class="comment">// response from the server. See comments in (*persistConn).wroteRequest.</span>
+<span id="L2496" class="ln">  2496&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L2497" class="ln">  2497&nbsp;&nbsp;</span><span class="comment">// In tests, we set this to a large value to avoid flakiness from inconsistent</span>
+<span id="L2498" class="ln">  2498&nbsp;&nbsp;</span><span class="comment">// recycling of connections.</span>
+<span id="L2499" class="ln">  2499&nbsp;&nbsp;</span>var maxWriteWaitBeforeConnReuse = 50 * time.Millisecond
+<span id="L2500" class="ln">  2500&nbsp;&nbsp;</span>
+<span id="L2501" class="ln">  2501&nbsp;&nbsp;</span><span class="comment">// wroteRequest is a check before recycling a connection that the previous write</span>
+<span id="L2502" class="ln">  2502&nbsp;&nbsp;</span><span class="comment">// (from writeLoop above) happened and was successful.</span>
+<span id="L2503" class="ln">  2503&nbsp;&nbsp;</span>func (pc *persistConn) wroteRequest() bool {
+<span id="L2504" class="ln">  2504&nbsp;&nbsp;</span>	select {
+<span id="L2505" class="ln">  2505&nbsp;&nbsp;</span>	case err := &lt;-pc.writeErrCh:
+<span id="L2506" class="ln">  2506&nbsp;&nbsp;</span>		<span class="comment">// Common case: the write happened well before the response, so</span>
+<span id="L2507" class="ln">  2507&nbsp;&nbsp;</span>		<span class="comment">// avoid creating a timer.</span>
+<span id="L2508" class="ln">  2508&nbsp;&nbsp;</span>		return err == nil
+<span id="L2509" class="ln">  2509&nbsp;&nbsp;</span>	default:
+<span id="L2510" class="ln">  2510&nbsp;&nbsp;</span>		<span class="comment">// Rare case: the request was written in writeLoop above but</span>
+<span id="L2511" class="ln">  2511&nbsp;&nbsp;</span>		<span class="comment">// before it could send to pc.writeErrCh, the reader read it</span>
+<span id="L2512" class="ln">  2512&nbsp;&nbsp;</span>		<span class="comment">// all, processed it, and called us here. In this case, give the</span>
+<span id="L2513" class="ln">  2513&nbsp;&nbsp;</span>		<span class="comment">// write goroutine a bit of time to finish its send.</span>
+<span id="L2514" class="ln">  2514&nbsp;&nbsp;</span>		<span class="comment">//</span>
+<span id="L2515" class="ln">  2515&nbsp;&nbsp;</span>		<span class="comment">// Less rare case: We also get here in the legitimate case of</span>
+<span id="L2516" class="ln">  2516&nbsp;&nbsp;</span>		<span class="comment">// Issue 7569, where the writer is still writing (or stalled),</span>
+<span id="L2517" class="ln">  2517&nbsp;&nbsp;</span>		<span class="comment">// but the server has already replied. In this case, we don&#39;t</span>
+<span id="L2518" class="ln">  2518&nbsp;&nbsp;</span>		<span class="comment">// want to wait too long, and we want to return false so this</span>
+<span id="L2519" class="ln">  2519&nbsp;&nbsp;</span>		<span class="comment">// connection isn&#39;t re-used.</span>
+<span id="L2520" class="ln">  2520&nbsp;&nbsp;</span>		t := time.NewTimer(maxWriteWaitBeforeConnReuse)
+<span id="L2521" class="ln">  2521&nbsp;&nbsp;</span>		defer t.Stop()
+<span id="L2522" class="ln">  2522&nbsp;&nbsp;</span>		select {
+<span id="L2523" class="ln">  2523&nbsp;&nbsp;</span>		case err := &lt;-pc.writeErrCh:
+<span id="L2524" class="ln">  2524&nbsp;&nbsp;</span>			return err == nil
+<span id="L2525" class="ln">  2525&nbsp;&nbsp;</span>		case &lt;-t.C:
+<span id="L2526" class="ln">  2526&nbsp;&nbsp;</span>			return false
+<span id="L2527" class="ln">  2527&nbsp;&nbsp;</span>		}
+<span id="L2528" class="ln">  2528&nbsp;&nbsp;</span>	}
+<span id="L2529" class="ln">  2529&nbsp;&nbsp;</span>}
+<span id="L2530" class="ln">  2530&nbsp;&nbsp;</span>
+<span id="L2531" class="ln">  2531&nbsp;&nbsp;</span><span class="comment">// responseAndError is how the goroutine reading from an HTTP/1 server</span>
+<span id="L2532" class="ln">  2532&nbsp;&nbsp;</span><span class="comment">// communicates with the goroutine doing the RoundTrip.</span>
+<span id="L2533" class="ln">  2533&nbsp;&nbsp;</span>type responseAndError struct {
+<span id="L2534" class="ln">  2534&nbsp;&nbsp;</span>	_   incomparable
+<span id="L2535" class="ln">  2535&nbsp;&nbsp;</span>	res *Response <span class="comment">// else use this response (see res method)</span>
+<span id="L2536" class="ln">  2536&nbsp;&nbsp;</span>	err error
+<span id="L2537" class="ln">  2537&nbsp;&nbsp;</span>}
+<span id="L2538" class="ln">  2538&nbsp;&nbsp;</span>
+<span id="L2539" class="ln">  2539&nbsp;&nbsp;</span>type requestAndChan struct {
+<span id="L2540" class="ln">  2540&nbsp;&nbsp;</span>	_         incomparable
+<span id="L2541" class="ln">  2541&nbsp;&nbsp;</span>	req       *Request
+<span id="L2542" class="ln">  2542&nbsp;&nbsp;</span>	cancelKey cancelKey
+<span id="L2543" class="ln">  2543&nbsp;&nbsp;</span>	ch        chan responseAndError <span class="comment">// unbuffered; always send in select on callerGone</span>
+<span id="L2544" class="ln">  2544&nbsp;&nbsp;</span>
+<span id="L2545" class="ln">  2545&nbsp;&nbsp;</span>	<span class="comment">// whether the Transport (as opposed to the user client code)</span>
+<span id="L2546" class="ln">  2546&nbsp;&nbsp;</span>	<span class="comment">// added the Accept-Encoding gzip header. If the Transport</span>
+<span id="L2547" class="ln">  2547&nbsp;&nbsp;</span>	<span class="comment">// set it, only then do we transparently decode the gzip.</span>
+<span id="L2548" class="ln">  2548&nbsp;&nbsp;</span>	addedGzip bool
+<span id="L2549" class="ln">  2549&nbsp;&nbsp;</span>
+<span id="L2550" class="ln">  2550&nbsp;&nbsp;</span>	<span class="comment">// Optional blocking chan for Expect: 100-continue (for send).</span>
+<span id="L2551" class="ln">  2551&nbsp;&nbsp;</span>	<span class="comment">// If the request has an &#34;Expect: 100-continue&#34; header and</span>
+<span id="L2552" class="ln">  2552&nbsp;&nbsp;</span>	<span class="comment">// the server responds 100 Continue, readLoop send a value</span>
+<span id="L2553" class="ln">  2553&nbsp;&nbsp;</span>	<span class="comment">// to writeLoop via this chan.</span>
+<span id="L2554" class="ln">  2554&nbsp;&nbsp;</span>	continueCh chan&lt;- struct{}
+<span id="L2555" class="ln">  2555&nbsp;&nbsp;</span>
+<span id="L2556" class="ln">  2556&nbsp;&nbsp;</span>	callerGone &lt;-chan struct{} <span class="comment">// closed when roundTrip caller has returned</span>
+<span id="L2557" class="ln">  2557&nbsp;&nbsp;</span>}
+<span id="L2558" class="ln">  2558&nbsp;&nbsp;</span>
+<span id="L2559" class="ln">  2559&nbsp;&nbsp;</span><span class="comment">// A writeRequest is sent by the caller&#39;s goroutine to the</span>
+<span id="L2560" class="ln">  2560&nbsp;&nbsp;</span><span class="comment">// writeLoop&#39;s goroutine to write a request while the read loop</span>
+<span id="L2561" class="ln">  2561&nbsp;&nbsp;</span><span class="comment">// concurrently waits on both the write response and the server&#39;s</span>
+<span id="L2562" class="ln">  2562&nbsp;&nbsp;</span><span class="comment">// reply.</span>
+<span id="L2563" class="ln">  2563&nbsp;&nbsp;</span>type writeRequest struct {
+<span id="L2564" class="ln">  2564&nbsp;&nbsp;</span>	req *transportRequest
+<span id="L2565" class="ln">  2565&nbsp;&nbsp;</span>	ch  chan&lt;- error
+<span id="L2566" class="ln">  2566&nbsp;&nbsp;</span>
+<span id="L2567" class="ln">  2567&nbsp;&nbsp;</span>	<span class="comment">// Optional blocking chan for Expect: 100-continue (for receive).</span>
+<span id="L2568" class="ln">  2568&nbsp;&nbsp;</span>	<span class="comment">// If not nil, writeLoop blocks sending request body until</span>
+<span id="L2569" class="ln">  2569&nbsp;&nbsp;</span>	<span class="comment">// it receives from this chan.</span>
+<span id="L2570" class="ln">  2570&nbsp;&nbsp;</span>	continueCh &lt;-chan struct{}
+<span id="L2571" class="ln">  2571&nbsp;&nbsp;</span>}
+<span id="L2572" class="ln">  2572&nbsp;&nbsp;</span>
+<span id="L2573" class="ln">  2573&nbsp;&nbsp;</span>type httpError struct {
+<span id="L2574" class="ln">  2574&nbsp;&nbsp;</span>	err     string
+<span id="L2575" class="ln">  2575&nbsp;&nbsp;</span>	timeout bool
+<span id="L2576" class="ln">  2576&nbsp;&nbsp;</span>}
+<span id="L2577" class="ln">  2577&nbsp;&nbsp;</span>
+<span id="L2578" class="ln">  2578&nbsp;&nbsp;</span>func (e *httpError) Error() string   { return e.err }
+<span id="L2579" class="ln">  2579&nbsp;&nbsp;</span>func (e *httpError) Timeout() bool   { return e.timeout }
+<span id="L2580" class="ln">  2580&nbsp;&nbsp;</span>func (e *httpError) Temporary() bool { return true }
+<span id="L2581" class="ln">  2581&nbsp;&nbsp;</span>
+<span id="L2582" class="ln">  2582&nbsp;&nbsp;</span>var errTimeout error = &amp;httpError{err: &#34;net/http: timeout awaiting response headers&#34;, timeout: true}
+<span id="L2583" class="ln">  2583&nbsp;&nbsp;</span>
+<span id="L2584" class="ln">  2584&nbsp;&nbsp;</span><span class="comment">// errRequestCanceled is set to be identical to the one from h2 to facilitate</span>
+<span id="L2585" class="ln">  2585&nbsp;&nbsp;</span><span class="comment">// testing.</span>
+<span id="L2586" class="ln">  2586&nbsp;&nbsp;</span>var errRequestCanceled = http2errRequestCanceled
+<span id="L2587" class="ln">  2587&nbsp;&nbsp;</span>var errRequestCanceledConn = errors.New(&#34;net/http: request canceled while waiting for connection&#34;) <span class="comment">// TODO: unify?</span>
+<span id="L2588" class="ln">  2588&nbsp;&nbsp;</span>
+<span id="L2589" class="ln">  2589&nbsp;&nbsp;</span>func nop() {}
+<span id="L2590" class="ln">  2590&nbsp;&nbsp;</span>
+<span id="L2591" class="ln">  2591&nbsp;&nbsp;</span><span class="comment">// testHooks. Always non-nil.</span>
+<span id="L2592" class="ln">  2592&nbsp;&nbsp;</span>var (
+<span id="L2593" class="ln">  2593&nbsp;&nbsp;</span>	testHookEnterRoundTrip   = nop
+<span id="L2594" class="ln">  2594&nbsp;&nbsp;</span>	testHookWaitResLoop      = nop
+<span id="L2595" class="ln">  2595&nbsp;&nbsp;</span>	testHookRoundTripRetried = nop
+<span id="L2596" class="ln">  2596&nbsp;&nbsp;</span>	testHookPrePendingDial   = nop
+<span id="L2597" class="ln">  2597&nbsp;&nbsp;</span>	testHookPostPendingDial  = nop
+<span id="L2598" class="ln">  2598&nbsp;&nbsp;</span>
+<span id="L2599" class="ln">  2599&nbsp;&nbsp;</span>	testHookMu                     sync.Locker = fakeLocker{} <span class="comment">// guards following</span>
+<span id="L2600" class="ln">  2600&nbsp;&nbsp;</span>	testHookReadLoopBeforeNextRead             = nop
+<span id="L2601" class="ln">  2601&nbsp;&nbsp;</span>)
+<span id="L2602" class="ln">  2602&nbsp;&nbsp;</span>
+<span id="L2603" class="ln">  2603&nbsp;&nbsp;</span>func (pc *persistConn) roundTrip(req *transportRequest) (resp *Response, err error) {
+<span id="L2604" class="ln">  2604&nbsp;&nbsp;</span>	testHookEnterRoundTrip()
+<span id="L2605" class="ln">  2605&nbsp;&nbsp;</span>	if !pc.t.replaceReqCanceler(req.cancelKey, pc.cancelRequest) {
+<span id="L2606" class="ln">  2606&nbsp;&nbsp;</span>		pc.t.putOrCloseIdleConn(pc)
+<span id="L2607" class="ln">  2607&nbsp;&nbsp;</span>		return nil, errRequestCanceled
+<span id="L2608" class="ln">  2608&nbsp;&nbsp;</span>	}
+<span id="L2609" class="ln">  2609&nbsp;&nbsp;</span>	pc.mu.Lock()
+<span id="L2610" class="ln">  2610&nbsp;&nbsp;</span>	pc.numExpectedResponses++
+<span id="L2611" class="ln">  2611&nbsp;&nbsp;</span>	headerFn := pc.mutateHeaderFunc
+<span id="L2612" class="ln">  2612&nbsp;&nbsp;</span>	pc.mu.Unlock()
+<span id="L2613" class="ln">  2613&nbsp;&nbsp;</span>
+<span id="L2614" class="ln">  2614&nbsp;&nbsp;</span>	if headerFn != nil {
+<span id="L2615" class="ln">  2615&nbsp;&nbsp;</span>		headerFn(req.extraHeaders())
+<span id="L2616" class="ln">  2616&nbsp;&nbsp;</span>	}
+<span id="L2617" class="ln">  2617&nbsp;&nbsp;</span>
+<span id="L2618" class="ln">  2618&nbsp;&nbsp;</span>	<span class="comment">// Ask for a compressed version if the caller didn&#39;t set their</span>
+<span id="L2619" class="ln">  2619&nbsp;&nbsp;</span>	<span class="comment">// own value for Accept-Encoding. We only attempt to</span>
+<span id="L2620" class="ln">  2620&nbsp;&nbsp;</span>	<span class="comment">// uncompress the gzip stream if we were the layer that</span>
+<span id="L2621" class="ln">  2621&nbsp;&nbsp;</span>	<span class="comment">// requested it.</span>
+<span id="L2622" class="ln">  2622&nbsp;&nbsp;</span>	requestedGzip := false
+<span id="L2623" class="ln">  2623&nbsp;&nbsp;</span>	if !pc.t.DisableCompression &amp;&amp;
+<span id="L2624" class="ln">  2624&nbsp;&nbsp;</span>		req.Header.Get(&#34;Accept-Encoding&#34;) == &#34;&#34; &amp;&amp;
+<span id="L2625" class="ln">  2625&nbsp;&nbsp;</span>		req.Header.Get(&#34;Range&#34;) == &#34;&#34; &amp;&amp;
+<span id="L2626" class="ln">  2626&nbsp;&nbsp;</span>		req.Method != &#34;HEAD&#34; {
+<span id="L2627" class="ln">  2627&nbsp;&nbsp;</span>		<span class="comment">// Request gzip only, not deflate. Deflate is ambiguous and</span>
+<span id="L2628" class="ln">  2628&nbsp;&nbsp;</span>		<span class="comment">// not as universally supported anyway.</span>
+<span id="L2629" class="ln">  2629&nbsp;&nbsp;</span>		<span class="comment">// See: https://zlib.net/zlib_faq.html#faq39</span>
+<span id="L2630" class="ln">  2630&nbsp;&nbsp;</span>		<span class="comment">//</span>
+<span id="L2631" class="ln">  2631&nbsp;&nbsp;</span>		<span class="comment">// Note that we don&#39;t request this for HEAD requests,</span>
+<span id="L2632" class="ln">  2632&nbsp;&nbsp;</span>		<span class="comment">// due to a bug in nginx:</span>
+<span id="L2633" class="ln">  2633&nbsp;&nbsp;</span>		<span class="comment">//   https://trac.nginx.org/nginx/ticket/358</span>
+<span id="L2634" class="ln">  2634&nbsp;&nbsp;</span>		<span class="comment">//   https://golang.org/issue/5522</span>
+<span id="L2635" class="ln">  2635&nbsp;&nbsp;</span>		<span class="comment">//</span>
+<span id="L2636" class="ln">  2636&nbsp;&nbsp;</span>		<span class="comment">// We don&#39;t request gzip if the request is for a range, since</span>
+<span id="L2637" class="ln">  2637&nbsp;&nbsp;</span>		<span class="comment">// auto-decoding a portion of a gzipped document will just fail</span>
+<span id="L2638" class="ln">  2638&nbsp;&nbsp;</span>		<span class="comment">// anyway. See https://golang.org/issue/8923</span>
+<span id="L2639" class="ln">  2639&nbsp;&nbsp;</span>		requestedGzip = true
+<span id="L2640" class="ln">  2640&nbsp;&nbsp;</span>		req.extraHeaders().Set(&#34;Accept-Encoding&#34;, &#34;gzip&#34;)
+<span id="L2641" class="ln">  2641&nbsp;&nbsp;</span>	}
+<span id="L2642" class="ln">  2642&nbsp;&nbsp;</span>
+<span id="L2643" class="ln">  2643&nbsp;&nbsp;</span>	var continueCh chan struct{}
+<span id="L2644" class="ln">  2644&nbsp;&nbsp;</span>	if req.ProtoAtLeast(1, 1) &amp;&amp; req.Body != nil &amp;&amp; req.expectsContinue() {
+<span id="L2645" class="ln">  2645&nbsp;&nbsp;</span>		continueCh = make(chan struct{}, 1)
+<span id="L2646" class="ln">  2646&nbsp;&nbsp;</span>	}
+<span id="L2647" class="ln">  2647&nbsp;&nbsp;</span>
+<span id="L2648" class="ln">  2648&nbsp;&nbsp;</span>	if pc.t.DisableKeepAlives &amp;&amp;
+<span id="L2649" class="ln">  2649&nbsp;&nbsp;</span>		!req.wantsClose() &amp;&amp;
+<span id="L2650" class="ln">  2650&nbsp;&nbsp;</span>		!isProtocolSwitchHeader(req.Header) {
+<span id="L2651" class="ln">  2651&nbsp;&nbsp;</span>		req.extraHeaders().Set(&#34;Connection&#34;, &#34;close&#34;)
+<span id="L2652" class="ln">  2652&nbsp;&nbsp;</span>	}
+<span id="L2653" class="ln">  2653&nbsp;&nbsp;</span>
+<span id="L2654" class="ln">  2654&nbsp;&nbsp;</span>	gone := make(chan struct{})
+<span id="L2655" class="ln">  2655&nbsp;&nbsp;</span>	defer close(gone)
+<span id="L2656" class="ln">  2656&nbsp;&nbsp;</span>
+<span id="L2657" class="ln">  2657&nbsp;&nbsp;</span>	defer func() {
+<span id="L2658" class="ln">  2658&nbsp;&nbsp;</span>		if err != nil {
+<span id="L2659" class="ln">  2659&nbsp;&nbsp;</span>			pc.t.setReqCanceler(req.cancelKey, nil)
+<span id="L2660" class="ln">  2660&nbsp;&nbsp;</span>		}
+<span id="L2661" class="ln">  2661&nbsp;&nbsp;</span>	}()
+<span id="L2662" class="ln">  2662&nbsp;&nbsp;</span>
+<span id="L2663" class="ln">  2663&nbsp;&nbsp;</span>	const debugRoundTrip = false
+<span id="L2664" class="ln">  2664&nbsp;&nbsp;</span>
+<span id="L2665" class="ln">  2665&nbsp;&nbsp;</span>	<span class="comment">// Write the request concurrently with waiting for a response,</span>
+<span id="L2666" class="ln">  2666&nbsp;&nbsp;</span>	<span class="comment">// in case the server decides to reply before reading our full</span>
+<span id="L2667" class="ln">  2667&nbsp;&nbsp;</span>	<span class="comment">// request body.</span>
+<span id="L2668" class="ln">  2668&nbsp;&nbsp;</span>	startBytesWritten := pc.nwrite
+<span id="L2669" class="ln">  2669&nbsp;&nbsp;</span>	writeErrCh := make(chan error, 1)
+<span id="L2670" class="ln">  2670&nbsp;&nbsp;</span>	pc.writech &lt;- writeRequest{req, writeErrCh, continueCh}
+<span id="L2671" class="ln">  2671&nbsp;&nbsp;</span>
+<span id="L2672" class="ln">  2672&nbsp;&nbsp;</span>	resc := make(chan responseAndError)
+<span id="L2673" class="ln">  2673&nbsp;&nbsp;</span>	pc.reqch &lt;- requestAndChan{
+<span id="L2674" class="ln">  2674&nbsp;&nbsp;</span>		req:        req.Request,
+<span id="L2675" class="ln">  2675&nbsp;&nbsp;</span>		cancelKey:  req.cancelKey,
+<span id="L2676" class="ln">  2676&nbsp;&nbsp;</span>		ch:         resc,
+<span id="L2677" class="ln">  2677&nbsp;&nbsp;</span>		addedGzip:  requestedGzip,
+<span id="L2678" class="ln">  2678&nbsp;&nbsp;</span>		continueCh: continueCh,
+<span id="L2679" class="ln">  2679&nbsp;&nbsp;</span>		callerGone: gone,
+<span id="L2680" class="ln">  2680&nbsp;&nbsp;</span>	}
+<span id="L2681" class="ln">  2681&nbsp;&nbsp;</span>
+<span id="L2682" class="ln">  2682&nbsp;&nbsp;</span>	var respHeaderTimer &lt;-chan time.Time
+<span id="L2683" class="ln">  2683&nbsp;&nbsp;</span>	cancelChan := req.Request.Cancel
+<span id="L2684" class="ln">  2684&nbsp;&nbsp;</span>	ctxDoneChan := req.Context().Done()
+<span id="L2685" class="ln">  2685&nbsp;&nbsp;</span>	pcClosed := pc.closech
+<span id="L2686" class="ln">  2686&nbsp;&nbsp;</span>	canceled := false
+<span id="L2687" class="ln">  2687&nbsp;&nbsp;</span>	for {
+<span id="L2688" class="ln">  2688&nbsp;&nbsp;</span>		testHookWaitResLoop()
+<span id="L2689" class="ln">  2689&nbsp;&nbsp;</span>		select {
+<span id="L2690" class="ln">  2690&nbsp;&nbsp;</span>		case err := &lt;-writeErrCh:
+<span id="L2691" class="ln">  2691&nbsp;&nbsp;</span>			if debugRoundTrip {
+<span id="L2692" class="ln">  2692&nbsp;&nbsp;</span>				req.logf(&#34;writeErrCh resv: %T/%#v&#34;, err, err)
+<span id="L2693" class="ln">  2693&nbsp;&nbsp;</span>			}
+<span id="L2694" class="ln">  2694&nbsp;&nbsp;</span>			if err != nil {
+<span id="L2695" class="ln">  2695&nbsp;&nbsp;</span>				pc.close(fmt.Errorf(&#34;write error: %w&#34;, err))
+<span id="L2696" class="ln">  2696&nbsp;&nbsp;</span>				return nil, pc.mapRoundTripError(req, startBytesWritten, err)
+<span id="L2697" class="ln">  2697&nbsp;&nbsp;</span>			}
+<span id="L2698" class="ln">  2698&nbsp;&nbsp;</span>			if d := pc.t.ResponseHeaderTimeout; d &gt; 0 {
+<span id="L2699" class="ln">  2699&nbsp;&nbsp;</span>				if debugRoundTrip {
+<span id="L2700" class="ln">  2700&nbsp;&nbsp;</span>					req.logf(&#34;starting timer for %v&#34;, d)
+<span id="L2701" class="ln">  2701&nbsp;&nbsp;</span>				}
+<span id="L2702" class="ln">  2702&nbsp;&nbsp;</span>				timer := time.NewTimer(d)
+<span id="L2703" class="ln">  2703&nbsp;&nbsp;</span>				defer timer.Stop() <span class="comment">// prevent leaks</span>
+<span id="L2704" class="ln">  2704&nbsp;&nbsp;</span>				respHeaderTimer = timer.C
+<span id="L2705" class="ln">  2705&nbsp;&nbsp;</span>			}
+<span id="L2706" class="ln">  2706&nbsp;&nbsp;</span>		case &lt;-pcClosed:
+<span id="L2707" class="ln">  2707&nbsp;&nbsp;</span>			pcClosed = nil
+<span id="L2708" class="ln">  2708&nbsp;&nbsp;</span>			if canceled || pc.t.replaceReqCanceler(req.cancelKey, nil) {
+<span id="L2709" class="ln">  2709&nbsp;&nbsp;</span>				if debugRoundTrip {
+<span id="L2710" class="ln">  2710&nbsp;&nbsp;</span>					req.logf(&#34;closech recv: %T %#v&#34;, pc.closed, pc.closed)
+<span id="L2711" class="ln">  2711&nbsp;&nbsp;</span>				}
+<span id="L2712" class="ln">  2712&nbsp;&nbsp;</span>				return nil, pc.mapRoundTripError(req, startBytesWritten, pc.closed)
+<span id="L2713" class="ln">  2713&nbsp;&nbsp;</span>			}
+<span id="L2714" class="ln">  2714&nbsp;&nbsp;</span>		case &lt;-respHeaderTimer:
+<span id="L2715" class="ln">  2715&nbsp;&nbsp;</span>			if debugRoundTrip {
+<span id="L2716" class="ln">  2716&nbsp;&nbsp;</span>				req.logf(&#34;timeout waiting for response headers.&#34;)
+<span id="L2717" class="ln">  2717&nbsp;&nbsp;</span>			}
+<span id="L2718" class="ln">  2718&nbsp;&nbsp;</span>			pc.close(errTimeout)
+<span id="L2719" class="ln">  2719&nbsp;&nbsp;</span>			return nil, errTimeout
+<span id="L2720" class="ln">  2720&nbsp;&nbsp;</span>		case re := &lt;-resc:
+<span id="L2721" class="ln">  2721&nbsp;&nbsp;</span>			if (re.res == nil) == (re.err == nil) {
+<span id="L2722" class="ln">  2722&nbsp;&nbsp;</span>				panic(fmt.Sprintf(&#34;internal error: exactly one of res or err should be set; nil=%v&#34;, re.res == nil))
+<span id="L2723" class="ln">  2723&nbsp;&nbsp;</span>			}
+<span id="L2724" class="ln">  2724&nbsp;&nbsp;</span>			if debugRoundTrip {
+<span id="L2725" class="ln">  2725&nbsp;&nbsp;</span>				req.logf(&#34;resc recv: %p, %T/%#v&#34;, re.res, re.err, re.err)
+<span id="L2726" class="ln">  2726&nbsp;&nbsp;</span>			}
+<span id="L2727" class="ln">  2727&nbsp;&nbsp;</span>			if re.err != nil {
+<span id="L2728" class="ln">  2728&nbsp;&nbsp;</span>				return nil, pc.mapRoundTripError(req, startBytesWritten, re.err)
+<span id="L2729" class="ln">  2729&nbsp;&nbsp;</span>			}
+<span id="L2730" class="ln">  2730&nbsp;&nbsp;</span>			return re.res, nil
+<span id="L2731" class="ln">  2731&nbsp;&nbsp;</span>		case &lt;-cancelChan:
+<span id="L2732" class="ln">  2732&nbsp;&nbsp;</span>			canceled = pc.t.cancelRequest(req.cancelKey, errRequestCanceled)
+<span id="L2733" class="ln">  2733&nbsp;&nbsp;</span>			cancelChan = nil
+<span id="L2734" class="ln">  2734&nbsp;&nbsp;</span>		case &lt;-ctxDoneChan:
+<span id="L2735" class="ln">  2735&nbsp;&nbsp;</span>			canceled = pc.t.cancelRequest(req.cancelKey, req.Context().Err())
+<span id="L2736" class="ln">  2736&nbsp;&nbsp;</span>			cancelChan = nil
+<span id="L2737" class="ln">  2737&nbsp;&nbsp;</span>			ctxDoneChan = nil
+<span id="L2738" class="ln">  2738&nbsp;&nbsp;</span>		}
+<span id="L2739" class="ln">  2739&nbsp;&nbsp;</span>	}
+<span id="L2740" class="ln">  2740&nbsp;&nbsp;</span>}
+<span id="L2741" class="ln">  2741&nbsp;&nbsp;</span>
+<span id="L2742" class="ln">  2742&nbsp;&nbsp;</span><span class="comment">// tLogKey is a context WithValue key for test debugging contexts containing</span>
+<span id="L2743" class="ln">  2743&nbsp;&nbsp;</span><span class="comment">// a t.Logf func. See export_test.go&#39;s Request.WithT method.</span>
+<span id="L2744" class="ln">  2744&nbsp;&nbsp;</span>type tLogKey struct{}
+<span id="L2745" class="ln">  2745&nbsp;&nbsp;</span>
+<span id="L2746" class="ln">  2746&nbsp;&nbsp;</span>func (tr *transportRequest) logf(format string, args ...any) {
+<span id="L2747" class="ln">  2747&nbsp;&nbsp;</span>	if logf, ok := tr.Request.Context().Value(tLogKey{}).(func(string, ...any)); ok {
+<span id="L2748" class="ln">  2748&nbsp;&nbsp;</span>		logf(time.Now().Format(time.RFC3339Nano)+&#34;: &#34;+format, args...)
+<span id="L2749" class="ln">  2749&nbsp;&nbsp;</span>	}
+<span id="L2750" class="ln">  2750&nbsp;&nbsp;</span>}
+<span id="L2751" class="ln">  2751&nbsp;&nbsp;</span>
+<span id="L2752" class="ln">  2752&nbsp;&nbsp;</span><span class="comment">// markReused marks this connection as having been successfully used for a</span>
+<span id="L2753" class="ln">  2753&nbsp;&nbsp;</span><span class="comment">// request and response.</span>
+<span id="L2754" class="ln">  2754&nbsp;&nbsp;</span>func (pc *persistConn) markReused() {
+<span id="L2755" class="ln">  2755&nbsp;&nbsp;</span>	pc.mu.Lock()
+<span id="L2756" class="ln">  2756&nbsp;&nbsp;</span>	pc.reused = true
+<span id="L2757" class="ln">  2757&nbsp;&nbsp;</span>	pc.mu.Unlock()
+<span id="L2758" class="ln">  2758&nbsp;&nbsp;</span>}
+<span id="L2759" class="ln">  2759&nbsp;&nbsp;</span>
+<span id="L2760" class="ln">  2760&nbsp;&nbsp;</span><span class="comment">// close closes the underlying TCP connection and closes</span>
+<span id="L2761" class="ln">  2761&nbsp;&nbsp;</span><span class="comment">// the pc.closech channel.</span>
+<span id="L2762" class="ln">  2762&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L2763" class="ln">  2763&nbsp;&nbsp;</span><span class="comment">// The provided err is only for testing and debugging; in normal</span>
+<span id="L2764" class="ln">  2764&nbsp;&nbsp;</span><span class="comment">// circumstances it should never be seen by users.</span>
+<span id="L2765" class="ln">  2765&nbsp;&nbsp;</span>func (pc *persistConn) close(err error) {
+<span id="L2766" class="ln">  2766&nbsp;&nbsp;</span>	pc.mu.Lock()
+<span id="L2767" class="ln">  2767&nbsp;&nbsp;</span>	defer pc.mu.Unlock()
+<span id="L2768" class="ln">  2768&nbsp;&nbsp;</span>	pc.closeLocked(err)
+<span id="L2769" class="ln">  2769&nbsp;&nbsp;</span>}
+<span id="L2770" class="ln">  2770&nbsp;&nbsp;</span>
+<span id="L2771" class="ln">  2771&nbsp;&nbsp;</span>func (pc *persistConn) closeLocked(err error) {
+<span id="L2772" class="ln">  2772&nbsp;&nbsp;</span>	if err == nil {
+<span id="L2773" class="ln">  2773&nbsp;&nbsp;</span>		panic(&#34;nil error&#34;)
+<span id="L2774" class="ln">  2774&nbsp;&nbsp;</span>	}
+<span id="L2775" class="ln">  2775&nbsp;&nbsp;</span>	pc.broken = true
+<span id="L2776" class="ln">  2776&nbsp;&nbsp;</span>	if pc.closed == nil {
+<span id="L2777" class="ln">  2777&nbsp;&nbsp;</span>		pc.closed = err
+<span id="L2778" class="ln">  2778&nbsp;&nbsp;</span>		pc.t.decConnsPerHost(pc.cacheKey)
+<span id="L2779" class="ln">  2779&nbsp;&nbsp;</span>		<span class="comment">// Close HTTP/1 (pc.alt == nil) connection.</span>
+<span id="L2780" class="ln">  2780&nbsp;&nbsp;</span>		<span class="comment">// HTTP/2 closes its connection itself.</span>
+<span id="L2781" class="ln">  2781&nbsp;&nbsp;</span>		if pc.alt == nil {
+<span id="L2782" class="ln">  2782&nbsp;&nbsp;</span>			if err != errCallerOwnsConn {
+<span id="L2783" class="ln">  2783&nbsp;&nbsp;</span>				pc.conn.Close()
+<span id="L2784" class="ln">  2784&nbsp;&nbsp;</span>			}
+<span id="L2785" class="ln">  2785&nbsp;&nbsp;</span>			close(pc.closech)
+<span id="L2786" class="ln">  2786&nbsp;&nbsp;</span>		}
+<span id="L2787" class="ln">  2787&nbsp;&nbsp;</span>	}
+<span id="L2788" class="ln">  2788&nbsp;&nbsp;</span>	pc.mutateHeaderFunc = nil
+<span id="L2789" class="ln">  2789&nbsp;&nbsp;</span>}
+<span id="L2790" class="ln">  2790&nbsp;&nbsp;</span>
+<span id="L2791" class="ln">  2791&nbsp;&nbsp;</span>var portMap = map[string]string{
+<span id="L2792" class="ln">  2792&nbsp;&nbsp;</span>	&#34;http&#34;:   &#34;80&#34;,
+<span id="L2793" class="ln">  2793&nbsp;&nbsp;</span>	&#34;https&#34;:  &#34;443&#34;,
+<span id="L2794" class="ln">  2794&nbsp;&nbsp;</span>	&#34;socks5&#34;: &#34;1080&#34;,
+<span id="L2795" class="ln">  2795&nbsp;&nbsp;</span>}
+<span id="L2796" class="ln">  2796&nbsp;&nbsp;</span>
+<span id="L2797" class="ln">  2797&nbsp;&nbsp;</span>func idnaASCIIFromURL(url *url.URL) string {
+<span id="L2798" class="ln">  2798&nbsp;&nbsp;</span>	addr := url.Hostname()
+<span id="L2799" class="ln">  2799&nbsp;&nbsp;</span>	if v, err := idnaASCII(addr); err == nil {
+<span id="L2800" class="ln">  2800&nbsp;&nbsp;</span>		addr = v
+<span id="L2801" class="ln">  2801&nbsp;&nbsp;</span>	}
+<span id="L2802" class="ln">  2802&nbsp;&nbsp;</span>	return addr
+<span id="L2803" class="ln">  2803&nbsp;&nbsp;</span>}
+<span id="L2804" class="ln">  2804&nbsp;&nbsp;</span>
+<span id="L2805" class="ln">  2805&nbsp;&nbsp;</span><span class="comment">// canonicalAddr returns url.Host but always with a &#34;:port&#34; suffix.</span>
+<span id="L2806" class="ln">  2806&nbsp;&nbsp;</span>func canonicalAddr(url *url.URL) string {
+<span id="L2807" class="ln">  2807&nbsp;&nbsp;</span>	port := url.Port()
+<span id="L2808" class="ln">  2808&nbsp;&nbsp;</span>	if port == &#34;&#34; {
+<span id="L2809" class="ln">  2809&nbsp;&nbsp;</span>		port = portMap[url.Scheme]
+<span id="L2810" class="ln">  2810&nbsp;&nbsp;</span>	}
+<span id="L2811" class="ln">  2811&nbsp;&nbsp;</span>	return net.JoinHostPort(idnaASCIIFromURL(url), port)
+<span id="L2812" class="ln">  2812&nbsp;&nbsp;</span>}
+<span id="L2813" class="ln">  2813&nbsp;&nbsp;</span>
+<span id="L2814" class="ln">  2814&nbsp;&nbsp;</span><span class="comment">// bodyEOFSignal is used by the HTTP/1 transport when reading response</span>
+<span id="L2815" class="ln">  2815&nbsp;&nbsp;</span><span class="comment">// bodies to make sure we see the end of a response body before</span>
+<span id="L2816" class="ln">  2816&nbsp;&nbsp;</span><span class="comment">// proceeding and reading on the connection again.</span>
+<span id="L2817" class="ln">  2817&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L2818" class="ln">  2818&nbsp;&nbsp;</span><span class="comment">// It wraps a ReadCloser but runs fn (if non-nil) at most</span>
+<span id="L2819" class="ln">  2819&nbsp;&nbsp;</span><span class="comment">// once, right before its final (error-producing) Read or Close call</span>
+<span id="L2820" class="ln">  2820&nbsp;&nbsp;</span><span class="comment">// returns. fn should return the new error to return from Read or Close.</span>
+<span id="L2821" class="ln">  2821&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L2822" class="ln">  2822&nbsp;&nbsp;</span><span class="comment">// If earlyCloseFn is non-nil and Close is called before io.EOF is</span>
+<span id="L2823" class="ln">  2823&nbsp;&nbsp;</span><span class="comment">// seen, earlyCloseFn is called instead of fn, and its return value is</span>
+<span id="L2824" class="ln">  2824&nbsp;&nbsp;</span><span class="comment">// the return value from Close.</span>
+<span id="L2825" class="ln">  2825&nbsp;&nbsp;</span>type bodyEOFSignal struct {
+<span id="L2826" class="ln">  2826&nbsp;&nbsp;</span>	body         io.ReadCloser
+<span id="L2827" class="ln">  2827&nbsp;&nbsp;</span>	mu           sync.Mutex        <span class="comment">// guards following 4 fields</span>
+<span id="L2828" class="ln">  2828&nbsp;&nbsp;</span>	closed       bool              <span class="comment">// whether Close has been called</span>
+<span id="L2829" class="ln">  2829&nbsp;&nbsp;</span>	rerr         error             <span class="comment">// sticky Read error</span>
+<span id="L2830" class="ln">  2830&nbsp;&nbsp;</span>	fn           func(error) error <span class="comment">// err will be nil on Read io.EOF</span>
+<span id="L2831" class="ln">  2831&nbsp;&nbsp;</span>	earlyCloseFn func() error      <span class="comment">// optional alt Close func used if io.EOF not seen</span>
+<span id="L2832" class="ln">  2832&nbsp;&nbsp;</span>}
+<span id="L2833" class="ln">  2833&nbsp;&nbsp;</span>
+<span id="L2834" class="ln">  2834&nbsp;&nbsp;</span>var errReadOnClosedResBody = errors.New(&#34;http: read on closed response body&#34;)
+<span id="L2835" class="ln">  2835&nbsp;&nbsp;</span>
+<span id="L2836" class="ln">  2836&nbsp;&nbsp;</span>func (es *bodyEOFSignal) Read(p []byte) (n int, err error) {
+<span id="L2837" class="ln">  2837&nbsp;&nbsp;</span>	es.mu.Lock()
+<span id="L2838" class="ln">  2838&nbsp;&nbsp;</span>	closed, rerr := es.closed, es.rerr
+<span id="L2839" class="ln">  2839&nbsp;&nbsp;</span>	es.mu.Unlock()
+<span id="L2840" class="ln">  2840&nbsp;&nbsp;</span>	if closed {
+<span id="L2841" class="ln">  2841&nbsp;&nbsp;</span>		return 0, errReadOnClosedResBody
+<span id="L2842" class="ln">  2842&nbsp;&nbsp;</span>	}
+<span id="L2843" class="ln">  2843&nbsp;&nbsp;</span>	if rerr != nil {
+<span id="L2844" class="ln">  2844&nbsp;&nbsp;</span>		return 0, rerr
+<span id="L2845" class="ln">  2845&nbsp;&nbsp;</span>	}
+<span id="L2846" class="ln">  2846&nbsp;&nbsp;</span>
+<span id="L2847" class="ln">  2847&nbsp;&nbsp;</span>	n, err = es.body.Read(p)
+<span id="L2848" class="ln">  2848&nbsp;&nbsp;</span>	if err != nil {
+<span id="L2849" class="ln">  2849&nbsp;&nbsp;</span>		es.mu.Lock()
+<span id="L2850" class="ln">  2850&nbsp;&nbsp;</span>		defer es.mu.Unlock()
+<span id="L2851" class="ln">  2851&nbsp;&nbsp;</span>		if es.rerr == nil {
+<span id="L2852" class="ln">  2852&nbsp;&nbsp;</span>			es.rerr = err
+<span id="L2853" class="ln">  2853&nbsp;&nbsp;</span>		}
+<span id="L2854" class="ln">  2854&nbsp;&nbsp;</span>		err = es.condfn(err)
+<span id="L2855" class="ln">  2855&nbsp;&nbsp;</span>	}
+<span id="L2856" class="ln">  2856&nbsp;&nbsp;</span>	return
+<span id="L2857" class="ln">  2857&nbsp;&nbsp;</span>}
+<span id="L2858" class="ln">  2858&nbsp;&nbsp;</span>
+<span id="L2859" class="ln">  2859&nbsp;&nbsp;</span>func (es *bodyEOFSignal) Close() error {
+<span id="L2860" class="ln">  2860&nbsp;&nbsp;</span>	es.mu.Lock()
+<span id="L2861" class="ln">  2861&nbsp;&nbsp;</span>	defer es.mu.Unlock()
+<span id="L2862" class="ln">  2862&nbsp;&nbsp;</span>	if es.closed {
+<span id="L2863" class="ln">  2863&nbsp;&nbsp;</span>		return nil
+<span id="L2864" class="ln">  2864&nbsp;&nbsp;</span>	}
+<span id="L2865" class="ln">  2865&nbsp;&nbsp;</span>	es.closed = true
+<span id="L2866" class="ln">  2866&nbsp;&nbsp;</span>	if es.earlyCloseFn != nil &amp;&amp; es.rerr != io.EOF {
+<span id="L2867" class="ln">  2867&nbsp;&nbsp;</span>		return es.earlyCloseFn()
+<span id="L2868" class="ln">  2868&nbsp;&nbsp;</span>	}
+<span id="L2869" class="ln">  2869&nbsp;&nbsp;</span>	err := es.body.Close()
+<span id="L2870" class="ln">  2870&nbsp;&nbsp;</span>	return es.condfn(err)
+<span id="L2871" class="ln">  2871&nbsp;&nbsp;</span>}
+<span id="L2872" class="ln">  2872&nbsp;&nbsp;</span>
+<span id="L2873" class="ln">  2873&nbsp;&nbsp;</span><span class="comment">// caller must hold es.mu.</span>
+<span id="L2874" class="ln">  2874&nbsp;&nbsp;</span>func (es *bodyEOFSignal) condfn(err error) error {
+<span id="L2875" class="ln">  2875&nbsp;&nbsp;</span>	if es.fn == nil {
+<span id="L2876" class="ln">  2876&nbsp;&nbsp;</span>		return err
+<span id="L2877" class="ln">  2877&nbsp;&nbsp;</span>	}
+<span id="L2878" class="ln">  2878&nbsp;&nbsp;</span>	err = es.fn(err)
+<span id="L2879" class="ln">  2879&nbsp;&nbsp;</span>	es.fn = nil
+<span id="L2880" class="ln">  2880&nbsp;&nbsp;</span>	return err
+<span id="L2881" class="ln">  2881&nbsp;&nbsp;</span>}
+<span id="L2882" class="ln">  2882&nbsp;&nbsp;</span>
+<span id="L2883" class="ln">  2883&nbsp;&nbsp;</span><span class="comment">// gzipReader wraps a response body so it can lazily</span>
+<span id="L2884" class="ln">  2884&nbsp;&nbsp;</span><span class="comment">// call gzip.NewReader on the first call to Read</span>
+<span id="L2885" class="ln">  2885&nbsp;&nbsp;</span>type gzipReader struct {
+<span id="L2886" class="ln">  2886&nbsp;&nbsp;</span>	_    incomparable
+<span id="L2887" class="ln">  2887&nbsp;&nbsp;</span>	body *bodyEOFSignal <span class="comment">// underlying HTTP/1 response body framing</span>
+<span id="L2888" class="ln">  2888&nbsp;&nbsp;</span>	zr   *gzip.Reader   <span class="comment">// lazily-initialized gzip reader</span>
+<span id="L2889" class="ln">  2889&nbsp;&nbsp;</span>	zerr error          <span class="comment">// any error from gzip.NewReader; sticky</span>
+<span id="L2890" class="ln">  2890&nbsp;&nbsp;</span>}
+<span id="L2891" class="ln">  2891&nbsp;&nbsp;</span>
+<span id="L2892" class="ln">  2892&nbsp;&nbsp;</span>func (gz *gzipReader) Read(p []byte) (n int, err error) {
+<span id="L2893" class="ln">  2893&nbsp;&nbsp;</span>	if gz.zr == nil {
+<span id="L2894" class="ln">  2894&nbsp;&nbsp;</span>		if gz.zerr == nil {
+<span id="L2895" class="ln">  2895&nbsp;&nbsp;</span>			gz.zr, gz.zerr = gzip.NewReader(gz.body)
+<span id="L2896" class="ln">  2896&nbsp;&nbsp;</span>		}
+<span id="L2897" class="ln">  2897&nbsp;&nbsp;</span>		if gz.zerr != nil {
+<span id="L2898" class="ln">  2898&nbsp;&nbsp;</span>			return 0, gz.zerr
+<span id="L2899" class="ln">  2899&nbsp;&nbsp;</span>		}
+<span id="L2900" class="ln">  2900&nbsp;&nbsp;</span>	}
+<span id="L2901" class="ln">  2901&nbsp;&nbsp;</span>
+<span id="L2902" class="ln">  2902&nbsp;&nbsp;</span>	gz.body.mu.Lock()
+<span id="L2903" class="ln">  2903&nbsp;&nbsp;</span>	if gz.body.closed {
+<span id="L2904" class="ln">  2904&nbsp;&nbsp;</span>		err = errReadOnClosedResBody
+<span id="L2905" class="ln">  2905&nbsp;&nbsp;</span>	}
+<span id="L2906" class="ln">  2906&nbsp;&nbsp;</span>	gz.body.mu.Unlock()
+<span id="L2907" class="ln">  2907&nbsp;&nbsp;</span>
+<span id="L2908" class="ln">  2908&nbsp;&nbsp;</span>	if err != nil {
+<span id="L2909" class="ln">  2909&nbsp;&nbsp;</span>		return 0, err
+<span id="L2910" class="ln">  2910&nbsp;&nbsp;</span>	}
+<span id="L2911" class="ln">  2911&nbsp;&nbsp;</span>	return gz.zr.Read(p)
+<span id="L2912" class="ln">  2912&nbsp;&nbsp;</span>}
+<span id="L2913" class="ln">  2913&nbsp;&nbsp;</span>
+<span id="L2914" class="ln">  2914&nbsp;&nbsp;</span>func (gz *gzipReader) Close() error {
+<span id="L2915" class="ln">  2915&nbsp;&nbsp;</span>	return gz.body.Close()
+<span id="L2916" class="ln">  2916&nbsp;&nbsp;</span>}
+<span id="L2917" class="ln">  2917&nbsp;&nbsp;</span>
+<span id="L2918" class="ln">  2918&nbsp;&nbsp;</span>type tlsHandshakeTimeoutError struct{}
+<span id="L2919" class="ln">  2919&nbsp;&nbsp;</span>
+<span id="L2920" class="ln">  2920&nbsp;&nbsp;</span>func (tlsHandshakeTimeoutError) Timeout() bool   { return true }
+<span id="L2921" class="ln">  2921&nbsp;&nbsp;</span>func (tlsHandshakeTimeoutError) Temporary() bool { return true }
+<span id="L2922" class="ln">  2922&nbsp;&nbsp;</span>func (tlsHandshakeTimeoutError) Error() string   { return &#34;net/http: TLS handshake timeout&#34; }
+<span id="L2923" class="ln">  2923&nbsp;&nbsp;</span>
+<span id="L2924" class="ln">  2924&nbsp;&nbsp;</span><span class="comment">// fakeLocker is a sync.Locker which does nothing. It&#39;s used to guard</span>
+<span id="L2925" class="ln">  2925&nbsp;&nbsp;</span><span class="comment">// test-only fields when not under test, to avoid runtime atomic</span>
+<span id="L2926" class="ln">  2926&nbsp;&nbsp;</span><span class="comment">// overhead.</span>
+<span id="L2927" class="ln">  2927&nbsp;&nbsp;</span>type fakeLocker struct{}
+<span id="L2928" class="ln">  2928&nbsp;&nbsp;</span>
+<span id="L2929" class="ln">  2929&nbsp;&nbsp;</span>func (fakeLocker) Lock()   {}
+<span id="L2930" class="ln">  2930&nbsp;&nbsp;</span>func (fakeLocker) Unlock() {}
+<span id="L2931" class="ln">  2931&nbsp;&nbsp;</span>
+<span id="L2932" class="ln">  2932&nbsp;&nbsp;</span><span class="comment">// cloneTLSConfig returns a shallow clone of cfg, or a new zero tls.Config if</span>
+<span id="L2933" class="ln">  2933&nbsp;&nbsp;</span><span class="comment">// cfg is nil. This is safe to call even if cfg is in active use by a TLS</span>
+<span id="L2934" class="ln">  2934&nbsp;&nbsp;</span><span class="comment">// client or server.</span>
+<span id="L2935" class="ln">  2935&nbsp;&nbsp;</span>func cloneTLSConfig(cfg *tls.Config) *tls.Config {
+<span id="L2936" class="ln">  2936&nbsp;&nbsp;</span>	if cfg == nil {
+<span id="L2937" class="ln">  2937&nbsp;&nbsp;</span>		return &amp;tls.Config{}
+<span id="L2938" class="ln">  2938&nbsp;&nbsp;</span>	}
+<span id="L2939" class="ln">  2939&nbsp;&nbsp;</span>	return cfg.Clone()
+<span id="L2940" class="ln">  2940&nbsp;&nbsp;</span>}
+<span id="L2941" class="ln">  2941&nbsp;&nbsp;</span>
+<span id="L2942" class="ln">  2942&nbsp;&nbsp;</span>type connLRU struct {
+<span id="L2943" class="ln">  2943&nbsp;&nbsp;</span>	ll *list.List <span class="comment">// list.Element.Value type is of *persistConn</span>
+<span id="L2944" class="ln">  2944&nbsp;&nbsp;</span>	m  map[*persistConn]*list.Element
+<span id="L2945" class="ln">  2945&nbsp;&nbsp;</span>}
+<span id="L2946" class="ln">  2946&nbsp;&nbsp;</span>
+<span id="L2947" class="ln">  2947&nbsp;&nbsp;</span><span class="comment">// add adds pc to the head of the linked list.</span>
+<span id="L2948" class="ln">  2948&nbsp;&nbsp;</span>func (cl *connLRU) add(pc *persistConn) {
+<span id="L2949" class="ln">  2949&nbsp;&nbsp;</span>	if cl.ll == nil {
+<span id="L2950" class="ln">  2950&nbsp;&nbsp;</span>		cl.ll = list.New()
+<span id="L2951" class="ln">  2951&nbsp;&nbsp;</span>		cl.m = make(map[*persistConn]*list.Element)
+<span id="L2952" class="ln">  2952&nbsp;&nbsp;</span>	}
+<span id="L2953" class="ln">  2953&nbsp;&nbsp;</span>	ele := cl.ll.PushFront(pc)
+<span id="L2954" class="ln">  2954&nbsp;&nbsp;</span>	if _, ok := cl.m[pc]; ok {
+<span id="L2955" class="ln">  2955&nbsp;&nbsp;</span>		panic(&#34;persistConn was already in LRU&#34;)
+<span id="L2956" class="ln">  2956&nbsp;&nbsp;</span>	}
+<span id="L2957" class="ln">  2957&nbsp;&nbsp;</span>	cl.m[pc] = ele
+<span id="L2958" class="ln">  2958&nbsp;&nbsp;</span>}
+<span id="L2959" class="ln">  2959&nbsp;&nbsp;</span>
+<span id="L2960" class="ln">  2960&nbsp;&nbsp;</span>func (cl *connLRU) removeOldest() *persistConn {
+<span id="L2961" class="ln">  2961&nbsp;&nbsp;</span>	ele := cl.ll.Back()
+<span id="L2962" class="ln">  2962&nbsp;&nbsp;</span>	pc := ele.Value.(*persistConn)
+<span id="L2963" class="ln">  2963&nbsp;&nbsp;</span>	cl.ll.Remove(ele)
+<span id="L2964" class="ln">  2964&nbsp;&nbsp;</span>	delete(cl.m, pc)
+<span id="L2965" class="ln">  2965&nbsp;&nbsp;</span>	return pc
+<span id="L2966" class="ln">  2966&nbsp;&nbsp;</span>}
+<span id="L2967" class="ln">  2967&nbsp;&nbsp;</span>
+<span id="L2968" class="ln">  2968&nbsp;&nbsp;</span><span class="comment">// remove removes pc from cl.</span>
+<span id="L2969" class="ln">  2969&nbsp;&nbsp;</span>func (cl *connLRU) remove(pc *persistConn) {
+<span id="L2970" class="ln">  2970&nbsp;&nbsp;</span>	if ele, ok := cl.m[pc]; ok {
+<span id="L2971" class="ln">  2971&nbsp;&nbsp;</span>		cl.ll.Remove(ele)
+<span id="L2972" class="ln">  2972&nbsp;&nbsp;</span>		delete(cl.m, pc)
+<span id="L2973" class="ln">  2973&nbsp;&nbsp;</span>	}
+<span id="L2974" class="ln">  2974&nbsp;&nbsp;</span>}
+<span id="L2975" class="ln">  2975&nbsp;&nbsp;</span>
+<span id="L2976" class="ln">  2976&nbsp;&nbsp;</span><span class="comment">// len returns the number of items in the cache.</span>
+<span id="L2977" class="ln">  2977&nbsp;&nbsp;</span>func (cl *connLRU) len() int {
+<span id="L2978" class="ln">  2978&nbsp;&nbsp;</span>	return len(cl.m)
+<span id="L2979" class="ln">  2979&nbsp;&nbsp;</span>}
+<span id="L2980" class="ln">  2980&nbsp;&nbsp;</span>
+</pre><p><a href="transport.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

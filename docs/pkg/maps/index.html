@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>maps - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package maps
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "maps"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+				<dd><a href="index.html#pkg-examples" class="examplesLink">Examples</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>Package maps defines various functions useful with maps of any type.
+
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+			
+			
+				
+				<dd><a href="index.html#Clone">func Clone[M ~map[K]V, K comparable, V any](m M) M</a></dd>
+			
+				
+				<dd><a href="index.html#Copy">func Copy[M1 ~map[K]V, M2 ~map[K]V, K comparable, V any](dst M1, src M2)</a></dd>
+			
+				
+				<dd><a href="index.html#DeleteFunc">func DeleteFunc[M ~map[K]V, K comparable, V any](m M, del func(K, V) bool)</a></dd>
+			
+				
+				<dd><a href="index.html#Equal">func Equal[M1, M2 ~map[K]V, K, V comparable](m1 M1, m2 M2) bool</a></dd>
+			
+				
+				<dd><a href="index.html#EqualFunc">func EqualFunc[M1 ~map[K]V1, M2 ~map[K]V2, K comparable, V1, V2 any](m1 M1, m2 M2, eq func(V1, V2) bool) bool</a></dd>
+			
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+		<div id="pkg-examples">
+			<h3>Examples</h3>
+			<div class="js-expandAll expandAll collapsed">(Expand All)</div>
+			<dl>
+			
+			<dd><a class="exampleLink" href="index.html#example_Clone">Clone</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Copy">Copy</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_DeleteFunc">DeleteFunc</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Equal">Equal</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_EqualFunc">EqualFunc</a></dd>
+			
+			</dl>
+		</div>
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../src/maps/maps.go">maps.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+		
+		
+			
+			
+			<h2 id="Clone">func <a href="../../src/maps/maps.go?s=1105:1155#L31">Clone</a>
+				<a class="permalink" href="index.html#Clone">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Clone[M ~map[K]V, K <a href="../builtin/index.html#comparable">comparable</a>, V <a href="../builtin/index.html#any">any</a>](m M) M</pre>
+			<p>Clone returns a copy of m.  This is a shallow clone:
+the new keys and values are set using ordinary assignment.
+
+			<div id="example_Clone" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">m1 := map[string]int{
+    &#34;key&#34;: 1,
+}
+m2 := maps.Clone(m1)
+m2[&#34;key&#34;] = 100
+fmt.Println(m1[&#34;key&#34;])
+fmt.Println(m2[&#34;key&#34;])
+
+m3 := map[string][]int{
+    &#34;key&#34;: {1, 2, 3},
+}
+m4 := maps.Clone(m3)
+fmt.Println(m4[&#34;key&#34;][0])
+m4[&#34;key&#34;][0] = 100
+fmt.Println(m3[&#34;key&#34;][0])
+fmt.Println(m4[&#34;key&#34;][0])
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">1
+100
+1
+100
+100
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Copy">func <a href="../../src/maps/maps.go?s=1448:1520#L43">Copy</a>
+				<a class="permalink" href="index.html#Copy">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Copy[M1 ~map[K]V, M2 ~map[K]V, K <a href="../builtin/index.html#comparable">comparable</a>, V <a href="../builtin/index.html#any">any</a>](dst M1, src M2)</pre>
+			<p>Copy copies all key/value pairs in src adding them to dst.
+When a key in src is already present in dst,
+the value in dst will be overwritten by the value associated
+with the key in src.
+
+			<div id="example_Copy" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">m1 := map[string]int{
+    &#34;one&#34;: 1,
+    &#34;two&#34;: 2,
+}
+m2 := map[string]int{
+    &#34;one&#34;: 10,
+}
+
+maps.Copy(m2, m1)
+fmt.Println(&#34;m2 is:&#34;, m2)
+
+m2[&#34;one&#34;] = 100
+fmt.Println(&#34;m1 is:&#34;, m1)
+fmt.Println(&#34;m2 is:&#34;, m2)
+
+m3 := map[string][]int{
+    &#34;one&#34;: {1, 2, 3},
+    &#34;two&#34;: {4, 5, 6},
+}
+m4 := map[string][]int{
+    &#34;one&#34;: {7, 8, 9},
+}
+
+maps.Copy(m4, m3)
+fmt.Println(&#34;m4 is:&#34;, m4)
+
+m4[&#34;one&#34;][0] = 100
+fmt.Println(&#34;m3 is:&#34;, m3)
+fmt.Println(&#34;m4 is:&#34;, m4)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">m2 is: map[one:1 two:2]
+m1 is: map[one:1 two:2]
+m2 is: map[one:100 two:2]
+m4 is: map[one:[1 2 3] two:[4 5 6]]
+m3 is: map[one:[100 2 3] two:[4 5 6]]
+m4 is: map[one:[100 2 3] two:[4 5 6]]
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="DeleteFunc">func <a href="../../src/maps/maps.go?s=1644:1718#L50">DeleteFunc</a>
+				<a class="permalink" href="index.html#DeleteFunc">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func DeleteFunc[M ~map[K]V, K <a href="../builtin/index.html#comparable">comparable</a>, V <a href="../builtin/index.html#any">any</a>](m M, del func(K, V) <a href="../builtin/index.html#bool">bool</a>)</pre>
+			<p>DeleteFunc deletes any key/value pairs from m for which del returns true.
+
+			<div id="example_DeleteFunc" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">m := map[string]int{
+    &#34;one&#34;:   1,
+    &#34;two&#34;:   2,
+    &#34;three&#34;: 3,
+    &#34;four&#34;:  4,
+}
+maps.DeleteFunc(m, func(k string, v int) bool {
+    return v%2 != 0 <span class="comment">// delete odd values</span>
+})
+fmt.Println(m)
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">map[four:4 two:2]
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Equal">func <a href="../../src/maps/maps.go?s=347:410#L1">Equal</a>
+				<a class="permalink" href="index.html#Equal">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Equal[M1, M2 ~map[K]V, K, V <a href="../builtin/index.html#comparable">comparable</a>](m1 M1, m2 M2) <a href="../builtin/index.html#bool">bool</a></pre>
+			<p>Equal reports whether two maps contain the same key/value pairs.
+Values are compared using ==.
+
+			<div id="example_Equal" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">m1 := map[int]string{
+    1:    &#34;one&#34;,
+    10:   &#34;Ten&#34;,
+    1000: &#34;THOUSAND&#34;,
+}
+m2 := map[int]string{
+    1:    &#34;one&#34;,
+    10:   &#34;Ten&#34;,
+    1000: &#34;THOUSAND&#34;,
+}
+m3 := map[int]string{
+    1:    &#34;one&#34;,
+    10:   &#34;ten&#34;,
+    1000: &#34;thousand&#34;,
+}
+
+fmt.Println(maps.Equal(m1, m2))
+fmt.Println(maps.Equal(m1, m3))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">true
+false
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="EqualFunc">func <a href="../../src/maps/maps.go?s=654:763#L14">EqualFunc</a>
+				<a class="permalink" href="index.html#EqualFunc">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func EqualFunc[M1 ~map[K]V1, M2 ~map[K]V2, K <a href="../builtin/index.html#comparable">comparable</a>, V1, V2 <a href="../builtin/index.html#any">any</a>](m1 M1, m2 M2, eq func(V1, V2) <a href="../builtin/index.html#bool">bool</a>) <a href="../builtin/index.html#bool">bool</a></pre>
+			<p>EqualFunc is like Equal, but compares values using eq.
+Keys are still compared with ==.
+
+			<div id="example_EqualFunc" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">m1 := map[int]string{
+    1:    &#34;one&#34;,
+    10:   &#34;Ten&#34;,
+    1000: &#34;THOUSAND&#34;,
+}
+m2 := map[int][]byte{
+    1:    []byte(&#34;One&#34;),
+    10:   []byte(&#34;Ten&#34;),
+    1000: []byte(&#34;Thousand&#34;),
+}
+eq := maps.EqualFunc(m1, m2, func(v1 string, v2 []byte) bool {
+    return strings.ToLower(v1) == strings.ToLower(string(v2))
+})
+fmt.Println(eq)
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">true
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+		
+	
+
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>src/crypto/tls/cipher_suites.go - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="cipher_suites.go#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Source file
+    <a href="http://localhost:8080/src">src</a>/<a href="http://localhost:8080/src/crypto">crypto</a>/<a href="http://localhost:8080/src/crypto/tls">tls</a>/<span class="text-muted">cipher_suites.go</span>
+  </h1>
+
+
+
+
+
+  <h2>
+    Documentation: <a href="http://localhost:8080/pkg/crypto/tls">crypto/tls</a>
+  </h2>
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1&nbsp;&nbsp;</span><span class="comment">// Copyright 2010 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2&nbsp;&nbsp;</span><span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3&nbsp;&nbsp;</span><span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4&nbsp;&nbsp;</span>
+<span id="L5" class="ln">     5&nbsp;&nbsp;</span>package tls
+<span id="L6" class="ln">     6&nbsp;&nbsp;</span>
+<span id="L7" class="ln">     7&nbsp;&nbsp;</span>import (
+<span id="L8" class="ln">     8&nbsp;&nbsp;</span>	&#34;crypto&#34;
+<span id="L9" class="ln">     9&nbsp;&nbsp;</span>	&#34;crypto/aes&#34;
+<span id="L10" class="ln">    10&nbsp;&nbsp;</span>	&#34;crypto/cipher&#34;
+<span id="L11" class="ln">    11&nbsp;&nbsp;</span>	&#34;crypto/des&#34;
+<span id="L12" class="ln">    12&nbsp;&nbsp;</span>	&#34;crypto/hmac&#34;
+<span id="L13" class="ln">    13&nbsp;&nbsp;</span>	&#34;crypto/internal/boring&#34;
+<span id="L14" class="ln">    14&nbsp;&nbsp;</span>	&#34;crypto/rc4&#34;
+<span id="L15" class="ln">    15&nbsp;&nbsp;</span>	&#34;crypto/sha1&#34;
+<span id="L16" class="ln">    16&nbsp;&nbsp;</span>	&#34;crypto/sha256&#34;
+<span id="L17" class="ln">    17&nbsp;&nbsp;</span>	&#34;fmt&#34;
+<span id="L18" class="ln">    18&nbsp;&nbsp;</span>	&#34;hash&#34;
+<span id="L19" class="ln">    19&nbsp;&nbsp;</span>	&#34;internal/cpu&#34;
+<span id="L20" class="ln">    20&nbsp;&nbsp;</span>	&#34;runtime&#34;
+<span id="L21" class="ln">    21&nbsp;&nbsp;</span>
+<span id="L22" class="ln">    22&nbsp;&nbsp;</span>	&#34;golang.org/x/crypto/chacha20poly1305&#34;
+<span id="L23" class="ln">    23&nbsp;&nbsp;</span>)
+<span id="L24" class="ln">    24&nbsp;&nbsp;</span>
+<span id="L25" class="ln">    25&nbsp;&nbsp;</span><span class="comment">// CipherSuite is a TLS cipher suite. Note that most functions in this package</span>
+<span id="L26" class="ln">    26&nbsp;&nbsp;</span><span class="comment">// accept and expose cipher suite IDs instead of this type.</span>
+<span id="L27" class="ln">    27&nbsp;&nbsp;</span>type CipherSuite struct {
+<span id="L28" class="ln">    28&nbsp;&nbsp;</span>	ID   uint16
+<span id="L29" class="ln">    29&nbsp;&nbsp;</span>	Name string
+<span id="L30" class="ln">    30&nbsp;&nbsp;</span>
+<span id="L31" class="ln">    31&nbsp;&nbsp;</span>	<span class="comment">// Supported versions is the list of TLS protocol versions that can</span>
+<span id="L32" class="ln">    32&nbsp;&nbsp;</span>	<span class="comment">// negotiate this cipher suite.</span>
+<span id="L33" class="ln">    33&nbsp;&nbsp;</span>	SupportedVersions []uint16
+<span id="L34" class="ln">    34&nbsp;&nbsp;</span>
+<span id="L35" class="ln">    35&nbsp;&nbsp;</span>	<span class="comment">// Insecure is true if the cipher suite has known security issues</span>
+<span id="L36" class="ln">    36&nbsp;&nbsp;</span>	<span class="comment">// due to its primitives, design, or implementation.</span>
+<span id="L37" class="ln">    37&nbsp;&nbsp;</span>	Insecure bool
+<span id="L38" class="ln">    38&nbsp;&nbsp;</span>}
+<span id="L39" class="ln">    39&nbsp;&nbsp;</span>
+<span id="L40" class="ln">    40&nbsp;&nbsp;</span>var (
+<span id="L41" class="ln">    41&nbsp;&nbsp;</span>	supportedUpToTLS12 = []uint16{VersionTLS10, VersionTLS11, VersionTLS12}
+<span id="L42" class="ln">    42&nbsp;&nbsp;</span>	supportedOnlyTLS12 = []uint16{VersionTLS12}
+<span id="L43" class="ln">    43&nbsp;&nbsp;</span>	supportedOnlyTLS13 = []uint16{VersionTLS13}
+<span id="L44" class="ln">    44&nbsp;&nbsp;</span>)
+<span id="L45" class="ln">    45&nbsp;&nbsp;</span>
+<span id="L46" class="ln">    46&nbsp;&nbsp;</span><span class="comment">// CipherSuites returns a list of cipher suites currently implemented by this</span>
+<span id="L47" class="ln">    47&nbsp;&nbsp;</span><span class="comment">// package, excluding those with security issues, which are returned by</span>
+<span id="L48" class="ln">    48&nbsp;&nbsp;</span><span class="comment">// [InsecureCipherSuites].</span>
+<span id="L49" class="ln">    49&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L50" class="ln">    50&nbsp;&nbsp;</span><span class="comment">// The list is sorted by ID. Note that the default cipher suites selected by</span>
+<span id="L51" class="ln">    51&nbsp;&nbsp;</span><span class="comment">// this package might depend on logic that can&#39;t be captured by a static list,</span>
+<span id="L52" class="ln">    52&nbsp;&nbsp;</span><span class="comment">// and might not match those returned by this function.</span>
+<span id="L53" class="ln">    53&nbsp;&nbsp;</span>func CipherSuites() []*CipherSuite {
+<span id="L54" class="ln">    54&nbsp;&nbsp;</span>	return []*CipherSuite{
+<span id="L55" class="ln">    55&nbsp;&nbsp;</span>		{TLS_AES_128_GCM_SHA256, &#34;TLS_AES_128_GCM_SHA256&#34;, supportedOnlyTLS13, false},
+<span id="L56" class="ln">    56&nbsp;&nbsp;</span>		{TLS_AES_256_GCM_SHA384, &#34;TLS_AES_256_GCM_SHA384&#34;, supportedOnlyTLS13, false},
+<span id="L57" class="ln">    57&nbsp;&nbsp;</span>		{TLS_CHACHA20_POLY1305_SHA256, &#34;TLS_CHACHA20_POLY1305_SHA256&#34;, supportedOnlyTLS13, false},
+<span id="L58" class="ln">    58&nbsp;&nbsp;</span>
+<span id="L59" class="ln">    59&nbsp;&nbsp;</span>		{TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA, &#34;TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA&#34;, supportedUpToTLS12, false},
+<span id="L60" class="ln">    60&nbsp;&nbsp;</span>		{TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA, &#34;TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA&#34;, supportedUpToTLS12, false},
+<span id="L61" class="ln">    61&nbsp;&nbsp;</span>		{TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA, &#34;TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA&#34;, supportedUpToTLS12, false},
+<span id="L62" class="ln">    62&nbsp;&nbsp;</span>		{TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA, &#34;TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA&#34;, supportedUpToTLS12, false},
+<span id="L63" class="ln">    63&nbsp;&nbsp;</span>		{TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256, &#34;TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256&#34;, supportedOnlyTLS12, false},
+<span id="L64" class="ln">    64&nbsp;&nbsp;</span>		{TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384, &#34;TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384&#34;, supportedOnlyTLS12, false},
+<span id="L65" class="ln">    65&nbsp;&nbsp;</span>		{TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256, &#34;TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256&#34;, supportedOnlyTLS12, false},
+<span id="L66" class="ln">    66&nbsp;&nbsp;</span>		{TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384, &#34;TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384&#34;, supportedOnlyTLS12, false},
+<span id="L67" class="ln">    67&nbsp;&nbsp;</span>		{TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256, &#34;TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256&#34;, supportedOnlyTLS12, false},
+<span id="L68" class="ln">    68&nbsp;&nbsp;</span>		{TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256, &#34;TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256&#34;, supportedOnlyTLS12, false},
+<span id="L69" class="ln">    69&nbsp;&nbsp;</span>	}
+<span id="L70" class="ln">    70&nbsp;&nbsp;</span>}
+<span id="L71" class="ln">    71&nbsp;&nbsp;</span>
+<span id="L72" class="ln">    72&nbsp;&nbsp;</span><span class="comment">// InsecureCipherSuites returns a list of cipher suites currently implemented by</span>
+<span id="L73" class="ln">    73&nbsp;&nbsp;</span><span class="comment">// this package and which have security issues.</span>
+<span id="L74" class="ln">    74&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L75" class="ln">    75&nbsp;&nbsp;</span><span class="comment">// Most applications should not use the cipher suites in this list, and should</span>
+<span id="L76" class="ln">    76&nbsp;&nbsp;</span><span class="comment">// only use those returned by [CipherSuites].</span>
+<span id="L77" class="ln">    77&nbsp;&nbsp;</span>func InsecureCipherSuites() []*CipherSuite {
+<span id="L78" class="ln">    78&nbsp;&nbsp;</span>	<span class="comment">// This list includes RC4, CBC_SHA256, and 3DES cipher suites. See</span>
+<span id="L79" class="ln">    79&nbsp;&nbsp;</span>	<span class="comment">// cipherSuitesPreferenceOrder for details.</span>
+<span id="L80" class="ln">    80&nbsp;&nbsp;</span>	return []*CipherSuite{
+<span id="L81" class="ln">    81&nbsp;&nbsp;</span>		{TLS_RSA_WITH_RC4_128_SHA, &#34;TLS_RSA_WITH_RC4_128_SHA&#34;, supportedUpToTLS12, true},
+<span id="L82" class="ln">    82&nbsp;&nbsp;</span>		{TLS_RSA_WITH_3DES_EDE_CBC_SHA, &#34;TLS_RSA_WITH_3DES_EDE_CBC_SHA&#34;, supportedUpToTLS12, true},
+<span id="L83" class="ln">    83&nbsp;&nbsp;</span>		{TLS_RSA_WITH_AES_128_CBC_SHA, &#34;TLS_RSA_WITH_AES_128_CBC_SHA&#34;, supportedUpToTLS12, true},
+<span id="L84" class="ln">    84&nbsp;&nbsp;</span>		{TLS_RSA_WITH_AES_256_CBC_SHA, &#34;TLS_RSA_WITH_AES_256_CBC_SHA&#34;, supportedUpToTLS12, true},
+<span id="L85" class="ln">    85&nbsp;&nbsp;</span>		{TLS_RSA_WITH_AES_128_CBC_SHA256, &#34;TLS_RSA_WITH_AES_128_CBC_SHA256&#34;, supportedOnlyTLS12, true},
+<span id="L86" class="ln">    86&nbsp;&nbsp;</span>		{TLS_RSA_WITH_AES_128_GCM_SHA256, &#34;TLS_RSA_WITH_AES_128_GCM_SHA256&#34;, supportedOnlyTLS12, true},
+<span id="L87" class="ln">    87&nbsp;&nbsp;</span>		{TLS_RSA_WITH_AES_256_GCM_SHA384, &#34;TLS_RSA_WITH_AES_256_GCM_SHA384&#34;, supportedOnlyTLS12, true},
+<span id="L88" class="ln">    88&nbsp;&nbsp;</span>		{TLS_ECDHE_ECDSA_WITH_RC4_128_SHA, &#34;TLS_ECDHE_ECDSA_WITH_RC4_128_SHA&#34;, supportedUpToTLS12, true},
+<span id="L89" class="ln">    89&nbsp;&nbsp;</span>		{TLS_ECDHE_RSA_WITH_RC4_128_SHA, &#34;TLS_ECDHE_RSA_WITH_RC4_128_SHA&#34;, supportedUpToTLS12, true},
+<span id="L90" class="ln">    90&nbsp;&nbsp;</span>		{TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA, &#34;TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA&#34;, supportedUpToTLS12, true},
+<span id="L91" class="ln">    91&nbsp;&nbsp;</span>		{TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256, &#34;TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256&#34;, supportedOnlyTLS12, true},
+<span id="L92" class="ln">    92&nbsp;&nbsp;</span>		{TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256, &#34;TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256&#34;, supportedOnlyTLS12, true},
+<span id="L93" class="ln">    93&nbsp;&nbsp;</span>	}
+<span id="L94" class="ln">    94&nbsp;&nbsp;</span>}
+<span id="L95" class="ln">    95&nbsp;&nbsp;</span>
+<span id="L96" class="ln">    96&nbsp;&nbsp;</span><span class="comment">// CipherSuiteName returns the standard name for the passed cipher suite ID</span>
+<span id="L97" class="ln">    97&nbsp;&nbsp;</span><span class="comment">// (e.g. &#34;TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256&#34;), or a fallback representation</span>
+<span id="L98" class="ln">    98&nbsp;&nbsp;</span><span class="comment">// of the ID value if the cipher suite is not implemented by this package.</span>
+<span id="L99" class="ln">    99&nbsp;&nbsp;</span>func CipherSuiteName(id uint16) string {
+<span id="L100" class="ln">   100&nbsp;&nbsp;</span>	for _, c := range CipherSuites() {
+<span id="L101" class="ln">   101&nbsp;&nbsp;</span>		if c.ID == id {
+<span id="L102" class="ln">   102&nbsp;&nbsp;</span>			return c.Name
+<span id="L103" class="ln">   103&nbsp;&nbsp;</span>		}
+<span id="L104" class="ln">   104&nbsp;&nbsp;</span>	}
+<span id="L105" class="ln">   105&nbsp;&nbsp;</span>	for _, c := range InsecureCipherSuites() {
+<span id="L106" class="ln">   106&nbsp;&nbsp;</span>		if c.ID == id {
+<span id="L107" class="ln">   107&nbsp;&nbsp;</span>			return c.Name
+<span id="L108" class="ln">   108&nbsp;&nbsp;</span>		}
+<span id="L109" class="ln">   109&nbsp;&nbsp;</span>	}
+<span id="L110" class="ln">   110&nbsp;&nbsp;</span>	return fmt.Sprintf(&#34;0x%04X&#34;, id)
+<span id="L111" class="ln">   111&nbsp;&nbsp;</span>}
+<span id="L112" class="ln">   112&nbsp;&nbsp;</span>
+<span id="L113" class="ln">   113&nbsp;&nbsp;</span>const (
+<span id="L114" class="ln">   114&nbsp;&nbsp;</span>	<span class="comment">// suiteECDHE indicates that the cipher suite involves elliptic curve</span>
+<span id="L115" class="ln">   115&nbsp;&nbsp;</span>	<span class="comment">// Diffie-Hellman. This means that it should only be selected when the</span>
+<span id="L116" class="ln">   116&nbsp;&nbsp;</span>	<span class="comment">// client indicates that it supports ECC with a curve and point format</span>
+<span id="L117" class="ln">   117&nbsp;&nbsp;</span>	<span class="comment">// that we&#39;re happy with.</span>
+<span id="L118" class="ln">   118&nbsp;&nbsp;</span>	suiteECDHE = 1 &lt;&lt; iota
+<span id="L119" class="ln">   119&nbsp;&nbsp;</span>	<span class="comment">// suiteECSign indicates that the cipher suite involves an ECDSA or</span>
+<span id="L120" class="ln">   120&nbsp;&nbsp;</span>	<span class="comment">// EdDSA signature and therefore may only be selected when the server&#39;s</span>
+<span id="L121" class="ln">   121&nbsp;&nbsp;</span>	<span class="comment">// certificate is ECDSA or EdDSA. If this is not set then the cipher suite</span>
+<span id="L122" class="ln">   122&nbsp;&nbsp;</span>	<span class="comment">// is RSA based.</span>
+<span id="L123" class="ln">   123&nbsp;&nbsp;</span>	suiteECSign
+<span id="L124" class="ln">   124&nbsp;&nbsp;</span>	<span class="comment">// suiteTLS12 indicates that the cipher suite should only be advertised</span>
+<span id="L125" class="ln">   125&nbsp;&nbsp;</span>	<span class="comment">// and accepted when using TLS 1.2.</span>
+<span id="L126" class="ln">   126&nbsp;&nbsp;</span>	suiteTLS12
+<span id="L127" class="ln">   127&nbsp;&nbsp;</span>	<span class="comment">// suiteSHA384 indicates that the cipher suite uses SHA384 as the</span>
+<span id="L128" class="ln">   128&nbsp;&nbsp;</span>	<span class="comment">// handshake hash.</span>
+<span id="L129" class="ln">   129&nbsp;&nbsp;</span>	suiteSHA384
+<span id="L130" class="ln">   130&nbsp;&nbsp;</span>)
+<span id="L131" class="ln">   131&nbsp;&nbsp;</span>
+<span id="L132" class="ln">   132&nbsp;&nbsp;</span><span class="comment">// A cipherSuite is a TLS 1.0–1.2 cipher suite, and defines the key exchange</span>
+<span id="L133" class="ln">   133&nbsp;&nbsp;</span><span class="comment">// mechanism, as well as the cipher+MAC pair or the AEAD.</span>
+<span id="L134" class="ln">   134&nbsp;&nbsp;</span>type cipherSuite struct {
+<span id="L135" class="ln">   135&nbsp;&nbsp;</span>	id uint16
+<span id="L136" class="ln">   136&nbsp;&nbsp;</span>	<span class="comment">// the lengths, in bytes, of the key material needed for each component.</span>
+<span id="L137" class="ln">   137&nbsp;&nbsp;</span>	keyLen int
+<span id="L138" class="ln">   138&nbsp;&nbsp;</span>	macLen int
+<span id="L139" class="ln">   139&nbsp;&nbsp;</span>	ivLen  int
+<span id="L140" class="ln">   140&nbsp;&nbsp;</span>	ka     func(version uint16) keyAgreement
+<span id="L141" class="ln">   141&nbsp;&nbsp;</span>	<span class="comment">// flags is a bitmask of the suite* values, above.</span>
+<span id="L142" class="ln">   142&nbsp;&nbsp;</span>	flags  int
+<span id="L143" class="ln">   143&nbsp;&nbsp;</span>	cipher func(key, iv []byte, isRead bool) any
+<span id="L144" class="ln">   144&nbsp;&nbsp;</span>	mac    func(key []byte) hash.Hash
+<span id="L145" class="ln">   145&nbsp;&nbsp;</span>	aead   func(key, fixedNonce []byte) aead
+<span id="L146" class="ln">   146&nbsp;&nbsp;</span>}
+<span id="L147" class="ln">   147&nbsp;&nbsp;</span>
+<span id="L148" class="ln">   148&nbsp;&nbsp;</span>var cipherSuites = []*cipherSuite{ <span class="comment">// TODO: replace with a map, since the order doesn&#39;t matter.</span>
+<span id="L149" class="ln">   149&nbsp;&nbsp;</span>	{TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305, 32, 0, 12, ecdheRSAKA, suiteECDHE | suiteTLS12, nil, nil, aeadChaCha20Poly1305},
+<span id="L150" class="ln">   150&nbsp;&nbsp;</span>	{TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305, 32, 0, 12, ecdheECDSAKA, suiteECDHE | suiteECSign | suiteTLS12, nil, nil, aeadChaCha20Poly1305},
+<span id="L151" class="ln">   151&nbsp;&nbsp;</span>	{TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256, 16, 0, 4, ecdheRSAKA, suiteECDHE | suiteTLS12, nil, nil, aeadAESGCM},
+<span id="L152" class="ln">   152&nbsp;&nbsp;</span>	{TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256, 16, 0, 4, ecdheECDSAKA, suiteECDHE | suiteECSign | suiteTLS12, nil, nil, aeadAESGCM},
+<span id="L153" class="ln">   153&nbsp;&nbsp;</span>	{TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384, 32, 0, 4, ecdheRSAKA, suiteECDHE | suiteTLS12 | suiteSHA384, nil, nil, aeadAESGCM},
+<span id="L154" class="ln">   154&nbsp;&nbsp;</span>	{TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384, 32, 0, 4, ecdheECDSAKA, suiteECDHE | suiteECSign | suiteTLS12 | suiteSHA384, nil, nil, aeadAESGCM},
+<span id="L155" class="ln">   155&nbsp;&nbsp;</span>	{TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256, 16, 32, 16, ecdheRSAKA, suiteECDHE | suiteTLS12, cipherAES, macSHA256, nil},
+<span id="L156" class="ln">   156&nbsp;&nbsp;</span>	{TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA, 16, 20, 16, ecdheRSAKA, suiteECDHE, cipherAES, macSHA1, nil},
+<span id="L157" class="ln">   157&nbsp;&nbsp;</span>	{TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256, 16, 32, 16, ecdheECDSAKA, suiteECDHE | suiteECSign | suiteTLS12, cipherAES, macSHA256, nil},
+<span id="L158" class="ln">   158&nbsp;&nbsp;</span>	{TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA, 16, 20, 16, ecdheECDSAKA, suiteECDHE | suiteECSign, cipherAES, macSHA1, nil},
+<span id="L159" class="ln">   159&nbsp;&nbsp;</span>	{TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA, 32, 20, 16, ecdheRSAKA, suiteECDHE, cipherAES, macSHA1, nil},
+<span id="L160" class="ln">   160&nbsp;&nbsp;</span>	{TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA, 32, 20, 16, ecdheECDSAKA, suiteECDHE | suiteECSign, cipherAES, macSHA1, nil},
+<span id="L161" class="ln">   161&nbsp;&nbsp;</span>	{TLS_RSA_WITH_AES_128_GCM_SHA256, 16, 0, 4, rsaKA, suiteTLS12, nil, nil, aeadAESGCM},
+<span id="L162" class="ln">   162&nbsp;&nbsp;</span>	{TLS_RSA_WITH_AES_256_GCM_SHA384, 32, 0, 4, rsaKA, suiteTLS12 | suiteSHA384, nil, nil, aeadAESGCM},
+<span id="L163" class="ln">   163&nbsp;&nbsp;</span>	{TLS_RSA_WITH_AES_128_CBC_SHA256, 16, 32, 16, rsaKA, suiteTLS12, cipherAES, macSHA256, nil},
+<span id="L164" class="ln">   164&nbsp;&nbsp;</span>	{TLS_RSA_WITH_AES_128_CBC_SHA, 16, 20, 16, rsaKA, 0, cipherAES, macSHA1, nil},
+<span id="L165" class="ln">   165&nbsp;&nbsp;</span>	{TLS_RSA_WITH_AES_256_CBC_SHA, 32, 20, 16, rsaKA, 0, cipherAES, macSHA1, nil},
+<span id="L166" class="ln">   166&nbsp;&nbsp;</span>	{TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA, 24, 20, 8, ecdheRSAKA, suiteECDHE, cipher3DES, macSHA1, nil},
+<span id="L167" class="ln">   167&nbsp;&nbsp;</span>	{TLS_RSA_WITH_3DES_EDE_CBC_SHA, 24, 20, 8, rsaKA, 0, cipher3DES, macSHA1, nil},
+<span id="L168" class="ln">   168&nbsp;&nbsp;</span>	{TLS_RSA_WITH_RC4_128_SHA, 16, 20, 0, rsaKA, 0, cipherRC4, macSHA1, nil},
+<span id="L169" class="ln">   169&nbsp;&nbsp;</span>	{TLS_ECDHE_RSA_WITH_RC4_128_SHA, 16, 20, 0, ecdheRSAKA, suiteECDHE, cipherRC4, macSHA1, nil},
+<span id="L170" class="ln">   170&nbsp;&nbsp;</span>	{TLS_ECDHE_ECDSA_WITH_RC4_128_SHA, 16, 20, 0, ecdheECDSAKA, suiteECDHE | suiteECSign, cipherRC4, macSHA1, nil},
+<span id="L171" class="ln">   171&nbsp;&nbsp;</span>}
+<span id="L172" class="ln">   172&nbsp;&nbsp;</span>
+<span id="L173" class="ln">   173&nbsp;&nbsp;</span><span class="comment">// selectCipherSuite returns the first TLS 1.0–1.2 cipher suite from ids which</span>
+<span id="L174" class="ln">   174&nbsp;&nbsp;</span><span class="comment">// is also in supportedIDs and passes the ok filter.</span>
+<span id="L175" class="ln">   175&nbsp;&nbsp;</span>func selectCipherSuite(ids, supportedIDs []uint16, ok func(*cipherSuite) bool) *cipherSuite {
+<span id="L176" class="ln">   176&nbsp;&nbsp;</span>	for _, id := range ids {
+<span id="L177" class="ln">   177&nbsp;&nbsp;</span>		candidate := cipherSuiteByID(id)
+<span id="L178" class="ln">   178&nbsp;&nbsp;</span>		if candidate == nil || !ok(candidate) {
+<span id="L179" class="ln">   179&nbsp;&nbsp;</span>			continue
+<span id="L180" class="ln">   180&nbsp;&nbsp;</span>		}
+<span id="L181" class="ln">   181&nbsp;&nbsp;</span>
+<span id="L182" class="ln">   182&nbsp;&nbsp;</span>		for _, suppID := range supportedIDs {
+<span id="L183" class="ln">   183&nbsp;&nbsp;</span>			if id == suppID {
+<span id="L184" class="ln">   184&nbsp;&nbsp;</span>				return candidate
+<span id="L185" class="ln">   185&nbsp;&nbsp;</span>			}
+<span id="L186" class="ln">   186&nbsp;&nbsp;</span>		}
+<span id="L187" class="ln">   187&nbsp;&nbsp;</span>	}
+<span id="L188" class="ln">   188&nbsp;&nbsp;</span>	return nil
+<span id="L189" class="ln">   189&nbsp;&nbsp;</span>}
+<span id="L190" class="ln">   190&nbsp;&nbsp;</span>
+<span id="L191" class="ln">   191&nbsp;&nbsp;</span><span class="comment">// A cipherSuiteTLS13 defines only the pair of the AEAD algorithm and hash</span>
+<span id="L192" class="ln">   192&nbsp;&nbsp;</span><span class="comment">// algorithm to be used with HKDF. See RFC 8446, Appendix B.4.</span>
+<span id="L193" class="ln">   193&nbsp;&nbsp;</span>type cipherSuiteTLS13 struct {
+<span id="L194" class="ln">   194&nbsp;&nbsp;</span>	id     uint16
+<span id="L195" class="ln">   195&nbsp;&nbsp;</span>	keyLen int
+<span id="L196" class="ln">   196&nbsp;&nbsp;</span>	aead   func(key, fixedNonce []byte) aead
+<span id="L197" class="ln">   197&nbsp;&nbsp;</span>	hash   crypto.Hash
+<span id="L198" class="ln">   198&nbsp;&nbsp;</span>}
+<span id="L199" class="ln">   199&nbsp;&nbsp;</span>
+<span id="L200" class="ln">   200&nbsp;&nbsp;</span>var cipherSuitesTLS13 = []*cipherSuiteTLS13{ <span class="comment">// TODO: replace with a map.</span>
+<span id="L201" class="ln">   201&nbsp;&nbsp;</span>	{TLS_AES_128_GCM_SHA256, 16, aeadAESGCMTLS13, crypto.SHA256},
+<span id="L202" class="ln">   202&nbsp;&nbsp;</span>	{TLS_CHACHA20_POLY1305_SHA256, 32, aeadChaCha20Poly1305, crypto.SHA256},
+<span id="L203" class="ln">   203&nbsp;&nbsp;</span>	{TLS_AES_256_GCM_SHA384, 32, aeadAESGCMTLS13, crypto.SHA384},
+<span id="L204" class="ln">   204&nbsp;&nbsp;</span>}
+<span id="L205" class="ln">   205&nbsp;&nbsp;</span>
+<span id="L206" class="ln">   206&nbsp;&nbsp;</span><span class="comment">// cipherSuitesPreferenceOrder is the order in which we&#39;ll select (on the</span>
+<span id="L207" class="ln">   207&nbsp;&nbsp;</span><span class="comment">// server) or advertise (on the client) TLS 1.0–1.2 cipher suites.</span>
+<span id="L208" class="ln">   208&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L209" class="ln">   209&nbsp;&nbsp;</span><span class="comment">// Cipher suites are filtered but not reordered based on the application and</span>
+<span id="L210" class="ln">   210&nbsp;&nbsp;</span><span class="comment">// peer&#39;s preferences, meaning we&#39;ll never select a suite lower in this list if</span>
+<span id="L211" class="ln">   211&nbsp;&nbsp;</span><span class="comment">// any higher one is available. This makes it more defensible to keep weaker</span>
+<span id="L212" class="ln">   212&nbsp;&nbsp;</span><span class="comment">// cipher suites enabled, especially on the server side where we get the last</span>
+<span id="L213" class="ln">   213&nbsp;&nbsp;</span><span class="comment">// word, since there are no known downgrade attacks on cipher suites selection.</span>
+<span id="L214" class="ln">   214&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L215" class="ln">   215&nbsp;&nbsp;</span><span class="comment">// The list is sorted by applying the following priority rules, stopping at the</span>
+<span id="L216" class="ln">   216&nbsp;&nbsp;</span><span class="comment">// first (most important) applicable one:</span>
+<span id="L217" class="ln">   217&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L218" class="ln">   218&nbsp;&nbsp;</span><span class="comment">//   - Anything else comes before RC4</span>
+<span id="L219" class="ln">   219&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L220" class="ln">   220&nbsp;&nbsp;</span><span class="comment">//     RC4 has practically exploitable biases. See https://www.rc4nomore.com.</span>
+<span id="L221" class="ln">   221&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L222" class="ln">   222&nbsp;&nbsp;</span><span class="comment">//   - Anything else comes before CBC_SHA256</span>
+<span id="L223" class="ln">   223&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L224" class="ln">   224&nbsp;&nbsp;</span><span class="comment">//     SHA-256 variants of the CBC ciphersuites don&#39;t implement any Lucky13</span>
+<span id="L225" class="ln">   225&nbsp;&nbsp;</span><span class="comment">//     countermeasures. See http://www.isg.rhul.ac.uk/tls/Lucky13.html and</span>
+<span id="L226" class="ln">   226&nbsp;&nbsp;</span><span class="comment">//     https://www.imperialviolet.org/2013/02/04/luckythirteen.html.</span>
+<span id="L227" class="ln">   227&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L228" class="ln">   228&nbsp;&nbsp;</span><span class="comment">//   - Anything else comes before 3DES</span>
+<span id="L229" class="ln">   229&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L230" class="ln">   230&nbsp;&nbsp;</span><span class="comment">//     3DES has 64-bit blocks, which makes it fundamentally susceptible to</span>
+<span id="L231" class="ln">   231&nbsp;&nbsp;</span><span class="comment">//     birthday attacks. See https://sweet32.info.</span>
+<span id="L232" class="ln">   232&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L233" class="ln">   233&nbsp;&nbsp;</span><span class="comment">//   - ECDHE comes before anything else</span>
+<span id="L234" class="ln">   234&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L235" class="ln">   235&nbsp;&nbsp;</span><span class="comment">//     Once we got the broken stuff out of the way, the most important</span>
+<span id="L236" class="ln">   236&nbsp;&nbsp;</span><span class="comment">//     property a cipher suite can have is forward secrecy. We don&#39;t</span>
+<span id="L237" class="ln">   237&nbsp;&nbsp;</span><span class="comment">//     implement FFDHE, so that means ECDHE.</span>
+<span id="L238" class="ln">   238&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L239" class="ln">   239&nbsp;&nbsp;</span><span class="comment">//   - AEADs come before CBC ciphers</span>
+<span id="L240" class="ln">   240&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L241" class="ln">   241&nbsp;&nbsp;</span><span class="comment">//     Even with Lucky13 countermeasures, MAC-then-Encrypt CBC cipher suites</span>
+<span id="L242" class="ln">   242&nbsp;&nbsp;</span><span class="comment">//     are fundamentally fragile, and suffered from an endless sequence of</span>
+<span id="L243" class="ln">   243&nbsp;&nbsp;</span><span class="comment">//     padding oracle attacks. See https://eprint.iacr.org/2015/1129,</span>
+<span id="L244" class="ln">   244&nbsp;&nbsp;</span><span class="comment">//     https://www.imperialviolet.org/2014/12/08/poodleagain.html, and</span>
+<span id="L245" class="ln">   245&nbsp;&nbsp;</span><span class="comment">//     https://blog.cloudflare.com/yet-another-padding-oracle-in-openssl-cbc-ciphersuites/.</span>
+<span id="L246" class="ln">   246&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L247" class="ln">   247&nbsp;&nbsp;</span><span class="comment">//   - AES comes before ChaCha20</span>
+<span id="L248" class="ln">   248&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L249" class="ln">   249&nbsp;&nbsp;</span><span class="comment">//     When AES hardware is available, AES-128-GCM and AES-256-GCM are faster</span>
+<span id="L250" class="ln">   250&nbsp;&nbsp;</span><span class="comment">//     than ChaCha20Poly1305.</span>
+<span id="L251" class="ln">   251&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L252" class="ln">   252&nbsp;&nbsp;</span><span class="comment">//     When AES hardware is not available, AES-128-GCM is one or more of: much</span>
+<span id="L253" class="ln">   253&nbsp;&nbsp;</span><span class="comment">//     slower, way more complex, and less safe (because not constant time)</span>
+<span id="L254" class="ln">   254&nbsp;&nbsp;</span><span class="comment">//     than ChaCha20Poly1305.</span>
+<span id="L255" class="ln">   255&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L256" class="ln">   256&nbsp;&nbsp;</span><span class="comment">//     We use this list if we think both peers have AES hardware, and</span>
+<span id="L257" class="ln">   257&nbsp;&nbsp;</span><span class="comment">//     cipherSuitesPreferenceOrderNoAES otherwise.</span>
+<span id="L258" class="ln">   258&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L259" class="ln">   259&nbsp;&nbsp;</span><span class="comment">//   - AES-128 comes before AES-256</span>
+<span id="L260" class="ln">   260&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L261" class="ln">   261&nbsp;&nbsp;</span><span class="comment">//     The only potential advantages of AES-256 are better multi-target</span>
+<span id="L262" class="ln">   262&nbsp;&nbsp;</span><span class="comment">//     margins, and hypothetical post-quantum properties. Neither apply to</span>
+<span id="L263" class="ln">   263&nbsp;&nbsp;</span><span class="comment">//     TLS, and AES-256 is slower due to its four extra rounds (which don&#39;t</span>
+<span id="L264" class="ln">   264&nbsp;&nbsp;</span><span class="comment">//     contribute to the advantages above).</span>
+<span id="L265" class="ln">   265&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L266" class="ln">   266&nbsp;&nbsp;</span><span class="comment">//   - ECDSA comes before RSA</span>
+<span id="L267" class="ln">   267&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L268" class="ln">   268&nbsp;&nbsp;</span><span class="comment">//     The relative order of ECDSA and RSA cipher suites doesn&#39;t matter,</span>
+<span id="L269" class="ln">   269&nbsp;&nbsp;</span><span class="comment">//     as they depend on the certificate. Pick one to get a stable order.</span>
+<span id="L270" class="ln">   270&nbsp;&nbsp;</span>var cipherSuitesPreferenceOrder = []uint16{
+<span id="L271" class="ln">   271&nbsp;&nbsp;</span>	<span class="comment">// AEADs w/ ECDHE</span>
+<span id="L272" class="ln">   272&nbsp;&nbsp;</span>	TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256, TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+<span id="L273" class="ln">   273&nbsp;&nbsp;</span>	TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384, TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+<span id="L274" class="ln">   274&nbsp;&nbsp;</span>	TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305, TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,
+<span id="L275" class="ln">   275&nbsp;&nbsp;</span>
+<span id="L276" class="ln">   276&nbsp;&nbsp;</span>	<span class="comment">// CBC w/ ECDHE</span>
+<span id="L277" class="ln">   277&nbsp;&nbsp;</span>	TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA, TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
+<span id="L278" class="ln">   278&nbsp;&nbsp;</span>	TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA, TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+<span id="L279" class="ln">   279&nbsp;&nbsp;</span>
+<span id="L280" class="ln">   280&nbsp;&nbsp;</span>	<span class="comment">// AEADs w/o ECDHE</span>
+<span id="L281" class="ln">   281&nbsp;&nbsp;</span>	TLS_RSA_WITH_AES_128_GCM_SHA256,
+<span id="L282" class="ln">   282&nbsp;&nbsp;</span>	TLS_RSA_WITH_AES_256_GCM_SHA384,
+<span id="L283" class="ln">   283&nbsp;&nbsp;</span>
+<span id="L284" class="ln">   284&nbsp;&nbsp;</span>	<span class="comment">// CBC w/o ECDHE</span>
+<span id="L285" class="ln">   285&nbsp;&nbsp;</span>	TLS_RSA_WITH_AES_128_CBC_SHA,
+<span id="L286" class="ln">   286&nbsp;&nbsp;</span>	TLS_RSA_WITH_AES_256_CBC_SHA,
+<span id="L287" class="ln">   287&nbsp;&nbsp;</span>
+<span id="L288" class="ln">   288&nbsp;&nbsp;</span>	<span class="comment">// 3DES</span>
+<span id="L289" class="ln">   289&nbsp;&nbsp;</span>	TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,
+<span id="L290" class="ln">   290&nbsp;&nbsp;</span>	TLS_RSA_WITH_3DES_EDE_CBC_SHA,
+<span id="L291" class="ln">   291&nbsp;&nbsp;</span>
+<span id="L292" class="ln">   292&nbsp;&nbsp;</span>	<span class="comment">// CBC_SHA256</span>
+<span id="L293" class="ln">   293&nbsp;&nbsp;</span>	TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256, TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256,
+<span id="L294" class="ln">   294&nbsp;&nbsp;</span>	TLS_RSA_WITH_AES_128_CBC_SHA256,
+<span id="L295" class="ln">   295&nbsp;&nbsp;</span>
+<span id="L296" class="ln">   296&nbsp;&nbsp;</span>	<span class="comment">// RC4</span>
+<span id="L297" class="ln">   297&nbsp;&nbsp;</span>	TLS_ECDHE_ECDSA_WITH_RC4_128_SHA, TLS_ECDHE_RSA_WITH_RC4_128_SHA,
+<span id="L298" class="ln">   298&nbsp;&nbsp;</span>	TLS_RSA_WITH_RC4_128_SHA,
+<span id="L299" class="ln">   299&nbsp;&nbsp;</span>}
+<span id="L300" class="ln">   300&nbsp;&nbsp;</span>
+<span id="L301" class="ln">   301&nbsp;&nbsp;</span>var cipherSuitesPreferenceOrderNoAES = []uint16{
+<span id="L302" class="ln">   302&nbsp;&nbsp;</span>	<span class="comment">// ChaCha20Poly1305</span>
+<span id="L303" class="ln">   303&nbsp;&nbsp;</span>	TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305, TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305,
+<span id="L304" class="ln">   304&nbsp;&nbsp;</span>
+<span id="L305" class="ln">   305&nbsp;&nbsp;</span>	<span class="comment">// AES-GCM w/ ECDHE</span>
+<span id="L306" class="ln">   306&nbsp;&nbsp;</span>	TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256, TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256,
+<span id="L307" class="ln">   307&nbsp;&nbsp;</span>	TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384, TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384,
+<span id="L308" class="ln">   308&nbsp;&nbsp;</span>
+<span id="L309" class="ln">   309&nbsp;&nbsp;</span>	<span class="comment">// The rest of cipherSuitesPreferenceOrder.</span>
+<span id="L310" class="ln">   310&nbsp;&nbsp;</span>	TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA, TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,
+<span id="L311" class="ln">   311&nbsp;&nbsp;</span>	TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA, TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA,
+<span id="L312" class="ln">   312&nbsp;&nbsp;</span>	TLS_RSA_WITH_AES_128_GCM_SHA256,
+<span id="L313" class="ln">   313&nbsp;&nbsp;</span>	TLS_RSA_WITH_AES_256_GCM_SHA384,
+<span id="L314" class="ln">   314&nbsp;&nbsp;</span>	TLS_RSA_WITH_AES_128_CBC_SHA,
+<span id="L315" class="ln">   315&nbsp;&nbsp;</span>	TLS_RSA_WITH_AES_256_CBC_SHA,
+<span id="L316" class="ln">   316&nbsp;&nbsp;</span>	TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA,
+<span id="L317" class="ln">   317&nbsp;&nbsp;</span>	TLS_RSA_WITH_3DES_EDE_CBC_SHA,
+<span id="L318" class="ln">   318&nbsp;&nbsp;</span>	TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256, TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256,
+<span id="L319" class="ln">   319&nbsp;&nbsp;</span>	TLS_RSA_WITH_AES_128_CBC_SHA256,
+<span id="L320" class="ln">   320&nbsp;&nbsp;</span>	TLS_ECDHE_ECDSA_WITH_RC4_128_SHA, TLS_ECDHE_RSA_WITH_RC4_128_SHA,
+<span id="L321" class="ln">   321&nbsp;&nbsp;</span>	TLS_RSA_WITH_RC4_128_SHA,
+<span id="L322" class="ln">   322&nbsp;&nbsp;</span>}
+<span id="L323" class="ln">   323&nbsp;&nbsp;</span>
+<span id="L324" class="ln">   324&nbsp;&nbsp;</span><span class="comment">// disabledCipherSuites are not used unless explicitly listed in Config.CipherSuites.</span>
+<span id="L325" class="ln">   325&nbsp;&nbsp;</span>var disabledCipherSuites = map[uint16]bool{
+<span id="L326" class="ln">   326&nbsp;&nbsp;</span>	<span class="comment">// CBC_SHA256</span>
+<span id="L327" class="ln">   327&nbsp;&nbsp;</span>	TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256: true,
+<span id="L328" class="ln">   328&nbsp;&nbsp;</span>	TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256:   true,
+<span id="L329" class="ln">   329&nbsp;&nbsp;</span>	TLS_RSA_WITH_AES_128_CBC_SHA256:         true,
+<span id="L330" class="ln">   330&nbsp;&nbsp;</span>
+<span id="L331" class="ln">   331&nbsp;&nbsp;</span>	<span class="comment">// RC4</span>
+<span id="L332" class="ln">   332&nbsp;&nbsp;</span>	TLS_ECDHE_ECDSA_WITH_RC4_128_SHA: true,
+<span id="L333" class="ln">   333&nbsp;&nbsp;</span>	TLS_ECDHE_RSA_WITH_RC4_128_SHA:   true,
+<span id="L334" class="ln">   334&nbsp;&nbsp;</span>	TLS_RSA_WITH_RC4_128_SHA:         true,
+<span id="L335" class="ln">   335&nbsp;&nbsp;</span>}
+<span id="L336" class="ln">   336&nbsp;&nbsp;</span>
+<span id="L337" class="ln">   337&nbsp;&nbsp;</span><span class="comment">// rsaKexCiphers contains the ciphers which use RSA based key exchange,</span>
+<span id="L338" class="ln">   338&nbsp;&nbsp;</span><span class="comment">// which we also disable by default unless a GODEBUG is set.</span>
+<span id="L339" class="ln">   339&nbsp;&nbsp;</span>var rsaKexCiphers = map[uint16]bool{
+<span id="L340" class="ln">   340&nbsp;&nbsp;</span>	TLS_RSA_WITH_RC4_128_SHA:        true,
+<span id="L341" class="ln">   341&nbsp;&nbsp;</span>	TLS_RSA_WITH_3DES_EDE_CBC_SHA:   true,
+<span id="L342" class="ln">   342&nbsp;&nbsp;</span>	TLS_RSA_WITH_AES_128_CBC_SHA:    true,
+<span id="L343" class="ln">   343&nbsp;&nbsp;</span>	TLS_RSA_WITH_AES_256_CBC_SHA:    true,
+<span id="L344" class="ln">   344&nbsp;&nbsp;</span>	TLS_RSA_WITH_AES_128_CBC_SHA256: true,
+<span id="L345" class="ln">   345&nbsp;&nbsp;</span>	TLS_RSA_WITH_AES_128_GCM_SHA256: true,
+<span id="L346" class="ln">   346&nbsp;&nbsp;</span>	TLS_RSA_WITH_AES_256_GCM_SHA384: true,
+<span id="L347" class="ln">   347&nbsp;&nbsp;</span>}
+<span id="L348" class="ln">   348&nbsp;&nbsp;</span>
+<span id="L349" class="ln">   349&nbsp;&nbsp;</span>var defaultCipherSuites []uint16
+<span id="L350" class="ln">   350&nbsp;&nbsp;</span>var defaultCipherSuitesWithRSAKex []uint16
+<span id="L351" class="ln">   351&nbsp;&nbsp;</span>
+<span id="L352" class="ln">   352&nbsp;&nbsp;</span>func init() {
+<span id="L353" class="ln">   353&nbsp;&nbsp;</span>	defaultCipherSuites = make([]uint16, 0, len(cipherSuitesPreferenceOrder))
+<span id="L354" class="ln">   354&nbsp;&nbsp;</span>	defaultCipherSuitesWithRSAKex = make([]uint16, 0, len(cipherSuitesPreferenceOrder))
+<span id="L355" class="ln">   355&nbsp;&nbsp;</span>	for _, c := range cipherSuitesPreferenceOrder {
+<span id="L356" class="ln">   356&nbsp;&nbsp;</span>		if disabledCipherSuites[c] {
+<span id="L357" class="ln">   357&nbsp;&nbsp;</span>			continue
+<span id="L358" class="ln">   358&nbsp;&nbsp;</span>		}
+<span id="L359" class="ln">   359&nbsp;&nbsp;</span>		if !rsaKexCiphers[c] {
+<span id="L360" class="ln">   360&nbsp;&nbsp;</span>			defaultCipherSuites = append(defaultCipherSuites, c)
+<span id="L361" class="ln">   361&nbsp;&nbsp;</span>		}
+<span id="L362" class="ln">   362&nbsp;&nbsp;</span>		defaultCipherSuitesWithRSAKex = append(defaultCipherSuitesWithRSAKex, c)
+<span id="L363" class="ln">   363&nbsp;&nbsp;</span>	}
+<span id="L364" class="ln">   364&nbsp;&nbsp;</span>}
+<span id="L365" class="ln">   365&nbsp;&nbsp;</span>
+<span id="L366" class="ln">   366&nbsp;&nbsp;</span><span class="comment">// defaultCipherSuitesTLS13 is also the preference order, since there are no</span>
+<span id="L367" class="ln">   367&nbsp;&nbsp;</span><span class="comment">// disabled by default TLS 1.3 cipher suites. The same AES vs ChaCha20 logic as</span>
+<span id="L368" class="ln">   368&nbsp;&nbsp;</span><span class="comment">// cipherSuitesPreferenceOrder applies.</span>
+<span id="L369" class="ln">   369&nbsp;&nbsp;</span>var defaultCipherSuitesTLS13 = []uint16{
+<span id="L370" class="ln">   370&nbsp;&nbsp;</span>	TLS_AES_128_GCM_SHA256,
+<span id="L371" class="ln">   371&nbsp;&nbsp;</span>	TLS_AES_256_GCM_SHA384,
+<span id="L372" class="ln">   372&nbsp;&nbsp;</span>	TLS_CHACHA20_POLY1305_SHA256,
+<span id="L373" class="ln">   373&nbsp;&nbsp;</span>}
+<span id="L374" class="ln">   374&nbsp;&nbsp;</span>
+<span id="L375" class="ln">   375&nbsp;&nbsp;</span>var defaultCipherSuitesTLS13NoAES = []uint16{
+<span id="L376" class="ln">   376&nbsp;&nbsp;</span>	TLS_CHACHA20_POLY1305_SHA256,
+<span id="L377" class="ln">   377&nbsp;&nbsp;</span>	TLS_AES_128_GCM_SHA256,
+<span id="L378" class="ln">   378&nbsp;&nbsp;</span>	TLS_AES_256_GCM_SHA384,
+<span id="L379" class="ln">   379&nbsp;&nbsp;</span>}
+<span id="L380" class="ln">   380&nbsp;&nbsp;</span>
+<span id="L381" class="ln">   381&nbsp;&nbsp;</span>var (
+<span id="L382" class="ln">   382&nbsp;&nbsp;</span>	hasGCMAsmAMD64 = cpu.X86.HasAES &amp;&amp; cpu.X86.HasPCLMULQDQ
+<span id="L383" class="ln">   383&nbsp;&nbsp;</span>	hasGCMAsmARM64 = cpu.ARM64.HasAES &amp;&amp; cpu.ARM64.HasPMULL
+<span id="L384" class="ln">   384&nbsp;&nbsp;</span>	<span class="comment">// Keep in sync with crypto/aes/cipher_s390x.go.</span>
+<span id="L385" class="ln">   385&nbsp;&nbsp;</span>	hasGCMAsmS390X = cpu.S390X.HasAES &amp;&amp; cpu.S390X.HasAESCBC &amp;&amp; cpu.S390X.HasAESCTR &amp;&amp;
+<span id="L386" class="ln">   386&nbsp;&nbsp;</span>		(cpu.S390X.HasGHASH || cpu.S390X.HasAESGCM)
+<span id="L387" class="ln">   387&nbsp;&nbsp;</span>
+<span id="L388" class="ln">   388&nbsp;&nbsp;</span>	hasAESGCMHardwareSupport = runtime.GOARCH == &#34;amd64&#34; &amp;&amp; hasGCMAsmAMD64 ||
+<span id="L389" class="ln">   389&nbsp;&nbsp;</span>		runtime.GOARCH == &#34;arm64&#34; &amp;&amp; hasGCMAsmARM64 ||
+<span id="L390" class="ln">   390&nbsp;&nbsp;</span>		runtime.GOARCH == &#34;s390x&#34; &amp;&amp; hasGCMAsmS390X
+<span id="L391" class="ln">   391&nbsp;&nbsp;</span>)
+<span id="L392" class="ln">   392&nbsp;&nbsp;</span>
+<span id="L393" class="ln">   393&nbsp;&nbsp;</span>var aesgcmCiphers = map[uint16]bool{
+<span id="L394" class="ln">   394&nbsp;&nbsp;</span>	<span class="comment">// TLS 1.2</span>
+<span id="L395" class="ln">   395&nbsp;&nbsp;</span>	TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256:   true,
+<span id="L396" class="ln">   396&nbsp;&nbsp;</span>	TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384:   true,
+<span id="L397" class="ln">   397&nbsp;&nbsp;</span>	TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256: true,
+<span id="L398" class="ln">   398&nbsp;&nbsp;</span>	TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384: true,
+<span id="L399" class="ln">   399&nbsp;&nbsp;</span>	<span class="comment">// TLS 1.3</span>
+<span id="L400" class="ln">   400&nbsp;&nbsp;</span>	TLS_AES_128_GCM_SHA256: true,
+<span id="L401" class="ln">   401&nbsp;&nbsp;</span>	TLS_AES_256_GCM_SHA384: true,
+<span id="L402" class="ln">   402&nbsp;&nbsp;</span>}
+<span id="L403" class="ln">   403&nbsp;&nbsp;</span>
+<span id="L404" class="ln">   404&nbsp;&nbsp;</span><span class="comment">// aesgcmPreferred returns whether the first known cipher in the preference list</span>
+<span id="L405" class="ln">   405&nbsp;&nbsp;</span><span class="comment">// is an AES-GCM cipher, implying the peer has hardware support for it.</span>
+<span id="L406" class="ln">   406&nbsp;&nbsp;</span>func aesgcmPreferred(ciphers []uint16) bool {
+<span id="L407" class="ln">   407&nbsp;&nbsp;</span>	for _, cID := range ciphers {
+<span id="L408" class="ln">   408&nbsp;&nbsp;</span>		if c := cipherSuiteByID(cID); c != nil {
+<span id="L409" class="ln">   409&nbsp;&nbsp;</span>			return aesgcmCiphers[cID]
+<span id="L410" class="ln">   410&nbsp;&nbsp;</span>		}
+<span id="L411" class="ln">   411&nbsp;&nbsp;</span>		if c := cipherSuiteTLS13ByID(cID); c != nil {
+<span id="L412" class="ln">   412&nbsp;&nbsp;</span>			return aesgcmCiphers[cID]
+<span id="L413" class="ln">   413&nbsp;&nbsp;</span>		}
+<span id="L414" class="ln">   414&nbsp;&nbsp;</span>	}
+<span id="L415" class="ln">   415&nbsp;&nbsp;</span>	return false
+<span id="L416" class="ln">   416&nbsp;&nbsp;</span>}
+<span id="L417" class="ln">   417&nbsp;&nbsp;</span>
+<span id="L418" class="ln">   418&nbsp;&nbsp;</span>func cipherRC4(key, iv []byte, isRead bool) any {
+<span id="L419" class="ln">   419&nbsp;&nbsp;</span>	cipher, _ := rc4.NewCipher(key)
+<span id="L420" class="ln">   420&nbsp;&nbsp;</span>	return cipher
+<span id="L421" class="ln">   421&nbsp;&nbsp;</span>}
+<span id="L422" class="ln">   422&nbsp;&nbsp;</span>
+<span id="L423" class="ln">   423&nbsp;&nbsp;</span>func cipher3DES(key, iv []byte, isRead bool) any {
+<span id="L424" class="ln">   424&nbsp;&nbsp;</span>	block, _ := des.NewTripleDESCipher(key)
+<span id="L425" class="ln">   425&nbsp;&nbsp;</span>	if isRead {
+<span id="L426" class="ln">   426&nbsp;&nbsp;</span>		return cipher.NewCBCDecrypter(block, iv)
+<span id="L427" class="ln">   427&nbsp;&nbsp;</span>	}
+<span id="L428" class="ln">   428&nbsp;&nbsp;</span>	return cipher.NewCBCEncrypter(block, iv)
+<span id="L429" class="ln">   429&nbsp;&nbsp;</span>}
+<span id="L430" class="ln">   430&nbsp;&nbsp;</span>
+<span id="L431" class="ln">   431&nbsp;&nbsp;</span>func cipherAES(key, iv []byte, isRead bool) any {
+<span id="L432" class="ln">   432&nbsp;&nbsp;</span>	block, _ := aes.NewCipher(key)
+<span id="L433" class="ln">   433&nbsp;&nbsp;</span>	if isRead {
+<span id="L434" class="ln">   434&nbsp;&nbsp;</span>		return cipher.NewCBCDecrypter(block, iv)
+<span id="L435" class="ln">   435&nbsp;&nbsp;</span>	}
+<span id="L436" class="ln">   436&nbsp;&nbsp;</span>	return cipher.NewCBCEncrypter(block, iv)
+<span id="L437" class="ln">   437&nbsp;&nbsp;</span>}
+<span id="L438" class="ln">   438&nbsp;&nbsp;</span>
+<span id="L439" class="ln">   439&nbsp;&nbsp;</span><span class="comment">// macSHA1 returns a SHA-1 based constant time MAC.</span>
+<span id="L440" class="ln">   440&nbsp;&nbsp;</span>func macSHA1(key []byte) hash.Hash {
+<span id="L441" class="ln">   441&nbsp;&nbsp;</span>	h := sha1.New
+<span id="L442" class="ln">   442&nbsp;&nbsp;</span>	<span class="comment">// The BoringCrypto SHA1 does not have a constant-time</span>
+<span id="L443" class="ln">   443&nbsp;&nbsp;</span>	<span class="comment">// checksum function, so don&#39;t try to use it.</span>
+<span id="L444" class="ln">   444&nbsp;&nbsp;</span>	if !boring.Enabled {
+<span id="L445" class="ln">   445&nbsp;&nbsp;</span>		h = newConstantTimeHash(h)
+<span id="L446" class="ln">   446&nbsp;&nbsp;</span>	}
+<span id="L447" class="ln">   447&nbsp;&nbsp;</span>	return hmac.New(h, key)
+<span id="L448" class="ln">   448&nbsp;&nbsp;</span>}
+<span id="L449" class="ln">   449&nbsp;&nbsp;</span>
+<span id="L450" class="ln">   450&nbsp;&nbsp;</span><span class="comment">// macSHA256 returns a SHA-256 based MAC. This is only supported in TLS 1.2 and</span>
+<span id="L451" class="ln">   451&nbsp;&nbsp;</span><span class="comment">// is currently only used in disabled-by-default cipher suites.</span>
+<span id="L452" class="ln">   452&nbsp;&nbsp;</span>func macSHA256(key []byte) hash.Hash {
+<span id="L453" class="ln">   453&nbsp;&nbsp;</span>	return hmac.New(sha256.New, key)
+<span id="L454" class="ln">   454&nbsp;&nbsp;</span>}
+<span id="L455" class="ln">   455&nbsp;&nbsp;</span>
+<span id="L456" class="ln">   456&nbsp;&nbsp;</span>type aead interface {
+<span id="L457" class="ln">   457&nbsp;&nbsp;</span>	cipher.AEAD
+<span id="L458" class="ln">   458&nbsp;&nbsp;</span>
+<span id="L459" class="ln">   459&nbsp;&nbsp;</span>	<span class="comment">// explicitNonceLen returns the number of bytes of explicit nonce</span>
+<span id="L460" class="ln">   460&nbsp;&nbsp;</span>	<span class="comment">// included in each record. This is eight for older AEADs and</span>
+<span id="L461" class="ln">   461&nbsp;&nbsp;</span>	<span class="comment">// zero for modern ones.</span>
+<span id="L462" class="ln">   462&nbsp;&nbsp;</span>	explicitNonceLen() int
+<span id="L463" class="ln">   463&nbsp;&nbsp;</span>}
+<span id="L464" class="ln">   464&nbsp;&nbsp;</span>
+<span id="L465" class="ln">   465&nbsp;&nbsp;</span>const (
+<span id="L466" class="ln">   466&nbsp;&nbsp;</span>	aeadNonceLength   = 12
+<span id="L467" class="ln">   467&nbsp;&nbsp;</span>	noncePrefixLength = 4
+<span id="L468" class="ln">   468&nbsp;&nbsp;</span>)
+<span id="L469" class="ln">   469&nbsp;&nbsp;</span>
+<span id="L470" class="ln">   470&nbsp;&nbsp;</span><span class="comment">// prefixNonceAEAD wraps an AEAD and prefixes a fixed portion of the nonce to</span>
+<span id="L471" class="ln">   471&nbsp;&nbsp;</span><span class="comment">// each call.</span>
+<span id="L472" class="ln">   472&nbsp;&nbsp;</span>type prefixNonceAEAD struct {
+<span id="L473" class="ln">   473&nbsp;&nbsp;</span>	<span class="comment">// nonce contains the fixed part of the nonce in the first four bytes.</span>
+<span id="L474" class="ln">   474&nbsp;&nbsp;</span>	nonce [aeadNonceLength]byte
+<span id="L475" class="ln">   475&nbsp;&nbsp;</span>	aead  cipher.AEAD
+<span id="L476" class="ln">   476&nbsp;&nbsp;</span>}
+<span id="L477" class="ln">   477&nbsp;&nbsp;</span>
+<span id="L478" class="ln">   478&nbsp;&nbsp;</span>func (f *prefixNonceAEAD) NonceSize() int        { return aeadNonceLength - noncePrefixLength }
+<span id="L479" class="ln">   479&nbsp;&nbsp;</span>func (f *prefixNonceAEAD) Overhead() int         { return f.aead.Overhead() }
+<span id="L480" class="ln">   480&nbsp;&nbsp;</span>func (f *prefixNonceAEAD) explicitNonceLen() int { return f.NonceSize() }
+<span id="L481" class="ln">   481&nbsp;&nbsp;</span>
+<span id="L482" class="ln">   482&nbsp;&nbsp;</span>func (f *prefixNonceAEAD) Seal(out, nonce, plaintext, additionalData []byte) []byte {
+<span id="L483" class="ln">   483&nbsp;&nbsp;</span>	copy(f.nonce[4:], nonce)
+<span id="L484" class="ln">   484&nbsp;&nbsp;</span>	return f.aead.Seal(out, f.nonce[:], plaintext, additionalData)
+<span id="L485" class="ln">   485&nbsp;&nbsp;</span>}
+<span id="L486" class="ln">   486&nbsp;&nbsp;</span>
+<span id="L487" class="ln">   487&nbsp;&nbsp;</span>func (f *prefixNonceAEAD) Open(out, nonce, ciphertext, additionalData []byte) ([]byte, error) {
+<span id="L488" class="ln">   488&nbsp;&nbsp;</span>	copy(f.nonce[4:], nonce)
+<span id="L489" class="ln">   489&nbsp;&nbsp;</span>	return f.aead.Open(out, f.nonce[:], ciphertext, additionalData)
+<span id="L490" class="ln">   490&nbsp;&nbsp;</span>}
+<span id="L491" class="ln">   491&nbsp;&nbsp;</span>
+<span id="L492" class="ln">   492&nbsp;&nbsp;</span><span class="comment">// xorNonceAEAD wraps an AEAD by XORing in a fixed pattern to the nonce</span>
+<span id="L493" class="ln">   493&nbsp;&nbsp;</span><span class="comment">// before each call.</span>
+<span id="L494" class="ln">   494&nbsp;&nbsp;</span>type xorNonceAEAD struct {
+<span id="L495" class="ln">   495&nbsp;&nbsp;</span>	nonceMask [aeadNonceLength]byte
+<span id="L496" class="ln">   496&nbsp;&nbsp;</span>	aead      cipher.AEAD
+<span id="L497" class="ln">   497&nbsp;&nbsp;</span>}
+<span id="L498" class="ln">   498&nbsp;&nbsp;</span>
+<span id="L499" class="ln">   499&nbsp;&nbsp;</span>func (f *xorNonceAEAD) NonceSize() int        { return 8 } <span class="comment">// 64-bit sequence number</span>
+<span id="L500" class="ln">   500&nbsp;&nbsp;</span>func (f *xorNonceAEAD) Overhead() int         { return f.aead.Overhead() }
+<span id="L501" class="ln">   501&nbsp;&nbsp;</span>func (f *xorNonceAEAD) explicitNonceLen() int { return 0 }
+<span id="L502" class="ln">   502&nbsp;&nbsp;</span>
+<span id="L503" class="ln">   503&nbsp;&nbsp;</span>func (f *xorNonceAEAD) Seal(out, nonce, plaintext, additionalData []byte) []byte {
+<span id="L504" class="ln">   504&nbsp;&nbsp;</span>	for i, b := range nonce {
+<span id="L505" class="ln">   505&nbsp;&nbsp;</span>		f.nonceMask[4+i] ^= b
+<span id="L506" class="ln">   506&nbsp;&nbsp;</span>	}
+<span id="L507" class="ln">   507&nbsp;&nbsp;</span>	result := f.aead.Seal(out, f.nonceMask[:], plaintext, additionalData)
+<span id="L508" class="ln">   508&nbsp;&nbsp;</span>	for i, b := range nonce {
+<span id="L509" class="ln">   509&nbsp;&nbsp;</span>		f.nonceMask[4+i] ^= b
+<span id="L510" class="ln">   510&nbsp;&nbsp;</span>	}
+<span id="L511" class="ln">   511&nbsp;&nbsp;</span>
+<span id="L512" class="ln">   512&nbsp;&nbsp;</span>	return result
+<span id="L513" class="ln">   513&nbsp;&nbsp;</span>}
+<span id="L514" class="ln">   514&nbsp;&nbsp;</span>
+<span id="L515" class="ln">   515&nbsp;&nbsp;</span>func (f *xorNonceAEAD) Open(out, nonce, ciphertext, additionalData []byte) ([]byte, error) {
+<span id="L516" class="ln">   516&nbsp;&nbsp;</span>	for i, b := range nonce {
+<span id="L517" class="ln">   517&nbsp;&nbsp;</span>		f.nonceMask[4+i] ^= b
+<span id="L518" class="ln">   518&nbsp;&nbsp;</span>	}
+<span id="L519" class="ln">   519&nbsp;&nbsp;</span>	result, err := f.aead.Open(out, f.nonceMask[:], ciphertext, additionalData)
+<span id="L520" class="ln">   520&nbsp;&nbsp;</span>	for i, b := range nonce {
+<span id="L521" class="ln">   521&nbsp;&nbsp;</span>		f.nonceMask[4+i] ^= b
+<span id="L522" class="ln">   522&nbsp;&nbsp;</span>	}
+<span id="L523" class="ln">   523&nbsp;&nbsp;</span>
+<span id="L524" class="ln">   524&nbsp;&nbsp;</span>	return result, err
+<span id="L525" class="ln">   525&nbsp;&nbsp;</span>}
+<span id="L526" class="ln">   526&nbsp;&nbsp;</span>
+<span id="L527" class="ln">   527&nbsp;&nbsp;</span>func aeadAESGCM(key, noncePrefix []byte) aead {
+<span id="L528" class="ln">   528&nbsp;&nbsp;</span>	if len(noncePrefix) != noncePrefixLength {
+<span id="L529" class="ln">   529&nbsp;&nbsp;</span>		panic(&#34;tls: internal error: wrong nonce length&#34;)
+<span id="L530" class="ln">   530&nbsp;&nbsp;</span>	}
+<span id="L531" class="ln">   531&nbsp;&nbsp;</span>	aes, err := aes.NewCipher(key)
+<span id="L532" class="ln">   532&nbsp;&nbsp;</span>	if err != nil {
+<span id="L533" class="ln">   533&nbsp;&nbsp;</span>		panic(err)
+<span id="L534" class="ln">   534&nbsp;&nbsp;</span>	}
+<span id="L535" class="ln">   535&nbsp;&nbsp;</span>	var aead cipher.AEAD
+<span id="L536" class="ln">   536&nbsp;&nbsp;</span>	if boring.Enabled {
+<span id="L537" class="ln">   537&nbsp;&nbsp;</span>		aead, err = boring.NewGCMTLS(aes)
+<span id="L538" class="ln">   538&nbsp;&nbsp;</span>	} else {
+<span id="L539" class="ln">   539&nbsp;&nbsp;</span>		boring.Unreachable()
+<span id="L540" class="ln">   540&nbsp;&nbsp;</span>		aead, err = cipher.NewGCM(aes)
+<span id="L541" class="ln">   541&nbsp;&nbsp;</span>	}
+<span id="L542" class="ln">   542&nbsp;&nbsp;</span>	if err != nil {
+<span id="L543" class="ln">   543&nbsp;&nbsp;</span>		panic(err)
+<span id="L544" class="ln">   544&nbsp;&nbsp;</span>	}
+<span id="L545" class="ln">   545&nbsp;&nbsp;</span>
+<span id="L546" class="ln">   546&nbsp;&nbsp;</span>	ret := &amp;prefixNonceAEAD{aead: aead}
+<span id="L547" class="ln">   547&nbsp;&nbsp;</span>	copy(ret.nonce[:], noncePrefix)
+<span id="L548" class="ln">   548&nbsp;&nbsp;</span>	return ret
+<span id="L549" class="ln">   549&nbsp;&nbsp;</span>}
+<span id="L550" class="ln">   550&nbsp;&nbsp;</span>
+<span id="L551" class="ln">   551&nbsp;&nbsp;</span>func aeadAESGCMTLS13(key, nonceMask []byte) aead {
+<span id="L552" class="ln">   552&nbsp;&nbsp;</span>	if len(nonceMask) != aeadNonceLength {
+<span id="L553" class="ln">   553&nbsp;&nbsp;</span>		panic(&#34;tls: internal error: wrong nonce length&#34;)
+<span id="L554" class="ln">   554&nbsp;&nbsp;</span>	}
+<span id="L555" class="ln">   555&nbsp;&nbsp;</span>	aes, err := aes.NewCipher(key)
+<span id="L556" class="ln">   556&nbsp;&nbsp;</span>	if err != nil {
+<span id="L557" class="ln">   557&nbsp;&nbsp;</span>		panic(err)
+<span id="L558" class="ln">   558&nbsp;&nbsp;</span>	}
+<span id="L559" class="ln">   559&nbsp;&nbsp;</span>	aead, err := cipher.NewGCM(aes)
+<span id="L560" class="ln">   560&nbsp;&nbsp;</span>	if err != nil {
+<span id="L561" class="ln">   561&nbsp;&nbsp;</span>		panic(err)
+<span id="L562" class="ln">   562&nbsp;&nbsp;</span>	}
+<span id="L563" class="ln">   563&nbsp;&nbsp;</span>
+<span id="L564" class="ln">   564&nbsp;&nbsp;</span>	ret := &amp;xorNonceAEAD{aead: aead}
+<span id="L565" class="ln">   565&nbsp;&nbsp;</span>	copy(ret.nonceMask[:], nonceMask)
+<span id="L566" class="ln">   566&nbsp;&nbsp;</span>	return ret
+<span id="L567" class="ln">   567&nbsp;&nbsp;</span>}
+<span id="L568" class="ln">   568&nbsp;&nbsp;</span>
+<span id="L569" class="ln">   569&nbsp;&nbsp;</span>func aeadChaCha20Poly1305(key, nonceMask []byte) aead {
+<span id="L570" class="ln">   570&nbsp;&nbsp;</span>	if len(nonceMask) != aeadNonceLength {
+<span id="L571" class="ln">   571&nbsp;&nbsp;</span>		panic(&#34;tls: internal error: wrong nonce length&#34;)
+<span id="L572" class="ln">   572&nbsp;&nbsp;</span>	}
+<span id="L573" class="ln">   573&nbsp;&nbsp;</span>	aead, err := chacha20poly1305.New(key)
+<span id="L574" class="ln">   574&nbsp;&nbsp;</span>	if err != nil {
+<span id="L575" class="ln">   575&nbsp;&nbsp;</span>		panic(err)
+<span id="L576" class="ln">   576&nbsp;&nbsp;</span>	}
+<span id="L577" class="ln">   577&nbsp;&nbsp;</span>
+<span id="L578" class="ln">   578&nbsp;&nbsp;</span>	ret := &amp;xorNonceAEAD{aead: aead}
+<span id="L579" class="ln">   579&nbsp;&nbsp;</span>	copy(ret.nonceMask[:], nonceMask)
+<span id="L580" class="ln">   580&nbsp;&nbsp;</span>	return ret
+<span id="L581" class="ln">   581&nbsp;&nbsp;</span>}
+<span id="L582" class="ln">   582&nbsp;&nbsp;</span>
+<span id="L583" class="ln">   583&nbsp;&nbsp;</span>type constantTimeHash interface {
+<span id="L584" class="ln">   584&nbsp;&nbsp;</span>	hash.Hash
+<span id="L585" class="ln">   585&nbsp;&nbsp;</span>	ConstantTimeSum(b []byte) []byte
+<span id="L586" class="ln">   586&nbsp;&nbsp;</span>}
+<span id="L587" class="ln">   587&nbsp;&nbsp;</span>
+<span id="L588" class="ln">   588&nbsp;&nbsp;</span><span class="comment">// cthWrapper wraps any hash.Hash that implements ConstantTimeSum, and replaces</span>
+<span id="L589" class="ln">   589&nbsp;&nbsp;</span><span class="comment">// with that all calls to Sum. It&#39;s used to obtain a ConstantTimeSum-based HMAC.</span>
+<span id="L590" class="ln">   590&nbsp;&nbsp;</span>type cthWrapper struct {
+<span id="L591" class="ln">   591&nbsp;&nbsp;</span>	h constantTimeHash
+<span id="L592" class="ln">   592&nbsp;&nbsp;</span>}
+<span id="L593" class="ln">   593&nbsp;&nbsp;</span>
+<span id="L594" class="ln">   594&nbsp;&nbsp;</span>func (c *cthWrapper) Size() int                   { return c.h.Size() }
+<span id="L595" class="ln">   595&nbsp;&nbsp;</span>func (c *cthWrapper) BlockSize() int              { return c.h.BlockSize() }
+<span id="L596" class="ln">   596&nbsp;&nbsp;</span>func (c *cthWrapper) Reset()                      { c.h.Reset() }
+<span id="L597" class="ln">   597&nbsp;&nbsp;</span>func (c *cthWrapper) Write(p []byte) (int, error) { return c.h.Write(p) }
+<span id="L598" class="ln">   598&nbsp;&nbsp;</span>func (c *cthWrapper) Sum(b []byte) []byte         { return c.h.ConstantTimeSum(b) }
+<span id="L599" class="ln">   599&nbsp;&nbsp;</span>
+<span id="L600" class="ln">   600&nbsp;&nbsp;</span>func newConstantTimeHash(h func() hash.Hash) func() hash.Hash {
+<span id="L601" class="ln">   601&nbsp;&nbsp;</span>	boring.Unreachable()
+<span id="L602" class="ln">   602&nbsp;&nbsp;</span>	return func() hash.Hash {
+<span id="L603" class="ln">   603&nbsp;&nbsp;</span>		return &amp;cthWrapper{h().(constantTimeHash)}
+<span id="L604" class="ln">   604&nbsp;&nbsp;</span>	}
+<span id="L605" class="ln">   605&nbsp;&nbsp;</span>}
+<span id="L606" class="ln">   606&nbsp;&nbsp;</span>
+<span id="L607" class="ln">   607&nbsp;&nbsp;</span><span class="comment">// tls10MAC implements the TLS 1.0 MAC function. RFC 2246, Section 6.2.3.</span>
+<span id="L608" class="ln">   608&nbsp;&nbsp;</span>func tls10MAC(h hash.Hash, out, seq, header, data, extra []byte) []byte {
+<span id="L609" class="ln">   609&nbsp;&nbsp;</span>	h.Reset()
+<span id="L610" class="ln">   610&nbsp;&nbsp;</span>	h.Write(seq)
+<span id="L611" class="ln">   611&nbsp;&nbsp;</span>	h.Write(header)
+<span id="L612" class="ln">   612&nbsp;&nbsp;</span>	h.Write(data)
+<span id="L613" class="ln">   613&nbsp;&nbsp;</span>	res := h.Sum(out)
+<span id="L614" class="ln">   614&nbsp;&nbsp;</span>	if extra != nil {
+<span id="L615" class="ln">   615&nbsp;&nbsp;</span>		h.Write(extra)
+<span id="L616" class="ln">   616&nbsp;&nbsp;</span>	}
+<span id="L617" class="ln">   617&nbsp;&nbsp;</span>	return res
+<span id="L618" class="ln">   618&nbsp;&nbsp;</span>}
+<span id="L619" class="ln">   619&nbsp;&nbsp;</span>
+<span id="L620" class="ln">   620&nbsp;&nbsp;</span>func rsaKA(version uint16) keyAgreement {
+<span id="L621" class="ln">   621&nbsp;&nbsp;</span>	return rsaKeyAgreement{}
+<span id="L622" class="ln">   622&nbsp;&nbsp;</span>}
+<span id="L623" class="ln">   623&nbsp;&nbsp;</span>
+<span id="L624" class="ln">   624&nbsp;&nbsp;</span>func ecdheECDSAKA(version uint16) keyAgreement {
+<span id="L625" class="ln">   625&nbsp;&nbsp;</span>	return &amp;ecdheKeyAgreement{
+<span id="L626" class="ln">   626&nbsp;&nbsp;</span>		isRSA:   false,
+<span id="L627" class="ln">   627&nbsp;&nbsp;</span>		version: version,
+<span id="L628" class="ln">   628&nbsp;&nbsp;</span>	}
+<span id="L629" class="ln">   629&nbsp;&nbsp;</span>}
+<span id="L630" class="ln">   630&nbsp;&nbsp;</span>
+<span id="L631" class="ln">   631&nbsp;&nbsp;</span>func ecdheRSAKA(version uint16) keyAgreement {
+<span id="L632" class="ln">   632&nbsp;&nbsp;</span>	return &amp;ecdheKeyAgreement{
+<span id="L633" class="ln">   633&nbsp;&nbsp;</span>		isRSA:   true,
+<span id="L634" class="ln">   634&nbsp;&nbsp;</span>		version: version,
+<span id="L635" class="ln">   635&nbsp;&nbsp;</span>	}
+<span id="L636" class="ln">   636&nbsp;&nbsp;</span>}
+<span id="L637" class="ln">   637&nbsp;&nbsp;</span>
+<span id="L638" class="ln">   638&nbsp;&nbsp;</span><span class="comment">// mutualCipherSuite returns a cipherSuite given a list of supported</span>
+<span id="L639" class="ln">   639&nbsp;&nbsp;</span><span class="comment">// ciphersuites and the id requested by the peer.</span>
+<span id="L640" class="ln">   640&nbsp;&nbsp;</span>func mutualCipherSuite(have []uint16, want uint16) *cipherSuite {
+<span id="L641" class="ln">   641&nbsp;&nbsp;</span>	for _, id := range have {
+<span id="L642" class="ln">   642&nbsp;&nbsp;</span>		if id == want {
+<span id="L643" class="ln">   643&nbsp;&nbsp;</span>			return cipherSuiteByID(id)
+<span id="L644" class="ln">   644&nbsp;&nbsp;</span>		}
+<span id="L645" class="ln">   645&nbsp;&nbsp;</span>	}
+<span id="L646" class="ln">   646&nbsp;&nbsp;</span>	return nil
+<span id="L647" class="ln">   647&nbsp;&nbsp;</span>}
+<span id="L648" class="ln">   648&nbsp;&nbsp;</span>
+<span id="L649" class="ln">   649&nbsp;&nbsp;</span>func cipherSuiteByID(id uint16) *cipherSuite {
+<span id="L650" class="ln">   650&nbsp;&nbsp;</span>	for _, cipherSuite := range cipherSuites {
+<span id="L651" class="ln">   651&nbsp;&nbsp;</span>		if cipherSuite.id == id {
+<span id="L652" class="ln">   652&nbsp;&nbsp;</span>			return cipherSuite
+<span id="L653" class="ln">   653&nbsp;&nbsp;</span>		}
+<span id="L654" class="ln">   654&nbsp;&nbsp;</span>	}
+<span id="L655" class="ln">   655&nbsp;&nbsp;</span>	return nil
+<span id="L656" class="ln">   656&nbsp;&nbsp;</span>}
+<span id="L657" class="ln">   657&nbsp;&nbsp;</span>
+<span id="L658" class="ln">   658&nbsp;&nbsp;</span>func mutualCipherSuiteTLS13(have []uint16, want uint16) *cipherSuiteTLS13 {
+<span id="L659" class="ln">   659&nbsp;&nbsp;</span>	for _, id := range have {
+<span id="L660" class="ln">   660&nbsp;&nbsp;</span>		if id == want {
+<span id="L661" class="ln">   661&nbsp;&nbsp;</span>			return cipherSuiteTLS13ByID(id)
+<span id="L662" class="ln">   662&nbsp;&nbsp;</span>		}
+<span id="L663" class="ln">   663&nbsp;&nbsp;</span>	}
+<span id="L664" class="ln">   664&nbsp;&nbsp;</span>	return nil
+<span id="L665" class="ln">   665&nbsp;&nbsp;</span>}
+<span id="L666" class="ln">   666&nbsp;&nbsp;</span>
+<span id="L667" class="ln">   667&nbsp;&nbsp;</span>func cipherSuiteTLS13ByID(id uint16) *cipherSuiteTLS13 {
+<span id="L668" class="ln">   668&nbsp;&nbsp;</span>	for _, cipherSuite := range cipherSuitesTLS13 {
+<span id="L669" class="ln">   669&nbsp;&nbsp;</span>		if cipherSuite.id == id {
+<span id="L670" class="ln">   670&nbsp;&nbsp;</span>			return cipherSuite
+<span id="L671" class="ln">   671&nbsp;&nbsp;</span>		}
+<span id="L672" class="ln">   672&nbsp;&nbsp;</span>	}
+<span id="L673" class="ln">   673&nbsp;&nbsp;</span>	return nil
+<span id="L674" class="ln">   674&nbsp;&nbsp;</span>}
+<span id="L675" class="ln">   675&nbsp;&nbsp;</span>
+<span id="L676" class="ln">   676&nbsp;&nbsp;</span><span class="comment">// A list of cipher suite IDs that are, or have been, implemented by this</span>
+<span id="L677" class="ln">   677&nbsp;&nbsp;</span><span class="comment">// package.</span>
+<span id="L678" class="ln">   678&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L679" class="ln">   679&nbsp;&nbsp;</span><span class="comment">// See https://www.iana.org/assignments/tls-parameters/tls-parameters.xml</span>
+<span id="L680" class="ln">   680&nbsp;&nbsp;</span>const (
+<span id="L681" class="ln">   681&nbsp;&nbsp;</span>	<span class="comment">// TLS 1.0 - 1.2 cipher suites.</span>
+<span id="L682" class="ln">   682&nbsp;&nbsp;</span>	TLS_RSA_WITH_RC4_128_SHA                      uint16 = 0x0005
+<span id="L683" class="ln">   683&nbsp;&nbsp;</span>	TLS_RSA_WITH_3DES_EDE_CBC_SHA                 uint16 = 0x000a
+<span id="L684" class="ln">   684&nbsp;&nbsp;</span>	TLS_RSA_WITH_AES_128_CBC_SHA                  uint16 = 0x002f
+<span id="L685" class="ln">   685&nbsp;&nbsp;</span>	TLS_RSA_WITH_AES_256_CBC_SHA                  uint16 = 0x0035
+<span id="L686" class="ln">   686&nbsp;&nbsp;</span>	TLS_RSA_WITH_AES_128_CBC_SHA256               uint16 = 0x003c
+<span id="L687" class="ln">   687&nbsp;&nbsp;</span>	TLS_RSA_WITH_AES_128_GCM_SHA256               uint16 = 0x009c
+<span id="L688" class="ln">   688&nbsp;&nbsp;</span>	TLS_RSA_WITH_AES_256_GCM_SHA384               uint16 = 0x009d
+<span id="L689" class="ln">   689&nbsp;&nbsp;</span>	TLS_ECDHE_ECDSA_WITH_RC4_128_SHA              uint16 = 0xc007
+<span id="L690" class="ln">   690&nbsp;&nbsp;</span>	TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA          uint16 = 0xc009
+<span id="L691" class="ln">   691&nbsp;&nbsp;</span>	TLS_ECDHE_ECDSA_WITH_AES_256_CBC_SHA          uint16 = 0xc00a
+<span id="L692" class="ln">   692&nbsp;&nbsp;</span>	TLS_ECDHE_RSA_WITH_RC4_128_SHA                uint16 = 0xc011
+<span id="L693" class="ln">   693&nbsp;&nbsp;</span>	TLS_ECDHE_RSA_WITH_3DES_EDE_CBC_SHA           uint16 = 0xc012
+<span id="L694" class="ln">   694&nbsp;&nbsp;</span>	TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA            uint16 = 0xc013
+<span id="L695" class="ln">   695&nbsp;&nbsp;</span>	TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA            uint16 = 0xc014
+<span id="L696" class="ln">   696&nbsp;&nbsp;</span>	TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA256       uint16 = 0xc023
+<span id="L697" class="ln">   697&nbsp;&nbsp;</span>	TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256         uint16 = 0xc027
+<span id="L698" class="ln">   698&nbsp;&nbsp;</span>	TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256         uint16 = 0xc02f
+<span id="L699" class="ln">   699&nbsp;&nbsp;</span>	TLS_ECDHE_ECDSA_WITH_AES_128_GCM_SHA256       uint16 = 0xc02b
+<span id="L700" class="ln">   700&nbsp;&nbsp;</span>	TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384         uint16 = 0xc030
+<span id="L701" class="ln">   701&nbsp;&nbsp;</span>	TLS_ECDHE_ECDSA_WITH_AES_256_GCM_SHA384       uint16 = 0xc02c
+<span id="L702" class="ln">   702&nbsp;&nbsp;</span>	TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256   uint16 = 0xcca8
+<span id="L703" class="ln">   703&nbsp;&nbsp;</span>	TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256 uint16 = 0xcca9
+<span id="L704" class="ln">   704&nbsp;&nbsp;</span>
+<span id="L705" class="ln">   705&nbsp;&nbsp;</span>	<span class="comment">// TLS 1.3 cipher suites.</span>
+<span id="L706" class="ln">   706&nbsp;&nbsp;</span>	TLS_AES_128_GCM_SHA256       uint16 = 0x1301
+<span id="L707" class="ln">   707&nbsp;&nbsp;</span>	TLS_AES_256_GCM_SHA384       uint16 = 0x1302
+<span id="L708" class="ln">   708&nbsp;&nbsp;</span>	TLS_CHACHA20_POLY1305_SHA256 uint16 = 0x1303
+<span id="L709" class="ln">   709&nbsp;&nbsp;</span>
+<span id="L710" class="ln">   710&nbsp;&nbsp;</span>	<span class="comment">// TLS_FALLBACK_SCSV isn&#39;t a standard cipher suite but an indicator</span>
+<span id="L711" class="ln">   711&nbsp;&nbsp;</span>	<span class="comment">// that the client is doing version fallback. See RFC 7507.</span>
+<span id="L712" class="ln">   712&nbsp;&nbsp;</span>	TLS_FALLBACK_SCSV uint16 = 0x5600
+<span id="L713" class="ln">   713&nbsp;&nbsp;</span>
+<span id="L714" class="ln">   714&nbsp;&nbsp;</span>	<span class="comment">// Legacy names for the corresponding cipher suites with the correct _SHA256</span>
+<span id="L715" class="ln">   715&nbsp;&nbsp;</span>	<span class="comment">// suffix, retained for backward compatibility.</span>
+<span id="L716" class="ln">   716&nbsp;&nbsp;</span>	TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305   = TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
+<span id="L717" class="ln">   717&nbsp;&nbsp;</span>	TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305 = TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256
+<span id="L718" class="ln">   718&nbsp;&nbsp;</span>)
+<span id="L719" class="ln">   719&nbsp;&nbsp;</span>
+</pre><p><a href="cipher_suites.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

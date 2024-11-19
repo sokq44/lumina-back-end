@@ -1,0 +1,917 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>js - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package js
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "syscall/js"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+				<dd><a href="index.html#pkg-examples" class="examplesLink">Examples</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>Package js gives access to the WebAssembly host environment when using the js/wasm architecture.
+Its API is based on JavaScript semantics.
+<p>This package is EXPERIMENTAL. Its current scope is only to allow tests to run, but not yet to provide a
+comprehensive API for users. It is exempt from the Go compatibility promise.
+
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+			
+			
+				
+				<dd><a href="index.html#CopyBytesToGo">func CopyBytesToGo(dst []byte, src Value) int</a></dd>
+			
+				
+				<dd><a href="index.html#CopyBytesToJS">func CopyBytesToJS(dst Value, src []byte) int</a></dd>
+			
+			
+				
+				<dd><a href="index.html#Error">type Error</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Error.Error">func (e Error) Error() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Func">type Func</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#FuncOf">func FuncOf(fn func(this Value, args []Value) any) Func</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Func.Release">func (c Func) Release()</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Type">type Type</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Type.String">func (t Type) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Value">type Value</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Global">func Global() Value</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Null">func Null() Value</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Undefined">func Undefined() Value</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ValueOf">func ValueOf(x any) Value</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Value.Bool">func (v Value) Bool() bool</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Value.Call">func (v Value) Call(m string, args ...any) Value</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Value.Delete">func (v Value) Delete(p string)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Value.Equal">func (v Value) Equal(w Value) bool</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Value.Float">func (v Value) Float() float64</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Value.Get">func (v Value) Get(p string) Value</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Value.Index">func (v Value) Index(i int) Value</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Value.InstanceOf">func (v Value) InstanceOf(t Value) bool</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Value.Int">func (v Value) Int() int</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Value.Invoke">func (v Value) Invoke(args ...any) Value</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Value.IsNaN">func (v Value) IsNaN() bool</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Value.IsNull">func (v Value) IsNull() bool</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Value.IsUndefined">func (v Value) IsUndefined() bool</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Value.Length">func (v Value) Length() int</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Value.New">func (v Value) New(args ...any) Value</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Value.Set">func (v Value) Set(p string, x any)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Value.SetIndex">func (v Value) SetIndex(i int, x any)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Value.String">func (v Value) String() string</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Value.Truthy">func (v Value) Truthy() bool</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Value.Type">func (v Value) Type() Type</a></dd>
+				
+			
+				
+				<dd><a href="index.html#ValueError">type ValueError</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ValueError.Error">func (e *ValueError) Error() string</a></dd>
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+		<div id="pkg-examples">
+			<h3>Examples</h3>
+			<div class="js-expandAll expandAll collapsed">(Expand All)</div>
+			<dl>
+			
+			<dd><a class="exampleLink" href="index.html#example_FuncOf">FuncOf</a></dd>
+			
+			</dl>
+		</div>
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../../src/syscall/js/func.go">func.go</a>
+			
+				<a href="../../../src/syscall/js/js.go">js.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+		
+		
+			
+			
+			<h2 id="CopyBytesToGo">func <a href="../../../src/syscall/js/js.go?s=15468:15513#L565">CopyBytesToGo</a>
+				<a class="permalink" href="index.html#CopyBytesToGo">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func CopyBytesToGo(dst []<a href="../../builtin/index.html#byte">byte</a>, src <a href="index.html#Value">Value</a>) <a href="../../builtin/index.html#int">int</a></pre>
+			<p>CopyBytesToGo copies bytes from src to dst.
+It panics if src is not a Uint8Array or Uint8ClampedArray.
+It returns the number of bytes copied, which will be the minimum of the lengths of src and dst.
+
+			
+			
+
+		
+			
+			
+			<h2 id="CopyBytesToJS">func <a href="../../../src/syscall/js/js.go?s=16002:16047#L580">CopyBytesToJS</a>
+				<a class="permalink" href="index.html#CopyBytesToJS">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func CopyBytesToJS(dst <a href="index.html#Value">Value</a>, src []<a href="../../builtin/index.html#byte">byte</a>) <a href="../../builtin/index.html#int">int</a></pre>
+			<p>CopyBytesToJS copies bytes from src to dst.
+It panics if dst is not a Uint8Array or Uint8ClampedArray.
+It returns the number of bytes copied, which will be the minimum of the lengths of src and dst.
+
+			
+			
+
+		
+		
+			
+			
+			<h2 id="Error">type <a href="../../../src/syscall/js/js.go?s=2397:2477#L69">Error</a>
+				<a class="permalink" href="index.html#Error">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Error wraps a JavaScript error.
+
+			<pre>type Error struct {
+    <span class="comment">// Value is the underlying JavaScript error value.</span>
+    <a href="index.html#Value">Value</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="Error.Error">func (Error) <a href="../../../src/syscall/js/js.go?s=2520:2549#L75">Error</a>
+					<a class="permalink" href="index.html#Error.Error">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (e <a href="index.html#Error">Error</a>) Error() <a href="../../builtin/index.html#string">string</a></pre>
+				<p>Error implements the error interface.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Func">type <a href="../../../src/syscall/js/func.go?s=389:486#L8">Func</a>
+				<a class="permalink" href="index.html#Func">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Func is a wrapped Go function to be called by JavaScript.
+
+			<pre>type Func struct {
+    <a href="index.html#Value">Value</a> <span class="comment">// the JavaScript function that invokes the Go function</span>
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="FuncOf">func <a href="../../../src/syscall/js/func.go?s=1454:1509#L31">FuncOf</a>
+					<a class="permalink" href="index.html#FuncOf">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func FuncOf(fn func(this <a href="index.html#Value">Value</a>, args []<a href="index.html#Value">Value</a>) <a href="../../builtin/index.html#any">any</a>) <a href="index.html#Func">Func</a></pre>
+				<p>FuncOf returns a function to be used by JavaScript.
+<p>The Go function fn is called with the value of JavaScript&apos;s &quot;this&quot; keyword and the
+arguments of the invocation. The return value of the invocation is
+the result of the Go function mapped back to JavaScript according to ValueOf.
+<p>Invoking the wrapped Go function from JavaScript will
+pause the event loop and spawn a new goroutine.
+Other wrapped functions which are triggered during a call from Go to JavaScript
+get executed on the same goroutine.
+<p>As a consequence, if one wrapped function blocks, JavaScript&apos;s event loop
+is blocked until that function returns. Hence, calling any async JavaScript
+API, which requires the event loop, like fetch (http.Client), will cause an
+immediate deadlock. Therefore a blocking function should explicitly start a
+new goroutine.
+<p>Func.Release must be called to free up resources when the function will not be invoked any more.
+
+				<div id="example_FuncOf" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">
+var cb js.Func
+cb = js.FuncOf(func(this js.Value, args []js.Value) any {
+    fmt.Println(&#34;button clicked&#34;)
+    cb.Release() <span class="comment">// release the function if the button will not be clicked again</span>
+    return nil
+})
+js.Global().Get(&#34;document&#34;).Call(&#34;getElementById&#34;, &#34;myButton&#34;).Call(&#34;addEventListener&#34;, &#34;click&#34;, cb)
+</pre>
+			
+		
+	</div>
+</div>
+
+				
+			
+
+			
+				
+				<h3 id="Func.Release">func (Func) <a href="../../../src/syscall/js/func.go?s=1858:1881#L46">Release</a>
+					<a class="permalink" href="index.html#Func.Release">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (c <a href="index.html#Func">Func</a>) Release()</pre>
+				<p>Release frees up resources allocated for the function.
+The function must not be invoked after calling Release.
+It is allowed to call Release while the function is still running.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Type">type <a href="../../../src/syscall/js/js.go?s=5939:5952#L207">Type</a>
+				<a class="permalink" href="index.html#Type">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Type represents the JavaScript type of a Value.
+
+			<pre>type Type <a href="../../builtin/index.html#int">int</a></pre>
+
+			
+				
+				<pre>const (
+    <span id="TypeUndefined">TypeUndefined</span> <a href="index.html#Type">Type</a> = <a href="../../builtin/index.html#iota">iota</a>
+    <span id="TypeNull">TypeNull</span>
+    <span id="TypeBoolean">TypeBoolean</span>
+    <span id="TypeNumber">TypeNumber</span>
+    <span id="TypeString">TypeString</span>
+    <span id="TypeSymbol">TypeSymbol</span>
+    <span id="TypeObject">TypeObject</span>
+    <span id="TypeFunction">TypeFunction</span>
+)</pre>
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="Type.String">func (Type) <a href="../../../src/syscall/js/js.go?s=6077:6106#L220">String</a>
+					<a class="permalink" href="index.html#Type.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t <a href="index.html#Type">Type</a>) String() <a href="../../builtin/index.html#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Value">type <a href="../../../src/syscall/js/js.go?s=1358:1592#L22">Value</a>
+				<a class="permalink" href="index.html#Value">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Value represents a JavaScript value. The zero value is the JavaScript value &quot;undefined&quot;.
+Values can be checked for equality with the Equal method.
+
+			<pre>type Value struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="Global">func <a href="../../../src/syscall/js/js.go?s=3954:3973#L124">Global</a>
+					<a class="permalink" href="index.html#Global">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func Global() <a href="index.html#Value">Value</a></pre>
+				<p>Global returns the JavaScript global object, usually &quot;window&quot; or &quot;global&quot;.
+
+				
+				
+			
+				
+				<h3 id="Null">func <a href="../../../src/syscall/js/js.go?s=3589:3606#L109">Null</a>
+					<a class="permalink" href="index.html#Null">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func Null() <a href="index.html#Value">Value</a></pre>
+				<p>Null returns the JavaScript value &quot;null&quot;.
+
+				
+				
+			
+				
+				<h3 id="Undefined">func <a href="../../../src/syscall/js/js.go?s=3348:3370#L99">Undefined</a>
+					<a class="permalink" href="index.html#Undefined">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func Undefined() <a href="index.html#Value">Value</a></pre>
+				<p>Undefined returns the JavaScript value &quot;undefined&quot;.
+
+				
+				
+			
+				
+				<h3 id="ValueOf">func <a href="../../../src/syscall/js/js.go?s=4648:4673#L142">ValueOf</a>
+					<a class="permalink" href="index.html#ValueOf">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func ValueOf(x <a href="../../builtin/index.html#any">any</a>) <a href="index.html#Value">Value</a></pre>
+				<p>ValueOf returns x as a JavaScript value:
+<pre>| Go                     | JavaScript             |
+| ---------------------- | ---------------------- |
+| js.Value               | [its value]            |
+| js.Func                | function               |
+| nil                    | null                   |
+| bool                   | boolean                |
+| integers and floats    | number                 |
+| string                 | string                 |
+| []interface{}          | new array              |
+| map[string]interface{} | new object             |
+</pre>
+<p>Panics if x is not one of the expected types.
+
+				
+				
+			
+
+			
+				
+				<h3 id="Value.Bool">func (Value) <a href="../../../src/syscall/js/js.go?s=12723:12749#L466">Bool</a>
+					<a class="permalink" href="index.html#Value.Bool">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v <a href="index.html#Value">Value</a>) Bool() <a href="../../builtin/index.html#bool">bool</a></pre>
+				<p>Bool returns the value v as a bool.
+It panics if v is not a JavaScript boolean.
+
+				
+				
+				
+			
+				
+				<h3 id="Value.Call">func (Value) <a href="../../../src/syscall/js/js.go?s=9926:9974#L375">Call</a>
+					<a class="permalink" href="index.html#Value.Call">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v <a href="index.html#Value">Value</a>) Call(m <a href="../../builtin/index.html#string">string</a>, args ...<a href="../../builtin/index.html#any">any</a>) <a href="index.html#Value">Value</a></pre>
+				<p>Call does a JavaScript call to the method m of value v with the given arguments.
+It panics if v has no method m.
+The arguments get mapped to JavaScript values according to the ValueOf function.
+
+				
+				
+				
+			
+				
+				<h3 id="Value.Delete">func (Value) <a href="../../../src/syscall/js/js.go?s=8080:8111#L307">Delete</a>
+					<a class="permalink" href="index.html#Value.Delete">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v <a href="index.html#Value">Value</a>) Delete(p <a href="../../builtin/index.html#string">string</a>)</pre>
+				<p>Delete deletes the JavaScript property p of value v.
+It panics if v is not a JavaScript object.
+
+				
+				
+				
+			
+				
+				<h3 id="Value.Equal">func (Value) <a href="../../../src/syscall/js/js.go?s=3205:3239#L94">Equal</a>
+					<a class="permalink" href="index.html#Value.Equal">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v <a href="index.html#Value">Value</a>) Equal(w <a href="index.html#Value">Value</a>) <a href="../../builtin/index.html#bool">bool</a></pre>
+				<p>Equal reports whether v and w are equal according to JavaScript&apos;s === operator.
+
+				
+				
+				
+			
+				
+				<h3 id="Value.Float">func (Value) <a href="../../../src/syscall/js/js.go?s=12412:12442#L454">Float</a>
+					<a class="permalink" href="index.html#Value.Float">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v <a href="index.html#Value">Value</a>) Float() <a href="../../builtin/index.html#float64">float64</a></pre>
+				<p>Float returns the value v as a float64.
+It panics if v is not a JavaScript number.
+
+				
+				
+				
+			
+				
+				<h3 id="Value.Get">func (Value) <a href="../../../src/syscall/js/js.go?s=7297:7331#L278">Get</a>
+					<a class="permalink" href="index.html#Value.Get">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v <a href="index.html#Value">Value</a>) Get(p <a href="../../builtin/index.html#string">string</a>) <a href="index.html#Value">Value</a></pre>
+				<p>Get returns the JavaScript property p of value v.
+It panics if v is not a JavaScript object.
+
+				
+				
+				
+			
+				
+				<h3 id="Value.Index">func (Value) <a href="../../../src/syscall/js/js.go?s=8425:8458#L320">Index</a>
+					<a class="permalink" href="index.html#Value.Index">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v <a href="index.html#Value">Value</a>) Index(i <a href="../../builtin/index.html#int">int</a>) <a href="index.html#Value">Value</a></pre>
+				<p>Index returns JavaScript index i of value v.
+It panics if v is not a JavaScript object.
+
+				
+				
+				
+			
+				
+				<h3 id="Value.InstanceOf">func (Value) <a href="../../../src/syscall/js/js.go?s=14712:14751#L540">InstanceOf</a>
+					<a class="permalink" href="index.html#Value.InstanceOf">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v <a href="index.html#Value">Value</a>) InstanceOf(t <a href="index.html#Value">Value</a>) <a href="../../builtin/index.html#bool">bool</a></pre>
+				<p>InstanceOf reports whether v is an instance of type t according to JavaScript&apos;s instanceof operator.
+
+				
+				
+				
+			
+				
+				<h3 id="Value.Int">func (Value) <a href="../../../src/syscall/js/js.go?s=12573:12597#L460">Int</a>
+					<a class="permalink" href="index.html#Value.Int">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v <a href="index.html#Value">Value</a>) Int() <a href="../../builtin/index.html#int">int</a></pre>
+				<p>Int returns the value v truncated to an int.
+It panics if v is not a JavaScript number.
+
+				
+				
+				
+			
+				
+				<h3 id="Value.Invoke">func (Value) <a href="../../../src/syscall/js/js.go?s=10795:10835#L399">Invoke</a>
+					<a class="permalink" href="index.html#Value.Invoke">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v <a href="index.html#Value">Value</a>) Invoke(args ...<a href="../../builtin/index.html#any">any</a>) <a href="index.html#Value">Value</a></pre>
+				<p>Invoke does a JavaScript call of the value v with the given arguments.
+It panics if v is not a JavaScript function.
+The arguments get mapped to JavaScript values according to the ValueOf function.
+
+				
+				
+				
+			
+				
+				<h3 id="Value.IsNaN">func (Value) <a href="../../../src/syscall/js/js.go?s=3813:3840#L119">IsNaN</a>
+					<a class="permalink" href="index.html#Value.IsNaN">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v <a href="index.html#Value">Value</a>) IsNaN() <a href="../../builtin/index.html#bool">bool</a></pre>
+				<p>IsNaN reports whether v is the JavaScript value &quot;NaN&quot;.
+
+				
+				
+				
+			
+				
+				<h3 id="Value.IsNull">func (Value) <a href="../../../src/syscall/js/js.go?s=3690:3718#L114">IsNull</a>
+					<a class="permalink" href="index.html#Value.IsNull">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v <a href="index.html#Value">Value</a>) IsNull() <a href="../../builtin/index.html#bool">bool</a></pre>
+				<p>IsNull reports whether v is the JavaScript value &quot;null&quot;.
+
+				
+				
+				
+			
+				
+				<h3 id="Value.IsUndefined">func (Value) <a href="../../../src/syscall/js/js.go?s=3469:3502#L104">IsUndefined</a>
+					<a class="permalink" href="index.html#Value.IsUndefined">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v <a href="index.html#Value">Value</a>) IsUndefined() <a href="../../builtin/index.html#bool">bool</a></pre>
+				<p>IsUndefined reports whether v is the JavaScript value &quot;undefined&quot;.
+
+				
+				
+				
+			
+				
+				<h3 id="Value.Length">func (Value) <a href="../../../src/syscall/js/js.go?s=9468:9495#L360">Length</a>
+					<a class="permalink" href="index.html#Value.Length">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v <a href="index.html#Value">Value</a>) Length() <a href="../../builtin/index.html#int">int</a></pre>
+				<p>Length returns the JavaScript property &quot;length&quot; of v.
+It panics if v is not a JavaScript object.
+
+				
+				
+				
+			
+				
+				<h3 id="Value.New">func (Value) <a href="../../../src/syscall/js/js.go?s=11497:11534#L419">New</a>
+					<a class="permalink" href="index.html#Value.New">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v <a href="index.html#Value">Value</a>) New(args ...<a href="../../builtin/index.html#any">any</a>) <a href="index.html#Value">Value</a></pre>
+				<p>New uses JavaScript&apos;s &quot;new&quot; operator with value v as constructor and the given arguments.
+It panics if v is not a JavaScript function.
+The arguments get mapped to JavaScript values according to the ValueOf function.
+
+				
+				
+				
+			
+				
+				<h3 id="Value.Set">func (Value) <a href="../../../src/syscall/js/js.go?s=7679:7714#L292">Set</a>
+					<a class="permalink" href="index.html#Value.Set">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v <a href="index.html#Value">Value</a>) Set(p <a href="../../builtin/index.html#string">string</a>, x <a href="../../builtin/index.html#any">any</a>)</pre>
+				<p>Set sets the JavaScript property p of value v to ValueOf(x).
+It panics if v is not a JavaScript object.
+
+				
+				
+				
+			
+				
+				<h3 id="Value.SetIndex">func (Value) <a href="../../../src/syscall/js/js.go?s=8813:8850#L334">SetIndex</a>
+					<a class="permalink" href="index.html#Value.SetIndex">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v <a href="index.html#Value">Value</a>) SetIndex(i <a href="../../builtin/index.html#int">int</a>, x <a href="../../builtin/index.html#any">any</a>)</pre>
+				<p>SetIndex sets the JavaScript index i of value v to ValueOf(x).
+It panics if v is not a JavaScript object.
+
+				
+				
+				
+			
+				
+				<h3 id="Value.String">func (Value) <a href="../../../src/syscall/js/js.go?s=13797:13827#L501">String</a>
+					<a class="permalink" href="index.html#Value.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v <a href="index.html#Value">Value</a>) String() <a href="../../builtin/index.html#string">string</a></pre>
+				<p>String returns the value v as a string.
+String is a special case because of Go&apos;s String method convention. Unlike the other getters,
+it does not panic if v&apos;s Type is not TypeString. Instead, it returns a string of the form &quot;&lt;T&gt;&quot;
+or &quot;&lt;T: V&gt;&quot; where T is v&apos;s type and V is a string representation of v&apos;s value.
+
+				
+				
+				
+			
+				
+				<h3 id="Value.Truthy">func (Value) <a href="../../../src/syscall/js/js.go?s=13131:13159#L480">Truthy</a>
+					<a class="permalink" href="index.html#Value.Truthy">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v <a href="index.html#Value">Value</a>) Truthy() <a href="../../builtin/index.html#bool">bool</a></pre>
+				<p>Truthy returns the JavaScript &quot;truthiness&quot; of the value v. In JavaScript,
+false, 0, &quot;&quot;, null, undefined, and NaN are &quot;falsy&quot;, and everything else is
+&quot;truthy&quot;. See <a href="https://developer.mozilla.org/en-US/docs/Glossary/Truthy">https://developer.mozilla.org/en-US/docs/Glossary/Truthy</a>.
+
+				
+				
+				
+			
+				
+				<h3 id="Value.Type">func (Value) <a href="../../../src/syscall/js/js.go?s=6699:6725#L249">Type</a>
+					<a class="permalink" href="index.html#Value.Type">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v <a href="index.html#Value">Value</a>) Type() <a href="index.html#Type">Type</a></pre>
+				<p>Type returns the JavaScript type of the value v. It is similar to JavaScript&apos;s typeof operator,
+except that it returns TypeNull instead of TypeObject for null.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="ValueError">type <a href="../../../src/syscall/js/js.go?s=15094:15148#L553">ValueError</a>
+				<a class="permalink" href="index.html#ValueError">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A ValueError occurs when a Value method is invoked on
+a Value that does not support it. Such cases are documented
+in the description of each method.
+
+			<pre>type ValueError struct {
+<span id="ValueError.Method"></span>    Method <a href="../../builtin/index.html#string">string</a>
+<span id="ValueError.Type"></span>    Type   <a href="index.html#Type">Type</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="ValueError.Error">func (*ValueError) <a href="../../../src/syscall/js/js.go?s=15150:15185#L558">Error</a>
+					<a class="permalink" href="index.html#ValueError.Error">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (e *<a href="index.html#ValueError">ValueError</a>) Error() <a href="../../builtin/index.html#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+	
+
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

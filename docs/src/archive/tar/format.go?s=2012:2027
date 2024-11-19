@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>src/archive/tar/format.go - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="./format.go?s=2012:2027#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Source file
+    <a href="http://localhost:8080/src">src</a>/<a href="http://localhost:8080/src/archive">archive</a>/<a href="http://localhost:8080/src/archive/tar">tar</a>/<span class="text-muted">format.go</span>
+  </h1>
+
+
+
+
+
+  <h2>
+    Documentation: <a href="http://localhost:8080/pkg/archive/tar">archive/tar</a>
+  </h2>
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1&nbsp;&nbsp;</span><span class="comment">// Copyright 2016 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2&nbsp;&nbsp;</span><span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3&nbsp;&nbsp;</span><span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4&nbsp;&nbsp;</span>
+<span id="L5" class="ln">     5&nbsp;&nbsp;</span>package tar
+<span id="L6" class="ln">     6&nbsp;&nbsp;</span>
+<span id="L7" class="ln">     7&nbsp;&nbsp;</span>import &#34;strings&#34;
+<span id="L8" class="ln">     8&nbsp;&nbsp;</span>
+<span id="L9" class="ln">     9&nbsp;&nbsp;</span><span class="comment">// Format represents the tar archive format.</span>
+<span id="L10" class="ln">    10&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L11" class="ln">    11&nbsp;&nbsp;</span><span class="comment">// The original tar format was introduced in Unix V7.</span>
+<span id="L12" class="ln">    12&nbsp;&nbsp;</span><span class="comment">// Since then, there have been multiple competing formats attempting to</span>
+<span id="L13" class="ln">    13&nbsp;&nbsp;</span><span class="comment">// standardize or extend the V7 format to overcome its limitations.</span>
+<span id="L14" class="ln">    14&nbsp;&nbsp;</span><span class="comment">// The most common formats are the USTAR, PAX, and GNU formats,</span>
+<span id="L15" class="ln">    15&nbsp;&nbsp;</span><span class="comment">// each with their own advantages and limitations.</span>
+<span id="L16" class="ln">    16&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L17" class="ln">    17&nbsp;&nbsp;</span><span class="comment">// The following table captures the capabilities of each format:</span>
+<span id="L18" class="ln">    18&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L19" class="ln">    19&nbsp;&nbsp;</span><span class="comment">//	                  |  USTAR |       PAX |       GNU</span>
+<span id="L20" class="ln">    20&nbsp;&nbsp;</span><span class="comment">//	------------------+--------+-----------+----------</span>
+<span id="L21" class="ln">    21&nbsp;&nbsp;</span><span class="comment">//	Name              |   256B | unlimited | unlimited</span>
+<span id="L22" class="ln">    22&nbsp;&nbsp;</span><span class="comment">//	Linkname          |   100B | unlimited | unlimited</span>
+<span id="L23" class="ln">    23&nbsp;&nbsp;</span><span class="comment">//	Size              | uint33 | unlimited |    uint89</span>
+<span id="L24" class="ln">    24&nbsp;&nbsp;</span><span class="comment">//	Mode              | uint21 |    uint21 |    uint57</span>
+<span id="L25" class="ln">    25&nbsp;&nbsp;</span><span class="comment">//	Uid/Gid           | uint21 | unlimited |    uint57</span>
+<span id="L26" class="ln">    26&nbsp;&nbsp;</span><span class="comment">//	Uname/Gname       |    32B | unlimited |       32B</span>
+<span id="L27" class="ln">    27&nbsp;&nbsp;</span><span class="comment">//	ModTime           | uint33 | unlimited |     int89</span>
+<span id="L28" class="ln">    28&nbsp;&nbsp;</span><span class="comment">//	AccessTime        |    n/a | unlimited |     int89</span>
+<span id="L29" class="ln">    29&nbsp;&nbsp;</span><span class="comment">//	ChangeTime        |    n/a | unlimited |     int89</span>
+<span id="L30" class="ln">    30&nbsp;&nbsp;</span><span class="comment">//	Devmajor/Devminor | uint21 |    uint21 |    uint57</span>
+<span id="L31" class="ln">    31&nbsp;&nbsp;</span><span class="comment">//	------------------+--------+-----------+----------</span>
+<span id="L32" class="ln">    32&nbsp;&nbsp;</span><span class="comment">//	string encoding   |  ASCII |     UTF-8 |    binary</span>
+<span id="L33" class="ln">    33&nbsp;&nbsp;</span><span class="comment">//	sub-second times  |     no |       yes |        no</span>
+<span id="L34" class="ln">    34&nbsp;&nbsp;</span><span class="comment">//	sparse files      |     no |       yes |       yes</span>
+<span id="L35" class="ln">    35&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L36" class="ln">    36&nbsp;&nbsp;</span><span class="comment">// The table&#39;s upper portion shows the [Header] fields, where each format reports</span>
+<span id="L37" class="ln">    37&nbsp;&nbsp;</span><span class="comment">// the maximum number of bytes allowed for each string field and</span>
+<span id="L38" class="ln">    38&nbsp;&nbsp;</span><span class="comment">// the integer type used to store each numeric field</span>
+<span id="L39" class="ln">    39&nbsp;&nbsp;</span><span class="comment">// (where timestamps are stored as the number of seconds since the Unix epoch).</span>
+<span id="L40" class="ln">    40&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L41" class="ln">    41&nbsp;&nbsp;</span><span class="comment">// The table&#39;s lower portion shows specialized features of each format,</span>
+<span id="L42" class="ln">    42&nbsp;&nbsp;</span><span class="comment">// such as supported string encodings, support for sub-second timestamps,</span>
+<span id="L43" class="ln">    43&nbsp;&nbsp;</span><span class="comment">// or support for sparse files.</span>
+<span id="L44" class="ln">    44&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L45" class="ln">    45&nbsp;&nbsp;</span><span class="comment">// The Writer currently provides no support for sparse files.</span>
+<span id="L46" class="ln">    46&nbsp;&nbsp;</span><span class="selection">type Format int</span>
+<span id="L47" class="ln">    47&nbsp;&nbsp;</span>
+<span id="L48" class="ln">    48&nbsp;&nbsp;</span><span class="comment">// Constants to identify various tar formats.</span>
+<span id="L49" class="ln">    49&nbsp;&nbsp;</span>const (
+<span id="L50" class="ln">    50&nbsp;&nbsp;</span>	<span class="comment">// Deliberately hide the meaning of constants from public API.</span>
+<span id="L51" class="ln">    51&nbsp;&nbsp;</span>	_ Format = (1 &lt;&lt; iota) / 4 <span class="comment">// Sequence of 0, 0, 1, 2, 4, 8, etc...</span>
+<span id="L52" class="ln">    52&nbsp;&nbsp;</span>
+<span id="L53" class="ln">    53&nbsp;&nbsp;</span>	<span class="comment">// FormatUnknown indicates that the format is unknown.</span>
+<span id="L54" class="ln">    54&nbsp;&nbsp;</span>	FormatUnknown
+<span id="L55" class="ln">    55&nbsp;&nbsp;</span>
+<span id="L56" class="ln">    56&nbsp;&nbsp;</span>	<span class="comment">// The format of the original Unix V7 tar tool prior to standardization.</span>
+<span id="L57" class="ln">    57&nbsp;&nbsp;</span>	formatV7
+<span id="L58" class="ln">    58&nbsp;&nbsp;</span>
+<span id="L59" class="ln">    59&nbsp;&nbsp;</span>	<span class="comment">// FormatUSTAR represents the USTAR header format defined in POSIX.1-1988.</span>
+<span id="L60" class="ln">    60&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L61" class="ln">    61&nbsp;&nbsp;</span>	<span class="comment">// While this format is compatible with most tar readers,</span>
+<span id="L62" class="ln">    62&nbsp;&nbsp;</span>	<span class="comment">// the format has several limitations making it unsuitable for some usages.</span>
+<span id="L63" class="ln">    63&nbsp;&nbsp;</span>	<span class="comment">// Most notably, it cannot support sparse files, files larger than 8GiB,</span>
+<span id="L64" class="ln">    64&nbsp;&nbsp;</span>	<span class="comment">// filenames larger than 256 characters, and non-ASCII filenames.</span>
+<span id="L65" class="ln">    65&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L66" class="ln">    66&nbsp;&nbsp;</span>	<span class="comment">// Reference:</span>
+<span id="L67" class="ln">    67&nbsp;&nbsp;</span>	<span class="comment">//	http://pubs.opengroup.org/onlinepubs/9699919799/utilities/pax.html#tag_20_92_13_06</span>
+<span id="L68" class="ln">    68&nbsp;&nbsp;</span>	FormatUSTAR
+<span id="L69" class="ln">    69&nbsp;&nbsp;</span>
+<span id="L70" class="ln">    70&nbsp;&nbsp;</span>	<span class="comment">// FormatPAX represents the PAX header format defined in POSIX.1-2001.</span>
+<span id="L71" class="ln">    71&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L72" class="ln">    72&nbsp;&nbsp;</span>	<span class="comment">// PAX extends USTAR by writing a special file with Typeflag TypeXHeader</span>
+<span id="L73" class="ln">    73&nbsp;&nbsp;</span>	<span class="comment">// preceding the original header. This file contains a set of key-value</span>
+<span id="L74" class="ln">    74&nbsp;&nbsp;</span>	<span class="comment">// records, which are used to overcome USTAR&#39;s shortcomings, in addition to</span>
+<span id="L75" class="ln">    75&nbsp;&nbsp;</span>	<span class="comment">// providing the ability to have sub-second resolution for timestamps.</span>
+<span id="L76" class="ln">    76&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L77" class="ln">    77&nbsp;&nbsp;</span>	<span class="comment">// Some newer formats add their own extensions to PAX by defining their</span>
+<span id="L78" class="ln">    78&nbsp;&nbsp;</span>	<span class="comment">// own keys and assigning certain semantic meaning to the associated values.</span>
+<span id="L79" class="ln">    79&nbsp;&nbsp;</span>	<span class="comment">// For example, sparse file support in PAX is implemented using keys</span>
+<span id="L80" class="ln">    80&nbsp;&nbsp;</span>	<span class="comment">// defined by the GNU manual (e.g., &#34;GNU.sparse.map&#34;).</span>
+<span id="L81" class="ln">    81&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L82" class="ln">    82&nbsp;&nbsp;</span>	<span class="comment">// Reference:</span>
+<span id="L83" class="ln">    83&nbsp;&nbsp;</span>	<span class="comment">//	http://pubs.opengroup.org/onlinepubs/009695399/utilities/pax.html</span>
+<span id="L84" class="ln">    84&nbsp;&nbsp;</span>	FormatPAX
+<span id="L85" class="ln">    85&nbsp;&nbsp;</span>
+<span id="L86" class="ln">    86&nbsp;&nbsp;</span>	<span class="comment">// FormatGNU represents the GNU header format.</span>
+<span id="L87" class="ln">    87&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L88" class="ln">    88&nbsp;&nbsp;</span>	<span class="comment">// The GNU header format is older than the USTAR and PAX standards and</span>
+<span id="L89" class="ln">    89&nbsp;&nbsp;</span>	<span class="comment">// is not compatible with them. The GNU format supports</span>
+<span id="L90" class="ln">    90&nbsp;&nbsp;</span>	<span class="comment">// arbitrary file sizes, filenames of arbitrary encoding and length,</span>
+<span id="L91" class="ln">    91&nbsp;&nbsp;</span>	<span class="comment">// sparse files, and other features.</span>
+<span id="L92" class="ln">    92&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L93" class="ln">    93&nbsp;&nbsp;</span>	<span class="comment">// It is recommended that PAX be chosen over GNU unless the target</span>
+<span id="L94" class="ln">    94&nbsp;&nbsp;</span>	<span class="comment">// application can only parse GNU formatted archives.</span>
+<span id="L95" class="ln">    95&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L96" class="ln">    96&nbsp;&nbsp;</span>	<span class="comment">// Reference:</span>
+<span id="L97" class="ln">    97&nbsp;&nbsp;</span>	<span class="comment">//	https://www.gnu.org/software/tar/manual/html_node/Standard.html</span>
+<span id="L98" class="ln">    98&nbsp;&nbsp;</span>	FormatGNU
+<span id="L99" class="ln">    99&nbsp;&nbsp;</span>
+<span id="L100" class="ln">   100&nbsp;&nbsp;</span>	<span class="comment">// Schily&#39;s tar format, which is incompatible with USTAR.</span>
+<span id="L101" class="ln">   101&nbsp;&nbsp;</span>	<span class="comment">// This does not cover STAR extensions to the PAX format; these fall under</span>
+<span id="L102" class="ln">   102&nbsp;&nbsp;</span>	<span class="comment">// the PAX format.</span>
+<span id="L103" class="ln">   103&nbsp;&nbsp;</span>	formatSTAR
+<span id="L104" class="ln">   104&nbsp;&nbsp;</span>
+<span id="L105" class="ln">   105&nbsp;&nbsp;</span>	formatMax
+<span id="L106" class="ln">   106&nbsp;&nbsp;</span>)
+<span id="L107" class="ln">   107&nbsp;&nbsp;</span>
+<span id="L108" class="ln">   108&nbsp;&nbsp;</span>func (f Format) has(f2 Format) bool   { return f&amp;f2 != 0 }
+<span id="L109" class="ln">   109&nbsp;&nbsp;</span>func (f *Format) mayBe(f2 Format)     { *f |= f2 }
+<span id="L110" class="ln">   110&nbsp;&nbsp;</span>func (f *Format) mayOnlyBe(f2 Format) { *f &amp;= f2 }
+<span id="L111" class="ln">   111&nbsp;&nbsp;</span>func (f *Format) mustNotBe(f2 Format) { *f &amp;^= f2 }
+<span id="L112" class="ln">   112&nbsp;&nbsp;</span>
+<span id="L113" class="ln">   113&nbsp;&nbsp;</span>var formatNames = map[Format]string{
+<span id="L114" class="ln">   114&nbsp;&nbsp;</span>	formatV7: &#34;V7&#34;, FormatUSTAR: &#34;USTAR&#34;, FormatPAX: &#34;PAX&#34;, FormatGNU: &#34;GNU&#34;, formatSTAR: &#34;STAR&#34;,
+<span id="L115" class="ln">   115&nbsp;&nbsp;</span>}
+<span id="L116" class="ln">   116&nbsp;&nbsp;</span>
+<span id="L117" class="ln">   117&nbsp;&nbsp;</span>func (f Format) String() string {
+<span id="L118" class="ln">   118&nbsp;&nbsp;</span>	var ss []string
+<span id="L119" class="ln">   119&nbsp;&nbsp;</span>	for f2 := Format(1); f2 &lt; formatMax; f2 &lt;&lt;= 1 {
+<span id="L120" class="ln">   120&nbsp;&nbsp;</span>		if f.has(f2) {
+<span id="L121" class="ln">   121&nbsp;&nbsp;</span>			ss = append(ss, formatNames[f2])
+<span id="L122" class="ln">   122&nbsp;&nbsp;</span>		}
+<span id="L123" class="ln">   123&nbsp;&nbsp;</span>	}
+<span id="L124" class="ln">   124&nbsp;&nbsp;</span>	switch len(ss) {
+<span id="L125" class="ln">   125&nbsp;&nbsp;</span>	case 0:
+<span id="L126" class="ln">   126&nbsp;&nbsp;</span>		return &#34;&lt;unknown&gt;&#34;
+<span id="L127" class="ln">   127&nbsp;&nbsp;</span>	case 1:
+<span id="L128" class="ln">   128&nbsp;&nbsp;</span>		return ss[0]
+<span id="L129" class="ln">   129&nbsp;&nbsp;</span>	default:
+<span id="L130" class="ln">   130&nbsp;&nbsp;</span>		return &#34;(&#34; + strings.Join(ss, &#34; | &#34;) + &#34;)&#34;
+<span id="L131" class="ln">   131&nbsp;&nbsp;</span>	}
+<span id="L132" class="ln">   132&nbsp;&nbsp;</span>}
+<span id="L133" class="ln">   133&nbsp;&nbsp;</span>
+<span id="L134" class="ln">   134&nbsp;&nbsp;</span><span class="comment">// Magics used to identify various formats.</span>
+<span id="L135" class="ln">   135&nbsp;&nbsp;</span>const (
+<span id="L136" class="ln">   136&nbsp;&nbsp;</span>	magicGNU, versionGNU     = &#34;ustar &#34;, &#34; \x00&#34;
+<span id="L137" class="ln">   137&nbsp;&nbsp;</span>	magicUSTAR, versionUSTAR = &#34;ustar\x00&#34;, &#34;00&#34;
+<span id="L138" class="ln">   138&nbsp;&nbsp;</span>	trailerSTAR              = &#34;tar\x00&#34;
+<span id="L139" class="ln">   139&nbsp;&nbsp;</span>)
+<span id="L140" class="ln">   140&nbsp;&nbsp;</span>
+<span id="L141" class="ln">   141&nbsp;&nbsp;</span><span class="comment">// Size constants from various tar specifications.</span>
+<span id="L142" class="ln">   142&nbsp;&nbsp;</span>const (
+<span id="L143" class="ln">   143&nbsp;&nbsp;</span>	blockSize  = 512 <span class="comment">// Size of each block in a tar stream</span>
+<span id="L144" class="ln">   144&nbsp;&nbsp;</span>	nameSize   = 100 <span class="comment">// Max length of the name field in USTAR format</span>
+<span id="L145" class="ln">   145&nbsp;&nbsp;</span>	prefixSize = 155 <span class="comment">// Max length of the prefix field in USTAR format</span>
+<span id="L146" class="ln">   146&nbsp;&nbsp;</span>
+<span id="L147" class="ln">   147&nbsp;&nbsp;</span>	<span class="comment">// Max length of a special file (PAX header, GNU long name or link).</span>
+<span id="L148" class="ln">   148&nbsp;&nbsp;</span>	<span class="comment">// This matches the limit used by libarchive.</span>
+<span id="L149" class="ln">   149&nbsp;&nbsp;</span>	maxSpecialFileSize = 1 &lt;&lt; 20
+<span id="L150" class="ln">   150&nbsp;&nbsp;</span>)
+<span id="L151" class="ln">   151&nbsp;&nbsp;</span>
+<span id="L152" class="ln">   152&nbsp;&nbsp;</span><span class="comment">// blockPadding computes the number of bytes needed to pad offset up to the</span>
+<span id="L153" class="ln">   153&nbsp;&nbsp;</span><span class="comment">// nearest block edge where 0 &lt;= n &lt; blockSize.</span>
+<span id="L154" class="ln">   154&nbsp;&nbsp;</span>func blockPadding(offset int64) (n int64) {
+<span id="L155" class="ln">   155&nbsp;&nbsp;</span>	return -offset &amp; (blockSize - 1)
+<span id="L156" class="ln">   156&nbsp;&nbsp;</span>}
+<span id="L157" class="ln">   157&nbsp;&nbsp;</span>
+<span id="L158" class="ln">   158&nbsp;&nbsp;</span>var zeroBlock block
+<span id="L159" class="ln">   159&nbsp;&nbsp;</span>
+<span id="L160" class="ln">   160&nbsp;&nbsp;</span>type block [blockSize]byte
+<span id="L161" class="ln">   161&nbsp;&nbsp;</span>
+<span id="L162" class="ln">   162&nbsp;&nbsp;</span><span class="comment">// Convert block to any number of formats.</span>
+<span id="L163" class="ln">   163&nbsp;&nbsp;</span>func (b *block) toV7() *headerV7       { return (*headerV7)(b) }
+<span id="L164" class="ln">   164&nbsp;&nbsp;</span>func (b *block) toGNU() *headerGNU     { return (*headerGNU)(b) }
+<span id="L165" class="ln">   165&nbsp;&nbsp;</span>func (b *block) toSTAR() *headerSTAR   { return (*headerSTAR)(b) }
+<span id="L166" class="ln">   166&nbsp;&nbsp;</span>func (b *block) toUSTAR() *headerUSTAR { return (*headerUSTAR)(b) }
+<span id="L167" class="ln">   167&nbsp;&nbsp;</span>func (b *block) toSparse() sparseArray { return sparseArray(b[:]) }
+<span id="L168" class="ln">   168&nbsp;&nbsp;</span>
+<span id="L169" class="ln">   169&nbsp;&nbsp;</span><span class="comment">// getFormat checks that the block is a valid tar header based on the checksum.</span>
+<span id="L170" class="ln">   170&nbsp;&nbsp;</span><span class="comment">// It then attempts to guess the specific format based on magic values.</span>
+<span id="L171" class="ln">   171&nbsp;&nbsp;</span><span class="comment">// If the checksum fails, then FormatUnknown is returned.</span>
+<span id="L172" class="ln">   172&nbsp;&nbsp;</span>func (b *block) getFormat() Format {
+<span id="L173" class="ln">   173&nbsp;&nbsp;</span>	<span class="comment">// Verify checksum.</span>
+<span id="L174" class="ln">   174&nbsp;&nbsp;</span>	var p parser
+<span id="L175" class="ln">   175&nbsp;&nbsp;</span>	value := p.parseOctal(b.toV7().chksum())
+<span id="L176" class="ln">   176&nbsp;&nbsp;</span>	chksum1, chksum2 := b.computeChecksum()
+<span id="L177" class="ln">   177&nbsp;&nbsp;</span>	if p.err != nil || (value != chksum1 &amp;&amp; value != chksum2) {
+<span id="L178" class="ln">   178&nbsp;&nbsp;</span>		return FormatUnknown
+<span id="L179" class="ln">   179&nbsp;&nbsp;</span>	}
+<span id="L180" class="ln">   180&nbsp;&nbsp;</span>
+<span id="L181" class="ln">   181&nbsp;&nbsp;</span>	<span class="comment">// Guess the magic values.</span>
+<span id="L182" class="ln">   182&nbsp;&nbsp;</span>	magic := string(b.toUSTAR().magic())
+<span id="L183" class="ln">   183&nbsp;&nbsp;</span>	version := string(b.toUSTAR().version())
+<span id="L184" class="ln">   184&nbsp;&nbsp;</span>	trailer := string(b.toSTAR().trailer())
+<span id="L185" class="ln">   185&nbsp;&nbsp;</span>	switch {
+<span id="L186" class="ln">   186&nbsp;&nbsp;</span>	case magic == magicUSTAR &amp;&amp; trailer == trailerSTAR:
+<span id="L187" class="ln">   187&nbsp;&nbsp;</span>		return formatSTAR
+<span id="L188" class="ln">   188&nbsp;&nbsp;</span>	case magic == magicUSTAR:
+<span id="L189" class="ln">   189&nbsp;&nbsp;</span>		return FormatUSTAR | FormatPAX
+<span id="L190" class="ln">   190&nbsp;&nbsp;</span>	case magic == magicGNU &amp;&amp; version == versionGNU:
+<span id="L191" class="ln">   191&nbsp;&nbsp;</span>		return FormatGNU
+<span id="L192" class="ln">   192&nbsp;&nbsp;</span>	default:
+<span id="L193" class="ln">   193&nbsp;&nbsp;</span>		return formatV7
+<span id="L194" class="ln">   194&nbsp;&nbsp;</span>	}
+<span id="L195" class="ln">   195&nbsp;&nbsp;</span>}
+<span id="L196" class="ln">   196&nbsp;&nbsp;</span>
+<span id="L197" class="ln">   197&nbsp;&nbsp;</span><span class="comment">// setFormat writes the magic values necessary for specified format</span>
+<span id="L198" class="ln">   198&nbsp;&nbsp;</span><span class="comment">// and then updates the checksum accordingly.</span>
+<span id="L199" class="ln">   199&nbsp;&nbsp;</span>func (b *block) setFormat(format Format) {
+<span id="L200" class="ln">   200&nbsp;&nbsp;</span>	<span class="comment">// Set the magic values.</span>
+<span id="L201" class="ln">   201&nbsp;&nbsp;</span>	switch {
+<span id="L202" class="ln">   202&nbsp;&nbsp;</span>	case format.has(formatV7):
+<span id="L203" class="ln">   203&nbsp;&nbsp;</span>		<span class="comment">// Do nothing.</span>
+<span id="L204" class="ln">   204&nbsp;&nbsp;</span>	case format.has(FormatGNU):
+<span id="L205" class="ln">   205&nbsp;&nbsp;</span>		copy(b.toGNU().magic(), magicGNU)
+<span id="L206" class="ln">   206&nbsp;&nbsp;</span>		copy(b.toGNU().version(), versionGNU)
+<span id="L207" class="ln">   207&nbsp;&nbsp;</span>	case format.has(formatSTAR):
+<span id="L208" class="ln">   208&nbsp;&nbsp;</span>		copy(b.toSTAR().magic(), magicUSTAR)
+<span id="L209" class="ln">   209&nbsp;&nbsp;</span>		copy(b.toSTAR().version(), versionUSTAR)
+<span id="L210" class="ln">   210&nbsp;&nbsp;</span>		copy(b.toSTAR().trailer(), trailerSTAR)
+<span id="L211" class="ln">   211&nbsp;&nbsp;</span>	case format.has(FormatUSTAR | FormatPAX):
+<span id="L212" class="ln">   212&nbsp;&nbsp;</span>		copy(b.toUSTAR().magic(), magicUSTAR)
+<span id="L213" class="ln">   213&nbsp;&nbsp;</span>		copy(b.toUSTAR().version(), versionUSTAR)
+<span id="L214" class="ln">   214&nbsp;&nbsp;</span>	default:
+<span id="L215" class="ln">   215&nbsp;&nbsp;</span>		panic(&#34;invalid format&#34;)
+<span id="L216" class="ln">   216&nbsp;&nbsp;</span>	}
+<span id="L217" class="ln">   217&nbsp;&nbsp;</span>
+<span id="L218" class="ln">   218&nbsp;&nbsp;</span>	<span class="comment">// Update checksum.</span>
+<span id="L219" class="ln">   219&nbsp;&nbsp;</span>	<span class="comment">// This field is special in that it is terminated by a NULL then space.</span>
+<span id="L220" class="ln">   220&nbsp;&nbsp;</span>	var f formatter
+<span id="L221" class="ln">   221&nbsp;&nbsp;</span>	field := b.toV7().chksum()
+<span id="L222" class="ln">   222&nbsp;&nbsp;</span>	chksum, _ := b.computeChecksum() <span class="comment">// Possible values are 256..128776</span>
+<span id="L223" class="ln">   223&nbsp;&nbsp;</span>	f.formatOctal(field[:7], chksum) <span class="comment">// Never fails since 128776 &lt; 262143</span>
+<span id="L224" class="ln">   224&nbsp;&nbsp;</span>	field[7] = &#39; &#39;
+<span id="L225" class="ln">   225&nbsp;&nbsp;</span>}
+<span id="L226" class="ln">   226&nbsp;&nbsp;</span>
+<span id="L227" class="ln">   227&nbsp;&nbsp;</span><span class="comment">// computeChecksum computes the checksum for the header block.</span>
+<span id="L228" class="ln">   228&nbsp;&nbsp;</span><span class="comment">// POSIX specifies a sum of the unsigned byte values, but the Sun tar used</span>
+<span id="L229" class="ln">   229&nbsp;&nbsp;</span><span class="comment">// signed byte values.</span>
+<span id="L230" class="ln">   230&nbsp;&nbsp;</span><span class="comment">// We compute and return both.</span>
+<span id="L231" class="ln">   231&nbsp;&nbsp;</span>func (b *block) computeChecksum() (unsigned, signed int64) {
+<span id="L232" class="ln">   232&nbsp;&nbsp;</span>	for i, c := range b {
+<span id="L233" class="ln">   233&nbsp;&nbsp;</span>		if 148 &lt;= i &amp;&amp; i &lt; 156 {
+<span id="L234" class="ln">   234&nbsp;&nbsp;</span>			c = &#39; &#39; <span class="comment">// Treat the checksum field itself as all spaces.</span>
+<span id="L235" class="ln">   235&nbsp;&nbsp;</span>		}
+<span id="L236" class="ln">   236&nbsp;&nbsp;</span>		unsigned += int64(c)
+<span id="L237" class="ln">   237&nbsp;&nbsp;</span>		signed += int64(int8(c))
+<span id="L238" class="ln">   238&nbsp;&nbsp;</span>	}
+<span id="L239" class="ln">   239&nbsp;&nbsp;</span>	return unsigned, signed
+<span id="L240" class="ln">   240&nbsp;&nbsp;</span>}
+<span id="L241" class="ln">   241&nbsp;&nbsp;</span>
+<span id="L242" class="ln">   242&nbsp;&nbsp;</span><span class="comment">// reset clears the block with all zeros.</span>
+<span id="L243" class="ln">   243&nbsp;&nbsp;</span>func (b *block) reset() {
+<span id="L244" class="ln">   244&nbsp;&nbsp;</span>	*b = block{}
+<span id="L245" class="ln">   245&nbsp;&nbsp;</span>}
+<span id="L246" class="ln">   246&nbsp;&nbsp;</span>
+<span id="L247" class="ln">   247&nbsp;&nbsp;</span>type headerV7 [blockSize]byte
+<span id="L248" class="ln">   248&nbsp;&nbsp;</span>
+<span id="L249" class="ln">   249&nbsp;&nbsp;</span>func (h *headerV7) name() []byte     { return h[000:][:100] }
+<span id="L250" class="ln">   250&nbsp;&nbsp;</span>func (h *headerV7) mode() []byte     { return h[100:][:8] }
+<span id="L251" class="ln">   251&nbsp;&nbsp;</span>func (h *headerV7) uid() []byte      { return h[108:][:8] }
+<span id="L252" class="ln">   252&nbsp;&nbsp;</span>func (h *headerV7) gid() []byte      { return h[116:][:8] }
+<span id="L253" class="ln">   253&nbsp;&nbsp;</span>func (h *headerV7) size() []byte     { return h[124:][:12] }
+<span id="L254" class="ln">   254&nbsp;&nbsp;</span>func (h *headerV7) modTime() []byte  { return h[136:][:12] }
+<span id="L255" class="ln">   255&nbsp;&nbsp;</span>func (h *headerV7) chksum() []byte   { return h[148:][:8] }
+<span id="L256" class="ln">   256&nbsp;&nbsp;</span>func (h *headerV7) typeFlag() []byte { return h[156:][:1] }
+<span id="L257" class="ln">   257&nbsp;&nbsp;</span>func (h *headerV7) linkName() []byte { return h[157:][:100] }
+<span id="L258" class="ln">   258&nbsp;&nbsp;</span>
+<span id="L259" class="ln">   259&nbsp;&nbsp;</span>type headerGNU [blockSize]byte
+<span id="L260" class="ln">   260&nbsp;&nbsp;</span>
+<span id="L261" class="ln">   261&nbsp;&nbsp;</span>func (h *headerGNU) v7() *headerV7       { return (*headerV7)(h) }
+<span id="L262" class="ln">   262&nbsp;&nbsp;</span>func (h *headerGNU) magic() []byte       { return h[257:][:6] }
+<span id="L263" class="ln">   263&nbsp;&nbsp;</span>func (h *headerGNU) version() []byte     { return h[263:][:2] }
+<span id="L264" class="ln">   264&nbsp;&nbsp;</span>func (h *headerGNU) userName() []byte    { return h[265:][:32] }
+<span id="L265" class="ln">   265&nbsp;&nbsp;</span>func (h *headerGNU) groupName() []byte   { return h[297:][:32] }
+<span id="L266" class="ln">   266&nbsp;&nbsp;</span>func (h *headerGNU) devMajor() []byte    { return h[329:][:8] }
+<span id="L267" class="ln">   267&nbsp;&nbsp;</span>func (h *headerGNU) devMinor() []byte    { return h[337:][:8] }
+<span id="L268" class="ln">   268&nbsp;&nbsp;</span>func (h *headerGNU) accessTime() []byte  { return h[345:][:12] }
+<span id="L269" class="ln">   269&nbsp;&nbsp;</span>func (h *headerGNU) changeTime() []byte  { return h[357:][:12] }
+<span id="L270" class="ln">   270&nbsp;&nbsp;</span>func (h *headerGNU) sparse() sparseArray { return sparseArray(h[386:][:24*4+1]) }
+<span id="L271" class="ln">   271&nbsp;&nbsp;</span>func (h *headerGNU) realSize() []byte    { return h[483:][:12] }
+<span id="L272" class="ln">   272&nbsp;&nbsp;</span>
+<span id="L273" class="ln">   273&nbsp;&nbsp;</span>type headerSTAR [blockSize]byte
+<span id="L274" class="ln">   274&nbsp;&nbsp;</span>
+<span id="L275" class="ln">   275&nbsp;&nbsp;</span>func (h *headerSTAR) v7() *headerV7      { return (*headerV7)(h) }
+<span id="L276" class="ln">   276&nbsp;&nbsp;</span>func (h *headerSTAR) magic() []byte      { return h[257:][:6] }
+<span id="L277" class="ln">   277&nbsp;&nbsp;</span>func (h *headerSTAR) version() []byte    { return h[263:][:2] }
+<span id="L278" class="ln">   278&nbsp;&nbsp;</span>func (h *headerSTAR) userName() []byte   { return h[265:][:32] }
+<span id="L279" class="ln">   279&nbsp;&nbsp;</span>func (h *headerSTAR) groupName() []byte  { return h[297:][:32] }
+<span id="L280" class="ln">   280&nbsp;&nbsp;</span>func (h *headerSTAR) devMajor() []byte   { return h[329:][:8] }
+<span id="L281" class="ln">   281&nbsp;&nbsp;</span>func (h *headerSTAR) devMinor() []byte   { return h[337:][:8] }
+<span id="L282" class="ln">   282&nbsp;&nbsp;</span>func (h *headerSTAR) prefix() []byte     { return h[345:][:131] }
+<span id="L283" class="ln">   283&nbsp;&nbsp;</span>func (h *headerSTAR) accessTime() []byte { return h[476:][:12] }
+<span id="L284" class="ln">   284&nbsp;&nbsp;</span>func (h *headerSTAR) changeTime() []byte { return h[488:][:12] }
+<span id="L285" class="ln">   285&nbsp;&nbsp;</span>func (h *headerSTAR) trailer() []byte    { return h[508:][:4] }
+<span id="L286" class="ln">   286&nbsp;&nbsp;</span>
+<span id="L287" class="ln">   287&nbsp;&nbsp;</span>type headerUSTAR [blockSize]byte
+<span id="L288" class="ln">   288&nbsp;&nbsp;</span>
+<span id="L289" class="ln">   289&nbsp;&nbsp;</span>func (h *headerUSTAR) v7() *headerV7     { return (*headerV7)(h) }
+<span id="L290" class="ln">   290&nbsp;&nbsp;</span>func (h *headerUSTAR) magic() []byte     { return h[257:][:6] }
+<span id="L291" class="ln">   291&nbsp;&nbsp;</span>func (h *headerUSTAR) version() []byte   { return h[263:][:2] }
+<span id="L292" class="ln">   292&nbsp;&nbsp;</span>func (h *headerUSTAR) userName() []byte  { return h[265:][:32] }
+<span id="L293" class="ln">   293&nbsp;&nbsp;</span>func (h *headerUSTAR) groupName() []byte { return h[297:][:32] }
+<span id="L294" class="ln">   294&nbsp;&nbsp;</span>func (h *headerUSTAR) devMajor() []byte  { return h[329:][:8] }
+<span id="L295" class="ln">   295&nbsp;&nbsp;</span>func (h *headerUSTAR) devMinor() []byte  { return h[337:][:8] }
+<span id="L296" class="ln">   296&nbsp;&nbsp;</span>func (h *headerUSTAR) prefix() []byte    { return h[345:][:155] }
+<span id="L297" class="ln">   297&nbsp;&nbsp;</span>
+<span id="L298" class="ln">   298&nbsp;&nbsp;</span>type sparseArray []byte
+<span id="L299" class="ln">   299&nbsp;&nbsp;</span>
+<span id="L300" class="ln">   300&nbsp;&nbsp;</span>func (s sparseArray) entry(i int) sparseElem { return sparseElem(s[i*24:]) }
+<span id="L301" class="ln">   301&nbsp;&nbsp;</span>func (s sparseArray) isExtended() []byte     { return s[24*s.maxEntries():][:1] }
+<span id="L302" class="ln">   302&nbsp;&nbsp;</span>func (s sparseArray) maxEntries() int        { return len(s) / 24 }
+<span id="L303" class="ln">   303&nbsp;&nbsp;</span>
+<span id="L304" class="ln">   304&nbsp;&nbsp;</span>type sparseElem []byte
+<span id="L305" class="ln">   305&nbsp;&nbsp;</span>
+<span id="L306" class="ln">   306&nbsp;&nbsp;</span>func (s sparseElem) offset() []byte { return s[00:][:12] }
+<span id="L307" class="ln">   307&nbsp;&nbsp;</span>func (s sparseElem) length() []byte { return s[12:][:12] }
+<span id="L308" class="ln">   308&nbsp;&nbsp;</span>
+</pre><p><a href="format.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

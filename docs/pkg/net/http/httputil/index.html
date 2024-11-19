@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>httputil - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package httputil
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "net/http/httputil"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+				<dd><a href="index.html#pkg-examples" class="examplesLink">Examples</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>Package httputil provides HTTP utility functions, complementing the
+more common ones in the net/http package.
+
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+			
+				<dd><a href="index.html#pkg-variables">Variables</a></dd>
+			
+			
+				
+				<dd><a href="index.html#DumpRequest">func DumpRequest(req *http.Request, body bool) ([]byte, error)</a></dd>
+			
+				
+				<dd><a href="index.html#DumpRequestOut">func DumpRequestOut(req *http.Request, body bool) ([]byte, error)</a></dd>
+			
+				
+				<dd><a href="index.html#DumpResponse">func DumpResponse(resp *http.Response, body bool) ([]byte, error)</a></dd>
+			
+				
+				<dd><a href="index.html#NewChunkedReader">func NewChunkedReader(r io.Reader) io.Reader</a></dd>
+			
+				
+				<dd><a href="index.html#NewChunkedWriter">func NewChunkedWriter(w io.Writer) io.WriteCloser</a></dd>
+			
+			
+				
+				<dd><a href="index.html#BufferPool">type BufferPool</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#ClientConn">type ClientConn</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewClientConn">func NewClientConn(c net.Conn, r *bufio.Reader) *ClientConn</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewProxyClientConn">func NewProxyClientConn(c net.Conn, r *bufio.Reader) *ClientConn</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ClientConn.Close">func (cc *ClientConn) Close() error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ClientConn.Do">func (cc *ClientConn) Do(req *http.Request) (*http.Response, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ClientConn.Hijack">func (cc *ClientConn) Hijack() (c net.Conn, r *bufio.Reader)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ClientConn.Pending">func (cc *ClientConn) Pending() int</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ClientConn.Read">func (cc *ClientConn) Read(req *http.Request) (resp *http.Response, err error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ClientConn.Write">func (cc *ClientConn) Write(req *http.Request) error</a></dd>
+				
+			
+				
+				<dd><a href="index.html#ProxyRequest">type ProxyRequest</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ProxyRequest.SetURL">func (r *ProxyRequest) SetURL(target *url.URL)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ProxyRequest.SetXForwarded">func (r *ProxyRequest) SetXForwarded()</a></dd>
+				
+			
+				
+				<dd><a href="index.html#ReverseProxy">type ReverseProxy</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewSingleHostReverseProxy">func NewSingleHostReverseProxy(target *url.URL) *ReverseProxy</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ReverseProxy.ServeHTTP">func (p *ReverseProxy) ServeHTTP(rw http.ResponseWriter, req *http.Request)</a></dd>
+				
+			
+				
+				<dd><a href="index.html#ServerConn">type ServerConn</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewServerConn">func NewServerConn(c net.Conn, r *bufio.Reader) *ServerConn</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ServerConn.Close">func (sc *ServerConn) Close() error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ServerConn.Hijack">func (sc *ServerConn) Hijack() (net.Conn, *bufio.Reader)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ServerConn.Pending">func (sc *ServerConn) Pending() int</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ServerConn.Read">func (sc *ServerConn) Read() (*http.Request, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ServerConn.Write">func (sc *ServerConn) Write(req *http.Request, resp *http.Response) error</a></dd>
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+		<div id="pkg-examples">
+			<h3>Examples</h3>
+			<div class="js-expandAll expandAll collapsed">(Expand All)</div>
+			<dl>
+			
+			<dd><a class="exampleLink" href="index.html#example_DumpRequest">DumpRequest</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_DumpRequestOut">DumpRequestOut</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_DumpResponse">DumpResponse</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_ReverseProxy">ReverseProxy</a></dd>
+			
+			</dl>
+		</div>
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../../../src/net/http/httputil/dump.go">dump.go</a>
+			
+				<a href="../../../../src/net/http/httputil/httputil.go">httputil.go</a>
+			
+				<a href="../../../../src/net/http/httputil/persist.go">persist.go</a>
+			
+				<a href="../../../../src/net/http/httputil/reverseproxy.go">reverseproxy.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+		
+			<h2 id="pkg-variables">Variables</h2>
+			
+				
+				<pre>var (
+    <span class="comment">// Deprecated: No longer used.</span>
+    <span id="ErrPersistEOF">ErrPersistEOF</span> = &amp;<a href="../index.html">http</a>.<a href="../index.html#ProtocolError">ProtocolError</a>{<a href="../index.html#ProtocolError.ErrorString">ErrorString</a>: &#34;persistent connection closed&#34;}
+
+    <span class="comment">// Deprecated: No longer used.</span>
+    <span id="ErrClosed">ErrClosed</span> = &amp;<a href="../index.html">http</a>.<a href="../index.html#ProtocolError">ProtocolError</a>{<a href="../index.html#ProtocolError.ErrorString">ErrorString</a>: &#34;connection closed by user&#34;}
+
+    <span class="comment">// Deprecated: No longer used.</span>
+    <span id="ErrPipeline">ErrPipeline</span> = &amp;<a href="../index.html">http</a>.<a href="../index.html#ProtocolError">ProtocolError</a>{<a href="../index.html#ProtocolError.ErrorString">ErrorString</a>: &#34;pipeline error&#34;}
+)</pre>
+			
+				<p>ErrLineTooLong is returned when reading malformed chunked data
+with lines that are too long.
+
+				<pre>var <span id="ErrLineTooLong">ErrLineTooLong</span> = <a href="../internal/index.html">internal</a>.<a href="../internal/index.html#ErrLineTooLong">ErrLineTooLong</a></pre>
+			
+		
+		
+			
+			
+			<h2 id="DumpRequest">func <a href="../../../../src/net/http/httputil/dump.go?s=6360:6422#L208">DumpRequest</a>
+				<a class="permalink" href="index.html#DumpRequest">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func DumpRequest(req *<a href="../index.html">http</a>.<a href="../index.html#Request">Request</a>, body <a href="../../../builtin/index.html#bool">bool</a>) ([]<a href="../../../builtin/index.html#byte">byte</a>, <a href="../../../builtin/index.html#error">error</a>)</pre>
+			<p>DumpRequest returns the given request in its HTTP/1.x wire
+representation. It should only be used by servers to debug client
+requests. The returned representation is an approximation only;
+some details of the initial request are lost while parsing it into
+an <a href="http://localhost:8080/net/http#Request">http.Request</a>. In particular, the order and case of header field
+names are lost. The order of values in multi-valued headers is kept
+intact. HTTP/2 requests are dumped in HTTP/1.x form, not in their
+original binary representations.
+<p>If body is true, DumpRequest also returns the body. To do so, it
+consumes req.Body and then replaces it with a new <a href="http://localhost:8080/io#ReadCloser">io.ReadCloser</a>
+that yields the same bytes. If DumpRequest returns an error,
+the state of req is undefined.
+<p>The documentation for <a href="http://localhost:8080/net/http#Request.Write">http.Request.Write</a> details which fields
+of req are included in the dump.
+
+			<div id="example_DumpRequest" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    dump, err := httputil.DumpRequest(r, true)
+    if err != nil {
+        http.Error(w, fmt.Sprint(err), http.StatusInternalServerError)
+        return
+    }
+
+    fmt.Fprintf(w, &#34;%q&#34;, dump)
+}))
+defer ts.Close()
+
+const body = &#34;Go is a general-purpose language designed with systems programming in mind.&#34;
+req, err := http.NewRequest(&#34;POST&#34;, ts.URL, strings.NewReader(body))
+if err != nil {
+    log.Fatal(err)
+}
+req.Host = &#34;www.example.org&#34;
+resp, err := http.DefaultClient.Do(req)
+if err != nil {
+    log.Fatal(err)
+}
+defer resp.Body.Close()
+
+b, err := io.ReadAll(resp.Body)
+if err != nil {
+    log.Fatal(err)
+}
+
+fmt.Printf(&#34;%s&#34;, b)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">&#34;POST / HTTP/1.1\r\nHost: www.example.org\r\nAccept-Encoding: gzip\r\nContent-Length: 75\r\nUser-Agent: Go-http-client/1.1\r\n\r\nGo is a general-purpose language designed with systems programming in mind.&#34;
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="DumpRequestOut">func <a href="../../../../src/net/http/httputil/dump.go?s=2114:2179#L67">DumpRequestOut</a>
+				<a class="permalink" href="index.html#DumpRequestOut">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func DumpRequestOut(req *<a href="../index.html">http</a>.<a href="../index.html#Request">Request</a>, body <a href="../../../builtin/index.html#bool">bool</a>) ([]<a href="../../../builtin/index.html#byte">byte</a>, <a href="../../../builtin/index.html#error">error</a>)</pre>
+			<p>DumpRequestOut is like <a href="index.html#DumpRequest">DumpRequest</a> but for outgoing client requests. It
+includes any headers that the standard <a href="http://localhost:8080/net/http#Transport">http.Transport</a> adds, such as
+User-Agent.
+
+			<div id="example_DumpRequestOut" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">const body = &#34;Go is a general-purpose language designed with systems programming in mind.&#34;
+req, err := http.NewRequest(&#34;PUT&#34;, &#34;http://www.example.org&#34;, strings.NewReader(body))
+if err != nil {
+    log.Fatal(err)
+}
+
+dump, err := httputil.DumpRequestOut(req, true)
+if err != nil {
+    log.Fatal(err)
+}
+
+fmt.Printf(&#34;%q&#34;, dump)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">&#34;PUT / HTTP/1.1\r\nHost: www.example.org\r\nUser-Agent: Go-http-client/1.1\r\nContent-Length: 75\r\nAccept-Encoding: gzip\r\n\r\nGo is a general-purpose language designed with systems programming in mind.&#34;
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="DumpResponse">func <a href="../../../../src/net/http/httputil/dump.go?s=8823:8888#L295">DumpResponse</a>
+				<a class="permalink" href="index.html#DumpResponse">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func DumpResponse(resp *<a href="../index.html">http</a>.<a href="../index.html#Response">Response</a>, body <a href="../../../builtin/index.html#bool">bool</a>) ([]<a href="../../../builtin/index.html#byte">byte</a>, <a href="../../../builtin/index.html#error">error</a>)</pre>
+			<p>DumpResponse is like DumpRequest but dumps a response.
+
+			<div id="example_DumpResponse" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">const body = &#34;Go is a general-purpose language designed with systems programming in mind.&#34;
+ts := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set(&#34;Date&#34;, &#34;Wed, 19 Jul 1972 19:00:00 GMT&#34;)
+    fmt.Fprintln(w, body)
+}))
+defer ts.Close()
+
+resp, err := http.Get(ts.URL)
+if err != nil {
+    log.Fatal(err)
+}
+defer resp.Body.Close()
+
+dump, err := httputil.DumpResponse(resp, true)
+if err != nil {
+    log.Fatal(err)
+}
+
+fmt.Printf(&#34;%q&#34;, dump)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">&#34;HTTP/1.1 200 OK\r\nContent-Length: 76\r\nContent-Type: text/plain; charset=utf-8\r\nDate: Wed, 19 Jul 1972 19:00:00 GMT\r\n\r\nGo is a general-purpose language designed with systems programming in mind.\n&#34;
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="NewChunkedReader">func <a href="../../../../src/net/http/httputil/httputil.go?s=690:734#L10">NewChunkedReader</a>
+				<a class="permalink" href="index.html#NewChunkedReader">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func NewChunkedReader(r <a href="../../../io/index.html">io</a>.<a href="../../../io/index.html#Reader">Reader</a>) <a href="../../../io/index.html">io</a>.<a href="../../../io/index.html#Reader">Reader</a></pre>
+			<p>NewChunkedReader returns a new chunkedReader that translates the data read from r
+out of HTTP &quot;chunked&quot; format before returning it.
+The chunkedReader returns <a href="http://localhost:8080/io#EOF">io.EOF</a> when the final 0-length chunk is read.
+<p>NewChunkedReader is not needed by normal applications. The http package
+automatically decodes chunking when reading response bodies.
+
+			
+			
+
+		
+			
+			
+			<h2 id="NewChunkedWriter">func <a href="../../../../src/net/http/httputil/httputil.go?s=1433:1482#L25">NewChunkedWriter</a>
+				<a class="permalink" href="index.html#NewChunkedWriter">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func NewChunkedWriter(w <a href="../../../io/index.html">io</a>.<a href="../../../io/index.html#Writer">Writer</a>) <a href="../../../io/index.html">io</a>.<a href="../../../io/index.html#WriteCloser">WriteCloser</a></pre>
+			<p>NewChunkedWriter returns a new chunkedWriter that translates writes into HTTP
+&quot;chunked&quot; format before writing them to w. Closing the returned chunkedWriter
+sends the final 0-length chunk that marks the end of the stream but does
+not send the final CRLF that appears after trailers; trailers and the last
+CRLF must be written separately.
+<p>NewChunkedWriter is not needed by normal applications. The http
+package adds chunking automatically if handlers don&apos;t set a
+Content-Length header. Using NewChunkedWriter inside a handler
+would result in double chunking or chunking with a Content-Length
+length, both of which are wrong.
+
+			
+			
+
+		
+		
+			
+			
+			<h2 id="BufferPool">type <a href="../../../../src/net/http/httputil/reverseproxy.go?s=7207:7263#L194">BufferPool</a>
+				<a class="permalink" href="index.html#BufferPool">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A BufferPool is an interface for getting and returning temporary
+byte slices for use by <a href="http://localhost:8080/io#CopyBuffer">io.CopyBuffer</a>.
+
+			<pre>type BufferPool interface {
+    Get() []<a href="../../../builtin/index.html#byte">byte</a>
+    Put([]<a href="../../../builtin/index.html#byte">byte</a>)
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="ClientConn">type <a href="../../../../src/net/http/httputil/persist.go?s=6035:6403#L220">ClientConn</a>
+				<a class="permalink" href="index.html#ClientConn">&#xb6;</a>
+				
+				
+			</h2>
+			<p>ClientConn is an artifact of Go&apos;s early HTTP implementation.
+It is low-level, old, and unused by Go&apos;s current HTTP stack.
+We should have deleted it before Go 1.
+<p>Deprecated: Use Client or Transport in package <a href="http://localhost:8080/net/http">net/http</a> instead.
+
+			<pre>type ClientConn struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="NewClientConn">func <a href="../../../../src/net/http/httputil/persist.go?s=6655:6714#L238">NewClientConn</a>
+					<a class="permalink" href="index.html#NewClientConn">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func NewClientConn(c <a href="../../index.html">net</a>.<a href="../../index.html#Conn">Conn</a>, r *<a href="../../../bufio/index.html">bufio</a>.<a href="../../../bufio/index.html#Reader">Reader</a>) *<a href="index.html#ClientConn">ClientConn</a></pre>
+				<p>NewClientConn is an artifact of Go&apos;s early HTTP implementation.
+It is low-level, old, and unused by Go&apos;s current HTTP stack.
+We should have deleted it before Go 1.
+<p>Deprecated: Use the Client or Transport in package <a href="http://localhost:8080/net/http">net/http</a> instead.
+
+				
+				
+			
+				
+				<h3 id="NewProxyClientConn">func <a href="../../../../src/net/http/httputil/persist.go?s=7149:7213#L255">NewProxyClientConn</a>
+					<a class="permalink" href="index.html#NewProxyClientConn">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func NewProxyClientConn(c <a href="../../index.html">net</a>.<a href="../../index.html#Conn">Conn</a>, r *<a href="../../../bufio/index.html">bufio</a>.<a href="../../../bufio/index.html#Reader">Reader</a>) *<a href="index.html#ClientConn">ClientConn</a></pre>
+				<p>NewProxyClientConn is an artifact of Go&apos;s early HTTP implementation.
+It is low-level, old, and unused by Go&apos;s current HTTP stack.
+We should have deleted it before Go 1.
+<p>Deprecated: Use the Client or Transport in package <a href="http://localhost:8080/net/http">net/http</a> instead.
+
+				
+				
+			
+
+			
+				
+				<h3 id="ClientConn.Close">func (*ClientConn) <a href="../../../../src/net/http/httputil/persist.go?s=7870:7905#L276">Close</a>
+					<a class="permalink" href="index.html#ClientConn.Close">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (cc *<a href="index.html#ClientConn">ClientConn</a>) Close() <a href="../../../builtin/index.html#error">error</a></pre>
+				<p>Close calls <a href="index.html#ClientConn.Hijack">ClientConn.Hijack</a> and then also closes the underlying connection.
+
+				
+				
+				
+			
+				
+				<h3 id="ClientConn.Do">func (*ClientConn) <a href="../../../../src/net/http/httputil/persist.go?s=11216:11283#L415">Do</a>
+					<a class="permalink" href="index.html#ClientConn.Do">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (cc *<a href="index.html#ClientConn">ClientConn</a>) Do(req *<a href="../index.html">http</a>.<a href="../index.html#Request">Request</a>) (*<a href="../index.html">http</a>.<a href="../index.html#Response">Response</a>, <a href="../../../builtin/index.html#error">error</a>)</pre>
+				<p>Do is convenience method that writes a request and reads a response.
+
+				
+				
+				
+			
+				
+				<h3 id="ClientConn.Hijack">func (*ClientConn) <a href="../../../../src/net/http/httputil/persist.go?s=7633:7693#L265">Hijack</a>
+					<a class="permalink" href="index.html#ClientConn.Hijack">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (cc *<a href="index.html#ClientConn">ClientConn</a>) Hijack() (c <a href="../../index.html">net</a>.<a href="../../index.html#Conn">Conn</a>, r *<a href="../../../bufio/index.html">bufio</a>.<a href="../../../bufio/index.html#Reader">Reader</a>)</pre>
+				<p>Hijack detaches the <a href="index.html#ClientConn">ClientConn</a> and returns the underlying connection as well
+as the read-side bufio which may have some left over data. Hijack may be
+called before the user or Read have signaled the end of the keep-alive
+logic. The user should not call Hijack while <a href="index.html#ClientConn.Read">ClientConn.Read</a> or ClientConn.Write is in progress.
+
+				
+				
+				
+			
+				
+				<h3 id="ClientConn.Pending">func (*ClientConn) <a href="../../../../src/net/http/httputil/persist.go?s=9474:9509#L343">Pending</a>
+					<a class="permalink" href="index.html#ClientConn.Pending">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (cc *<a href="index.html#ClientConn">ClientConn</a>) Pending() <a href="../../../builtin/index.html#int">int</a></pre>
+				<p>Pending returns the number of unanswered requests
+that have been sent on the connection.
+
+				
+				
+				
+			
+				
+				<h3 id="ClientConn.Read">func (*ClientConn) <a href="../../../../src/net/http/httputil/persist.go?s=9869:9947#L353">Read</a>
+					<a class="permalink" href="index.html#ClientConn.Read">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (cc *<a href="index.html#ClientConn">ClientConn</a>) Read(req *<a href="../index.html">http</a>.<a href="../index.html#Request">Request</a>) (resp *<a href="../index.html">http</a>.<a href="../index.html#Response">Response</a>, err <a href="../../../builtin/index.html#error">error</a>)</pre>
+				<p>Read reads the next response from the wire. A valid response might be
+returned together with an <a href="index.html#ErrPersistEOF">ErrPersistEOF</a>, which means that the remote
+requested that this be the last request serviced. Read can be called
+concurrently with <a href="index.html#ClientConn.Write">ClientConn.Write</a>, but not with another Read.
+
+				
+				
+				
+			
+				
+				<h3 id="ClientConn.Write">func (*ClientConn) <a href="../../../../src/net/http/httputil/persist.go?s=8374:8426#L289">Write</a>
+					<a class="permalink" href="index.html#ClientConn.Write">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (cc *<a href="index.html#ClientConn">ClientConn</a>) Write(req *<a href="../index.html">http</a>.<a href="../index.html#Request">Request</a>) <a href="../../../builtin/index.html#error">error</a></pre>
+				<p>Write writes a request. An <a href="index.html#ErrPersistEOF">ErrPersistEOF</a> error is returned if the connection
+has been closed in an HTTP keep-alive sense. If req.Close equals true, the
+keep-alive connection is logically closed after this request and the opposing
+server is informed. An ErrUnexpectedEOF indicates the remote closed the
+underlying TCP connection, which is usually considered as graceful close.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="ProxyRequest">type <a href="../../../../src/net/http/httputil/reverseproxy.go?s=502:858#L20">ProxyRequest</a>
+				<a class="permalink" href="index.html#ProxyRequest">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A ProxyRequest contains a request to be rewritten by a <a href="index.html#ReverseProxy">ReverseProxy</a>.
+
+			<pre>type ProxyRequest struct {
+<span id="ProxyRequest.In"></span>    <span class="comment">// In is the request received by the proxy.</span>
+    <span class="comment">// The Rewrite function must not modify In.</span>
+    In *<a href="../index.html">http</a>.<a href="../index.html#Request">Request</a>
+
+<span id="ProxyRequest.Out"></span>    <span class="comment">// Out is the request which will be sent by the proxy.</span>
+    <span class="comment">// The Rewrite function may modify or replace this request.</span>
+    <span class="comment">// Hop-by-hop headers are removed from this request</span>
+    <span class="comment">// before Rewrite is called.</span>
+    Out *<a href="../index.html">http</a>.<a href="../index.html#Request">Request</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="ProxyRequest.SetURL">func (*ProxyRequest) <a href="../../../../src/net/http/httputil/reverseproxy.go?s=1362:1408#L44">SetURL</a>
+					<a class="permalink" href="index.html#ProxyRequest.SetURL">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (r *<a href="index.html#ProxyRequest">ProxyRequest</a>) SetURL(target *<a href="../../url/index.html">url</a>.<a href="../../url/index.html#URL">URL</a>)</pre>
+				<p>SetURL routes the outbound request to the scheme, host, and base path
+provided in target. If the target&apos;s path is &quot;/base&quot; and the incoming
+request was for &quot;/dir&quot;, the target request will be for &quot;/base/dir&quot;.
+<p>SetURL rewrites the outbound Host header to match the target&apos;s host.
+To preserve the inbound request&apos;s Host header (the default behavior
+of <a href="index.html#NewSingleHostReverseProxy">NewSingleHostReverseProxy</a>):
+<pre>rewriteFunc := func(r *httputil.ProxyRequest) {
+	r.SetURL(url)
+	r.Out.Host = r.In.Host
+}
+</pre>
+
+				
+				
+				
+			
+				
+				<h3 id="ProxyRequest.SetXForwarded">func (*ProxyRequest) <a href="../../../../src/net/http/httputil/reverseproxy.go?s=2386:2424#L68">SetXForwarded</a>
+					<a class="permalink" href="index.html#ProxyRequest.SetXForwarded">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (r *<a href="index.html#ProxyRequest">ProxyRequest</a>) SetXForwarded()</pre>
+				<p>SetXForwarded sets the X-Forwarded-For, X-Forwarded-Host, and
+X-Forwarded-Proto headers of the outbound request.
+<ul>
+<li>The X-Forwarded-For header is set to the client IP address.
+<li>The X-Forwarded-Host header is set to the host name requested
+by the client.
+<li>The X-Forwarded-Proto header is set to &quot;http&quot; or &quot;https&quot;, depending
+on whether the inbound request was made on a TLS-enabled connection.
+</ul>
+<p>If the outbound request contains an existing X-Forwarded-For header,
+SetXForwarded appends the client IP address to it. To append to the
+inbound request&apos;s X-Forwarded-For header (the default behavior of
+<a href="index.html#ReverseProxy">ReverseProxy</a> when using a Director function), copy the header
+from the inbound request before calling SetXForwarded:
+<pre>rewriteFunc := func(r *httputil.ProxyRequest) {
+	r.Out.Header[&quot;X-Forwarded-For&quot;] = r.In.Header[&quot;X-Forwarded-For&quot;]
+	r.SetXForwarded()
+}
+</pre>
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="ReverseProxy">type <a href="../../../../src/net/http/httputil/reverseproxy.go?s=3172:7094#L93">ReverseProxy</a>
+				<a class="permalink" href="index.html#ReverseProxy">&#xb6;</a>
+				
+				
+			</h2>
+			<p>ReverseProxy is an HTTP Handler that takes an incoming request and
+sends it to another server, proxying the response back to the
+client.
+<p>1xx responses are forwarded to the client if the underlying
+transport supports ClientTrace.Got1xxResponse.
+
+			<pre>type ReverseProxy struct {
+<span id="ReverseProxy.Rewrite"></span>    <span class="comment">// Rewrite must be a function which modifies</span>
+    <span class="comment">// the request into a new request to be sent</span>
+    <span class="comment">// using Transport. Its response is then copied</span>
+    <span class="comment">// back to the original client unmodified.</span>
+    <span class="comment">// Rewrite must not access the provided ProxyRequest</span>
+    <span class="comment">// or its contents after returning.</span>
+    <span class="comment">//</span>
+    <span class="comment">// The Forwarded, X-Forwarded, X-Forwarded-Host,</span>
+    <span class="comment">// and X-Forwarded-Proto headers are removed from the</span>
+    <span class="comment">// outbound request before Rewrite is called. See also</span>
+    <span class="comment">// the ProxyRequest.SetXForwarded method.</span>
+    <span class="comment">//</span>
+    <span class="comment">// Unparsable query parameters are removed from the</span>
+    <span class="comment">// outbound request before Rewrite is called.</span>
+    <span class="comment">// The Rewrite function may copy the inbound URL&#39;s</span>
+    <span class="comment">// RawQuery to the outbound URL to preserve the original</span>
+    <span class="comment">// parameter string. Note that this can lead to security</span>
+    <span class="comment">// issues if the proxy&#39;s interpretation of query parameters</span>
+    <span class="comment">// does not match that of the downstream server.</span>
+    <span class="comment">//</span>
+    <span class="comment">// At most one of Rewrite or Director may be set.</span>
+    Rewrite func(*<a href="index.html#ProxyRequest">ProxyRequest</a>)
+
+<span id="ReverseProxy.Director"></span>    <span class="comment">// Director is a function which modifies</span>
+    <span class="comment">// the request into a new request to be sent</span>
+    <span class="comment">// using Transport. Its response is then copied</span>
+    <span class="comment">// back to the original client unmodified.</span>
+    <span class="comment">// Director must not access the provided Request</span>
+    <span class="comment">// after returning.</span>
+    <span class="comment">//</span>
+    <span class="comment">// By default, the X-Forwarded-For header is set to the</span>
+    <span class="comment">// value of the client IP address. If an X-Forwarded-For</span>
+    <span class="comment">// header already exists, the client IP is appended to the</span>
+    <span class="comment">// existing values. As a special case, if the header</span>
+    <span class="comment">// exists in the Request.Header map but has a nil value</span>
+    <span class="comment">// (such as when set by the Director func), the X-Forwarded-For</span>
+    <span class="comment">// header is not modified.</span>
+    <span class="comment">//</span>
+    <span class="comment">// To prevent IP spoofing, be sure to delete any pre-existing</span>
+    <span class="comment">// X-Forwarded-For header coming from the client or</span>
+    <span class="comment">// an untrusted proxy.</span>
+    <span class="comment">//</span>
+    <span class="comment">// Hop-by-hop headers are removed from the request after</span>
+    <span class="comment">// Director returns, which can remove headers added by</span>
+    <span class="comment">// Director. Use a Rewrite function instead to ensure</span>
+    <span class="comment">// modifications to the request are preserved.</span>
+    <span class="comment">//</span>
+    <span class="comment">// Unparsable query parameters are removed from the outbound</span>
+    <span class="comment">// request if Request.Form is set after Director returns.</span>
+    <span class="comment">//</span>
+    <span class="comment">// At most one of Rewrite or Director may be set.</span>
+    Director func(*<a href="../index.html">http</a>.<a href="../index.html#Request">Request</a>)
+
+    <span class="comment">// The transport used to perform proxy requests.</span>
+    <span class="comment">// If nil, http.DefaultTransport is used.</span>
+<span id="ReverseProxy.Transport"></span>    Transport <a href="../index.html">http</a>.<a href="../index.html#RoundTripper">RoundTripper</a>
+
+<span id="ReverseProxy.FlushInterval"></span>    <span class="comment">// FlushInterval specifies the flush interval</span>
+    <span class="comment">// to flush to the client while copying the</span>
+    <span class="comment">// response body.</span>
+    <span class="comment">// If zero, no periodic flushing is done.</span>
+    <span class="comment">// A negative value means to flush immediately</span>
+    <span class="comment">// after each write to the client.</span>
+    <span class="comment">// The FlushInterval is ignored when ReverseProxy</span>
+    <span class="comment">// recognizes a response as a streaming response, or</span>
+    <span class="comment">// if its ContentLength is -1; for such responses, writes</span>
+    <span class="comment">// are flushed to the client immediately.</span>
+    FlushInterval <a href="../../../time/index.html">time</a>.<a href="../../../time/index.html#Duration">Duration</a>
+
+<span id="ReverseProxy.ErrorLog"></span>    <span class="comment">// ErrorLog specifies an optional logger for errors</span>
+    <span class="comment">// that occur when attempting to proxy the request.</span>
+    <span class="comment">// If nil, logging is done via the log package&#39;s standard logger.</span>
+    ErrorLog *<a href="../../../log/index.html">log</a>.<a href="../../../log/index.html#Logger">Logger</a>
+
+<span id="ReverseProxy.BufferPool"></span>    <span class="comment">// BufferPool optionally specifies a buffer pool to</span>
+    <span class="comment">// get byte slices for use by io.CopyBuffer when</span>
+    <span class="comment">// copying HTTP response bodies.</span>
+    BufferPool <a href="index.html#BufferPool">BufferPool</a>
+
+<span id="ReverseProxy.ModifyResponse"></span>    <span class="comment">// ModifyResponse is an optional function that modifies the</span>
+    <span class="comment">// Response from the backend. It is called if the backend</span>
+    <span class="comment">// returns a response at all, with any HTTP status code.</span>
+    <span class="comment">// If the backend is unreachable, the optional ErrorHandler is</span>
+    <span class="comment">// called without any call to ModifyResponse.</span>
+    <span class="comment">//</span>
+    <span class="comment">// If ModifyResponse returns an error, ErrorHandler is called</span>
+    <span class="comment">// with its error value. If ErrorHandler is nil, its default</span>
+    <span class="comment">// implementation is used.</span>
+    ModifyResponse func(*<a href="../index.html">http</a>.<a href="../index.html#Response">Response</a>) <a href="../../../builtin/index.html#error">error</a>
+
+<span id="ReverseProxy.ErrorHandler"></span>    <span class="comment">// ErrorHandler is an optional function that handles errors</span>
+    <span class="comment">// reaching the backend or errors from ModifyResponse.</span>
+    <span class="comment">//</span>
+    <span class="comment">// If nil, the default is to log the provided error and return</span>
+    <span class="comment">// a 502 Status Bad Gateway response.</span>
+    ErrorHandler func(<a href="../index.html">http</a>.<a href="../index.html#ResponseWriter">ResponseWriter</a>, *<a href="../index.html">http</a>.<a href="../index.html#Request">Request</a>, <a href="../../../builtin/index.html#error">error</a>)
+}
+</pre>
+
+			
+
+			
+
+			<div id="example_ReverseProxy" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">backendServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    fmt.Fprintln(w, &#34;this call was relayed by the reverse proxy&#34;)
+}))
+defer backendServer.Close()
+
+rpURL, err := url.Parse(backendServer.URL)
+if err != nil {
+    log.Fatal(err)
+}
+frontendProxy := httptest.NewServer(&amp;httputil.ReverseProxy{
+    Rewrite: func(r *httputil.ProxyRequest) {
+        r.SetXForwarded()
+        r.SetURL(rpURL)
+    },
+})
+defer frontendProxy.Close()
+
+resp, err := http.Get(frontendProxy.URL)
+if err != nil {
+    log.Fatal(err)
+}
+
+b, err := io.ReadAll(resp.Body)
+if err != nil {
+    log.Fatal(err)
+}
+
+fmt.Printf(&#34;%s&#34;, b)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">this call was relayed by the reverse proxy
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+			
+
+			
+				
+				<h3 id="NewSingleHostReverseProxy">func <a href="../../../../src/net/http/httputil/reverseproxy.go?s=8908:8969#L252">NewSingleHostReverseProxy</a>
+					<a class="permalink" href="index.html#NewSingleHostReverseProxy">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func NewSingleHostReverseProxy(target *<a href="../../url/index.html">url</a>.<a href="../../url/index.html#URL">URL</a>) *<a href="index.html#ReverseProxy">ReverseProxy</a></pre>
+				<p>NewSingleHostReverseProxy returns a new <a href="index.html#ReverseProxy">ReverseProxy</a> that routes
+URLs to the scheme, host, and base path provided in target. If the
+target&apos;s path is &quot;/base&quot; and the incoming request was for &quot;/dir&quot;,
+the target request will be for /base/dir.
+<p>NewSingleHostReverseProxy does not rewrite the Host header.
+<p>To customize the ReverseProxy behavior beyond what
+NewSingleHostReverseProxy provides, use ReverseProxy directly
+with a Rewrite function. The ProxyRequest SetURL method
+may be used to route the outbound request. (Note that SetURL,
+unlike NewSingleHostReverseProxy, rewrites the Host header
+of the outbound request by default.)
+<pre>proxy := &amp;ReverseProxy{
+	Rewrite: func(r *ProxyRequest) {
+		r.SetURL(target)
+		r.Out.Host = r.In.Host // if desired
+	},
+}
+</pre>
+
+				
+				
+			
+
+			
+				
+				<h3 id="ReverseProxy.ServeHTTP">func (*ReverseProxy) <a href="../../../../src/net/http/httputil/reverseproxy.go?s=11028:11103#L322">ServeHTTP</a>
+					<a class="permalink" href="index.html#ReverseProxy.ServeHTTP">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#ReverseProxy">ReverseProxy</a>) ServeHTTP(rw <a href="../index.html">http</a>.<a href="../index.html#ResponseWriter">ResponseWriter</a>, req *<a href="../index.html">http</a>.<a href="../index.html#Request">Request</a>)</pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="ServerConn">type <a href="../../../../src/net/http/httputil/persist.go?s=1012:1329#L27">ServerConn</a>
+				<a class="permalink" href="index.html#ServerConn">&#xb6;</a>
+				
+				
+			</h2>
+			<p>ServerConn is an artifact of Go&apos;s early HTTP implementation.
+It is low-level, old, and unused by Go&apos;s current HTTP stack.
+We should have deleted it before Go 1.
+<p>Deprecated: Use the Server in package <a href="http://localhost:8080/net/http">net/http</a> instead.
+
+			<pre>type ServerConn struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="NewServerConn">func <a href="../../../../src/net/http/httputil/persist.go?s=1568:1627#L44">NewServerConn</a>
+					<a class="permalink" href="index.html#NewServerConn">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func NewServerConn(c <a href="../../index.html">net</a>.<a href="../../index.html#Conn">Conn</a>, r *<a href="../../../bufio/index.html">bufio</a>.<a href="../../../bufio/index.html#Reader">Reader</a>) *<a href="index.html#ServerConn">ServerConn</a></pre>
+				<p>NewServerConn is an artifact of Go&apos;s early HTTP implementation.
+It is low-level, old, and unused by Go&apos;s current HTTP stack.
+We should have deleted it before Go 1.
+<p>Deprecated: Use the Server in package <a href="http://localhost:8080/net/http">net/http</a> instead.
+
+				
+				
+			
+
+			
+				
+				<h3 id="ServerConn.Close">func (*ServerConn) <a href="../../../../src/net/http/httputil/persist.go?s=2310:2345#L66">Close</a>
+					<a class="permalink" href="index.html#ServerConn.Close">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (sc *<a href="index.html#ServerConn">ServerConn</a>) Close() <a href="../../../builtin/index.html#error">error</a></pre>
+				<p>Close calls <a href="index.html#ServerConn.Hijack">ServerConn.Hijack</a> and then also closes the underlying connection.
+
+				
+				
+				
+			
+				
+				<h3 id="ServerConn.Hijack">func (*ServerConn) <a href="../../../../src/net/http/httputil/persist.go?s=2070:2126#L55">Hijack</a>
+					<a class="permalink" href="index.html#ServerConn.Hijack">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (sc *<a href="index.html#ServerConn">ServerConn</a>) Hijack() (<a href="../../index.html">net</a>.<a href="../../index.html#Conn">Conn</a>, *<a href="../../../bufio/index.html">bufio</a>.<a href="../../../bufio/index.html#Reader">Reader</a>)</pre>
+				<p>Hijack detaches the <a href="index.html#ServerConn">ServerConn</a> and returns the underlying connection as well
+as the read-side bufio which may have some left over data. Hijack may be
+called before Read has signaled the end of the keep-alive logic. The user
+should not call Hijack while <a href="index.html#ServerConn.Read">ServerConn.Read</a> or <a href="index.html#ServerConn.Write">ServerConn.Write</a> is in progress.
+
+				
+				
+				
+			
+				
+				<h3 id="ServerConn.Pending">func (*ServerConn) <a href="../../../../src/net/http/httputil/persist.go?s=4434:4469#L156">Pending</a>
+					<a class="permalink" href="index.html#ServerConn.Pending">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (sc *<a href="index.html#ServerConn">ServerConn</a>) Pending() <a href="../../../builtin/index.html#int">int</a></pre>
+				<p>Pending returns the number of unanswered requests
+that have been received on the connection.
+
+				
+				
+				
+			
+				
+				<h3 id="ServerConn.Read">func (*ServerConn) <a href="../../../../src/net/http/httputil/persist.go?s=2682:2733#L78">Read</a>
+					<a class="permalink" href="index.html#ServerConn.Read">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (sc *<a href="index.html#ServerConn">ServerConn</a>) Read() (*<a href="../index.html">http</a>.<a href="../index.html#Request">Request</a>, <a href="../../../builtin/index.html#error">error</a>)</pre>
+				<p>Read returns the next request on the wire. An <a href="index.html#ErrPersistEOF">ErrPersistEOF</a> is returned if
+it is gracefully determined that there are no more requests (e.g. after the
+first request on an HTTP/1.0 connection, or after a Connection:close on a
+HTTP/1.1 connection).
+
+				
+				
+				
+			
+				
+				<h3 id="ServerConn.Write">func (*ServerConn) <a href="../../../../src/net/http/httputil/persist.go?s=4794:4867#L165">Write</a>
+					<a class="permalink" href="index.html#ServerConn.Write">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (sc *<a href="index.html#ServerConn">ServerConn</a>) Write(req *<a href="../index.html">http</a>.<a href="../index.html#Request">Request</a>, resp *<a href="../index.html">http</a>.<a href="../index.html#Response">Response</a>) <a href="../../../builtin/index.html#error">error</a></pre>
+				<p>Write writes resp in response to req. To close the connection gracefully, set the
+Response.Close field to true. Write should be considered operational until
+it returns an error, regardless of any errors returned on the <a href="index.html#ServerConn.Read">ServerConn.Read</a> side.
+
+				
+				
+				
+			
+		
+	
+
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>zlib - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package zlib
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "compress/zlib"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+				<dd><a href="index.html#pkg-examples" class="examplesLink">Examples</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>Package zlib implements reading and writing of zlib format compressed data,
+as specified in RFC 1950.
+<p>The implementation provides filters that uncompress during reading
+and compress during writing.  For example, to write compressed data
+to a buffer:
+<pre>var b bytes.Buffer
+w := zlib.NewWriter(&amp;b)
+w.Write([]byte(&quot;hello, world\n&quot;))
+w.Close()
+</pre>
+<p>and to read that data back:
+<pre>r, err := zlib.NewReader(&amp;b)
+io.Copy(os.Stdout, r)
+r.Close()
+</pre>
+
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+				<dd><a href="index.html#pkg-constants">Constants</a></dd>
+			
+			
+				<dd><a href="index.html#pkg-variables">Variables</a></dd>
+			
+			
+				
+				<dd><a href="index.html#NewReader">func NewReader(r io.Reader) (io.ReadCloser, error)</a></dd>
+			
+				
+				<dd><a href="index.html#NewReaderDict">func NewReaderDict(r io.Reader, dict []byte) (io.ReadCloser, error)</a></dd>
+			
+			
+				
+				<dd><a href="index.html#Resetter">type Resetter</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#Writer">type Writer</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewWriter">func NewWriter(w io.Writer) *Writer</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewWriterLevel">func NewWriterLevel(w io.Writer, level int) (*Writer, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewWriterLevelDict">func NewWriterLevelDict(w io.Writer, level int, dict []byte) (*Writer, error)</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Writer.Close">func (z *Writer) Close() error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Writer.Flush">func (z *Writer) Flush() error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Writer.Reset">func (z *Writer) Reset(w io.Writer)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Writer.Write">func (z *Writer) Write(p []byte) (n int, err error)</a></dd>
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+		<div id="pkg-examples">
+			<h3>Examples</h3>
+			<div class="js-expandAll expandAll collapsed">(Expand All)</div>
+			<dl>
+			
+			<dd><a class="exampleLink" href="index.html#example_NewReader">NewReader</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_NewWriter">NewWriter</a></dd>
+			
+			</dl>
+		</div>
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../../src/compress/zlib/reader.go">reader.go</a>
+			
+				<a href="../../../src/compress/zlib/writer.go">writer.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+			<h2 id="pkg-constants">Constants</h2>
+			
+				<p>These constants are copied from the flate package, so that code that imports
+&quot;compress/zlib&quot; does not also have to import &quot;compress/flate&quot;.
+
+				<pre>const (
+    <span id="NoCompression">NoCompression</span>      = <a href="../flate/index.html">flate</a>.<a href="../flate/index.html#NoCompression">NoCompression</a>
+    <span id="BestSpeed">BestSpeed</span>          = <a href="../flate/index.html">flate</a>.<a href="../flate/index.html#BestSpeed">BestSpeed</a>
+    <span id="BestCompression">BestCompression</span>    = <a href="../flate/index.html">flate</a>.<a href="../flate/index.html#BestCompression">BestCompression</a>
+    <span id="DefaultCompression">DefaultCompression</span> = <a href="../flate/index.html">flate</a>.<a href="../flate/index.html#DefaultCompression">DefaultCompression</a>
+    <span id="HuffmanOnly">HuffmanOnly</span>        = <a href="../flate/index.html">flate</a>.<a href="../flate/index.html#HuffmanOnly">HuffmanOnly</a>
+)</pre>
+			
+		
+		
+			<h2 id="pkg-variables">Variables</h2>
+			
+				
+				<pre>var (
+    <span class="comment">// ErrChecksum is returned when reading ZLIB data that has an invalid checksum.</span>
+    <span id="ErrChecksum">ErrChecksum</span> = <a href="../../errors/index.html">errors</a>.<a href="../../errors/index.html#New">New</a>(&#34;zlib: invalid checksum&#34;)
+    <span class="comment">// ErrDictionary is returned when reading ZLIB data that has an invalid dictionary.</span>
+    <span id="ErrDictionary">ErrDictionary</span> = <a href="../../errors/index.html">errors</a>.<a href="../../errors/index.html#New">New</a>(&#34;zlib: invalid dictionary&#34;)
+    <span class="comment">// ErrHeader is returned when reading ZLIB data that has an invalid header.</span>
+    <span id="ErrHeader">ErrHeader</span> = <a href="../../errors/index.html">errors</a>.<a href="../../errors/index.html#New">New</a>(&#34;zlib: invalid header&#34;)
+)</pre>
+			
+		
+		
+			
+			
+			<h2 id="NewReader">func <a href="../../../src/compress/zlib/reader.go?s=2064:2114#L64">NewReader</a>
+				<a class="permalink" href="index.html#NewReader">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func NewReader(r <a href="../../io/index.html">io</a>.<a href="../../io/index.html#Reader">Reader</a>) (<a href="../../io/index.html">io</a>.<a href="../../io/index.html#ReadCloser">ReadCloser</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+			<p>NewReader creates a new ReadCloser.
+Reads from the returned ReadCloser read and decompress data from r.
+If r does not implement <a href="http://localhost:8080/io#ByteReader">io.ByteReader</a>, the decompressor may read more
+data than necessary from r.
+It is the caller&apos;s responsibility to call Close on the ReadCloser when done.
+<p>The <a href="http://localhost:8080/io#ReadCloser">io.ReadCloser</a> returned by NewReader also implements <a href="index.html#Resetter">Resetter</a>.
+
+			<div id="example_NewReader" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">buff := []byte{120, 156, 202, 72, 205, 201, 201, 215, 81, 40, 207,
+    47, 202, 73, 225, 2, 4, 0, 0, 255, 255, 33, 231, 4, 147}
+b := bytes.NewReader(buff)
+
+r, err := zlib.NewReader(b)
+if err != nil {
+    panic(err)
+}
+io.Copy(os.Stdout, r)
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">hello, world
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="NewReaderDict">func <a href="../../../src/compress/zlib/reader.go?s=2476:2543#L73">NewReaderDict</a>
+				<a class="permalink" href="index.html#NewReaderDict">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func NewReaderDict(r <a href="../../io/index.html">io</a>.<a href="../../io/index.html#Reader">Reader</a>, dict []<a href="../../builtin/index.html#byte">byte</a>) (<a href="../../io/index.html">io</a>.<a href="../../io/index.html#ReadCloser">ReadCloser</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+			<p>NewReaderDict is like <a href="index.html#NewReader">NewReader</a> but uses a preset dictionary.
+NewReaderDict ignores the dictionary if the compressed data does not refer to it.
+If the compressed data refers to a different dictionary, NewReaderDict returns <a href="index.html#ErrDictionary">ErrDictionary</a>.
+<p>The ReadCloser returned by NewReaderDict also implements <a href="index.html#Resetter">Resetter</a>.
+
+			
+			
+
+		
+		
+			
+			
+			<h2 id="Resetter">type <a href="../../../src/compress/zlib/reader.go?s=1505:1690#L51">Resetter</a>
+				<a class="permalink" href="index.html#Resetter">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Resetter resets a ReadCloser returned by <a href="index.html#NewReader">NewReader</a> or <a href="index.html#NewReaderDict">NewReaderDict</a>
+to switch to a new underlying Reader. This permits reusing a ReadCloser
+instead of allocating a new one.
+
+			<pre>type Resetter interface {
+    <span class="comment">// Reset discards any buffered data and resets the Resetter as if it was</span>
+    <span class="comment">// newly initialized with the given reader.</span>
+    Reset(r <a href="../../io/index.html">io</a>.<a href="../../io/index.html#Reader">Reader</a>, dict []<a href="../../builtin/index.html#byte">byte</a>) <a href="../../builtin/index.html#error">error</a>
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="Writer">type <a href="../../../src/compress/zlib/writer.go?s=753:945#L18">Writer</a>
+				<a class="permalink" href="index.html#Writer">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A Writer takes data written to it and writes the compressed
+form of that data to an underlying writer (see NewWriter).
+
+			<pre>type Writer struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="NewWriter">func <a href="../../../src/compress/zlib/writer.go?s=1182:1217#L34">NewWriter</a>
+					<a class="permalink" href="index.html#NewWriter">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func NewWriter(w <a href="../../io/index.html">io</a>.<a href="../../io/index.html#Writer">Writer</a>) *<a href="index.html#Writer">Writer</a></pre>
+				<p>NewWriter creates a new Writer.
+Writes to the returned Writer are compressed and written to w.
+<p>It is the caller&apos;s responsibility to call Close on the Writer when done.
+Writes may be buffered and not flushed until Close.
+
+				<div id="example_NewWriter" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">var b bytes.Buffer
+
+w := zlib.NewWriter(&amp;b)
+w.Write([]byte(&#34;hello, world\n&#34;))
+w.Close()
+fmt.Println(b.Bytes())
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">[120 156 202 72 205 201 201 215 81 40 207 47 202 73 225 2 4 0 0 255 255 33 231 4 147]
+</pre>
+			
+		
+	</div>
+</div>
+
+				
+			
+				
+				<h3 id="NewWriterLevel">func <a href="../../../src/compress/zlib/writer.go?s=1616:1676#L45">NewWriterLevel</a>
+					<a class="permalink" href="index.html#NewWriterLevel">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func NewWriterLevel(w <a href="../../io/index.html">io</a>.<a href="../../io/index.html#Writer">Writer</a>, level <a href="../../builtin/index.html#int">int</a>) (*<a href="index.html#Writer">Writer</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+				<p>NewWriterLevel is like NewWriter but specifies the compression level instead
+of assuming DefaultCompression.
+<p>The compression level can be DefaultCompression, NoCompression, HuffmanOnly
+or any integer value between BestSpeed and BestCompression inclusive.
+The error returned will be nil if the level is valid.
+
+				
+				
+			
+				
+				<h3 id="NewWriterLevelDict">func <a href="../../../src/compress/zlib/writer.go?s=1925:2002#L54">NewWriterLevelDict</a>
+					<a class="permalink" href="index.html#NewWriterLevelDict">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func NewWriterLevelDict(w <a href="../../io/index.html">io</a>.<a href="../../io/index.html#Writer">Writer</a>, level <a href="../../builtin/index.html#int">int</a>, dict []<a href="../../builtin/index.html#byte">byte</a>) (*<a href="index.html#Writer">Writer</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+				<p>NewWriterLevelDict is like NewWriterLevel but specifies a dictionary to
+compress with.
+<p>The dictionary may be nil. If not, its contents should not be modified until
+the Writer is closed.
+
+				
+				
+			
+
+			
+				
+				<h3 id="Writer.Close">func (*Writer) <a href="../../../src/compress/zlib/writer.go?s=4922:4952#L167">Close</a>
+					<a class="permalink" href="index.html#Writer.Close">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (z *<a href="index.html#Writer">Writer</a>) Close() <a href="../../builtin/index.html#error">error</a></pre>
+				<p>Close closes the Writer, flushing any unwritten data to the underlying
+io.Writer, but does not close the underlying io.Writer.
+
+				
+				
+				
+			
+				
+				<h3 id="Writer.Flush">func (*Writer) <a href="../../../src/compress/zlib/writer.go?s=4622:4652#L154">Flush</a>
+					<a class="permalink" href="index.html#Writer.Flush">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (z *<a href="index.html#Writer">Writer</a>) Flush() <a href="../../builtin/index.html#error">error</a></pre>
+				<p>Flush flushes the Writer to its underlying io.Writer.
+
+				
+				
+				
+			
+				
+				<h3 id="Writer.Reset">func (*Writer) <a href="../../../src/compress/zlib/writer.go?s=2368:2403#L68">Reset</a>
+					<a class="permalink" href="index.html#Writer.Reset">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (z *<a href="index.html#Writer">Writer</a>) Reset(w <a href="../../io/index.html">io</a>.<a href="../../io/index.html#Writer">Writer</a>)</pre>
+				<p>Reset clears the state of the Writer z such that it is equivalent to its
+initial state from NewWriterLevel or NewWriterLevelDict, but instead writing
+to w.
+
+				
+				
+				
+			
+				
+				<h3 id="Writer.Write">func (*Writer) <a href="../../../src/compress/zlib/writer.go?s=4279:4330#L134">Write</a>
+					<a class="permalink" href="index.html#Writer.Write">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (z *<a href="index.html#Writer">Writer</a>) Write(p []<a href="../../builtin/index.html#byte">byte</a>) (n <a href="../../builtin/index.html#int">int</a>, err <a href="../../builtin/index.html#error">error</a>)</pre>
+				<p>Write writes a compressed form of p to the underlying io.Writer. The
+compressed bytes are not necessarily flushed until the Writer is closed or
+explicitly flushed.
+
+				
+				
+				
+			
+		
+	
+
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

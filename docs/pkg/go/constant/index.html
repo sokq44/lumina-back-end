@@ -1,0 +1,1101 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>constant - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package constant
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "go/constant"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+				<dd><a href="index.html#pkg-examples" class="examplesLink">Examples</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>Package constant implements Values representing untyped
+Go constants and their corresponding operations.
+<p>A special Unknown value may be used when a value
+is unknown due to an error. Operations on unknown
+values produce unknown values unless specified
+otherwise.
+
+				<div id="example__complexNumbers" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example (ComplexNumbers)</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example (ComplexNumbers)</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code"><span class="comment">// Create the complex number 2.3 + 5i.</span>
+ar := constant.MakeFloat64(2.3)
+ai := constant.MakeImag(constant.MakeInt64(5))
+a := constant.BinaryOp(ar, token.ADD, ai)
+
+<span class="comment">// Compute (2.3 + 5i) * 11.</span>
+b := constant.MakeUint64(11)
+c := constant.BinaryOp(a, token.MUL, b)
+
+<span class="comment">// Convert c into a complex128.</span>
+Ar, exact := constant.Float64Val(constant.Real(c))
+if !exact {
+    fmt.Printf(&#34;Could not represent real part %s exactly as float64\n&#34;, constant.Real(c))
+}
+Ai, exact := constant.Float64Val(constant.Imag(c))
+if !exact {
+    fmt.Printf(&#34;Could not represent imaginary part %s as exactly as float64\n&#34;, constant.Imag(c))
+}
+C := complex(Ar, Ai)
+
+fmt.Println(&#34;literal&#34;, 25.3+55i)
+fmt.Println(&#34;go/constant&#34;, c)
+fmt.Println(&#34;complex128&#34;, C)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">
+Could not represent real part 25.3 exactly as float64
+literal (25.3+55i)
+go/constant (25.3 + 55i)
+complex128 (25.299999999999997+55i)
+</pre>
+			
+		
+	</div>
+</div>
+
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+			
+			
+				
+				<dd><a href="index.html#BitLen">func BitLen(x Value) int</a></dd>
+			
+				
+				<dd><a href="index.html#BoolVal">func BoolVal(x Value) bool</a></dd>
+			
+				
+				<dd><a href="index.html#Bytes">func Bytes(x Value) []byte</a></dd>
+			
+				
+				<dd><a href="index.html#Compare">func Compare(x_ Value, op token.Token, y_ Value) bool</a></dd>
+			
+				
+				<dd><a href="index.html#Float32Val">func Float32Val(x Value) (float32, bool)</a></dd>
+			
+				
+				<dd><a href="index.html#Float64Val">func Float64Val(x Value) (float64, bool)</a></dd>
+			
+				
+				<dd><a href="index.html#Int64Val">func Int64Val(x Value) (int64, bool)</a></dd>
+			
+				
+				<dd><a href="index.html#Sign">func Sign(x Value) int</a></dd>
+			
+				
+				<dd><a href="index.html#StringVal">func StringVal(x Value) string</a></dd>
+			
+				
+				<dd><a href="index.html#Uint64Val">func Uint64Val(x Value) (uint64, bool)</a></dd>
+			
+				
+				<dd><a href="index.html#Val">func Val(x Value) any</a></dd>
+			
+			
+				
+				<dd><a href="index.html#Kind">type Kind</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Kind.String">func (i Kind) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Value">type Value</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#BinaryOp">func BinaryOp(x_ Value, op token.Token, y_ Value) Value</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Denom">func Denom(x Value) Value</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Imag">func Imag(x Value) Value</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Make">func Make(x any) Value</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#MakeBool">func MakeBool(b bool) Value</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#MakeFloat64">func MakeFloat64(x float64) Value</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#MakeFromBytes">func MakeFromBytes(bytes []byte) Value</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#MakeFromLiteral">func MakeFromLiteral(lit string, tok token.Token, zero uint) Value</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#MakeImag">func MakeImag(x Value) Value</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#MakeInt64">func MakeInt64(x int64) Value</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#MakeString">func MakeString(s string) Value</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#MakeUint64">func MakeUint64(x uint64) Value</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#MakeUnknown">func MakeUnknown() Value</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Num">func Num(x Value) Value</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Real">func Real(x Value) Value</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Shift">func Shift(x Value, op token.Token, s uint) Value</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ToComplex">func ToComplex(x Value) Value</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ToFloat">func ToFloat(x Value) Value</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ToInt">func ToInt(x Value) Value</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#UnaryOp">func UnaryOp(op token.Token, y Value, prec uint) Value</a></dd>
+				
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+		<div id="pkg-examples">
+			<h3>Examples</h3>
+			<div class="js-expandAll expandAll collapsed">(Expand All)</div>
+			<dl>
+			
+			<dd><a class="exampleLink" href="index.html#example_BinaryOp">BinaryOp</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Compare">Compare</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Sign">Sign</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_UnaryOp">UnaryOp</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Val">Val</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example__complexNumbers">Package (ComplexNumbers)</a></dd>
+			
+			</dl>
+		</div>
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../../src/go/constant/kind_string.go">kind_string.go</a>
+			
+				<a href="../../../src/go/constant/value.go">value.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+		
+		
+			
+			
+			<h2 id="BitLen">func <a href="../../../src/go/constant/value.go?s=18267:18291#L635">BitLen</a>
+				<a class="permalink" href="index.html#BitLen">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func BitLen(x <a href="index.html#Value">Value</a>) <a href="../../builtin/index.html#int">int</a></pre>
+			<p>BitLen returns the number of bits required to represent
+the absolute value x in binary representation; x must be an <a href="index.html#Int">Int</a> or an <a href="index.html#Unknown">Unknown</a>.
+If x is <a href="index.html#Unknown">Unknown</a>, the result is 0.
+
+			
+			
+
+		
+			
+			
+			<h2 id="BoolVal">func <a href="../../../src/go/constant/value.go?s=14022:14048#L470">BoolVal</a>
+				<a class="permalink" href="index.html#BoolVal">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func BoolVal(x <a href="index.html#Value">Value</a>) <a href="../../builtin/index.html#bool">bool</a></pre>
+			<p>BoolVal returns the Go boolean value of x, which must be a <a href="index.html#Bool">Bool</a> or an <a href="index.html#Unknown">Unknown</a>.
+If x is <a href="index.html#Unknown">Unknown</a>, the result is false.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Bytes">func <a href="../../../src/go/constant/value.go?s=19594:19620#L692">Bytes</a>
+				<a class="permalink" href="index.html#Bytes">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Bytes(x <a href="index.html#Value">Value</a>) []<a href="../../builtin/index.html#byte">byte</a></pre>
+			<p>Bytes returns the bytes for the absolute value of x in little-
+endian binary representation; x must be an <a href="index.html#Int">Int</a>.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Compare">func <a href="../../../src/go/constant/value.go?s=33477:33530#L1327">Compare</a>
+				<a class="permalink" href="index.html#Compare">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Compare(x_ <a href="index.html#Value">Value</a>, op <a href="../token/index.html">token</a>.<a href="../token/index.html#Token">Token</a>, y_ <a href="index.html#Value">Value</a>) <a href="../../builtin/index.html#bool">bool</a></pre>
+			<p>Compare returns the result of the comparison x op y.
+The comparison must be defined for the operands.
+If one of the operands is <a href="index.html#Unknown">Unknown</a>, the result is
+false.
+
+			<div id="example_Compare" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">vs := []constant.Value{
+    constant.MakeString(&#34;Z&#34;),
+    constant.MakeString(&#34;bacon&#34;),
+    constant.MakeString(&#34;go&#34;),
+    constant.MakeString(&#34;Frame&#34;),
+    constant.MakeString(&#34;defer&#34;),
+    constant.MakeFromLiteral(`&#34;a&#34;`, token.STRING, 0),
+}
+
+sort.Slice(vs, func(i, j int) bool {
+    <span class="comment">// Equivalent to vs[i] &lt;= vs[j].</span>
+    return constant.Compare(vs[i], token.LEQ, vs[j])
+})
+
+for _, v := range vs {
+    fmt.Println(constant.StringVal(v))
+}
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">
+Frame
+Z
+a
+bacon
+defer
+go
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Float32Val">func <a href="../../../src/go/constant/value.go?s=15550:15590#L527">Float32Val</a>
+				<a class="permalink" href="index.html#Float32Val">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Float32Val(x <a href="index.html#Value">Value</a>) (<a href="../../builtin/index.html#float32">float32</a>, <a href="../../builtin/index.html#bool">bool</a>)</pre>
+			<p>Float32Val is like <a href="index.html#Float64Val">Float64Val</a> but for float32 instead of float64.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Float64Val">func <a href="../../../src/go/constant/value.go?s=16336:16376#L552">Float64Val</a>
+				<a class="permalink" href="index.html#Float64Val">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Float64Val(x <a href="index.html#Value">Value</a>) (<a href="../../builtin/index.html#float64">float64</a>, <a href="../../builtin/index.html#bool">bool</a>)</pre>
+			<p>Float64Val returns the nearest Go float64 value of x and whether the result is exact;
+x must be numeric or an <a href="index.html#Unknown">Unknown</a>, but not <a href="index.html#Complex">Complex</a>. For values too small (too close to 0)
+to represent as float64, <a href="index.html#Float64Val">Float64Val</a> silently underflows to 0. The result sign always
+matches the sign of x, even for 0.
+If x is <a href="index.html#Unknown">Unknown</a>, the result is (0, false).
+
+			
+			
+
+		
+			
+			
+			<h2 id="Int64Val">func <a href="../../../src/go/constant/value.go?s=14726:14762#L497">Int64Val</a>
+				<a class="permalink" href="index.html#Int64Val">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Int64Val(x <a href="index.html#Value">Value</a>) (<a href="../../builtin/index.html#int64">int64</a>, <a href="../../builtin/index.html#bool">bool</a>)</pre>
+			<p>Int64Val returns the Go int64 value of x and whether the result is exact;
+x must be an <a href="index.html#Int">Int</a> or an <a href="index.html#Unknown">Unknown</a>. If the result is not exact, its value is undefined.
+If x is <a href="index.html#Unknown">Unknown</a>, the result is (0, false).
+
+			
+			
+
+		
+			
+			
+			<h2 id="Sign">func <a href="../../../src/go/constant/value.go?s=18764:18786#L655">Sign</a>
+				<a class="permalink" href="index.html#Sign">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Sign(x <a href="index.html#Value">Value</a>) <a href="../../builtin/index.html#int">int</a></pre>
+			<p>Sign returns -1, 0, or 1 depending on whether x &lt; 0, x == 0, or x &gt; 0;
+x must be numeric or <a href="index.html#Unknown">Unknown</a>. For complex values x, the sign is 0 if x == 0,
+otherwise it is != 0. If x is <a href="index.html#Unknown">Unknown</a>, the result is 1.
+
+			<div id="example_Sign" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">zero := constant.MakeInt64(0)
+one := constant.MakeInt64(1)
+negOne := constant.MakeInt64(-1)
+
+mkComplex := func(a, b constant.Value) constant.Value {
+    b = constant.MakeImag(b)
+    return constant.BinaryOp(a, token.ADD, b)
+}
+
+vs := []constant.Value{
+    negOne,
+    mkComplex(zero, negOne),
+    mkComplex(one, negOne),
+    mkComplex(negOne, one),
+    mkComplex(negOne, negOne),
+    zero,
+    mkComplex(zero, zero),
+    one,
+    mkComplex(zero, one),
+    mkComplex(one, one),
+}
+
+for _, v := range vs {
+    fmt.Printf(&#34;% d %s\n&#34;, constant.Sign(v), v)
+}
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">
+-1 -1
+-1 (0 + -1i)
+-1 (1 + -1i)
+-1 (-1 + 1i)
+-1 (-1 + -1i)
+ 0 0
+ 0 (0 + 0i)
+ 1 1
+ 1 (0 + 1i)
+ 1 (1 + 1i)
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="StringVal">func <a href="../../../src/go/constant/value.go?s=14326:14356#L483">StringVal</a>
+				<a class="permalink" href="index.html#StringVal">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func StringVal(x <a href="index.html#Value">Value</a>) <a href="../../builtin/index.html#string">string</a></pre>
+			<p>StringVal returns the Go string value of x, which must be a <a href="index.html#String">String</a> or an <a href="index.html#Unknown">Unknown</a>.
+If x is <a href="index.html#Unknown">Unknown</a>, the result is &quot;&quot;.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Uint64Val">func <a href="../../../src/go/constant/value.go?s=15222:15260#L513">Uint64Val</a>
+				<a class="permalink" href="index.html#Uint64Val">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Uint64Val(x <a href="index.html#Value">Value</a>) (<a href="../../builtin/index.html#uint64">uint64</a>, <a href="../../builtin/index.html#bool">bool</a>)</pre>
+			<p>Uint64Val returns the Go uint64 value of x and whether the result is exact;
+x must be an <a href="index.html#Int">Int</a> or an <a href="index.html#Unknown">Unknown</a>. If the result is not exact, its value is undefined.
+If x is <a href="index.html#Unknown">Unknown</a>, the result is (0, false).
+
+			
+			
+
+		
+			
+			
+			<h2 id="Val">func <a href="../../../src/go/constant/value.go?s=17226:17247#L583">Val</a>
+				<a class="permalink" href="index.html#Val">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Val(x <a href="index.html#Value">Value</a>) <a href="../../builtin/index.html#any">any</a></pre>
+			<p>Val returns the underlying value for a given constant. Since it returns an
+interface, it is up to the caller to type assert the result to the expected
+type. The possible dynamic return types are:
+<pre>x Kind             type of result
+-----------------------------------------
+Bool               bool
+String             string
+Int                int64 or *big.Int
+Float              *big.Float or *big.Rat
+everything else    nil
+</pre>
+
+			<div id="example_Val" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">maxint := constant.MakeInt64(math.MaxInt64)
+fmt.Printf(&#34;%v\n&#34;, constant.Val(maxint))
+
+e := constant.MakeFloat64(math.E)
+fmt.Printf(&#34;%v\n&#34;, constant.Val(e))
+
+b := constant.MakeBool(true)
+fmt.Printf(&#34;%v\n&#34;, constant.Val(b))
+
+b = constant.Make(false)
+fmt.Printf(&#34;%v\n&#34;, constant.Val(b))
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">
+9223372036854775807
+6121026514868073/2251799813685248
+true
+false
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+		
+			
+			
+			<h2 id="Kind">type <a href="../../../src/go/constant/value.go?s=668:681#L19">Kind</a>
+				<a class="permalink" href="index.html#Kind">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Kind specifies the kind of value represented by a <a href="index.html#Value">Value</a>.
+
+			<pre>type Kind <a href="../../builtin/index.html#int">int</a></pre>
+
+			
+				
+				<pre>const (
+    <span class="comment">// unknown values</span>
+    <span id="Unknown">Unknown</span> <a href="index.html#Kind">Kind</a> = <a href="../../builtin/index.html#iota">iota</a>
+
+    <span class="comment">// non-numeric values</span>
+    <span id="Bool">Bool</span>
+    <span id="String">String</span>
+
+    <span class="comment">// numeric values</span>
+    <span id="Int">Int</span>
+    <span id="Float">Float</span>
+    <span id="Complex">Complex</span>
+)</pre>
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="Kind.String">func (Kind) <a href="../../../src/go/constant/kind_string.go?s=485:514#L13">String</a>
+					<a class="permalink" href="index.html#Kind.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (i <a href="index.html#Kind">Kind</a>) String() <a href="../../builtin/index.html#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Value">type <a href="../../../src/go/constant/value.go?s=863:1444#L36">Value</a>
+				<a class="permalink" href="index.html#Value">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A Value represents the value of a Go constant.
+
+			<pre>type Value interface {
+    <span class="comment">// Kind returns the value kind.</span>
+    Kind() <a href="index.html#Kind">Kind</a>
+
+    <span class="comment">// String returns a short, quoted (human-readable) form of the value.</span>
+    <span class="comment">// For numeric values, the result may be an approximation;</span>
+    <span class="comment">// for String values the result may be a shortened string.</span>
+    <span class="comment">// Use ExactString for a string representing a value exactly.</span>
+    String() <a href="../../builtin/index.html#string">string</a>
+
+    <span class="comment">// ExactString returns an exact, quoted (human-readable) form of the value.</span>
+    <span class="comment">// If the Value is of Kind String, use StringVal to obtain the unquoted string.</span>
+    ExactString() <a href="../../builtin/index.html#string">string</a>
+    <span class="comment">// contains filtered or unexported methods</span>
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="BinaryOp">func <a href="../../../src/go/constant/value.go?s=28957:29012#L1093">BinaryOp</a>
+					<a class="permalink" href="index.html#BinaryOp">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func BinaryOp(x_ <a href="index.html#Value">Value</a>, op <a href="../token/index.html">token</a>.<a href="../token/index.html#Token">Token</a>, y_ <a href="index.html#Value">Value</a>) <a href="index.html#Value">Value</a></pre>
+				<p>BinaryOp returns the result of the binary expression x op y.
+The operation must be defined for the operands. If one of the
+operands is <a href="index.html#Unknown">Unknown</a>, the result is <a href="index.html#Unknown">Unknown</a>.
+BinaryOp doesn&apos;t handle comparisons or shifts; use <a href="index.html#Compare">Compare</a>
+or <a href="index.html#Shift">Shift</a> instead.
+<p>To force integer division of <a href="index.html#Int">Int</a> operands, use op == <a href="http://localhost:8080/go/token#QUO_ASSIGN">token.QUO_ASSIGN</a>
+instead of <a href="http://localhost:8080/go/token#QUO">token.QUO</a>; the result is guaranteed to be <a href="index.html#Int">Int</a> in this case.
+Division by zero leads to a run-time panic.
+
+				<div id="example_BinaryOp" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code"><span class="comment">// 11 / 0.5</span>
+a := constant.MakeUint64(11)
+b := constant.MakeFloat64(0.5)
+c := constant.BinaryOp(a, token.QUO, b)
+fmt.Println(c)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">22
+</pre>
+			
+		
+	</div>
+</div>
+
+				
+			
+				
+				<h3 id="Denom">func <a href="../../../src/go/constant/value.go?s=21445:21470#L778">Denom</a>
+					<a class="permalink" href="index.html#Denom">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func Denom(x <a href="index.html#Value">Value</a>) <a href="index.html#Value">Value</a></pre>
+				<p>Denom returns the denominator of x; x must be <a href="index.html#Int">Int</a>, <a href="index.html#Float">Float</a>, or <a href="index.html#Unknown">Unknown</a>.
+If x is <a href="index.html#Unknown">Unknown</a>, or if it is too large or small to represent as a
+fraction, the result is <a href="index.html#Unknown">Unknown</a>. Otherwise the result is an <a href="index.html#Int">Int</a> &gt;= 1.
+
+				
+				
+			
+				
+				<h3 id="Imag">func <a href="../../../src/go/constant/value.go?s=22615:22639#L826">Imag</a>
+					<a class="permalink" href="index.html#Imag">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func Imag(x <a href="index.html#Value">Value</a>) <a href="index.html#Value">Value</a></pre>
+				<p>Imag returns the imaginary part of x, which must be a numeric or unknown value.
+If x is <a href="index.html#Unknown">Unknown</a>, the result is <a href="index.html#Unknown">Unknown</a>.
+
+				
+				
+			
+				
+				<h3 id="Make">func <a href="../../../src/go/constant/value.go?s=17778:17800#L613">Make</a>
+					<a class="permalink" href="index.html#Make">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func Make(x <a href="../../builtin/index.html#any">any</a>) <a href="index.html#Value">Value</a></pre>
+				<p>Make returns the <a href="index.html#Value">Value</a> for x.
+<pre>type of x        result Kind
+----------------------------
+bool             Bool
+string           String
+int64            Int
+*big.Int         Int
+*big.Float       Float
+*big.Rat         Float
+anything else    Unknown
+</pre>
+
+				
+				
+			
+				
+				<h3 id="MakeBool">func <a href="../../../src/go/constant/value.go?s=11481:11508#L376">MakeBool</a>
+					<a class="permalink" href="index.html#MakeBool">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func MakeBool(b <a href="../../builtin/index.html#bool">bool</a>) <a href="index.html#Value">Value</a></pre>
+				<p>MakeBool returns the <a href="index.html#Bool">Bool</a> value for b.
+
+				
+				
+			
+				
+				<h3 id="MakeFloat64">func <a href="../../../src/go/constant/value.go?s=12123:12156#L402">MakeFloat64</a>
+					<a class="permalink" href="index.html#MakeFloat64">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func MakeFloat64(x <a href="../../builtin/index.html#float64">float64</a>) <a href="index.html#Value">Value</a></pre>
+				<p>MakeFloat64 returns the <a href="index.html#Float">Float</a> value for x.
+If x is -0.0, the result is 0.0.
+If x is not finite, the result is an <a href="index.html#Unknown">Unknown</a>.
+
+				
+				
+			
+				
+				<h3 id="MakeFromBytes">func <a href="../../../src/go/constant/value.go?s=20187:20225#L724">MakeFromBytes</a>
+					<a class="permalink" href="index.html#MakeFromBytes">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func MakeFromBytes(bytes []<a href="../../builtin/index.html#byte">byte</a>) <a href="index.html#Value">Value</a></pre>
+				<p>MakeFromBytes returns the <a href="index.html#Int">Int</a> value given the bytes of its little-endian
+binary representation. An empty byte slice argument represents 0.
+
+				
+				
+			
+				
+				<h3 id="MakeFromLiteral">func <a href="../../../src/go/constant/value.go?s=12713:12779#L417">MakeFromLiteral</a>
+					<a class="permalink" href="index.html#MakeFromLiteral">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func MakeFromLiteral(lit <a href="../../builtin/index.html#string">string</a>, tok <a href="../token/index.html">token</a>.<a href="../token/index.html#Token">Token</a>, zero <a href="../../builtin/index.html#uint">uint</a>) <a href="index.html#Value">Value</a></pre>
+				<p>MakeFromLiteral returns the corresponding integer, floating-point,
+imaginary, character, or string value for a Go literal string. The
+tok value must be one of <a href="http://localhost:8080/go/token#INT">token.INT</a>, <a href="http://localhost:8080/go/token#FLOAT">token.FLOAT</a>, <a href="http://localhost:8080/go/token#IMAG">token.IMAG</a>,
+<a href="http://localhost:8080/go/token#CHAR">token.CHAR</a>, or <a href="http://localhost:8080/go/token#STRING">token.STRING</a>. The final argument must be zero.
+If the literal string syntax is invalid, the result is an <a href="index.html#Unknown">Unknown</a>.
+
+				
+				
+			
+				
+				<h3 id="MakeImag">func <a href="../../../src/go/constant/value.go?s=21933:21961#L800">MakeImag</a>
+					<a class="permalink" href="index.html#MakeImag">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func MakeImag(x <a href="index.html#Value">Value</a>) <a href="index.html#Value">Value</a></pre>
+				<p>MakeImag returns the <a href="index.html#Complex">Complex</a> value x*i;
+x must be <a href="index.html#Int">Int</a>, <a href="index.html#Float">Float</a>, or <a href="index.html#Unknown">Unknown</a>.
+If x is <a href="index.html#Unknown">Unknown</a>, the result is <a href="index.html#Unknown">Unknown</a>.
+
+				
+				
+			
+				
+				<h3 id="MakeInt64">func <a href="../../../src/go/constant/value.go?s=11767:11796#L389">MakeInt64</a>
+					<a class="permalink" href="index.html#MakeInt64">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func MakeInt64(x <a href="../../builtin/index.html#int64">int64</a>) <a href="index.html#Value">Value</a></pre>
+				<p>MakeInt64 returns the <a href="index.html#Int">Int</a> value for x.
+
+				
+				
+			
+				
+				<h3 id="MakeString">func <a href="../../../src/go/constant/value.go?s=11580:11611#L379">MakeString</a>
+					<a class="permalink" href="index.html#MakeString">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func MakeString(s <a href="../../builtin/index.html#string">string</a>) <a href="index.html#Value">Value</a></pre>
+				<p>MakeString returns the <a href="index.html#String">String</a> value for s.
+
+				
+				
+			
+				
+				<h3 id="MakeUint64">func <a href="../../../src/go/constant/value.go?s=11866:11897#L392">MakeUint64</a>
+					<a class="permalink" href="index.html#MakeUint64">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func MakeUint64(x <a href="../../builtin/index.html#uint64">uint64</a>) <a href="index.html#Value">Value</a></pre>
+				<p>MakeUint64 returns the <a href="index.html#Int">Int</a> value for x.
+
+				
+				
+			
+				
+				<h3 id="MakeUnknown">func <a href="../../../src/go/constant/value.go?s=11387:11411#L373">MakeUnknown</a>
+					<a class="permalink" href="index.html#MakeUnknown">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func MakeUnknown() <a href="index.html#Value">Value</a></pre>
+				<p>MakeUnknown returns the <a href="index.html#Unknown">Unknown</a> value.
+
+				
+				
+			
+				
+				<h3 id="Num">func <a href="../../../src/go/constant/value.go?s=20881:20904#L756">Num</a>
+					<a class="permalink" href="index.html#Num">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func Num(x <a href="index.html#Value">Value</a>) <a href="index.html#Value">Value</a></pre>
+				<p>Num returns the numerator of x; x must be <a href="index.html#Int">Int</a>, <a href="index.html#Float">Float</a>, or <a href="index.html#Unknown">Unknown</a>.
+If x is <a href="index.html#Unknown">Unknown</a>, or if it is too large or small to represent as a
+fraction, the result is <a href="index.html#Unknown">Unknown</a>. Otherwise the result is an <a href="index.html#Int">Int</a>
+with the same sign as x.
+
+				
+				
+			
+				
+				<h3 id="Real">func <a href="../../../src/go/constant/value.go?s=22279:22303#L813">Real</a>
+					<a class="permalink" href="index.html#Real">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func Real(x <a href="index.html#Value">Value</a>) <a href="index.html#Value">Value</a></pre>
+				<p>Real returns the real part of x, which must be a numeric or unknown value.
+If x is <a href="index.html#Unknown">Unknown</a>, the result is <a href="index.html#Unknown">Unknown</a>.
+
+				
+				
+			
+				
+				<h3 id="Shift">func <a href="../../../src/go/constant/value.go?s=32466:32515#L1272">Shift</a>
+					<a class="permalink" href="index.html#Shift">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func Shift(x <a href="index.html#Value">Value</a>, op <a href="../token/index.html">token</a>.<a href="../token/index.html#Token">Token</a>, s <a href="../../builtin/index.html#uint">uint</a>) <a href="index.html#Value">Value</a></pre>
+				<p>Shift returns the result of the shift expression x op s
+with op == <a href="http://localhost:8080/go/token#SHL">token.SHL</a> or <a href="http://localhost:8080/go/token#SHR">token.SHR</a> (&lt;&lt; or &gt;&gt;). x must be
+an <a href="index.html#Int">Int</a> or an <a href="index.html#Unknown">Unknown</a>. If x is <a href="index.html#Unknown">Unknown</a>, the result is x.
+
+				
+				
+			
+				
+				<h3 id="ToComplex">func <a href="../../../src/go/constant/value.go?s=24746:24775#L919">ToComplex</a>
+					<a class="permalink" href="index.html#ToComplex">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func ToComplex(x <a href="index.html#Value">Value</a>) <a href="index.html#Value">Value</a></pre>
+				<p>ToComplex converts x to a <a href="index.html#Complex">Complex</a> value if x is representable as a <a href="index.html#Complex">Complex</a>.
+Otherwise it returns an <a href="index.html#Unknown">Unknown</a>.
+
+				
+				
+			
+				
+				<h3 id="ToFloat">func <a href="../../../src/go/constant/value.go?s=24302:24329#L898">ToFloat</a>
+					<a class="permalink" href="index.html#ToFloat">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func ToFloat(x <a href="index.html#Value">Value</a>) <a href="index.html#Value">Value</a></pre>
+				<p>ToFloat converts x to a <a href="index.html#Float">Float</a> value if x is representable as a <a href="index.html#Float">Float</a>.
+Otherwise it returns an <a href="index.html#Unknown">Unknown</a>.
+
+				
+				
+			
+				
+				<h3 id="ToInt">func <a href="../../../src/go/constant/value.go?s=23063:23088#L844">ToInt</a>
+					<a class="permalink" href="index.html#ToInt">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func ToInt(x <a href="index.html#Value">Value</a>) <a href="index.html#Value">Value</a></pre>
+				<p>ToInt converts x to an <a href="index.html#Int">Int</a> value if x is representable as an <a href="index.html#Int">Int</a>.
+Otherwise it returns an <a href="index.html#Unknown">Unknown</a>.
+
+				
+				
+			
+				
+				<h3 id="UnaryOp">func <a href="../../../src/go/constant/value.go?s=25532:25586#L948">UnaryOp</a>
+					<a class="permalink" href="index.html#UnaryOp">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func UnaryOp(op <a href="../token/index.html">token</a>.<a href="../token/index.html#Token">Token</a>, y <a href="index.html#Value">Value</a>, prec <a href="../../builtin/index.html#uint">uint</a>) <a href="index.html#Value">Value</a></pre>
+				<p>UnaryOp returns the result of the unary expression op y.
+The operation must be defined for the operand.
+If prec &gt; 0 it specifies the ^ (xor) result size in bits.
+If y is <a href="index.html#Unknown">Unknown</a>, the result is <a href="index.html#Unknown">Unknown</a>.
+
+				<div id="example_UnaryOp" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">vs := []constant.Value{
+    constant.MakeBool(true),
+    constant.MakeFloat64(2.7),
+    constant.MakeUint64(42),
+}
+
+for i, v := range vs {
+    switch v.Kind() {
+    case constant.Bool:
+        vs[i] = constant.UnaryOp(token.NOT, v, 0)
+
+    case constant.Float:
+        vs[i] = constant.UnaryOp(token.SUB, v, 0)
+
+    case constant.Int:
+        <span class="comment">// Use 16-bit precision.</span>
+        <span class="comment">// This would be equivalent to ^uint16(v).</span>
+        vs[i] = constant.UnaryOp(token.XOR, v, 16)
+    }
+}
+
+for _, v := range vs {
+    fmt.Println(v)
+}
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">
+false
+-2.7
+65493
+</pre>
+			
+		
+	</div>
+</div>
+
+				
+			
+
+			
+		
+	
+
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

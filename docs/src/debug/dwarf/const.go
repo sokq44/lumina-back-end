@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>src/debug/dwarf/const.go - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="const.go#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Source file
+    <a href="http://localhost:8080/src">src</a>/<a href="http://localhost:8080/src/debug">debug</a>/<a href="http://localhost:8080/src/debug/dwarf">dwarf</a>/<span class="text-muted">const.go</span>
+  </h1>
+
+
+
+
+
+  <h2>
+    Documentation: <a href="http://localhost:8080/pkg/debug/dwarf">debug/dwarf</a>
+  </h2>
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1&nbsp;&nbsp;</span><span class="comment">// Copyright 2009 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2&nbsp;&nbsp;</span><span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3&nbsp;&nbsp;</span><span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4&nbsp;&nbsp;</span>
+<span id="L5" class="ln">     5&nbsp;&nbsp;</span><span class="comment">// Constants</span>
+<span id="L6" class="ln">     6&nbsp;&nbsp;</span>
+<span id="L7" class="ln">     7&nbsp;&nbsp;</span>package dwarf
+<span id="L8" class="ln">     8&nbsp;&nbsp;</span>
+<span id="L9" class="ln">     9&nbsp;&nbsp;</span><span class="comment">//go:generate stringer -type Attr -trimprefix=Attr</span>
+<span id="L10" class="ln">    10&nbsp;&nbsp;</span>
+<span id="L11" class="ln">    11&nbsp;&nbsp;</span><span class="comment">// An Attr identifies the attribute type in a DWARF [Entry.Field].</span>
+<span id="L12" class="ln">    12&nbsp;&nbsp;</span>type Attr uint32
+<span id="L13" class="ln">    13&nbsp;&nbsp;</span>
+<span id="L14" class="ln">    14&nbsp;&nbsp;</span>const (
+<span id="L15" class="ln">    15&nbsp;&nbsp;</span>	AttrSibling        Attr = 0x01
+<span id="L16" class="ln">    16&nbsp;&nbsp;</span>	AttrLocation       Attr = 0x02
+<span id="L17" class="ln">    17&nbsp;&nbsp;</span>	AttrName           Attr = 0x03
+<span id="L18" class="ln">    18&nbsp;&nbsp;</span>	AttrOrdering       Attr = 0x09
+<span id="L19" class="ln">    19&nbsp;&nbsp;</span>	AttrByteSize       Attr = 0x0B
+<span id="L20" class="ln">    20&nbsp;&nbsp;</span>	AttrBitOffset      Attr = 0x0C
+<span id="L21" class="ln">    21&nbsp;&nbsp;</span>	AttrBitSize        Attr = 0x0D
+<span id="L22" class="ln">    22&nbsp;&nbsp;</span>	AttrStmtList       Attr = 0x10
+<span id="L23" class="ln">    23&nbsp;&nbsp;</span>	AttrLowpc          Attr = 0x11
+<span id="L24" class="ln">    24&nbsp;&nbsp;</span>	AttrHighpc         Attr = 0x12
+<span id="L25" class="ln">    25&nbsp;&nbsp;</span>	AttrLanguage       Attr = 0x13
+<span id="L26" class="ln">    26&nbsp;&nbsp;</span>	AttrDiscr          Attr = 0x15
+<span id="L27" class="ln">    27&nbsp;&nbsp;</span>	AttrDiscrValue     Attr = 0x16
+<span id="L28" class="ln">    28&nbsp;&nbsp;</span>	AttrVisibility     Attr = 0x17
+<span id="L29" class="ln">    29&nbsp;&nbsp;</span>	AttrImport         Attr = 0x18
+<span id="L30" class="ln">    30&nbsp;&nbsp;</span>	AttrStringLength   Attr = 0x19
+<span id="L31" class="ln">    31&nbsp;&nbsp;</span>	AttrCommonRef      Attr = 0x1A
+<span id="L32" class="ln">    32&nbsp;&nbsp;</span>	AttrCompDir        Attr = 0x1B
+<span id="L33" class="ln">    33&nbsp;&nbsp;</span>	AttrConstValue     Attr = 0x1C
+<span id="L34" class="ln">    34&nbsp;&nbsp;</span>	AttrContainingType Attr = 0x1D
+<span id="L35" class="ln">    35&nbsp;&nbsp;</span>	AttrDefaultValue   Attr = 0x1E
+<span id="L36" class="ln">    36&nbsp;&nbsp;</span>	AttrInline         Attr = 0x20
+<span id="L37" class="ln">    37&nbsp;&nbsp;</span>	AttrIsOptional     Attr = 0x21
+<span id="L38" class="ln">    38&nbsp;&nbsp;</span>	AttrLowerBound     Attr = 0x22
+<span id="L39" class="ln">    39&nbsp;&nbsp;</span>	AttrProducer       Attr = 0x25
+<span id="L40" class="ln">    40&nbsp;&nbsp;</span>	AttrPrototyped     Attr = 0x27
+<span id="L41" class="ln">    41&nbsp;&nbsp;</span>	AttrReturnAddr     Attr = 0x2A
+<span id="L42" class="ln">    42&nbsp;&nbsp;</span>	AttrStartScope     Attr = 0x2C
+<span id="L43" class="ln">    43&nbsp;&nbsp;</span>	AttrStrideSize     Attr = 0x2E
+<span id="L44" class="ln">    44&nbsp;&nbsp;</span>	AttrUpperBound     Attr = 0x2F
+<span id="L45" class="ln">    45&nbsp;&nbsp;</span>	AttrAbstractOrigin Attr = 0x31
+<span id="L46" class="ln">    46&nbsp;&nbsp;</span>	AttrAccessibility  Attr = 0x32
+<span id="L47" class="ln">    47&nbsp;&nbsp;</span>	AttrAddrClass      Attr = 0x33
+<span id="L48" class="ln">    48&nbsp;&nbsp;</span>	AttrArtificial     Attr = 0x34
+<span id="L49" class="ln">    49&nbsp;&nbsp;</span>	AttrBaseTypes      Attr = 0x35
+<span id="L50" class="ln">    50&nbsp;&nbsp;</span>	AttrCalling        Attr = 0x36
+<span id="L51" class="ln">    51&nbsp;&nbsp;</span>	AttrCount          Attr = 0x37
+<span id="L52" class="ln">    52&nbsp;&nbsp;</span>	AttrDataMemberLoc  Attr = 0x38
+<span id="L53" class="ln">    53&nbsp;&nbsp;</span>	AttrDeclColumn     Attr = 0x39
+<span id="L54" class="ln">    54&nbsp;&nbsp;</span>	AttrDeclFile       Attr = 0x3A
+<span id="L55" class="ln">    55&nbsp;&nbsp;</span>	AttrDeclLine       Attr = 0x3B
+<span id="L56" class="ln">    56&nbsp;&nbsp;</span>	AttrDeclaration    Attr = 0x3C
+<span id="L57" class="ln">    57&nbsp;&nbsp;</span>	AttrDiscrList      Attr = 0x3D
+<span id="L58" class="ln">    58&nbsp;&nbsp;</span>	AttrEncoding       Attr = 0x3E
+<span id="L59" class="ln">    59&nbsp;&nbsp;</span>	AttrExternal       Attr = 0x3F
+<span id="L60" class="ln">    60&nbsp;&nbsp;</span>	AttrFrameBase      Attr = 0x40
+<span id="L61" class="ln">    61&nbsp;&nbsp;</span>	AttrFriend         Attr = 0x41
+<span id="L62" class="ln">    62&nbsp;&nbsp;</span>	AttrIdentifierCase Attr = 0x42
+<span id="L63" class="ln">    63&nbsp;&nbsp;</span>	AttrMacroInfo      Attr = 0x43
+<span id="L64" class="ln">    64&nbsp;&nbsp;</span>	AttrNamelistItem   Attr = 0x44
+<span id="L65" class="ln">    65&nbsp;&nbsp;</span>	AttrPriority       Attr = 0x45
+<span id="L66" class="ln">    66&nbsp;&nbsp;</span>	AttrSegment        Attr = 0x46
+<span id="L67" class="ln">    67&nbsp;&nbsp;</span>	AttrSpecification  Attr = 0x47
+<span id="L68" class="ln">    68&nbsp;&nbsp;</span>	AttrStaticLink     Attr = 0x48
+<span id="L69" class="ln">    69&nbsp;&nbsp;</span>	AttrType           Attr = 0x49
+<span id="L70" class="ln">    70&nbsp;&nbsp;</span>	AttrUseLocation    Attr = 0x4A
+<span id="L71" class="ln">    71&nbsp;&nbsp;</span>	AttrVarParam       Attr = 0x4B
+<span id="L72" class="ln">    72&nbsp;&nbsp;</span>	AttrVirtuality     Attr = 0x4C
+<span id="L73" class="ln">    73&nbsp;&nbsp;</span>	AttrVtableElemLoc  Attr = 0x4D
+<span id="L74" class="ln">    74&nbsp;&nbsp;</span>	<span class="comment">// The following are new in DWARF 3.</span>
+<span id="L75" class="ln">    75&nbsp;&nbsp;</span>	AttrAllocated     Attr = 0x4E
+<span id="L76" class="ln">    76&nbsp;&nbsp;</span>	AttrAssociated    Attr = 0x4F
+<span id="L77" class="ln">    77&nbsp;&nbsp;</span>	AttrDataLocation  Attr = 0x50
+<span id="L78" class="ln">    78&nbsp;&nbsp;</span>	AttrStride        Attr = 0x51
+<span id="L79" class="ln">    79&nbsp;&nbsp;</span>	AttrEntrypc       Attr = 0x52
+<span id="L80" class="ln">    80&nbsp;&nbsp;</span>	AttrUseUTF8       Attr = 0x53
+<span id="L81" class="ln">    81&nbsp;&nbsp;</span>	AttrExtension     Attr = 0x54
+<span id="L82" class="ln">    82&nbsp;&nbsp;</span>	AttrRanges        Attr = 0x55
+<span id="L83" class="ln">    83&nbsp;&nbsp;</span>	AttrTrampoline    Attr = 0x56
+<span id="L84" class="ln">    84&nbsp;&nbsp;</span>	AttrCallColumn    Attr = 0x57
+<span id="L85" class="ln">    85&nbsp;&nbsp;</span>	AttrCallFile      Attr = 0x58
+<span id="L86" class="ln">    86&nbsp;&nbsp;</span>	AttrCallLine      Attr = 0x59
+<span id="L87" class="ln">    87&nbsp;&nbsp;</span>	AttrDescription   Attr = 0x5A
+<span id="L88" class="ln">    88&nbsp;&nbsp;</span>	AttrBinaryScale   Attr = 0x5B
+<span id="L89" class="ln">    89&nbsp;&nbsp;</span>	AttrDecimalScale  Attr = 0x5C
+<span id="L90" class="ln">    90&nbsp;&nbsp;</span>	AttrSmall         Attr = 0x5D
+<span id="L91" class="ln">    91&nbsp;&nbsp;</span>	AttrDecimalSign   Attr = 0x5E
+<span id="L92" class="ln">    92&nbsp;&nbsp;</span>	AttrDigitCount    Attr = 0x5F
+<span id="L93" class="ln">    93&nbsp;&nbsp;</span>	AttrPictureString Attr = 0x60
+<span id="L94" class="ln">    94&nbsp;&nbsp;</span>	AttrMutable       Attr = 0x61
+<span id="L95" class="ln">    95&nbsp;&nbsp;</span>	AttrThreadsScaled Attr = 0x62
+<span id="L96" class="ln">    96&nbsp;&nbsp;</span>	AttrExplicit      Attr = 0x63
+<span id="L97" class="ln">    97&nbsp;&nbsp;</span>	AttrObjectPointer Attr = 0x64
+<span id="L98" class="ln">    98&nbsp;&nbsp;</span>	AttrEndianity     Attr = 0x65
+<span id="L99" class="ln">    99&nbsp;&nbsp;</span>	AttrElemental     Attr = 0x66
+<span id="L100" class="ln">   100&nbsp;&nbsp;</span>	AttrPure          Attr = 0x67
+<span id="L101" class="ln">   101&nbsp;&nbsp;</span>	AttrRecursive     Attr = 0x68
+<span id="L102" class="ln">   102&nbsp;&nbsp;</span>	<span class="comment">// The following are new in DWARF 4.</span>
+<span id="L103" class="ln">   103&nbsp;&nbsp;</span>	AttrSignature      Attr = 0x69
+<span id="L104" class="ln">   104&nbsp;&nbsp;</span>	AttrMainSubprogram Attr = 0x6A
+<span id="L105" class="ln">   105&nbsp;&nbsp;</span>	AttrDataBitOffset  Attr = 0x6B
+<span id="L106" class="ln">   106&nbsp;&nbsp;</span>	AttrConstExpr      Attr = 0x6C
+<span id="L107" class="ln">   107&nbsp;&nbsp;</span>	AttrEnumClass      Attr = 0x6D
+<span id="L108" class="ln">   108&nbsp;&nbsp;</span>	AttrLinkageName    Attr = 0x6E
+<span id="L109" class="ln">   109&nbsp;&nbsp;</span>	<span class="comment">// The following are new in DWARF 5.</span>
+<span id="L110" class="ln">   110&nbsp;&nbsp;</span>	AttrStringLengthBitSize  Attr = 0x6F
+<span id="L111" class="ln">   111&nbsp;&nbsp;</span>	AttrStringLengthByteSize Attr = 0x70
+<span id="L112" class="ln">   112&nbsp;&nbsp;</span>	AttrRank                 Attr = 0x71
+<span id="L113" class="ln">   113&nbsp;&nbsp;</span>	AttrStrOffsetsBase       Attr = 0x72
+<span id="L114" class="ln">   114&nbsp;&nbsp;</span>	AttrAddrBase             Attr = 0x73
+<span id="L115" class="ln">   115&nbsp;&nbsp;</span>	AttrRnglistsBase         Attr = 0x74
+<span id="L116" class="ln">   116&nbsp;&nbsp;</span>	AttrDwoName              Attr = 0x76
+<span id="L117" class="ln">   117&nbsp;&nbsp;</span>	AttrReference            Attr = 0x77
+<span id="L118" class="ln">   118&nbsp;&nbsp;</span>	AttrRvalueReference      Attr = 0x78
+<span id="L119" class="ln">   119&nbsp;&nbsp;</span>	AttrMacros               Attr = 0x79
+<span id="L120" class="ln">   120&nbsp;&nbsp;</span>	AttrCallAllCalls         Attr = 0x7A
+<span id="L121" class="ln">   121&nbsp;&nbsp;</span>	AttrCallAllSourceCalls   Attr = 0x7B
+<span id="L122" class="ln">   122&nbsp;&nbsp;</span>	AttrCallAllTailCalls     Attr = 0x7C
+<span id="L123" class="ln">   123&nbsp;&nbsp;</span>	AttrCallReturnPC         Attr = 0x7D
+<span id="L124" class="ln">   124&nbsp;&nbsp;</span>	AttrCallValue            Attr = 0x7E
+<span id="L125" class="ln">   125&nbsp;&nbsp;</span>	AttrCallOrigin           Attr = 0x7F
+<span id="L126" class="ln">   126&nbsp;&nbsp;</span>	AttrCallParameter        Attr = 0x80
+<span id="L127" class="ln">   127&nbsp;&nbsp;</span>	AttrCallPC               Attr = 0x81
+<span id="L128" class="ln">   128&nbsp;&nbsp;</span>	AttrCallTailCall         Attr = 0x82
+<span id="L129" class="ln">   129&nbsp;&nbsp;</span>	AttrCallTarget           Attr = 0x83
+<span id="L130" class="ln">   130&nbsp;&nbsp;</span>	AttrCallTargetClobbered  Attr = 0x84
+<span id="L131" class="ln">   131&nbsp;&nbsp;</span>	AttrCallDataLocation     Attr = 0x85
+<span id="L132" class="ln">   132&nbsp;&nbsp;</span>	AttrCallDataValue        Attr = 0x86
+<span id="L133" class="ln">   133&nbsp;&nbsp;</span>	AttrNoreturn             Attr = 0x87
+<span id="L134" class="ln">   134&nbsp;&nbsp;</span>	AttrAlignment            Attr = 0x88
+<span id="L135" class="ln">   135&nbsp;&nbsp;</span>	AttrExportSymbols        Attr = 0x89
+<span id="L136" class="ln">   136&nbsp;&nbsp;</span>	AttrDeleted              Attr = 0x8A
+<span id="L137" class="ln">   137&nbsp;&nbsp;</span>	AttrDefaulted            Attr = 0x8B
+<span id="L138" class="ln">   138&nbsp;&nbsp;</span>	AttrLoclistsBase         Attr = 0x8C
+<span id="L139" class="ln">   139&nbsp;&nbsp;</span>)
+<span id="L140" class="ln">   140&nbsp;&nbsp;</span>
+<span id="L141" class="ln">   141&nbsp;&nbsp;</span>func (a Attr) GoString() string {
+<span id="L142" class="ln">   142&nbsp;&nbsp;</span>	if str, ok := _Attr_map[a]; ok {
+<span id="L143" class="ln">   143&nbsp;&nbsp;</span>		return &#34;dwarf.Attr&#34; + str
+<span id="L144" class="ln">   144&nbsp;&nbsp;</span>	}
+<span id="L145" class="ln">   145&nbsp;&nbsp;</span>	return &#34;dwarf.&#34; + a.String()
+<span id="L146" class="ln">   146&nbsp;&nbsp;</span>}
+<span id="L147" class="ln">   147&nbsp;&nbsp;</span>
+<span id="L148" class="ln">   148&nbsp;&nbsp;</span><span class="comment">// A format is a DWARF data encoding format.</span>
+<span id="L149" class="ln">   149&nbsp;&nbsp;</span>type format uint32
+<span id="L150" class="ln">   150&nbsp;&nbsp;</span>
+<span id="L151" class="ln">   151&nbsp;&nbsp;</span>const (
+<span id="L152" class="ln">   152&nbsp;&nbsp;</span>	<span class="comment">// value formats</span>
+<span id="L153" class="ln">   153&nbsp;&nbsp;</span>	formAddr        format = 0x01
+<span id="L154" class="ln">   154&nbsp;&nbsp;</span>	formDwarfBlock2 format = 0x03
+<span id="L155" class="ln">   155&nbsp;&nbsp;</span>	formDwarfBlock4 format = 0x04
+<span id="L156" class="ln">   156&nbsp;&nbsp;</span>	formData2       format = 0x05
+<span id="L157" class="ln">   157&nbsp;&nbsp;</span>	formData4       format = 0x06
+<span id="L158" class="ln">   158&nbsp;&nbsp;</span>	formData8       format = 0x07
+<span id="L159" class="ln">   159&nbsp;&nbsp;</span>	formString      format = 0x08
+<span id="L160" class="ln">   160&nbsp;&nbsp;</span>	formDwarfBlock  format = 0x09
+<span id="L161" class="ln">   161&nbsp;&nbsp;</span>	formDwarfBlock1 format = 0x0A
+<span id="L162" class="ln">   162&nbsp;&nbsp;</span>	formData1       format = 0x0B
+<span id="L163" class="ln">   163&nbsp;&nbsp;</span>	formFlag        format = 0x0C
+<span id="L164" class="ln">   164&nbsp;&nbsp;</span>	formSdata       format = 0x0D
+<span id="L165" class="ln">   165&nbsp;&nbsp;</span>	formStrp        format = 0x0E
+<span id="L166" class="ln">   166&nbsp;&nbsp;</span>	formUdata       format = 0x0F
+<span id="L167" class="ln">   167&nbsp;&nbsp;</span>	formRefAddr     format = 0x10
+<span id="L168" class="ln">   168&nbsp;&nbsp;</span>	formRef1        format = 0x11
+<span id="L169" class="ln">   169&nbsp;&nbsp;</span>	formRef2        format = 0x12
+<span id="L170" class="ln">   170&nbsp;&nbsp;</span>	formRef4        format = 0x13
+<span id="L171" class="ln">   171&nbsp;&nbsp;</span>	formRef8        format = 0x14
+<span id="L172" class="ln">   172&nbsp;&nbsp;</span>	formRefUdata    format = 0x15
+<span id="L173" class="ln">   173&nbsp;&nbsp;</span>	formIndirect    format = 0x16
+<span id="L174" class="ln">   174&nbsp;&nbsp;</span>	<span class="comment">// The following are new in DWARF 4.</span>
+<span id="L175" class="ln">   175&nbsp;&nbsp;</span>	formSecOffset   format = 0x17
+<span id="L176" class="ln">   176&nbsp;&nbsp;</span>	formExprloc     format = 0x18
+<span id="L177" class="ln">   177&nbsp;&nbsp;</span>	formFlagPresent format = 0x19
+<span id="L178" class="ln">   178&nbsp;&nbsp;</span>	formRefSig8     format = 0x20
+<span id="L179" class="ln">   179&nbsp;&nbsp;</span>	<span class="comment">// The following are new in DWARF 5.</span>
+<span id="L180" class="ln">   180&nbsp;&nbsp;</span>	formStrx          format = 0x1A
+<span id="L181" class="ln">   181&nbsp;&nbsp;</span>	formAddrx         format = 0x1B
+<span id="L182" class="ln">   182&nbsp;&nbsp;</span>	formRefSup4       format = 0x1C
+<span id="L183" class="ln">   183&nbsp;&nbsp;</span>	formStrpSup       format = 0x1D
+<span id="L184" class="ln">   184&nbsp;&nbsp;</span>	formData16        format = 0x1E
+<span id="L185" class="ln">   185&nbsp;&nbsp;</span>	formLineStrp      format = 0x1F
+<span id="L186" class="ln">   186&nbsp;&nbsp;</span>	formImplicitConst format = 0x21
+<span id="L187" class="ln">   187&nbsp;&nbsp;</span>	formLoclistx      format = 0x22
+<span id="L188" class="ln">   188&nbsp;&nbsp;</span>	formRnglistx      format = 0x23
+<span id="L189" class="ln">   189&nbsp;&nbsp;</span>	formRefSup8       format = 0x24
+<span id="L190" class="ln">   190&nbsp;&nbsp;</span>	formStrx1         format = 0x25
+<span id="L191" class="ln">   191&nbsp;&nbsp;</span>	formStrx2         format = 0x26
+<span id="L192" class="ln">   192&nbsp;&nbsp;</span>	formStrx3         format = 0x27
+<span id="L193" class="ln">   193&nbsp;&nbsp;</span>	formStrx4         format = 0x28
+<span id="L194" class="ln">   194&nbsp;&nbsp;</span>	formAddrx1        format = 0x29
+<span id="L195" class="ln">   195&nbsp;&nbsp;</span>	formAddrx2        format = 0x2A
+<span id="L196" class="ln">   196&nbsp;&nbsp;</span>	formAddrx3        format = 0x2B
+<span id="L197" class="ln">   197&nbsp;&nbsp;</span>	formAddrx4        format = 0x2C
+<span id="L198" class="ln">   198&nbsp;&nbsp;</span>	<span class="comment">// Extensions for multi-file compression (.dwz)</span>
+<span id="L199" class="ln">   199&nbsp;&nbsp;</span>	<span class="comment">// http://www.dwarfstd.org/ShowIssue.php?issue=120604.1</span>
+<span id="L200" class="ln">   200&nbsp;&nbsp;</span>	formGnuRefAlt  format = 0x1f20
+<span id="L201" class="ln">   201&nbsp;&nbsp;</span>	formGnuStrpAlt format = 0x1f21
+<span id="L202" class="ln">   202&nbsp;&nbsp;</span>)
+<span id="L203" class="ln">   203&nbsp;&nbsp;</span>
+<span id="L204" class="ln">   204&nbsp;&nbsp;</span><span class="comment">//go:generate stringer -type Tag -trimprefix=Tag</span>
+<span id="L205" class="ln">   205&nbsp;&nbsp;</span>
+<span id="L206" class="ln">   206&nbsp;&nbsp;</span><span class="comment">// A Tag is the classification (the type) of an [Entry].</span>
+<span id="L207" class="ln">   207&nbsp;&nbsp;</span>type Tag uint32
+<span id="L208" class="ln">   208&nbsp;&nbsp;</span>
+<span id="L209" class="ln">   209&nbsp;&nbsp;</span>const (
+<span id="L210" class="ln">   210&nbsp;&nbsp;</span>	TagArrayType              Tag = 0x01
+<span id="L211" class="ln">   211&nbsp;&nbsp;</span>	TagClassType              Tag = 0x02
+<span id="L212" class="ln">   212&nbsp;&nbsp;</span>	TagEntryPoint             Tag = 0x03
+<span id="L213" class="ln">   213&nbsp;&nbsp;</span>	TagEnumerationType        Tag = 0x04
+<span id="L214" class="ln">   214&nbsp;&nbsp;</span>	TagFormalParameter        Tag = 0x05
+<span id="L215" class="ln">   215&nbsp;&nbsp;</span>	TagImportedDeclaration    Tag = 0x08
+<span id="L216" class="ln">   216&nbsp;&nbsp;</span>	TagLabel                  Tag = 0x0A
+<span id="L217" class="ln">   217&nbsp;&nbsp;</span>	TagLexDwarfBlock          Tag = 0x0B
+<span id="L218" class="ln">   218&nbsp;&nbsp;</span>	TagMember                 Tag = 0x0D
+<span id="L219" class="ln">   219&nbsp;&nbsp;</span>	TagPointerType            Tag = 0x0F
+<span id="L220" class="ln">   220&nbsp;&nbsp;</span>	TagReferenceType          Tag = 0x10
+<span id="L221" class="ln">   221&nbsp;&nbsp;</span>	TagCompileUnit            Tag = 0x11
+<span id="L222" class="ln">   222&nbsp;&nbsp;</span>	TagStringType             Tag = 0x12
+<span id="L223" class="ln">   223&nbsp;&nbsp;</span>	TagStructType             Tag = 0x13
+<span id="L224" class="ln">   224&nbsp;&nbsp;</span>	TagSubroutineType         Tag = 0x15
+<span id="L225" class="ln">   225&nbsp;&nbsp;</span>	TagTypedef                Tag = 0x16
+<span id="L226" class="ln">   226&nbsp;&nbsp;</span>	TagUnionType              Tag = 0x17
+<span id="L227" class="ln">   227&nbsp;&nbsp;</span>	TagUnspecifiedParameters  Tag = 0x18
+<span id="L228" class="ln">   228&nbsp;&nbsp;</span>	TagVariant                Tag = 0x19
+<span id="L229" class="ln">   229&nbsp;&nbsp;</span>	TagCommonDwarfBlock       Tag = 0x1A
+<span id="L230" class="ln">   230&nbsp;&nbsp;</span>	TagCommonInclusion        Tag = 0x1B
+<span id="L231" class="ln">   231&nbsp;&nbsp;</span>	TagInheritance            Tag = 0x1C
+<span id="L232" class="ln">   232&nbsp;&nbsp;</span>	TagInlinedSubroutine      Tag = 0x1D
+<span id="L233" class="ln">   233&nbsp;&nbsp;</span>	TagModule                 Tag = 0x1E
+<span id="L234" class="ln">   234&nbsp;&nbsp;</span>	TagPtrToMemberType        Tag = 0x1F
+<span id="L235" class="ln">   235&nbsp;&nbsp;</span>	TagSetType                Tag = 0x20
+<span id="L236" class="ln">   236&nbsp;&nbsp;</span>	TagSubrangeType           Tag = 0x21
+<span id="L237" class="ln">   237&nbsp;&nbsp;</span>	TagWithStmt               Tag = 0x22
+<span id="L238" class="ln">   238&nbsp;&nbsp;</span>	TagAccessDeclaration      Tag = 0x23
+<span id="L239" class="ln">   239&nbsp;&nbsp;</span>	TagBaseType               Tag = 0x24
+<span id="L240" class="ln">   240&nbsp;&nbsp;</span>	TagCatchDwarfBlock        Tag = 0x25
+<span id="L241" class="ln">   241&nbsp;&nbsp;</span>	TagConstType              Tag = 0x26
+<span id="L242" class="ln">   242&nbsp;&nbsp;</span>	TagConstant               Tag = 0x27
+<span id="L243" class="ln">   243&nbsp;&nbsp;</span>	TagEnumerator             Tag = 0x28
+<span id="L244" class="ln">   244&nbsp;&nbsp;</span>	TagFileType               Tag = 0x29
+<span id="L245" class="ln">   245&nbsp;&nbsp;</span>	TagFriend                 Tag = 0x2A
+<span id="L246" class="ln">   246&nbsp;&nbsp;</span>	TagNamelist               Tag = 0x2B
+<span id="L247" class="ln">   247&nbsp;&nbsp;</span>	TagNamelistItem           Tag = 0x2C
+<span id="L248" class="ln">   248&nbsp;&nbsp;</span>	TagPackedType             Tag = 0x2D
+<span id="L249" class="ln">   249&nbsp;&nbsp;</span>	TagSubprogram             Tag = 0x2E
+<span id="L250" class="ln">   250&nbsp;&nbsp;</span>	TagTemplateTypeParameter  Tag = 0x2F
+<span id="L251" class="ln">   251&nbsp;&nbsp;</span>	TagTemplateValueParameter Tag = 0x30
+<span id="L252" class="ln">   252&nbsp;&nbsp;</span>	TagThrownType             Tag = 0x31
+<span id="L253" class="ln">   253&nbsp;&nbsp;</span>	TagTryDwarfBlock          Tag = 0x32
+<span id="L254" class="ln">   254&nbsp;&nbsp;</span>	TagVariantPart            Tag = 0x33
+<span id="L255" class="ln">   255&nbsp;&nbsp;</span>	TagVariable               Tag = 0x34
+<span id="L256" class="ln">   256&nbsp;&nbsp;</span>	TagVolatileType           Tag = 0x35
+<span id="L257" class="ln">   257&nbsp;&nbsp;</span>	<span class="comment">// The following are new in DWARF 3.</span>
+<span id="L258" class="ln">   258&nbsp;&nbsp;</span>	TagDwarfProcedure  Tag = 0x36
+<span id="L259" class="ln">   259&nbsp;&nbsp;</span>	TagRestrictType    Tag = 0x37
+<span id="L260" class="ln">   260&nbsp;&nbsp;</span>	TagInterfaceType   Tag = 0x38
+<span id="L261" class="ln">   261&nbsp;&nbsp;</span>	TagNamespace       Tag = 0x39
+<span id="L262" class="ln">   262&nbsp;&nbsp;</span>	TagImportedModule  Tag = 0x3A
+<span id="L263" class="ln">   263&nbsp;&nbsp;</span>	TagUnspecifiedType Tag = 0x3B
+<span id="L264" class="ln">   264&nbsp;&nbsp;</span>	TagPartialUnit     Tag = 0x3C
+<span id="L265" class="ln">   265&nbsp;&nbsp;</span>	TagImportedUnit    Tag = 0x3D
+<span id="L266" class="ln">   266&nbsp;&nbsp;</span>	TagMutableType     Tag = 0x3E <span class="comment">// Later removed from DWARF.</span>
+<span id="L267" class="ln">   267&nbsp;&nbsp;</span>	TagCondition       Tag = 0x3F
+<span id="L268" class="ln">   268&nbsp;&nbsp;</span>	TagSharedType      Tag = 0x40
+<span id="L269" class="ln">   269&nbsp;&nbsp;</span>	<span class="comment">// The following are new in DWARF 4.</span>
+<span id="L270" class="ln">   270&nbsp;&nbsp;</span>	TagTypeUnit            Tag = 0x41
+<span id="L271" class="ln">   271&nbsp;&nbsp;</span>	TagRvalueReferenceType Tag = 0x42
+<span id="L272" class="ln">   272&nbsp;&nbsp;</span>	TagTemplateAlias       Tag = 0x43
+<span id="L273" class="ln">   273&nbsp;&nbsp;</span>	<span class="comment">// The following are new in DWARF 5.</span>
+<span id="L274" class="ln">   274&nbsp;&nbsp;</span>	TagCoarrayType       Tag = 0x44
+<span id="L275" class="ln">   275&nbsp;&nbsp;</span>	TagGenericSubrange   Tag = 0x45
+<span id="L276" class="ln">   276&nbsp;&nbsp;</span>	TagDynamicType       Tag = 0x46
+<span id="L277" class="ln">   277&nbsp;&nbsp;</span>	TagAtomicType        Tag = 0x47
+<span id="L278" class="ln">   278&nbsp;&nbsp;</span>	TagCallSite          Tag = 0x48
+<span id="L279" class="ln">   279&nbsp;&nbsp;</span>	TagCallSiteParameter Tag = 0x49
+<span id="L280" class="ln">   280&nbsp;&nbsp;</span>	TagSkeletonUnit      Tag = 0x4A
+<span id="L281" class="ln">   281&nbsp;&nbsp;</span>	TagImmutableType     Tag = 0x4B
+<span id="L282" class="ln">   282&nbsp;&nbsp;</span>)
+<span id="L283" class="ln">   283&nbsp;&nbsp;</span>
+<span id="L284" class="ln">   284&nbsp;&nbsp;</span>func (t Tag) GoString() string {
+<span id="L285" class="ln">   285&nbsp;&nbsp;</span>	if t &lt;= TagTemplateAlias {
+<span id="L286" class="ln">   286&nbsp;&nbsp;</span>		return &#34;dwarf.Tag&#34; + t.String()
+<span id="L287" class="ln">   287&nbsp;&nbsp;</span>	}
+<span id="L288" class="ln">   288&nbsp;&nbsp;</span>	return &#34;dwarf.&#34; + t.String()
+<span id="L289" class="ln">   289&nbsp;&nbsp;</span>}
+<span id="L290" class="ln">   290&nbsp;&nbsp;</span>
+<span id="L291" class="ln">   291&nbsp;&nbsp;</span><span class="comment">// Location expression operators.</span>
+<span id="L292" class="ln">   292&nbsp;&nbsp;</span><span class="comment">// The debug info encodes value locations like 8(R3)</span>
+<span id="L293" class="ln">   293&nbsp;&nbsp;</span><span class="comment">// as a sequence of these op codes.</span>
+<span id="L294" class="ln">   294&nbsp;&nbsp;</span><span class="comment">// This package does not implement full expressions;</span>
+<span id="L295" class="ln">   295&nbsp;&nbsp;</span><span class="comment">// the opPlusUconst operator is expected by the type parser.</span>
+<span id="L296" class="ln">   296&nbsp;&nbsp;</span>const (
+<span id="L297" class="ln">   297&nbsp;&nbsp;</span>	opAddr       = 0x03 <span class="comment">/* 1 op, const addr */</span>
+<span id="L298" class="ln">   298&nbsp;&nbsp;</span>	opDeref      = 0x06
+<span id="L299" class="ln">   299&nbsp;&nbsp;</span>	opConst1u    = 0x08 <span class="comment">/* 1 op, 1 byte const */</span>
+<span id="L300" class="ln">   300&nbsp;&nbsp;</span>	opConst1s    = 0x09 <span class="comment">/*	&#34; signed */</span>
+<span id="L301" class="ln">   301&nbsp;&nbsp;</span>	opConst2u    = 0x0A <span class="comment">/* 1 op, 2 byte const  */</span>
+<span id="L302" class="ln">   302&nbsp;&nbsp;</span>	opConst2s    = 0x0B <span class="comment">/*	&#34; signed */</span>
+<span id="L303" class="ln">   303&nbsp;&nbsp;</span>	opConst4u    = 0x0C <span class="comment">/* 1 op, 4 byte const */</span>
+<span id="L304" class="ln">   304&nbsp;&nbsp;</span>	opConst4s    = 0x0D <span class="comment">/*	&#34; signed */</span>
+<span id="L305" class="ln">   305&nbsp;&nbsp;</span>	opConst8u    = 0x0E <span class="comment">/* 1 op, 8 byte const */</span>
+<span id="L306" class="ln">   306&nbsp;&nbsp;</span>	opConst8s    = 0x0F <span class="comment">/*	&#34; signed */</span>
+<span id="L307" class="ln">   307&nbsp;&nbsp;</span>	opConstu     = 0x10 <span class="comment">/* 1 op, LEB128 const */</span>
+<span id="L308" class="ln">   308&nbsp;&nbsp;</span>	opConsts     = 0x11 <span class="comment">/*	&#34; signed */</span>
+<span id="L309" class="ln">   309&nbsp;&nbsp;</span>	opDup        = 0x12
+<span id="L310" class="ln">   310&nbsp;&nbsp;</span>	opDrop       = 0x13
+<span id="L311" class="ln">   311&nbsp;&nbsp;</span>	opOver       = 0x14
+<span id="L312" class="ln">   312&nbsp;&nbsp;</span>	opPick       = 0x15 <span class="comment">/* 1 op, 1 byte stack index */</span>
+<span id="L313" class="ln">   313&nbsp;&nbsp;</span>	opSwap       = 0x16
+<span id="L314" class="ln">   314&nbsp;&nbsp;</span>	opRot        = 0x17
+<span id="L315" class="ln">   315&nbsp;&nbsp;</span>	opXderef     = 0x18
+<span id="L316" class="ln">   316&nbsp;&nbsp;</span>	opAbs        = 0x19
+<span id="L317" class="ln">   317&nbsp;&nbsp;</span>	opAnd        = 0x1A
+<span id="L318" class="ln">   318&nbsp;&nbsp;</span>	opDiv        = 0x1B
+<span id="L319" class="ln">   319&nbsp;&nbsp;</span>	opMinus      = 0x1C
+<span id="L320" class="ln">   320&nbsp;&nbsp;</span>	opMod        = 0x1D
+<span id="L321" class="ln">   321&nbsp;&nbsp;</span>	opMul        = 0x1E
+<span id="L322" class="ln">   322&nbsp;&nbsp;</span>	opNeg        = 0x1F
+<span id="L323" class="ln">   323&nbsp;&nbsp;</span>	opNot        = 0x20
+<span id="L324" class="ln">   324&nbsp;&nbsp;</span>	opOr         = 0x21
+<span id="L325" class="ln">   325&nbsp;&nbsp;</span>	opPlus       = 0x22
+<span id="L326" class="ln">   326&nbsp;&nbsp;</span>	opPlusUconst = 0x23 <span class="comment">/* 1 op, ULEB128 addend */</span>
+<span id="L327" class="ln">   327&nbsp;&nbsp;</span>	opShl        = 0x24
+<span id="L328" class="ln">   328&nbsp;&nbsp;</span>	opShr        = 0x25
+<span id="L329" class="ln">   329&nbsp;&nbsp;</span>	opShra       = 0x26
+<span id="L330" class="ln">   330&nbsp;&nbsp;</span>	opXor        = 0x27
+<span id="L331" class="ln">   331&nbsp;&nbsp;</span>	opSkip       = 0x2F <span class="comment">/* 1 op, signed 2-byte constant */</span>
+<span id="L332" class="ln">   332&nbsp;&nbsp;</span>	opBra        = 0x28 <span class="comment">/* 1 op, signed 2-byte constant */</span>
+<span id="L333" class="ln">   333&nbsp;&nbsp;</span>	opEq         = 0x29
+<span id="L334" class="ln">   334&nbsp;&nbsp;</span>	opGe         = 0x2A
+<span id="L335" class="ln">   335&nbsp;&nbsp;</span>	opGt         = 0x2B
+<span id="L336" class="ln">   336&nbsp;&nbsp;</span>	opLe         = 0x2C
+<span id="L337" class="ln">   337&nbsp;&nbsp;</span>	opLt         = 0x2D
+<span id="L338" class="ln">   338&nbsp;&nbsp;</span>	opNe         = 0x2E
+<span id="L339" class="ln">   339&nbsp;&nbsp;</span>	opLit0       = 0x30
+<span id="L340" class="ln">   340&nbsp;&nbsp;</span>	<span class="comment">/* OpLitN = OpLit0 + N for N = 0..31 */</span>
+<span id="L341" class="ln">   341&nbsp;&nbsp;</span>	opReg0 = 0x50
+<span id="L342" class="ln">   342&nbsp;&nbsp;</span>	<span class="comment">/* OpRegN = OpReg0 + N for N = 0..31 */</span>
+<span id="L343" class="ln">   343&nbsp;&nbsp;</span>	opBreg0 = 0x70 <span class="comment">/* 1 op, signed LEB128 constant */</span>
+<span id="L344" class="ln">   344&nbsp;&nbsp;</span>	<span class="comment">/* OpBregN = OpBreg0 + N for N = 0..31 */</span>
+<span id="L345" class="ln">   345&nbsp;&nbsp;</span>	opRegx       = 0x90 <span class="comment">/* 1 op, ULEB128 register */</span>
+<span id="L346" class="ln">   346&nbsp;&nbsp;</span>	opFbreg      = 0x91 <span class="comment">/* 1 op, SLEB128 offset */</span>
+<span id="L347" class="ln">   347&nbsp;&nbsp;</span>	opBregx      = 0x92 <span class="comment">/* 2 op, ULEB128 reg; SLEB128 off */</span>
+<span id="L348" class="ln">   348&nbsp;&nbsp;</span>	opPiece      = 0x93 <span class="comment">/* 1 op, ULEB128 size of piece */</span>
+<span id="L349" class="ln">   349&nbsp;&nbsp;</span>	opDerefSize  = 0x94 <span class="comment">/* 1-byte size of data retrieved */</span>
+<span id="L350" class="ln">   350&nbsp;&nbsp;</span>	opXderefSize = 0x95 <span class="comment">/* 1-byte size of data retrieved */</span>
+<span id="L351" class="ln">   351&nbsp;&nbsp;</span>	opNop        = 0x96
+<span id="L352" class="ln">   352&nbsp;&nbsp;</span>	<span class="comment">// The following are new in DWARF 3.</span>
+<span id="L353" class="ln">   353&nbsp;&nbsp;</span>	opPushObjAddr    = 0x97
+<span id="L354" class="ln">   354&nbsp;&nbsp;</span>	opCall2          = 0x98 <span class="comment">/* 2-byte offset of DIE */</span>
+<span id="L355" class="ln">   355&nbsp;&nbsp;</span>	opCall4          = 0x99 <span class="comment">/* 4-byte offset of DIE */</span>
+<span id="L356" class="ln">   356&nbsp;&nbsp;</span>	opCallRef        = 0x9A <span class="comment">/* 4- or 8- byte offset of DIE */</span>
+<span id="L357" class="ln">   357&nbsp;&nbsp;</span>	opFormTLSAddress = 0x9B
+<span id="L358" class="ln">   358&nbsp;&nbsp;</span>	opCallFrameCFA   = 0x9C
+<span id="L359" class="ln">   359&nbsp;&nbsp;</span>	opBitPiece       = 0x9D
+<span id="L360" class="ln">   360&nbsp;&nbsp;</span>	<span class="comment">// The following are new in DWARF 4.</span>
+<span id="L361" class="ln">   361&nbsp;&nbsp;</span>	opImplicitValue = 0x9E
+<span id="L362" class="ln">   362&nbsp;&nbsp;</span>	opStackValue    = 0x9F
+<span id="L363" class="ln">   363&nbsp;&nbsp;</span>	<span class="comment">// The following a new in DWARF 5.</span>
+<span id="L364" class="ln">   364&nbsp;&nbsp;</span>	opImplicitPointer = 0xA0
+<span id="L365" class="ln">   365&nbsp;&nbsp;</span>	opAddrx           = 0xA1
+<span id="L366" class="ln">   366&nbsp;&nbsp;</span>	opConstx          = 0xA2
+<span id="L367" class="ln">   367&nbsp;&nbsp;</span>	opEntryValue      = 0xA3
+<span id="L368" class="ln">   368&nbsp;&nbsp;</span>	opConstType       = 0xA4
+<span id="L369" class="ln">   369&nbsp;&nbsp;</span>	opRegvalType      = 0xA5
+<span id="L370" class="ln">   370&nbsp;&nbsp;</span>	opDerefType       = 0xA6
+<span id="L371" class="ln">   371&nbsp;&nbsp;</span>	opXderefType      = 0xA7
+<span id="L372" class="ln">   372&nbsp;&nbsp;</span>	opConvert         = 0xA8
+<span id="L373" class="ln">   373&nbsp;&nbsp;</span>	opReinterpret     = 0xA9
+<span id="L374" class="ln">   374&nbsp;&nbsp;</span>	<span class="comment">/* 0xE0-0xFF reserved for user-specific */</span>
+<span id="L375" class="ln">   375&nbsp;&nbsp;</span>)
+<span id="L376" class="ln">   376&nbsp;&nbsp;</span>
+<span id="L377" class="ln">   377&nbsp;&nbsp;</span><span class="comment">// Basic type encodings -- the value for AttrEncoding in a TagBaseType Entry.</span>
+<span id="L378" class="ln">   378&nbsp;&nbsp;</span>const (
+<span id="L379" class="ln">   379&nbsp;&nbsp;</span>	encAddress      = 0x01
+<span id="L380" class="ln">   380&nbsp;&nbsp;</span>	encBoolean      = 0x02
+<span id="L381" class="ln">   381&nbsp;&nbsp;</span>	encComplexFloat = 0x03
+<span id="L382" class="ln">   382&nbsp;&nbsp;</span>	encFloat        = 0x04
+<span id="L383" class="ln">   383&nbsp;&nbsp;</span>	encSigned       = 0x05
+<span id="L384" class="ln">   384&nbsp;&nbsp;</span>	encSignedChar   = 0x06
+<span id="L385" class="ln">   385&nbsp;&nbsp;</span>	encUnsigned     = 0x07
+<span id="L386" class="ln">   386&nbsp;&nbsp;</span>	encUnsignedChar = 0x08
+<span id="L387" class="ln">   387&nbsp;&nbsp;</span>	<span class="comment">// The following are new in DWARF 3.</span>
+<span id="L388" class="ln">   388&nbsp;&nbsp;</span>	encImaginaryFloat = 0x09
+<span id="L389" class="ln">   389&nbsp;&nbsp;</span>	encPackedDecimal  = 0x0A
+<span id="L390" class="ln">   390&nbsp;&nbsp;</span>	encNumericString  = 0x0B
+<span id="L391" class="ln">   391&nbsp;&nbsp;</span>	encEdited         = 0x0C
+<span id="L392" class="ln">   392&nbsp;&nbsp;</span>	encSignedFixed    = 0x0D
+<span id="L393" class="ln">   393&nbsp;&nbsp;</span>	encUnsignedFixed  = 0x0E
+<span id="L394" class="ln">   394&nbsp;&nbsp;</span>	encDecimalFloat   = 0x0F
+<span id="L395" class="ln">   395&nbsp;&nbsp;</span>	<span class="comment">// The following are new in DWARF 4.</span>
+<span id="L396" class="ln">   396&nbsp;&nbsp;</span>	encUTF = 0x10
+<span id="L397" class="ln">   397&nbsp;&nbsp;</span>	<span class="comment">// The following are new in DWARF 5.</span>
+<span id="L398" class="ln">   398&nbsp;&nbsp;</span>	encUCS   = 0x11
+<span id="L399" class="ln">   399&nbsp;&nbsp;</span>	encASCII = 0x12
+<span id="L400" class="ln">   400&nbsp;&nbsp;</span>)
+<span id="L401" class="ln">   401&nbsp;&nbsp;</span>
+<span id="L402" class="ln">   402&nbsp;&nbsp;</span><span class="comment">// Statement program standard opcode encodings.</span>
+<span id="L403" class="ln">   403&nbsp;&nbsp;</span>const (
+<span id="L404" class="ln">   404&nbsp;&nbsp;</span>	lnsCopy           = 1
+<span id="L405" class="ln">   405&nbsp;&nbsp;</span>	lnsAdvancePC      = 2
+<span id="L406" class="ln">   406&nbsp;&nbsp;</span>	lnsAdvanceLine    = 3
+<span id="L407" class="ln">   407&nbsp;&nbsp;</span>	lnsSetFile        = 4
+<span id="L408" class="ln">   408&nbsp;&nbsp;</span>	lnsSetColumn      = 5
+<span id="L409" class="ln">   409&nbsp;&nbsp;</span>	lnsNegateStmt     = 6
+<span id="L410" class="ln">   410&nbsp;&nbsp;</span>	lnsSetBasicBlock  = 7
+<span id="L411" class="ln">   411&nbsp;&nbsp;</span>	lnsConstAddPC     = 8
+<span id="L412" class="ln">   412&nbsp;&nbsp;</span>	lnsFixedAdvancePC = 9
+<span id="L413" class="ln">   413&nbsp;&nbsp;</span>
+<span id="L414" class="ln">   414&nbsp;&nbsp;</span>	<span class="comment">// DWARF 3</span>
+<span id="L415" class="ln">   415&nbsp;&nbsp;</span>	lnsSetPrologueEnd   = 10
+<span id="L416" class="ln">   416&nbsp;&nbsp;</span>	lnsSetEpilogueBegin = 11
+<span id="L417" class="ln">   417&nbsp;&nbsp;</span>	lnsSetISA           = 12
+<span id="L418" class="ln">   418&nbsp;&nbsp;</span>)
+<span id="L419" class="ln">   419&nbsp;&nbsp;</span>
+<span id="L420" class="ln">   420&nbsp;&nbsp;</span><span class="comment">// Statement program extended opcode encodings.</span>
+<span id="L421" class="ln">   421&nbsp;&nbsp;</span>const (
+<span id="L422" class="ln">   422&nbsp;&nbsp;</span>	lneEndSequence = 1
+<span id="L423" class="ln">   423&nbsp;&nbsp;</span>	lneSetAddress  = 2
+<span id="L424" class="ln">   424&nbsp;&nbsp;</span>	lneDefineFile  = 3
+<span id="L425" class="ln">   425&nbsp;&nbsp;</span>
+<span id="L426" class="ln">   426&nbsp;&nbsp;</span>	<span class="comment">// DWARF 4</span>
+<span id="L427" class="ln">   427&nbsp;&nbsp;</span>	lneSetDiscriminator = 4
+<span id="L428" class="ln">   428&nbsp;&nbsp;</span>)
+<span id="L429" class="ln">   429&nbsp;&nbsp;</span>
+<span id="L430" class="ln">   430&nbsp;&nbsp;</span><span class="comment">// Line table directory and file name entry formats.</span>
+<span id="L431" class="ln">   431&nbsp;&nbsp;</span><span class="comment">// These are new in DWARF 5.</span>
+<span id="L432" class="ln">   432&nbsp;&nbsp;</span>const (
+<span id="L433" class="ln">   433&nbsp;&nbsp;</span>	lnctPath           = 0x01
+<span id="L434" class="ln">   434&nbsp;&nbsp;</span>	lnctDirectoryIndex = 0x02
+<span id="L435" class="ln">   435&nbsp;&nbsp;</span>	lnctTimestamp      = 0x03
+<span id="L436" class="ln">   436&nbsp;&nbsp;</span>	lnctSize           = 0x04
+<span id="L437" class="ln">   437&nbsp;&nbsp;</span>	lnctMD5            = 0x05
+<span id="L438" class="ln">   438&nbsp;&nbsp;</span>)
+<span id="L439" class="ln">   439&nbsp;&nbsp;</span>
+<span id="L440" class="ln">   440&nbsp;&nbsp;</span><span class="comment">// Location list entry codes.</span>
+<span id="L441" class="ln">   441&nbsp;&nbsp;</span><span class="comment">// These are new in DWARF 5.</span>
+<span id="L442" class="ln">   442&nbsp;&nbsp;</span>const (
+<span id="L443" class="ln">   443&nbsp;&nbsp;</span>	lleEndOfList       = 0x00
+<span id="L444" class="ln">   444&nbsp;&nbsp;</span>	lleBaseAddressx    = 0x01
+<span id="L445" class="ln">   445&nbsp;&nbsp;</span>	lleStartxEndx      = 0x02
+<span id="L446" class="ln">   446&nbsp;&nbsp;</span>	lleStartxLength    = 0x03
+<span id="L447" class="ln">   447&nbsp;&nbsp;</span>	lleOffsetPair      = 0x04
+<span id="L448" class="ln">   448&nbsp;&nbsp;</span>	lleDefaultLocation = 0x05
+<span id="L449" class="ln">   449&nbsp;&nbsp;</span>	lleBaseAddress     = 0x06
+<span id="L450" class="ln">   450&nbsp;&nbsp;</span>	lleStartEnd        = 0x07
+<span id="L451" class="ln">   451&nbsp;&nbsp;</span>	lleStartLength     = 0x08
+<span id="L452" class="ln">   452&nbsp;&nbsp;</span>)
+<span id="L453" class="ln">   453&nbsp;&nbsp;</span>
+<span id="L454" class="ln">   454&nbsp;&nbsp;</span><span class="comment">// Unit header unit type encodings.</span>
+<span id="L455" class="ln">   455&nbsp;&nbsp;</span><span class="comment">// These are new in DWARF 5.</span>
+<span id="L456" class="ln">   456&nbsp;&nbsp;</span>const (
+<span id="L457" class="ln">   457&nbsp;&nbsp;</span>	utCompile      = 0x01
+<span id="L458" class="ln">   458&nbsp;&nbsp;</span>	utType         = 0x02
+<span id="L459" class="ln">   459&nbsp;&nbsp;</span>	utPartial      = 0x03
+<span id="L460" class="ln">   460&nbsp;&nbsp;</span>	utSkeleton     = 0x04
+<span id="L461" class="ln">   461&nbsp;&nbsp;</span>	utSplitCompile = 0x05
+<span id="L462" class="ln">   462&nbsp;&nbsp;</span>	utSplitType    = 0x06
+<span id="L463" class="ln">   463&nbsp;&nbsp;</span>)
+<span id="L464" class="ln">   464&nbsp;&nbsp;</span>
+<span id="L465" class="ln">   465&nbsp;&nbsp;</span><span class="comment">// Opcodes for DWARFv5 debug_rnglists section.</span>
+<span id="L466" class="ln">   466&nbsp;&nbsp;</span>const (
+<span id="L467" class="ln">   467&nbsp;&nbsp;</span>	rleEndOfList    = 0x0
+<span id="L468" class="ln">   468&nbsp;&nbsp;</span>	rleBaseAddressx = 0x1
+<span id="L469" class="ln">   469&nbsp;&nbsp;</span>	rleStartxEndx   = 0x2
+<span id="L470" class="ln">   470&nbsp;&nbsp;</span>	rleStartxLength = 0x3
+<span id="L471" class="ln">   471&nbsp;&nbsp;</span>	rleOffsetPair   = 0x4
+<span id="L472" class="ln">   472&nbsp;&nbsp;</span>	rleBaseAddress  = 0x5
+<span id="L473" class="ln">   473&nbsp;&nbsp;</span>	rleStartEnd     = 0x6
+<span id="L474" class="ln">   474&nbsp;&nbsp;</span>	rleStartLength  = 0x7
+<span id="L475" class="ln">   475&nbsp;&nbsp;</span>)
+<span id="L476" class="ln">   476&nbsp;&nbsp;</span>
+</pre><p><a href="const.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

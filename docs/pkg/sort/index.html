@@ -1,0 +1,1764 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>sort - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package sort
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "sort"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+				<dd><a href="index.html#pkg-examples" class="examplesLink">Examples</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>Package sort provides primitives for sorting slices and user-defined collections.
+
+				<div id="example_" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">package sort_test
+
+import (
+    &#34;fmt&#34;
+    &#34;sort&#34;
+)
+
+type Person struct {
+    Name string
+    Age  int
+}
+
+func (p Person) String() string {
+    return fmt.Sprintf(&#34;%s: %d&#34;, p.Name, p.Age)
+}
+
+<span class="comment">// ByAge implements sort.Interface for []Person based on</span>
+<span class="comment">// the Age field.</span>
+type ByAge []Person
+
+func (a ByAge) Len() int           { return len(a) }
+func (a ByAge) Swap(i, j int)      { a[i], a[j] = a[j], a[i] }
+func (a ByAge) Less(i, j int) bool { return a[i].Age &lt; a[j].Age }
+
+func Example() {
+    people := []Person{
+        {&#34;Bob&#34;, 31},
+        {&#34;John&#34;, 42},
+        {&#34;Michael&#34;, 17},
+        {&#34;Jenny&#34;, 26},
+    }
+
+    fmt.Println(people)
+    <span class="comment">// There are two ways to sort a slice. First, one can define</span>
+    <span class="comment">// a set of methods for the slice type, as with ByAge, and</span>
+    <span class="comment">// call sort.Sort. In this first example we use that technique.</span>
+    sort.Sort(ByAge(people))
+    fmt.Println(people)
+
+    <span class="comment">// The other way is to use sort.Slice with a custom Less</span>
+    <span class="comment">// function, which can be provided as a closure. In this</span>
+    <span class="comment">// case no methods are needed. (And if they exist, they</span>
+    <span class="comment">// are ignored.) Here we re-sort in reverse order: compare</span>
+    <span class="comment">// the closure with ByAge.Less.</span>
+    sort.Slice(people, func(i, j int) bool {
+        return people[i].Age &gt; people[j].Age
+    })
+    fmt.Println(people)
+
+    <span class="comment">// Output:</span>
+    <span class="comment">// [Bob: 31 John: 42 Michael: 17 Jenny: 26]</span>
+    <span class="comment">// [Michael: 17 Jenny: 26 Bob: 31 John: 42]</span>
+    <span class="comment">// [John: 42 Bob: 31 Jenny: 26 Michael: 17]</span>
+}
+</pre>
+			
+		
+	</div>
+</div>
+<div id="example__sortKeys" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example (SortKeys)</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example (SortKeys)</span></p>
+		<p>ExampleSortKeys demonstrates a technique for sorting a struct type using programmable sort criteria.
+</p>
+		
+		
+			<p>Code:</p>
+			<pre class="code">package sort_test
+
+import (
+    &#34;fmt&#34;
+    &#34;sort&#34;
+)
+
+<span class="comment">// A couple of type definitions to make the units clear.</span>
+type earthMass float64
+type au float64
+
+<span class="comment">// A Planet defines the properties of a solar system object.</span>
+type Planet struct {
+    name     string
+    mass     earthMass
+    distance au
+}
+
+<span class="comment">// By is the type of a &#34;less&#34; function that defines the ordering of its Planet arguments.</span>
+type By func(p1, p2 *Planet) bool
+
+<span class="comment">// Sort is a method on the function type, By, that sorts the argument slice according to the function.</span>
+func (by By) Sort(planets []Planet) {
+    ps := &amp;planetSorter{
+        planets: planets,
+        by:      by, <span class="comment">// The Sort method&#39;s receiver is the function (closure) that defines the sort order.</span>
+    }
+    sort.Sort(ps)
+}
+
+<span class="comment">// planetSorter joins a By function and a slice of Planets to be sorted.</span>
+type planetSorter struct {
+    planets []Planet
+    by      func(p1, p2 *Planet) bool <span class="comment">// Closure used in the Less method.</span>
+}
+
+<span class="comment">// Len is part of sort.Interface.</span>
+func (s *planetSorter) Len() int {
+    return len(s.planets)
+}
+
+<span class="comment">// Swap is part of sort.Interface.</span>
+func (s *planetSorter) Swap(i, j int) {
+    s.planets[i], s.planets[j] = s.planets[j], s.planets[i]
+}
+
+<span class="comment">// Less is part of sort.Interface. It is implemented by calling the &#34;by&#34; closure in the sorter.</span>
+func (s *planetSorter) Less(i, j int) bool {
+    return s.by(&amp;s.planets[i], &amp;s.planets[j])
+}
+
+var planets = []Planet{
+    {&#34;Mercury&#34;, 0.055, 0.4},
+    {&#34;Venus&#34;, 0.815, 0.7},
+    {&#34;Earth&#34;, 1.0, 1.0},
+    {&#34;Mars&#34;, 0.107, 1.5},
+}
+
+<span class="comment">// ExampleSortKeys demonstrates a technique for sorting a struct type using programmable sort criteria.</span>
+func Example_sortKeys() {
+    <span class="comment">// Closures that order the Planet structure.</span>
+    name := func(p1, p2 *Planet) bool {
+        return p1.name &lt; p2.name
+    }
+    mass := func(p1, p2 *Planet) bool {
+        return p1.mass &lt; p2.mass
+    }
+    distance := func(p1, p2 *Planet) bool {
+        return p1.distance &lt; p2.distance
+    }
+    decreasingDistance := func(p1, p2 *Planet) bool {
+        return distance(p2, p1)
+    }
+
+    <span class="comment">// Sort the planets by the various criteria.</span>
+    By(name).Sort(planets)
+    fmt.Println(&#34;By name:&#34;, planets)
+
+    By(mass).Sort(planets)
+    fmt.Println(&#34;By mass:&#34;, planets)
+
+    By(distance).Sort(planets)
+    fmt.Println(&#34;By distance:&#34;, planets)
+
+    By(decreasingDistance).Sort(planets)
+    fmt.Println(&#34;By decreasing distance:&#34;, planets)
+
+    <span class="comment">// Output: By name: [{Earth 1 1} {Mars 0.107 1.5} {Mercury 0.055 0.4} {Venus 0.815 0.7}]</span>
+    <span class="comment">// By mass: [{Mercury 0.055 0.4} {Mars 0.107 1.5} {Venus 0.815 0.7} {Earth 1 1}]</span>
+    <span class="comment">// By distance: [{Mercury 0.055 0.4} {Venus 0.815 0.7} {Earth 1 1} {Mars 0.107 1.5}]</span>
+    <span class="comment">// By decreasing distance: [{Mars 0.107 1.5} {Earth 1 1} {Venus 0.815 0.7} {Mercury 0.055 0.4}]</span>
+}
+</pre>
+			
+		
+	</div>
+</div>
+<div id="example__sortMultiKeys" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example (SortMultiKeys)</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example (SortMultiKeys)</span></p>
+		<p>ExampleMultiKeys demonstrates a technique for sorting a struct type using different
+sets of multiple fields in the comparison. We chain together &#34;Less&#34; functions, each of
+which compares a single field.
+</p>
+		
+		
+			<p>Code:</p>
+			<pre class="code">package sort_test
+
+import (
+    &#34;fmt&#34;
+    &#34;sort&#34;
+)
+
+<span class="comment">// A Change is a record of source code changes, recording user, language, and delta size.</span>
+type Change struct {
+    user     string
+    language string
+    lines    int
+}
+
+type lessFunc func(p1, p2 *Change) bool
+
+<span class="comment">// multiSorter implements the Sort interface, sorting the changes within.</span>
+type multiSorter struct {
+    changes []Change
+    less    []lessFunc
+}
+
+<span class="comment">// Sort sorts the argument slice according to the less functions passed to OrderedBy.</span>
+func (ms *multiSorter) Sort(changes []Change) {
+    ms.changes = changes
+    sort.Sort(ms)
+}
+
+<span class="comment">// OrderedBy returns a Sorter that sorts using the less functions, in order.</span>
+<span class="comment">// Call its Sort method to sort the data.</span>
+func OrderedBy(less ...lessFunc) *multiSorter {
+    return &amp;multiSorter{
+        less: less,
+    }
+}
+
+<span class="comment">// Len is part of sort.Interface.</span>
+func (ms *multiSorter) Len() int {
+    return len(ms.changes)
+}
+
+<span class="comment">// Swap is part of sort.Interface.</span>
+func (ms *multiSorter) Swap(i, j int) {
+    ms.changes[i], ms.changes[j] = ms.changes[j], ms.changes[i]
+}
+
+<span class="comment">// Less is part of sort.Interface. It is implemented by looping along the</span>
+<span class="comment">// less functions until it finds a comparison that discriminates between</span>
+<span class="comment">// the two items (one is less than the other). Note that it can call the</span>
+<span class="comment">// less functions twice per call. We could change the functions to return</span>
+<span class="comment">// -1, 0, 1 and reduce the number of calls for greater efficiency: an</span>
+<span class="comment">// exercise for the reader.</span>
+func (ms *multiSorter) Less(i, j int) bool {
+    p, q := &amp;ms.changes[i], &amp;ms.changes[j]
+    <span class="comment">// Try all but the last comparison.</span>
+    var k int
+    for k = 0; k &lt; len(ms.less)-1; k++ {
+        less := ms.less[k]
+        switch {
+        case less(p, q):
+            <span class="comment">// p &lt; q, so we have a decision.</span>
+            return true
+        case less(q, p):
+            <span class="comment">// p &gt; q, so we have a decision.</span>
+            return false
+        }
+        <span class="comment">// p == q; try the next comparison.</span>
+    }
+    <span class="comment">// All comparisons to here said &#34;equal&#34;, so just return whatever</span>
+    <span class="comment">// the final comparison reports.</span>
+    return ms.less[k](p, q)
+}
+
+var changes = []Change{
+    {&#34;gri&#34;, &#34;Go&#34;, 100},
+    {&#34;ken&#34;, &#34;C&#34;, 150},
+    {&#34;glenda&#34;, &#34;Go&#34;, 200},
+    {&#34;rsc&#34;, &#34;Go&#34;, 200},
+    {&#34;r&#34;, &#34;Go&#34;, 100},
+    {&#34;ken&#34;, &#34;Go&#34;, 200},
+    {&#34;dmr&#34;, &#34;C&#34;, 100},
+    {&#34;r&#34;, &#34;C&#34;, 150},
+    {&#34;gri&#34;, &#34;Smalltalk&#34;, 80},
+}
+
+<span class="comment">// ExampleMultiKeys demonstrates a technique for sorting a struct type using different</span>
+<span class="comment">// sets of multiple fields in the comparison. We chain together &#34;Less&#34; functions, each of</span>
+<span class="comment">// which compares a single field.</span>
+func Example_sortMultiKeys() {
+    <span class="comment">// Closures that order the Change structure.</span>
+    user := func(c1, c2 *Change) bool {
+        return c1.user &lt; c2.user
+    }
+    language := func(c1, c2 *Change) bool {
+        return c1.language &lt; c2.language
+    }
+    increasingLines := func(c1, c2 *Change) bool {
+        return c1.lines &lt; c2.lines
+    }
+    decreasingLines := func(c1, c2 *Change) bool {
+        return c1.lines &gt; c2.lines <span class="comment">// Note: &gt; orders downwards.</span>
+    }
+
+    <span class="comment">// Simple use: Sort by user.</span>
+    OrderedBy(user).Sort(changes)
+    fmt.Println(&#34;By user:&#34;, changes)
+
+    <span class="comment">// More examples.</span>
+    OrderedBy(user, increasingLines).Sort(changes)
+    fmt.Println(&#34;By user,&lt;lines:&#34;, changes)
+
+    OrderedBy(user, decreasingLines).Sort(changes)
+    fmt.Println(&#34;By user,&gt;lines:&#34;, changes)
+
+    OrderedBy(language, increasingLines).Sort(changes)
+    fmt.Println(&#34;By language,&lt;lines:&#34;, changes)
+
+    OrderedBy(language, increasingLines, user).Sort(changes)
+    fmt.Println(&#34;By language,&lt;lines,user:&#34;, changes)
+
+    <span class="comment">// Output:</span>
+    <span class="comment">// By user: [{dmr C 100} {glenda Go 200} {gri Go 100} {gri Smalltalk 80} {ken C 150} {ken Go 200} {r Go 100} {r C 150} {rsc Go 200}]</span>
+    <span class="comment">// By user,&lt;lines: [{dmr C 100} {glenda Go 200} {gri Smalltalk 80} {gri Go 100} {ken C 150} {ken Go 200} {r Go 100} {r C 150} {rsc Go 200}]</span>
+    <span class="comment">// By user,&gt;lines: [{dmr C 100} {glenda Go 200} {gri Go 100} {gri Smalltalk 80} {ken Go 200} {ken C 150} {r C 150} {r Go 100} {rsc Go 200}]</span>
+    <span class="comment">// By language,&lt;lines: [{dmr C 100} {ken C 150} {r C 150} {gri Go 100} {r Go 100} {glenda Go 200} {ken Go 200} {rsc Go 200} {gri Smalltalk 80}]</span>
+    <span class="comment">// By language,&lt;lines,user: [{dmr C 100} {ken C 150} {r C 150} {gri Go 100} {r Go 100} {glenda Go 200} {ken Go 200} {rsc Go 200} {gri Smalltalk 80}]</span>
+
+}
+</pre>
+			
+		
+	</div>
+</div>
+<div id="example__sortWrapper" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example (SortWrapper)</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example (SortWrapper)</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">package sort_test
+
+import (
+    &#34;fmt&#34;
+    &#34;sort&#34;
+)
+
+type Grams int
+
+func (g Grams) String() string { return fmt.Sprintf(&#34;%dg&#34;, int(g)) }
+
+type Organ struct {
+    Name   string
+    Weight Grams
+}
+
+type Organs []*Organ
+
+func (s Organs) Len() int      { return len(s) }
+func (s Organs) Swap(i, j int) { s[i], s[j] = s[j], s[i] }
+
+<span class="comment">// ByName implements sort.Interface by providing Less and using the Len and</span>
+<span class="comment">// Swap methods of the embedded Organs value.</span>
+type ByName struct{ Organs }
+
+func (s ByName) Less(i, j int) bool { return s.Organs[i].Name &lt; s.Organs[j].Name }
+
+<span class="comment">// ByWeight implements sort.Interface by providing Less and using the Len and</span>
+<span class="comment">// Swap methods of the embedded Organs value.</span>
+type ByWeight struct{ Organs }
+
+func (s ByWeight) Less(i, j int) bool { return s.Organs[i].Weight &lt; s.Organs[j].Weight }
+
+func Example_sortWrapper() {
+    s := []*Organ{
+        {&#34;brain&#34;, 1340},
+        {&#34;heart&#34;, 290},
+        {&#34;liver&#34;, 1494},
+        {&#34;pancreas&#34;, 131},
+        {&#34;prostate&#34;, 62},
+        {&#34;spleen&#34;, 162},
+    }
+
+    sort.Sort(ByWeight{s})
+    fmt.Println(&#34;Organs by weight:&#34;)
+    printOrgans(s)
+
+    sort.Sort(ByName{s})
+    fmt.Println(&#34;Organs by name:&#34;)
+    printOrgans(s)
+
+    <span class="comment">// Output:</span>
+    <span class="comment">// Organs by weight:</span>
+    <span class="comment">// prostate (62g)</span>
+    <span class="comment">// pancreas (131g)</span>
+    <span class="comment">// spleen   (162g)</span>
+    <span class="comment">// heart    (290g)</span>
+    <span class="comment">// brain    (1340g)</span>
+    <span class="comment">// liver    (1494g)</span>
+    <span class="comment">// Organs by name:</span>
+    <span class="comment">// brain    (1340g)</span>
+    <span class="comment">// heart    (290g)</span>
+    <span class="comment">// liver    (1494g)</span>
+    <span class="comment">// pancreas (131g)</span>
+    <span class="comment">// prostate (62g)</span>
+    <span class="comment">// spleen   (162g)</span>
+}
+
+func printOrgans(s []*Organ) {
+    for _, o := range s {
+        fmt.Printf(&#34;%-8s (%v)\n&#34;, o.Name, o.Weight)
+    }
+}
+</pre>
+			
+		
+	</div>
+</div>
+
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+			
+			
+				
+				<dd><a href="index.html#Find">func Find(n int, cmp func(int) int) (i int, found bool)</a></dd>
+			
+				
+				<dd><a href="index.html#Float64s">func Float64s(x []float64)</a></dd>
+			
+				
+				<dd><a href="index.html#Float64sAreSorted">func Float64sAreSorted(x []float64) bool</a></dd>
+			
+				
+				<dd><a href="index.html#Ints">func Ints(x []int)</a></dd>
+			
+				
+				<dd><a href="index.html#IntsAreSorted">func IntsAreSorted(x []int) bool</a></dd>
+			
+				
+				<dd><a href="index.html#IsSorted">func IsSorted(data Interface) bool</a></dd>
+			
+				
+				<dd><a href="index.html#Search">func Search(n int, f func(int) bool) int</a></dd>
+			
+				
+				<dd><a href="index.html#SearchFloat64s">func SearchFloat64s(a []float64, x float64) int</a></dd>
+			
+				
+				<dd><a href="index.html#SearchInts">func SearchInts(a []int, x int) int</a></dd>
+			
+				
+				<dd><a href="index.html#SearchStrings">func SearchStrings(a []string, x string) int</a></dd>
+			
+				
+				<dd><a href="index.html#Slice">func Slice(x any, less func(i, j int) bool)</a></dd>
+			
+				
+				<dd><a href="index.html#SliceIsSorted">func SliceIsSorted(x any, less func(i, j int) bool) bool</a></dd>
+			
+				
+				<dd><a href="index.html#SliceStable">func SliceStable(x any, less func(i, j int) bool)</a></dd>
+			
+				
+				<dd><a href="index.html#Sort">func Sort(data Interface)</a></dd>
+			
+				
+				<dd><a href="index.html#Stable">func Stable(data Interface)</a></dd>
+			
+				
+				<dd><a href="index.html#Strings">func Strings(x []string)</a></dd>
+			
+				
+				<dd><a href="index.html#StringsAreSorted">func StringsAreSorted(x []string) bool</a></dd>
+			
+			
+				
+				<dd><a href="index.html#Float64Slice">type Float64Slice</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Float64Slice.Len">func (x Float64Slice) Len() int</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Float64Slice.Less">func (x Float64Slice) Less(i, j int) bool</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Float64Slice.Search">func (p Float64Slice) Search(x float64) int</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Float64Slice.Sort">func (x Float64Slice) Sort()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Float64Slice.Swap">func (x Float64Slice) Swap(i, j int)</a></dd>
+				
+			
+				
+				<dd><a href="index.html#IntSlice">type IntSlice</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#IntSlice.Len">func (x IntSlice) Len() int</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#IntSlice.Less">func (x IntSlice) Less(i, j int) bool</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#IntSlice.Search">func (p IntSlice) Search(x int) int</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#IntSlice.Sort">func (x IntSlice) Sort()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#IntSlice.Swap">func (x IntSlice) Swap(i, j int)</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Interface">type Interface</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Reverse">func Reverse(data Interface) Interface</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#StringSlice">type StringSlice</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#StringSlice.Len">func (x StringSlice) Len() int</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#StringSlice.Less">func (x StringSlice) Less(i, j int) bool</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#StringSlice.Search">func (p StringSlice) Search(x string) int</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#StringSlice.Sort">func (x StringSlice) Sort()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#StringSlice.Swap">func (x StringSlice) Swap(i, j int)</a></dd>
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+		<div id="pkg-examples">
+			<h3>Examples</h3>
+			<div class="js-expandAll expandAll collapsed">(Expand All)</div>
+			<dl>
+			
+			<dd><a class="exampleLink" href="index.html#example_">Package</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Float64s">Float64s</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Float64sAreSorted">Float64sAreSorted</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Ints">Ints</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_IntsAreSorted">IntsAreSorted</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Reverse">Reverse</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Search">Search</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_SearchFloat64s">SearchFloat64s</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_SearchInts">SearchInts</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Search_descendingOrder">Search (DescendingOrder)</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Slice">Slice</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_SliceStable">SliceStable</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Strings">Strings</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example__sortKeys">Package (SortKeys)</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example__sortMultiKeys">Package (SortMultiKeys)</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example__sortWrapper">Package (SortWrapper)</a></dd>
+			
+			</dl>
+		</div>
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../src/sort/search.go">search.go</a>
+			
+				<a href="../../src/sort/slice.go">slice.go</a>
+			
+				<a href="../../src/sort/sort.go">sort.go</a>
+			
+				<a href="../../src/sort/sort_impl_go121.go">sort_impl_go121.go</a>
+			
+				<a href="../../src/sort/zsortfunc.go">zsortfunc.go</a>
+			
+				<a href="../../src/sort/zsortinterface.go">zsortinterface.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+		
+		
+			
+			
+			<h2 id="Find">func <a href="../../src/sort/search.go?s=3760:3815#L89">Find</a>
+				<a class="permalink" href="index.html#Find">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Find(n <a href="../builtin/index.html#int">int</a>, cmp func(<a href="../builtin/index.html#int">int</a>) <a href="../builtin/index.html#int">int</a>) (i <a href="../builtin/index.html#int">int</a>, found <a href="../builtin/index.html#bool">bool</a>)</pre>
+			<p>Find uses binary search to find and return the smallest index i in [0, n)
+at which cmp(i) &lt;= 0. If there is no such index i, Find returns i = n.
+The found result is true if i &lt; n and cmp(i) == 0.
+Find calls cmp(i) only for i in the range [0, n).
+<p>To permit binary search, Find requires that cmp(i) &gt; 0 for a leading
+prefix of the range, cmp(i) == 0 in the middle, and cmp(i) &lt; 0 for
+the final suffix of the range. (Each subrange could be empty.)
+The usual way to establish this condition is to interpret cmp(i)
+as a comparison of a desired target value t against entry i in an
+underlying indexed data structure x, returning &lt;0, 0, and &gt;0
+when t &lt; x[i], t == x[i], and t &gt; x[i], respectively.
+<p>For example, to look for a particular string in a sorted, random-access
+list of strings:
+<pre>i, found := sort.Find(x.Len(), func(i int) int {
+    return strings.Compare(target, x.At(i))
+})
+if found {
+    fmt.Printf(&quot;found %s at entry %d\n&quot;, target, i)
+} else {
+    fmt.Printf(&quot;%s not found, would insert at %d&quot;, target, i)
+}
+</pre>
+
+			
+			
+
+		
+			
+			
+			<h2 id="Float64s">func <a href="../../src/sort/sort.go?s=5540:5566#L161">Float64s</a>
+				<a class="permalink" href="index.html#Float64s">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Float64s(x []<a href="../builtin/index.html#float64">float64</a>)</pre>
+			<p>Float64s sorts a slice of float64s in increasing order.
+Not-a-number (NaN) values are ordered before other values.
+<p>Note: as of Go 1.22, this function simply calls <a href="http://localhost:8080/slices#Sort">slices.Sort</a>.
+
+			<div id="example_Float64s" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">s := []float64{5.2, -1.3, 0.7, -3.8, 2.6} <span class="comment">// unsorted</span>
+sort.Float64s(s)
+fmt.Println(s)
+
+s = []float64{math.Inf(1), math.NaN(), math.Inf(-1), 0.0} <span class="comment">// unsorted</span>
+sort.Float64s(s)
+fmt.Println(s)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">[-3.8 -1.3 0.7 2.6 5.2]
+[NaN -Inf 0 +Inf]
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Float64sAreSorted">func <a href="../../src/sort/sort.go?s=6186:6226#L177">Float64sAreSorted</a>
+				<a class="permalink" href="index.html#Float64sAreSorted">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Float64sAreSorted(x []<a href="../builtin/index.html#float64">float64</a>) <a href="../builtin/index.html#bool">bool</a></pre>
+			<p>Float64sAreSorted reports whether the slice x is sorted in increasing order,
+with not-a-number (NaN) values before any other values.
+<p>Note: as of Go 1.22, this function simply calls <a href="http://localhost:8080/slices#IsSorted">slices.IsSorted</a>.
+
+			<div id="example_Float64sAreSorted" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">s := []float64{0.7, 1.3, 2.6, 3.8, 5.2} <span class="comment">// sorted ascending</span>
+fmt.Println(sort.Float64sAreSorted(s))
+
+s = []float64{5.2, 3.8, 2.6, 1.3, 0.7} <span class="comment">// sorted descending</span>
+fmt.Println(sort.Float64sAreSorted(s))
+
+s = []float64{5.2, 1.3, 0.7, 3.8, 2.6} <span class="comment">// unsorted</span>
+fmt.Println(sort.Float64sAreSorted(s))
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">true
+false
+false
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Ints">func <a href="../../src/sort/sort.go?s=5314:5332#L155">Ints</a>
+				<a class="permalink" href="index.html#Ints">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Ints(x []<a href="../builtin/index.html#int">int</a>)</pre>
+			<p>Ints sorts a slice of ints in increasing order.
+<p>Note: as of Go 1.22, this function simply calls <a href="http://localhost:8080/slices#Sort">slices.Sort</a>.
+
+			<div id="example_Ints" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">s := []int{5, 2, 6, 3, 1, 4} <span class="comment">// unsorted</span>
+sort.Ints(s)
+fmt.Println(s)
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">[1 2 3 4 5 6]
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="IntsAreSorted">func <a href="../../src/sort/sort.go?s=5908:5940#L171">IntsAreSorted</a>
+				<a class="permalink" href="index.html#IntsAreSorted">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func IntsAreSorted(x []<a href="../builtin/index.html#int">int</a>) <a href="../builtin/index.html#bool">bool</a></pre>
+			<p>IntsAreSorted reports whether the slice x is sorted in increasing order.
+<p>Note: as of Go 1.22, this function simply calls <a href="http://localhost:8080/slices#IsSorted">slices.IsSorted</a>.
+
+			<div id="example_IntsAreSorted" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">s := []int{1, 2, 3, 4, 5, 6} <span class="comment">// sorted ascending</span>
+fmt.Println(sort.IntsAreSorted(s))
+
+s = []int{6, 5, 4, 3, 2, 1} <span class="comment">// sorted descending</span>
+fmt.Println(sort.IntsAreSorted(s))
+
+s = []int{3, 2, 4, 1, 5} <span class="comment">// unsorted</span>
+fmt.Println(sort.IntsAreSorted(s))
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">true
+false
+false
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="IsSorted">func <a href="../../src/sort/sort.go?s=3166:3200#L95">IsSorted</a>
+				<a class="permalink" href="index.html#IsSorted">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func IsSorted(data <a href="index.html#Interface">Interface</a>) <a href="../builtin/index.html#bool">bool</a></pre>
+			<p>IsSorted reports whether data is sorted.
+<p>Note: in many situations, the newer <a href="http://localhost:8080/slices#IsSortedFunc">slices.IsSortedFunc</a> function is more
+ergonomic and runs faster.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Search">func <a href="../../src/sort/search.go?s=2243:2283#L48">Search</a>
+				<a class="permalink" href="index.html#Search">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Search(n <a href="../builtin/index.html#int">int</a>, f func(<a href="../builtin/index.html#int">int</a>) <a href="../builtin/index.html#bool">bool</a>) <a href="../builtin/index.html#int">int</a></pre>
+			<p>Search uses binary search to find and return the smallest index i
+in [0, n) at which f(i) is true, assuming that on the range [0, n),
+f(i) == true implies f(i+1) == true. That is, Search requires that
+f is false for some (possibly empty) prefix of the input range [0, n)
+and then true for the (possibly empty) remainder; Search returns
+the first true index. If there is no such index, Search returns n.
+(Note that the &quot;not found&quot; return value is not -1 as in, for instance,
+strings.Index.)
+Search calls f(i) only for i in the range [0, n).
+<p>A common use of Search is to find the index i for a value x in
+a sorted, indexable data structure such as an array or slice.
+In this case, the argument f, typically a closure, captures the value
+to be searched for, and how the data structure is indexed and
+ordered.
+<p>For instance, given a slice data sorted in ascending order,
+the call Search(len(data), func(i int) bool { return data[i] &gt;= 23 })
+returns the smallest index i such that data[i] &gt;= 23. If the caller
+wants to find whether 23 is in the slice, it must test data[i] == 23
+separately.
+<p>Searching data sorted in descending order would use the &lt;=
+operator instead of the &gt;= operator.
+<p>To complete the example above, the following code tries to find the value
+x in an integer slice data sorted in ascending order:
+<pre>x := 23
+i := sort.Search(len(data), func(i int) bool { return data[i] &gt;= x })
+if i &lt; len(data) &amp;&amp; data[i] == x {
+	// x is present at data[i]
+} else {
+	// x is not present in data,
+	// but i is the index where it would be inserted.
+}
+</pre>
+<p>As a more whimsical example, this program guesses your number:
+<pre>func GuessingGame() {
+	var s string
+	fmt.Printf(&quot;Pick an integer from 0 to 100.\n&quot;)
+	answer := sort.Search(100, func(i int) bool {
+		fmt.Printf(&quot;Is your number &lt;= %d? &quot;, i)
+		fmt.Scanf(&quot;%s&quot;, &amp;s)
+		return s != &quot;&quot; &amp;&amp; s[0] == &apos;y&apos;
+	})
+	fmt.Printf(&quot;Your number is %d.\n&quot;, answer)
+}
+</pre>
+
+			<div id="example_Search" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		<p>This example demonstrates searching a list sorted in ascending order.
+</p>
+		
+		
+			<p>Code:</p>
+			<pre class="code">a := []int{1, 3, 6, 10, 15, 21, 28, 36, 45, 55}
+x := 6
+
+i := sort.Search(len(a), func(i int) bool { return a[i] &gt;= x })
+if i &lt; len(a) &amp;&amp; a[i] == x {
+    fmt.Printf(&#34;found %d at index %d in %v\n&#34;, x, i, a)
+} else {
+    fmt.Printf(&#34;%d not found in %v\n&#34;, x, a)
+}
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">found 6 at index 2 in [1 3 6 10 15 21 28 36 45 55]
+</pre>
+			
+		
+	</div>
+</div>
+<div id="example_Search_descendingOrder" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example (DescendingOrder)</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example (DescendingOrder)</span></p>
+		<p>This example demonstrates searching a list sorted in descending order.
+The approach is the same as searching a list in ascending order,
+but with the condition inverted.
+</p>
+		
+		
+			<p>Code:</p>
+			<pre class="code">a := []int{55, 45, 36, 28, 21, 15, 10, 6, 3, 1}
+x := 6
+
+i := sort.Search(len(a), func(i int) bool { return a[i] &lt;= x })
+if i &lt; len(a) &amp;&amp; a[i] == x {
+    fmt.Printf(&#34;found %d at index %d in %v\n&#34;, x, i, a)
+} else {
+    fmt.Printf(&#34;%d not found in %v\n&#34;, x, a)
+}
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">found 6 at index 7 in [55 45 36 28 21 15 10 6 3 1]
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="SearchFloat64s">func <a href="../../src/sort/search.go?s=4884:4931#L121">SearchFloat64s</a>
+				<a class="permalink" href="index.html#SearchFloat64s">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func SearchFloat64s(a []<a href="../builtin/index.html#float64">float64</a>, x <a href="../builtin/index.html#float64">float64</a>) <a href="../builtin/index.html#int">int</a></pre>
+			<p>SearchFloat64s searches for x in a sorted slice of float64s and returns the index
+as specified by <a href="index.html#Search">Search</a>. The return value is the index to insert x if x is not
+present (it could be len(a)).
+The slice must be sorted in ascending order.
+
+			<div id="example_SearchFloat64s" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		<p>This example demonstrates searching for float64 in a list sorted in ascending order.
+</p>
+		
+		
+			<p>Code:</p>
+			<pre class="code">a := []float64{1.0, 2.0, 3.3, 4.6, 6.1, 7.2, 8.0}
+
+x := 2.0
+i := sort.SearchFloat64s(a, x)
+fmt.Printf(&#34;found %g at index %d in %v\n&#34;, x, i, a)
+
+x = 0.5
+i = sort.SearchFloat64s(a, x)
+fmt.Printf(&#34;%g not found, can be inserted at index %d in %v\n&#34;, x, i, a)
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">found 2 at index 1 in [1 2 3.3 4.6 6.1 7.2 8]
+0.5 not found, can be inserted at index 0 in [1 2 3.3 4.6 6.1 7.2 8]
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="SearchInts">func <a href="../../src/sort/search.go?s=4532:4567#L113">SearchInts</a>
+				<a class="permalink" href="index.html#SearchInts">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func SearchInts(a []<a href="../builtin/index.html#int">int</a>, x <a href="../builtin/index.html#int">int</a>) <a href="../builtin/index.html#int">int</a></pre>
+			<p>SearchInts searches for x in a sorted slice of ints and returns the index
+as specified by <a href="index.html#Search">Search</a>. The return value is the index to insert x if x is
+not present (it could be len(a)).
+The slice must be sorted in ascending order.
+
+			<div id="example_SearchInts" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		<p>This example demonstrates searching for int in a list sorted in ascending order.
+</p>
+		
+		
+			<p>Code:</p>
+			<pre class="code">a := []int{1, 2, 3, 4, 6, 7, 8}
+
+x := 2
+i := sort.SearchInts(a, x)
+fmt.Printf(&#34;found %d at index %d in %v\n&#34;, x, i, a)
+
+x = 5
+i = sort.SearchInts(a, x)
+fmt.Printf(&#34;%d not found, can be inserted at index %d in %v\n&#34;, x, i, a)
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">found 2 at index 1 in [1 2 3 4 6 7 8]
+5 not found, can be inserted at index 4 in [1 2 3 4 6 7 8]
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="SearchStrings">func <a href="../../src/sort/search.go?s=5244:5288#L129">SearchStrings</a>
+				<a class="permalink" href="index.html#SearchStrings">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func SearchStrings(a []<a href="../builtin/index.html#string">string</a>, x <a href="../builtin/index.html#string">string</a>) <a href="../builtin/index.html#int">int</a></pre>
+			<p>SearchStrings searches for x in a sorted slice of strings and returns the index
+as specified by Search. The return value is the index to insert x if x is not
+present (it could be len(a)).
+The slice must be sorted in ascending order.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Slice">func <a href="../../src/sort/slice.go?s=673:716#L14">Slice</a>
+				<a class="permalink" href="index.html#Slice">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Slice(x <a href="../builtin/index.html#any">any</a>, less func(i, j <a href="../builtin/index.html#int">int</a>) <a href="../builtin/index.html#bool">bool</a>)</pre>
+			<p>Slice sorts the slice x given the provided less function.
+It panics if x is not a slice.
+<p>The sort is not guaranteed to be stable: equal elements
+may be reversed from their original order.
+For a stable sort, use <a href="index.html#SliceStable">SliceStable</a>.
+<p>The less function must satisfy the same requirements as
+the Interface type&apos;s Less method.
+<p>Note: in many situations, the newer <a href="http://localhost:8080/slices#SortFunc">slices.SortFunc</a> function is more
+ergonomic and runs faster.
+
+			<div id="example_Slice" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">people := []struct {
+    Name string
+    Age  int
+}{
+    {&#34;Gopher&#34;, 7},
+    {&#34;Alice&#34;, 55},
+    {&#34;Vera&#34;, 24},
+    {&#34;Bob&#34;, 75},
+}
+sort.Slice(people, func(i, j int) bool { return people[i].Name &lt; people[j].Name })
+fmt.Println(&#34;By name:&#34;, people)
+
+sort.Slice(people, func(i, j int) bool { return people[i].Age &lt; people[j].Age })
+fmt.Println(&#34;By age:&#34;, people)
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">By name: [{Alice 55} {Bob 75} {Gopher 7} {Vera 24}]
+By age: [{Gopher 7} {Vera 24} {Alice 55} {Bob 75}]
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="SliceIsSorted">func <a href="../../src/sort/slice.go?s=1658:1714#L42">SliceIsSorted</a>
+				<a class="permalink" href="index.html#SliceIsSorted">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func SliceIsSorted(x <a href="../builtin/index.html#any">any</a>, less func(i, j <a href="../builtin/index.html#int">int</a>) <a href="../builtin/index.html#bool">bool</a>) <a href="../builtin/index.html#bool">bool</a></pre>
+			<p>SliceIsSorted reports whether the slice x is sorted according to the provided less function.
+It panics if x is not a slice.
+<p>Note: in many situations, the newer <a href="http://localhost:8080/slices#IsSortedFunc">slices.IsSortedFunc</a> function is more
+ergonomic and runs faster.
+
+			
+			
+
+		
+			
+			
+			<h2 id="SliceStable">func <a href="../../src/sort/slice.go?s=1255:1304#L31">SliceStable</a>
+				<a class="permalink" href="index.html#SliceStable">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func SliceStable(x <a href="../builtin/index.html#any">any</a>, less func(i, j <a href="../builtin/index.html#int">int</a>) <a href="../builtin/index.html#bool">bool</a>)</pre>
+			<p>SliceStable sorts the slice x using the provided less
+function, keeping equal elements in their original order.
+It panics if x is not a slice.
+<p>The less function must satisfy the same requirements as
+the Interface type&apos;s Less method.
+<p>Note: in many situations, the newer <a href="http://localhost:8080/slices#SortStableFunc">slices.SortStableFunc</a> function is more
+ergonomic and runs faster.
+
+			<div id="example_SliceStable" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">people := []struct {
+    Name string
+    Age  int
+}{
+    {&#34;Alice&#34;, 25},
+    {&#34;Elizabeth&#34;, 75},
+    {&#34;Alice&#34;, 75},
+    {&#34;Bob&#34;, 75},
+    {&#34;Alice&#34;, 75},
+    {&#34;Bob&#34;, 25},
+    {&#34;Colin&#34;, 25},
+    {&#34;Elizabeth&#34;, 25},
+}
+
+<span class="comment">// Sort by name, preserving original order</span>
+sort.SliceStable(people, func(i, j int) bool { return people[i].Name &lt; people[j].Name })
+fmt.Println(&#34;By name:&#34;, people)
+
+<span class="comment">// Sort by age preserving name order</span>
+sort.SliceStable(people, func(i, j int) bool { return people[i].Age &lt; people[j].Age })
+fmt.Println(&#34;By age,name:&#34;, people)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">By name: [{Alice 25} {Alice 75} {Alice 75} {Bob 75} {Bob 25} {Colin 25} {Elizabeth 75} {Elizabeth 25}]
+By age,name: [{Alice 25} {Bob 25} {Colin 25} {Elizabeth 25} {Alice 75} {Alice 75} {Bob 75} {Elizabeth 75}]
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Sort">func <a href="../../src/sort/sort.go?s=1817:1842#L35">Sort</a>
+				<a class="permalink" href="index.html#Sort">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Sort(data <a href="index.html#Interface">Interface</a>)</pre>
+			<p>Sort sorts data in ascending order as determined by the Less method.
+It makes one call to data.Len to determine n and O(n*log(n)) calls to
+data.Less and data.Swap. The sort is not guaranteed to be stable.
+<p>Note: in many situations, the newer <a href="http://localhost:8080/slices#SortFunc">slices.SortFunc</a> function is more
+ergonomic and runs faster.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Stable">func <a href="../../src/sort/sort.go?s=8385:8412#L218">Stable</a>
+				<a class="permalink" href="index.html#Stable">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Stable(data <a href="index.html#Interface">Interface</a>)</pre>
+			<p>Stable sorts data in ascending order as determined by the Less method,
+while keeping the original order of equal elements.
+<p>It makes one call to data.Len to determine n, O(n*log(n)) calls to
+data.Less and O(n*log(n)*log(n)) calls to data.Swap.
+<p>Note: in many situations, the newer slices.SortStableFunc function is more
+ergonomic and runs faster.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Strings">func <a href="../../src/sort/sort.go?s=5714:5738#L166">Strings</a>
+				<a class="permalink" href="index.html#Strings">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Strings(x []<a href="../builtin/index.html#string">string</a>)</pre>
+			<p>Strings sorts a slice of strings in increasing order.
+<p>Note: as of Go 1.22, this function simply calls <a href="http://localhost:8080/slices#Sort">slices.Sort</a>.
+
+			<div id="example_Strings" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">s := []string{&#34;Go&#34;, &#34;Bravo&#34;, &#34;Gopher&#34;, &#34;Alpha&#34;, &#34;Grin&#34;, &#34;Delta&#34;}
+sort.Strings(s)
+fmt.Println(s)
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">[Alpha Bravo Delta Go Gopher Grin]
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="StringsAreSorted">func <a href="../../src/sort/sort.go?s=6416:6454#L182">StringsAreSorted</a>
+				<a class="permalink" href="index.html#StringsAreSorted">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func StringsAreSorted(x []<a href="../builtin/index.html#string">string</a>) <a href="../builtin/index.html#bool">bool</a></pre>
+			<p>StringsAreSorted reports whether the slice x is sorted in increasing order.
+<p>Note: as of Go 1.22, this function simply calls <a href="http://localhost:8080/slices#IsSorted">slices.IsSorted</a>.
+
+			
+			
+
+		
+		
+			
+			
+			<h2 id="Float64Slice">type <a href="../../src/sort/sort.go?s=3884:3911#L119">Float64Slice</a>
+				<a class="permalink" href="index.html#Float64Slice">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Float64Slice implements Interface for a []float64, sorting in increasing order,
+with not-a-number (NaN) values ordered before other values.
+
+			<pre>type Float64Slice []<a href="../builtin/index.html#float64">float64</a></pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="Float64Slice.Len">func (Float64Slice) <a href="../../src/sort/sort.go?s=3913:3944#L121">Len</a>
+					<a class="permalink" href="index.html#Float64Slice.Len">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x <a href="index.html#Float64Slice">Float64Slice</a>) Len() <a href="../builtin/index.html#int">int</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="Float64Slice.Less">func (Float64Slice) <a href="../../src/sort/sort.go?s=4352:4393#L129">Less</a>
+					<a class="permalink" href="index.html#Float64Slice.Less">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x <a href="index.html#Float64Slice">Float64Slice</a>) Less(i, j <a href="../builtin/index.html#int">int</a>) <a href="../builtin/index.html#bool">bool</a></pre>
+				<p>Less reports whether x[i] should be ordered before x[j], as required by the sort Interface.
+Note that floating-point comparison by itself is not a transitive relation: it does not
+report a consistent ordering for not-a-number (NaN) values.
+This implementation of Less places NaN values before any others, by using:
+<pre>x[i] &lt; x[j] || (math.IsNaN(x[i]) &amp;&amp; !math.IsNaN(x[j]))
+</pre>
+
+				
+				
+				
+			
+				
+				<h3 id="Float64Slice.Search">func (Float64Slice) <a href="../../src/sort/search.go?s=5579:5622#L137">Search</a>
+					<a class="permalink" href="index.html#Float64Slice.Search">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p <a href="index.html#Float64Slice">Float64Slice</a>) Search(x <a href="../builtin/index.html#float64">float64</a>) <a href="../builtin/index.html#int">int</a></pre>
+				<p>Search returns the result of applying <a href="index.html#SearchFloat64s">SearchFloat64s</a> to the receiver and x.
+
+				
+				
+				
+			
+				
+				<h3 id="Float64Slice.Sort">func (Float64Slice) <a href="../../src/sort/sort.go?s=4701:4729#L138">Sort</a>
+					<a class="permalink" href="index.html#Float64Slice.Sort">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x <a href="index.html#Float64Slice">Float64Slice</a>) Sort()</pre>
+				<p>Sort is a convenience method: x.Sort() calls Sort(x).
+
+				
+				
+				
+			
+				
+				<h3 id="Float64Slice.Swap">func (Float64Slice) <a href="../../src/sort/sort.go?s=4450:4486#L130">Swap</a>
+					<a class="permalink" href="index.html#Float64Slice.Swap">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x <a href="index.html#Float64Slice">Float64Slice</a>) Swap(i, j <a href="../builtin/index.html#int">int</a>)</pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="IntSlice">type <a href="../../src/sort/sort.go?s=3438:3457#L108">IntSlice</a>
+				<a class="permalink" href="index.html#IntSlice">&#xb6;</a>
+				
+				
+			</h2>
+			<p>IntSlice attaches the methods of Interface to []int, sorting in increasing order.
+
+			<pre>type IntSlice []<a href="../builtin/index.html#int">int</a></pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="IntSlice.Len">func (IntSlice) <a href="../../src/sort/sort.go?s=3459:3486#L110">Len</a>
+					<a class="permalink" href="index.html#IntSlice.Len">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x <a href="index.html#IntSlice">IntSlice</a>) Len() <a href="../builtin/index.html#int">int</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="IntSlice.Less">func (IntSlice) <a href="../../src/sort/sort.go?s=3515:3552#L111">Less</a>
+					<a class="permalink" href="index.html#IntSlice.Less">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x <a href="index.html#IntSlice">IntSlice</a>) Less(i, j <a href="../builtin/index.html#int">int</a>) <a href="../builtin/index.html#bool">bool</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="IntSlice.Search">func (IntSlice) <a href="../../src/sort/search.go?s=5433:5468#L134">Search</a>
+					<a class="permalink" href="index.html#IntSlice.Search">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p <a href="index.html#IntSlice">IntSlice</a>) Search(x <a href="../builtin/index.html#int">int</a>) <a href="../builtin/index.html#int">int</a></pre>
+				<p>Search returns the result of applying <a href="index.html#SearchInts">SearchInts</a> to the receiver and x.
+
+				
+				
+				
+			
+				
+				<h3 id="IntSlice.Sort">func (IntSlice) <a href="../../src/sort/sort.go?s=3700:3724#L115">Sort</a>
+					<a class="permalink" href="index.html#IntSlice.Sort">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x <a href="index.html#IntSlice">IntSlice</a>) Sort()</pre>
+				<p>Sort is a convenience method: x.Sort() calls Sort(x).
+
+				
+				
+				
+			
+				
+				<h3 id="IntSlice.Swap">func (IntSlice) <a href="../../src/sort/sort.go?s=3576:3608#L112">Swap</a>
+					<a class="permalink" href="index.html#IntSlice.Swap">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x <a href="index.html#IntSlice">IntSlice</a>) Swap(i, j <a href="../builtin/index.html#int">int</a>)</pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Interface">type <a href="../../src/sort/sort.go?s=483:1494#L4">Interface</a>
+				<a class="permalink" href="index.html#Interface">&#xb6;</a>
+				
+				
+			</h2>
+			<p>An implementation of Interface can be sorted by the routines in this package.
+The methods refer to elements of the underlying collection by integer index.
+
+			<pre>type Interface interface {
+    <span class="comment">// Len is the number of elements in the collection.</span>
+    Len() <a href="../builtin/index.html#int">int</a>
+
+    <span class="comment">// Less reports whether the element with index i</span>
+    <span class="comment">// must sort before the element with index j.</span>
+    <span class="comment">//</span>
+    <span class="comment">// If both Less(i, j) and Less(j, i) are false,</span>
+    <span class="comment">// then the elements at index i and j are considered equal.</span>
+    <span class="comment">// Sort may place equal elements in any order in the final result,</span>
+    <span class="comment">// while Stable preserves the original input order of equal elements.</span>
+    <span class="comment">//</span>
+    <span class="comment">// Less must describe a transitive ordering:</span>
+    <span class="comment">//  - if both Less(i, j) and Less(j, k) are true, then Less(i, k) must be true as well.</span>
+    <span class="comment">//  - if both Less(i, j) and Less(j, k) are false, then Less(i, k) must be false as well.</span>
+    <span class="comment">//</span>
+    <span class="comment">// Note that floating-point comparison (the &lt; operator on float32 or float64 values)</span>
+    <span class="comment">// is not a transitive ordering when not-a-number (NaN) values are involved.</span>
+    <span class="comment">// See Float64Slice.Less for a correct implementation for floating-point values.</span>
+    Less(i, j <a href="../builtin/index.html#int">int</a>) <a href="../builtin/index.html#bool">bool</a>
+
+    <span class="comment">// Swap swaps the elements with indexes i and j.</span>
+    Swap(i, j <a href="../builtin/index.html#int">int</a>)
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="Reverse">func <a href="../../src/sort/sort.go?s=2944:2982#L87">Reverse</a>
+					<a class="permalink" href="index.html#Reverse">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func Reverse(data <a href="index.html#Interface">Interface</a>) <a href="index.html#Interface">Interface</a></pre>
+				<p>Reverse returns the reverse order for data.
+
+				<div id="example_Reverse" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">s := []int{5, 2, 6, 3, 1, 4} <span class="comment">// unsorted</span>
+sort.Sort(sort.Reverse(sort.IntSlice(s)))
+fmt.Println(s)
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">[6 5 4 3 2 1]
+</pre>
+			
+		
+	</div>
+</div>
+
+				
+			
+
+			
+		
+			
+			
+			<h2 id="StringSlice">type <a href="../../src/sort/sort.go?s=4834:4859#L141">StringSlice</a>
+				<a class="permalink" href="index.html#StringSlice">&#xb6;</a>
+				
+				
+			</h2>
+			<p>StringSlice attaches the methods of Interface to []string, sorting in increasing order.
+
+			<pre>type StringSlice []<a href="../builtin/index.html#string">string</a></pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="StringSlice.Len">func (StringSlice) <a href="../../src/sort/sort.go?s=4861:4891#L143">Len</a>
+					<a class="permalink" href="index.html#StringSlice.Len">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x <a href="index.html#StringSlice">StringSlice</a>) Len() <a href="../builtin/index.html#int">int</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="StringSlice.Less">func (StringSlice) <a href="../../src/sort/sort.go?s=4920:4960#L144">Less</a>
+					<a class="permalink" href="index.html#StringSlice.Less">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x <a href="index.html#StringSlice">StringSlice</a>) Less(i, j <a href="../builtin/index.html#int">int</a>) <a href="../builtin/index.html#bool">bool</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="StringSlice.Search">func (StringSlice) <a href="../../src/sort/search.go?s=5736:5777#L140">Search</a>
+					<a class="permalink" href="index.html#StringSlice.Search">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p <a href="index.html#StringSlice">StringSlice</a>) Search(x <a href="../builtin/index.html#string">string</a>) <a href="../builtin/index.html#int">int</a></pre>
+				<p>Search returns the result of applying <a href="index.html#SearchStrings">SearchStrings</a> to the receiver and x.
+
+				
+				
+				
+			
+				
+				<h3 id="StringSlice.Sort">func (StringSlice) <a href="../../src/sort/sort.go?s=5111:5138#L148">Sort</a>
+					<a class="permalink" href="index.html#StringSlice.Sort">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x <a href="index.html#StringSlice">StringSlice</a>) Sort()</pre>
+				<p>Sort is a convenience method: x.Sort() calls Sort(x).
+
+				
+				
+				
+			
+				
+				<h3 id="StringSlice.Swap">func (StringSlice) <a href="../../src/sort/sort.go?s=4984:5019#L145">Swap</a>
+					<a class="permalink" href="index.html#StringSlice.Swap">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (x <a href="index.html#StringSlice">StringSlice</a>) Swap(i, j <a href="../builtin/index.html#int">int</a>)</pre>
+				
+				
+				
+				
+			
+		
+	
+
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

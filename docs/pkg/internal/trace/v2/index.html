@@ -1,0 +1,1769 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>trace - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package trace
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "internal/trace/v2"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+			
+				<dd><a href="index.html#pkg-subdirectories">Subdirectories</a></dd>
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+				<dd><a href="index.html#pkg-constants">Constants</a></dd>
+			
+			
+				<dd><a href="index.html#pkg-variables">Variables</a></dd>
+			
+			
+			
+				
+				<dd><a href="index.html#Event">type Event</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Event.Goroutine">func (e Event) Goroutine() GoID</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Event.Kind">func (e Event) Kind() EventKind</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Event.Label">func (e Event) Label() Label</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Event.Log">func (e Event) Log() Log</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Event.Metric">func (e Event) Metric() Metric</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Event.Proc">func (e Event) Proc() ProcID</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Event.Range">func (e Event) Range() Range</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Event.RangeAttributes">func (e Event) RangeAttributes() []RangeAttribute</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Event.Region">func (e Event) Region() Region</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Event.Stack">func (e Event) Stack() Stack</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Event.StateTransition">func (e Event) StateTransition() StateTransition</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Event.String">func (e Event) String() string</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Event.Task">func (e Event) Task() Task</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Event.Thread">func (e Event) Thread() ThreadID</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Event.Time">func (e Event) Time() Time</a></dd>
+				
+			
+				
+				<dd><a href="index.html#EventKind">type EventKind</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#EventKind.String">func (e EventKind) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#GoID">type GoID</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#GoState">type GoState</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#GoState.Executing">func (s GoState) Executing() bool</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#GoState.String">func (s GoState) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Label">type Label</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#Log">type Log</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#Metric">type Metric</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#ProcID">type ProcID</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#ProcState">type ProcState</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ProcState.Executing">func (s ProcState) Executing() bool</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ProcState.String">func (s ProcState) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Range">type Range</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#RangeAttribute">type RangeAttribute</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#Reader">type Reader</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewReader">func NewReader(r io.Reader) (*Reader, error)</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Reader.ReadEvent">func (r *Reader) ReadEvent() (e Event, err error)</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Region">type Region</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#ResourceID">type ResourceID</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#MakeResourceID">func MakeResourceID[T interface{GoID | ProcID | ThreadID}](id T) ResourceID</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ResourceID.Goroutine">func (r ResourceID) Goroutine() GoID</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ResourceID.Proc">func (r ResourceID) Proc() ProcID</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ResourceID.String">func (r ResourceID) String() string</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ResourceID.Thread">func (r ResourceID) Thread() ThreadID</a></dd>
+				
+			
+				
+				<dd><a href="index.html#ResourceKind">type ResourceKind</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ResourceKind.String">func (r ResourceKind) String() string</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Stack">type Stack</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Stack.Frames">func (s Stack) Frames(yield func(f StackFrame) bool) bool</a></dd>
+				
+			
+				
+				<dd><a href="index.html#StackFrame">type StackFrame</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#StateTransition">type StateTransition</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#StateTransition.Goroutine">func (d StateTransition) Goroutine() (from, to GoState)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#StateTransition.Proc">func (d StateTransition) Proc() (from, to ProcState)</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Task">type Task</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#TaskID">type TaskID</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#ThreadID">type ThreadID</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#Time">type Time</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Time.Sub">func (t Time) Sub(t0 Time) time.Duration</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Value">type Value</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Value.Kind">func (v Value) Kind() ValueKind</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Value.Uint64">func (v Value) Uint64() uint64</a></dd>
+				
+			
+				
+				<dd><a href="index.html#ValueKind">type ValueKind</a></dd>
+				
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../../../src/internal/trace/v2/base.go">base.go</a>
+			
+				<a href="../../../../src/internal/trace/v2/batch.go">batch.go</a>
+			
+				<a href="../../../../src/internal/trace/v2/batchcursor.go">batchcursor.go</a>
+			
+				<a href="../../../../src/internal/trace/v2/event.go">event.go</a>
+			
+				<a href="../../../../src/internal/trace/v2/generation.go">generation.go</a>
+			
+				<a href="../../../../src/internal/trace/v2/order.go">order.go</a>
+			
+				<a href="../../../../src/internal/trace/v2/reader.go">reader.go</a>
+			
+				<a href="../../../../src/internal/trace/v2/resources.go">resources.go</a>
+			
+				<a href="../../../../src/internal/trace/v2/value.go">value.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+			<h2 id="pkg-constants">Constants</h2>
+			
+				
+				<pre>const (
+    <span class="comment">// NoTask indicates the lack of a task.</span>
+    <span id="NoTask">NoTask</span> = <a href="index.html#TaskID">TaskID</a>(^<a href="../../../builtin/index.html#uint64">uint64</a>(0))
+
+    <span class="comment">// BackgroundTask is the global task that events are attached to if there was</span>
+    <span class="comment">// no other task in the context at the point the event was emitted.</span>
+    <span id="BackgroundTask">BackgroundTask</span> = <a href="index.html#TaskID">TaskID</a>(0)
+)</pre>
+			
+				<p>NoGoroutine indicates that the relevant events don&apos;t correspond to any
+goroutine in particular.
+
+				<pre>const <span id="NoGoroutine">NoGoroutine</span> = <a href="index.html#GoID">GoID</a>(-1)</pre>
+			
+				<p>NoProc indicates that the relevant events don&apos;t correspond to any
+P in particular.
+
+				<pre>const <span id="NoProc">NoProc</span> = <a href="index.html#ProcID">ProcID</a>(-1)</pre>
+			
+				<p>NoThread indicates that the relevant events don&apos;t correspond to any
+thread in particular.
+
+				<pre>const <span id="NoThread">NoThread</span> = <a href="index.html#ThreadID">ThreadID</a>(-1)</pre>
+			
+		
+		
+			<h2 id="pkg-variables">Variables</h2>
+			
+				<p>NoStack is a sentinel value that can be compared against any Stack value, indicating
+a lack of a stack trace.
+
+				<pre>var <span id="NoStack">NoStack</span> = <a href="index.html#Stack">Stack</a>{}</pre>
+			
+		
+		
+		
+			
+			
+			<h2 id="Event">type <a href="../../../../src/internal/trace/v2/event.go?s=9662:9732#L293">Event</a>
+				<a class="permalink" href="index.html#Event">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Event represents a single event in the trace.
+
+			<pre>type Event struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="Event.Goroutine">func (Event) <a href="../../../../src/internal/trace/v2/event.go?s=10437:10468#L318">Goroutine</a>
+					<a class="permalink" href="index.html#Event.Goroutine">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (e <a href="index.html#Event">Event</a>) Goroutine() <a href="index.html#GoID">GoID</a></pre>
+				<p>Goroutine returns the ID of the goroutine that was executing when
+this event happened. It describes part of the execution context
+for this event.
+<p>Note that for goroutine state transitions this always refers to the
+state before the transition. For example, if a goroutine is just
+starting to run on this thread and/or proc, then this will return
+NoGoroutine. In this case, the goroutine starting to run will be
+can be found at Event.StateTransition().Resource.
+
+				
+				
+				
+			
+				
+				<h3 id="Event.Kind">func (Event) <a href="../../../../src/internal/trace/v2/event.go?s=9782:9813#L300">Kind</a>
+					<a class="permalink" href="index.html#Event.Kind">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (e <a href="index.html#Event">Event</a>) Kind() <a href="index.html#EventKind">EventKind</a></pre>
+				<p>Kind returns the kind of event that this is.
+
+				
+				
+				
+			
+				
+				<h3 id="Event.Label">func (Event) <a href="../../../../src/internal/trace/v2/event.go?s=12893:12921#L397">Label</a>
+					<a class="permalink" href="index.html#Event.Label">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (e <a href="index.html#Event">Event</a>) Label() <a href="index.html#Label">Label</a></pre>
+				<p>Label returns details about a Label event.
+<p>Panics if Kind != EventLabel.
+
+				
+				
+				
+			
+				
+				<h3 id="Event.Log">func (Event) <a href="../../../../src/internal/trace/v2/event.go?s=16921:16945#L517">Log</a>
+					<a class="permalink" href="index.html#Event.Log">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (e <a href="index.html#Event">Event</a>) Log() <a href="index.html#Log">Log</a></pre>
+				<p>Log returns details about a Log event.
+<p>Panics if Kind != EventLog.
+
+				
+				
+				
+			
+				
+				<h3 id="Event.Metric">func (Event) <a href="../../../../src/internal/trace/v2/event.go?s=12147:12177#L373">Metric</a>
+					<a class="permalink" href="index.html#Event.Metric">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (e <a href="index.html#Event">Event</a>) Metric() <a href="index.html#Metric">Metric</a></pre>
+				<p>Metric returns details about a Metric event.
+<p>Panics if Kind != EventMetric.
+
+				
+				
+				
+			
+				
+				<h3 id="Event.Proc">func (Event) <a href="../../../../src/internal/trace/v2/event.go?s=10752:10780#L327">Proc</a>
+					<a class="permalink" href="index.html#Event.Proc">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (e <a href="index.html#Event">Event</a>) Proc() <a href="index.html#ProcID">ProcID</a></pre>
+				<p>Proc returns the ID of the proc this event event pertains to.
+<p>Note that for proc state transitions this always refers to the
+state before the transition. For example, if a proc is just
+starting to run on this thread, then this will return NoProc.
+
+				
+				
+				
+			
+				
+				<h3 id="Event.Range">func (Event) <a href="../../../../src/internal/trace/v2/event.go?s=13490:13518#L413">Range</a>
+					<a class="permalink" href="index.html#Event.Range">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (e <a href="index.html#Event">Event</a>) Range() <a href="index.html#Range">Range</a></pre>
+				<p>Range returns details about an EventRangeBegin, EventRangeActive, or EventRangeEnd event.
+<p>Panics if Kind != EventRangeBegin, Kind != EventRangeActive, and Kind != EventRangeEnd.
+
+				
+				
+				
+			
+				
+				<h3 id="Event.RangeAttributes">func (Event) <a href="../../../../src/internal/trace/v2/event.go?s=15014:15063#L453">RangeAttributes</a>
+					<a class="permalink" href="index.html#Event.RangeAttributes">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (e <a href="index.html#Event">Event</a>) RangeAttributes() []<a href="index.html#RangeAttribute">RangeAttribute</a></pre>
+				<p>RangeAttributes returns attributes for a completed range.
+<p>Panics if Kind != EventRangeEnd.
+
+				
+				
+				
+			
+				
+				<h3 id="Event.Region">func (Event) <a href="../../../../src/internal/trace/v2/event.go?s=16377:16407#L501">Region</a>
+					<a class="permalink" href="index.html#Event.Region">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (e <a href="index.html#Event">Event</a>) Region() <a href="index.html#Region">Region</a></pre>
+				<p>Region returns details about a RegionBegin or RegionEnd event.
+<p>Panics if Kind != EventRegionBegin and Kind != EventRegionEnd.
+
+				
+				
+				
+			
+				
+				<h3 id="Event.Stack">func (Event) <a href="../../../../src/internal/trace/v2/event.go?s=11503:11531#L349">Stack</a>
+					<a class="permalink" href="index.html#Event.Stack">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (e <a href="index.html#Event">Event</a>) Stack() <a href="index.html#Stack">Stack</a></pre>
+				<p>Stack returns a handle to a stack associated with the event.
+<p>This represents a stack trace at the current moment in time for
+the current execution context.
+
+				
+				
+				
+			
+				
+				<h3 id="Event.StateTransition">func (Event) <a href="../../../../src/internal/trace/v2/event.go?s=17459:17507#L534">StateTransition</a>
+					<a class="permalink" href="index.html#Event.StateTransition">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (e <a href="index.html#Event">Event</a>) StateTransition() <a href="index.html#StateTransition">StateTransition</a></pre>
+				<p>StateTransition returns details about a StateTransition event.
+<p>Panics if Kind != EventStateTransition.
+
+				
+				
+				
+			
+				
+				<h3 id="Event.String">func (Event) <a href="../../../../src/internal/trace/v2/event.go?s=22987:23017#L658">String</a>
+					<a class="permalink" href="index.html#Event.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (e <a href="index.html#Event">Event</a>) String() <a href="../../../builtin/index.html#string">string</a></pre>
+				<p>String returns the event as a human-readable string.
+<p>The format of the string is intended for debugging and is subject to change.
+
+				
+				
+				
+			
+				
+				<h3 id="Event.Task">func (Event) <a href="../../../../src/internal/trace/v2/event.go?s=15548:15574#L475">Task</a>
+					<a class="permalink" href="index.html#Event.Task">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (e <a href="index.html#Event">Event</a>) Task() <a href="index.html#Task">Task</a></pre>
+				<p>Task returns details about a TaskBegin or TaskEnd event.
+<p>Panics if Kind != EventTaskBegin and Kind != EventTaskEnd.
+
+				
+				
+				
+			
+				
+				<h3 id="Event.Thread">func (Event) <a href="../../../../src/internal/trace/v2/event.go?s=11281:11313#L341">Thread</a>
+					<a class="permalink" href="index.html#Event.Thread">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (e <a href="index.html#Event">Event</a>) Thread() <a href="index.html#ThreadID">ThreadID</a></pre>
+				<p>Thread returns the ID of the thread this event pertains to.
+<p>Note that for thread state transitions this always refers to the
+state before the transition. For example, if a thread is just
+starting to run, then this will return NoThread.
+<p>Note: tracking thread state is not currently supported, so this
+will always return a valid thread ID. However thread state transitions
+may be tracked in the future, and callers must be robust to this
+possibility.
+
+				
+				
+				
+			
+				
+				<h3 id="Event.Time">func (Event) <a href="../../../../src/internal/trace/v2/event.go?s=9898:9924#L305">Time</a>
+					<a class="permalink" href="index.html#Event.Time">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (e <a href="index.html#Event">Event</a>) Time() <a href="index.html#Time">Time</a></pre>
+				<p>Time returns the timestamp of the event.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="EventKind">type <a href="../../../../src/internal/trace/v2/event.go?s=472:493#L12">EventKind</a>
+				<a class="permalink" href="index.html#EventKind">&#xb6;</a>
+				
+				
+			</h2>
+			<p>EventKind indicates the kind of event this is.
+<p>Use this information to obtain a more specific event that
+allows access to more detailed information.
+
+			<pre>type EventKind <a href="../../../builtin/index.html#uint16">uint16</a></pre>
+
+			
+				
+				<pre>const (
+    <span id="EventBad">EventBad</span> <a href="index.html#EventKind">EventKind</a> = <a href="../../../builtin/index.html#iota">iota</a>
+
+    <span class="comment">// EventKindSync is an event that indicates a global synchronization</span>
+    <span class="comment">// point in the trace. At the point of a sync event, the</span>
+    <span class="comment">// trace reader can be certain that all resources (e.g. threads,</span>
+    <span class="comment">// goroutines) that have existed until that point have been enumerated.</span>
+    <span id="EventSync">EventSync</span>
+
+    <span class="comment">// EventMetric is an event that represents the value of a metric at</span>
+    <span class="comment">// a particular point in time.</span>
+    <span id="EventMetric">EventMetric</span>
+
+    <span class="comment">// EventLabel attaches a label to a resource.</span>
+    <span id="EventLabel">EventLabel</span>
+
+    <span class="comment">// EventStackSample represents an execution sample, indicating what a</span>
+    <span class="comment">// thread/proc/goroutine was doing at a particular point in time via</span>
+    <span class="comment">// its backtrace.</span>
+    <span class="comment">//</span>
+    <span class="comment">// Note: Samples should be considered a close approximation of</span>
+    <span class="comment">// what a thread/proc/goroutine was executing at a given point in time.</span>
+    <span class="comment">// These events may slightly contradict the situation StateTransitions</span>
+    <span class="comment">// describe, so they should only be treated as a best-effort annotation.</span>
+    <span id="EventStackSample">EventStackSample</span>
+
+    <span class="comment">// EventRangeBegin and EventRangeEnd are a pair of generic events representing</span>
+    <span class="comment">// a special range of time. Ranges are named and scoped to some resource</span>
+    <span class="comment">// (identified via ResourceKind). A range that has begun but has not ended</span>
+    <span class="comment">// is considered active.</span>
+    <span class="comment">//</span>
+    <span class="comment">// EvRangeBegin and EvRangeEnd will share the same name, and an End will always</span>
+    <span class="comment">// follow a Begin on the same instance of the resource. The associated</span>
+    <span class="comment">// resource ID can be obtained from the Event. ResourceNone indicates the</span>
+    <span class="comment">// range is globally scoped. That is, any goroutine/proc/thread can start or</span>
+    <span class="comment">// stop, but only one such range may be active at any given time.</span>
+    <span class="comment">//</span>
+    <span class="comment">// EventRangeActive is like EventRangeBegin, but indicates that the range was</span>
+    <span class="comment">// already active. In this case, the resource referenced may not be in the current</span>
+    <span class="comment">// context.</span>
+    <span id="EventRangeBegin">EventRangeBegin</span>
+    <span id="EventRangeActive">EventRangeActive</span>
+    <span id="EventRangeEnd">EventRangeEnd</span>
+
+    <span class="comment">// EvTaskBegin and EvTaskEnd are a pair of events representing a runtime/trace.Task.</span>
+    <span id="EventTaskBegin">EventTaskBegin</span>
+    <span id="EventTaskEnd">EventTaskEnd</span>
+
+    <span class="comment">// EventRegionBegin and EventRegionEnd are a pair of events represent a runtime/trace.Region.</span>
+    <span id="EventRegionBegin">EventRegionBegin</span>
+    <span id="EventRegionEnd">EventRegionEnd</span>
+
+    <span class="comment">// EventLog represents a runtime/trace.Log call.</span>
+    <span id="EventLog">EventLog</span>
+
+    <span class="comment">// Transitions in state for some resource.</span>
+    <span id="EventStateTransition">EventStateTransition</span>
+)</pre>
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="EventKind.String">func (EventKind) <a href="../../../../src/internal/trace/v2/event.go?s=2742:2776#L74">String</a>
+					<a class="permalink" href="index.html#EventKind.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (e <a href="index.html#EventKind">EventKind</a>) String() <a href="../../../builtin/index.html#string">string</a></pre>
+				<p>String returns a string form of the EventKind.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="GoID">type <a href="../../../../src/internal/trace/v2/resources.go?s=748:763#L17">GoID</a>
+				<a class="permalink" href="index.html#GoID">&#xb6;</a>
+				
+				
+			</h2>
+			<p>GoID is the runtime-internal G structure&apos;s goid field. This is unique
+for each goroutine.
+
+			<pre>type GoID <a href="../../../builtin/index.html#int64">int64</a></pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="GoState">type <a href="../../../../src/internal/trace/v2/resources.go?s=1050:1068#L27">GoState</a>
+				<a class="permalink" href="index.html#GoState">&#xb6;</a>
+				
+				
+			</h2>
+			<p>GoState represents the state of a goroutine.
+<p>New GoStates may be added in the future. Users of this type must be robust
+to that possibility.
+
+			<pre>type GoState <a href="../../../builtin/index.html#uint8">uint8</a></pre>
+
+			
+				
+				<pre>const (
+    <span id="GoUndetermined">GoUndetermined</span> <a href="index.html#GoState">GoState</a> = <a href="../../../builtin/index.html#iota">iota</a> <span class="comment">// No information is known about the goroutine.</span>
+    <span id="GoNotExist">GoNotExist</span>                    <span class="comment">// Goroutine does not exist.</span>
+    <span id="GoRunnable">GoRunnable</span>                    <span class="comment">// Goroutine is runnable but not running.</span>
+    <span id="GoRunning">GoRunning</span>                     <span class="comment">// Goroutine is running.</span>
+    <span id="GoWaiting">GoWaiting</span>                     <span class="comment">// Goroutine is waiting on something to happen.</span>
+    <span id="GoSyscall">GoSyscall</span>                     <span class="comment">// Goroutine is in a system call.</span>
+)</pre>
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="GoState.Executing">func (GoState) <a href="../../../../src/internal/trace/v2/resources.go?s=1602:1635#L40">Executing</a>
+					<a class="permalink" href="index.html#GoState.Executing">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (s <a href="index.html#GoState">GoState</a>) Executing() <a href="../../../builtin/index.html#bool">bool</a></pre>
+				<p>Executing returns true if the state indicates that the goroutine is executing
+and bound to its thread.
+
+				
+				
+				
+			
+				
+				<h3 id="GoState.String">func (GoState) <a href="../../../../src/internal/trace/v2/resources.go?s=1838:1870#L47">String</a>
+					<a class="permalink" href="index.html#GoState.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (s <a href="index.html#GoState">GoState</a>) String() <a href="../../../builtin/index.html#string">string</a></pre>
+				<p>String returns a human-readable representation of a GoState.
+<p>The format of the returned string is for debugging purposes and is subject to change.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Label">type <a href="../../../../src/internal/trace/v2/event.go?s=5178:5352#L146">Label</a>
+				<a class="permalink" href="index.html#Label">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Label provides details about a Label event.
+
+			<pre>type Label struct {
+<span id="Label.Label"></span>    <span class="comment">// Label is the label applied to some resource.</span>
+    Label <a href="../../../builtin/index.html#string">string</a>
+
+<span id="Label.Resource"></span>    <span class="comment">// Resource is the resource to which this label should be applied.</span>
+    Resource <a href="index.html#ResourceID">ResourceID</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="Log">type <a href="../../../../src/internal/trace/v2/event.go?s=7986:8292#L231">Log</a>
+				<a class="permalink" href="index.html#Log">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Log provides details about a Log event.
+
+			<pre>type Log struct {
+<span id="Log.Task"></span>    <span class="comment">// Task is the ID of the task this region is associated with.</span>
+    Task <a href="index.html#TaskID">TaskID</a>
+
+<span id="Log.Category"></span>    <span class="comment">// Category is the category that was passed to runtime/trace.Log or runtime/trace.Logf.</span>
+    Category <a href="../../../builtin/index.html#string">string</a>
+
+<span id="Log.Message"></span>    <span class="comment">// Message is the message that was passed to runtime/trace.Log or runtime/trace.Logf.</span>
+    Message <a href="../../../builtin/index.html#string">string</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="Metric">type <a href="../../../../src/internal/trace/v2/event.go?s=4524:5129#L127">Metric</a>
+				<a class="permalink" href="index.html#Metric">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Metric provides details about a Metric event.
+
+			<pre>type Metric struct {
+<span id="Metric.Name"></span>    <span class="comment">// Name is the name of the sampled metric.</span>
+    <span class="comment">//</span>
+    <span class="comment">// Names follow the same convention as metric names in the</span>
+    <span class="comment">// runtime/metrics package, meaning they include the unit.</span>
+    <span class="comment">// Names that match with the runtime/metrics package represent</span>
+    <span class="comment">// the same quantity. Note that this corresponds to the</span>
+    <span class="comment">// runtime/metrics package for the Go version this trace was</span>
+    <span class="comment">// collected for.</span>
+    Name <a href="../../../builtin/index.html#string">string</a>
+
+<span id="Metric.Value"></span>    <span class="comment">// Value is the sampled value of the metric.</span>
+    <span class="comment">//</span>
+    <span class="comment">// The Value&#39;s Kind is tied to the name of the metric, and so is</span>
+    <span class="comment">// guaranteed to be the same for metric samples for the same metric.</span>
+    Value <a href="index.html#Value">Value</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="ProcID">type <a href="../../../../src/internal/trace/v2/resources.go?s=517:534#L9">ProcID</a>
+				<a class="permalink" href="index.html#ProcID">&#xb6;</a>
+				
+				
+			</h2>
+			<p>ProcID is the runtime-internal G structure&apos;s id field. This is unique
+for each P.
+
+			<pre>type ProcID <a href="../../../builtin/index.html#int64">int64</a></pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="ProcState">type <a href="../../../../src/internal/trace/v2/resources.go?s=2287:2307#L69">ProcState</a>
+				<a class="permalink" href="index.html#ProcState">&#xb6;</a>
+				
+				
+			</h2>
+			<p>ProcState represents the state of a proc.
+<p>New ProcStates may be added in the future. Users of this type must be robust
+to that possibility.
+
+			<pre>type ProcState <a href="../../../builtin/index.html#uint8">uint8</a></pre>
+
+			
+				
+				<pre>const (
+    <span id="ProcUndetermined">ProcUndetermined</span> <a href="index.html#ProcState">ProcState</a> = <a href="../../../builtin/index.html#iota">iota</a> <span class="comment">// No information is known about the proc.</span>
+    <span id="ProcNotExist">ProcNotExist</span>                      <span class="comment">// Proc does not exist.</span>
+    <span id="ProcRunning">ProcRunning</span>                       <span class="comment">// Proc is running.</span>
+    <span id="ProcIdle">ProcIdle</span>                          <span class="comment">// Proc is idle.</span>
+)</pre>
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="ProcState.Executing">func (ProcState) <a href="../../../../src/internal/trace/v2/resources.go?s=2668:2703#L80">Executing</a>
+					<a class="permalink" href="index.html#ProcState.Executing">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (s <a href="index.html#ProcState">ProcState</a>) Executing() <a href="../../../builtin/index.html#bool">bool</a></pre>
+				<p>Executing returns true if the state indicates that the proc is executing
+and bound to its thread.
+
+				
+				
+				
+			
+				
+				<h3 id="ProcState.String">func (ProcState) <a href="../../../../src/internal/trace/v2/resources.go?s=2892:2926#L87">String</a>
+					<a class="permalink" href="index.html#ProcState.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (s <a href="index.html#ProcState">ProcState</a>) String() <a href="../../../builtin/index.html#string">string</a></pre>
+				<p>String returns a human-readable representation of a ProcState.
+<p>The format of the returned string is for debugging purposes and is subject to change.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Range">type <a href="../../../../src/internal/trace/v2/event.go?s=5401:6666#L155">Range</a>
+				<a class="permalink" href="index.html#Range">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Range provides details about a Range event.
+
+			<pre>type Range struct {
+<span id="Range.Name"></span>    <span class="comment">// Name is a human-readable name for the range.</span>
+    <span class="comment">//</span>
+    <span class="comment">// This name can be used to identify the end of the range for the resource</span>
+    <span class="comment">// its scoped to, because only one of each type of range may be active on</span>
+    <span class="comment">// a particular resource. The relevant resource should be obtained from the</span>
+    <span class="comment">// Event that produced these details. The corresponding RangeEnd will have</span>
+    <span class="comment">// an identical name.</span>
+    Name <a href="../../../builtin/index.html#string">string</a>
+
+<span id="Range.Scope"></span>    <span class="comment">// Scope is the resource that the range is scoped to.</span>
+    <span class="comment">//</span>
+    <span class="comment">// For example, a ResourceGoroutine scope means that the same goroutine</span>
+    <span class="comment">// must have a start and end for the range, and that goroutine can only</span>
+    <span class="comment">// have one range of a particular name active at any given time. The</span>
+    <span class="comment">// ID that this range is scoped to may be obtained via Event.Goroutine.</span>
+    <span class="comment">//</span>
+    <span class="comment">// The ResourceNone scope means that the range is globally scoped. As a</span>
+    <span class="comment">// result, any goroutine/proc/thread may start or end the range, and only</span>
+    <span class="comment">// one such named range may be active globally at any given time.</span>
+    <span class="comment">//</span>
+    <span class="comment">// For RangeBegin and RangeEnd events, this will always reference some</span>
+    <span class="comment">// resource ID in the current execution context. For RangeActive events,</span>
+    <span class="comment">// this may reference a resource not in the current context. Prefer Scope</span>
+    <span class="comment">// over the current execution context.</span>
+    Scope <a href="index.html#ResourceID">ResourceID</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="RangeAttribute">type <a href="../../../../src/internal/trace/v2/event.go?s=6732:6881#L184">RangeAttribute</a>
+				<a class="permalink" href="index.html#RangeAttribute">&#xb6;</a>
+				
+				
+			</h2>
+			<p>RangeAttributes provides attributes about a completed Range.
+
+			<pre>type RangeAttribute struct {
+<span id="RangeAttribute.Name"></span>    <span class="comment">// Name is the human-readable name for the range.</span>
+    Name <a href="../../../builtin/index.html#string">string</a>
+
+<span id="RangeAttribute.Value"></span>    <span class="comment">// Value is the value of the attribute.</span>
+    Value <a href="index.html#Value">Value</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="Reader">type <a href="../../../../src/internal/trace/v2/reader.go?s=365:577#L9">Reader</a>
+				<a class="permalink" href="index.html#Reader">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Reader reads a byte stream, validates it, and produces trace events.
+
+			<pre>type Reader struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="NewReader">func <a href="../../../../src/internal/trace/v2/reader.go?s=620:664#L21">NewReader</a>
+					<a class="permalink" href="index.html#NewReader">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func NewReader(r <a href="../../../io/index.html">io</a>.<a href="../../../io/index.html#Reader">Reader</a>) (*<a href="index.html#Reader">Reader</a>, <a href="../../../builtin/index.html#error">error</a>)</pre>
+				<p>NewReader creates a new trace reader.
+
+				
+				
+			
+
+			
+				
+				<h3 id="Reader.ReadEvent">func (*Reader) <a href="../../../../src/internal/trace/v2/reader.go?s=1311:1360#L47">ReadEvent</a>
+					<a class="permalink" href="index.html#Reader.ReadEvent">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (r *<a href="index.html#Reader">Reader</a>) ReadEvent() (e <a href="index.html#Event">Event</a>, err <a href="../../../builtin/index.html#error">error</a>)</pre>
+				<p>ReadEvent reads a single event from the stream.
+<p>If the stream has been exhausted, it returns an invalid
+event and io.EOF.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Region">type <a href="../../../../src/internal/trace/v2/event.go?s=7728:7941#L222">Region</a>
+				<a class="permalink" href="index.html#Region">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Region provides details about a Region event.
+
+			<pre>type Region struct {
+<span id="Region.Task"></span>    <span class="comment">// Task is the ID of the task this region is associated with.</span>
+    Task <a href="index.html#TaskID">TaskID</a>
+
+<span id="Region.Type"></span>    <span class="comment">// Type is the regionType that was passed to runtime/trace.StartRegion or runtime/trace.WithRegion.</span>
+    Type <a href="../../../builtin/index.html#string">string</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="ResourceID">type <a href="../../../../src/internal/trace/v2/resources.go?s=3981:4087#L132">ResourceID</a>
+				<a class="permalink" href="index.html#ResourceID">&#xb6;</a>
+				
+				
+			</h2>
+			<p>ResourceID represents a generic resource ID.
+
+			<pre>type ResourceID struct {
+<span id="ResourceID.Kind"></span>    <span class="comment">// Kind is the kind of resource this ID is for.</span>
+    Kind <a href="index.html#ResourceKind">ResourceKind</a>
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="MakeResourceID">func <a href="../../../../src/internal/trace/v2/resources.go?s=4168:4245#L139">MakeResourceID</a>
+					<a class="permalink" href="index.html#MakeResourceID">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func MakeResourceID[T interface{ <a href="index.html#GoID">GoID</a> | <a href="index.html#ProcID">ProcID</a> | <a href="index.html#ThreadID">ThreadID</a> }](id T) <a href="index.html#ResourceID">ResourceID</a></pre>
+				<p>MakeResourceID creates a general resource ID from a specific resource&apos;s ID.
+
+				
+				
+			
+
+			
+				
+				<h3 id="ResourceID.Goroutine">func (ResourceID) <a href="../../../../src/internal/trace/v2/resources.go?s=4580:4616#L157">Goroutine</a>
+					<a class="permalink" href="index.html#ResourceID.Goroutine">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (r <a href="index.html#ResourceID">ResourceID</a>) Goroutine() <a href="index.html#GoID">GoID</a></pre>
+				<p>Goroutine obtains a GoID from the resource ID.
+<p>r.Kind must be ResourceGoroutine or this function will panic.
+
+				
+				
+				
+			
+				
+				<h3 id="ResourceID.Proc">func (ResourceID) <a href="../../../../src/internal/trace/v2/resources.go?s=4862:4895#L167">Proc</a>
+					<a class="permalink" href="index.html#ResourceID.Proc">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (r <a href="index.html#ResourceID">ResourceID</a>) Proc() <a href="index.html#ProcID">ProcID</a></pre>
+				<p>Proc obtains a ProcID from the resource ID.
+<p>r.Kind must be ResourceProc or this function will panic.
+
+				
+				
+				
+			
+				
+				<h3 id="ResourceID.String">func (ResourceID) <a href="../../../../src/internal/trace/v2/resources.go?s=5488:5523#L187">String</a>
+					<a class="permalink" href="index.html#ResourceID.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (r <a href="index.html#ResourceID">ResourceID</a>) String() <a href="../../../builtin/index.html#string">string</a></pre>
+				<p>String returns a human-readable string representation of the ResourceID.
+<p>This representation is subject to change and is intended primarily for debugging.
+
+				
+				
+				
+			
+				
+				<h3 id="ResourceID.Thread">func (ResourceID) <a href="../../../../src/internal/trace/v2/resources.go?s=5146:5183#L177">Thread</a>
+					<a class="permalink" href="index.html#ResourceID.Thread">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (r <a href="index.html#ResourceID">ResourceID</a>) Thread() <a href="index.html#ThreadID">ThreadID</a></pre>
+				<p>Thread obtains a ThreadID from the resource ID.
+<p>r.Kind must be ResourceThread or this function will panic.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="ResourceKind">type <a href="../../../../src/internal/trace/v2/resources.go?s=3300:3323#L105">ResourceKind</a>
+				<a class="permalink" href="index.html#ResourceKind">&#xb6;</a>
+				
+				
+			</h2>
+			<p>ResourceKind indicates a kind of resource that has a state machine.
+<p>New ResourceKinds may be added in the future. Users of this type must be robust
+to that possibility.
+
+			<pre>type ResourceKind <a href="../../../builtin/index.html#uint8">uint8</a></pre>
+
+			
+				
+				<pre>const (
+    <span id="ResourceNone">ResourceNone</span>      <a href="index.html#ResourceKind">ResourceKind</a> = <a href="../../../builtin/index.html#iota">iota</a> <span class="comment">// No resource.</span>
+    <span id="ResourceGoroutine">ResourceGoroutine</span>                     <span class="comment">// Goroutine.</span>
+    <span id="ResourceProc">ResourceProc</span>                          <span class="comment">// Proc.</span>
+    <span id="ResourceThread">ResourceThread</span>                        <span class="comment">// Thread.</span>
+)</pre>
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="ResourceKind.String">func (ResourceKind) <a href="../../../../src/internal/trace/v2/resources.go?s=3703:3740#L117">String</a>
+					<a class="permalink" href="index.html#ResourceKind.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (r <a href="index.html#ResourceKind">ResourceKind</a>) String() <a href="../../../builtin/index.html#string">string</a></pre>
+				<p>String returns a human-readable representation of a ResourceKind.
+<p>The format of the returned string is for debugging purposes and is subject to change.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Stack">type <a href="../../../../src/internal/trace/v2/event.go?s=8534:8586#L246">Stack</a>
+				<a class="permalink" href="index.html#Stack">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Stack represents a stack. It&apos;s really a handle to a stack and it&apos;s trivially comparable.
+<p>If two Stacks are equal then their Frames are guaranteed to be identical. If they are not
+equal, however, their Frames may still be equal.
+
+			<pre>type Stack struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="Stack.Frames">func (Stack) <a href="../../../../src/internal/trace/v2/event.go?s=8641:8698#L252">Frames</a>
+					<a class="permalink" href="index.html#Stack.Frames">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (s <a href="index.html#Stack">Stack</a>) Frames(yield func(f <a href="index.html#StackFrame">StackFrame</a>) <a href="../../../builtin/index.html#bool">bool</a>) <a href="../../../builtin/index.html#bool">bool</a></pre>
+				<p>Frames is an iterator over the frames in a Stack.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="StackFrame">type <a href="../../../../src/internal/trace/v2/event.go?s=9195:9611#L276">StackFrame</a>
+				<a class="permalink" href="index.html#StackFrame">&#xb6;</a>
+				
+				
+			</h2>
+			<p>StackFrame represents a single frame of a stack.
+
+			<pre>type StackFrame struct {
+<span id="StackFrame.PC"></span>    <span class="comment">// PC is the program counter of the function call if this</span>
+    <span class="comment">// is not a leaf frame. If it&#39;s a leaf frame, it&#39;s the point</span>
+    <span class="comment">// at which the stack trace was taken.</span>
+    PC <a href="../../../builtin/index.html#uint64">uint64</a>
+
+<span id="StackFrame.Func"></span>    <span class="comment">// Func is the name of the function this frame maps to.</span>
+    Func <a href="../../../builtin/index.html#string">string</a>
+
+<span id="StackFrame.File"></span>    <span class="comment">// File is the file which contains the source code of Func.</span>
+    File <a href="../../../builtin/index.html#string">string</a>
+
+<span id="StackFrame.Line"></span>    <span class="comment">// Line is the line number within File which maps to PC.</span>
+    Line <a href="../../../builtin/index.html#uint64">uint64</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="StateTransition">type <a href="../../../../src/internal/trace/v2/resources.go?s=5697:6654#L195">StateTransition</a>
+				<a class="permalink" href="index.html#StateTransition">&#xb6;</a>
+				
+				
+			</h2>
+			<p>StateTransition provides details about a StateTransition event.
+
+			<pre>type StateTransition struct {
+<span id="StateTransition.Resource"></span>    <span class="comment">// Resource is the resource this state transition is for.</span>
+    Resource <a href="index.html#ResourceID">ResourceID</a>
+
+<span id="StateTransition.Reason"></span>    <span class="comment">// Reason is a human-readable reason for the state transition.</span>
+    Reason <a href="../../../builtin/index.html#string">string</a>
+
+<span id="StateTransition.Stack"></span>    <span class="comment">// Stack is the stack trace of the resource making the state transition.</span>
+    <span class="comment">//</span>
+    <span class="comment">// This is distinct from the result (Event).Stack because it pertains to</span>
+    <span class="comment">// the transitioning resource, not any of the ones executing the event</span>
+    <span class="comment">// this StateTransition came from.</span>
+    <span class="comment">//</span>
+    <span class="comment">// An example of this difference is the NotExist -&gt; Runnable transition for</span>
+    <span class="comment">// goroutines, which indicates goroutine creation. In this particular case,</span>
+    <span class="comment">// a Stack here would refer to the starting stack of the new goroutine, and</span>
+    <span class="comment">// an (Event).Stack would refer to the stack trace of whoever created the</span>
+    <span class="comment">// goroutine.</span>
+    Stack <a href="index.html#Stack">Stack</a>
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="StateTransition.Goroutine">func (StateTransition) <a href="../../../../src/internal/trace/v2/resources.go?s=7425:7480#L245">Goroutine</a>
+					<a class="permalink" href="index.html#StateTransition.Goroutine">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (d <a href="index.html#StateTransition">StateTransition</a>) Goroutine() (from, to <a href="index.html#GoState">GoState</a>)</pre>
+				<p>Goroutine returns the state transition for a goroutine.
+<p>Transitions to and from states that are Executing are special in that
+they change the future execution context. In other words, future events
+on the same thread will feature the same goroutine until it stops running.
+<p>Panics if d.Resource.Kind is not ResourceGoroutine.
+
+				
+				
+				
+			
+				
+				<h3 id="StateTransition.Proc">func (StateTransition) <a href="../../../../src/internal/trace/v2/resources.go?s=7974:8026#L259">Proc</a>
+					<a class="permalink" href="index.html#StateTransition.Proc">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (d <a href="index.html#StateTransition">StateTransition</a>) Proc() (from, to <a href="index.html#ProcState">ProcState</a>)</pre>
+				<p>Proc returns the state transition for a proc.
+<p>Transitions to and from states that are Executing are special in that
+they change the future execution context. In other words, future events
+on the same thread will feature the same goroutine until it stops running.
+<p>Panics if d.Resource.Kind is not ResourceProc.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Task">type <a href="../../../../src/internal/trace/v2/event.go?s=7312:7677#L206">Task</a>
+				<a class="permalink" href="index.html#Task">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Task provides details about a Task event.
+
+			<pre>type Task struct {
+<span id="Task.ID"></span>    <span class="comment">// ID is a unique identifier for the task.</span>
+    <span class="comment">//</span>
+    <span class="comment">// This can be used to associate the beginning of a task with its end.</span>
+    ID <a href="index.html#TaskID">TaskID</a>
+
+    <span class="comment">// ParentID is the ID of the parent task.</span>
+<span id="Task.Parent"></span>    Parent <a href="index.html#TaskID">TaskID</a>
+
+<span id="Task.Type"></span>    <span class="comment">// Type is the taskType that was passed to runtime/trace.NewTask.</span>
+    <span class="comment">//</span>
+    <span class="comment">// May be &#34;&#34; if a task&#39;s TaskBegin event isn&#39;t present in the trace.</span>
+    Type <a href="../../../builtin/index.html#string">string</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="TaskID">type <a href="../../../../src/internal/trace/v2/event.go?s=6989:7007#L194">TaskID</a>
+				<a class="permalink" href="index.html#TaskID">&#xb6;</a>
+				
+				
+			</h2>
+			<p>TaskID is the internal ID of a task used to disambiguate tasks (even if they
+are of the same type).
+
+			<pre>type TaskID <a href="../../../builtin/index.html#uint64">uint64</a></pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="ThreadID">type <a href="../../../../src/internal/trace/v2/resources.go?s=281:300#L1">ThreadID</a>
+				<a class="permalink" href="index.html#ThreadID">&#xb6;</a>
+				
+				
+			</h2>
+			<p>ThreadID is the runtime-internal M structure&apos;s ID. This is unique
+for each OS thread.
+
+			<pre>type ThreadID <a href="../../../builtin/index.html#int64">int64</a></pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="Time">type <a href="../../../../src/internal/trace/v2/event.go?s=4301:4316#L119">Time</a>
+				<a class="permalink" href="index.html#Time">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Time is a timestamp in nanoseconds.
+<p>It corresponds to the monotonic clock on the platform that the
+trace was taken, and so is possible to correlate with timestamps
+for other traces taken on the same machine using the same clock
+(i.e. no reboots in between).
+<p>The actual absolute value of the timestamp is only meaningful in
+relation to other timestamps from the same clock.
+<p>BUG: Timestamps coming from traces on Windows platforms are
+only comparable with timestamps from the same trace. Timestamps
+across traces cannot be compared, because the system clock is
+not used as of Go 1.22.
+<p>BUG: Traces produced by Go versions 1.21 and earlier cannot be
+compared with timestamps from other traces taken on the same
+machine. This is because the system clock was not used at all
+to collect those timestamps.
+
+			<pre>type Time <a href="../../../builtin/index.html#int64">int64</a></pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="Time.Sub">func (Time) <a href="../../../../src/internal/trace/v2/event.go?s=4385:4425#L122">Sub</a>
+					<a class="permalink" href="index.html#Time.Sub">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (t <a href="index.html#Time">Time</a>) Sub(t0 <a href="index.html#Time">Time</a>) <a href="../../../time/index.html">time</a>.<a href="../../../time/index.html#Duration">Duration</a></pre>
+				<p>Sub subtracts t0 from t, returning the duration in nanoseconds.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Value">type <a href="../../../../src/internal/trace/v2/value.go?s=250:304#L1">Value</a>
+				<a class="permalink" href="index.html#Value">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Value is a dynamically-typed value obtained from a trace.
+
+			<pre>type Value struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="Value.Kind">func (Value) <a href="../../../../src/internal/trace/v2/value.go?s=657:688#L19">Kind</a>
+					<a class="permalink" href="index.html#Value.Kind">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v <a href="index.html#Value">Value</a>) Kind() <a href="index.html#ValueKind">ValueKind</a></pre>
+				<p>Kind returns the ValueKind of the value.
+<p>It represents the underlying structure of the value.
+<p>New ValueKinds may be added in the future. Users of this type must be robust
+to that possibility.
+
+				
+				
+				
+			
+				
+				<h3 id="Value.Uint64">func (Value) <a href="../../../../src/internal/trace/v2/value.go?s=839:869#L26">Uint64</a>
+					<a class="permalink" href="index.html#Value.Uint64">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (v <a href="index.html#Value">Value</a>) Uint64() <a href="../../../builtin/index.html#uint64">uint64</a></pre>
+				<p>Uint64 returns the uint64 value for a MetricSampleUint64.
+<p>Panics if this metric sample&apos;s Kind is not MetricSampleUint64.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="ValueKind">type <a href="../../../../src/internal/trace/v2/value.go?s=374:394#L6">ValueKind</a>
+				<a class="permalink" href="index.html#ValueKind">&#xb6;</a>
+				
+				
+			</h2>
+			<p>ValueKind is the type of a dynamically-typed value from a trace.
+
+			<pre>type ValueKind <a href="../../../builtin/index.html#uint8">uint8</a></pre>
+
+			
+				
+				<pre>const (
+    <span id="ValueBad">ValueBad</span> <a href="index.html#ValueKind">ValueKind</a> = <a href="../../../builtin/index.html#iota">iota</a>
+    <span id="ValueUint64">ValueUint64</span>
+)</pre>
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+	
+
+	
+
+
+
+
+
+	
+	
+		<h2 id="pkg-subdirectories">Subdirectories</h2>
+	
+	<div class="pkg-dir">
+		<table>
+			<tr>
+				<th class="pkg-name">Name</th>
+				<th class="pkg-synopsis">Synopsis</th>
+			</tr>
+
+			
+			<tr>
+				<td colspan="2"><a href="../index.html">..</a></td>
+			</tr>
+			
+
+			
+		</table>
+	</div>
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

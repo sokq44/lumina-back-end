@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>printer - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package printer
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "go/printer"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+				<dd><a href="index.html#pkg-examples" class="examplesLink">Examples</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>Package printer implements printing of AST nodes.
+
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+			
+			
+				
+				<dd><a href="index.html#Fprint">func Fprint(output io.Writer, fset *token.FileSet, node any) error</a></dd>
+			
+			
+				
+				<dd><a href="index.html#CommentedNode">type CommentedNode</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#Config">type Config</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Config.Fprint">func (cfg *Config) Fprint(output io.Writer, fset *token.FileSet, node any) error</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Mode">type Mode</a></dd>
+				
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+		<div id="pkg-examples">
+			<h3>Examples</h3>
+			<div class="js-expandAll expandAll collapsed">(Expand All)</div>
+			<dl>
+			
+			<dd><a class="exampleLink" href="index.html#example_Fprint">Fprint</a></dd>
+			
+			</dl>
+		</div>
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../../src/go/printer/comment.go">comment.go</a>
+			
+				<a href="../../../src/go/printer/gobuild.go">gobuild.go</a>
+			
+				<a href="../../../src/go/printer/nodes.go">nodes.go</a>
+			
+				<a href="../../../src/go/printer/printer.go">printer.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+		
+		
+			
+			
+			<h2 id="Fprint">func <a href="../../../src/go/printer/printer.go?s=42441:42507#L1421">Fprint</a>
+				<a class="permalink" href="index.html#Fprint">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Fprint(output <a href="../../io/index.html">io</a>.<a href="../../io/index.html#Writer">Writer</a>, fset *<a href="../token/index.html">token</a>.<a href="../token/index.html#FileSet">FileSet</a>, node <a href="../../builtin/index.html#any">any</a>) <a href="../../builtin/index.html#error">error</a></pre>
+			<p>Fprint &quot;pretty-prints&quot; an AST node to output.
+It calls <a href="index.html#Config.Fprint">Config.Fprint</a> with default settings.
+Note that gofmt uses tabs for indentation but spaces for alignment;
+use format.Node (package go/format) for output that matches gofmt.
+
+			<div id="example_Fprint" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">package printer_test
+
+import (
+    &#34;bytes&#34;
+    &#34;fmt&#34;
+    &#34;go/ast&#34;
+    &#34;go/parser&#34;
+    &#34;go/printer&#34;
+    &#34;go/token&#34;
+    &#34;strings&#34;
+)
+
+func parseFunc(filename, functionname string) (fun *ast.FuncDecl, fset *token.FileSet) {
+    fset = token.NewFileSet()
+    if file, err := parser.ParseFile(fset, filename, nil, 0); err == nil {
+        for _, d := range file.Decls {
+            if f, ok := d.(*ast.FuncDecl); ok &amp;&amp; f.Name.Name == functionname {
+                fun = f
+                return
+            }
+        }
+    }
+    panic(&#34;function not found&#34;)
+}
+
+func printSelf() {
+    <span class="comment">// Parse source file and extract the AST without comments for</span>
+    <span class="comment">// this function, with position information referring to the</span>
+    <span class="comment">// file set fset.</span>
+    funcAST, fset := parseFunc(&#34;example_test.go&#34;, &#34;printSelf&#34;)
+
+    <span class="comment">// Print the function body into buffer buf.</span>
+    <span class="comment">// The file set is provided to the printer so that it knows</span>
+    <span class="comment">// about the original source formatting and can add additional</span>
+    <span class="comment">// line breaks where they were present in the source.</span>
+    var buf bytes.Buffer
+    printer.Fprint(&amp;buf, fset, funcAST.Body)
+
+    <span class="comment">// Remove braces {} enclosing the function body, unindent,</span>
+    <span class="comment">// and trim leading and trailing white space.</span>
+    s := buf.String()
+    s = s[1 : len(s)-1]
+    s = strings.TrimSpace(strings.ReplaceAll(s, &#34;\n\t&#34;, &#34;\n&#34;))
+
+    <span class="comment">// Print the cleaned-up body text to stdout.</span>
+    fmt.Println(s)
+}
+
+func ExampleFprint() {
+    printSelf()
+
+    <span class="comment">// Output:</span>
+    <span class="comment">// funcAST, fset := parseFunc(&#34;example_test.go&#34;, &#34;printSelf&#34;)</span>
+    <span class="comment">//</span>
+    <span class="comment">// var buf bytes.Buffer</span>
+    <span class="comment">// printer.Fprint(&amp;buf, fset, funcAST.Body)</span>
+    <span class="comment">//</span>
+    <span class="comment">// s := buf.String()</span>
+    <span class="comment">// s = s[1 : len(s)-1]</span>
+    <span class="comment">// s = strings.TrimSpace(strings.ReplaceAll(s, &#34;\n\t&#34;, &#34;\n&#34;))</span>
+    <span class="comment">//</span>
+    <span class="comment">// fmt.Println(s)</span>
+}
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+		
+			
+			
+			<h2 id="CommentedNode">type <a href="../../../src/go/printer/printer.go?s=41602:41734#L1404">CommentedNode</a>
+				<a class="permalink" href="index.html#CommentedNode">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A CommentedNode bundles an AST node and corresponding comments.
+It may be provided as argument to any of the <a href="index.html#Fprint">Fprint</a> functions.
+
+			<pre>type CommentedNode struct {
+<span id="CommentedNode.Node"></span>    Node     <a href="../../builtin/index.html#any">any</a> <span class="comment">// *ast.File, or ast.Expr, ast.Decl, ast.Spec, or ast.Stmt</span>
+<span id="CommentedNode.Comments"></span>    Comments []*<a href="../ast/index.html">ast</a>.<a href="../ast/index.html#CommentGroup">CommentGroup</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="Config">type <a href="../../../src/go/printer/printer.go?s=38896:39050#L1307">Config</a>
+				<a class="permalink" href="index.html#Config">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A Config node controls the output of Fprint.
+
+			<pre>type Config struct {
+<span id="Config.Mode"></span>    Mode     <a href="index.html#Mode">Mode</a> <span class="comment">// default: 0</span>
+<span id="Config.Tabwidth"></span>    Tabwidth <a href="../../builtin/index.html#int">int</a>  <span class="comment">// default: 8</span>
+<span id="Config.Indent"></span>    Indent   <a href="../../builtin/index.html#int">int</a>  <span class="comment">// default: 0 (all code is indented at least by this much)</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="Config.Fprint">func (*Config) <a href="../../../src/go/printer/printer.go?s=42051:42131#L1413">Fprint</a>
+					<a class="permalink" href="index.html#Config.Fprint">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (cfg *<a href="index.html#Config">Config</a>) Fprint(output <a href="../../io/index.html">io</a>.<a href="../../io/index.html#Writer">Writer</a>, fset *<a href="../token/index.html">token</a>.<a href="../token/index.html#FileSet">FileSet</a>, node <a href="../../builtin/index.html#any">any</a>) <a href="../../builtin/index.html#error">error</a></pre>
+				<p>Fprint &quot;pretty-prints&quot; an AST node to output for a given configuration cfg.
+Position information is interpreted relative to the file set fset.
+The node type must be *<a href="http://localhost:8080/go/ast#File">ast.File</a>, *<a href="index.html#CommentedNode">CommentedNode</a>, []<a href="http://localhost:8080/go/ast#Decl">ast.Decl</a>, []<a href="http://localhost:8080/go/ast#Stmt">ast.Stmt</a>,
+or assignment-compatible to <a href="http://localhost:8080/go/ast#Expr">ast.Expr</a>, <a href="http://localhost:8080/go/ast#Decl">ast.Decl</a>, <a href="http://localhost:8080/go/ast#Spec">ast.Spec</a>, or <a href="http://localhost:8080/go/ast#Stmt">ast.Stmt</a>.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Mode">type <a href="../../../src/go/printer/printer.go?s=37806:37820#L1281">Mode</a>
+				<a class="permalink" href="index.html#Mode">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A Mode value is a set of flags (or 0). They control printing.
+
+			<pre>type Mode <a href="../../builtin/index.html#uint">uint</a></pre>
+
+			
+				
+				<pre>const (
+    <span id="RawFormat">RawFormat</span> <a href="index.html#Mode">Mode</a> = 1 &lt;&lt; <a href="../../builtin/index.html#iota">iota</a> <span class="comment">// do not use a tabwriter; if set, UseSpaces is ignored</span>
+    <span id="TabIndent">TabIndent</span>                  <span class="comment">// use tabs for indentation independent of UseSpaces</span>
+    <span id="UseSpaces">UseSpaces</span>                  <span class="comment">// use spaces instead of tabs for alignment</span>
+    <span id="SourcePos">SourcePos</span>                  <span class="comment">// emit //line directives to preserve original source positions</span>
+)</pre>
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+	
+
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>src/compress/bzip2/bzip2.go - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="./bzip2.go?s=1728:1765#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Source file
+    <a href="http://localhost:8080/src">src</a>/<a href="http://localhost:8080/src/compress">compress</a>/<a href="http://localhost:8080/src/compress/bzip2">bzip2</a>/<span class="text-muted">bzip2.go</span>
+  </h1>
+
+
+
+
+
+  <h2>
+    Documentation: <a href="http://localhost:8080/pkg/compress/bzip2">compress/bzip2</a>
+  </h2>
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1&nbsp;&nbsp;</span><span class="comment">// Copyright 2011 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2&nbsp;&nbsp;</span><span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3&nbsp;&nbsp;</span><span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4&nbsp;&nbsp;</span>
+<span id="L5" class="ln">     5&nbsp;&nbsp;</span><span class="comment">// Package bzip2 implements bzip2 decompression.</span>
+<span id="L6" class="ln">     6&nbsp;&nbsp;</span>package bzip2
+<span id="L7" class="ln">     7&nbsp;&nbsp;</span>
+<span id="L8" class="ln">     8&nbsp;&nbsp;</span>import &#34;io&#34;
+<span id="L9" class="ln">     9&nbsp;&nbsp;</span>
+<span id="L10" class="ln">    10&nbsp;&nbsp;</span><span class="comment">// There&#39;s no RFC for bzip2. I used the Wikipedia page for reference and a lot</span>
+<span id="L11" class="ln">    11&nbsp;&nbsp;</span><span class="comment">// of guessing: https://en.wikipedia.org/wiki/Bzip2</span>
+<span id="L12" class="ln">    12&nbsp;&nbsp;</span><span class="comment">// The source code to pyflate was useful for debugging:</span>
+<span id="L13" class="ln">    13&nbsp;&nbsp;</span><span class="comment">// http://www.paul.sladen.org/projects/pyflate</span>
+<span id="L14" class="ln">    14&nbsp;&nbsp;</span>
+<span id="L15" class="ln">    15&nbsp;&nbsp;</span><span class="comment">// A StructuralError is returned when the bzip2 data is found to be</span>
+<span id="L16" class="ln">    16&nbsp;&nbsp;</span><span class="comment">// syntactically invalid.</span>
+<span id="L17" class="ln">    17&nbsp;&nbsp;</span>type StructuralError string
+<span id="L18" class="ln">    18&nbsp;&nbsp;</span>
+<span id="L19" class="ln">    19&nbsp;&nbsp;</span>func (s StructuralError) Error() string {
+<span id="L20" class="ln">    20&nbsp;&nbsp;</span>	return &#34;bzip2 data invalid: &#34; + string(s)
+<span id="L21" class="ln">    21&nbsp;&nbsp;</span>}
+<span id="L22" class="ln">    22&nbsp;&nbsp;</span>
+<span id="L23" class="ln">    23&nbsp;&nbsp;</span><span class="comment">// A reader decompresses bzip2 compressed data.</span>
+<span id="L24" class="ln">    24&nbsp;&nbsp;</span>type reader struct {
+<span id="L25" class="ln">    25&nbsp;&nbsp;</span>	br           bitReader
+<span id="L26" class="ln">    26&nbsp;&nbsp;</span>	fileCRC      uint32
+<span id="L27" class="ln">    27&nbsp;&nbsp;</span>	blockCRC     uint32
+<span id="L28" class="ln">    28&nbsp;&nbsp;</span>	wantBlockCRC uint32
+<span id="L29" class="ln">    29&nbsp;&nbsp;</span>	setupDone    bool <span class="comment">// true if we have parsed the bzip2 header.</span>
+<span id="L30" class="ln">    30&nbsp;&nbsp;</span>	blockSize    int  <span class="comment">// blockSize in bytes, i.e. 900 * 1000.</span>
+<span id="L31" class="ln">    31&nbsp;&nbsp;</span>	eof          bool
+<span id="L32" class="ln">    32&nbsp;&nbsp;</span>	c            [256]uint <span class="comment">// the ``C&#39;&#39; array for the inverse BWT.</span>
+<span id="L33" class="ln">    33&nbsp;&nbsp;</span>	tt           []uint32  <span class="comment">// mirrors the ``tt&#39;&#39; array in the bzip2 source and contains the P array in the upper 24 bits.</span>
+<span id="L34" class="ln">    34&nbsp;&nbsp;</span>	tPos         uint32    <span class="comment">// Index of the next output byte in tt.</span>
+<span id="L35" class="ln">    35&nbsp;&nbsp;</span>
+<span id="L36" class="ln">    36&nbsp;&nbsp;</span>	preRLE      []uint32 <span class="comment">// contains the RLE data still to be processed.</span>
+<span id="L37" class="ln">    37&nbsp;&nbsp;</span>	preRLEUsed  int      <span class="comment">// number of entries of preRLE used.</span>
+<span id="L38" class="ln">    38&nbsp;&nbsp;</span>	lastByte    int      <span class="comment">// the last byte value seen.</span>
+<span id="L39" class="ln">    39&nbsp;&nbsp;</span>	byteRepeats uint     <span class="comment">// the number of repeats of lastByte seen.</span>
+<span id="L40" class="ln">    40&nbsp;&nbsp;</span>	repeats     uint     <span class="comment">// the number of copies of lastByte to output.</span>
+<span id="L41" class="ln">    41&nbsp;&nbsp;</span>}
+<span id="L42" class="ln">    42&nbsp;&nbsp;</span>
+<span id="L43" class="ln">    43&nbsp;&nbsp;</span><span class="comment">// NewReader returns an io.Reader which decompresses bzip2 data from r.</span>
+<span id="L44" class="ln">    44&nbsp;&nbsp;</span><span class="comment">// If r does not also implement [io.ByteReader],</span>
+<span id="L45" class="ln">    45&nbsp;&nbsp;</span><span class="comment">// the decompressor may read more data than necessary from r.</span>
+<span id="L46" class="ln">    46&nbsp;&nbsp;</span><span class="selection">func NewReader(r io.Reader) io.Reader</span> {
+<span id="L47" class="ln">    47&nbsp;&nbsp;</span>	bz2 := new(reader)
+<span id="L48" class="ln">    48&nbsp;&nbsp;</span>	bz2.br = newBitReader(r)
+<span id="L49" class="ln">    49&nbsp;&nbsp;</span>	return bz2
+<span id="L50" class="ln">    50&nbsp;&nbsp;</span>}
+<span id="L51" class="ln">    51&nbsp;&nbsp;</span>
+<span id="L52" class="ln">    52&nbsp;&nbsp;</span>const bzip2FileMagic = 0x425a <span class="comment">// &#34;BZ&#34;</span>
+<span id="L53" class="ln">    53&nbsp;&nbsp;</span>const bzip2BlockMagic = 0x314159265359
+<span id="L54" class="ln">    54&nbsp;&nbsp;</span>const bzip2FinalMagic = 0x177245385090
+<span id="L55" class="ln">    55&nbsp;&nbsp;</span>
+<span id="L56" class="ln">    56&nbsp;&nbsp;</span><span class="comment">// setup parses the bzip2 header.</span>
+<span id="L57" class="ln">    57&nbsp;&nbsp;</span>func (bz2 *reader) setup(needMagic bool) error {
+<span id="L58" class="ln">    58&nbsp;&nbsp;</span>	br := &amp;bz2.br
+<span id="L59" class="ln">    59&nbsp;&nbsp;</span>
+<span id="L60" class="ln">    60&nbsp;&nbsp;</span>	if needMagic {
+<span id="L61" class="ln">    61&nbsp;&nbsp;</span>		magic := br.ReadBits(16)
+<span id="L62" class="ln">    62&nbsp;&nbsp;</span>		if magic != bzip2FileMagic {
+<span id="L63" class="ln">    63&nbsp;&nbsp;</span>			return StructuralError(&#34;bad magic value&#34;)
+<span id="L64" class="ln">    64&nbsp;&nbsp;</span>		}
+<span id="L65" class="ln">    65&nbsp;&nbsp;</span>	}
+<span id="L66" class="ln">    66&nbsp;&nbsp;</span>
+<span id="L67" class="ln">    67&nbsp;&nbsp;</span>	t := br.ReadBits(8)
+<span id="L68" class="ln">    68&nbsp;&nbsp;</span>	if t != &#39;h&#39; {
+<span id="L69" class="ln">    69&nbsp;&nbsp;</span>		return StructuralError(&#34;non-Huffman entropy encoding&#34;)
+<span id="L70" class="ln">    70&nbsp;&nbsp;</span>	}
+<span id="L71" class="ln">    71&nbsp;&nbsp;</span>
+<span id="L72" class="ln">    72&nbsp;&nbsp;</span>	level := br.ReadBits(8)
+<span id="L73" class="ln">    73&nbsp;&nbsp;</span>	if level &lt; &#39;1&#39; || level &gt; &#39;9&#39; {
+<span id="L74" class="ln">    74&nbsp;&nbsp;</span>		return StructuralError(&#34;invalid compression level&#34;)
+<span id="L75" class="ln">    75&nbsp;&nbsp;</span>	}
+<span id="L76" class="ln">    76&nbsp;&nbsp;</span>
+<span id="L77" class="ln">    77&nbsp;&nbsp;</span>	bz2.fileCRC = 0
+<span id="L78" class="ln">    78&nbsp;&nbsp;</span>	bz2.blockSize = 100 * 1000 * (level - &#39;0&#39;)
+<span id="L79" class="ln">    79&nbsp;&nbsp;</span>	if bz2.blockSize &gt; len(bz2.tt) {
+<span id="L80" class="ln">    80&nbsp;&nbsp;</span>		bz2.tt = make([]uint32, bz2.blockSize)
+<span id="L81" class="ln">    81&nbsp;&nbsp;</span>	}
+<span id="L82" class="ln">    82&nbsp;&nbsp;</span>	return nil
+<span id="L83" class="ln">    83&nbsp;&nbsp;</span>}
+<span id="L84" class="ln">    84&nbsp;&nbsp;</span>
+<span id="L85" class="ln">    85&nbsp;&nbsp;</span>func (bz2 *reader) Read(buf []byte) (n int, err error) {
+<span id="L86" class="ln">    86&nbsp;&nbsp;</span>	if bz2.eof {
+<span id="L87" class="ln">    87&nbsp;&nbsp;</span>		return 0, io.EOF
+<span id="L88" class="ln">    88&nbsp;&nbsp;</span>	}
+<span id="L89" class="ln">    89&nbsp;&nbsp;</span>
+<span id="L90" class="ln">    90&nbsp;&nbsp;</span>	if !bz2.setupDone {
+<span id="L91" class="ln">    91&nbsp;&nbsp;</span>		err = bz2.setup(true)
+<span id="L92" class="ln">    92&nbsp;&nbsp;</span>		brErr := bz2.br.Err()
+<span id="L93" class="ln">    93&nbsp;&nbsp;</span>		if brErr != nil {
+<span id="L94" class="ln">    94&nbsp;&nbsp;</span>			err = brErr
+<span id="L95" class="ln">    95&nbsp;&nbsp;</span>		}
+<span id="L96" class="ln">    96&nbsp;&nbsp;</span>		if err != nil {
+<span id="L97" class="ln">    97&nbsp;&nbsp;</span>			return 0, err
+<span id="L98" class="ln">    98&nbsp;&nbsp;</span>		}
+<span id="L99" class="ln">    99&nbsp;&nbsp;</span>		bz2.setupDone = true
+<span id="L100" class="ln">   100&nbsp;&nbsp;</span>	}
+<span id="L101" class="ln">   101&nbsp;&nbsp;</span>
+<span id="L102" class="ln">   102&nbsp;&nbsp;</span>	n, err = bz2.read(buf)
+<span id="L103" class="ln">   103&nbsp;&nbsp;</span>	brErr := bz2.br.Err()
+<span id="L104" class="ln">   104&nbsp;&nbsp;</span>	if brErr != nil {
+<span id="L105" class="ln">   105&nbsp;&nbsp;</span>		err = brErr
+<span id="L106" class="ln">   106&nbsp;&nbsp;</span>	}
+<span id="L107" class="ln">   107&nbsp;&nbsp;</span>	return
+<span id="L108" class="ln">   108&nbsp;&nbsp;</span>}
+<span id="L109" class="ln">   109&nbsp;&nbsp;</span>
+<span id="L110" class="ln">   110&nbsp;&nbsp;</span>func (bz2 *reader) readFromBlock(buf []byte) int {
+<span id="L111" class="ln">   111&nbsp;&nbsp;</span>	<span class="comment">// bzip2 is a block based compressor, except that it has a run-length</span>
+<span id="L112" class="ln">   112&nbsp;&nbsp;</span>	<span class="comment">// preprocessing step. The block based nature means that we can</span>
+<span id="L113" class="ln">   113&nbsp;&nbsp;</span>	<span class="comment">// preallocate fixed-size buffers and reuse them. However, the RLE</span>
+<span id="L114" class="ln">   114&nbsp;&nbsp;</span>	<span class="comment">// preprocessing would require allocating huge buffers to store the</span>
+<span id="L115" class="ln">   115&nbsp;&nbsp;</span>	<span class="comment">// maximum expansion. Thus we process blocks all at once, except for</span>
+<span id="L116" class="ln">   116&nbsp;&nbsp;</span>	<span class="comment">// the RLE which we decompress as required.</span>
+<span id="L117" class="ln">   117&nbsp;&nbsp;</span>	n := 0
+<span id="L118" class="ln">   118&nbsp;&nbsp;</span>	for (bz2.repeats &gt; 0 || bz2.preRLEUsed &lt; len(bz2.preRLE)) &amp;&amp; n &lt; len(buf) {
+<span id="L119" class="ln">   119&nbsp;&nbsp;</span>		<span class="comment">// We have RLE data pending.</span>
+<span id="L120" class="ln">   120&nbsp;&nbsp;</span>
+<span id="L121" class="ln">   121&nbsp;&nbsp;</span>		<span class="comment">// The run-length encoding works like this:</span>
+<span id="L122" class="ln">   122&nbsp;&nbsp;</span>		<span class="comment">// Any sequence of four equal bytes is followed by a length</span>
+<span id="L123" class="ln">   123&nbsp;&nbsp;</span>		<span class="comment">// byte which contains the number of repeats of that byte to</span>
+<span id="L124" class="ln">   124&nbsp;&nbsp;</span>		<span class="comment">// include. (The number of repeats can be zero.) Because we are</span>
+<span id="L125" class="ln">   125&nbsp;&nbsp;</span>		<span class="comment">// decompressing on-demand our state is kept in the reader</span>
+<span id="L126" class="ln">   126&nbsp;&nbsp;</span>		<span class="comment">// object.</span>
+<span id="L127" class="ln">   127&nbsp;&nbsp;</span>
+<span id="L128" class="ln">   128&nbsp;&nbsp;</span>		if bz2.repeats &gt; 0 {
+<span id="L129" class="ln">   129&nbsp;&nbsp;</span>			buf[n] = byte(bz2.lastByte)
+<span id="L130" class="ln">   130&nbsp;&nbsp;</span>			n++
+<span id="L131" class="ln">   131&nbsp;&nbsp;</span>			bz2.repeats--
+<span id="L132" class="ln">   132&nbsp;&nbsp;</span>			if bz2.repeats == 0 {
+<span id="L133" class="ln">   133&nbsp;&nbsp;</span>				bz2.lastByte = -1
+<span id="L134" class="ln">   134&nbsp;&nbsp;</span>			}
+<span id="L135" class="ln">   135&nbsp;&nbsp;</span>			continue
+<span id="L136" class="ln">   136&nbsp;&nbsp;</span>		}
+<span id="L137" class="ln">   137&nbsp;&nbsp;</span>
+<span id="L138" class="ln">   138&nbsp;&nbsp;</span>		bz2.tPos = bz2.preRLE[bz2.tPos]
+<span id="L139" class="ln">   139&nbsp;&nbsp;</span>		b := byte(bz2.tPos)
+<span id="L140" class="ln">   140&nbsp;&nbsp;</span>		bz2.tPos &gt;&gt;= 8
+<span id="L141" class="ln">   141&nbsp;&nbsp;</span>		bz2.preRLEUsed++
+<span id="L142" class="ln">   142&nbsp;&nbsp;</span>
+<span id="L143" class="ln">   143&nbsp;&nbsp;</span>		if bz2.byteRepeats == 3 {
+<span id="L144" class="ln">   144&nbsp;&nbsp;</span>			bz2.repeats = uint(b)
+<span id="L145" class="ln">   145&nbsp;&nbsp;</span>			bz2.byteRepeats = 0
+<span id="L146" class="ln">   146&nbsp;&nbsp;</span>			continue
+<span id="L147" class="ln">   147&nbsp;&nbsp;</span>		}
+<span id="L148" class="ln">   148&nbsp;&nbsp;</span>
+<span id="L149" class="ln">   149&nbsp;&nbsp;</span>		if bz2.lastByte == int(b) {
+<span id="L150" class="ln">   150&nbsp;&nbsp;</span>			bz2.byteRepeats++
+<span id="L151" class="ln">   151&nbsp;&nbsp;</span>		} else {
+<span id="L152" class="ln">   152&nbsp;&nbsp;</span>			bz2.byteRepeats = 0
+<span id="L153" class="ln">   153&nbsp;&nbsp;</span>		}
+<span id="L154" class="ln">   154&nbsp;&nbsp;</span>		bz2.lastByte = int(b)
+<span id="L155" class="ln">   155&nbsp;&nbsp;</span>
+<span id="L156" class="ln">   156&nbsp;&nbsp;</span>		buf[n] = b
+<span id="L157" class="ln">   157&nbsp;&nbsp;</span>		n++
+<span id="L158" class="ln">   158&nbsp;&nbsp;</span>	}
+<span id="L159" class="ln">   159&nbsp;&nbsp;</span>
+<span id="L160" class="ln">   160&nbsp;&nbsp;</span>	return n
+<span id="L161" class="ln">   161&nbsp;&nbsp;</span>}
+<span id="L162" class="ln">   162&nbsp;&nbsp;</span>
+<span id="L163" class="ln">   163&nbsp;&nbsp;</span>func (bz2 *reader) read(buf []byte) (int, error) {
+<span id="L164" class="ln">   164&nbsp;&nbsp;</span>	for {
+<span id="L165" class="ln">   165&nbsp;&nbsp;</span>		n := bz2.readFromBlock(buf)
+<span id="L166" class="ln">   166&nbsp;&nbsp;</span>		if n &gt; 0 || len(buf) == 0 {
+<span id="L167" class="ln">   167&nbsp;&nbsp;</span>			bz2.blockCRC = updateCRC(bz2.blockCRC, buf[:n])
+<span id="L168" class="ln">   168&nbsp;&nbsp;</span>			return n, nil
+<span id="L169" class="ln">   169&nbsp;&nbsp;</span>		}
+<span id="L170" class="ln">   170&nbsp;&nbsp;</span>
+<span id="L171" class="ln">   171&nbsp;&nbsp;</span>		<span class="comment">// End of block. Check CRC.</span>
+<span id="L172" class="ln">   172&nbsp;&nbsp;</span>		if bz2.blockCRC != bz2.wantBlockCRC {
+<span id="L173" class="ln">   173&nbsp;&nbsp;</span>			bz2.br.err = StructuralError(&#34;block checksum mismatch&#34;)
+<span id="L174" class="ln">   174&nbsp;&nbsp;</span>			return 0, bz2.br.err
+<span id="L175" class="ln">   175&nbsp;&nbsp;</span>		}
+<span id="L176" class="ln">   176&nbsp;&nbsp;</span>
+<span id="L177" class="ln">   177&nbsp;&nbsp;</span>		<span class="comment">// Find next block.</span>
+<span id="L178" class="ln">   178&nbsp;&nbsp;</span>		br := &amp;bz2.br
+<span id="L179" class="ln">   179&nbsp;&nbsp;</span>		switch br.ReadBits64(48) {
+<span id="L180" class="ln">   180&nbsp;&nbsp;</span>		default:
+<span id="L181" class="ln">   181&nbsp;&nbsp;</span>			return 0, StructuralError(&#34;bad magic value found&#34;)
+<span id="L182" class="ln">   182&nbsp;&nbsp;</span>
+<span id="L183" class="ln">   183&nbsp;&nbsp;</span>		case bzip2BlockMagic:
+<span id="L184" class="ln">   184&nbsp;&nbsp;</span>			<span class="comment">// Start of block.</span>
+<span id="L185" class="ln">   185&nbsp;&nbsp;</span>			err := bz2.readBlock()
+<span id="L186" class="ln">   186&nbsp;&nbsp;</span>			if err != nil {
+<span id="L187" class="ln">   187&nbsp;&nbsp;</span>				return 0, err
+<span id="L188" class="ln">   188&nbsp;&nbsp;</span>			}
+<span id="L189" class="ln">   189&nbsp;&nbsp;</span>
+<span id="L190" class="ln">   190&nbsp;&nbsp;</span>		case bzip2FinalMagic:
+<span id="L191" class="ln">   191&nbsp;&nbsp;</span>			<span class="comment">// Check end-of-file CRC.</span>
+<span id="L192" class="ln">   192&nbsp;&nbsp;</span>			wantFileCRC := uint32(br.ReadBits64(32))
+<span id="L193" class="ln">   193&nbsp;&nbsp;</span>			if br.err != nil {
+<span id="L194" class="ln">   194&nbsp;&nbsp;</span>				return 0, br.err
+<span id="L195" class="ln">   195&nbsp;&nbsp;</span>			}
+<span id="L196" class="ln">   196&nbsp;&nbsp;</span>			if bz2.fileCRC != wantFileCRC {
+<span id="L197" class="ln">   197&nbsp;&nbsp;</span>				br.err = StructuralError(&#34;file checksum mismatch&#34;)
+<span id="L198" class="ln">   198&nbsp;&nbsp;</span>				return 0, br.err
+<span id="L199" class="ln">   199&nbsp;&nbsp;</span>			}
+<span id="L200" class="ln">   200&nbsp;&nbsp;</span>
+<span id="L201" class="ln">   201&nbsp;&nbsp;</span>			<span class="comment">// Skip ahead to byte boundary.</span>
+<span id="L202" class="ln">   202&nbsp;&nbsp;</span>			<span class="comment">// Is there a file concatenated to this one?</span>
+<span id="L203" class="ln">   203&nbsp;&nbsp;</span>			<span class="comment">// It would start with BZ.</span>
+<span id="L204" class="ln">   204&nbsp;&nbsp;</span>			if br.bits%8 != 0 {
+<span id="L205" class="ln">   205&nbsp;&nbsp;</span>				br.ReadBits(br.bits % 8)
+<span id="L206" class="ln">   206&nbsp;&nbsp;</span>			}
+<span id="L207" class="ln">   207&nbsp;&nbsp;</span>			b, err := br.r.ReadByte()
+<span id="L208" class="ln">   208&nbsp;&nbsp;</span>			if err == io.EOF {
+<span id="L209" class="ln">   209&nbsp;&nbsp;</span>				br.err = io.EOF
+<span id="L210" class="ln">   210&nbsp;&nbsp;</span>				bz2.eof = true
+<span id="L211" class="ln">   211&nbsp;&nbsp;</span>				return 0, io.EOF
+<span id="L212" class="ln">   212&nbsp;&nbsp;</span>			}
+<span id="L213" class="ln">   213&nbsp;&nbsp;</span>			if err != nil {
+<span id="L214" class="ln">   214&nbsp;&nbsp;</span>				br.err = err
+<span id="L215" class="ln">   215&nbsp;&nbsp;</span>				return 0, err
+<span id="L216" class="ln">   216&nbsp;&nbsp;</span>			}
+<span id="L217" class="ln">   217&nbsp;&nbsp;</span>			z, err := br.r.ReadByte()
+<span id="L218" class="ln">   218&nbsp;&nbsp;</span>			if err != nil {
+<span id="L219" class="ln">   219&nbsp;&nbsp;</span>				if err == io.EOF {
+<span id="L220" class="ln">   220&nbsp;&nbsp;</span>					err = io.ErrUnexpectedEOF
+<span id="L221" class="ln">   221&nbsp;&nbsp;</span>				}
+<span id="L222" class="ln">   222&nbsp;&nbsp;</span>				br.err = err
+<span id="L223" class="ln">   223&nbsp;&nbsp;</span>				return 0, err
+<span id="L224" class="ln">   224&nbsp;&nbsp;</span>			}
+<span id="L225" class="ln">   225&nbsp;&nbsp;</span>			if b != &#39;B&#39; || z != &#39;Z&#39; {
+<span id="L226" class="ln">   226&nbsp;&nbsp;</span>				return 0, StructuralError(&#34;bad magic value in continuation file&#34;)
+<span id="L227" class="ln">   227&nbsp;&nbsp;</span>			}
+<span id="L228" class="ln">   228&nbsp;&nbsp;</span>			if err := bz2.setup(false); err != nil {
+<span id="L229" class="ln">   229&nbsp;&nbsp;</span>				return 0, err
+<span id="L230" class="ln">   230&nbsp;&nbsp;</span>			}
+<span id="L231" class="ln">   231&nbsp;&nbsp;</span>		}
+<span id="L232" class="ln">   232&nbsp;&nbsp;</span>	}
+<span id="L233" class="ln">   233&nbsp;&nbsp;</span>}
+<span id="L234" class="ln">   234&nbsp;&nbsp;</span>
+<span id="L235" class="ln">   235&nbsp;&nbsp;</span><span class="comment">// readBlock reads a bzip2 block. The magic number should already have been consumed.</span>
+<span id="L236" class="ln">   236&nbsp;&nbsp;</span>func (bz2 *reader) readBlock() (err error) {
+<span id="L237" class="ln">   237&nbsp;&nbsp;</span>	br := &amp;bz2.br
+<span id="L238" class="ln">   238&nbsp;&nbsp;</span>	bz2.wantBlockCRC = uint32(br.ReadBits64(32)) <span class="comment">// skip checksum. TODO: check it if we can figure out what it is.</span>
+<span id="L239" class="ln">   239&nbsp;&nbsp;</span>	bz2.blockCRC = 0
+<span id="L240" class="ln">   240&nbsp;&nbsp;</span>	bz2.fileCRC = (bz2.fileCRC&lt;&lt;1 | bz2.fileCRC&gt;&gt;31) ^ bz2.wantBlockCRC
+<span id="L241" class="ln">   241&nbsp;&nbsp;</span>	randomized := br.ReadBits(1)
+<span id="L242" class="ln">   242&nbsp;&nbsp;</span>	if randomized != 0 {
+<span id="L243" class="ln">   243&nbsp;&nbsp;</span>		return StructuralError(&#34;deprecated randomized files&#34;)
+<span id="L244" class="ln">   244&nbsp;&nbsp;</span>	}
+<span id="L245" class="ln">   245&nbsp;&nbsp;</span>	origPtr := uint(br.ReadBits(24))
+<span id="L246" class="ln">   246&nbsp;&nbsp;</span>
+<span id="L247" class="ln">   247&nbsp;&nbsp;</span>	<span class="comment">// If not every byte value is used in the block (i.e., it&#39;s text) then</span>
+<span id="L248" class="ln">   248&nbsp;&nbsp;</span>	<span class="comment">// the symbol set is reduced. The symbols used are stored as a</span>
+<span id="L249" class="ln">   249&nbsp;&nbsp;</span>	<span class="comment">// two-level, 16x16 bitmap.</span>
+<span id="L250" class="ln">   250&nbsp;&nbsp;</span>	symbolRangeUsedBitmap := br.ReadBits(16)
+<span id="L251" class="ln">   251&nbsp;&nbsp;</span>	symbolPresent := make([]bool, 256)
+<span id="L252" class="ln">   252&nbsp;&nbsp;</span>	numSymbols := 0
+<span id="L253" class="ln">   253&nbsp;&nbsp;</span>	for symRange := uint(0); symRange &lt; 16; symRange++ {
+<span id="L254" class="ln">   254&nbsp;&nbsp;</span>		if symbolRangeUsedBitmap&amp;(1&lt;&lt;(15-symRange)) != 0 {
+<span id="L255" class="ln">   255&nbsp;&nbsp;</span>			bits := br.ReadBits(16)
+<span id="L256" class="ln">   256&nbsp;&nbsp;</span>			for symbol := uint(0); symbol &lt; 16; symbol++ {
+<span id="L257" class="ln">   257&nbsp;&nbsp;</span>				if bits&amp;(1&lt;&lt;(15-symbol)) != 0 {
+<span id="L258" class="ln">   258&nbsp;&nbsp;</span>					symbolPresent[16*symRange+symbol] = true
+<span id="L259" class="ln">   259&nbsp;&nbsp;</span>					numSymbols++
+<span id="L260" class="ln">   260&nbsp;&nbsp;</span>				}
+<span id="L261" class="ln">   261&nbsp;&nbsp;</span>			}
+<span id="L262" class="ln">   262&nbsp;&nbsp;</span>		}
+<span id="L263" class="ln">   263&nbsp;&nbsp;</span>	}
+<span id="L264" class="ln">   264&nbsp;&nbsp;</span>
+<span id="L265" class="ln">   265&nbsp;&nbsp;</span>	if numSymbols == 0 {
+<span id="L266" class="ln">   266&nbsp;&nbsp;</span>		<span class="comment">// There must be an EOF symbol.</span>
+<span id="L267" class="ln">   267&nbsp;&nbsp;</span>		return StructuralError(&#34;no symbols in input&#34;)
+<span id="L268" class="ln">   268&nbsp;&nbsp;</span>	}
+<span id="L269" class="ln">   269&nbsp;&nbsp;</span>
+<span id="L270" class="ln">   270&nbsp;&nbsp;</span>	<span class="comment">// A block uses between two and six different Huffman trees.</span>
+<span id="L271" class="ln">   271&nbsp;&nbsp;</span>	numHuffmanTrees := br.ReadBits(3)
+<span id="L272" class="ln">   272&nbsp;&nbsp;</span>	if numHuffmanTrees &lt; 2 || numHuffmanTrees &gt; 6 {
+<span id="L273" class="ln">   273&nbsp;&nbsp;</span>		return StructuralError(&#34;invalid number of Huffman trees&#34;)
+<span id="L274" class="ln">   274&nbsp;&nbsp;</span>	}
+<span id="L275" class="ln">   275&nbsp;&nbsp;</span>
+<span id="L276" class="ln">   276&nbsp;&nbsp;</span>	<span class="comment">// The Huffman tree can switch every 50 symbols so there&#39;s a list of</span>
+<span id="L277" class="ln">   277&nbsp;&nbsp;</span>	<span class="comment">// tree indexes telling us which tree to use for each 50 symbol block.</span>
+<span id="L278" class="ln">   278&nbsp;&nbsp;</span>	numSelectors := br.ReadBits(15)
+<span id="L279" class="ln">   279&nbsp;&nbsp;</span>	treeIndexes := make([]uint8, numSelectors)
+<span id="L280" class="ln">   280&nbsp;&nbsp;</span>
+<span id="L281" class="ln">   281&nbsp;&nbsp;</span>	<span class="comment">// The tree indexes are move-to-front transformed and stored as unary</span>
+<span id="L282" class="ln">   282&nbsp;&nbsp;</span>	<span class="comment">// numbers.</span>
+<span id="L283" class="ln">   283&nbsp;&nbsp;</span>	mtfTreeDecoder := newMTFDecoderWithRange(numHuffmanTrees)
+<span id="L284" class="ln">   284&nbsp;&nbsp;</span>	for i := range treeIndexes {
+<span id="L285" class="ln">   285&nbsp;&nbsp;</span>		c := 0
+<span id="L286" class="ln">   286&nbsp;&nbsp;</span>		for {
+<span id="L287" class="ln">   287&nbsp;&nbsp;</span>			inc := br.ReadBits(1)
+<span id="L288" class="ln">   288&nbsp;&nbsp;</span>			if inc == 0 {
+<span id="L289" class="ln">   289&nbsp;&nbsp;</span>				break
+<span id="L290" class="ln">   290&nbsp;&nbsp;</span>			}
+<span id="L291" class="ln">   291&nbsp;&nbsp;</span>			c++
+<span id="L292" class="ln">   292&nbsp;&nbsp;</span>		}
+<span id="L293" class="ln">   293&nbsp;&nbsp;</span>		if c &gt;= numHuffmanTrees {
+<span id="L294" class="ln">   294&nbsp;&nbsp;</span>			return StructuralError(&#34;tree index too large&#34;)
+<span id="L295" class="ln">   295&nbsp;&nbsp;</span>		}
+<span id="L296" class="ln">   296&nbsp;&nbsp;</span>		treeIndexes[i] = mtfTreeDecoder.Decode(c)
+<span id="L297" class="ln">   297&nbsp;&nbsp;</span>	}
+<span id="L298" class="ln">   298&nbsp;&nbsp;</span>
+<span id="L299" class="ln">   299&nbsp;&nbsp;</span>	<span class="comment">// The list of symbols for the move-to-front transform is taken from</span>
+<span id="L300" class="ln">   300&nbsp;&nbsp;</span>	<span class="comment">// the previously decoded symbol bitmap.</span>
+<span id="L301" class="ln">   301&nbsp;&nbsp;</span>	symbols := make([]byte, numSymbols)
+<span id="L302" class="ln">   302&nbsp;&nbsp;</span>	nextSymbol := 0
+<span id="L303" class="ln">   303&nbsp;&nbsp;</span>	for i := 0; i &lt; 256; i++ {
+<span id="L304" class="ln">   304&nbsp;&nbsp;</span>		if symbolPresent[i] {
+<span id="L305" class="ln">   305&nbsp;&nbsp;</span>			symbols[nextSymbol] = byte(i)
+<span id="L306" class="ln">   306&nbsp;&nbsp;</span>			nextSymbol++
+<span id="L307" class="ln">   307&nbsp;&nbsp;</span>		}
+<span id="L308" class="ln">   308&nbsp;&nbsp;</span>	}
+<span id="L309" class="ln">   309&nbsp;&nbsp;</span>	mtf := newMTFDecoder(symbols)
+<span id="L310" class="ln">   310&nbsp;&nbsp;</span>
+<span id="L311" class="ln">   311&nbsp;&nbsp;</span>	numSymbols += 2 <span class="comment">// to account for RUNA and RUNB symbols</span>
+<span id="L312" class="ln">   312&nbsp;&nbsp;</span>	huffmanTrees := make([]huffmanTree, numHuffmanTrees)
+<span id="L313" class="ln">   313&nbsp;&nbsp;</span>
+<span id="L314" class="ln">   314&nbsp;&nbsp;</span>	<span class="comment">// Now we decode the arrays of code-lengths for each tree.</span>
+<span id="L315" class="ln">   315&nbsp;&nbsp;</span>	lengths := make([]uint8, numSymbols)
+<span id="L316" class="ln">   316&nbsp;&nbsp;</span>	for i := range huffmanTrees {
+<span id="L317" class="ln">   317&nbsp;&nbsp;</span>		<span class="comment">// The code lengths are delta encoded from a 5-bit base value.</span>
+<span id="L318" class="ln">   318&nbsp;&nbsp;</span>		length := br.ReadBits(5)
+<span id="L319" class="ln">   319&nbsp;&nbsp;</span>		for j := range lengths {
+<span id="L320" class="ln">   320&nbsp;&nbsp;</span>			for {
+<span id="L321" class="ln">   321&nbsp;&nbsp;</span>				if length &lt; 1 || length &gt; 20 {
+<span id="L322" class="ln">   322&nbsp;&nbsp;</span>					return StructuralError(&#34;Huffman length out of range&#34;)
+<span id="L323" class="ln">   323&nbsp;&nbsp;</span>				}
+<span id="L324" class="ln">   324&nbsp;&nbsp;</span>				if !br.ReadBit() {
+<span id="L325" class="ln">   325&nbsp;&nbsp;</span>					break
+<span id="L326" class="ln">   326&nbsp;&nbsp;</span>				}
+<span id="L327" class="ln">   327&nbsp;&nbsp;</span>				if br.ReadBit() {
+<span id="L328" class="ln">   328&nbsp;&nbsp;</span>					length--
+<span id="L329" class="ln">   329&nbsp;&nbsp;</span>				} else {
+<span id="L330" class="ln">   330&nbsp;&nbsp;</span>					length++
+<span id="L331" class="ln">   331&nbsp;&nbsp;</span>				}
+<span id="L332" class="ln">   332&nbsp;&nbsp;</span>			}
+<span id="L333" class="ln">   333&nbsp;&nbsp;</span>			lengths[j] = uint8(length)
+<span id="L334" class="ln">   334&nbsp;&nbsp;</span>		}
+<span id="L335" class="ln">   335&nbsp;&nbsp;</span>		huffmanTrees[i], err = newHuffmanTree(lengths)
+<span id="L336" class="ln">   336&nbsp;&nbsp;</span>		if err != nil {
+<span id="L337" class="ln">   337&nbsp;&nbsp;</span>			return err
+<span id="L338" class="ln">   338&nbsp;&nbsp;</span>		}
+<span id="L339" class="ln">   339&nbsp;&nbsp;</span>	}
+<span id="L340" class="ln">   340&nbsp;&nbsp;</span>
+<span id="L341" class="ln">   341&nbsp;&nbsp;</span>	selectorIndex := 1 <span class="comment">// the next tree index to use</span>
+<span id="L342" class="ln">   342&nbsp;&nbsp;</span>	if len(treeIndexes) == 0 {
+<span id="L343" class="ln">   343&nbsp;&nbsp;</span>		return StructuralError(&#34;no tree selectors given&#34;)
+<span id="L344" class="ln">   344&nbsp;&nbsp;</span>	}
+<span id="L345" class="ln">   345&nbsp;&nbsp;</span>	if int(treeIndexes[0]) &gt;= len(huffmanTrees) {
+<span id="L346" class="ln">   346&nbsp;&nbsp;</span>		return StructuralError(&#34;tree selector out of range&#34;)
+<span id="L347" class="ln">   347&nbsp;&nbsp;</span>	}
+<span id="L348" class="ln">   348&nbsp;&nbsp;</span>	currentHuffmanTree := huffmanTrees[treeIndexes[0]]
+<span id="L349" class="ln">   349&nbsp;&nbsp;</span>	bufIndex := 0 <span class="comment">// indexes bz2.buf, the output buffer.</span>
+<span id="L350" class="ln">   350&nbsp;&nbsp;</span>	<span class="comment">// The output of the move-to-front transform is run-length encoded and</span>
+<span id="L351" class="ln">   351&nbsp;&nbsp;</span>	<span class="comment">// we merge the decoding into the Huffman parsing loop. These two</span>
+<span id="L352" class="ln">   352&nbsp;&nbsp;</span>	<span class="comment">// variables accumulate the repeat count. See the Wikipedia page for</span>
+<span id="L353" class="ln">   353&nbsp;&nbsp;</span>	<span class="comment">// details.</span>
+<span id="L354" class="ln">   354&nbsp;&nbsp;</span>	repeat := 0
+<span id="L355" class="ln">   355&nbsp;&nbsp;</span>	repeatPower := 0
+<span id="L356" class="ln">   356&nbsp;&nbsp;</span>
+<span id="L357" class="ln">   357&nbsp;&nbsp;</span>	<span class="comment">// The `C&#39; array (used by the inverse BWT) needs to be zero initialized.</span>
+<span id="L358" class="ln">   358&nbsp;&nbsp;</span>	for i := range bz2.c {
+<span id="L359" class="ln">   359&nbsp;&nbsp;</span>		bz2.c[i] = 0
+<span id="L360" class="ln">   360&nbsp;&nbsp;</span>	}
+<span id="L361" class="ln">   361&nbsp;&nbsp;</span>
+<span id="L362" class="ln">   362&nbsp;&nbsp;</span>	decoded := 0 <span class="comment">// counts the number of symbols decoded by the current tree.</span>
+<span id="L363" class="ln">   363&nbsp;&nbsp;</span>	for {
+<span id="L364" class="ln">   364&nbsp;&nbsp;</span>		if decoded == 50 {
+<span id="L365" class="ln">   365&nbsp;&nbsp;</span>			if selectorIndex &gt;= numSelectors {
+<span id="L366" class="ln">   366&nbsp;&nbsp;</span>				return StructuralError(&#34;insufficient selector indices for number of symbols&#34;)
+<span id="L367" class="ln">   367&nbsp;&nbsp;</span>			}
+<span id="L368" class="ln">   368&nbsp;&nbsp;</span>			if int(treeIndexes[selectorIndex]) &gt;= len(huffmanTrees) {
+<span id="L369" class="ln">   369&nbsp;&nbsp;</span>				return StructuralError(&#34;tree selector out of range&#34;)
+<span id="L370" class="ln">   370&nbsp;&nbsp;</span>			}
+<span id="L371" class="ln">   371&nbsp;&nbsp;</span>			currentHuffmanTree = huffmanTrees[treeIndexes[selectorIndex]]
+<span id="L372" class="ln">   372&nbsp;&nbsp;</span>			selectorIndex++
+<span id="L373" class="ln">   373&nbsp;&nbsp;</span>			decoded = 0
+<span id="L374" class="ln">   374&nbsp;&nbsp;</span>		}
+<span id="L375" class="ln">   375&nbsp;&nbsp;</span>
+<span id="L376" class="ln">   376&nbsp;&nbsp;</span>		v := currentHuffmanTree.Decode(br)
+<span id="L377" class="ln">   377&nbsp;&nbsp;</span>		decoded++
+<span id="L378" class="ln">   378&nbsp;&nbsp;</span>
+<span id="L379" class="ln">   379&nbsp;&nbsp;</span>		if v &lt; 2 {
+<span id="L380" class="ln">   380&nbsp;&nbsp;</span>			<span class="comment">// This is either the RUNA or RUNB symbol.</span>
+<span id="L381" class="ln">   381&nbsp;&nbsp;</span>			if repeat == 0 {
+<span id="L382" class="ln">   382&nbsp;&nbsp;</span>				repeatPower = 1
+<span id="L383" class="ln">   383&nbsp;&nbsp;</span>			}
+<span id="L384" class="ln">   384&nbsp;&nbsp;</span>			repeat += repeatPower &lt;&lt; v
+<span id="L385" class="ln">   385&nbsp;&nbsp;</span>			repeatPower &lt;&lt;= 1
+<span id="L386" class="ln">   386&nbsp;&nbsp;</span>
+<span id="L387" class="ln">   387&nbsp;&nbsp;</span>			<span class="comment">// This limit of 2 million comes from the bzip2 source</span>
+<span id="L388" class="ln">   388&nbsp;&nbsp;</span>			<span class="comment">// code. It prevents repeat from overflowing.</span>
+<span id="L389" class="ln">   389&nbsp;&nbsp;</span>			if repeat &gt; 2*1024*1024 {
+<span id="L390" class="ln">   390&nbsp;&nbsp;</span>				return StructuralError(&#34;repeat count too large&#34;)
+<span id="L391" class="ln">   391&nbsp;&nbsp;</span>			}
+<span id="L392" class="ln">   392&nbsp;&nbsp;</span>			continue
+<span id="L393" class="ln">   393&nbsp;&nbsp;</span>		}
+<span id="L394" class="ln">   394&nbsp;&nbsp;</span>
+<span id="L395" class="ln">   395&nbsp;&nbsp;</span>		if repeat &gt; 0 {
+<span id="L396" class="ln">   396&nbsp;&nbsp;</span>			<span class="comment">// We have decoded a complete run-length so we need to</span>
+<span id="L397" class="ln">   397&nbsp;&nbsp;</span>			<span class="comment">// replicate the last output symbol.</span>
+<span id="L398" class="ln">   398&nbsp;&nbsp;</span>			if repeat &gt; bz2.blockSize-bufIndex {
+<span id="L399" class="ln">   399&nbsp;&nbsp;</span>				return StructuralError(&#34;repeats past end of block&#34;)
+<span id="L400" class="ln">   400&nbsp;&nbsp;</span>			}
+<span id="L401" class="ln">   401&nbsp;&nbsp;</span>			for i := 0; i &lt; repeat; i++ {
+<span id="L402" class="ln">   402&nbsp;&nbsp;</span>				b := mtf.First()
+<span id="L403" class="ln">   403&nbsp;&nbsp;</span>				bz2.tt[bufIndex] = uint32(b)
+<span id="L404" class="ln">   404&nbsp;&nbsp;</span>				bz2.c[b]++
+<span id="L405" class="ln">   405&nbsp;&nbsp;</span>				bufIndex++
+<span id="L406" class="ln">   406&nbsp;&nbsp;</span>			}
+<span id="L407" class="ln">   407&nbsp;&nbsp;</span>			repeat = 0
+<span id="L408" class="ln">   408&nbsp;&nbsp;</span>		}
+<span id="L409" class="ln">   409&nbsp;&nbsp;</span>
+<span id="L410" class="ln">   410&nbsp;&nbsp;</span>		if int(v) == numSymbols-1 {
+<span id="L411" class="ln">   411&nbsp;&nbsp;</span>			<span class="comment">// This is the EOF symbol. Because it&#39;s always at the</span>
+<span id="L412" class="ln">   412&nbsp;&nbsp;</span>			<span class="comment">// end of the move-to-front list, and never gets moved</span>
+<span id="L413" class="ln">   413&nbsp;&nbsp;</span>			<span class="comment">// to the front, it has this unique value.</span>
+<span id="L414" class="ln">   414&nbsp;&nbsp;</span>			break
+<span id="L415" class="ln">   415&nbsp;&nbsp;</span>		}
+<span id="L416" class="ln">   416&nbsp;&nbsp;</span>
+<span id="L417" class="ln">   417&nbsp;&nbsp;</span>		<span class="comment">// Since two metasymbols (RUNA and RUNB) have values 0 and 1,</span>
+<span id="L418" class="ln">   418&nbsp;&nbsp;</span>		<span class="comment">// one would expect |v-2| to be passed to the MTF decoder.</span>
+<span id="L419" class="ln">   419&nbsp;&nbsp;</span>		<span class="comment">// However, the front of the MTF list is never referenced as 0,</span>
+<span id="L420" class="ln">   420&nbsp;&nbsp;</span>		<span class="comment">// it&#39;s always referenced with a run-length of 1. Thus 0</span>
+<span id="L421" class="ln">   421&nbsp;&nbsp;</span>		<span class="comment">// doesn&#39;t need to be encoded and we have |v-1| in the next</span>
+<span id="L422" class="ln">   422&nbsp;&nbsp;</span>		<span class="comment">// line.</span>
+<span id="L423" class="ln">   423&nbsp;&nbsp;</span>		b := mtf.Decode(int(v - 1))
+<span id="L424" class="ln">   424&nbsp;&nbsp;</span>		if bufIndex &gt;= bz2.blockSize {
+<span id="L425" class="ln">   425&nbsp;&nbsp;</span>			return StructuralError(&#34;data exceeds block size&#34;)
+<span id="L426" class="ln">   426&nbsp;&nbsp;</span>		}
+<span id="L427" class="ln">   427&nbsp;&nbsp;</span>		bz2.tt[bufIndex] = uint32(b)
+<span id="L428" class="ln">   428&nbsp;&nbsp;</span>		bz2.c[b]++
+<span id="L429" class="ln">   429&nbsp;&nbsp;</span>		bufIndex++
+<span id="L430" class="ln">   430&nbsp;&nbsp;</span>	}
+<span id="L431" class="ln">   431&nbsp;&nbsp;</span>
+<span id="L432" class="ln">   432&nbsp;&nbsp;</span>	if origPtr &gt;= uint(bufIndex) {
+<span id="L433" class="ln">   433&nbsp;&nbsp;</span>		return StructuralError(&#34;origPtr out of bounds&#34;)
+<span id="L434" class="ln">   434&nbsp;&nbsp;</span>	}
+<span id="L435" class="ln">   435&nbsp;&nbsp;</span>
+<span id="L436" class="ln">   436&nbsp;&nbsp;</span>	<span class="comment">// We have completed the entropy decoding. Now we can perform the</span>
+<span id="L437" class="ln">   437&nbsp;&nbsp;</span>	<span class="comment">// inverse BWT and setup the RLE buffer.</span>
+<span id="L438" class="ln">   438&nbsp;&nbsp;</span>	bz2.preRLE = bz2.tt[:bufIndex]
+<span id="L439" class="ln">   439&nbsp;&nbsp;</span>	bz2.preRLEUsed = 0
+<span id="L440" class="ln">   440&nbsp;&nbsp;</span>	bz2.tPos = inverseBWT(bz2.preRLE, origPtr, bz2.c[:])
+<span id="L441" class="ln">   441&nbsp;&nbsp;</span>	bz2.lastByte = -1
+<span id="L442" class="ln">   442&nbsp;&nbsp;</span>	bz2.byteRepeats = 0
+<span id="L443" class="ln">   443&nbsp;&nbsp;</span>	bz2.repeats = 0
+<span id="L444" class="ln">   444&nbsp;&nbsp;</span>
+<span id="L445" class="ln">   445&nbsp;&nbsp;</span>	return nil
+<span id="L446" class="ln">   446&nbsp;&nbsp;</span>}
+<span id="L447" class="ln">   447&nbsp;&nbsp;</span>
+<span id="L448" class="ln">   448&nbsp;&nbsp;</span><span class="comment">// inverseBWT implements the inverse Burrows-Wheeler transform as described in</span>
+<span id="L449" class="ln">   449&nbsp;&nbsp;</span><span class="comment">// http://www.hpl.hp.com/techreports/Compaq-DEC/SRC-RR-124.pdf, section 4.2.</span>
+<span id="L450" class="ln">   450&nbsp;&nbsp;</span><span class="comment">// In that document, origPtr is called “I” and c is the “C” array after the</span>
+<span id="L451" class="ln">   451&nbsp;&nbsp;</span><span class="comment">// first pass over the data. It&#39;s an argument here because we merge the first</span>
+<span id="L452" class="ln">   452&nbsp;&nbsp;</span><span class="comment">// pass with the Huffman decoding.</span>
+<span id="L453" class="ln">   453&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L454" class="ln">   454&nbsp;&nbsp;</span><span class="comment">// This also implements the “single array” method from the bzip2 source code</span>
+<span id="L455" class="ln">   455&nbsp;&nbsp;</span><span class="comment">// which leaves the output, still shuffled, in the bottom 8 bits of tt with the</span>
+<span id="L456" class="ln">   456&nbsp;&nbsp;</span><span class="comment">// index of the next byte in the top 24-bits. The index of the first byte is</span>
+<span id="L457" class="ln">   457&nbsp;&nbsp;</span><span class="comment">// returned.</span>
+<span id="L458" class="ln">   458&nbsp;&nbsp;</span>func inverseBWT(tt []uint32, origPtr uint, c []uint) uint32 {
+<span id="L459" class="ln">   459&nbsp;&nbsp;</span>	sum := uint(0)
+<span id="L460" class="ln">   460&nbsp;&nbsp;</span>	for i := 0; i &lt; 256; i++ {
+<span id="L461" class="ln">   461&nbsp;&nbsp;</span>		sum += c[i]
+<span id="L462" class="ln">   462&nbsp;&nbsp;</span>		c[i] = sum - c[i]
+<span id="L463" class="ln">   463&nbsp;&nbsp;</span>	}
+<span id="L464" class="ln">   464&nbsp;&nbsp;</span>
+<span id="L465" class="ln">   465&nbsp;&nbsp;</span>	for i := range tt {
+<span id="L466" class="ln">   466&nbsp;&nbsp;</span>		b := tt[i] &amp; 0xff
+<span id="L467" class="ln">   467&nbsp;&nbsp;</span>		tt[c[b]] |= uint32(i) &lt;&lt; 8
+<span id="L468" class="ln">   468&nbsp;&nbsp;</span>		c[b]++
+<span id="L469" class="ln">   469&nbsp;&nbsp;</span>	}
+<span id="L470" class="ln">   470&nbsp;&nbsp;</span>
+<span id="L471" class="ln">   471&nbsp;&nbsp;</span>	return tt[origPtr] &gt;&gt; 8
+<span id="L472" class="ln">   472&nbsp;&nbsp;</span>}
+<span id="L473" class="ln">   473&nbsp;&nbsp;</span>
+<span id="L474" class="ln">   474&nbsp;&nbsp;</span><span class="comment">// This is a standard CRC32 like in hash/crc32 except that all the shifts are reversed,</span>
+<span id="L475" class="ln">   475&nbsp;&nbsp;</span><span class="comment">// causing the bits in the input to be processed in the reverse of the usual order.</span>
+<span id="L476" class="ln">   476&nbsp;&nbsp;</span>
+<span id="L477" class="ln">   477&nbsp;&nbsp;</span>var crctab [256]uint32
+<span id="L478" class="ln">   478&nbsp;&nbsp;</span>
+<span id="L479" class="ln">   479&nbsp;&nbsp;</span>func init() {
+<span id="L480" class="ln">   480&nbsp;&nbsp;</span>	const poly = 0x04C11DB7
+<span id="L481" class="ln">   481&nbsp;&nbsp;</span>	for i := range crctab {
+<span id="L482" class="ln">   482&nbsp;&nbsp;</span>		crc := uint32(i) &lt;&lt; 24
+<span id="L483" class="ln">   483&nbsp;&nbsp;</span>		for j := 0; j &lt; 8; j++ {
+<span id="L484" class="ln">   484&nbsp;&nbsp;</span>			if crc&amp;0x80000000 != 0 {
+<span id="L485" class="ln">   485&nbsp;&nbsp;</span>				crc = (crc &lt;&lt; 1) ^ poly
+<span id="L486" class="ln">   486&nbsp;&nbsp;</span>			} else {
+<span id="L487" class="ln">   487&nbsp;&nbsp;</span>				crc &lt;&lt;= 1
+<span id="L488" class="ln">   488&nbsp;&nbsp;</span>			}
+<span id="L489" class="ln">   489&nbsp;&nbsp;</span>		}
+<span id="L490" class="ln">   490&nbsp;&nbsp;</span>		crctab[i] = crc
+<span id="L491" class="ln">   491&nbsp;&nbsp;</span>	}
+<span id="L492" class="ln">   492&nbsp;&nbsp;</span>}
+<span id="L493" class="ln">   493&nbsp;&nbsp;</span>
+<span id="L494" class="ln">   494&nbsp;&nbsp;</span><span class="comment">// updateCRC updates the crc value to incorporate the data in b.</span>
+<span id="L495" class="ln">   495&nbsp;&nbsp;</span><span class="comment">// The initial value is 0.</span>
+<span id="L496" class="ln">   496&nbsp;&nbsp;</span>func updateCRC(val uint32, b []byte) uint32 {
+<span id="L497" class="ln">   497&nbsp;&nbsp;</span>	crc := ^val
+<span id="L498" class="ln">   498&nbsp;&nbsp;</span>	for _, v := range b {
+<span id="L499" class="ln">   499&nbsp;&nbsp;</span>		crc = crctab[byte(crc&gt;&gt;24)^v] ^ (crc &lt;&lt; 8)
+<span id="L500" class="ln">   500&nbsp;&nbsp;</span>	}
+<span id="L501" class="ln">   501&nbsp;&nbsp;</span>	return ^crc
+<span id="L502" class="ln">   502&nbsp;&nbsp;</span>}
+<span id="L503" class="ln">   503&nbsp;&nbsp;</span>
+</pre><p><a href="bzip2.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

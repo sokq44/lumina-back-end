@@ -1,0 +1,597 @@
+// This package provides all the handlers for all the endpoints the API has.
+//
+// It includes handlers for:
+//   - user registration,
+//   - user verification (through e-mail),
+//   - logging into one's account,
+//   - logging out from one's account,
+//   - getting user's data,
+//   - modifying user's data,
+//   - initializing password change,
+//   - changing user's password
+package handlers
+
+import (
+	"backend/config"
+	"backend/models"
+	"backend/utils/crypt"
+	"backend/utils/database"
+	"backend/utils/emails"
+	"backend/utils/errhandle"
+	"backend/utils/jwt"
+	"encoding/json"
+	"fmt"
+	"net/http"
+	"time"
+)
+
+var db *database.Database = database.GetDb()
+var em *emails.SmtpClient = emails.GetEmails()
+
+// # RegisterUser
+//
+//	This handler allows the registratin process.
+//	This means creating an unverified user, after validation, in the database and sending a verification e-mail message.
+//
+//	Methods: POST
+//
+//	Request Body:
+//	{
+//		username: "...",
+//		email: "...",
+//		password: "..."
+//	}
+//
+//	Possible Responses:
+//		201 (Created): A new unverified user record was created in the database.
+//
+//		400 (Bad Request): Error while decing the request body or validating the sent data.
+//
+//		409 (Conflict): A user with the provided credentials already exists.
+//
+//		500 (Internal Server Error): Problem while checking whether a user with the provided credentials already exists.
+//		Could also occur when there's been a problem while creating a new user record in the database. Can also be caused
+//		by a problem while the generation and storing of a new email verification token. The last possible cause for this
+//		response to happen could be an error while sending the verification e-mail. Refer to the logs for more information.
+var RegisterUser http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
+	type RequestBody struct {
+		Username string `json:"username"`
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+
+	var body RequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		e := errhandle.Error{
+			Type:          errhandle.HandlerError,
+			ServerMessage: fmt.Sprintf("error while decoding the request body: %v", err),
+			ClientMessage: "An error has occurred while processing your request.",
+			Status:        http.StatusBadRequest,
+		}
+		if e.Handle(w, r) {
+			return
+		}
+	}
+
+	u := models.User{
+		Username: body.Username,
+		Email:    body.Email,
+		Password: body.Password,
+	}
+	if u.Validate(false).Handle(w, r) {
+		return
+	}
+
+	exists, e := db.UserExists(u)
+	if e.Handle(w, r) {
+		return
+	}
+	if exists {
+		e := errhandle.Error{
+			Type:          errhandle.DatabaseError,
+			ServerMessage: "user already exists",
+			ClientMessage: "A user with these credentials already exists.",
+			Status:        http.StatusConflict,
+		}
+		if e.Handle(w, r) {
+			return
+		}
+	}
+
+	u.Password = crypt.Sha256(body.Password)
+	if db.CreateUser(u).Handle(w, r) {
+		return
+	}
+
+	token, e := crypt.RandomString(128)
+	if e.Handle(w, r) {
+		return
+	}
+
+	duration := time.Duration(config.EmailVerTime)
+	verification := models.EmailVerification{
+		Token:   token,
+		UserId:  u.Id,
+		Expires: time.Now().Add(duration),
+	}
+	if db.CreateEmailVerification(verification).Handle(w, r) {
+		return
+	}
+
+	if em.SendVerificationEmail(u.Email, token).Handle(w, r) {
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+}
+
+// # VerifyEmail
+//
+//	This handler allows the user to verify himself with an email verification token generated earlier.
+//
+//	Methods: PATCH
+//
+//	RequestBody:
+//	{
+//		token: "..."
+//	}
+//
+//	Possible Responses:
+//		204 (No Content): User with the given token has been verified.
+//
+//		400 (Bad Request): Problem while decoding the request body.
+//
+//		404 (Not Found): No such e-mail verification token or unverified user was found in the database.
+//
+//		410 (Gone): The provided e-mail verification token has expired.
+//
+//		500 (Internal Server Error): Problem while retrieving the provided e-mail verification token. Could also be caused
+//		by an error while deleting the e-mail verification token or when verifying a user. Refer to the logs for more
+//		information.
+var VerifyEmail http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
+	type RequestBody struct {
+		Token string `json:"token"`
+	}
+
+	var body RequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		e := errhandle.Error{
+			Type:          errhandle.HandlerError,
+			ServerMessage: fmt.Sprintf("error while retrieving the access_token cookie: %v", err),
+			ClientMessage: "An error has occurred while processing your request.",
+			Status:        http.StatusBadRequest,
+		}
+		if e.Handle(w, r) {
+			return
+		}
+	}
+
+	emailValidation, e := db.GetEmailVerificationByToken(body.Token)
+	if e.Handle(w, r) {
+		return
+	}
+
+	if emailValidation.Expires.Before(time.Now()) {
+		e := errhandle.Error{
+			Type:          errhandle.DatabaseError,
+			ServerMessage: "email validation token has expired",
+			ClientMessage: "The verification link is invalid or has expired.",
+			Status:        http.StatusGone,
+		}
+		e.Handle(w, r)
+		return
+	}
+
+	e = db.DeleteEmailVerificationById(emailValidation.Id)
+	if e.Handle(w, r) {
+		return
+	}
+
+	e = db.VerifyUser(emailValidation.UserId)
+	if e.Handle(w, r) {
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+// # LoginUser
+//
+//	This handler allows the user to log into his account.
+//	This means generating access and refresh token which are passed in HTTP-ONLY Cookies.
+//
+//	Methods: POST
+//
+//	Request Body:
+//	{
+//		email: "...",
+//		password: "..."
+//	}
+//
+//	Possible Responses:
+//		200 (OK): User has been logged in and his 'session' started.
+//
+//		400 (Bad Request): Problem while decoding the request body.
+//
+//		404 (Not Found): User or his refresh token couldn't be found.
+//
+//		500 (Internal Server Error): Problem while retrieving the user or his refresh token from the database.
+//		Could also occur when there's been a problem with access or refresh token generation. Another reason
+//		for its occurance could be an error while storing the refresh toke in the database.
+var LoginUser http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
+	type RequestBody struct {
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}
+
+	var body RequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		e := errhandle.Error{
+			Type:          errhandle.HandlerError,
+			ServerMessage: fmt.Sprintf("error while decoding the request body: %v", err),
+			ClientMessage: "An error has occurred while processing your request.",
+			Status:        http.StatusBadRequest,
+		}
+		if e.Handle(w, r) {
+			return
+		}
+	}
+
+	user, e := db.GetUserByEmail(body.Email)
+	if e.Handle(w, r) {
+		return
+	}
+
+	refreshToken, _ := db.GetRefreshTokenByUserId(user.Id)
+	if refreshToken != nil {
+		w.WriteHeader(http.StatusOK)
+		return
+	}
+
+	hashedPasswd := crypt.Sha256(body.Password)
+	if !user.Verified || hashedPasswd != user.Password {
+		w.WriteHeader(http.StatusForbidden)
+		return
+	}
+
+	now := time.Now()
+	access, e := jwt.GenerateAccessToken(user.Id, now)
+	if e.Handle(w, r) {
+		return
+	}
+
+	refresh, e := jwt.GenerateRefreshToken(user.Id, now)
+	if e.Handle(w, r) {
+		return
+	}
+
+	e = db.CreateRefreshToken(refresh)
+	if e.Handle(w, r) {
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "access_token",
+		Value:    access,
+		HttpOnly: true,
+		Path:     "/",
+		Expires:  now.Add(time.Duration(config.JwtAccExpTime)),
+	})
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    refresh.Token,
+		HttpOnly: true,
+		Path:     "/",
+		Expires:  now.Add(time.Duration(config.JwtRefExpTime)),
+	})
+
+	w.WriteHeader(http.StatusOK)
+}
+
+// # LogoutUser
+//
+//	This handler allows the user to log out from his account.
+//	This means destroying his session (deleting the access and refresh tokens Cookies).
+//	In order to access this endpoint the user must be logged in.
+//
+//	Methods: DELETE
+//
+//	Possible Responses:
+//		200 (OK): User has been logged out which means his 'session' has been destroyed.
+//
+//		500 (Internal Server Error): Problem while retrieving the refresh token or while deleting it from the database.
+//		Refer to the logs for more information.
+var LogoutUser http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
+	refreshCookie, err := r.Cookie("refresh_token")
+	if err != nil {
+		e := errhandle.Error{
+			Type:          errhandle.HandlerError,
+			ServerMessage: fmt.Sprintf("error while retrieving the refresh_token cookie: %v", err),
+			ClientMessage: "An error has occurred while processing your request.",
+			Status:        http.StatusInternalServerError,
+		}
+		if e.Handle(w, r) {
+			return
+		}
+	}
+
+	e := db.DeleteRefreshTokenByToken(refreshCookie.Value)
+	if e.Handle(w, r) {
+		return
+	}
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "access_token",
+		Value:    "",
+		HttpOnly: true,
+		Path:     "/",
+		Expires:  time.Unix(0, 0),
+	})
+
+	http.SetCookie(w, &http.Cookie{
+		Name:     "refresh_token",
+		Value:    "",
+		HttpOnly: true,
+		Path:     "/",
+		Expires:  time.Unix(0, 0),
+	})
+
+	w.WriteHeader(http.StatusOK)
+}
+
+// # GetUser
+//
+//	This handler allows the user to get his data.
+//	In order to access this endpoint the user must be logged in.
+//
+//	Methods: GET
+//
+//	Possible Responses:
+//		200 (OK): There's been no error while getting user's information.
+//
+//		400 (Bad Request): When the token isn't properly formed (e.g. doesn't have three parts).
+//
+//		404 (Not found): Couldn't find the user in the the database.
+//
+//		500 (Internal Server Error): Problem while retrieving the access token or while unmarshaling it's payload.
+//		Could also be caused by an error while retrieving the user from the database. Will also accur when there's
+//		an error while encoding data to the response. Refer to the logs for more information.
+var GetUser http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
+	access, err := r.Cookie("access_token")
+	if err != nil {
+		e := errhandle.Error{
+			Type:          errhandle.HandlerError,
+			ServerMessage: fmt.Sprintf("error while retrieving the access_token cookie: %v", err),
+			ClientMessage: "An error has occurred while processing your request.",
+			Status:        http.StatusInternalServerError,
+		}
+		if e.Handle(w, r) {
+			return
+		}
+	}
+
+	claims, e := jwt.DecodePayload(access.Value)
+	if e.Handle(w, r) {
+		return
+	}
+
+	userId := claims["user"].(string)
+	user, e := db.GetUserById(userId)
+	if e.Handle(w, r) {
+		return
+	}
+
+	userData := map[string]string{
+		"username": user.Username,
+		"email":    user.Email,
+	}
+	if err := json.NewEncoder(w).Encode(userData); err != nil {
+		e := errhandle.Error{
+			Type:          errhandle.HandlerError,
+			ServerMessage: fmt.Sprintf("error while encoding json data to the response: %v", err),
+			ClientMessage: "An error has occurred while processing your request.",
+			Status:        http.StatusInternalServerError,
+		}
+		if e.Handle(w, r) {
+			return
+		}
+	}
+}
+
+// # ModifyUser
+//
+//	This handler allows the user to modify his data.
+//	In order to access this endpoint the user must be logged in.
+//
+//	Methods: PATCH
+//
+//	Request Body:
+//	{
+//		username: "...",
+//		email: "..."
+//	}
+//
+//	Possible Responses:
+//		200 (OK): There's been no error while modifying the user.
+//
+//		400 (Bad Request): Couldn't decode the body or the new data validation failed.
+//
+//		404 (Not Found): Couldn't find the user in the the database.
+//
+//		500 (Internal Server Error): Problem while retrieving the user from the database or while updating his data.
+//		Refer to the logs for more information.
+var ModifyUser http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
+	type RequestBody struct {
+		Username string `json:"username"`
+		Email    string `json:"email"`
+	}
+
+	var body RequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		e := errhandle.Error{
+			Type:          errhandle.HandlerError,
+			ServerMessage: fmt.Sprintf("error while decoding the request body: %v", err),
+			ClientMessage: "An error has occurred while processing your request.",
+			Status:        http.StatusBadRequest,
+		}
+		if e.Handle(w, r) {
+			return
+		}
+	}
+
+	user, e := db.GetUserByEmail(body.Email)
+	if e.Handle(w, r) {
+		return
+	}
+
+	var newUser models.User = models.User{
+		Id:       user.Id,
+		Username: body.Username,
+		Email:    body.Email,
+		Password: user.Password,
+		Verified: user.Verified,
+	}
+	if newUser.Validate(true).Handle(w, r) {
+		return
+	}
+	if db.UpdateUser(newUser).Handle(w, r) {
+		return
+	}
+}
+
+// # PasswordChangeInit
+//
+//	This handler is responsible for initiating the password change procedure for a user.
+//	This means generating a password change token, storing it in the database and providing it
+//	for a user through an e-mail message.
+//
+//	Methods: POST
+//
+//	Request Body:
+//	{
+//		email: "..."
+//	}
+//
+//	Possible Responses:
+//		201 (Created): The password change procedure has been initialized, which means that a new record of password change
+//		token has been created in the database.
+//
+//		400 (Bad Request): Problem while decoding the request body.
+//
+//		404 (Not Found): Couldn't find any user with the provided e-mail address.
+//
+//		500 (Internal Server Error): Problem while retrieving a user with the specified e-mail. Could also be caused by
+//		an error while generating, storing or sending the new password change token Refer to the logs for more information.
+var PasswordChangeInit http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
+	type RequestBody struct {
+		Email string `json:"email"`
+	}
+
+	var body RequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		e := errhandle.Error{
+			Type:          errhandle.HandlerError,
+			ServerMessage: fmt.Sprintf("error while decoding the request body: %v", err),
+			ClientMessage: "An error has occurred while processing your request.",
+			Status:        http.StatusBadRequest,
+		}
+		if e.Handle(w, r) {
+			return
+		}
+	}
+
+	u, e := db.GetUserByEmail(body.Email)
+	if e.Handle(w, r) {
+		return
+	}
+
+	token, e := crypt.RandomString(128)
+	if e.Handle(w, r) {
+		return
+	}
+
+	duration := time.Duration(config.PasswdChangeTime)
+	passwdChange := models.PasswordChange{
+		Token:   token,
+		UserId:  u.Id,
+		Expires: time.Now().Add(duration),
+	}
+	if db.CreatePasswordChange(passwdChange).Handle(w, r) {
+		return
+	}
+
+	if em.SendPasswordChangeEmail(body.Email, token).Handle(w, r) {
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+}
+
+// # ChangePassword
+//
+//	This handler is responsible for the password change.
+//
+//	Methods: PATCH
+//
+//	Request Body:
+//	{
+//		password: "...",
+//		token: "..."
+//	}
+//
+//	Possible Responses:
+//		200 (OK): User's password has been changed.
+//
+//		400 (Bad Request): Problem while decoding the request body or while validating the new password.
+//
+//		404 (Not Found): Couldn't find the specified password change token or any user assigned to it in the database.
+//
+//		500 (Internal Server Error): Problem while retrieving the desired password change token or the user assigned
+//		to it from the database. Could also be caused by an error while deleting the password change token or updating
+//		the user assigned to it. Refer to the logs for more information.
+var ChangePassword http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
+	type RequestBody struct {
+		Password string `json:"password"`
+		Token    string `json:"token"`
+	}
+
+	var body RequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		e := errhandle.Error{
+			Type:          errhandle.HandlerError,
+			ServerMessage: fmt.Sprintf("error while decoding the request body: %v", err),
+			ClientMessage: "An error has occurred while processing your request.",
+			Status:        http.StatusBadRequest,
+		}
+		if e.Handle(w, r) {
+			return
+		}
+	}
+
+	passwordChange, e := db.GetPasswordChangeByToken(body.Token)
+	if e.Handle(w, r) {
+		return
+	}
+
+	user, e := db.GetUserById(passwordChange.UserId)
+	if e.Handle(w, r) {
+		return
+	}
+
+	user.Password = body.Password
+	if user.Validate(false).Handle(w, r) {
+		return
+	}
+
+	if db.DeletePasswordChangeById(passwordChange.Id).Handle(w, r) {
+		return
+	}
+
+	user.Password = crypt.Sha256(body.Password)
+	if db.UpdateUser(*user).Handle(w, r) {
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+}

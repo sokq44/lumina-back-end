@@ -1,0 +1,1063 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>src/archive/zip/reader.go - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="reader.go#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Source file
+    <a href="http://localhost:8080/src">src</a>/<a href="http://localhost:8080/src/archive">archive</a>/<a href="http://localhost:8080/src/archive/zip">zip</a>/<span class="text-muted">reader.go</span>
+  </h1>
+
+
+
+
+
+  <h2>
+    Documentation: <a href="http://localhost:8080/pkg/archive/zip">archive/zip</a>
+  </h2>
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1&nbsp;&nbsp;</span><span class="comment">// Copyright 2010 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2&nbsp;&nbsp;</span><span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3&nbsp;&nbsp;</span><span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4&nbsp;&nbsp;</span>
+<span id="L5" class="ln">     5&nbsp;&nbsp;</span>package zip
+<span id="L6" class="ln">     6&nbsp;&nbsp;</span>
+<span id="L7" class="ln">     7&nbsp;&nbsp;</span>import (
+<span id="L8" class="ln">     8&nbsp;&nbsp;</span>	&#34;bufio&#34;
+<span id="L9" class="ln">     9&nbsp;&nbsp;</span>	&#34;encoding/binary&#34;
+<span id="L10" class="ln">    10&nbsp;&nbsp;</span>	&#34;errors&#34;
+<span id="L11" class="ln">    11&nbsp;&nbsp;</span>	&#34;hash&#34;
+<span id="L12" class="ln">    12&nbsp;&nbsp;</span>	&#34;hash/crc32&#34;
+<span id="L13" class="ln">    13&nbsp;&nbsp;</span>	&#34;internal/godebug&#34;
+<span id="L14" class="ln">    14&nbsp;&nbsp;</span>	&#34;io&#34;
+<span id="L15" class="ln">    15&nbsp;&nbsp;</span>	&#34;io/fs&#34;
+<span id="L16" class="ln">    16&nbsp;&nbsp;</span>	&#34;os&#34;
+<span id="L17" class="ln">    17&nbsp;&nbsp;</span>	&#34;path&#34;
+<span id="L18" class="ln">    18&nbsp;&nbsp;</span>	&#34;path/filepath&#34;
+<span id="L19" class="ln">    19&nbsp;&nbsp;</span>	&#34;sort&#34;
+<span id="L20" class="ln">    20&nbsp;&nbsp;</span>	&#34;strings&#34;
+<span id="L21" class="ln">    21&nbsp;&nbsp;</span>	&#34;sync&#34;
+<span id="L22" class="ln">    22&nbsp;&nbsp;</span>	&#34;time&#34;
+<span id="L23" class="ln">    23&nbsp;&nbsp;</span>)
+<span id="L24" class="ln">    24&nbsp;&nbsp;</span>
+<span id="L25" class="ln">    25&nbsp;&nbsp;</span>var zipinsecurepath = godebug.New(&#34;zipinsecurepath&#34;)
+<span id="L26" class="ln">    26&nbsp;&nbsp;</span>
+<span id="L27" class="ln">    27&nbsp;&nbsp;</span>var (
+<span id="L28" class="ln">    28&nbsp;&nbsp;</span>	ErrFormat       = errors.New(&#34;zip: not a valid zip file&#34;)
+<span id="L29" class="ln">    29&nbsp;&nbsp;</span>	ErrAlgorithm    = errors.New(&#34;zip: unsupported compression algorithm&#34;)
+<span id="L30" class="ln">    30&nbsp;&nbsp;</span>	ErrChecksum     = errors.New(&#34;zip: checksum error&#34;)
+<span id="L31" class="ln">    31&nbsp;&nbsp;</span>	ErrInsecurePath = errors.New(&#34;zip: insecure file path&#34;)
+<span id="L32" class="ln">    32&nbsp;&nbsp;</span>)
+<span id="L33" class="ln">    33&nbsp;&nbsp;</span>
+<span id="L34" class="ln">    34&nbsp;&nbsp;</span><span class="comment">// A Reader serves content from a ZIP archive.</span>
+<span id="L35" class="ln">    35&nbsp;&nbsp;</span>type Reader struct {
+<span id="L36" class="ln">    36&nbsp;&nbsp;</span>	r             io.ReaderAt
+<span id="L37" class="ln">    37&nbsp;&nbsp;</span>	File          []*File
+<span id="L38" class="ln">    38&nbsp;&nbsp;</span>	Comment       string
+<span id="L39" class="ln">    39&nbsp;&nbsp;</span>	decompressors map[uint16]Decompressor
+<span id="L40" class="ln">    40&nbsp;&nbsp;</span>
+<span id="L41" class="ln">    41&nbsp;&nbsp;</span>	<span class="comment">// Some JAR files are zip files with a prefix that is a bash script.</span>
+<span id="L42" class="ln">    42&nbsp;&nbsp;</span>	<span class="comment">// The baseOffset field is the start of the zip file proper.</span>
+<span id="L43" class="ln">    43&nbsp;&nbsp;</span>	baseOffset int64
+<span id="L44" class="ln">    44&nbsp;&nbsp;</span>
+<span id="L45" class="ln">    45&nbsp;&nbsp;</span>	<span class="comment">// fileList is a list of files sorted by ename,</span>
+<span id="L46" class="ln">    46&nbsp;&nbsp;</span>	<span class="comment">// for use by the Open method.</span>
+<span id="L47" class="ln">    47&nbsp;&nbsp;</span>	fileListOnce sync.Once
+<span id="L48" class="ln">    48&nbsp;&nbsp;</span>	fileList     []fileListEntry
+<span id="L49" class="ln">    49&nbsp;&nbsp;</span>}
+<span id="L50" class="ln">    50&nbsp;&nbsp;</span>
+<span id="L51" class="ln">    51&nbsp;&nbsp;</span><span class="comment">// A ReadCloser is a [Reader] that must be closed when no longer needed.</span>
+<span id="L52" class="ln">    52&nbsp;&nbsp;</span>type ReadCloser struct {
+<span id="L53" class="ln">    53&nbsp;&nbsp;</span>	f *os.File
+<span id="L54" class="ln">    54&nbsp;&nbsp;</span>	Reader
+<span id="L55" class="ln">    55&nbsp;&nbsp;</span>}
+<span id="L56" class="ln">    56&nbsp;&nbsp;</span>
+<span id="L57" class="ln">    57&nbsp;&nbsp;</span><span class="comment">// A File is a single file in a ZIP archive.</span>
+<span id="L58" class="ln">    58&nbsp;&nbsp;</span><span class="comment">// The file information is in the embedded [FileHeader].</span>
+<span id="L59" class="ln">    59&nbsp;&nbsp;</span><span class="comment">// The file content can be accessed by calling [File.Open].</span>
+<span id="L60" class="ln">    60&nbsp;&nbsp;</span>type File struct {
+<span id="L61" class="ln">    61&nbsp;&nbsp;</span>	FileHeader
+<span id="L62" class="ln">    62&nbsp;&nbsp;</span>	zip          *Reader
+<span id="L63" class="ln">    63&nbsp;&nbsp;</span>	zipr         io.ReaderAt
+<span id="L64" class="ln">    64&nbsp;&nbsp;</span>	headerOffset int64 <span class="comment">// includes overall ZIP archive baseOffset</span>
+<span id="L65" class="ln">    65&nbsp;&nbsp;</span>	zip64        bool  <span class="comment">// zip64 extended information extra field presence</span>
+<span id="L66" class="ln">    66&nbsp;&nbsp;</span>}
+<span id="L67" class="ln">    67&nbsp;&nbsp;</span>
+<span id="L68" class="ln">    68&nbsp;&nbsp;</span><span class="comment">// OpenReader will open the Zip file specified by name and return a ReadCloser.</span>
+<span id="L69" class="ln">    69&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L70" class="ln">    70&nbsp;&nbsp;</span><span class="comment">// If any file inside the archive uses a non-local name</span>
+<span id="L71" class="ln">    71&nbsp;&nbsp;</span><span class="comment">// (as defined by [filepath.IsLocal]) or a name containing backslashes</span>
+<span id="L72" class="ln">    72&nbsp;&nbsp;</span><span class="comment">// and the GODEBUG environment variable contains `zipinsecurepath=0`,</span>
+<span id="L73" class="ln">    73&nbsp;&nbsp;</span><span class="comment">// OpenReader returns the reader with an ErrInsecurePath error.</span>
+<span id="L74" class="ln">    74&nbsp;&nbsp;</span><span class="comment">// A future version of Go may introduce this behavior by default.</span>
+<span id="L75" class="ln">    75&nbsp;&nbsp;</span><span class="comment">// Programs that want to accept non-local names can ignore</span>
+<span id="L76" class="ln">    76&nbsp;&nbsp;</span><span class="comment">// the ErrInsecurePath error and use the returned reader.</span>
+<span id="L77" class="ln">    77&nbsp;&nbsp;</span>func OpenReader(name string) (*ReadCloser, error) {
+<span id="L78" class="ln">    78&nbsp;&nbsp;</span>	f, err := os.Open(name)
+<span id="L79" class="ln">    79&nbsp;&nbsp;</span>	if err != nil {
+<span id="L80" class="ln">    80&nbsp;&nbsp;</span>		return nil, err
+<span id="L81" class="ln">    81&nbsp;&nbsp;</span>	}
+<span id="L82" class="ln">    82&nbsp;&nbsp;</span>	fi, err := f.Stat()
+<span id="L83" class="ln">    83&nbsp;&nbsp;</span>	if err != nil {
+<span id="L84" class="ln">    84&nbsp;&nbsp;</span>		f.Close()
+<span id="L85" class="ln">    85&nbsp;&nbsp;</span>		return nil, err
+<span id="L86" class="ln">    86&nbsp;&nbsp;</span>	}
+<span id="L87" class="ln">    87&nbsp;&nbsp;</span>	r := new(ReadCloser)
+<span id="L88" class="ln">    88&nbsp;&nbsp;</span>	if err = r.init(f, fi.Size()); err != nil &amp;&amp; err != ErrInsecurePath {
+<span id="L89" class="ln">    89&nbsp;&nbsp;</span>		f.Close()
+<span id="L90" class="ln">    90&nbsp;&nbsp;</span>		return nil, err
+<span id="L91" class="ln">    91&nbsp;&nbsp;</span>	}
+<span id="L92" class="ln">    92&nbsp;&nbsp;</span>	r.f = f
+<span id="L93" class="ln">    93&nbsp;&nbsp;</span>	return r, err
+<span id="L94" class="ln">    94&nbsp;&nbsp;</span>}
+<span id="L95" class="ln">    95&nbsp;&nbsp;</span>
+<span id="L96" class="ln">    96&nbsp;&nbsp;</span><span class="comment">// NewReader returns a new [Reader] reading from r, which is assumed to</span>
+<span id="L97" class="ln">    97&nbsp;&nbsp;</span><span class="comment">// have the given size in bytes.</span>
+<span id="L98" class="ln">    98&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L99" class="ln">    99&nbsp;&nbsp;</span><span class="comment">// If any file inside the archive uses a non-local name</span>
+<span id="L100" class="ln">   100&nbsp;&nbsp;</span><span class="comment">// (as defined by [filepath.IsLocal]) or a name containing backslashes</span>
+<span id="L101" class="ln">   101&nbsp;&nbsp;</span><span class="comment">// and the GODEBUG environment variable contains `zipinsecurepath=0`,</span>
+<span id="L102" class="ln">   102&nbsp;&nbsp;</span><span class="comment">// NewReader returns the reader with an [ErrInsecurePath] error.</span>
+<span id="L103" class="ln">   103&nbsp;&nbsp;</span><span class="comment">// A future version of Go may introduce this behavior by default.</span>
+<span id="L104" class="ln">   104&nbsp;&nbsp;</span><span class="comment">// Programs that want to accept non-local names can ignore</span>
+<span id="L105" class="ln">   105&nbsp;&nbsp;</span><span class="comment">// the [ErrInsecurePath] error and use the returned reader.</span>
+<span id="L106" class="ln">   106&nbsp;&nbsp;</span>func NewReader(r io.ReaderAt, size int64) (*Reader, error) {
+<span id="L107" class="ln">   107&nbsp;&nbsp;</span>	if size &lt; 0 {
+<span id="L108" class="ln">   108&nbsp;&nbsp;</span>		return nil, errors.New(&#34;zip: size cannot be negative&#34;)
+<span id="L109" class="ln">   109&nbsp;&nbsp;</span>	}
+<span id="L110" class="ln">   110&nbsp;&nbsp;</span>	zr := new(Reader)
+<span id="L111" class="ln">   111&nbsp;&nbsp;</span>	var err error
+<span id="L112" class="ln">   112&nbsp;&nbsp;</span>	if err = zr.init(r, size); err != nil &amp;&amp; err != ErrInsecurePath {
+<span id="L113" class="ln">   113&nbsp;&nbsp;</span>		return nil, err
+<span id="L114" class="ln">   114&nbsp;&nbsp;</span>	}
+<span id="L115" class="ln">   115&nbsp;&nbsp;</span>	return zr, err
+<span id="L116" class="ln">   116&nbsp;&nbsp;</span>}
+<span id="L117" class="ln">   117&nbsp;&nbsp;</span>
+<span id="L118" class="ln">   118&nbsp;&nbsp;</span>func (r *Reader) init(rdr io.ReaderAt, size int64) error {
+<span id="L119" class="ln">   119&nbsp;&nbsp;</span>	end, baseOffset, err := readDirectoryEnd(rdr, size)
+<span id="L120" class="ln">   120&nbsp;&nbsp;</span>	if err != nil {
+<span id="L121" class="ln">   121&nbsp;&nbsp;</span>		return err
+<span id="L122" class="ln">   122&nbsp;&nbsp;</span>	}
+<span id="L123" class="ln">   123&nbsp;&nbsp;</span>	r.r = rdr
+<span id="L124" class="ln">   124&nbsp;&nbsp;</span>	r.baseOffset = baseOffset
+<span id="L125" class="ln">   125&nbsp;&nbsp;</span>	<span class="comment">// Since the number of directory records is not validated, it is not</span>
+<span id="L126" class="ln">   126&nbsp;&nbsp;</span>	<span class="comment">// safe to preallocate r.File without first checking that the specified</span>
+<span id="L127" class="ln">   127&nbsp;&nbsp;</span>	<span class="comment">// number of files is reasonable, since a malformed archive may</span>
+<span id="L128" class="ln">   128&nbsp;&nbsp;</span>	<span class="comment">// indicate it contains up to 1 &lt;&lt; 128 - 1 files. Since each file has a</span>
+<span id="L129" class="ln">   129&nbsp;&nbsp;</span>	<span class="comment">// header which will be _at least_ 30 bytes we can safely preallocate</span>
+<span id="L130" class="ln">   130&nbsp;&nbsp;</span>	<span class="comment">// if (data size / 30) &gt;= end.directoryRecords.</span>
+<span id="L131" class="ln">   131&nbsp;&nbsp;</span>	if end.directorySize &lt; uint64(size) &amp;&amp; (uint64(size)-end.directorySize)/30 &gt;= end.directoryRecords {
+<span id="L132" class="ln">   132&nbsp;&nbsp;</span>		r.File = make([]*File, 0, end.directoryRecords)
+<span id="L133" class="ln">   133&nbsp;&nbsp;</span>	}
+<span id="L134" class="ln">   134&nbsp;&nbsp;</span>	r.Comment = end.comment
+<span id="L135" class="ln">   135&nbsp;&nbsp;</span>	rs := io.NewSectionReader(rdr, 0, size)
+<span id="L136" class="ln">   136&nbsp;&nbsp;</span>	if _, err = rs.Seek(r.baseOffset+int64(end.directoryOffset), io.SeekStart); err != nil {
+<span id="L137" class="ln">   137&nbsp;&nbsp;</span>		return err
+<span id="L138" class="ln">   138&nbsp;&nbsp;</span>	}
+<span id="L139" class="ln">   139&nbsp;&nbsp;</span>	buf := bufio.NewReader(rs)
+<span id="L140" class="ln">   140&nbsp;&nbsp;</span>
+<span id="L141" class="ln">   141&nbsp;&nbsp;</span>	<span class="comment">// The count of files inside a zip is truncated to fit in a uint16.</span>
+<span id="L142" class="ln">   142&nbsp;&nbsp;</span>	<span class="comment">// Gloss over this by reading headers until we encounter</span>
+<span id="L143" class="ln">   143&nbsp;&nbsp;</span>	<span class="comment">// a bad one, and then only report an ErrFormat or UnexpectedEOF if</span>
+<span id="L144" class="ln">   144&nbsp;&nbsp;</span>	<span class="comment">// the file count modulo 65536 is incorrect.</span>
+<span id="L145" class="ln">   145&nbsp;&nbsp;</span>	for {
+<span id="L146" class="ln">   146&nbsp;&nbsp;</span>		f := &amp;File{zip: r, zipr: rdr}
+<span id="L147" class="ln">   147&nbsp;&nbsp;</span>		err = readDirectoryHeader(f, buf)
+<span id="L148" class="ln">   148&nbsp;&nbsp;</span>		if err == ErrFormat || err == io.ErrUnexpectedEOF {
+<span id="L149" class="ln">   149&nbsp;&nbsp;</span>			break
+<span id="L150" class="ln">   150&nbsp;&nbsp;</span>		}
+<span id="L151" class="ln">   151&nbsp;&nbsp;</span>		if err != nil {
+<span id="L152" class="ln">   152&nbsp;&nbsp;</span>			return err
+<span id="L153" class="ln">   153&nbsp;&nbsp;</span>		}
+<span id="L154" class="ln">   154&nbsp;&nbsp;</span>		f.headerOffset += r.baseOffset
+<span id="L155" class="ln">   155&nbsp;&nbsp;</span>		r.File = append(r.File, f)
+<span id="L156" class="ln">   156&nbsp;&nbsp;</span>	}
+<span id="L157" class="ln">   157&nbsp;&nbsp;</span>	if uint16(len(r.File)) != uint16(end.directoryRecords) { <span class="comment">// only compare 16 bits here</span>
+<span id="L158" class="ln">   158&nbsp;&nbsp;</span>		<span class="comment">// Return the readDirectoryHeader error if we read</span>
+<span id="L159" class="ln">   159&nbsp;&nbsp;</span>		<span class="comment">// the wrong number of directory entries.</span>
+<span id="L160" class="ln">   160&nbsp;&nbsp;</span>		return err
+<span id="L161" class="ln">   161&nbsp;&nbsp;</span>	}
+<span id="L162" class="ln">   162&nbsp;&nbsp;</span>	if zipinsecurepath.Value() == &#34;0&#34; {
+<span id="L163" class="ln">   163&nbsp;&nbsp;</span>		for _, f := range r.File {
+<span id="L164" class="ln">   164&nbsp;&nbsp;</span>			if f.Name == &#34;&#34; {
+<span id="L165" class="ln">   165&nbsp;&nbsp;</span>				<span class="comment">// Zip permits an empty file name field.</span>
+<span id="L166" class="ln">   166&nbsp;&nbsp;</span>				continue
+<span id="L167" class="ln">   167&nbsp;&nbsp;</span>			}
+<span id="L168" class="ln">   168&nbsp;&nbsp;</span>			<span class="comment">// The zip specification states that names must use forward slashes,</span>
+<span id="L169" class="ln">   169&nbsp;&nbsp;</span>			<span class="comment">// so consider any backslashes in the name insecure.</span>
+<span id="L170" class="ln">   170&nbsp;&nbsp;</span>			if !filepath.IsLocal(f.Name) || strings.Contains(f.Name, `\`) {
+<span id="L171" class="ln">   171&nbsp;&nbsp;</span>				zipinsecurepath.IncNonDefault()
+<span id="L172" class="ln">   172&nbsp;&nbsp;</span>				return ErrInsecurePath
+<span id="L173" class="ln">   173&nbsp;&nbsp;</span>			}
+<span id="L174" class="ln">   174&nbsp;&nbsp;</span>		}
+<span id="L175" class="ln">   175&nbsp;&nbsp;</span>	}
+<span id="L176" class="ln">   176&nbsp;&nbsp;</span>	return nil
+<span id="L177" class="ln">   177&nbsp;&nbsp;</span>}
+<span id="L178" class="ln">   178&nbsp;&nbsp;</span>
+<span id="L179" class="ln">   179&nbsp;&nbsp;</span><span class="comment">// RegisterDecompressor registers or overrides a custom decompressor for a</span>
+<span id="L180" class="ln">   180&nbsp;&nbsp;</span><span class="comment">// specific method ID. If a decompressor for a given method is not found,</span>
+<span id="L181" class="ln">   181&nbsp;&nbsp;</span><span class="comment">// [Reader] will default to looking up the decompressor at the package level.</span>
+<span id="L182" class="ln">   182&nbsp;&nbsp;</span>func (r *Reader) RegisterDecompressor(method uint16, dcomp Decompressor) {
+<span id="L183" class="ln">   183&nbsp;&nbsp;</span>	if r.decompressors == nil {
+<span id="L184" class="ln">   184&nbsp;&nbsp;</span>		r.decompressors = make(map[uint16]Decompressor)
+<span id="L185" class="ln">   185&nbsp;&nbsp;</span>	}
+<span id="L186" class="ln">   186&nbsp;&nbsp;</span>	r.decompressors[method] = dcomp
+<span id="L187" class="ln">   187&nbsp;&nbsp;</span>}
+<span id="L188" class="ln">   188&nbsp;&nbsp;</span>
+<span id="L189" class="ln">   189&nbsp;&nbsp;</span>func (r *Reader) decompressor(method uint16) Decompressor {
+<span id="L190" class="ln">   190&nbsp;&nbsp;</span>	dcomp := r.decompressors[method]
+<span id="L191" class="ln">   191&nbsp;&nbsp;</span>	if dcomp == nil {
+<span id="L192" class="ln">   192&nbsp;&nbsp;</span>		dcomp = decompressor(method)
+<span id="L193" class="ln">   193&nbsp;&nbsp;</span>	}
+<span id="L194" class="ln">   194&nbsp;&nbsp;</span>	return dcomp
+<span id="L195" class="ln">   195&nbsp;&nbsp;</span>}
+<span id="L196" class="ln">   196&nbsp;&nbsp;</span>
+<span id="L197" class="ln">   197&nbsp;&nbsp;</span><span class="comment">// Close closes the Zip file, rendering it unusable for I/O.</span>
+<span id="L198" class="ln">   198&nbsp;&nbsp;</span>func (rc *ReadCloser) Close() error {
+<span id="L199" class="ln">   199&nbsp;&nbsp;</span>	return rc.f.Close()
+<span id="L200" class="ln">   200&nbsp;&nbsp;</span>}
+<span id="L201" class="ln">   201&nbsp;&nbsp;</span>
+<span id="L202" class="ln">   202&nbsp;&nbsp;</span><span class="comment">// DataOffset returns the offset of the file&#39;s possibly-compressed</span>
+<span id="L203" class="ln">   203&nbsp;&nbsp;</span><span class="comment">// data, relative to the beginning of the zip file.</span>
+<span id="L204" class="ln">   204&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L205" class="ln">   205&nbsp;&nbsp;</span><span class="comment">// Most callers should instead use [File.Open], which transparently</span>
+<span id="L206" class="ln">   206&nbsp;&nbsp;</span><span class="comment">// decompresses data and verifies checksums.</span>
+<span id="L207" class="ln">   207&nbsp;&nbsp;</span>func (f *File) DataOffset() (offset int64, err error) {
+<span id="L208" class="ln">   208&nbsp;&nbsp;</span>	bodyOffset, err := f.findBodyOffset()
+<span id="L209" class="ln">   209&nbsp;&nbsp;</span>	if err != nil {
+<span id="L210" class="ln">   210&nbsp;&nbsp;</span>		return
+<span id="L211" class="ln">   211&nbsp;&nbsp;</span>	}
+<span id="L212" class="ln">   212&nbsp;&nbsp;</span>	return f.headerOffset + bodyOffset, nil
+<span id="L213" class="ln">   213&nbsp;&nbsp;</span>}
+<span id="L214" class="ln">   214&nbsp;&nbsp;</span>
+<span id="L215" class="ln">   215&nbsp;&nbsp;</span><span class="comment">// Open returns a [ReadCloser] that provides access to the [File]&#39;s contents.</span>
+<span id="L216" class="ln">   216&nbsp;&nbsp;</span><span class="comment">// Multiple files may be read concurrently.</span>
+<span id="L217" class="ln">   217&nbsp;&nbsp;</span>func (f *File) Open() (io.ReadCloser, error) {
+<span id="L218" class="ln">   218&nbsp;&nbsp;</span>	bodyOffset, err := f.findBodyOffset()
+<span id="L219" class="ln">   219&nbsp;&nbsp;</span>	if err != nil {
+<span id="L220" class="ln">   220&nbsp;&nbsp;</span>		return nil, err
+<span id="L221" class="ln">   221&nbsp;&nbsp;</span>	}
+<span id="L222" class="ln">   222&nbsp;&nbsp;</span>	if strings.HasSuffix(f.Name, &#34;/&#34;) {
+<span id="L223" class="ln">   223&nbsp;&nbsp;</span>		<span class="comment">// The ZIP specification (APPNOTE.TXT) specifies that directories, which</span>
+<span id="L224" class="ln">   224&nbsp;&nbsp;</span>		<span class="comment">// are technically zero-byte files, must not have any associated file</span>
+<span id="L225" class="ln">   225&nbsp;&nbsp;</span>		<span class="comment">// data. We previously tried failing here if f.CompressedSize64 != 0,</span>
+<span id="L226" class="ln">   226&nbsp;&nbsp;</span>		<span class="comment">// but it turns out that a number of implementations (namely, the Java</span>
+<span id="L227" class="ln">   227&nbsp;&nbsp;</span>		<span class="comment">// jar tool) don&#39;t properly set the storage method on directories</span>
+<span id="L228" class="ln">   228&nbsp;&nbsp;</span>		<span class="comment">// resulting in a file with compressed size &gt; 0 but uncompressed size ==</span>
+<span id="L229" class="ln">   229&nbsp;&nbsp;</span>		<span class="comment">// 0. We still want to fail when a directory has associated uncompressed</span>
+<span id="L230" class="ln">   230&nbsp;&nbsp;</span>		<span class="comment">// data, but we are tolerant of cases where the uncompressed size is</span>
+<span id="L231" class="ln">   231&nbsp;&nbsp;</span>		<span class="comment">// zero but compressed size is not.</span>
+<span id="L232" class="ln">   232&nbsp;&nbsp;</span>		if f.UncompressedSize64 != 0 {
+<span id="L233" class="ln">   233&nbsp;&nbsp;</span>			return &amp;dirReader{ErrFormat}, nil
+<span id="L234" class="ln">   234&nbsp;&nbsp;</span>		} else {
+<span id="L235" class="ln">   235&nbsp;&nbsp;</span>			return &amp;dirReader{io.EOF}, nil
+<span id="L236" class="ln">   236&nbsp;&nbsp;</span>		}
+<span id="L237" class="ln">   237&nbsp;&nbsp;</span>	}
+<span id="L238" class="ln">   238&nbsp;&nbsp;</span>	size := int64(f.CompressedSize64)
+<span id="L239" class="ln">   239&nbsp;&nbsp;</span>	r := io.NewSectionReader(f.zipr, f.headerOffset+bodyOffset, size)
+<span id="L240" class="ln">   240&nbsp;&nbsp;</span>	dcomp := f.zip.decompressor(f.Method)
+<span id="L241" class="ln">   241&nbsp;&nbsp;</span>	if dcomp == nil {
+<span id="L242" class="ln">   242&nbsp;&nbsp;</span>		return nil, ErrAlgorithm
+<span id="L243" class="ln">   243&nbsp;&nbsp;</span>	}
+<span id="L244" class="ln">   244&nbsp;&nbsp;</span>	var rc io.ReadCloser = dcomp(r)
+<span id="L245" class="ln">   245&nbsp;&nbsp;</span>	var desr io.Reader
+<span id="L246" class="ln">   246&nbsp;&nbsp;</span>	if f.hasDataDescriptor() {
+<span id="L247" class="ln">   247&nbsp;&nbsp;</span>		desr = io.NewSectionReader(f.zipr, f.headerOffset+bodyOffset+size, dataDescriptorLen)
+<span id="L248" class="ln">   248&nbsp;&nbsp;</span>	}
+<span id="L249" class="ln">   249&nbsp;&nbsp;</span>	rc = &amp;checksumReader{
+<span id="L250" class="ln">   250&nbsp;&nbsp;</span>		rc:   rc,
+<span id="L251" class="ln">   251&nbsp;&nbsp;</span>		hash: crc32.NewIEEE(),
+<span id="L252" class="ln">   252&nbsp;&nbsp;</span>		f:    f,
+<span id="L253" class="ln">   253&nbsp;&nbsp;</span>		desr: desr,
+<span id="L254" class="ln">   254&nbsp;&nbsp;</span>	}
+<span id="L255" class="ln">   255&nbsp;&nbsp;</span>	return rc, nil
+<span id="L256" class="ln">   256&nbsp;&nbsp;</span>}
+<span id="L257" class="ln">   257&nbsp;&nbsp;</span>
+<span id="L258" class="ln">   258&nbsp;&nbsp;</span><span class="comment">// OpenRaw returns a [Reader] that provides access to the [File]&#39;s contents without</span>
+<span id="L259" class="ln">   259&nbsp;&nbsp;</span><span class="comment">// decompression.</span>
+<span id="L260" class="ln">   260&nbsp;&nbsp;</span>func (f *File) OpenRaw() (io.Reader, error) {
+<span id="L261" class="ln">   261&nbsp;&nbsp;</span>	bodyOffset, err := f.findBodyOffset()
+<span id="L262" class="ln">   262&nbsp;&nbsp;</span>	if err != nil {
+<span id="L263" class="ln">   263&nbsp;&nbsp;</span>		return nil, err
+<span id="L264" class="ln">   264&nbsp;&nbsp;</span>	}
+<span id="L265" class="ln">   265&nbsp;&nbsp;</span>	r := io.NewSectionReader(f.zipr, f.headerOffset+bodyOffset, int64(f.CompressedSize64))
+<span id="L266" class="ln">   266&nbsp;&nbsp;</span>	return r, nil
+<span id="L267" class="ln">   267&nbsp;&nbsp;</span>}
+<span id="L268" class="ln">   268&nbsp;&nbsp;</span>
+<span id="L269" class="ln">   269&nbsp;&nbsp;</span>type dirReader struct {
+<span id="L270" class="ln">   270&nbsp;&nbsp;</span>	err error
+<span id="L271" class="ln">   271&nbsp;&nbsp;</span>}
+<span id="L272" class="ln">   272&nbsp;&nbsp;</span>
+<span id="L273" class="ln">   273&nbsp;&nbsp;</span>func (r *dirReader) Read([]byte) (int, error) {
+<span id="L274" class="ln">   274&nbsp;&nbsp;</span>	return 0, r.err
+<span id="L275" class="ln">   275&nbsp;&nbsp;</span>}
+<span id="L276" class="ln">   276&nbsp;&nbsp;</span>
+<span id="L277" class="ln">   277&nbsp;&nbsp;</span>func (r *dirReader) Close() error {
+<span id="L278" class="ln">   278&nbsp;&nbsp;</span>	return nil
+<span id="L279" class="ln">   279&nbsp;&nbsp;</span>}
+<span id="L280" class="ln">   280&nbsp;&nbsp;</span>
+<span id="L281" class="ln">   281&nbsp;&nbsp;</span>type checksumReader struct {
+<span id="L282" class="ln">   282&nbsp;&nbsp;</span>	rc    io.ReadCloser
+<span id="L283" class="ln">   283&nbsp;&nbsp;</span>	hash  hash.Hash32
+<span id="L284" class="ln">   284&nbsp;&nbsp;</span>	nread uint64 <span class="comment">// number of bytes read so far</span>
+<span id="L285" class="ln">   285&nbsp;&nbsp;</span>	f     *File
+<span id="L286" class="ln">   286&nbsp;&nbsp;</span>	desr  io.Reader <span class="comment">// if non-nil, where to read the data descriptor</span>
+<span id="L287" class="ln">   287&nbsp;&nbsp;</span>	err   error     <span class="comment">// sticky error</span>
+<span id="L288" class="ln">   288&nbsp;&nbsp;</span>}
+<span id="L289" class="ln">   289&nbsp;&nbsp;</span>
+<span id="L290" class="ln">   290&nbsp;&nbsp;</span>func (r *checksumReader) Stat() (fs.FileInfo, error) {
+<span id="L291" class="ln">   291&nbsp;&nbsp;</span>	return headerFileInfo{&amp;r.f.FileHeader}, nil
+<span id="L292" class="ln">   292&nbsp;&nbsp;</span>}
+<span id="L293" class="ln">   293&nbsp;&nbsp;</span>
+<span id="L294" class="ln">   294&nbsp;&nbsp;</span>func (r *checksumReader) Read(b []byte) (n int, err error) {
+<span id="L295" class="ln">   295&nbsp;&nbsp;</span>	if r.err != nil {
+<span id="L296" class="ln">   296&nbsp;&nbsp;</span>		return 0, r.err
+<span id="L297" class="ln">   297&nbsp;&nbsp;</span>	}
+<span id="L298" class="ln">   298&nbsp;&nbsp;</span>	n, err = r.rc.Read(b)
+<span id="L299" class="ln">   299&nbsp;&nbsp;</span>	r.hash.Write(b[:n])
+<span id="L300" class="ln">   300&nbsp;&nbsp;</span>	r.nread += uint64(n)
+<span id="L301" class="ln">   301&nbsp;&nbsp;</span>	if r.nread &gt; r.f.UncompressedSize64 {
+<span id="L302" class="ln">   302&nbsp;&nbsp;</span>		return 0, ErrFormat
+<span id="L303" class="ln">   303&nbsp;&nbsp;</span>	}
+<span id="L304" class="ln">   304&nbsp;&nbsp;</span>	if err == nil {
+<span id="L305" class="ln">   305&nbsp;&nbsp;</span>		return
+<span id="L306" class="ln">   306&nbsp;&nbsp;</span>	}
+<span id="L307" class="ln">   307&nbsp;&nbsp;</span>	if err == io.EOF {
+<span id="L308" class="ln">   308&nbsp;&nbsp;</span>		if r.nread != r.f.UncompressedSize64 {
+<span id="L309" class="ln">   309&nbsp;&nbsp;</span>			return 0, io.ErrUnexpectedEOF
+<span id="L310" class="ln">   310&nbsp;&nbsp;</span>		}
+<span id="L311" class="ln">   311&nbsp;&nbsp;</span>		if r.desr != nil {
+<span id="L312" class="ln">   312&nbsp;&nbsp;</span>			if err1 := readDataDescriptor(r.desr, r.f); err1 != nil {
+<span id="L313" class="ln">   313&nbsp;&nbsp;</span>				if err1 == io.EOF {
+<span id="L314" class="ln">   314&nbsp;&nbsp;</span>					err = io.ErrUnexpectedEOF
+<span id="L315" class="ln">   315&nbsp;&nbsp;</span>				} else {
+<span id="L316" class="ln">   316&nbsp;&nbsp;</span>					err = err1
+<span id="L317" class="ln">   317&nbsp;&nbsp;</span>				}
+<span id="L318" class="ln">   318&nbsp;&nbsp;</span>			} else if r.hash.Sum32() != r.f.CRC32 {
+<span id="L319" class="ln">   319&nbsp;&nbsp;</span>				err = ErrChecksum
+<span id="L320" class="ln">   320&nbsp;&nbsp;</span>			}
+<span id="L321" class="ln">   321&nbsp;&nbsp;</span>		} else {
+<span id="L322" class="ln">   322&nbsp;&nbsp;</span>			<span class="comment">// If there&#39;s not a data descriptor, we still compare</span>
+<span id="L323" class="ln">   323&nbsp;&nbsp;</span>			<span class="comment">// the CRC32 of what we&#39;ve read against the file header</span>
+<span id="L324" class="ln">   324&nbsp;&nbsp;</span>			<span class="comment">// or TOC&#39;s CRC32, if it seems like it was set.</span>
+<span id="L325" class="ln">   325&nbsp;&nbsp;</span>			if r.f.CRC32 != 0 &amp;&amp; r.hash.Sum32() != r.f.CRC32 {
+<span id="L326" class="ln">   326&nbsp;&nbsp;</span>				err = ErrChecksum
+<span id="L327" class="ln">   327&nbsp;&nbsp;</span>			}
+<span id="L328" class="ln">   328&nbsp;&nbsp;</span>		}
+<span id="L329" class="ln">   329&nbsp;&nbsp;</span>	}
+<span id="L330" class="ln">   330&nbsp;&nbsp;</span>	r.err = err
+<span id="L331" class="ln">   331&nbsp;&nbsp;</span>	return
+<span id="L332" class="ln">   332&nbsp;&nbsp;</span>}
+<span id="L333" class="ln">   333&nbsp;&nbsp;</span>
+<span id="L334" class="ln">   334&nbsp;&nbsp;</span>func (r *checksumReader) Close() error { return r.rc.Close() }
+<span id="L335" class="ln">   335&nbsp;&nbsp;</span>
+<span id="L336" class="ln">   336&nbsp;&nbsp;</span><span class="comment">// findBodyOffset does the minimum work to verify the file has a header</span>
+<span id="L337" class="ln">   337&nbsp;&nbsp;</span><span class="comment">// and returns the file body offset.</span>
+<span id="L338" class="ln">   338&nbsp;&nbsp;</span>func (f *File) findBodyOffset() (int64, error) {
+<span id="L339" class="ln">   339&nbsp;&nbsp;</span>	var buf [fileHeaderLen]byte
+<span id="L340" class="ln">   340&nbsp;&nbsp;</span>	if _, err := f.zipr.ReadAt(buf[:], f.headerOffset); err != nil {
+<span id="L341" class="ln">   341&nbsp;&nbsp;</span>		return 0, err
+<span id="L342" class="ln">   342&nbsp;&nbsp;</span>	}
+<span id="L343" class="ln">   343&nbsp;&nbsp;</span>	b := readBuf(buf[:])
+<span id="L344" class="ln">   344&nbsp;&nbsp;</span>	if sig := b.uint32(); sig != fileHeaderSignature {
+<span id="L345" class="ln">   345&nbsp;&nbsp;</span>		return 0, ErrFormat
+<span id="L346" class="ln">   346&nbsp;&nbsp;</span>	}
+<span id="L347" class="ln">   347&nbsp;&nbsp;</span>	b = b[22:] <span class="comment">// skip over most of the header</span>
+<span id="L348" class="ln">   348&nbsp;&nbsp;</span>	filenameLen := int(b.uint16())
+<span id="L349" class="ln">   349&nbsp;&nbsp;</span>	extraLen := int(b.uint16())
+<span id="L350" class="ln">   350&nbsp;&nbsp;</span>	return int64(fileHeaderLen + filenameLen + extraLen), nil
+<span id="L351" class="ln">   351&nbsp;&nbsp;</span>}
+<span id="L352" class="ln">   352&nbsp;&nbsp;</span>
+<span id="L353" class="ln">   353&nbsp;&nbsp;</span><span class="comment">// readDirectoryHeader attempts to read a directory header from r.</span>
+<span id="L354" class="ln">   354&nbsp;&nbsp;</span><span class="comment">// It returns io.ErrUnexpectedEOF if it cannot read a complete header,</span>
+<span id="L355" class="ln">   355&nbsp;&nbsp;</span><span class="comment">// and ErrFormat if it doesn&#39;t find a valid header signature.</span>
+<span id="L356" class="ln">   356&nbsp;&nbsp;</span>func readDirectoryHeader(f *File, r io.Reader) error {
+<span id="L357" class="ln">   357&nbsp;&nbsp;</span>	var buf [directoryHeaderLen]byte
+<span id="L358" class="ln">   358&nbsp;&nbsp;</span>	if _, err := io.ReadFull(r, buf[:]); err != nil {
+<span id="L359" class="ln">   359&nbsp;&nbsp;</span>		return err
+<span id="L360" class="ln">   360&nbsp;&nbsp;</span>	}
+<span id="L361" class="ln">   361&nbsp;&nbsp;</span>	b := readBuf(buf[:])
+<span id="L362" class="ln">   362&nbsp;&nbsp;</span>	if sig := b.uint32(); sig != directoryHeaderSignature {
+<span id="L363" class="ln">   363&nbsp;&nbsp;</span>		return ErrFormat
+<span id="L364" class="ln">   364&nbsp;&nbsp;</span>	}
+<span id="L365" class="ln">   365&nbsp;&nbsp;</span>	f.CreatorVersion = b.uint16()
+<span id="L366" class="ln">   366&nbsp;&nbsp;</span>	f.ReaderVersion = b.uint16()
+<span id="L367" class="ln">   367&nbsp;&nbsp;</span>	f.Flags = b.uint16()
+<span id="L368" class="ln">   368&nbsp;&nbsp;</span>	f.Method = b.uint16()
+<span id="L369" class="ln">   369&nbsp;&nbsp;</span>	f.ModifiedTime = b.uint16()
+<span id="L370" class="ln">   370&nbsp;&nbsp;</span>	f.ModifiedDate = b.uint16()
+<span id="L371" class="ln">   371&nbsp;&nbsp;</span>	f.CRC32 = b.uint32()
+<span id="L372" class="ln">   372&nbsp;&nbsp;</span>	f.CompressedSize = b.uint32()
+<span id="L373" class="ln">   373&nbsp;&nbsp;</span>	f.UncompressedSize = b.uint32()
+<span id="L374" class="ln">   374&nbsp;&nbsp;</span>	f.CompressedSize64 = uint64(f.CompressedSize)
+<span id="L375" class="ln">   375&nbsp;&nbsp;</span>	f.UncompressedSize64 = uint64(f.UncompressedSize)
+<span id="L376" class="ln">   376&nbsp;&nbsp;</span>	filenameLen := int(b.uint16())
+<span id="L377" class="ln">   377&nbsp;&nbsp;</span>	extraLen := int(b.uint16())
+<span id="L378" class="ln">   378&nbsp;&nbsp;</span>	commentLen := int(b.uint16())
+<span id="L379" class="ln">   379&nbsp;&nbsp;</span>	b = b[4:] <span class="comment">// skipped start disk number and internal attributes (2x uint16)</span>
+<span id="L380" class="ln">   380&nbsp;&nbsp;</span>	f.ExternalAttrs = b.uint32()
+<span id="L381" class="ln">   381&nbsp;&nbsp;</span>	f.headerOffset = int64(b.uint32())
+<span id="L382" class="ln">   382&nbsp;&nbsp;</span>	d := make([]byte, filenameLen+extraLen+commentLen)
+<span id="L383" class="ln">   383&nbsp;&nbsp;</span>	if _, err := io.ReadFull(r, d); err != nil {
+<span id="L384" class="ln">   384&nbsp;&nbsp;</span>		return err
+<span id="L385" class="ln">   385&nbsp;&nbsp;</span>	}
+<span id="L386" class="ln">   386&nbsp;&nbsp;</span>	f.Name = string(d[:filenameLen])
+<span id="L387" class="ln">   387&nbsp;&nbsp;</span>	f.Extra = d[filenameLen : filenameLen+extraLen]
+<span id="L388" class="ln">   388&nbsp;&nbsp;</span>	f.Comment = string(d[filenameLen+extraLen:])
+<span id="L389" class="ln">   389&nbsp;&nbsp;</span>
+<span id="L390" class="ln">   390&nbsp;&nbsp;</span>	<span class="comment">// Determine the character encoding.</span>
+<span id="L391" class="ln">   391&nbsp;&nbsp;</span>	utf8Valid1, utf8Require1 := detectUTF8(f.Name)
+<span id="L392" class="ln">   392&nbsp;&nbsp;</span>	utf8Valid2, utf8Require2 := detectUTF8(f.Comment)
+<span id="L393" class="ln">   393&nbsp;&nbsp;</span>	switch {
+<span id="L394" class="ln">   394&nbsp;&nbsp;</span>	case !utf8Valid1 || !utf8Valid2:
+<span id="L395" class="ln">   395&nbsp;&nbsp;</span>		<span class="comment">// Name and Comment definitely not UTF-8.</span>
+<span id="L396" class="ln">   396&nbsp;&nbsp;</span>		f.NonUTF8 = true
+<span id="L397" class="ln">   397&nbsp;&nbsp;</span>	case !utf8Require1 &amp;&amp; !utf8Require2:
+<span id="L398" class="ln">   398&nbsp;&nbsp;</span>		<span class="comment">// Name and Comment use only single-byte runes that overlap with UTF-8.</span>
+<span id="L399" class="ln">   399&nbsp;&nbsp;</span>		f.NonUTF8 = false
+<span id="L400" class="ln">   400&nbsp;&nbsp;</span>	default:
+<span id="L401" class="ln">   401&nbsp;&nbsp;</span>		<span class="comment">// Might be UTF-8, might be some other encoding; preserve existing flag.</span>
+<span id="L402" class="ln">   402&nbsp;&nbsp;</span>		<span class="comment">// Some ZIP writers use UTF-8 encoding without setting the UTF-8 flag.</span>
+<span id="L403" class="ln">   403&nbsp;&nbsp;</span>		<span class="comment">// Since it is impossible to always distinguish valid UTF-8 from some</span>
+<span id="L404" class="ln">   404&nbsp;&nbsp;</span>		<span class="comment">// other encoding (e.g., GBK or Shift-JIS), we trust the flag.</span>
+<span id="L405" class="ln">   405&nbsp;&nbsp;</span>		f.NonUTF8 = f.Flags&amp;0x800 == 0
+<span id="L406" class="ln">   406&nbsp;&nbsp;</span>	}
+<span id="L407" class="ln">   407&nbsp;&nbsp;</span>
+<span id="L408" class="ln">   408&nbsp;&nbsp;</span>	needUSize := f.UncompressedSize == ^uint32(0)
+<span id="L409" class="ln">   409&nbsp;&nbsp;</span>	needCSize := f.CompressedSize == ^uint32(0)
+<span id="L410" class="ln">   410&nbsp;&nbsp;</span>	needHeaderOffset := f.headerOffset == int64(^uint32(0))
+<span id="L411" class="ln">   411&nbsp;&nbsp;</span>
+<span id="L412" class="ln">   412&nbsp;&nbsp;</span>	<span class="comment">// Best effort to find what we need.</span>
+<span id="L413" class="ln">   413&nbsp;&nbsp;</span>	<span class="comment">// Other zip authors might not even follow the basic format,</span>
+<span id="L414" class="ln">   414&nbsp;&nbsp;</span>	<span class="comment">// and we&#39;ll just ignore the Extra content in that case.</span>
+<span id="L415" class="ln">   415&nbsp;&nbsp;</span>	var modified time.Time
+<span id="L416" class="ln">   416&nbsp;&nbsp;</span>parseExtras:
+<span id="L417" class="ln">   417&nbsp;&nbsp;</span>	for extra := readBuf(f.Extra); len(extra) &gt;= 4; { <span class="comment">// need at least tag and size</span>
+<span id="L418" class="ln">   418&nbsp;&nbsp;</span>		fieldTag := extra.uint16()
+<span id="L419" class="ln">   419&nbsp;&nbsp;</span>		fieldSize := int(extra.uint16())
+<span id="L420" class="ln">   420&nbsp;&nbsp;</span>		if len(extra) &lt; fieldSize {
+<span id="L421" class="ln">   421&nbsp;&nbsp;</span>			break
+<span id="L422" class="ln">   422&nbsp;&nbsp;</span>		}
+<span id="L423" class="ln">   423&nbsp;&nbsp;</span>		fieldBuf := extra.sub(fieldSize)
+<span id="L424" class="ln">   424&nbsp;&nbsp;</span>
+<span id="L425" class="ln">   425&nbsp;&nbsp;</span>		switch fieldTag {
+<span id="L426" class="ln">   426&nbsp;&nbsp;</span>		case zip64ExtraID:
+<span id="L427" class="ln">   427&nbsp;&nbsp;</span>			f.zip64 = true
+<span id="L428" class="ln">   428&nbsp;&nbsp;</span>
+<span id="L429" class="ln">   429&nbsp;&nbsp;</span>			<span class="comment">// update directory values from the zip64 extra block.</span>
+<span id="L430" class="ln">   430&nbsp;&nbsp;</span>			<span class="comment">// They should only be consulted if the sizes read earlier</span>
+<span id="L431" class="ln">   431&nbsp;&nbsp;</span>			<span class="comment">// are maxed out.</span>
+<span id="L432" class="ln">   432&nbsp;&nbsp;</span>			<span class="comment">// See golang.org/issue/13367.</span>
+<span id="L433" class="ln">   433&nbsp;&nbsp;</span>			if needUSize {
+<span id="L434" class="ln">   434&nbsp;&nbsp;</span>				needUSize = false
+<span id="L435" class="ln">   435&nbsp;&nbsp;</span>				if len(fieldBuf) &lt; 8 {
+<span id="L436" class="ln">   436&nbsp;&nbsp;</span>					return ErrFormat
+<span id="L437" class="ln">   437&nbsp;&nbsp;</span>				}
+<span id="L438" class="ln">   438&nbsp;&nbsp;</span>				f.UncompressedSize64 = fieldBuf.uint64()
+<span id="L439" class="ln">   439&nbsp;&nbsp;</span>			}
+<span id="L440" class="ln">   440&nbsp;&nbsp;</span>			if needCSize {
+<span id="L441" class="ln">   441&nbsp;&nbsp;</span>				needCSize = false
+<span id="L442" class="ln">   442&nbsp;&nbsp;</span>				if len(fieldBuf) &lt; 8 {
+<span id="L443" class="ln">   443&nbsp;&nbsp;</span>					return ErrFormat
+<span id="L444" class="ln">   444&nbsp;&nbsp;</span>				}
+<span id="L445" class="ln">   445&nbsp;&nbsp;</span>				f.CompressedSize64 = fieldBuf.uint64()
+<span id="L446" class="ln">   446&nbsp;&nbsp;</span>			}
+<span id="L447" class="ln">   447&nbsp;&nbsp;</span>			if needHeaderOffset {
+<span id="L448" class="ln">   448&nbsp;&nbsp;</span>				needHeaderOffset = false
+<span id="L449" class="ln">   449&nbsp;&nbsp;</span>				if len(fieldBuf) &lt; 8 {
+<span id="L450" class="ln">   450&nbsp;&nbsp;</span>					return ErrFormat
+<span id="L451" class="ln">   451&nbsp;&nbsp;</span>				}
+<span id="L452" class="ln">   452&nbsp;&nbsp;</span>				f.headerOffset = int64(fieldBuf.uint64())
+<span id="L453" class="ln">   453&nbsp;&nbsp;</span>			}
+<span id="L454" class="ln">   454&nbsp;&nbsp;</span>		case ntfsExtraID:
+<span id="L455" class="ln">   455&nbsp;&nbsp;</span>			if len(fieldBuf) &lt; 4 {
+<span id="L456" class="ln">   456&nbsp;&nbsp;</span>				continue parseExtras
+<span id="L457" class="ln">   457&nbsp;&nbsp;</span>			}
+<span id="L458" class="ln">   458&nbsp;&nbsp;</span>			fieldBuf.uint32()        <span class="comment">// reserved (ignored)</span>
+<span id="L459" class="ln">   459&nbsp;&nbsp;</span>			for len(fieldBuf) &gt;= 4 { <span class="comment">// need at least tag and size</span>
+<span id="L460" class="ln">   460&nbsp;&nbsp;</span>				attrTag := fieldBuf.uint16()
+<span id="L461" class="ln">   461&nbsp;&nbsp;</span>				attrSize := int(fieldBuf.uint16())
+<span id="L462" class="ln">   462&nbsp;&nbsp;</span>				if len(fieldBuf) &lt; attrSize {
+<span id="L463" class="ln">   463&nbsp;&nbsp;</span>					continue parseExtras
+<span id="L464" class="ln">   464&nbsp;&nbsp;</span>				}
+<span id="L465" class="ln">   465&nbsp;&nbsp;</span>				attrBuf := fieldBuf.sub(attrSize)
+<span id="L466" class="ln">   466&nbsp;&nbsp;</span>				if attrTag != 1 || attrSize != 24 {
+<span id="L467" class="ln">   467&nbsp;&nbsp;</span>					continue <span class="comment">// Ignore irrelevant attributes</span>
+<span id="L468" class="ln">   468&nbsp;&nbsp;</span>				}
+<span id="L469" class="ln">   469&nbsp;&nbsp;</span>
+<span id="L470" class="ln">   470&nbsp;&nbsp;</span>				const ticksPerSecond = 1e7    <span class="comment">// Windows timestamp resolution</span>
+<span id="L471" class="ln">   471&nbsp;&nbsp;</span>				ts := int64(attrBuf.uint64()) <span class="comment">// ModTime since Windows epoch</span>
+<span id="L472" class="ln">   472&nbsp;&nbsp;</span>				secs := ts / ticksPerSecond
+<span id="L473" class="ln">   473&nbsp;&nbsp;</span>				nsecs := (1e9 / ticksPerSecond) * (ts % ticksPerSecond)
+<span id="L474" class="ln">   474&nbsp;&nbsp;</span>				epoch := time.Date(1601, time.January, 1, 0, 0, 0, 0, time.UTC)
+<span id="L475" class="ln">   475&nbsp;&nbsp;</span>				modified = time.Unix(epoch.Unix()+secs, nsecs)
+<span id="L476" class="ln">   476&nbsp;&nbsp;</span>			}
+<span id="L477" class="ln">   477&nbsp;&nbsp;</span>		case unixExtraID, infoZipUnixExtraID:
+<span id="L478" class="ln">   478&nbsp;&nbsp;</span>			if len(fieldBuf) &lt; 8 {
+<span id="L479" class="ln">   479&nbsp;&nbsp;</span>				continue parseExtras
+<span id="L480" class="ln">   480&nbsp;&nbsp;</span>			}
+<span id="L481" class="ln">   481&nbsp;&nbsp;</span>			fieldBuf.uint32()              <span class="comment">// AcTime (ignored)</span>
+<span id="L482" class="ln">   482&nbsp;&nbsp;</span>			ts := int64(fieldBuf.uint32()) <span class="comment">// ModTime since Unix epoch</span>
+<span id="L483" class="ln">   483&nbsp;&nbsp;</span>			modified = time.Unix(ts, 0)
+<span id="L484" class="ln">   484&nbsp;&nbsp;</span>		case extTimeExtraID:
+<span id="L485" class="ln">   485&nbsp;&nbsp;</span>			if len(fieldBuf) &lt; 5 || fieldBuf.uint8()&amp;1 == 0 {
+<span id="L486" class="ln">   486&nbsp;&nbsp;</span>				continue parseExtras
+<span id="L487" class="ln">   487&nbsp;&nbsp;</span>			}
+<span id="L488" class="ln">   488&nbsp;&nbsp;</span>			ts := int64(fieldBuf.uint32()) <span class="comment">// ModTime since Unix epoch</span>
+<span id="L489" class="ln">   489&nbsp;&nbsp;</span>			modified = time.Unix(ts, 0)
+<span id="L490" class="ln">   490&nbsp;&nbsp;</span>		}
+<span id="L491" class="ln">   491&nbsp;&nbsp;</span>	}
+<span id="L492" class="ln">   492&nbsp;&nbsp;</span>
+<span id="L493" class="ln">   493&nbsp;&nbsp;</span>	msdosModified := msDosTimeToTime(f.ModifiedDate, f.ModifiedTime)
+<span id="L494" class="ln">   494&nbsp;&nbsp;</span>	f.Modified = msdosModified
+<span id="L495" class="ln">   495&nbsp;&nbsp;</span>	if !modified.IsZero() {
+<span id="L496" class="ln">   496&nbsp;&nbsp;</span>		f.Modified = modified.UTC()
+<span id="L497" class="ln">   497&nbsp;&nbsp;</span>
+<span id="L498" class="ln">   498&nbsp;&nbsp;</span>		<span class="comment">// If legacy MS-DOS timestamps are set, we can use the delta between</span>
+<span id="L499" class="ln">   499&nbsp;&nbsp;</span>		<span class="comment">// the legacy and extended versions to estimate timezone offset.</span>
+<span id="L500" class="ln">   500&nbsp;&nbsp;</span>		<span class="comment">//</span>
+<span id="L501" class="ln">   501&nbsp;&nbsp;</span>		<span class="comment">// A non-UTC timezone is always used (even if offset is zero).</span>
+<span id="L502" class="ln">   502&nbsp;&nbsp;</span>		<span class="comment">// Thus, FileHeader.Modified.Location() == time.UTC is useful for</span>
+<span id="L503" class="ln">   503&nbsp;&nbsp;</span>		<span class="comment">// determining whether extended timestamps are present.</span>
+<span id="L504" class="ln">   504&nbsp;&nbsp;</span>		<span class="comment">// This is necessary for users that need to do additional time</span>
+<span id="L505" class="ln">   505&nbsp;&nbsp;</span>		<span class="comment">// calculations when dealing with legacy ZIP formats.</span>
+<span id="L506" class="ln">   506&nbsp;&nbsp;</span>		if f.ModifiedTime != 0 || f.ModifiedDate != 0 {
+<span id="L507" class="ln">   507&nbsp;&nbsp;</span>			f.Modified = modified.In(timeZone(msdosModified.Sub(modified)))
+<span id="L508" class="ln">   508&nbsp;&nbsp;</span>		}
+<span id="L509" class="ln">   509&nbsp;&nbsp;</span>	}
+<span id="L510" class="ln">   510&nbsp;&nbsp;</span>
+<span id="L511" class="ln">   511&nbsp;&nbsp;</span>	<span class="comment">// Assume that uncompressed size 2³²-1 could plausibly happen in</span>
+<span id="L512" class="ln">   512&nbsp;&nbsp;</span>	<span class="comment">// an old zip32 file that was sharding inputs into the largest chunks</span>
+<span id="L513" class="ln">   513&nbsp;&nbsp;</span>	<span class="comment">// possible (or is just malicious; search the web for 42.zip).</span>
+<span id="L514" class="ln">   514&nbsp;&nbsp;</span>	<span class="comment">// If needUSize is true still, it means we didn&#39;t see a zip64 extension.</span>
+<span id="L515" class="ln">   515&nbsp;&nbsp;</span>	<span class="comment">// As long as the compressed size is not also 2³²-1 (implausible)</span>
+<span id="L516" class="ln">   516&nbsp;&nbsp;</span>	<span class="comment">// and the header is not also 2³²-1 (equally implausible),</span>
+<span id="L517" class="ln">   517&nbsp;&nbsp;</span>	<span class="comment">// accept the uncompressed size 2³²-1 as valid.</span>
+<span id="L518" class="ln">   518&nbsp;&nbsp;</span>	<span class="comment">// If nothing else, this keeps archive/zip working with 42.zip.</span>
+<span id="L519" class="ln">   519&nbsp;&nbsp;</span>	_ = needUSize
+<span id="L520" class="ln">   520&nbsp;&nbsp;</span>
+<span id="L521" class="ln">   521&nbsp;&nbsp;</span>	if needCSize || needHeaderOffset {
+<span id="L522" class="ln">   522&nbsp;&nbsp;</span>		return ErrFormat
+<span id="L523" class="ln">   523&nbsp;&nbsp;</span>	}
+<span id="L524" class="ln">   524&nbsp;&nbsp;</span>
+<span id="L525" class="ln">   525&nbsp;&nbsp;</span>	return nil
+<span id="L526" class="ln">   526&nbsp;&nbsp;</span>}
+<span id="L527" class="ln">   527&nbsp;&nbsp;</span>
+<span id="L528" class="ln">   528&nbsp;&nbsp;</span>func readDataDescriptor(r io.Reader, f *File) error {
+<span id="L529" class="ln">   529&nbsp;&nbsp;</span>	var buf [dataDescriptorLen]byte
+<span id="L530" class="ln">   530&nbsp;&nbsp;</span>	<span class="comment">// The spec says: &#34;Although not originally assigned a</span>
+<span id="L531" class="ln">   531&nbsp;&nbsp;</span>	<span class="comment">// signature, the value 0x08074b50 has commonly been adopted</span>
+<span id="L532" class="ln">   532&nbsp;&nbsp;</span>	<span class="comment">// as a signature value for the data descriptor record.</span>
+<span id="L533" class="ln">   533&nbsp;&nbsp;</span>	<span class="comment">// Implementers should be aware that ZIP files may be</span>
+<span id="L534" class="ln">   534&nbsp;&nbsp;</span>	<span class="comment">// encountered with or without this signature marking data</span>
+<span id="L535" class="ln">   535&nbsp;&nbsp;</span>	<span class="comment">// descriptors and should account for either case when reading</span>
+<span id="L536" class="ln">   536&nbsp;&nbsp;</span>	<span class="comment">// ZIP files to ensure compatibility.&#34;</span>
+<span id="L537" class="ln">   537&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L538" class="ln">   538&nbsp;&nbsp;</span>	<span class="comment">// dataDescriptorLen includes the size of the signature but</span>
+<span id="L539" class="ln">   539&nbsp;&nbsp;</span>	<span class="comment">// first read just those 4 bytes to see if it exists.</span>
+<span id="L540" class="ln">   540&nbsp;&nbsp;</span>	if _, err := io.ReadFull(r, buf[:4]); err != nil {
+<span id="L541" class="ln">   541&nbsp;&nbsp;</span>		return err
+<span id="L542" class="ln">   542&nbsp;&nbsp;</span>	}
+<span id="L543" class="ln">   543&nbsp;&nbsp;</span>	off := 0
+<span id="L544" class="ln">   544&nbsp;&nbsp;</span>	maybeSig := readBuf(buf[:4])
+<span id="L545" class="ln">   545&nbsp;&nbsp;</span>	if maybeSig.uint32() != dataDescriptorSignature {
+<span id="L546" class="ln">   546&nbsp;&nbsp;</span>		<span class="comment">// No data descriptor signature. Keep these four</span>
+<span id="L547" class="ln">   547&nbsp;&nbsp;</span>		<span class="comment">// bytes.</span>
+<span id="L548" class="ln">   548&nbsp;&nbsp;</span>		off += 4
+<span id="L549" class="ln">   549&nbsp;&nbsp;</span>	}
+<span id="L550" class="ln">   550&nbsp;&nbsp;</span>	if _, err := io.ReadFull(r, buf[off:12]); err != nil {
+<span id="L551" class="ln">   551&nbsp;&nbsp;</span>		return err
+<span id="L552" class="ln">   552&nbsp;&nbsp;</span>	}
+<span id="L553" class="ln">   553&nbsp;&nbsp;</span>	b := readBuf(buf[:12])
+<span id="L554" class="ln">   554&nbsp;&nbsp;</span>	if b.uint32() != f.CRC32 {
+<span id="L555" class="ln">   555&nbsp;&nbsp;</span>		return ErrChecksum
+<span id="L556" class="ln">   556&nbsp;&nbsp;</span>	}
+<span id="L557" class="ln">   557&nbsp;&nbsp;</span>
+<span id="L558" class="ln">   558&nbsp;&nbsp;</span>	<span class="comment">// The two sizes that follow here can be either 32 bits or 64 bits</span>
+<span id="L559" class="ln">   559&nbsp;&nbsp;</span>	<span class="comment">// but the spec is not very clear on this and different</span>
+<span id="L560" class="ln">   560&nbsp;&nbsp;</span>	<span class="comment">// interpretations has been made causing incompatibilities. We</span>
+<span id="L561" class="ln">   561&nbsp;&nbsp;</span>	<span class="comment">// already have the sizes from the central directory so we can</span>
+<span id="L562" class="ln">   562&nbsp;&nbsp;</span>	<span class="comment">// just ignore these.</span>
+<span id="L563" class="ln">   563&nbsp;&nbsp;</span>
+<span id="L564" class="ln">   564&nbsp;&nbsp;</span>	return nil
+<span id="L565" class="ln">   565&nbsp;&nbsp;</span>}
+<span id="L566" class="ln">   566&nbsp;&nbsp;</span>
+<span id="L567" class="ln">   567&nbsp;&nbsp;</span>func readDirectoryEnd(r io.ReaderAt, size int64) (dir *directoryEnd, baseOffset int64, err error) {
+<span id="L568" class="ln">   568&nbsp;&nbsp;</span>	<span class="comment">// look for directoryEndSignature in the last 1k, then in the last 65k</span>
+<span id="L569" class="ln">   569&nbsp;&nbsp;</span>	var buf []byte
+<span id="L570" class="ln">   570&nbsp;&nbsp;</span>	var directoryEndOffset int64
+<span id="L571" class="ln">   571&nbsp;&nbsp;</span>	for i, bLen := range []int64{1024, 65 * 1024} {
+<span id="L572" class="ln">   572&nbsp;&nbsp;</span>		if bLen &gt; size {
+<span id="L573" class="ln">   573&nbsp;&nbsp;</span>			bLen = size
+<span id="L574" class="ln">   574&nbsp;&nbsp;</span>		}
+<span id="L575" class="ln">   575&nbsp;&nbsp;</span>		buf = make([]byte, int(bLen))
+<span id="L576" class="ln">   576&nbsp;&nbsp;</span>		if _, err := r.ReadAt(buf, size-bLen); err != nil &amp;&amp; err != io.EOF {
+<span id="L577" class="ln">   577&nbsp;&nbsp;</span>			return nil, 0, err
+<span id="L578" class="ln">   578&nbsp;&nbsp;</span>		}
+<span id="L579" class="ln">   579&nbsp;&nbsp;</span>		if p := findSignatureInBlock(buf); p &gt;= 0 {
+<span id="L580" class="ln">   580&nbsp;&nbsp;</span>			buf = buf[p:]
+<span id="L581" class="ln">   581&nbsp;&nbsp;</span>			directoryEndOffset = size - bLen + int64(p)
+<span id="L582" class="ln">   582&nbsp;&nbsp;</span>			break
+<span id="L583" class="ln">   583&nbsp;&nbsp;</span>		}
+<span id="L584" class="ln">   584&nbsp;&nbsp;</span>		if i == 1 || bLen == size {
+<span id="L585" class="ln">   585&nbsp;&nbsp;</span>			return nil, 0, ErrFormat
+<span id="L586" class="ln">   586&nbsp;&nbsp;</span>		}
+<span id="L587" class="ln">   587&nbsp;&nbsp;</span>	}
+<span id="L588" class="ln">   588&nbsp;&nbsp;</span>
+<span id="L589" class="ln">   589&nbsp;&nbsp;</span>	<span class="comment">// read header into struct</span>
+<span id="L590" class="ln">   590&nbsp;&nbsp;</span>	b := readBuf(buf[4:]) <span class="comment">// skip signature</span>
+<span id="L591" class="ln">   591&nbsp;&nbsp;</span>	d := &amp;directoryEnd{
+<span id="L592" class="ln">   592&nbsp;&nbsp;</span>		diskNbr:            uint32(b.uint16()),
+<span id="L593" class="ln">   593&nbsp;&nbsp;</span>		dirDiskNbr:         uint32(b.uint16()),
+<span id="L594" class="ln">   594&nbsp;&nbsp;</span>		dirRecordsThisDisk: uint64(b.uint16()),
+<span id="L595" class="ln">   595&nbsp;&nbsp;</span>		directoryRecords:   uint64(b.uint16()),
+<span id="L596" class="ln">   596&nbsp;&nbsp;</span>		directorySize:      uint64(b.uint32()),
+<span id="L597" class="ln">   597&nbsp;&nbsp;</span>		directoryOffset:    uint64(b.uint32()),
+<span id="L598" class="ln">   598&nbsp;&nbsp;</span>		commentLen:         b.uint16(),
+<span id="L599" class="ln">   599&nbsp;&nbsp;</span>	}
+<span id="L600" class="ln">   600&nbsp;&nbsp;</span>	l := int(d.commentLen)
+<span id="L601" class="ln">   601&nbsp;&nbsp;</span>	if l &gt; len(b) {
+<span id="L602" class="ln">   602&nbsp;&nbsp;</span>		return nil, 0, errors.New(&#34;zip: invalid comment length&#34;)
+<span id="L603" class="ln">   603&nbsp;&nbsp;</span>	}
+<span id="L604" class="ln">   604&nbsp;&nbsp;</span>	d.comment = string(b[:l])
+<span id="L605" class="ln">   605&nbsp;&nbsp;</span>
+<span id="L606" class="ln">   606&nbsp;&nbsp;</span>	<span class="comment">// These values mean that the file can be a zip64 file</span>
+<span id="L607" class="ln">   607&nbsp;&nbsp;</span>	if d.directoryRecords == 0xffff || d.directorySize == 0xffff || d.directoryOffset == 0xffffffff {
+<span id="L608" class="ln">   608&nbsp;&nbsp;</span>		p, err := findDirectory64End(r, directoryEndOffset)
+<span id="L609" class="ln">   609&nbsp;&nbsp;</span>		if err == nil &amp;&amp; p &gt;= 0 {
+<span id="L610" class="ln">   610&nbsp;&nbsp;</span>			directoryEndOffset = p
+<span id="L611" class="ln">   611&nbsp;&nbsp;</span>			err = readDirectory64End(r, p, d)
+<span id="L612" class="ln">   612&nbsp;&nbsp;</span>		}
+<span id="L613" class="ln">   613&nbsp;&nbsp;</span>		if err != nil {
+<span id="L614" class="ln">   614&nbsp;&nbsp;</span>			return nil, 0, err
+<span id="L615" class="ln">   615&nbsp;&nbsp;</span>		}
+<span id="L616" class="ln">   616&nbsp;&nbsp;</span>	}
+<span id="L617" class="ln">   617&nbsp;&nbsp;</span>
+<span id="L618" class="ln">   618&nbsp;&nbsp;</span>	maxInt64 := uint64(1&lt;&lt;63 - 1)
+<span id="L619" class="ln">   619&nbsp;&nbsp;</span>	if d.directorySize &gt; maxInt64 || d.directoryOffset &gt; maxInt64 {
+<span id="L620" class="ln">   620&nbsp;&nbsp;</span>		return nil, 0, ErrFormat
+<span id="L621" class="ln">   621&nbsp;&nbsp;</span>	}
+<span id="L622" class="ln">   622&nbsp;&nbsp;</span>
+<span id="L623" class="ln">   623&nbsp;&nbsp;</span>	baseOffset = directoryEndOffset - int64(d.directorySize) - int64(d.directoryOffset)
+<span id="L624" class="ln">   624&nbsp;&nbsp;</span>
+<span id="L625" class="ln">   625&nbsp;&nbsp;</span>	<span class="comment">// Make sure directoryOffset points to somewhere in our file.</span>
+<span id="L626" class="ln">   626&nbsp;&nbsp;</span>	if o := baseOffset + int64(d.directoryOffset); o &lt; 0 || o &gt;= size {
+<span id="L627" class="ln">   627&nbsp;&nbsp;</span>		return nil, 0, ErrFormat
+<span id="L628" class="ln">   628&nbsp;&nbsp;</span>	}
+<span id="L629" class="ln">   629&nbsp;&nbsp;</span>
+<span id="L630" class="ln">   630&nbsp;&nbsp;</span>	<span class="comment">// If the directory end data tells us to use a non-zero baseOffset,</span>
+<span id="L631" class="ln">   631&nbsp;&nbsp;</span>	<span class="comment">// but we would find a valid directory entry if we assume that the</span>
+<span id="L632" class="ln">   632&nbsp;&nbsp;</span>	<span class="comment">// baseOffset is 0, then just use a baseOffset of 0.</span>
+<span id="L633" class="ln">   633&nbsp;&nbsp;</span>	<span class="comment">// We&#39;ve seen files in which the directory end data gives us</span>
+<span id="L634" class="ln">   634&nbsp;&nbsp;</span>	<span class="comment">// an incorrect baseOffset.</span>
+<span id="L635" class="ln">   635&nbsp;&nbsp;</span>	if baseOffset &gt; 0 {
+<span id="L636" class="ln">   636&nbsp;&nbsp;</span>		off := int64(d.directoryOffset)
+<span id="L637" class="ln">   637&nbsp;&nbsp;</span>		rs := io.NewSectionReader(r, off, size-off)
+<span id="L638" class="ln">   638&nbsp;&nbsp;</span>		if readDirectoryHeader(&amp;File{}, rs) == nil {
+<span id="L639" class="ln">   639&nbsp;&nbsp;</span>			baseOffset = 0
+<span id="L640" class="ln">   640&nbsp;&nbsp;</span>		}
+<span id="L641" class="ln">   641&nbsp;&nbsp;</span>	}
+<span id="L642" class="ln">   642&nbsp;&nbsp;</span>
+<span id="L643" class="ln">   643&nbsp;&nbsp;</span>	return d, baseOffset, nil
+<span id="L644" class="ln">   644&nbsp;&nbsp;</span>}
+<span id="L645" class="ln">   645&nbsp;&nbsp;</span>
+<span id="L646" class="ln">   646&nbsp;&nbsp;</span><span class="comment">// findDirectory64End tries to read the zip64 locator just before the</span>
+<span id="L647" class="ln">   647&nbsp;&nbsp;</span><span class="comment">// directory end and returns the offset of the zip64 directory end if</span>
+<span id="L648" class="ln">   648&nbsp;&nbsp;</span><span class="comment">// found.</span>
+<span id="L649" class="ln">   649&nbsp;&nbsp;</span>func findDirectory64End(r io.ReaderAt, directoryEndOffset int64) (int64, error) {
+<span id="L650" class="ln">   650&nbsp;&nbsp;</span>	locOffset := directoryEndOffset - directory64LocLen
+<span id="L651" class="ln">   651&nbsp;&nbsp;</span>	if locOffset &lt; 0 {
+<span id="L652" class="ln">   652&nbsp;&nbsp;</span>		return -1, nil <span class="comment">// no need to look for a header outside the file</span>
+<span id="L653" class="ln">   653&nbsp;&nbsp;</span>	}
+<span id="L654" class="ln">   654&nbsp;&nbsp;</span>	buf := make([]byte, directory64LocLen)
+<span id="L655" class="ln">   655&nbsp;&nbsp;</span>	if _, err := r.ReadAt(buf, locOffset); err != nil {
+<span id="L656" class="ln">   656&nbsp;&nbsp;</span>		return -1, err
+<span id="L657" class="ln">   657&nbsp;&nbsp;</span>	}
+<span id="L658" class="ln">   658&nbsp;&nbsp;</span>	b := readBuf(buf)
+<span id="L659" class="ln">   659&nbsp;&nbsp;</span>	if sig := b.uint32(); sig != directory64LocSignature {
+<span id="L660" class="ln">   660&nbsp;&nbsp;</span>		return -1, nil
+<span id="L661" class="ln">   661&nbsp;&nbsp;</span>	}
+<span id="L662" class="ln">   662&nbsp;&nbsp;</span>	if b.uint32() != 0 { <span class="comment">// number of the disk with the start of the zip64 end of central directory</span>
+<span id="L663" class="ln">   663&nbsp;&nbsp;</span>		return -1, nil <span class="comment">// the file is not a valid zip64-file</span>
+<span id="L664" class="ln">   664&nbsp;&nbsp;</span>	}
+<span id="L665" class="ln">   665&nbsp;&nbsp;</span>	p := b.uint64()      <span class="comment">// relative offset of the zip64 end of central directory record</span>
+<span id="L666" class="ln">   666&nbsp;&nbsp;</span>	if b.uint32() != 1 { <span class="comment">// total number of disks</span>
+<span id="L667" class="ln">   667&nbsp;&nbsp;</span>		return -1, nil <span class="comment">// the file is not a valid zip64-file</span>
+<span id="L668" class="ln">   668&nbsp;&nbsp;</span>	}
+<span id="L669" class="ln">   669&nbsp;&nbsp;</span>	return int64(p), nil
+<span id="L670" class="ln">   670&nbsp;&nbsp;</span>}
+<span id="L671" class="ln">   671&nbsp;&nbsp;</span>
+<span id="L672" class="ln">   672&nbsp;&nbsp;</span><span class="comment">// readDirectory64End reads the zip64 directory end and updates the</span>
+<span id="L673" class="ln">   673&nbsp;&nbsp;</span><span class="comment">// directory end with the zip64 directory end values.</span>
+<span id="L674" class="ln">   674&nbsp;&nbsp;</span>func readDirectory64End(r io.ReaderAt, offset int64, d *directoryEnd) (err error) {
+<span id="L675" class="ln">   675&nbsp;&nbsp;</span>	buf := make([]byte, directory64EndLen)
+<span id="L676" class="ln">   676&nbsp;&nbsp;</span>	if _, err := r.ReadAt(buf, offset); err != nil {
+<span id="L677" class="ln">   677&nbsp;&nbsp;</span>		return err
+<span id="L678" class="ln">   678&nbsp;&nbsp;</span>	}
+<span id="L679" class="ln">   679&nbsp;&nbsp;</span>
+<span id="L680" class="ln">   680&nbsp;&nbsp;</span>	b := readBuf(buf)
+<span id="L681" class="ln">   681&nbsp;&nbsp;</span>	if sig := b.uint32(); sig != directory64EndSignature {
+<span id="L682" class="ln">   682&nbsp;&nbsp;</span>		return ErrFormat
+<span id="L683" class="ln">   683&nbsp;&nbsp;</span>	}
+<span id="L684" class="ln">   684&nbsp;&nbsp;</span>
+<span id="L685" class="ln">   685&nbsp;&nbsp;</span>	b = b[12:]                        <span class="comment">// skip dir size, version and version needed (uint64 + 2x uint16)</span>
+<span id="L686" class="ln">   686&nbsp;&nbsp;</span>	d.diskNbr = b.uint32()            <span class="comment">// number of this disk</span>
+<span id="L687" class="ln">   687&nbsp;&nbsp;</span>	d.dirDiskNbr = b.uint32()         <span class="comment">// number of the disk with the start of the central directory</span>
+<span id="L688" class="ln">   688&nbsp;&nbsp;</span>	d.dirRecordsThisDisk = b.uint64() <span class="comment">// total number of entries in the central directory on this disk</span>
+<span id="L689" class="ln">   689&nbsp;&nbsp;</span>	d.directoryRecords = b.uint64()   <span class="comment">// total number of entries in the central directory</span>
+<span id="L690" class="ln">   690&nbsp;&nbsp;</span>	d.directorySize = b.uint64()      <span class="comment">// size of the central directory</span>
+<span id="L691" class="ln">   691&nbsp;&nbsp;</span>	d.directoryOffset = b.uint64()    <span class="comment">// offset of start of central directory with respect to the starting disk number</span>
+<span id="L692" class="ln">   692&nbsp;&nbsp;</span>
+<span id="L693" class="ln">   693&nbsp;&nbsp;</span>	return nil
+<span id="L694" class="ln">   694&nbsp;&nbsp;</span>}
+<span id="L695" class="ln">   695&nbsp;&nbsp;</span>
+<span id="L696" class="ln">   696&nbsp;&nbsp;</span>func findSignatureInBlock(b []byte) int {
+<span id="L697" class="ln">   697&nbsp;&nbsp;</span>	for i := len(b) - directoryEndLen; i &gt;= 0; i-- {
+<span id="L698" class="ln">   698&nbsp;&nbsp;</span>		<span class="comment">// defined from directoryEndSignature in struct.go</span>
+<span id="L699" class="ln">   699&nbsp;&nbsp;</span>		if b[i] == &#39;P&#39; &amp;&amp; b[i+1] == &#39;K&#39; &amp;&amp; b[i+2] == 0x05 &amp;&amp; b[i+3] == 0x06 {
+<span id="L700" class="ln">   700&nbsp;&nbsp;</span>			<span class="comment">// n is length of comment</span>
+<span id="L701" class="ln">   701&nbsp;&nbsp;</span>			n := int(b[i+directoryEndLen-2]) | int(b[i+directoryEndLen-1])&lt;&lt;8
+<span id="L702" class="ln">   702&nbsp;&nbsp;</span>			if n+directoryEndLen+i &gt; len(b) {
+<span id="L703" class="ln">   703&nbsp;&nbsp;</span>				<span class="comment">// Truncated comment.</span>
+<span id="L704" class="ln">   704&nbsp;&nbsp;</span>				<span class="comment">// Some parsers (such as Info-ZIP) ignore the truncated comment</span>
+<span id="L705" class="ln">   705&nbsp;&nbsp;</span>				<span class="comment">// rather than treating it as a hard error.</span>
+<span id="L706" class="ln">   706&nbsp;&nbsp;</span>				return -1
+<span id="L707" class="ln">   707&nbsp;&nbsp;</span>			}
+<span id="L708" class="ln">   708&nbsp;&nbsp;</span>			return i
+<span id="L709" class="ln">   709&nbsp;&nbsp;</span>		}
+<span id="L710" class="ln">   710&nbsp;&nbsp;</span>	}
+<span id="L711" class="ln">   711&nbsp;&nbsp;</span>	return -1
+<span id="L712" class="ln">   712&nbsp;&nbsp;</span>}
+<span id="L713" class="ln">   713&nbsp;&nbsp;</span>
+<span id="L714" class="ln">   714&nbsp;&nbsp;</span>type readBuf []byte
+<span id="L715" class="ln">   715&nbsp;&nbsp;</span>
+<span id="L716" class="ln">   716&nbsp;&nbsp;</span>func (b *readBuf) uint8() uint8 {
+<span id="L717" class="ln">   717&nbsp;&nbsp;</span>	v := (*b)[0]
+<span id="L718" class="ln">   718&nbsp;&nbsp;</span>	*b = (*b)[1:]
+<span id="L719" class="ln">   719&nbsp;&nbsp;</span>	return v
+<span id="L720" class="ln">   720&nbsp;&nbsp;</span>}
+<span id="L721" class="ln">   721&nbsp;&nbsp;</span>
+<span id="L722" class="ln">   722&nbsp;&nbsp;</span>func (b *readBuf) uint16() uint16 {
+<span id="L723" class="ln">   723&nbsp;&nbsp;</span>	v := binary.LittleEndian.Uint16(*b)
+<span id="L724" class="ln">   724&nbsp;&nbsp;</span>	*b = (*b)[2:]
+<span id="L725" class="ln">   725&nbsp;&nbsp;</span>	return v
+<span id="L726" class="ln">   726&nbsp;&nbsp;</span>}
+<span id="L727" class="ln">   727&nbsp;&nbsp;</span>
+<span id="L728" class="ln">   728&nbsp;&nbsp;</span>func (b *readBuf) uint32() uint32 {
+<span id="L729" class="ln">   729&nbsp;&nbsp;</span>	v := binary.LittleEndian.Uint32(*b)
+<span id="L730" class="ln">   730&nbsp;&nbsp;</span>	*b = (*b)[4:]
+<span id="L731" class="ln">   731&nbsp;&nbsp;</span>	return v
+<span id="L732" class="ln">   732&nbsp;&nbsp;</span>}
+<span id="L733" class="ln">   733&nbsp;&nbsp;</span>
+<span id="L734" class="ln">   734&nbsp;&nbsp;</span>func (b *readBuf) uint64() uint64 {
+<span id="L735" class="ln">   735&nbsp;&nbsp;</span>	v := binary.LittleEndian.Uint64(*b)
+<span id="L736" class="ln">   736&nbsp;&nbsp;</span>	*b = (*b)[8:]
+<span id="L737" class="ln">   737&nbsp;&nbsp;</span>	return v
+<span id="L738" class="ln">   738&nbsp;&nbsp;</span>}
+<span id="L739" class="ln">   739&nbsp;&nbsp;</span>
+<span id="L740" class="ln">   740&nbsp;&nbsp;</span>func (b *readBuf) sub(n int) readBuf {
+<span id="L741" class="ln">   741&nbsp;&nbsp;</span>	b2 := (*b)[:n]
+<span id="L742" class="ln">   742&nbsp;&nbsp;</span>	*b = (*b)[n:]
+<span id="L743" class="ln">   743&nbsp;&nbsp;</span>	return b2
+<span id="L744" class="ln">   744&nbsp;&nbsp;</span>}
+<span id="L745" class="ln">   745&nbsp;&nbsp;</span>
+<span id="L746" class="ln">   746&nbsp;&nbsp;</span><span class="comment">// A fileListEntry is a File and its ename.</span>
+<span id="L747" class="ln">   747&nbsp;&nbsp;</span><span class="comment">// If file == nil, the fileListEntry describes a directory without metadata.</span>
+<span id="L748" class="ln">   748&nbsp;&nbsp;</span>type fileListEntry struct {
+<span id="L749" class="ln">   749&nbsp;&nbsp;</span>	name  string
+<span id="L750" class="ln">   750&nbsp;&nbsp;</span>	file  *File
+<span id="L751" class="ln">   751&nbsp;&nbsp;</span>	isDir bool
+<span id="L752" class="ln">   752&nbsp;&nbsp;</span>	isDup bool
+<span id="L753" class="ln">   753&nbsp;&nbsp;</span>}
+<span id="L754" class="ln">   754&nbsp;&nbsp;</span>
+<span id="L755" class="ln">   755&nbsp;&nbsp;</span>type fileInfoDirEntry interface {
+<span id="L756" class="ln">   756&nbsp;&nbsp;</span>	fs.FileInfo
+<span id="L757" class="ln">   757&nbsp;&nbsp;</span>	fs.DirEntry
+<span id="L758" class="ln">   758&nbsp;&nbsp;</span>}
+<span id="L759" class="ln">   759&nbsp;&nbsp;</span>
+<span id="L760" class="ln">   760&nbsp;&nbsp;</span>func (f *fileListEntry) stat() (fileInfoDirEntry, error) {
+<span id="L761" class="ln">   761&nbsp;&nbsp;</span>	if f.isDup {
+<span id="L762" class="ln">   762&nbsp;&nbsp;</span>		return nil, errors.New(f.name + &#34;: duplicate entries in zip file&#34;)
+<span id="L763" class="ln">   763&nbsp;&nbsp;</span>	}
+<span id="L764" class="ln">   764&nbsp;&nbsp;</span>	if !f.isDir {
+<span id="L765" class="ln">   765&nbsp;&nbsp;</span>		return headerFileInfo{&amp;f.file.FileHeader}, nil
+<span id="L766" class="ln">   766&nbsp;&nbsp;</span>	}
+<span id="L767" class="ln">   767&nbsp;&nbsp;</span>	return f, nil
+<span id="L768" class="ln">   768&nbsp;&nbsp;</span>}
+<span id="L769" class="ln">   769&nbsp;&nbsp;</span>
+<span id="L770" class="ln">   770&nbsp;&nbsp;</span><span class="comment">// Only used for directories.</span>
+<span id="L771" class="ln">   771&nbsp;&nbsp;</span>func (f *fileListEntry) Name() string      { _, elem, _ := split(f.name); return elem }
+<span id="L772" class="ln">   772&nbsp;&nbsp;</span>func (f *fileListEntry) Size() int64       { return 0 }
+<span id="L773" class="ln">   773&nbsp;&nbsp;</span>func (f *fileListEntry) Mode() fs.FileMode { return fs.ModeDir | 0555 }
+<span id="L774" class="ln">   774&nbsp;&nbsp;</span>func (f *fileListEntry) Type() fs.FileMode { return fs.ModeDir }
+<span id="L775" class="ln">   775&nbsp;&nbsp;</span>func (f *fileListEntry) IsDir() bool       { return true }
+<span id="L776" class="ln">   776&nbsp;&nbsp;</span>func (f *fileListEntry) Sys() any          { return nil }
+<span id="L777" class="ln">   777&nbsp;&nbsp;</span>
+<span id="L778" class="ln">   778&nbsp;&nbsp;</span>func (f *fileListEntry) ModTime() time.Time {
+<span id="L779" class="ln">   779&nbsp;&nbsp;</span>	if f.file == nil {
+<span id="L780" class="ln">   780&nbsp;&nbsp;</span>		return time.Time{}
+<span id="L781" class="ln">   781&nbsp;&nbsp;</span>	}
+<span id="L782" class="ln">   782&nbsp;&nbsp;</span>	return f.file.FileHeader.Modified.UTC()
+<span id="L783" class="ln">   783&nbsp;&nbsp;</span>}
+<span id="L784" class="ln">   784&nbsp;&nbsp;</span>
+<span id="L785" class="ln">   785&nbsp;&nbsp;</span>func (f *fileListEntry) Info() (fs.FileInfo, error) { return f, nil }
+<span id="L786" class="ln">   786&nbsp;&nbsp;</span>
+<span id="L787" class="ln">   787&nbsp;&nbsp;</span>func (f *fileListEntry) String() string {
+<span id="L788" class="ln">   788&nbsp;&nbsp;</span>	return fs.FormatDirEntry(f)
+<span id="L789" class="ln">   789&nbsp;&nbsp;</span>}
+<span id="L790" class="ln">   790&nbsp;&nbsp;</span>
+<span id="L791" class="ln">   791&nbsp;&nbsp;</span><span class="comment">// toValidName coerces name to be a valid name for fs.FS.Open.</span>
+<span id="L792" class="ln">   792&nbsp;&nbsp;</span>func toValidName(name string) string {
+<span id="L793" class="ln">   793&nbsp;&nbsp;</span>	name = strings.ReplaceAll(name, `\`, `/`)
+<span id="L794" class="ln">   794&nbsp;&nbsp;</span>	p := path.Clean(name)
+<span id="L795" class="ln">   795&nbsp;&nbsp;</span>
+<span id="L796" class="ln">   796&nbsp;&nbsp;</span>	p = strings.TrimPrefix(p, &#34;/&#34;)
+<span id="L797" class="ln">   797&nbsp;&nbsp;</span>
+<span id="L798" class="ln">   798&nbsp;&nbsp;</span>	for strings.HasPrefix(p, &#34;../&#34;) {
+<span id="L799" class="ln">   799&nbsp;&nbsp;</span>		p = p[len(&#34;../&#34;):]
+<span id="L800" class="ln">   800&nbsp;&nbsp;</span>	}
+<span id="L801" class="ln">   801&nbsp;&nbsp;</span>
+<span id="L802" class="ln">   802&nbsp;&nbsp;</span>	return p
+<span id="L803" class="ln">   803&nbsp;&nbsp;</span>}
+<span id="L804" class="ln">   804&nbsp;&nbsp;</span>
+<span id="L805" class="ln">   805&nbsp;&nbsp;</span>func (r *Reader) initFileList() {
+<span id="L806" class="ln">   806&nbsp;&nbsp;</span>	r.fileListOnce.Do(func() {
+<span id="L807" class="ln">   807&nbsp;&nbsp;</span>		<span class="comment">// files and knownDirs map from a file/directory name</span>
+<span id="L808" class="ln">   808&nbsp;&nbsp;</span>		<span class="comment">// to an index into the r.fileList entry that we are</span>
+<span id="L809" class="ln">   809&nbsp;&nbsp;</span>		<span class="comment">// building. They are used to mark duplicate entries.</span>
+<span id="L810" class="ln">   810&nbsp;&nbsp;</span>		files := make(map[string]int)
+<span id="L811" class="ln">   811&nbsp;&nbsp;</span>		knownDirs := make(map[string]int)
+<span id="L812" class="ln">   812&nbsp;&nbsp;</span>
+<span id="L813" class="ln">   813&nbsp;&nbsp;</span>		<span class="comment">// dirs[name] is true if name is known to be a directory,</span>
+<span id="L814" class="ln">   814&nbsp;&nbsp;</span>		<span class="comment">// because it appears as a prefix in a path.</span>
+<span id="L815" class="ln">   815&nbsp;&nbsp;</span>		dirs := make(map[string]bool)
+<span id="L816" class="ln">   816&nbsp;&nbsp;</span>
+<span id="L817" class="ln">   817&nbsp;&nbsp;</span>		for _, file := range r.File {
+<span id="L818" class="ln">   818&nbsp;&nbsp;</span>			isDir := len(file.Name) &gt; 0 &amp;&amp; file.Name[len(file.Name)-1] == &#39;/&#39;
+<span id="L819" class="ln">   819&nbsp;&nbsp;</span>			name := toValidName(file.Name)
+<span id="L820" class="ln">   820&nbsp;&nbsp;</span>			if name == &#34;&#34; {
+<span id="L821" class="ln">   821&nbsp;&nbsp;</span>				continue
+<span id="L822" class="ln">   822&nbsp;&nbsp;</span>			}
+<span id="L823" class="ln">   823&nbsp;&nbsp;</span>
+<span id="L824" class="ln">   824&nbsp;&nbsp;</span>			if idx, ok := files[name]; ok {
+<span id="L825" class="ln">   825&nbsp;&nbsp;</span>				r.fileList[idx].isDup = true
+<span id="L826" class="ln">   826&nbsp;&nbsp;</span>				continue
+<span id="L827" class="ln">   827&nbsp;&nbsp;</span>			}
+<span id="L828" class="ln">   828&nbsp;&nbsp;</span>			if idx, ok := knownDirs[name]; ok {
+<span id="L829" class="ln">   829&nbsp;&nbsp;</span>				r.fileList[idx].isDup = true
+<span id="L830" class="ln">   830&nbsp;&nbsp;</span>				continue
+<span id="L831" class="ln">   831&nbsp;&nbsp;</span>			}
+<span id="L832" class="ln">   832&nbsp;&nbsp;</span>
+<span id="L833" class="ln">   833&nbsp;&nbsp;</span>			for dir := path.Dir(name); dir != &#34;.&#34;; dir = path.Dir(dir) {
+<span id="L834" class="ln">   834&nbsp;&nbsp;</span>				dirs[dir] = true
+<span id="L835" class="ln">   835&nbsp;&nbsp;</span>			}
+<span id="L836" class="ln">   836&nbsp;&nbsp;</span>
+<span id="L837" class="ln">   837&nbsp;&nbsp;</span>			idx := len(r.fileList)
+<span id="L838" class="ln">   838&nbsp;&nbsp;</span>			entry := fileListEntry{
+<span id="L839" class="ln">   839&nbsp;&nbsp;</span>				name:  name,
+<span id="L840" class="ln">   840&nbsp;&nbsp;</span>				file:  file,
+<span id="L841" class="ln">   841&nbsp;&nbsp;</span>				isDir: isDir,
+<span id="L842" class="ln">   842&nbsp;&nbsp;</span>			}
+<span id="L843" class="ln">   843&nbsp;&nbsp;</span>			r.fileList = append(r.fileList, entry)
+<span id="L844" class="ln">   844&nbsp;&nbsp;</span>			if isDir {
+<span id="L845" class="ln">   845&nbsp;&nbsp;</span>				knownDirs[name] = idx
+<span id="L846" class="ln">   846&nbsp;&nbsp;</span>			} else {
+<span id="L847" class="ln">   847&nbsp;&nbsp;</span>				files[name] = idx
+<span id="L848" class="ln">   848&nbsp;&nbsp;</span>			}
+<span id="L849" class="ln">   849&nbsp;&nbsp;</span>		}
+<span id="L850" class="ln">   850&nbsp;&nbsp;</span>		for dir := range dirs {
+<span id="L851" class="ln">   851&nbsp;&nbsp;</span>			if _, ok := knownDirs[dir]; !ok {
+<span id="L852" class="ln">   852&nbsp;&nbsp;</span>				if idx, ok := files[dir]; ok {
+<span id="L853" class="ln">   853&nbsp;&nbsp;</span>					r.fileList[idx].isDup = true
+<span id="L854" class="ln">   854&nbsp;&nbsp;</span>				} else {
+<span id="L855" class="ln">   855&nbsp;&nbsp;</span>					entry := fileListEntry{
+<span id="L856" class="ln">   856&nbsp;&nbsp;</span>						name:  dir,
+<span id="L857" class="ln">   857&nbsp;&nbsp;</span>						file:  nil,
+<span id="L858" class="ln">   858&nbsp;&nbsp;</span>						isDir: true,
+<span id="L859" class="ln">   859&nbsp;&nbsp;</span>					}
+<span id="L860" class="ln">   860&nbsp;&nbsp;</span>					r.fileList = append(r.fileList, entry)
+<span id="L861" class="ln">   861&nbsp;&nbsp;</span>				}
+<span id="L862" class="ln">   862&nbsp;&nbsp;</span>			}
+<span id="L863" class="ln">   863&nbsp;&nbsp;</span>		}
+<span id="L864" class="ln">   864&nbsp;&nbsp;</span>
+<span id="L865" class="ln">   865&nbsp;&nbsp;</span>		sort.Slice(r.fileList, func(i, j int) bool { return fileEntryLess(r.fileList[i].name, r.fileList[j].name) })
+<span id="L866" class="ln">   866&nbsp;&nbsp;</span>	})
+<span id="L867" class="ln">   867&nbsp;&nbsp;</span>}
+<span id="L868" class="ln">   868&nbsp;&nbsp;</span>
+<span id="L869" class="ln">   869&nbsp;&nbsp;</span>func fileEntryLess(x, y string) bool {
+<span id="L870" class="ln">   870&nbsp;&nbsp;</span>	xdir, xelem, _ := split(x)
+<span id="L871" class="ln">   871&nbsp;&nbsp;</span>	ydir, yelem, _ := split(y)
+<span id="L872" class="ln">   872&nbsp;&nbsp;</span>	return xdir &lt; ydir || xdir == ydir &amp;&amp; xelem &lt; yelem
+<span id="L873" class="ln">   873&nbsp;&nbsp;</span>}
+<span id="L874" class="ln">   874&nbsp;&nbsp;</span>
+<span id="L875" class="ln">   875&nbsp;&nbsp;</span><span class="comment">// Open opens the named file in the ZIP archive,</span>
+<span id="L876" class="ln">   876&nbsp;&nbsp;</span><span class="comment">// using the semantics of fs.FS.Open:</span>
+<span id="L877" class="ln">   877&nbsp;&nbsp;</span><span class="comment">// paths are always slash separated, with no</span>
+<span id="L878" class="ln">   878&nbsp;&nbsp;</span><span class="comment">// leading / or ../ elements.</span>
+<span id="L879" class="ln">   879&nbsp;&nbsp;</span>func (r *Reader) Open(name string) (fs.File, error) {
+<span id="L880" class="ln">   880&nbsp;&nbsp;</span>	r.initFileList()
+<span id="L881" class="ln">   881&nbsp;&nbsp;</span>
+<span id="L882" class="ln">   882&nbsp;&nbsp;</span>	if !fs.ValidPath(name) {
+<span id="L883" class="ln">   883&nbsp;&nbsp;</span>		return nil, &amp;fs.PathError{Op: &#34;open&#34;, Path: name, Err: fs.ErrInvalid}
+<span id="L884" class="ln">   884&nbsp;&nbsp;</span>	}
+<span id="L885" class="ln">   885&nbsp;&nbsp;</span>	e := r.openLookup(name)
+<span id="L886" class="ln">   886&nbsp;&nbsp;</span>	if e == nil {
+<span id="L887" class="ln">   887&nbsp;&nbsp;</span>		return nil, &amp;fs.PathError{Op: &#34;open&#34;, Path: name, Err: fs.ErrNotExist}
+<span id="L888" class="ln">   888&nbsp;&nbsp;</span>	}
+<span id="L889" class="ln">   889&nbsp;&nbsp;</span>	if e.isDir {
+<span id="L890" class="ln">   890&nbsp;&nbsp;</span>		return &amp;openDir{e, r.openReadDir(name), 0}, nil
+<span id="L891" class="ln">   891&nbsp;&nbsp;</span>	}
+<span id="L892" class="ln">   892&nbsp;&nbsp;</span>	rc, err := e.file.Open()
+<span id="L893" class="ln">   893&nbsp;&nbsp;</span>	if err != nil {
+<span id="L894" class="ln">   894&nbsp;&nbsp;</span>		return nil, err
+<span id="L895" class="ln">   895&nbsp;&nbsp;</span>	}
+<span id="L896" class="ln">   896&nbsp;&nbsp;</span>	return rc.(fs.File), nil
+<span id="L897" class="ln">   897&nbsp;&nbsp;</span>}
+<span id="L898" class="ln">   898&nbsp;&nbsp;</span>
+<span id="L899" class="ln">   899&nbsp;&nbsp;</span>func split(name string) (dir, elem string, isDir bool) {
+<span id="L900" class="ln">   900&nbsp;&nbsp;</span>	if len(name) &gt; 0 &amp;&amp; name[len(name)-1] == &#39;/&#39; {
+<span id="L901" class="ln">   901&nbsp;&nbsp;</span>		isDir = true
+<span id="L902" class="ln">   902&nbsp;&nbsp;</span>		name = name[:len(name)-1]
+<span id="L903" class="ln">   903&nbsp;&nbsp;</span>	}
+<span id="L904" class="ln">   904&nbsp;&nbsp;</span>	i := len(name) - 1
+<span id="L905" class="ln">   905&nbsp;&nbsp;</span>	for i &gt;= 0 &amp;&amp; name[i] != &#39;/&#39; {
+<span id="L906" class="ln">   906&nbsp;&nbsp;</span>		i--
+<span id="L907" class="ln">   907&nbsp;&nbsp;</span>	}
+<span id="L908" class="ln">   908&nbsp;&nbsp;</span>	if i &lt; 0 {
+<span id="L909" class="ln">   909&nbsp;&nbsp;</span>		return &#34;.&#34;, name, isDir
+<span id="L910" class="ln">   910&nbsp;&nbsp;</span>	}
+<span id="L911" class="ln">   911&nbsp;&nbsp;</span>	return name[:i], name[i+1:], isDir
+<span id="L912" class="ln">   912&nbsp;&nbsp;</span>}
+<span id="L913" class="ln">   913&nbsp;&nbsp;</span>
+<span id="L914" class="ln">   914&nbsp;&nbsp;</span>var dotFile = &amp;fileListEntry{name: &#34;./&#34;, isDir: true}
+<span id="L915" class="ln">   915&nbsp;&nbsp;</span>
+<span id="L916" class="ln">   916&nbsp;&nbsp;</span>func (r *Reader) openLookup(name string) *fileListEntry {
+<span id="L917" class="ln">   917&nbsp;&nbsp;</span>	if name == &#34;.&#34; {
+<span id="L918" class="ln">   918&nbsp;&nbsp;</span>		return dotFile
+<span id="L919" class="ln">   919&nbsp;&nbsp;</span>	}
+<span id="L920" class="ln">   920&nbsp;&nbsp;</span>
+<span id="L921" class="ln">   921&nbsp;&nbsp;</span>	dir, elem, _ := split(name)
+<span id="L922" class="ln">   922&nbsp;&nbsp;</span>	files := r.fileList
+<span id="L923" class="ln">   923&nbsp;&nbsp;</span>	i := sort.Search(len(files), func(i int) bool {
+<span id="L924" class="ln">   924&nbsp;&nbsp;</span>		idir, ielem, _ := split(files[i].name)
+<span id="L925" class="ln">   925&nbsp;&nbsp;</span>		return idir &gt; dir || idir == dir &amp;&amp; ielem &gt;= elem
+<span id="L926" class="ln">   926&nbsp;&nbsp;</span>	})
+<span id="L927" class="ln">   927&nbsp;&nbsp;</span>	if i &lt; len(files) {
+<span id="L928" class="ln">   928&nbsp;&nbsp;</span>		fname := files[i].name
+<span id="L929" class="ln">   929&nbsp;&nbsp;</span>		if fname == name || len(fname) == len(name)+1 &amp;&amp; fname[len(name)] == &#39;/&#39; &amp;&amp; fname[:len(name)] == name {
+<span id="L930" class="ln">   930&nbsp;&nbsp;</span>			return &amp;files[i]
+<span id="L931" class="ln">   931&nbsp;&nbsp;</span>		}
+<span id="L932" class="ln">   932&nbsp;&nbsp;</span>	}
+<span id="L933" class="ln">   933&nbsp;&nbsp;</span>	return nil
+<span id="L934" class="ln">   934&nbsp;&nbsp;</span>}
+<span id="L935" class="ln">   935&nbsp;&nbsp;</span>
+<span id="L936" class="ln">   936&nbsp;&nbsp;</span>func (r *Reader) openReadDir(dir string) []fileListEntry {
+<span id="L937" class="ln">   937&nbsp;&nbsp;</span>	files := r.fileList
+<span id="L938" class="ln">   938&nbsp;&nbsp;</span>	i := sort.Search(len(files), func(i int) bool {
+<span id="L939" class="ln">   939&nbsp;&nbsp;</span>		idir, _, _ := split(files[i].name)
+<span id="L940" class="ln">   940&nbsp;&nbsp;</span>		return idir &gt;= dir
+<span id="L941" class="ln">   941&nbsp;&nbsp;</span>	})
+<span id="L942" class="ln">   942&nbsp;&nbsp;</span>	j := sort.Search(len(files), func(j int) bool {
+<span id="L943" class="ln">   943&nbsp;&nbsp;</span>		jdir, _, _ := split(files[j].name)
+<span id="L944" class="ln">   944&nbsp;&nbsp;</span>		return jdir &gt; dir
+<span id="L945" class="ln">   945&nbsp;&nbsp;</span>	})
+<span id="L946" class="ln">   946&nbsp;&nbsp;</span>	return files[i:j]
+<span id="L947" class="ln">   947&nbsp;&nbsp;</span>}
+<span id="L948" class="ln">   948&nbsp;&nbsp;</span>
+<span id="L949" class="ln">   949&nbsp;&nbsp;</span>type openDir struct {
+<span id="L950" class="ln">   950&nbsp;&nbsp;</span>	e      *fileListEntry
+<span id="L951" class="ln">   951&nbsp;&nbsp;</span>	files  []fileListEntry
+<span id="L952" class="ln">   952&nbsp;&nbsp;</span>	offset int
+<span id="L953" class="ln">   953&nbsp;&nbsp;</span>}
+<span id="L954" class="ln">   954&nbsp;&nbsp;</span>
+<span id="L955" class="ln">   955&nbsp;&nbsp;</span>func (d *openDir) Close() error               { return nil }
+<span id="L956" class="ln">   956&nbsp;&nbsp;</span>func (d *openDir) Stat() (fs.FileInfo, error) { return d.e.stat() }
+<span id="L957" class="ln">   957&nbsp;&nbsp;</span>
+<span id="L958" class="ln">   958&nbsp;&nbsp;</span>func (d *openDir) Read([]byte) (int, error) {
+<span id="L959" class="ln">   959&nbsp;&nbsp;</span>	return 0, &amp;fs.PathError{Op: &#34;read&#34;, Path: d.e.name, Err: errors.New(&#34;is a directory&#34;)}
+<span id="L960" class="ln">   960&nbsp;&nbsp;</span>}
+<span id="L961" class="ln">   961&nbsp;&nbsp;</span>
+<span id="L962" class="ln">   962&nbsp;&nbsp;</span>func (d *openDir) ReadDir(count int) ([]fs.DirEntry, error) {
+<span id="L963" class="ln">   963&nbsp;&nbsp;</span>	n := len(d.files) - d.offset
+<span id="L964" class="ln">   964&nbsp;&nbsp;</span>	if count &gt; 0 &amp;&amp; n &gt; count {
+<span id="L965" class="ln">   965&nbsp;&nbsp;</span>		n = count
+<span id="L966" class="ln">   966&nbsp;&nbsp;</span>	}
+<span id="L967" class="ln">   967&nbsp;&nbsp;</span>	if n == 0 {
+<span id="L968" class="ln">   968&nbsp;&nbsp;</span>		if count &lt;= 0 {
+<span id="L969" class="ln">   969&nbsp;&nbsp;</span>			return nil, nil
+<span id="L970" class="ln">   970&nbsp;&nbsp;</span>		}
+<span id="L971" class="ln">   971&nbsp;&nbsp;</span>		return nil, io.EOF
+<span id="L972" class="ln">   972&nbsp;&nbsp;</span>	}
+<span id="L973" class="ln">   973&nbsp;&nbsp;</span>	list := make([]fs.DirEntry, n)
+<span id="L974" class="ln">   974&nbsp;&nbsp;</span>	for i := range list {
+<span id="L975" class="ln">   975&nbsp;&nbsp;</span>		s, err := d.files[d.offset+i].stat()
+<span id="L976" class="ln">   976&nbsp;&nbsp;</span>		if err != nil {
+<span id="L977" class="ln">   977&nbsp;&nbsp;</span>			return nil, err
+<span id="L978" class="ln">   978&nbsp;&nbsp;</span>		}
+<span id="L979" class="ln">   979&nbsp;&nbsp;</span>		list[i] = s
+<span id="L980" class="ln">   980&nbsp;&nbsp;</span>	}
+<span id="L981" class="ln">   981&nbsp;&nbsp;</span>	d.offset += n
+<span id="L982" class="ln">   982&nbsp;&nbsp;</span>	return list, nil
+<span id="L983" class="ln">   983&nbsp;&nbsp;</span>}
+<span id="L984" class="ln">   984&nbsp;&nbsp;</span>
+</pre><p><a href="reader.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

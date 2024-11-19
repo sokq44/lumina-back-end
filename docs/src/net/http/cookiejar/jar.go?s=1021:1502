@@ -1,0 +1,626 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>src/net/http/cookiejar/jar.go - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../../index.html">GoDoc</a></div>
+<a href="./jar.go?s=1021:1502#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Source file
+    <a href="http://localhost:8080/src">src</a>/<a href="http://localhost:8080/src/net">net</a>/<a href="http://localhost:8080/src/net/http">http</a>/<a href="http://localhost:8080/src/net/http/cookiejar">cookiejar</a>/<span class="text-muted">jar.go</span>
+  </h1>
+
+
+
+
+
+  <h2>
+    Documentation: <a href="http://localhost:8080/pkg/net/http/cookiejar">net/http/cookiejar</a>
+  </h2>
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1&nbsp;&nbsp;</span><span class="comment">// Copyright 2012 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2&nbsp;&nbsp;</span><span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3&nbsp;&nbsp;</span><span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4&nbsp;&nbsp;</span>
+<span id="L5" class="ln">     5&nbsp;&nbsp;</span><span class="comment">// Package cookiejar implements an in-memory RFC 6265-compliant http.CookieJar.</span>
+<span id="L6" class="ln">     6&nbsp;&nbsp;</span>package cookiejar
+<span id="L7" class="ln">     7&nbsp;&nbsp;</span>
+<span id="L8" class="ln">     8&nbsp;&nbsp;</span>import (
+<span id="L9" class="ln">     9&nbsp;&nbsp;</span>	&#34;errors&#34;
+<span id="L10" class="ln">    10&nbsp;&nbsp;</span>	&#34;fmt&#34;
+<span id="L11" class="ln">    11&nbsp;&nbsp;</span>	&#34;net&#34;
+<span id="L12" class="ln">    12&nbsp;&nbsp;</span>	&#34;net/http&#34;
+<span id="L13" class="ln">    13&nbsp;&nbsp;</span>	&#34;net/http/internal/ascii&#34;
+<span id="L14" class="ln">    14&nbsp;&nbsp;</span>	&#34;net/url&#34;
+<span id="L15" class="ln">    15&nbsp;&nbsp;</span>	&#34;sort&#34;
+<span id="L16" class="ln">    16&nbsp;&nbsp;</span>	&#34;strings&#34;
+<span id="L17" class="ln">    17&nbsp;&nbsp;</span>	&#34;sync&#34;
+<span id="L18" class="ln">    18&nbsp;&nbsp;</span>	&#34;time&#34;
+<span id="L19" class="ln">    19&nbsp;&nbsp;</span>)
+<span id="L20" class="ln">    20&nbsp;&nbsp;</span>
+<span id="L21" class="ln">    21&nbsp;&nbsp;</span><span class="comment">// PublicSuffixList provides the public suffix of a domain. For example:</span>
+<span id="L22" class="ln">    22&nbsp;&nbsp;</span><span class="comment">//   - the public suffix of &#34;example.com&#34; is &#34;com&#34;,</span>
+<span id="L23" class="ln">    23&nbsp;&nbsp;</span><span class="comment">//   - the public suffix of &#34;foo1.foo2.foo3.co.uk&#34; is &#34;co.uk&#34;, and</span>
+<span id="L24" class="ln">    24&nbsp;&nbsp;</span><span class="comment">//   - the public suffix of &#34;bar.pvt.k12.ma.us&#34; is &#34;pvt.k12.ma.us&#34;.</span>
+<span id="L25" class="ln">    25&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L26" class="ln">    26&nbsp;&nbsp;</span><span class="comment">// Implementations of PublicSuffixList must be safe for concurrent use by</span>
+<span id="L27" class="ln">    27&nbsp;&nbsp;</span><span class="comment">// multiple goroutines.</span>
+<span id="L28" class="ln">    28&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L29" class="ln">    29&nbsp;&nbsp;</span><span class="comment">// An implementation that always returns &#34;&#34; is valid and may be useful for</span>
+<span id="L30" class="ln">    30&nbsp;&nbsp;</span><span class="comment">// testing but it is not secure: it means that the HTTP server for foo.com can</span>
+<span id="L31" class="ln">    31&nbsp;&nbsp;</span><span class="comment">// set a cookie for bar.com.</span>
+<span id="L32" class="ln">    32&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L33" class="ln">    33&nbsp;&nbsp;</span><span class="comment">// A public suffix list implementation is in the package</span>
+<span id="L34" class="ln">    34&nbsp;&nbsp;</span><span class="comment">// golang.org/x/net/publicsuffix.</span>
+<span id="L35" class="ln">    35&nbsp;&nbsp;</span><span class="selection">type PublicSuffixList interface {
+<span id="L36" class="ln">    36&nbsp;&nbsp;</span>	</span><span class="selection-comment">// PublicSuffix returns the public suffix of domain.</span><span class="selection">
+<span id="L37" class="ln">    37&nbsp;&nbsp;</span>	</span><span class="selection-comment">//</span><span class="selection">
+<span id="L38" class="ln">    38&nbsp;&nbsp;</span>	</span><span class="selection-comment">// TODO: specify which of the caller and callee is responsible for IP</span><span class="selection">
+<span id="L39" class="ln">    39&nbsp;&nbsp;</span>	</span><span class="selection-comment">// addresses, for leading and trailing dots, for case sensitivity, and</span><span class="selection">
+<span id="L40" class="ln">    40&nbsp;&nbsp;</span>	</span><span class="selection-comment">// for IDN/Punycode.</span><span class="selection">
+<span id="L41" class="ln">    41&nbsp;&nbsp;</span>	PublicSuffix(domain string) string
+<span id="L42" class="ln">    42&nbsp;&nbsp;</span>
+<span id="L43" class="ln">    43&nbsp;&nbsp;</span>	</span><span class="selection-comment">// String returns a description of the source of this public suffix</span><span class="selection">
+<span id="L44" class="ln">    44&nbsp;&nbsp;</span>	</span><span class="selection-comment">// list. The description will typically contain something like a time</span><span class="selection">
+<span id="L45" class="ln">    45&nbsp;&nbsp;</span>	</span><span class="selection-comment">// stamp or version number.</span><span class="selection">
+<span id="L46" class="ln">    46&nbsp;&nbsp;</span>	String() string
+<span id="L47" class="ln">    47&nbsp;&nbsp;</span>}</span>
+<span id="L48" class="ln">    48&nbsp;&nbsp;</span>
+<span id="L49" class="ln">    49&nbsp;&nbsp;</span><span class="comment">// Options are the options for creating a new Jar.</span>
+<span id="L50" class="ln">    50&nbsp;&nbsp;</span>type Options struct {
+<span id="L51" class="ln">    51&nbsp;&nbsp;</span>	<span class="comment">// PublicSuffixList is the public suffix list that determines whether</span>
+<span id="L52" class="ln">    52&nbsp;&nbsp;</span>	<span class="comment">// an HTTP server can set a cookie for a domain.</span>
+<span id="L53" class="ln">    53&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L54" class="ln">    54&nbsp;&nbsp;</span>	<span class="comment">// A nil value is valid and may be useful for testing but it is not</span>
+<span id="L55" class="ln">    55&nbsp;&nbsp;</span>	<span class="comment">// secure: it means that the HTTP server for foo.co.uk can set a cookie</span>
+<span id="L56" class="ln">    56&nbsp;&nbsp;</span>	<span class="comment">// for bar.co.uk.</span>
+<span id="L57" class="ln">    57&nbsp;&nbsp;</span>	PublicSuffixList PublicSuffixList
+<span id="L58" class="ln">    58&nbsp;&nbsp;</span>}
+<span id="L59" class="ln">    59&nbsp;&nbsp;</span>
+<span id="L60" class="ln">    60&nbsp;&nbsp;</span><span class="comment">// Jar implements the http.CookieJar interface from the net/http package.</span>
+<span id="L61" class="ln">    61&nbsp;&nbsp;</span>type Jar struct {
+<span id="L62" class="ln">    62&nbsp;&nbsp;</span>	psList PublicSuffixList
+<span id="L63" class="ln">    63&nbsp;&nbsp;</span>
+<span id="L64" class="ln">    64&nbsp;&nbsp;</span>	<span class="comment">// mu locks the remaining fields.</span>
+<span id="L65" class="ln">    65&nbsp;&nbsp;</span>	mu sync.Mutex
+<span id="L66" class="ln">    66&nbsp;&nbsp;</span>
+<span id="L67" class="ln">    67&nbsp;&nbsp;</span>	<span class="comment">// entries is a set of entries, keyed by their eTLD+1 and subkeyed by</span>
+<span id="L68" class="ln">    68&nbsp;&nbsp;</span>	<span class="comment">// their name/domain/path.</span>
+<span id="L69" class="ln">    69&nbsp;&nbsp;</span>	entries map[string]map[string]entry
+<span id="L70" class="ln">    70&nbsp;&nbsp;</span>
+<span id="L71" class="ln">    71&nbsp;&nbsp;</span>	<span class="comment">// nextSeqNum is the next sequence number assigned to a new cookie</span>
+<span id="L72" class="ln">    72&nbsp;&nbsp;</span>	<span class="comment">// created SetCookies.</span>
+<span id="L73" class="ln">    73&nbsp;&nbsp;</span>	nextSeqNum uint64
+<span id="L74" class="ln">    74&nbsp;&nbsp;</span>}
+<span id="L75" class="ln">    75&nbsp;&nbsp;</span>
+<span id="L76" class="ln">    76&nbsp;&nbsp;</span><span class="comment">// New returns a new cookie jar. A nil [*Options] is equivalent to a zero</span>
+<span id="L77" class="ln">    77&nbsp;&nbsp;</span><span class="comment">// Options.</span>
+<span id="L78" class="ln">    78&nbsp;&nbsp;</span>func New(o *Options) (*Jar, error) {
+<span id="L79" class="ln">    79&nbsp;&nbsp;</span>	jar := &amp;Jar{
+<span id="L80" class="ln">    80&nbsp;&nbsp;</span>		entries: make(map[string]map[string]entry),
+<span id="L81" class="ln">    81&nbsp;&nbsp;</span>	}
+<span id="L82" class="ln">    82&nbsp;&nbsp;</span>	if o != nil {
+<span id="L83" class="ln">    83&nbsp;&nbsp;</span>		jar.psList = o.PublicSuffixList
+<span id="L84" class="ln">    84&nbsp;&nbsp;</span>	}
+<span id="L85" class="ln">    85&nbsp;&nbsp;</span>	return jar, nil
+<span id="L86" class="ln">    86&nbsp;&nbsp;</span>}
+<span id="L87" class="ln">    87&nbsp;&nbsp;</span>
+<span id="L88" class="ln">    88&nbsp;&nbsp;</span><span class="comment">// entry is the internal representation of a cookie.</span>
+<span id="L89" class="ln">    89&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L90" class="ln">    90&nbsp;&nbsp;</span><span class="comment">// This struct type is not used outside of this package per se, but the exported</span>
+<span id="L91" class="ln">    91&nbsp;&nbsp;</span><span class="comment">// fields are those of RFC 6265.</span>
+<span id="L92" class="ln">    92&nbsp;&nbsp;</span>type entry struct {
+<span id="L93" class="ln">    93&nbsp;&nbsp;</span>	Name       string
+<span id="L94" class="ln">    94&nbsp;&nbsp;</span>	Value      string
+<span id="L95" class="ln">    95&nbsp;&nbsp;</span>	Domain     string
+<span id="L96" class="ln">    96&nbsp;&nbsp;</span>	Path       string
+<span id="L97" class="ln">    97&nbsp;&nbsp;</span>	SameSite   string
+<span id="L98" class="ln">    98&nbsp;&nbsp;</span>	Secure     bool
+<span id="L99" class="ln">    99&nbsp;&nbsp;</span>	HttpOnly   bool
+<span id="L100" class="ln">   100&nbsp;&nbsp;</span>	Persistent bool
+<span id="L101" class="ln">   101&nbsp;&nbsp;</span>	HostOnly   bool
+<span id="L102" class="ln">   102&nbsp;&nbsp;</span>	Expires    time.Time
+<span id="L103" class="ln">   103&nbsp;&nbsp;</span>	Creation   time.Time
+<span id="L104" class="ln">   104&nbsp;&nbsp;</span>	LastAccess time.Time
+<span id="L105" class="ln">   105&nbsp;&nbsp;</span>
+<span id="L106" class="ln">   106&nbsp;&nbsp;</span>	<span class="comment">// seqNum is a sequence number so that Cookies returns cookies in a</span>
+<span id="L107" class="ln">   107&nbsp;&nbsp;</span>	<span class="comment">// deterministic order, even for cookies that have equal Path length and</span>
+<span id="L108" class="ln">   108&nbsp;&nbsp;</span>	<span class="comment">// equal Creation time. This simplifies testing.</span>
+<span id="L109" class="ln">   109&nbsp;&nbsp;</span>	seqNum uint64
+<span id="L110" class="ln">   110&nbsp;&nbsp;</span>}
+<span id="L111" class="ln">   111&nbsp;&nbsp;</span>
+<span id="L112" class="ln">   112&nbsp;&nbsp;</span><span class="comment">// id returns the domain;path;name triple of e as an id.</span>
+<span id="L113" class="ln">   113&nbsp;&nbsp;</span>func (e *entry) id() string {
+<span id="L114" class="ln">   114&nbsp;&nbsp;</span>	return fmt.Sprintf(&#34;%s;%s;%s&#34;, e.Domain, e.Path, e.Name)
+<span id="L115" class="ln">   115&nbsp;&nbsp;</span>}
+<span id="L116" class="ln">   116&nbsp;&nbsp;</span>
+<span id="L117" class="ln">   117&nbsp;&nbsp;</span><span class="comment">// shouldSend determines whether e&#39;s cookie qualifies to be included in a</span>
+<span id="L118" class="ln">   118&nbsp;&nbsp;</span><span class="comment">// request to host/path. It is the caller&#39;s responsibility to check if the</span>
+<span id="L119" class="ln">   119&nbsp;&nbsp;</span><span class="comment">// cookie is expired.</span>
+<span id="L120" class="ln">   120&nbsp;&nbsp;</span>func (e *entry) shouldSend(https bool, host, path string) bool {
+<span id="L121" class="ln">   121&nbsp;&nbsp;</span>	return e.domainMatch(host) &amp;&amp; e.pathMatch(path) &amp;&amp; (https || !e.Secure)
+<span id="L122" class="ln">   122&nbsp;&nbsp;</span>}
+<span id="L123" class="ln">   123&nbsp;&nbsp;</span>
+<span id="L124" class="ln">   124&nbsp;&nbsp;</span><span class="comment">// domainMatch checks whether e&#39;s Domain allows sending e back to host.</span>
+<span id="L125" class="ln">   125&nbsp;&nbsp;</span><span class="comment">// It differs from &#34;domain-match&#34; of RFC 6265 section 5.1.3 because we treat</span>
+<span id="L126" class="ln">   126&nbsp;&nbsp;</span><span class="comment">// a cookie with an IP address in the Domain always as a host cookie.</span>
+<span id="L127" class="ln">   127&nbsp;&nbsp;</span>func (e *entry) domainMatch(host string) bool {
+<span id="L128" class="ln">   128&nbsp;&nbsp;</span>	if e.Domain == host {
+<span id="L129" class="ln">   129&nbsp;&nbsp;</span>		return true
+<span id="L130" class="ln">   130&nbsp;&nbsp;</span>	}
+<span id="L131" class="ln">   131&nbsp;&nbsp;</span>	return !e.HostOnly &amp;&amp; hasDotSuffix(host, e.Domain)
+<span id="L132" class="ln">   132&nbsp;&nbsp;</span>}
+<span id="L133" class="ln">   133&nbsp;&nbsp;</span>
+<span id="L134" class="ln">   134&nbsp;&nbsp;</span><span class="comment">// pathMatch implements &#34;path-match&#34; according to RFC 6265 section 5.1.4.</span>
+<span id="L135" class="ln">   135&nbsp;&nbsp;</span>func (e *entry) pathMatch(requestPath string) bool {
+<span id="L136" class="ln">   136&nbsp;&nbsp;</span>	if requestPath == e.Path {
+<span id="L137" class="ln">   137&nbsp;&nbsp;</span>		return true
+<span id="L138" class="ln">   138&nbsp;&nbsp;</span>	}
+<span id="L139" class="ln">   139&nbsp;&nbsp;</span>	if strings.HasPrefix(requestPath, e.Path) {
+<span id="L140" class="ln">   140&nbsp;&nbsp;</span>		if e.Path[len(e.Path)-1] == &#39;/&#39; {
+<span id="L141" class="ln">   141&nbsp;&nbsp;</span>			return true <span class="comment">// The &#34;/any/&#34; matches &#34;/any/path&#34; case.</span>
+<span id="L142" class="ln">   142&nbsp;&nbsp;</span>		} else if requestPath[len(e.Path)] == &#39;/&#39; {
+<span id="L143" class="ln">   143&nbsp;&nbsp;</span>			return true <span class="comment">// The &#34;/any&#34; matches &#34;/any/path&#34; case.</span>
+<span id="L144" class="ln">   144&nbsp;&nbsp;</span>		}
+<span id="L145" class="ln">   145&nbsp;&nbsp;</span>	}
+<span id="L146" class="ln">   146&nbsp;&nbsp;</span>	return false
+<span id="L147" class="ln">   147&nbsp;&nbsp;</span>}
+<span id="L148" class="ln">   148&nbsp;&nbsp;</span>
+<span id="L149" class="ln">   149&nbsp;&nbsp;</span><span class="comment">// hasDotSuffix reports whether s ends in &#34;.&#34;+suffix.</span>
+<span id="L150" class="ln">   150&nbsp;&nbsp;</span>func hasDotSuffix(s, suffix string) bool {
+<span id="L151" class="ln">   151&nbsp;&nbsp;</span>	return len(s) &gt; len(suffix) &amp;&amp; s[len(s)-len(suffix)-1] == &#39;.&#39; &amp;&amp; s[len(s)-len(suffix):] == suffix
+<span id="L152" class="ln">   152&nbsp;&nbsp;</span>}
+<span id="L153" class="ln">   153&nbsp;&nbsp;</span>
+<span id="L154" class="ln">   154&nbsp;&nbsp;</span><span class="comment">// Cookies implements the Cookies method of the [http.CookieJar] interface.</span>
+<span id="L155" class="ln">   155&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L156" class="ln">   156&nbsp;&nbsp;</span><span class="comment">// It returns an empty slice if the URL&#39;s scheme is not HTTP or HTTPS.</span>
+<span id="L157" class="ln">   157&nbsp;&nbsp;</span>func (j *Jar) Cookies(u *url.URL) (cookies []*http.Cookie) {
+<span id="L158" class="ln">   158&nbsp;&nbsp;</span>	return j.cookies(u, time.Now())
+<span id="L159" class="ln">   159&nbsp;&nbsp;</span>}
+<span id="L160" class="ln">   160&nbsp;&nbsp;</span>
+<span id="L161" class="ln">   161&nbsp;&nbsp;</span><span class="comment">// cookies is like Cookies but takes the current time as a parameter.</span>
+<span id="L162" class="ln">   162&nbsp;&nbsp;</span>func (j *Jar) cookies(u *url.URL, now time.Time) (cookies []*http.Cookie) {
+<span id="L163" class="ln">   163&nbsp;&nbsp;</span>	if u.Scheme != &#34;http&#34; &amp;&amp; u.Scheme != &#34;https&#34; {
+<span id="L164" class="ln">   164&nbsp;&nbsp;</span>		return cookies
+<span id="L165" class="ln">   165&nbsp;&nbsp;</span>	}
+<span id="L166" class="ln">   166&nbsp;&nbsp;</span>	host, err := canonicalHost(u.Host)
+<span id="L167" class="ln">   167&nbsp;&nbsp;</span>	if err != nil {
+<span id="L168" class="ln">   168&nbsp;&nbsp;</span>		return cookies
+<span id="L169" class="ln">   169&nbsp;&nbsp;</span>	}
+<span id="L170" class="ln">   170&nbsp;&nbsp;</span>	key := jarKey(host, j.psList)
+<span id="L171" class="ln">   171&nbsp;&nbsp;</span>
+<span id="L172" class="ln">   172&nbsp;&nbsp;</span>	j.mu.Lock()
+<span id="L173" class="ln">   173&nbsp;&nbsp;</span>	defer j.mu.Unlock()
+<span id="L174" class="ln">   174&nbsp;&nbsp;</span>
+<span id="L175" class="ln">   175&nbsp;&nbsp;</span>	submap := j.entries[key]
+<span id="L176" class="ln">   176&nbsp;&nbsp;</span>	if submap == nil {
+<span id="L177" class="ln">   177&nbsp;&nbsp;</span>		return cookies
+<span id="L178" class="ln">   178&nbsp;&nbsp;</span>	}
+<span id="L179" class="ln">   179&nbsp;&nbsp;</span>
+<span id="L180" class="ln">   180&nbsp;&nbsp;</span>	https := u.Scheme == &#34;https&#34;
+<span id="L181" class="ln">   181&nbsp;&nbsp;</span>	path := u.Path
+<span id="L182" class="ln">   182&nbsp;&nbsp;</span>	if path == &#34;&#34; {
+<span id="L183" class="ln">   183&nbsp;&nbsp;</span>		path = &#34;/&#34;
+<span id="L184" class="ln">   184&nbsp;&nbsp;</span>	}
+<span id="L185" class="ln">   185&nbsp;&nbsp;</span>
+<span id="L186" class="ln">   186&nbsp;&nbsp;</span>	modified := false
+<span id="L187" class="ln">   187&nbsp;&nbsp;</span>	var selected []entry
+<span id="L188" class="ln">   188&nbsp;&nbsp;</span>	for id, e := range submap {
+<span id="L189" class="ln">   189&nbsp;&nbsp;</span>		if e.Persistent &amp;&amp; !e.Expires.After(now) {
+<span id="L190" class="ln">   190&nbsp;&nbsp;</span>			delete(submap, id)
+<span id="L191" class="ln">   191&nbsp;&nbsp;</span>			modified = true
+<span id="L192" class="ln">   192&nbsp;&nbsp;</span>			continue
+<span id="L193" class="ln">   193&nbsp;&nbsp;</span>		}
+<span id="L194" class="ln">   194&nbsp;&nbsp;</span>		if !e.shouldSend(https, host, path) {
+<span id="L195" class="ln">   195&nbsp;&nbsp;</span>			continue
+<span id="L196" class="ln">   196&nbsp;&nbsp;</span>		}
+<span id="L197" class="ln">   197&nbsp;&nbsp;</span>		e.LastAccess = now
+<span id="L198" class="ln">   198&nbsp;&nbsp;</span>		submap[id] = e
+<span id="L199" class="ln">   199&nbsp;&nbsp;</span>		selected = append(selected, e)
+<span id="L200" class="ln">   200&nbsp;&nbsp;</span>		modified = true
+<span id="L201" class="ln">   201&nbsp;&nbsp;</span>	}
+<span id="L202" class="ln">   202&nbsp;&nbsp;</span>	if modified {
+<span id="L203" class="ln">   203&nbsp;&nbsp;</span>		if len(submap) == 0 {
+<span id="L204" class="ln">   204&nbsp;&nbsp;</span>			delete(j.entries, key)
+<span id="L205" class="ln">   205&nbsp;&nbsp;</span>		} else {
+<span id="L206" class="ln">   206&nbsp;&nbsp;</span>			j.entries[key] = submap
+<span id="L207" class="ln">   207&nbsp;&nbsp;</span>		}
+<span id="L208" class="ln">   208&nbsp;&nbsp;</span>	}
+<span id="L209" class="ln">   209&nbsp;&nbsp;</span>
+<span id="L210" class="ln">   210&nbsp;&nbsp;</span>	<span class="comment">// sort according to RFC 6265 section 5.4 point 2: by longest</span>
+<span id="L211" class="ln">   211&nbsp;&nbsp;</span>	<span class="comment">// path and then by earliest creation time.</span>
+<span id="L212" class="ln">   212&nbsp;&nbsp;</span>	sort.Slice(selected, func(i, j int) bool {
+<span id="L213" class="ln">   213&nbsp;&nbsp;</span>		s := selected
+<span id="L214" class="ln">   214&nbsp;&nbsp;</span>		if len(s[i].Path) != len(s[j].Path) {
+<span id="L215" class="ln">   215&nbsp;&nbsp;</span>			return len(s[i].Path) &gt; len(s[j].Path)
+<span id="L216" class="ln">   216&nbsp;&nbsp;</span>		}
+<span id="L217" class="ln">   217&nbsp;&nbsp;</span>		if ret := s[i].Creation.Compare(s[j].Creation); ret != 0 {
+<span id="L218" class="ln">   218&nbsp;&nbsp;</span>			return ret &lt; 0
+<span id="L219" class="ln">   219&nbsp;&nbsp;</span>		}
+<span id="L220" class="ln">   220&nbsp;&nbsp;</span>		return s[i].seqNum &lt; s[j].seqNum
+<span id="L221" class="ln">   221&nbsp;&nbsp;</span>	})
+<span id="L222" class="ln">   222&nbsp;&nbsp;</span>	for _, e := range selected {
+<span id="L223" class="ln">   223&nbsp;&nbsp;</span>		cookies = append(cookies, &amp;http.Cookie{Name: e.Name, Value: e.Value})
+<span id="L224" class="ln">   224&nbsp;&nbsp;</span>	}
+<span id="L225" class="ln">   225&nbsp;&nbsp;</span>
+<span id="L226" class="ln">   226&nbsp;&nbsp;</span>	return cookies
+<span id="L227" class="ln">   227&nbsp;&nbsp;</span>}
+<span id="L228" class="ln">   228&nbsp;&nbsp;</span>
+<span id="L229" class="ln">   229&nbsp;&nbsp;</span><span class="comment">// SetCookies implements the SetCookies method of the [http.CookieJar] interface.</span>
+<span id="L230" class="ln">   230&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L231" class="ln">   231&nbsp;&nbsp;</span><span class="comment">// It does nothing if the URL&#39;s scheme is not HTTP or HTTPS.</span>
+<span id="L232" class="ln">   232&nbsp;&nbsp;</span>func (j *Jar) SetCookies(u *url.URL, cookies []*http.Cookie) {
+<span id="L233" class="ln">   233&nbsp;&nbsp;</span>	j.setCookies(u, cookies, time.Now())
+<span id="L234" class="ln">   234&nbsp;&nbsp;</span>}
+<span id="L235" class="ln">   235&nbsp;&nbsp;</span>
+<span id="L236" class="ln">   236&nbsp;&nbsp;</span><span class="comment">// setCookies is like SetCookies but takes the current time as parameter.</span>
+<span id="L237" class="ln">   237&nbsp;&nbsp;</span>func (j *Jar) setCookies(u *url.URL, cookies []*http.Cookie, now time.Time) {
+<span id="L238" class="ln">   238&nbsp;&nbsp;</span>	if len(cookies) == 0 {
+<span id="L239" class="ln">   239&nbsp;&nbsp;</span>		return
+<span id="L240" class="ln">   240&nbsp;&nbsp;</span>	}
+<span id="L241" class="ln">   241&nbsp;&nbsp;</span>	if u.Scheme != &#34;http&#34; &amp;&amp; u.Scheme != &#34;https&#34; {
+<span id="L242" class="ln">   242&nbsp;&nbsp;</span>		return
+<span id="L243" class="ln">   243&nbsp;&nbsp;</span>	}
+<span id="L244" class="ln">   244&nbsp;&nbsp;</span>	host, err := canonicalHost(u.Host)
+<span id="L245" class="ln">   245&nbsp;&nbsp;</span>	if err != nil {
+<span id="L246" class="ln">   246&nbsp;&nbsp;</span>		return
+<span id="L247" class="ln">   247&nbsp;&nbsp;</span>	}
+<span id="L248" class="ln">   248&nbsp;&nbsp;</span>	key := jarKey(host, j.psList)
+<span id="L249" class="ln">   249&nbsp;&nbsp;</span>	defPath := defaultPath(u.Path)
+<span id="L250" class="ln">   250&nbsp;&nbsp;</span>
+<span id="L251" class="ln">   251&nbsp;&nbsp;</span>	j.mu.Lock()
+<span id="L252" class="ln">   252&nbsp;&nbsp;</span>	defer j.mu.Unlock()
+<span id="L253" class="ln">   253&nbsp;&nbsp;</span>
+<span id="L254" class="ln">   254&nbsp;&nbsp;</span>	submap := j.entries[key]
+<span id="L255" class="ln">   255&nbsp;&nbsp;</span>
+<span id="L256" class="ln">   256&nbsp;&nbsp;</span>	modified := false
+<span id="L257" class="ln">   257&nbsp;&nbsp;</span>	for _, cookie := range cookies {
+<span id="L258" class="ln">   258&nbsp;&nbsp;</span>		e, remove, err := j.newEntry(cookie, now, defPath, host)
+<span id="L259" class="ln">   259&nbsp;&nbsp;</span>		if err != nil {
+<span id="L260" class="ln">   260&nbsp;&nbsp;</span>			continue
+<span id="L261" class="ln">   261&nbsp;&nbsp;</span>		}
+<span id="L262" class="ln">   262&nbsp;&nbsp;</span>		id := e.id()
+<span id="L263" class="ln">   263&nbsp;&nbsp;</span>		if remove {
+<span id="L264" class="ln">   264&nbsp;&nbsp;</span>			if submap != nil {
+<span id="L265" class="ln">   265&nbsp;&nbsp;</span>				if _, ok := submap[id]; ok {
+<span id="L266" class="ln">   266&nbsp;&nbsp;</span>					delete(submap, id)
+<span id="L267" class="ln">   267&nbsp;&nbsp;</span>					modified = true
+<span id="L268" class="ln">   268&nbsp;&nbsp;</span>				}
+<span id="L269" class="ln">   269&nbsp;&nbsp;</span>			}
+<span id="L270" class="ln">   270&nbsp;&nbsp;</span>			continue
+<span id="L271" class="ln">   271&nbsp;&nbsp;</span>		}
+<span id="L272" class="ln">   272&nbsp;&nbsp;</span>		if submap == nil {
+<span id="L273" class="ln">   273&nbsp;&nbsp;</span>			submap = make(map[string]entry)
+<span id="L274" class="ln">   274&nbsp;&nbsp;</span>		}
+<span id="L275" class="ln">   275&nbsp;&nbsp;</span>
+<span id="L276" class="ln">   276&nbsp;&nbsp;</span>		if old, ok := submap[id]; ok {
+<span id="L277" class="ln">   277&nbsp;&nbsp;</span>			e.Creation = old.Creation
+<span id="L278" class="ln">   278&nbsp;&nbsp;</span>			e.seqNum = old.seqNum
+<span id="L279" class="ln">   279&nbsp;&nbsp;</span>		} else {
+<span id="L280" class="ln">   280&nbsp;&nbsp;</span>			e.Creation = now
+<span id="L281" class="ln">   281&nbsp;&nbsp;</span>			e.seqNum = j.nextSeqNum
+<span id="L282" class="ln">   282&nbsp;&nbsp;</span>			j.nextSeqNum++
+<span id="L283" class="ln">   283&nbsp;&nbsp;</span>		}
+<span id="L284" class="ln">   284&nbsp;&nbsp;</span>		e.LastAccess = now
+<span id="L285" class="ln">   285&nbsp;&nbsp;</span>		submap[id] = e
+<span id="L286" class="ln">   286&nbsp;&nbsp;</span>		modified = true
+<span id="L287" class="ln">   287&nbsp;&nbsp;</span>	}
+<span id="L288" class="ln">   288&nbsp;&nbsp;</span>
+<span id="L289" class="ln">   289&nbsp;&nbsp;</span>	if modified {
+<span id="L290" class="ln">   290&nbsp;&nbsp;</span>		if len(submap) == 0 {
+<span id="L291" class="ln">   291&nbsp;&nbsp;</span>			delete(j.entries, key)
+<span id="L292" class="ln">   292&nbsp;&nbsp;</span>		} else {
+<span id="L293" class="ln">   293&nbsp;&nbsp;</span>			j.entries[key] = submap
+<span id="L294" class="ln">   294&nbsp;&nbsp;</span>		}
+<span id="L295" class="ln">   295&nbsp;&nbsp;</span>	}
+<span id="L296" class="ln">   296&nbsp;&nbsp;</span>}
+<span id="L297" class="ln">   297&nbsp;&nbsp;</span>
+<span id="L298" class="ln">   298&nbsp;&nbsp;</span><span class="comment">// canonicalHost strips port from host if present and returns the canonicalized</span>
+<span id="L299" class="ln">   299&nbsp;&nbsp;</span><span class="comment">// host name.</span>
+<span id="L300" class="ln">   300&nbsp;&nbsp;</span>func canonicalHost(host string) (string, error) {
+<span id="L301" class="ln">   301&nbsp;&nbsp;</span>	var err error
+<span id="L302" class="ln">   302&nbsp;&nbsp;</span>	if hasPort(host) {
+<span id="L303" class="ln">   303&nbsp;&nbsp;</span>		host, _, err = net.SplitHostPort(host)
+<span id="L304" class="ln">   304&nbsp;&nbsp;</span>		if err != nil {
+<span id="L305" class="ln">   305&nbsp;&nbsp;</span>			return &#34;&#34;, err
+<span id="L306" class="ln">   306&nbsp;&nbsp;</span>		}
+<span id="L307" class="ln">   307&nbsp;&nbsp;</span>	}
+<span id="L308" class="ln">   308&nbsp;&nbsp;</span>	<span class="comment">// Strip trailing dot from fully qualified domain names.</span>
+<span id="L309" class="ln">   309&nbsp;&nbsp;</span>	host = strings.TrimSuffix(host, &#34;.&#34;)
+<span id="L310" class="ln">   310&nbsp;&nbsp;</span>	encoded, err := toASCII(host)
+<span id="L311" class="ln">   311&nbsp;&nbsp;</span>	if err != nil {
+<span id="L312" class="ln">   312&nbsp;&nbsp;</span>		return &#34;&#34;, err
+<span id="L313" class="ln">   313&nbsp;&nbsp;</span>	}
+<span id="L314" class="ln">   314&nbsp;&nbsp;</span>	<span class="comment">// We know this is ascii, no need to check.</span>
+<span id="L315" class="ln">   315&nbsp;&nbsp;</span>	lower, _ := ascii.ToLower(encoded)
+<span id="L316" class="ln">   316&nbsp;&nbsp;</span>	return lower, nil
+<span id="L317" class="ln">   317&nbsp;&nbsp;</span>}
+<span id="L318" class="ln">   318&nbsp;&nbsp;</span>
+<span id="L319" class="ln">   319&nbsp;&nbsp;</span><span class="comment">// hasPort reports whether host contains a port number. host may be a host</span>
+<span id="L320" class="ln">   320&nbsp;&nbsp;</span><span class="comment">// name, an IPv4 or an IPv6 address.</span>
+<span id="L321" class="ln">   321&nbsp;&nbsp;</span>func hasPort(host string) bool {
+<span id="L322" class="ln">   322&nbsp;&nbsp;</span>	colons := strings.Count(host, &#34;:&#34;)
+<span id="L323" class="ln">   323&nbsp;&nbsp;</span>	if colons == 0 {
+<span id="L324" class="ln">   324&nbsp;&nbsp;</span>		return false
+<span id="L325" class="ln">   325&nbsp;&nbsp;</span>	}
+<span id="L326" class="ln">   326&nbsp;&nbsp;</span>	if colons == 1 {
+<span id="L327" class="ln">   327&nbsp;&nbsp;</span>		return true
+<span id="L328" class="ln">   328&nbsp;&nbsp;</span>	}
+<span id="L329" class="ln">   329&nbsp;&nbsp;</span>	return host[0] == &#39;[&#39; &amp;&amp; strings.Contains(host, &#34;]:&#34;)
+<span id="L330" class="ln">   330&nbsp;&nbsp;</span>}
+<span id="L331" class="ln">   331&nbsp;&nbsp;</span>
+<span id="L332" class="ln">   332&nbsp;&nbsp;</span><span class="comment">// jarKey returns the key to use for a jar.</span>
+<span id="L333" class="ln">   333&nbsp;&nbsp;</span>func jarKey(host string, psl PublicSuffixList) string {
+<span id="L334" class="ln">   334&nbsp;&nbsp;</span>	if isIP(host) {
+<span id="L335" class="ln">   335&nbsp;&nbsp;</span>		return host
+<span id="L336" class="ln">   336&nbsp;&nbsp;</span>	}
+<span id="L337" class="ln">   337&nbsp;&nbsp;</span>
+<span id="L338" class="ln">   338&nbsp;&nbsp;</span>	var i int
+<span id="L339" class="ln">   339&nbsp;&nbsp;</span>	if psl == nil {
+<span id="L340" class="ln">   340&nbsp;&nbsp;</span>		i = strings.LastIndex(host, &#34;.&#34;)
+<span id="L341" class="ln">   341&nbsp;&nbsp;</span>		if i &lt;= 0 {
+<span id="L342" class="ln">   342&nbsp;&nbsp;</span>			return host
+<span id="L343" class="ln">   343&nbsp;&nbsp;</span>		}
+<span id="L344" class="ln">   344&nbsp;&nbsp;</span>	} else {
+<span id="L345" class="ln">   345&nbsp;&nbsp;</span>		suffix := psl.PublicSuffix(host)
+<span id="L346" class="ln">   346&nbsp;&nbsp;</span>		if suffix == host {
+<span id="L347" class="ln">   347&nbsp;&nbsp;</span>			return host
+<span id="L348" class="ln">   348&nbsp;&nbsp;</span>		}
+<span id="L349" class="ln">   349&nbsp;&nbsp;</span>		i = len(host) - len(suffix)
+<span id="L350" class="ln">   350&nbsp;&nbsp;</span>		if i &lt;= 0 || host[i-1] != &#39;.&#39; {
+<span id="L351" class="ln">   351&nbsp;&nbsp;</span>			<span class="comment">// The provided public suffix list psl is broken.</span>
+<span id="L352" class="ln">   352&nbsp;&nbsp;</span>			<span class="comment">// Storing cookies under host is a safe stopgap.</span>
+<span id="L353" class="ln">   353&nbsp;&nbsp;</span>			return host
+<span id="L354" class="ln">   354&nbsp;&nbsp;</span>		}
+<span id="L355" class="ln">   355&nbsp;&nbsp;</span>		<span class="comment">// Only len(suffix) is used to determine the jar key from</span>
+<span id="L356" class="ln">   356&nbsp;&nbsp;</span>		<span class="comment">// here on, so it is okay if psl.PublicSuffix(&#34;www.buggy.psl&#34;)</span>
+<span id="L357" class="ln">   357&nbsp;&nbsp;</span>		<span class="comment">// returns &#34;com&#34; as the jar key is generated from host.</span>
+<span id="L358" class="ln">   358&nbsp;&nbsp;</span>	}
+<span id="L359" class="ln">   359&nbsp;&nbsp;</span>	prevDot := strings.LastIndex(host[:i-1], &#34;.&#34;)
+<span id="L360" class="ln">   360&nbsp;&nbsp;</span>	return host[prevDot+1:]
+<span id="L361" class="ln">   361&nbsp;&nbsp;</span>}
+<span id="L362" class="ln">   362&nbsp;&nbsp;</span>
+<span id="L363" class="ln">   363&nbsp;&nbsp;</span><span class="comment">// isIP reports whether host is an IP address.</span>
+<span id="L364" class="ln">   364&nbsp;&nbsp;</span>func isIP(host string) bool {
+<span id="L365" class="ln">   365&nbsp;&nbsp;</span>	if strings.ContainsAny(host, &#34;:%&#34;) {
+<span id="L366" class="ln">   366&nbsp;&nbsp;</span>		<span class="comment">// Probable IPv6 address.</span>
+<span id="L367" class="ln">   367&nbsp;&nbsp;</span>		<span class="comment">// Hostnames can&#39;t contain : or %, so this is definitely not a valid host.</span>
+<span id="L368" class="ln">   368&nbsp;&nbsp;</span>		<span class="comment">// Treating it as an IP is the more conservative option, and avoids the risk</span>
+<span id="L369" class="ln">   369&nbsp;&nbsp;</span>		<span class="comment">// of interpeting ::1%.www.example.com as a subtomain of www.example.com.</span>
+<span id="L370" class="ln">   370&nbsp;&nbsp;</span>		return true
+<span id="L371" class="ln">   371&nbsp;&nbsp;</span>	}
+<span id="L372" class="ln">   372&nbsp;&nbsp;</span>	return net.ParseIP(host) != nil
+<span id="L373" class="ln">   373&nbsp;&nbsp;</span>}
+<span id="L374" class="ln">   374&nbsp;&nbsp;</span>
+<span id="L375" class="ln">   375&nbsp;&nbsp;</span><span class="comment">// defaultPath returns the directory part of a URL&#39;s path according to</span>
+<span id="L376" class="ln">   376&nbsp;&nbsp;</span><span class="comment">// RFC 6265 section 5.1.4.</span>
+<span id="L377" class="ln">   377&nbsp;&nbsp;</span>func defaultPath(path string) string {
+<span id="L378" class="ln">   378&nbsp;&nbsp;</span>	if len(path) == 0 || path[0] != &#39;/&#39; {
+<span id="L379" class="ln">   379&nbsp;&nbsp;</span>		return &#34;/&#34; <span class="comment">// Path is empty or malformed.</span>
+<span id="L380" class="ln">   380&nbsp;&nbsp;</span>	}
+<span id="L381" class="ln">   381&nbsp;&nbsp;</span>
+<span id="L382" class="ln">   382&nbsp;&nbsp;</span>	i := strings.LastIndex(path, &#34;/&#34;) <span class="comment">// Path starts with &#34;/&#34;, so i != -1.</span>
+<span id="L383" class="ln">   383&nbsp;&nbsp;</span>	if i == 0 {
+<span id="L384" class="ln">   384&nbsp;&nbsp;</span>		return &#34;/&#34; <span class="comment">// Path has the form &#34;/abc&#34;.</span>
+<span id="L385" class="ln">   385&nbsp;&nbsp;</span>	}
+<span id="L386" class="ln">   386&nbsp;&nbsp;</span>	return path[:i] <span class="comment">// Path is either of form &#34;/abc/xyz&#34; or &#34;/abc/xyz/&#34;.</span>
+<span id="L387" class="ln">   387&nbsp;&nbsp;</span>}
+<span id="L388" class="ln">   388&nbsp;&nbsp;</span>
+<span id="L389" class="ln">   389&nbsp;&nbsp;</span><span class="comment">// newEntry creates an entry from an http.Cookie c. now is the current time and</span>
+<span id="L390" class="ln">   390&nbsp;&nbsp;</span><span class="comment">// is compared to c.Expires to determine deletion of c. defPath and host are the</span>
+<span id="L391" class="ln">   391&nbsp;&nbsp;</span><span class="comment">// default-path and the canonical host name of the URL c was received from.</span>
+<span id="L392" class="ln">   392&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L393" class="ln">   393&nbsp;&nbsp;</span><span class="comment">// remove records whether the jar should delete this cookie, as it has already</span>
+<span id="L394" class="ln">   394&nbsp;&nbsp;</span><span class="comment">// expired with respect to now. In this case, e may be incomplete, but it will</span>
+<span id="L395" class="ln">   395&nbsp;&nbsp;</span><span class="comment">// be valid to call e.id (which depends on e&#39;s Name, Domain and Path).</span>
+<span id="L396" class="ln">   396&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L397" class="ln">   397&nbsp;&nbsp;</span><span class="comment">// A malformed c.Domain will result in an error.</span>
+<span id="L398" class="ln">   398&nbsp;&nbsp;</span>func (j *Jar) newEntry(c *http.Cookie, now time.Time, defPath, host string) (e entry, remove bool, err error) {
+<span id="L399" class="ln">   399&nbsp;&nbsp;</span>	e.Name = c.Name
+<span id="L400" class="ln">   400&nbsp;&nbsp;</span>
+<span id="L401" class="ln">   401&nbsp;&nbsp;</span>	if c.Path == &#34;&#34; || c.Path[0] != &#39;/&#39; {
+<span id="L402" class="ln">   402&nbsp;&nbsp;</span>		e.Path = defPath
+<span id="L403" class="ln">   403&nbsp;&nbsp;</span>	} else {
+<span id="L404" class="ln">   404&nbsp;&nbsp;</span>		e.Path = c.Path
+<span id="L405" class="ln">   405&nbsp;&nbsp;</span>	}
+<span id="L406" class="ln">   406&nbsp;&nbsp;</span>
+<span id="L407" class="ln">   407&nbsp;&nbsp;</span>	e.Domain, e.HostOnly, err = j.domainAndType(host, c.Domain)
+<span id="L408" class="ln">   408&nbsp;&nbsp;</span>	if err != nil {
+<span id="L409" class="ln">   409&nbsp;&nbsp;</span>		return e, false, err
+<span id="L410" class="ln">   410&nbsp;&nbsp;</span>	}
+<span id="L411" class="ln">   411&nbsp;&nbsp;</span>
+<span id="L412" class="ln">   412&nbsp;&nbsp;</span>	<span class="comment">// MaxAge takes precedence over Expires.</span>
+<span id="L413" class="ln">   413&nbsp;&nbsp;</span>	if c.MaxAge &lt; 0 {
+<span id="L414" class="ln">   414&nbsp;&nbsp;</span>		return e, true, nil
+<span id="L415" class="ln">   415&nbsp;&nbsp;</span>	} else if c.MaxAge &gt; 0 {
+<span id="L416" class="ln">   416&nbsp;&nbsp;</span>		e.Expires = now.Add(time.Duration(c.MaxAge) * time.Second)
+<span id="L417" class="ln">   417&nbsp;&nbsp;</span>		e.Persistent = true
+<span id="L418" class="ln">   418&nbsp;&nbsp;</span>	} else {
+<span id="L419" class="ln">   419&nbsp;&nbsp;</span>		if c.Expires.IsZero() {
+<span id="L420" class="ln">   420&nbsp;&nbsp;</span>			e.Expires = endOfTime
+<span id="L421" class="ln">   421&nbsp;&nbsp;</span>			e.Persistent = false
+<span id="L422" class="ln">   422&nbsp;&nbsp;</span>		} else {
+<span id="L423" class="ln">   423&nbsp;&nbsp;</span>			if !c.Expires.After(now) {
+<span id="L424" class="ln">   424&nbsp;&nbsp;</span>				return e, true, nil
+<span id="L425" class="ln">   425&nbsp;&nbsp;</span>			}
+<span id="L426" class="ln">   426&nbsp;&nbsp;</span>			e.Expires = c.Expires
+<span id="L427" class="ln">   427&nbsp;&nbsp;</span>			e.Persistent = true
+<span id="L428" class="ln">   428&nbsp;&nbsp;</span>		}
+<span id="L429" class="ln">   429&nbsp;&nbsp;</span>	}
+<span id="L430" class="ln">   430&nbsp;&nbsp;</span>
+<span id="L431" class="ln">   431&nbsp;&nbsp;</span>	e.Value = c.Value
+<span id="L432" class="ln">   432&nbsp;&nbsp;</span>	e.Secure = c.Secure
+<span id="L433" class="ln">   433&nbsp;&nbsp;</span>	e.HttpOnly = c.HttpOnly
+<span id="L434" class="ln">   434&nbsp;&nbsp;</span>
+<span id="L435" class="ln">   435&nbsp;&nbsp;</span>	switch c.SameSite {
+<span id="L436" class="ln">   436&nbsp;&nbsp;</span>	case http.SameSiteDefaultMode:
+<span id="L437" class="ln">   437&nbsp;&nbsp;</span>		e.SameSite = &#34;SameSite&#34;
+<span id="L438" class="ln">   438&nbsp;&nbsp;</span>	case http.SameSiteStrictMode:
+<span id="L439" class="ln">   439&nbsp;&nbsp;</span>		e.SameSite = &#34;SameSite=Strict&#34;
+<span id="L440" class="ln">   440&nbsp;&nbsp;</span>	case http.SameSiteLaxMode:
+<span id="L441" class="ln">   441&nbsp;&nbsp;</span>		e.SameSite = &#34;SameSite=Lax&#34;
+<span id="L442" class="ln">   442&nbsp;&nbsp;</span>	}
+<span id="L443" class="ln">   443&nbsp;&nbsp;</span>
+<span id="L444" class="ln">   444&nbsp;&nbsp;</span>	return e, false, nil
+<span id="L445" class="ln">   445&nbsp;&nbsp;</span>}
+<span id="L446" class="ln">   446&nbsp;&nbsp;</span>
+<span id="L447" class="ln">   447&nbsp;&nbsp;</span>var (
+<span id="L448" class="ln">   448&nbsp;&nbsp;</span>	errIllegalDomain   = errors.New(&#34;cookiejar: illegal cookie domain attribute&#34;)
+<span id="L449" class="ln">   449&nbsp;&nbsp;</span>	errMalformedDomain = errors.New(&#34;cookiejar: malformed cookie domain attribute&#34;)
+<span id="L450" class="ln">   450&nbsp;&nbsp;</span>)
+<span id="L451" class="ln">   451&nbsp;&nbsp;</span>
+<span id="L452" class="ln">   452&nbsp;&nbsp;</span><span class="comment">// endOfTime is the time when session (non-persistent) cookies expire.</span>
+<span id="L453" class="ln">   453&nbsp;&nbsp;</span><span class="comment">// This instant is representable in most date/time formats (not just</span>
+<span id="L454" class="ln">   454&nbsp;&nbsp;</span><span class="comment">// Go&#39;s time.Time) and should be far enough in the future.</span>
+<span id="L455" class="ln">   455&nbsp;&nbsp;</span>var endOfTime = time.Date(9999, 12, 31, 23, 59, 59, 0, time.UTC)
+<span id="L456" class="ln">   456&nbsp;&nbsp;</span>
+<span id="L457" class="ln">   457&nbsp;&nbsp;</span><span class="comment">// domainAndType determines the cookie&#39;s domain and hostOnly attribute.</span>
+<span id="L458" class="ln">   458&nbsp;&nbsp;</span>func (j *Jar) domainAndType(host, domain string) (string, bool, error) {
+<span id="L459" class="ln">   459&nbsp;&nbsp;</span>	if domain == &#34;&#34; {
+<span id="L460" class="ln">   460&nbsp;&nbsp;</span>		<span class="comment">// No domain attribute in the SetCookie header indicates a</span>
+<span id="L461" class="ln">   461&nbsp;&nbsp;</span>		<span class="comment">// host cookie.</span>
+<span id="L462" class="ln">   462&nbsp;&nbsp;</span>		return host, true, nil
+<span id="L463" class="ln">   463&nbsp;&nbsp;</span>	}
+<span id="L464" class="ln">   464&nbsp;&nbsp;</span>
+<span id="L465" class="ln">   465&nbsp;&nbsp;</span>	if isIP(host) {
+<span id="L466" class="ln">   466&nbsp;&nbsp;</span>		<span class="comment">// RFC 6265 is not super clear here, a sensible interpretation</span>
+<span id="L467" class="ln">   467&nbsp;&nbsp;</span>		<span class="comment">// is that cookies with an IP address in the domain-attribute</span>
+<span id="L468" class="ln">   468&nbsp;&nbsp;</span>		<span class="comment">// are allowed.</span>
+<span id="L469" class="ln">   469&nbsp;&nbsp;</span>
+<span id="L470" class="ln">   470&nbsp;&nbsp;</span>		<span class="comment">// RFC 6265 section 5.2.3 mandates to strip an optional leading</span>
+<span id="L471" class="ln">   471&nbsp;&nbsp;</span>		<span class="comment">// dot in the domain-attribute before processing the cookie.</span>
+<span id="L472" class="ln">   472&nbsp;&nbsp;</span>		<span class="comment">//</span>
+<span id="L473" class="ln">   473&nbsp;&nbsp;</span>		<span class="comment">// Most browsers don&#39;t do that for IP addresses, only curl</span>
+<span id="L474" class="ln">   474&nbsp;&nbsp;</span>		<span class="comment">// (version 7.54) and IE (version 11) do not reject a</span>
+<span id="L475" class="ln">   475&nbsp;&nbsp;</span>		<span class="comment">//     Set-Cookie: a=1; domain=.127.0.0.1</span>
+<span id="L476" class="ln">   476&nbsp;&nbsp;</span>		<span class="comment">// This leading dot is optional and serves only as hint for</span>
+<span id="L477" class="ln">   477&nbsp;&nbsp;</span>		<span class="comment">// humans to indicate that a cookie with &#34;domain=.bbc.co.uk&#34;</span>
+<span id="L478" class="ln">   478&nbsp;&nbsp;</span>		<span class="comment">// would be sent to every subdomain of bbc.co.uk.</span>
+<span id="L479" class="ln">   479&nbsp;&nbsp;</span>		<span class="comment">// It just doesn&#39;t make sense on IP addresses.</span>
+<span id="L480" class="ln">   480&nbsp;&nbsp;</span>		<span class="comment">// The other processing and validation steps in RFC 6265 just</span>
+<span id="L481" class="ln">   481&nbsp;&nbsp;</span>		<span class="comment">// collapse to:</span>
+<span id="L482" class="ln">   482&nbsp;&nbsp;</span>		if host != domain {
+<span id="L483" class="ln">   483&nbsp;&nbsp;</span>			return &#34;&#34;, false, errIllegalDomain
+<span id="L484" class="ln">   484&nbsp;&nbsp;</span>		}
+<span id="L485" class="ln">   485&nbsp;&nbsp;</span>
+<span id="L486" class="ln">   486&nbsp;&nbsp;</span>		<span class="comment">// According to RFC 6265 such cookies should be treated as</span>
+<span id="L487" class="ln">   487&nbsp;&nbsp;</span>		<span class="comment">// domain cookies.</span>
+<span id="L488" class="ln">   488&nbsp;&nbsp;</span>		<span class="comment">// As there are no subdomains of an IP address the treatment</span>
+<span id="L489" class="ln">   489&nbsp;&nbsp;</span>		<span class="comment">// according to RFC 6265 would be exactly the same as that of</span>
+<span id="L490" class="ln">   490&nbsp;&nbsp;</span>		<span class="comment">// a host-only cookie. Contemporary browsers (and curl) do</span>
+<span id="L491" class="ln">   491&nbsp;&nbsp;</span>		<span class="comment">// allows such cookies but treat them as host-only cookies.</span>
+<span id="L492" class="ln">   492&nbsp;&nbsp;</span>		<span class="comment">// So do we as it just doesn&#39;t make sense to label them as</span>
+<span id="L493" class="ln">   493&nbsp;&nbsp;</span>		<span class="comment">// domain cookies when there is no domain; the whole notion of</span>
+<span id="L494" class="ln">   494&nbsp;&nbsp;</span>		<span class="comment">// domain cookies requires a domain name to be well defined.</span>
+<span id="L495" class="ln">   495&nbsp;&nbsp;</span>		return host, true, nil
+<span id="L496" class="ln">   496&nbsp;&nbsp;</span>	}
+<span id="L497" class="ln">   497&nbsp;&nbsp;</span>
+<span id="L498" class="ln">   498&nbsp;&nbsp;</span>	<span class="comment">// From here on: If the cookie is valid, it is a domain cookie (with</span>
+<span id="L499" class="ln">   499&nbsp;&nbsp;</span>	<span class="comment">// the one exception of a public suffix below).</span>
+<span id="L500" class="ln">   500&nbsp;&nbsp;</span>	<span class="comment">// See RFC 6265 section 5.2.3.</span>
+<span id="L501" class="ln">   501&nbsp;&nbsp;</span>	if domain[0] == &#39;.&#39; {
+<span id="L502" class="ln">   502&nbsp;&nbsp;</span>		domain = domain[1:]
+<span id="L503" class="ln">   503&nbsp;&nbsp;</span>	}
+<span id="L504" class="ln">   504&nbsp;&nbsp;</span>
+<span id="L505" class="ln">   505&nbsp;&nbsp;</span>	if len(domain) == 0 || domain[0] == &#39;.&#39; {
+<span id="L506" class="ln">   506&nbsp;&nbsp;</span>		<span class="comment">// Received either &#34;Domain=.&#34; or &#34;Domain=..some.thing&#34;,</span>
+<span id="L507" class="ln">   507&nbsp;&nbsp;</span>		<span class="comment">// both are illegal.</span>
+<span id="L508" class="ln">   508&nbsp;&nbsp;</span>		return &#34;&#34;, false, errMalformedDomain
+<span id="L509" class="ln">   509&nbsp;&nbsp;</span>	}
+<span id="L510" class="ln">   510&nbsp;&nbsp;</span>
+<span id="L511" class="ln">   511&nbsp;&nbsp;</span>	domain, isASCII := ascii.ToLower(domain)
+<span id="L512" class="ln">   512&nbsp;&nbsp;</span>	if !isASCII {
+<span id="L513" class="ln">   513&nbsp;&nbsp;</span>		<span class="comment">// Received non-ASCII domain, e.g. &#34;perché.com&#34; instead of &#34;xn--perch-fsa.com&#34;</span>
+<span id="L514" class="ln">   514&nbsp;&nbsp;</span>		return &#34;&#34;, false, errMalformedDomain
+<span id="L515" class="ln">   515&nbsp;&nbsp;</span>	}
+<span id="L516" class="ln">   516&nbsp;&nbsp;</span>
+<span id="L517" class="ln">   517&nbsp;&nbsp;</span>	if domain[len(domain)-1] == &#39;.&#39; {
+<span id="L518" class="ln">   518&nbsp;&nbsp;</span>		<span class="comment">// We received stuff like &#34;Domain=www.example.com.&#34;.</span>
+<span id="L519" class="ln">   519&nbsp;&nbsp;</span>		<span class="comment">// Browsers do handle such stuff (actually differently) but</span>
+<span id="L520" class="ln">   520&nbsp;&nbsp;</span>		<span class="comment">// RFC 6265 seems to be clear here (e.g. section 4.1.2.3) in</span>
+<span id="L521" class="ln">   521&nbsp;&nbsp;</span>		<span class="comment">// requiring a reject.  4.1.2.3 is not normative, but</span>
+<span id="L522" class="ln">   522&nbsp;&nbsp;</span>		<span class="comment">// &#34;Domain Matching&#34; (5.1.3) and &#34;Canonicalized Host Names&#34;</span>
+<span id="L523" class="ln">   523&nbsp;&nbsp;</span>		<span class="comment">// (5.1.2) are.</span>
+<span id="L524" class="ln">   524&nbsp;&nbsp;</span>		return &#34;&#34;, false, errMalformedDomain
+<span id="L525" class="ln">   525&nbsp;&nbsp;</span>	}
+<span id="L526" class="ln">   526&nbsp;&nbsp;</span>
+<span id="L527" class="ln">   527&nbsp;&nbsp;</span>	<span class="comment">// See RFC 6265 section 5.3 #5.</span>
+<span id="L528" class="ln">   528&nbsp;&nbsp;</span>	if j.psList != nil {
+<span id="L529" class="ln">   529&nbsp;&nbsp;</span>		if ps := j.psList.PublicSuffix(domain); ps != &#34;&#34; &amp;&amp; !hasDotSuffix(domain, ps) {
+<span id="L530" class="ln">   530&nbsp;&nbsp;</span>			if host == domain {
+<span id="L531" class="ln">   531&nbsp;&nbsp;</span>				<span class="comment">// This is the one exception in which a cookie</span>
+<span id="L532" class="ln">   532&nbsp;&nbsp;</span>				<span class="comment">// with a domain attribute is a host cookie.</span>
+<span id="L533" class="ln">   533&nbsp;&nbsp;</span>				return host, true, nil
+<span id="L534" class="ln">   534&nbsp;&nbsp;</span>			}
+<span id="L535" class="ln">   535&nbsp;&nbsp;</span>			return &#34;&#34;, false, errIllegalDomain
+<span id="L536" class="ln">   536&nbsp;&nbsp;</span>		}
+<span id="L537" class="ln">   537&nbsp;&nbsp;</span>	}
+<span id="L538" class="ln">   538&nbsp;&nbsp;</span>
+<span id="L539" class="ln">   539&nbsp;&nbsp;</span>	<span class="comment">// The domain must domain-match host: www.mycompany.com cannot</span>
+<span id="L540" class="ln">   540&nbsp;&nbsp;</span>	<span class="comment">// set cookies for .ourcompetitors.com.</span>
+<span id="L541" class="ln">   541&nbsp;&nbsp;</span>	if host != domain &amp;&amp; !hasDotSuffix(host, domain) {
+<span id="L542" class="ln">   542&nbsp;&nbsp;</span>		return &#34;&#34;, false, errIllegalDomain
+<span id="L543" class="ln">   543&nbsp;&nbsp;</span>	}
+<span id="L544" class="ln">   544&nbsp;&nbsp;</span>
+<span id="L545" class="ln">   545&nbsp;&nbsp;</span>	return domain, false, nil
+<span id="L546" class="ln">   546&nbsp;&nbsp;</span>}
+<span id="L547" class="ln">   547&nbsp;&nbsp;</span>
+</pre><p><a href="jar.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

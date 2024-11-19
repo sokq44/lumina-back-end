@@ -1,0 +1,2940 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>strings - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package strings
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "strings"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+				<dd><a href="index.html#pkg-examples" class="examplesLink">Examples</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>Package strings implements simple functions to manipulate UTF-8 encoded strings.
+<p>For information about UTF-8 strings in Go, see <a href="https://blog.golang.org/strings">https://blog.golang.org/strings</a>.
+
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+			
+			
+				
+				<dd><a href="index.html#Clone">func Clone(s string) string</a></dd>
+			
+				
+				<dd><a href="index.html#Compare">func Compare(a, b string) int</a></dd>
+			
+				
+				<dd><a href="index.html#Contains">func Contains(s, substr string) bool</a></dd>
+			
+				
+				<dd><a href="index.html#ContainsAny">func ContainsAny(s, chars string) bool</a></dd>
+			
+				
+				<dd><a href="index.html#ContainsFunc">func ContainsFunc(s string, f func(rune) bool) bool</a></dd>
+			
+				
+				<dd><a href="index.html#ContainsRune">func ContainsRune(s string, r rune) bool</a></dd>
+			
+				
+				<dd><a href="index.html#Count">func Count(s, substr string) int</a></dd>
+			
+				
+				<dd><a href="index.html#Cut">func Cut(s, sep string) (before, after string, found bool)</a></dd>
+			
+				
+				<dd><a href="index.html#CutPrefix">func CutPrefix(s, prefix string) (after string, found bool)</a></dd>
+			
+				
+				<dd><a href="index.html#CutSuffix">func CutSuffix(s, suffix string) (before string, found bool)</a></dd>
+			
+				
+				<dd><a href="index.html#EqualFold">func EqualFold(s, t string) bool</a></dd>
+			
+				
+				<dd><a href="index.html#Fields">func Fields(s string) []string</a></dd>
+			
+				
+				<dd><a href="index.html#FieldsFunc">func FieldsFunc(s string, f func(rune) bool) []string</a></dd>
+			
+				
+				<dd><a href="index.html#HasPrefix">func HasPrefix(s, prefix string) bool</a></dd>
+			
+				
+				<dd><a href="index.html#HasSuffix">func HasSuffix(s, suffix string) bool</a></dd>
+			
+				
+				<dd><a href="index.html#Index">func Index(s, substr string) int</a></dd>
+			
+				
+				<dd><a href="index.html#IndexAny">func IndexAny(s, chars string) int</a></dd>
+			
+				
+				<dd><a href="index.html#IndexByte">func IndexByte(s string, c byte) int</a></dd>
+			
+				
+				<dd><a href="index.html#IndexFunc">func IndexFunc(s string, f func(rune) bool) int</a></dd>
+			
+				
+				<dd><a href="index.html#IndexRune">func IndexRune(s string, r rune) int</a></dd>
+			
+				
+				<dd><a href="index.html#Join">func Join(elems []string, sep string) string</a></dd>
+			
+				
+				<dd><a href="index.html#LastIndex">func LastIndex(s, substr string) int</a></dd>
+			
+				
+				<dd><a href="index.html#LastIndexAny">func LastIndexAny(s, chars string) int</a></dd>
+			
+				
+				<dd><a href="index.html#LastIndexByte">func LastIndexByte(s string, c byte) int</a></dd>
+			
+				
+				<dd><a href="index.html#LastIndexFunc">func LastIndexFunc(s string, f func(rune) bool) int</a></dd>
+			
+				
+				<dd><a href="index.html#Map">func Map(mapping func(rune) rune, s string) string</a></dd>
+			
+				
+				<dd><a href="index.html#Repeat">func Repeat(s string, count int) string</a></dd>
+			
+				
+				<dd><a href="index.html#Replace">func Replace(s, old, new string, n int) string</a></dd>
+			
+				
+				<dd><a href="index.html#ReplaceAll">func ReplaceAll(s, old, new string) string</a></dd>
+			
+				
+				<dd><a href="index.html#Split">func Split(s, sep string) []string</a></dd>
+			
+				
+				<dd><a href="index.html#SplitAfter">func SplitAfter(s, sep string) []string</a></dd>
+			
+				
+				<dd><a href="index.html#SplitAfterN">func SplitAfterN(s, sep string, n int) []string</a></dd>
+			
+				
+				<dd><a href="index.html#SplitN">func SplitN(s, sep string, n int) []string</a></dd>
+			
+				
+				<dd><a href="index.html#Title">func Title(s string) string</a></dd>
+			
+				
+				<dd><a href="index.html#ToLower">func ToLower(s string) string</a></dd>
+			
+				
+				<dd><a href="index.html#ToLowerSpecial">func ToLowerSpecial(c unicode.SpecialCase, s string) string</a></dd>
+			
+				
+				<dd><a href="index.html#ToTitle">func ToTitle(s string) string</a></dd>
+			
+				
+				<dd><a href="index.html#ToTitleSpecial">func ToTitleSpecial(c unicode.SpecialCase, s string) string</a></dd>
+			
+				
+				<dd><a href="index.html#ToUpper">func ToUpper(s string) string</a></dd>
+			
+				
+				<dd><a href="index.html#ToUpperSpecial">func ToUpperSpecial(c unicode.SpecialCase, s string) string</a></dd>
+			
+				
+				<dd><a href="index.html#ToValidUTF8">func ToValidUTF8(s, replacement string) string</a></dd>
+			
+				
+				<dd><a href="index.html#Trim">func Trim(s, cutset string) string</a></dd>
+			
+				
+				<dd><a href="index.html#TrimFunc">func TrimFunc(s string, f func(rune) bool) string</a></dd>
+			
+				
+				<dd><a href="index.html#TrimLeft">func TrimLeft(s, cutset string) string</a></dd>
+			
+				
+				<dd><a href="index.html#TrimLeftFunc">func TrimLeftFunc(s string, f func(rune) bool) string</a></dd>
+			
+				
+				<dd><a href="index.html#TrimPrefix">func TrimPrefix(s, prefix string) string</a></dd>
+			
+				
+				<dd><a href="index.html#TrimRight">func TrimRight(s, cutset string) string</a></dd>
+			
+				
+				<dd><a href="index.html#TrimRightFunc">func TrimRightFunc(s string, f func(rune) bool) string</a></dd>
+			
+				
+				<dd><a href="index.html#TrimSpace">func TrimSpace(s string) string</a></dd>
+			
+				
+				<dd><a href="index.html#TrimSuffix">func TrimSuffix(s, suffix string) string</a></dd>
+			
+			
+				
+				<dd><a href="index.html#Builder">type Builder</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Builder.Cap">func (b *Builder) Cap() int</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Builder.Grow">func (b *Builder) Grow(n int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Builder.Len">func (b *Builder) Len() int</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Builder.Reset">func (b *Builder) Reset()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Builder.String">func (b *Builder) String() string</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Builder.Write">func (b *Builder) Write(p []byte) (int, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Builder.WriteByte">func (b *Builder) WriteByte(c byte) error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Builder.WriteRune">func (b *Builder) WriteRune(r rune) (int, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Builder.WriteString">func (b *Builder) WriteString(s string) (int, error)</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Reader">type Reader</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewReader">func NewReader(s string) *Reader</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Reader.Len">func (r *Reader) Len() int</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Reader.Read">func (r *Reader) Read(b []byte) (n int, err error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Reader.ReadAt">func (r *Reader) ReadAt(b []byte, off int64) (n int, err error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Reader.ReadByte">func (r *Reader) ReadByte() (byte, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Reader.ReadRune">func (r *Reader) ReadRune() (ch rune, size int, err error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Reader.Reset">func (r *Reader) Reset(s string)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Reader.Seek">func (r *Reader) Seek(offset int64, whence int) (int64, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Reader.Size">func (r *Reader) Size() int64</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Reader.UnreadByte">func (r *Reader) UnreadByte() error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Reader.UnreadRune">func (r *Reader) UnreadRune() error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Reader.WriteTo">func (r *Reader) WriteTo(w io.Writer) (n int64, err error)</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Replacer">type Replacer</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewReplacer">func NewReplacer(oldnew ...string) *Replacer</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Replacer.Replace">func (r *Replacer) Replace(s string) string</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Replacer.WriteString">func (r *Replacer) WriteString(w io.Writer, s string) (n int, err error)</a></dd>
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+		<div id="pkg-examples">
+			<h3>Examples</h3>
+			<div class="js-expandAll expandAll collapsed">(Expand All)</div>
+			<dl>
+			
+			<dd><a class="exampleLink" href="index.html#example_Builder">Builder</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Clone">Clone</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Compare">Compare</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Contains">Contains</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_ContainsAny">ContainsAny</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_ContainsFunc">ContainsFunc</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_ContainsRune">ContainsRune</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Count">Count</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Cut">Cut</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_CutPrefix">CutPrefix</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_CutSuffix">CutSuffix</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_EqualFold">EqualFold</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Fields">Fields</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_FieldsFunc">FieldsFunc</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_HasPrefix">HasPrefix</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_HasSuffix">HasSuffix</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Index">Index</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_IndexAny">IndexAny</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_IndexByte">IndexByte</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_IndexFunc">IndexFunc</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_IndexRune">IndexRune</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Join">Join</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_LastIndex">LastIndex</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_LastIndexAny">LastIndexAny</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_LastIndexByte">LastIndexByte</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_LastIndexFunc">LastIndexFunc</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Map">Map</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_NewReplacer">NewReplacer</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Repeat">Repeat</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Replace">Replace</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_ReplaceAll">ReplaceAll</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Split">Split</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_SplitAfter">SplitAfter</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_SplitAfterN">SplitAfterN</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_SplitN">SplitN</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Title">Title</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_ToLower">ToLower</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_ToLowerSpecial">ToLowerSpecial</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_ToTitle">ToTitle</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_ToTitleSpecial">ToTitleSpecial</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_ToUpper">ToUpper</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_ToUpperSpecial">ToUpperSpecial</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_ToValidUTF8">ToValidUTF8</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Trim">Trim</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_TrimFunc">TrimFunc</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_TrimLeft">TrimLeft</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_TrimLeftFunc">TrimLeftFunc</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_TrimPrefix">TrimPrefix</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_TrimRight">TrimRight</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_TrimRightFunc">TrimRightFunc</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_TrimSpace">TrimSpace</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_TrimSuffix">TrimSuffix</a></dd>
+			
+			</dl>
+		</div>
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../src/strings/builder.go">builder.go</a>
+			
+				<a href="../../src/strings/clone.go">clone.go</a>
+			
+				<a href="../../src/strings/compare.go">compare.go</a>
+			
+				<a href="../../src/strings/reader.go">reader.go</a>
+			
+				<a href="../../src/strings/replace.go">replace.go</a>
+			
+				<a href="../../src/strings/search.go">search.go</a>
+			
+				<a href="../../src/strings/strings.go">strings.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+		
+		
+			
+			
+			<h2 id="Clone">func <a href="../../src/strings/clone.go?s=734:761#L11">Clone</a>
+				<a class="permalink" href="index.html#Clone">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Clone(s <a href="../builtin/index.html#string">string</a>) <a href="../builtin/index.html#string">string</a></pre>
+			<p>Clone returns a fresh copy of s.
+It guarantees to make a copy of s into a new allocation,
+which can be important when retaining only a small substring
+of a much larger string. Using Clone can help such programs
+use less memory. Of course, since using Clone makes a copy,
+overuse of Clone can make programs use more memory.
+Clone should typically be used only rarely, and only when
+profiling indicates that it is needed.
+For strings of length zero the string &quot;&quot; will be returned
+and no allocation is made.
+
+			<div id="example_Clone" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">s := &#34;abc&#34;
+clone := strings.Clone(s)
+fmt.Println(s == clone)
+fmt.Println(unsafe.StringData(s) == unsafe.StringData(clone))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">true
+false
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Compare">func <a href="../../src/strings/compare.go?s=492:521#L3">Compare</a>
+				<a class="permalink" href="index.html#Compare">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Compare(a, b <a href="../builtin/index.html#string">string</a>) <a href="../builtin/index.html#int">int</a></pre>
+			<p>Compare returns an integer comparing two strings lexicographically.
+The result will be 0 if a == b, -1 if a &lt; b, and +1 if a &gt; b.
+<p>Compare is included only for symmetry with package bytes.
+It is usually clearer and always faster to use the built-in
+string comparison operators ==, &lt;, &gt;, and so on.
+
+			<div id="example_Compare" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">fmt.Println(strings.Compare(&#34;a&#34;, &#34;b&#34;))
+fmt.Println(strings.Compare(&#34;a&#34;, &#34;a&#34;))
+fmt.Println(strings.Compare(&#34;b&#34;, &#34;a&#34;))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">-1
+0
+1
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Contains">func <a href="../../src/strings/strings.go?s=1398:1434#L50">Contains</a>
+				<a class="permalink" href="index.html#Contains">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Contains(s, substr <a href="../builtin/index.html#string">string</a>) <a href="../builtin/index.html#bool">bool</a></pre>
+			<p>Contains reports whether substr is within s.
+
+			<div id="example_Contains" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">fmt.Println(strings.Contains(&#34;seafood&#34;, &#34;foo&#34;))
+fmt.Println(strings.Contains(&#34;seafood&#34;, &#34;bar&#34;))
+fmt.Println(strings.Contains(&#34;seafood&#34;, &#34;&#34;))
+fmt.Println(strings.Contains(&#34;&#34;, &#34;&#34;))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">true
+false
+true
+true
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="ContainsAny">func <a href="../../src/strings/strings.go?s=1548:1586#L55">ContainsAny</a>
+				<a class="permalink" href="index.html#ContainsAny">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func ContainsAny(s, chars <a href="../builtin/index.html#string">string</a>) <a href="../builtin/index.html#bool">bool</a></pre>
+			<p>ContainsAny reports whether any Unicode code points in chars are within s.
+
+			<div id="example_ContainsAny" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">fmt.Println(strings.ContainsAny(&#34;team&#34;, &#34;i&#34;))
+fmt.Println(strings.ContainsAny(&#34;fail&#34;, &#34;ui&#34;))
+fmt.Println(strings.ContainsAny(&#34;ure&#34;, &#34;ui&#34;))
+fmt.Println(strings.ContainsAny(&#34;failure&#34;, &#34;ui&#34;))
+fmt.Println(strings.ContainsAny(&#34;foo&#34;, &#34;&#34;))
+fmt.Println(strings.ContainsAny(&#34;&#34;, &#34;&#34;))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">false
+true
+true
+true
+false
+false
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="ContainsFunc">func <a href="../../src/strings/strings.go?s=1850:1901#L65">ContainsFunc</a>
+				<a class="permalink" href="index.html#ContainsFunc">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func ContainsFunc(s <a href="../builtin/index.html#string">string</a>, f func(<a href="../builtin/index.html#rune">rune</a>) <a href="../builtin/index.html#bool">bool</a>) <a href="../builtin/index.html#bool">bool</a></pre>
+			<p>ContainsFunc reports whether any Unicode code points r within s satisfy f(r).
+
+			<div id="example_ContainsFunc" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">f := func(r rune) bool {
+    return r == &#39;a&#39; || r == &#39;e&#39; || r == &#39;i&#39; || r == &#39;o&#39; || r == &#39;u&#39;
+}
+fmt.Println(strings.ContainsFunc(&#34;hello&#34;, f))
+fmt.Println(strings.ContainsFunc(&#34;rhythms&#34;, f))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">true
+false
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="ContainsRune">func <a href="../../src/strings/strings.go?s=1694:1734#L60">ContainsRune</a>
+				<a class="permalink" href="index.html#ContainsRune">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func ContainsRune(s <a href="../builtin/index.html#string">string</a>, r <a href="../builtin/index.html#rune">rune</a>) <a href="../builtin/index.html#bool">bool</a></pre>
+			<p>ContainsRune reports whether the Unicode code point r is within s.
+
+			<div id="example_ContainsRune" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code"><span class="comment">// Finds whether a string contains a particular Unicode code point.</span>
+<span class="comment">// The code point for the lowercase letter &#34;a&#34;, for example, is 97.</span>
+fmt.Println(strings.ContainsRune(&#34;aardvark&#34;, 97))
+fmt.Println(strings.ContainsRune(&#34;timeout&#34;, 97))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">true
+false
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Count">func <a href="../../src/strings/strings.go?s=1058:1090#L30">Count</a>
+				<a class="permalink" href="index.html#Count">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Count(s, substr <a href="../builtin/index.html#string">string</a>) <a href="../builtin/index.html#int">int</a></pre>
+			<p>Count counts the number of non-overlapping instances of substr in s.
+If substr is an empty string, Count returns 1 + the number of Unicode code points in s.
+
+			<div id="example_Count" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">fmt.Println(strings.Count(&#34;cheese&#34;, &#34;e&#34;))
+fmt.Println(strings.Count(&#34;five&#34;, &#34;&#34;)) <span class="comment">// before &amp; after each rune</span>
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">3
+5
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Cut">func <a href="../../src/strings/strings.go?s=31099:31157#L1263">Cut</a>
+				<a class="permalink" href="index.html#Cut">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Cut(s, sep <a href="../builtin/index.html#string">string</a>) (before, after <a href="../builtin/index.html#string">string</a>, found <a href="../builtin/index.html#bool">bool</a>)</pre>
+			<p>Cut slices s around the first instance of sep,
+returning the text before and after sep.
+The found result reports whether sep appears in s.
+If sep does not appear in s, cut returns s, &quot;&quot;, false.
+
+			<div id="example_Cut" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">show := func(s, sep string) {
+    before, after, found := strings.Cut(s, sep)
+    fmt.Printf(&#34;Cut(%q, %q) = %q, %q, %v\n&#34;, s, sep, before, after, found)
+}
+show(&#34;Gopher&#34;, &#34;Go&#34;)
+show(&#34;Gopher&#34;, &#34;ph&#34;)
+show(&#34;Gopher&#34;, &#34;er&#34;)
+show(&#34;Gopher&#34;, &#34;Badger&#34;)
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">Cut(&#34;Gopher&#34;, &#34;Go&#34;) = &#34;&#34;, &#34;pher&#34;, true
+Cut(&#34;Gopher&#34;, &#34;ph&#34;) = &#34;Go&#34;, &#34;er&#34;, true
+Cut(&#34;Gopher&#34;, &#34;er&#34;) = &#34;Goph&#34;, &#34;&#34;, true
+Cut(&#34;Gopher&#34;, &#34;Badger&#34;) = &#34;Gopher&#34;, &#34;&#34;, false
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="CutPrefix">func <a href="../../src/strings/strings.go?s=31491:31550#L1274">CutPrefix</a>
+				<a class="permalink" href="index.html#CutPrefix">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func CutPrefix(s, prefix <a href="../builtin/index.html#string">string</a>) (after <a href="../builtin/index.html#string">string</a>, found <a href="../builtin/index.html#bool">bool</a>)</pre>
+			<p>CutPrefix returns s without the provided leading prefix string
+and reports whether it found the prefix.
+If s doesn&apos;t start with prefix, CutPrefix returns s, false.
+If prefix is the empty string, CutPrefix returns s, true.
+
+			<div id="example_CutPrefix" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">show := func(s, sep string) {
+    after, found := strings.CutPrefix(s, sep)
+    fmt.Printf(&#34;CutPrefix(%q, %q) = %q, %v\n&#34;, s, sep, after, found)
+}
+show(&#34;Gopher&#34;, &#34;Go&#34;)
+show(&#34;Gopher&#34;, &#34;ph&#34;)
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">CutPrefix(&#34;Gopher&#34;, &#34;Go&#34;) = &#34;pher&#34;, true
+CutPrefix(&#34;Gopher&#34;, &#34;ph&#34;) = &#34;Gopher&#34;, false
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="CutSuffix">func <a href="../../src/strings/strings.go?s=31866:31926#L1285">CutSuffix</a>
+				<a class="permalink" href="index.html#CutSuffix">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func CutSuffix(s, suffix <a href="../builtin/index.html#string">string</a>) (before <a href="../builtin/index.html#string">string</a>, found <a href="../builtin/index.html#bool">bool</a>)</pre>
+			<p>CutSuffix returns s without the provided ending suffix string
+and reports whether it found the suffix.
+If s doesn&apos;t end with suffix, CutSuffix returns s, false.
+If suffix is the empty string, CutSuffix returns s, true.
+
+			<div id="example_CutSuffix" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">show := func(s, sep string) {
+    before, found := strings.CutSuffix(s, sep)
+    fmt.Printf(&#34;CutSuffix(%q, %q) = %q, %v\n&#34;, s, sep, before, found)
+}
+show(&#34;Gopher&#34;, &#34;Go&#34;)
+show(&#34;Gopher&#34;, &#34;er&#34;)
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">CutSuffix(&#34;Gopher&#34;, &#34;Go&#34;) = &#34;Gopher&#34;, false
+CutSuffix(&#34;Gopher&#34;, &#34;er&#34;) = &#34;Goph&#34;, true
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="EqualFold">func <a href="../../src/strings/strings.go?s=27720:27752#L1096">EqualFold</a>
+				<a class="permalink" href="index.html#EqualFold">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func EqualFold(s, t <a href="../builtin/index.html#string">string</a>) <a href="../builtin/index.html#bool">bool</a></pre>
+			<p>EqualFold reports whether s and t, interpreted as UTF-8 strings,
+are equal under simple Unicode case-folding, which is a more general
+form of case-insensitivity.
+
+			<div id="example_EqualFold" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">fmt.Println(strings.EqualFold(&#34;Go&#34;, &#34;go&#34;))
+fmt.Println(strings.EqualFold(&#34;AB&#34;, &#34;ab&#34;)) <span class="comment">// true because comparison uses simple case-folding</span>
+fmt.Println(strings.EqualFold(&#34;ß&#34;, &#34;ss&#34;))  <span class="comment">// false because comparison does not use full case-folding</span>
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">true
+true
+false
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Fields">func <a href="../../src/strings/strings.go?s=8320:8350#L318">Fields</a>
+				<a class="permalink" href="index.html#Fields">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Fields(s <a href="../builtin/index.html#string">string</a>) []<a href="../builtin/index.html#string">string</a></pre>
+			<p>Fields splits the string s around each instance of one or more consecutive white space
+characters, as defined by unicode.IsSpace, returning a slice of substrings of s or an
+empty slice if s contains only white space.
+
+			<div id="example_Fields" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">fmt.Printf(&#34;Fields are: %q&#34;, strings.Fields(&#34;  foo bar  baz   &#34;))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">Fields are: [&#34;foo&#34; &#34;bar&#34; &#34;baz&#34;]
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="FieldsFunc">func <a href="../../src/strings/strings.go?s=9705:9758#L373">FieldsFunc</a>
+				<a class="permalink" href="index.html#FieldsFunc">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func FieldsFunc(s <a href="../builtin/index.html#string">string</a>, f func(<a href="../builtin/index.html#rune">rune</a>) <a href="../builtin/index.html#bool">bool</a>) []<a href="../builtin/index.html#string">string</a></pre>
+			<p>FieldsFunc splits the string s at each run of Unicode code points c satisfying f(c)
+and returns an array of slices of s. If all code points in s satisfy f(c) or the
+string is empty, an empty slice is returned.
+<p>FieldsFunc makes no guarantees about the order in which it calls f(c)
+and assumes that f always returns the same value for a given c.
+
+			<div id="example_FieldsFunc" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">f := func(c rune) bool {
+    return !unicode.IsLetter(c) &amp;&amp; !unicode.IsNumber(c)
+}
+fmt.Printf(&#34;Fields are: %q&#34;, strings.FieldsFunc(&#34;  foo1;bar2,baz3...&#34;, f))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">Fields are: [&#34;foo1&#34; &#34;bar2&#34; &#34;baz3&#34;]
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="HasPrefix">func <a href="../../src/strings/strings.go?s=11631:11668#L452">HasPrefix</a>
+				<a class="permalink" href="index.html#HasPrefix">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func HasPrefix(s, prefix <a href="../builtin/index.html#string">string</a>) <a href="../builtin/index.html#bool">bool</a></pre>
+			<p>HasPrefix reports whether the string s begins with prefix.
+
+			<div id="example_HasPrefix" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">fmt.Println(strings.HasPrefix(&#34;Gopher&#34;, &#34;Go&#34;))
+fmt.Println(strings.HasPrefix(&#34;Gopher&#34;, &#34;C&#34;))
+fmt.Println(strings.HasPrefix(&#34;Gopher&#34;, &#34;&#34;))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">true
+false
+true
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="HasSuffix">func <a href="../../src/strings/strings.go?s=11794:11831#L457">HasSuffix</a>
+				<a class="permalink" href="index.html#HasSuffix">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func HasSuffix(s, suffix <a href="../builtin/index.html#string">string</a>) <a href="../builtin/index.html#bool">bool</a></pre>
+			<p>HasSuffix reports whether the string s ends with suffix.
+
+			<div id="example_HasSuffix" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">fmt.Println(strings.HasSuffix(&#34;Amigo&#34;, &#34;go&#34;))
+fmt.Println(strings.HasSuffix(&#34;Amigo&#34;, &#34;O&#34;))
+fmt.Println(strings.HasSuffix(&#34;Amigo&#34;, &#34;Ami&#34;))
+fmt.Println(strings.HasSuffix(&#34;Amigo&#34;, &#34;&#34;))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">true
+false
+false
+true
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Index">func <a href="../../src/strings/strings.go?s=29398:29430#L1179">Index</a>
+				<a class="permalink" href="index.html#Index">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Index(s, substr <a href="../builtin/index.html#string">string</a>) <a href="../builtin/index.html#int">int</a></pre>
+			<p>Index returns the index of the first instance of substr in s, or -1 if substr is not present in s.
+
+			<div id="example_Index" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">fmt.Println(strings.Index(&#34;chicken&#34;, &#34;ken&#34;))
+fmt.Println(strings.Index(&#34;chicken&#34;, &#34;dmr&#34;))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">4
+-1
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="IndexAny">func <a href="../../src/strings/strings.go?s=3605:3639#L135">IndexAny</a>
+				<a class="permalink" href="index.html#IndexAny">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func IndexAny(s, chars <a href="../builtin/index.html#string">string</a>) <a href="../builtin/index.html#int">int</a></pre>
+			<p>IndexAny returns the index of the first instance of any Unicode code point
+from chars in s, or -1 if no Unicode code point from chars is present in s.
+
+			<div id="example_IndexAny" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">fmt.Println(strings.IndexAny(&#34;chicken&#34;, &#34;aeiouy&#34;))
+fmt.Println(strings.IndexAny(&#34;crwth&#34;, &#34;aeiouy&#34;))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">2
+-1
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="IndexByte">func <a href="../../src/strings/strings.go?s=2841:2877#L107">IndexByte</a>
+				<a class="permalink" href="index.html#IndexByte">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func IndexByte(s <a href="../builtin/index.html#string">string</a>, c <a href="../builtin/index.html#byte">byte</a>) <a href="../builtin/index.html#int">int</a></pre>
+			<p>IndexByte returns the index of the first instance of c in s, or -1 if c is not present in s.
+
+			<div id="example_IndexByte" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">fmt.Println(strings.IndexByte(&#34;golang&#34;, &#39;g&#39;))
+fmt.Println(strings.IndexByte(&#34;gophers&#34;, &#39;h&#39;))
+fmt.Println(strings.IndexByte(&#34;golang&#34;, &#39;x&#39;))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">0
+3
+-1
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="IndexFunc">func <a href="../../src/strings/strings.go?s=20410:20457#L815">IndexFunc</a>
+				<a class="permalink" href="index.html#IndexFunc">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func IndexFunc(s <a href="../builtin/index.html#string">string</a>, f func(<a href="../builtin/index.html#rune">rune</a>) <a href="../builtin/index.html#bool">bool</a>) <a href="../builtin/index.html#int">int</a></pre>
+			<p>IndexFunc returns the index into s of the first Unicode
+code point satisfying f(c), or -1 if none do.
+
+			<div id="example_IndexFunc" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">f := func(c rune) bool {
+    return unicode.Is(unicode.Han, c)
+}
+fmt.Println(strings.IndexFunc(&#34;Hello, 世界&#34;, f))
+fmt.Println(strings.IndexFunc(&#34;Hello, world&#34;, f))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">7
+-1
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="IndexRune">func <a href="../../src/strings/strings.go?s=3137:3173#L115">IndexRune</a>
+				<a class="permalink" href="index.html#IndexRune">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func IndexRune(s <a href="../builtin/index.html#string">string</a>, r <a href="../builtin/index.html#rune">rune</a>) <a href="../builtin/index.html#int">int</a></pre>
+			<p>IndexRune returns the index of the first instance of the Unicode code point
+r, or -1 if rune is not present in s.
+If r is utf8.RuneError, it returns the first instance of any
+invalid UTF-8 byte sequence.
+
+			<div id="example_IndexRune" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">fmt.Println(strings.IndexRune(&#34;chicken&#34;, &#39;k&#39;))
+fmt.Println(strings.IndexRune(&#34;chicken&#34;, &#39;d&#39;))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">4
+-1
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Join">func <a href="../../src/strings/strings.go?s=11008:11052#L419">Join</a>
+				<a class="permalink" href="index.html#Join">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Join(elems []<a href="../builtin/index.html#string">string</a>, sep <a href="../builtin/index.html#string">string</a>) <a href="../builtin/index.html#string">string</a></pre>
+			<p>Join concatenates the elements of its first argument to create a single string. The separator
+string sep is placed between elements in the resulting string.
+
+			<div id="example_Join" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">s := []string{&#34;foo&#34;, &#34;bar&#34;, &#34;baz&#34;}
+fmt.Println(strings.Join(s, &#34;, &#34;))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">foo, bar, baz
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="LastIndex">func <a href="../../src/strings/strings.go?s=2041:2077#L70">LastIndex</a>
+				<a class="permalink" href="index.html#LastIndex">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func LastIndex(s, substr <a href="../builtin/index.html#string">string</a>) <a href="../builtin/index.html#int">int</a></pre>
+			<p>LastIndex returns the index of the last instance of substr in s, or -1 if substr is not present in s.
+
+			<div id="example_LastIndex" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">fmt.Println(strings.Index(&#34;go gopher&#34;, &#34;go&#34;))
+fmt.Println(strings.LastIndex(&#34;go gopher&#34;, &#34;go&#34;))
+fmt.Println(strings.LastIndex(&#34;go gopher&#34;, &#34;rodent&#34;))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">0
+3
+-1
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="LastIndexAny">func <a href="../../src/strings/strings.go?s=4283:4321#L169">LastIndexAny</a>
+				<a class="permalink" href="index.html#LastIndexAny">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func LastIndexAny(s, chars <a href="../builtin/index.html#string">string</a>) <a href="../builtin/index.html#int">int</a></pre>
+			<p>LastIndexAny returns the index of the last instance of any Unicode code
+point from chars in s, or -1 if no Unicode code point from chars is
+present in s.
+
+			<div id="example_LastIndexAny" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">fmt.Println(strings.LastIndexAny(&#34;go gopher&#34;, &#34;go&#34;))
+fmt.Println(strings.LastIndexAny(&#34;go gopher&#34;, &#34;rodent&#34;))
+fmt.Println(strings.LastIndexAny(&#34;go gopher&#34;, &#34;fail&#34;))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">4
+8
+-1
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="LastIndexByte">func <a href="../../src/strings/strings.go?s=5213:5253#L219">LastIndexByte</a>
+				<a class="permalink" href="index.html#LastIndexByte">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func LastIndexByte(s <a href="../builtin/index.html#string">string</a>, c <a href="../builtin/index.html#byte">byte</a>) <a href="../builtin/index.html#int">int</a></pre>
+			<p>LastIndexByte returns the index of the last instance of c in s, or -1 if c is not present in s.
+
+			<div id="example_LastIndexByte" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">fmt.Println(strings.LastIndexByte(&#34;Hello, world&#34;, &#39;l&#39;))
+fmt.Println(strings.LastIndexByte(&#34;Hello, world&#34;, &#39;o&#39;))
+fmt.Println(strings.LastIndexByte(&#34;Hello, world&#34;, &#39;x&#39;))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">10
+8
+-1
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="LastIndexFunc">func <a href="../../src/strings/strings.go?s=20604:20655#L821">LastIndexFunc</a>
+				<a class="permalink" href="index.html#LastIndexFunc">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func LastIndexFunc(s <a href="../builtin/index.html#string">string</a>, f func(<a href="../builtin/index.html#rune">rune</a>) <a href="../builtin/index.html#bool">bool</a>) <a href="../builtin/index.html#int">int</a></pre>
+			<p>LastIndexFunc returns the index into s of the last
+Unicode code point satisfying f(c), or -1 if none do.
+
+			<div id="example_LastIndexFunc" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">fmt.Println(strings.LastIndexFunc(&#34;go 123&#34;, unicode.IsNumber))
+fmt.Println(strings.LastIndexFunc(&#34;123 go&#34;, unicode.IsNumber))
+fmt.Println(strings.LastIndexFunc(&#34;go&#34;, unicode.IsNumber))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">5
+2
+-1
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Map">func <a href="../../src/strings/strings.go?s=12114:12164#L464">Map</a>
+				<a class="permalink" href="index.html#Map">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Map(mapping func(<a href="../builtin/index.html#rune">rune</a>) <a href="../builtin/index.html#rune">rune</a>, s <a href="../builtin/index.html#string">string</a>) <a href="../builtin/index.html#string">string</a></pre>
+			<p>Map returns a copy of the string s with all its characters modified
+according to the mapping function. If mapping returns a negative value, the character is
+dropped from the string with no replacement.
+
+			<div id="example_Map" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">rot13 := func(r rune) rune {
+    switch {
+    case r &gt;= &#39;A&#39; &amp;&amp; r &lt;= &#39;Z&#39;:
+        return &#39;A&#39; + (r-&#39;A&#39;+13)%26
+    case r &gt;= &#39;a&#39; &amp;&amp; r &lt;= &#39;z&#39;:
+        return &#39;a&#39; + (r-&#39;a&#39;+13)%26
+    }
+    return r
+}
+fmt.Println(strings.Map(rot13, &#34;&#39;Twas brillig and the slithy gopher...&#34;))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">&#39;Gjnf oevyyvt naq gur fyvgul tbcure...
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Repeat">func <a href="../../src/strings/strings.go?s=13468:13507#L527">Repeat</a>
+				<a class="permalink" href="index.html#Repeat">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Repeat(s <a href="../builtin/index.html#string">string</a>, count <a href="../builtin/index.html#int">int</a>) <a href="../builtin/index.html#string">string</a></pre>
+			<p>Repeat returns a new string consisting of count copies of the string s.
+<p>It panics if count is negative or if the result of (len(s) * count)
+overflows.
+
+			<div id="example_Repeat" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">fmt.Println(&#34;ba&#34; + strings.Repeat(&#34;na&#34;, 2))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">banana
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Replace">func <a href="../../src/strings/strings.go?s=26548:26594#L1050">Replace</a>
+				<a class="permalink" href="index.html#Replace">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Replace(s, old, new <a href="../builtin/index.html#string">string</a>, n <a href="../builtin/index.html#int">int</a>) <a href="../builtin/index.html#string">string</a></pre>
+			<p>Replace returns a copy of the string s with the first n
+non-overlapping instances of old replaced by new.
+If old is empty, it matches at the beginning of the string
+and after each UTF-8 sequence, yielding up to k+1 replacements
+for a k-rune string.
+If n &lt; 0, there is no limit on the number of replacements.
+
+			<div id="example_Replace" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">fmt.Println(strings.Replace(&#34;oink oink oink&#34;, &#34;k&#34;, &#34;ky&#34;, 2))
+fmt.Println(strings.Replace(&#34;oink oink oink&#34;, &#34;oink&#34;, &#34;moo&#34;, -1))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">oinky oinky oink
+moo moo moo
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="ReplaceAll">func <a href="../../src/strings/strings.go?s=27468:27510#L1089">ReplaceAll</a>
+				<a class="permalink" href="index.html#ReplaceAll">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func ReplaceAll(s, old, new <a href="../builtin/index.html#string">string</a>) <a href="../builtin/index.html#string">string</a></pre>
+			<p>ReplaceAll returns a copy of the string s with all
+non-overlapping instances of old replaced by new.
+If old is empty, it matches at the beginning of the string
+and after each UTF-8 sequence, yielding up to k+1 replacements
+for a k-rune string.
+
+			<div id="example_ReplaceAll" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">fmt.Println(strings.ReplaceAll(&#34;oink oink oink&#34;, &#34;oink&#34;, &#34;moo&#34;))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">moo moo moo
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Split">func <a href="../../src/strings/strings.go?s=7427:7461#L297">Split</a>
+				<a class="permalink" href="index.html#Split">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Split(s, sep <a href="../builtin/index.html#string">string</a>) []<a href="../builtin/index.html#string">string</a></pre>
+			<p>Split slices s into all substrings separated by sep and returns a slice of
+the substrings between those separators.
+<p>If s does not contain sep and sep is not empty, Split returns a
+slice of length 1 whose only element is s.
+<p>If sep is empty, Split splits after each UTF-8 sequence. If both s
+and sep are empty, Split returns an empty slice.
+<p>It is equivalent to <a href="index.html#SplitN">SplitN</a> with a count of -1.
+<p>To split around the first instance of a separator, see Cut.
+
+			<div id="example_Split" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">fmt.Printf(&#34;%q\n&#34;, strings.Split(&#34;a,b,c&#34;, &#34;,&#34;))
+fmt.Printf(&#34;%q\n&#34;, strings.Split(&#34;a man a plan a canal panama&#34;, &#34;a &#34;))
+fmt.Printf(&#34;%q\n&#34;, strings.Split(&#34; xyz &#34;, &#34;&#34;))
+fmt.Printf(&#34;%q\n&#34;, strings.Split(&#34;&#34;, &#34;Bernardo O&#39;Higgins&#34;))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">[&#34;a&#34; &#34;b&#34; &#34;c&#34;]
+[&#34;&#34; &#34;man &#34; &#34;plan &#34; &#34;canal panama&#34;]
+[&#34; &#34; &#34;x&#34; &#34;y&#34; &#34;z&#34; &#34; &#34;]
+[&#34;&#34;]
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="SplitAfter">func <a href="../../src/strings/strings.go?s=7928:7967#L309">SplitAfter</a>
+				<a class="permalink" href="index.html#SplitAfter">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func SplitAfter(s, sep <a href="../builtin/index.html#string">string</a>) []<a href="../builtin/index.html#string">string</a></pre>
+			<p>SplitAfter slices s into all substrings after each instance of sep and
+returns a slice of those substrings.
+<p>If s does not contain sep and sep is not empty, SplitAfter returns
+a slice of length 1 whose only element is s.
+<p>If sep is empty, SplitAfter splits after each UTF-8 sequence. If
+both s and sep are empty, SplitAfter returns an empty slice.
+<p>It is equivalent to <a href="index.html#SplitAfterN">SplitAfterN</a> with a count of -1.
+
+			<div id="example_SplitAfter" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">fmt.Printf(&#34;%q\n&#34;, strings.SplitAfter(&#34;a,b,c&#34;, &#34;,&#34;))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">[&#34;a,&#34; &#34;b,&#34; &#34;c&#34;]
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="SplitAfterN">func <a href="../../src/strings/strings.go?s=6852:6899#L281">SplitAfterN</a>
+				<a class="permalink" href="index.html#SplitAfterN">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func SplitAfterN(s, sep <a href="../builtin/index.html#string">string</a>, n <a href="../builtin/index.html#int">int</a>) []<a href="../builtin/index.html#string">string</a></pre>
+			<p>SplitAfterN slices s into substrings after each instance of sep and
+returns a slice of those substrings.
+<p>The count determines the number of substrings to return:
+<pre>n &gt; 0: at most n substrings; the last substring will be the unsplit remainder.
+n == 0: the result is nil (zero substrings)
+n &lt; 0: all substrings
+</pre>
+<p>Edge cases for s and sep (for example, empty strings) are handled
+as described in the documentation for SplitAfter.
+
+			<div id="example_SplitAfterN" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">fmt.Printf(&#34;%q\n&#34;, strings.SplitAfterN(&#34;a,b,c&#34;, &#34;,&#34;, 2))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">[&#34;a,&#34; &#34;b,c&#34;]
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="SplitN">func <a href="../../src/strings/strings.go?s=6318:6360#L268">SplitN</a>
+				<a class="permalink" href="index.html#SplitN">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func SplitN(s, sep <a href="../builtin/index.html#string">string</a>, n <a href="../builtin/index.html#int">int</a>) []<a href="../builtin/index.html#string">string</a></pre>
+			<p>SplitN slices s into substrings separated by sep and returns a slice of
+the substrings between those separators.
+<p>The count determines the number of substrings to return:
+<pre>n &gt; 0: at most n substrings; the last substring will be the unsplit remainder.
+n == 0: the result is nil (zero substrings)
+n &lt; 0: all substrings
+</pre>
+<p>Edge cases for s and sep (for example, empty strings) are handled
+as described in the documentation for <a href="index.html#Split">Split</a>.
+<p>To split around the first instance of a separator, see Cut.
+
+			<div id="example_SplitN" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">fmt.Printf(&#34;%q\n&#34;, strings.SplitN(&#34;a,b,c&#34;, &#34;,&#34;, 2))
+z := strings.SplitN(&#34;a,b,c&#34;, &#34;,&#34;, 0)
+fmt.Printf(&#34;%q (nil = %v)\n&#34;, z, z == nil)
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">[&#34;a&#34; &#34;b,c&#34;]
+[] (nil = true)
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Title">func <a href="../../src/strings/strings.go?s=19162:19189#L767">Title</a>
+				<a class="permalink" href="index.html#Title">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Title(s <a href="../builtin/index.html#string">string</a>) <a href="../builtin/index.html#string">string</a></pre>
+			<p>Title returns a copy of the string s with all Unicode letters that begin words
+mapped to their Unicode title case.
+<p>Deprecated: The rule Title uses for word boundaries does not handle Unicode
+punctuation properly. Use golang.org/x/text/cases instead.
+
+			<div id="example_Title" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code"><span class="comment">// Compare this example to the ToTitle example.</span>
+fmt.Println(strings.Title(&#34;her royal highness&#34;))
+fmt.Println(strings.Title(&#34;loud noises&#34;))
+fmt.Println(strings.Title(&#34;хлеб&#34;))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">Her Royal Highness
+Loud Noises
+Хлеб
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="ToLower">func <a href="../../src/strings/strings.go?s=15742:15771#L626">ToLower</a>
+				<a class="permalink" href="index.html#ToLower">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func ToLower(s <a href="../builtin/index.html#string">string</a>) <a href="../builtin/index.html#string">string</a></pre>
+			<p>ToLower returns s with all Unicode letters mapped to their lower case.
+
+			<div id="example_ToLower" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">fmt.Println(strings.ToLower(&#34;Gopher&#34;))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">gopher
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="ToLowerSpecial">func <a href="../../src/strings/strings.go?s=16945:17004#L677">ToLowerSpecial</a>
+				<a class="permalink" href="index.html#ToLowerSpecial">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func ToLowerSpecial(c <a href="../unicode/index.html">unicode</a>.<a href="../unicode/index.html#SpecialCase">SpecialCase</a>, s <a href="../builtin/index.html#string">string</a>) <a href="../builtin/index.html#string">string</a></pre>
+			<p>ToLowerSpecial returns a copy of the string s with all Unicode letters mapped to their
+lower case using the case mapping specified by c.
+
+			<div id="example_ToLowerSpecial" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">fmt.Println(strings.ToLowerSpecial(unicode.TurkishCase, &#34;Önnek İş&#34;))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">önnek iş
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="ToTitle">func <a href="../../src/strings/strings.go?s=16502:16531#L667">ToTitle</a>
+				<a class="permalink" href="index.html#ToTitle">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func ToTitle(s <a href="../builtin/index.html#string">string</a>) <a href="../builtin/index.html#string">string</a></pre>
+			<p>ToTitle returns a copy of the string s with all Unicode letters mapped to
+their Unicode title case.
+
+			<div id="example_ToTitle" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code"><span class="comment">// Compare this example to the Title example.</span>
+fmt.Println(strings.ToTitle(&#34;her royal highness&#34;))
+fmt.Println(strings.ToTitle(&#34;loud noises&#34;))
+fmt.Println(strings.ToTitle(&#34;хлеб&#34;))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">HER ROYAL HIGHNESS
+LOUD NOISES
+ХЛЕБ
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="ToTitleSpecial">func <a href="../../src/strings/strings.go?s=17194:17253#L683">ToTitleSpecial</a>
+				<a class="permalink" href="index.html#ToTitleSpecial">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func ToTitleSpecial(c <a href="../unicode/index.html">unicode</a>.<a href="../unicode/index.html#SpecialCase">SpecialCase</a>, s <a href="../builtin/index.html#string">string</a>) <a href="../builtin/index.html#string">string</a></pre>
+			<p>ToTitleSpecial returns a copy of the string s with all Unicode letters mapped to their
+Unicode title case, giving priority to the special casing rules.
+
+			<div id="example_ToTitleSpecial" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">fmt.Println(strings.ToTitleSpecial(unicode.TurkishCase, &#34;dünyanın ilk borsa yapısı Aizonai kabul edilir&#34;))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">DÜNYANIN İLK BORSA YAPISI AİZONAİ KABUL EDİLİR
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="ToUpper">func <a href="../../src/strings/strings.go?s=15014:15043#L586">ToUpper</a>
+				<a class="permalink" href="index.html#ToUpper">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func ToUpper(s <a href="../builtin/index.html#string">string</a>) <a href="../builtin/index.html#string">string</a></pre>
+			<p>ToUpper returns s with all Unicode letters mapped to their upper case.
+
+			<div id="example_ToUpper" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">fmt.Println(strings.ToUpper(&#34;Gopher&#34;))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">GOPHER
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="ToUpperSpecial">func <a href="../../src/strings/strings.go?s=16711:16770#L671">ToUpperSpecial</a>
+				<a class="permalink" href="index.html#ToUpperSpecial">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func ToUpperSpecial(c <a href="../unicode/index.html">unicode</a>.<a href="../unicode/index.html#SpecialCase">SpecialCase</a>, s <a href="../builtin/index.html#string">string</a>) <a href="../builtin/index.html#string">string</a></pre>
+			<p>ToUpperSpecial returns a copy of the string s with all Unicode letters mapped to their
+upper case using the case mapping specified by c.
+
+			<div id="example_ToUpperSpecial" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">fmt.Println(strings.ToUpperSpecial(unicode.TurkishCase, &#34;örnek iş&#34;))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">ÖRNEK İŞ
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="ToValidUTF8">func <a href="../../src/strings/strings.go?s=17436:17482#L689">ToValidUTF8</a>
+				<a class="permalink" href="index.html#ToValidUTF8">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func ToValidUTF8(s, replacement <a href="../builtin/index.html#string">string</a>) <a href="../builtin/index.html#string">string</a></pre>
+			<p>ToValidUTF8 returns a copy of the string s with each run of invalid UTF-8 byte sequences
+replaced by the replacement string, which may be empty.
+
+			<div id="example_ToValidUTF8" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">fmt.Printf(&#34;%s\n&#34;, strings.ToValidUTF8(&#34;abc&#34;, &#34;\uFFFD&#34;))
+fmt.Printf(&#34;%s\n&#34;, strings.ToValidUTF8(&#34;a\xffb\xC0\xAFc\xff&#34;, &#34;&#34;))
+fmt.Printf(&#34;%s\n&#34;, strings.ToValidUTF8(&#34;\xed\xa0\x80&#34;, &#34;abc&#34;))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">abc
+abc
+abc
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Trim">func <a href="../../src/strings/strings.go?s=22464:22498#L881">Trim</a>
+				<a class="permalink" href="index.html#Trim">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Trim(s, cutset <a href="../builtin/index.html#string">string</a>) <a href="../builtin/index.html#string">string</a></pre>
+			<p>Trim returns a slice of the string s with all leading and
+trailing Unicode code points contained in cutset removed.
+
+			<div id="example_Trim" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">fmt.Print(strings.Trim(&#34;¡¡¡Hello, Gophers!!!&#34;, &#34;!¡&#34;))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">Hello, Gophers
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="TrimFunc">func <a href="../../src/strings/strings.go?s=20202:20251#L809">TrimFunc</a>
+				<a class="permalink" href="index.html#TrimFunc">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func TrimFunc(s <a href="../builtin/index.html#string">string</a>, f func(<a href="../builtin/index.html#rune">rune</a>) <a href="../builtin/index.html#bool">bool</a>) <a href="../builtin/index.html#string">string</a></pre>
+			<p>TrimFunc returns a slice of the string s with all leading
+and trailing Unicode code points c satisfying f(c) removed.
+
+			<div id="example_TrimFunc" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">fmt.Print(strings.TrimFunc(&#34;¡¡¡Hello, Gophers!!!&#34;, func(r rune) bool {
+    return !unicode.IsLetter(r) &amp;&amp; !unicode.IsNumber(r)
+}))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">Hello, Gophers
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="TrimLeft">func <a href="../../src/strings/strings.go?s=22987:23025#L898">TrimLeft</a>
+				<a class="permalink" href="index.html#TrimLeft">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func TrimLeft(s, cutset <a href="../builtin/index.html#string">string</a>) <a href="../builtin/index.html#string">string</a></pre>
+			<p>TrimLeft returns a slice of the string s with all leading
+Unicode code points contained in cutset removed.
+<p>To remove a prefix, use <a href="index.html#TrimPrefix">TrimPrefix</a> instead.
+
+			<div id="example_TrimLeft" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">fmt.Print(strings.TrimLeft(&#34;¡¡¡Hello, Gophers!!!&#34;, &#34;!¡&#34;))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">Hello, Gophers!!!
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="TrimLeftFunc">func <a href="../../src/strings/strings.go?s=19611:19664#L786">TrimLeftFunc</a>
+				<a class="permalink" href="index.html#TrimLeftFunc">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func TrimLeftFunc(s <a href="../builtin/index.html#string">string</a>, f func(<a href="../builtin/index.html#rune">rune</a>) <a href="../builtin/index.html#bool">bool</a>) <a href="../builtin/index.html#string">string</a></pre>
+			<p>TrimLeftFunc returns a slice of the string s with all leading
+Unicode code points c satisfying f(c) removed.
+
+			<div id="example_TrimLeftFunc" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">fmt.Print(strings.TrimLeftFunc(&#34;¡¡¡Hello, Gophers!!!&#34;, func(r rune) bool {
+    return !unicode.IsLetter(r) &amp;&amp; !unicode.IsNumber(r)
+}))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">Hello, Gophers!!!
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="TrimPrefix">func <a href="../../src/strings/strings.go?s=25866:25906#L1028">TrimPrefix</a>
+				<a class="permalink" href="index.html#TrimPrefix">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func TrimPrefix(s, prefix <a href="../builtin/index.html#string">string</a>) <a href="../builtin/index.html#string">string</a></pre>
+			<p>TrimPrefix returns s without the provided leading prefix string.
+If s doesn&apos;t start with prefix, s is returned unchanged.
+
+			<div id="example_TrimPrefix" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">var s = &#34;¡¡¡Hello, Gophers!!!&#34;
+s = strings.TrimPrefix(s, &#34;¡¡¡Hello, &#34;)
+s = strings.TrimPrefix(s, &#34;¡¡¡Howdy, &#34;)
+fmt.Print(s)
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">Gophers!!!
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="TrimRight">func <a href="../../src/strings/strings.go?s=23915:23954#L946">TrimRight</a>
+				<a class="permalink" href="index.html#TrimRight">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func TrimRight(s, cutset <a href="../builtin/index.html#string">string</a>) <a href="../builtin/index.html#string">string</a></pre>
+			<p>TrimRight returns a slice of the string s, with all trailing
+Unicode code points contained in cutset removed.
+<p>To remove a suffix, use <a href="index.html#TrimSuffix">TrimSuffix</a> instead.
+
+			<div id="example_TrimRight" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">fmt.Print(strings.TrimRight(&#34;¡¡¡Hello, Gophers!!!&#34;, &#34;!¡&#34;))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">¡¡¡Hello, Gophers
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="TrimRightFunc">func <a href="../../src/strings/strings.go?s=19859:19913#L796">TrimRightFunc</a>
+				<a class="permalink" href="index.html#TrimRightFunc">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func TrimRightFunc(s <a href="../builtin/index.html#string">string</a>, f func(<a href="../builtin/index.html#rune">rune</a>) <a href="../builtin/index.html#bool">bool</a>) <a href="../builtin/index.html#string">string</a></pre>
+			<p>TrimRightFunc returns a slice of the string s with all trailing
+Unicode code points c satisfying f(c) removed.
+
+			<div id="example_TrimRightFunc" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">fmt.Print(strings.TrimRightFunc(&#34;¡¡¡Hello, Gophers!!!&#34;, func(r rune) bool {
+    return !unicode.IsLetter(r) &amp;&amp; !unicode.IsNumber(r)
+}))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">¡¡¡Hello, Gophers
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="TrimSpace">func <a href="../../src/strings/strings.go?s=24851:24882#L992">TrimSpace</a>
+				<a class="permalink" href="index.html#TrimSpace">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func TrimSpace(s <a href="../builtin/index.html#string">string</a>) <a href="../builtin/index.html#string">string</a></pre>
+			<p>TrimSpace returns a slice of the string s, with all leading
+and trailing white space removed, as defined by Unicode.
+
+			<div id="example_TrimSpace" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">fmt.Println(strings.TrimSpace(&#34; \t\n Hello, Gophers \n\t\r\n&#34;))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">Hello, Gophers
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="TrimSuffix">func <a href="../../src/strings/strings.go?s=26104:26144#L1037">TrimSuffix</a>
+				<a class="permalink" href="index.html#TrimSuffix">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func TrimSuffix(s, suffix <a href="../builtin/index.html#string">string</a>) <a href="../builtin/index.html#string">string</a></pre>
+			<p>TrimSuffix returns s without the provided trailing suffix string.
+If s doesn&apos;t end with suffix, s is returned unchanged.
+
+			<div id="example_TrimSuffix" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">var s = &#34;¡¡¡Hello, Gophers!!!&#34;
+s = strings.TrimSuffix(s, &#34;, Gophers!!!&#34;)
+s = strings.TrimSuffix(s, &#34;, Marmots!!!&#34;)
+fmt.Print(s)
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">¡¡¡Hello
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+		
+			
+			
+			<h2 id="Builder">type <a href="../../src/strings/builder.go?s=416:509#L6">Builder</a>
+				<a class="permalink" href="index.html#Builder">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A Builder is used to efficiently build a string using <a href="index.html#Builder.Write">Builder.Write</a> methods.
+It minimizes memory copying. The zero value is ready to use.
+Do not copy a non-zero Builder.
+
+			<pre>type Builder struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			<div id="example_Builder" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">var b strings.Builder
+for i := 3; i &gt;= 1; i-- {
+    fmt.Fprintf(&amp;b, &#34;%d...&#34;, i)
+}
+b.WriteString(&#34;ignition&#34;)
+fmt.Println(b.String())
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">3...2...1...ignition
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+			
+
+			
+
+			
+				
+				<h3 id="Builder.Cap">func (*Builder) <a href="../../src/strings/builder.go?s=1816:1843#L48">Cap</a>
+					<a class="permalink" href="index.html#Builder.Cap">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (b *<a href="index.html#Builder">Builder</a>) Cap() <a href="../builtin/index.html#int">int</a></pre>
+				<p>Cap returns the capacity of the builder&apos;s underlying byte slice. It is the
+total space allocated for the string being built and includes any bytes
+already written.
+
+				
+				
+				
+			
+				
+				<h3 id="Builder.Grow">func (*Builder) <a href="../../src/strings/builder.go?s=2410:2439#L67">Grow</a>
+					<a class="permalink" href="index.html#Builder.Grow">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (b *<a href="index.html#Builder">Builder</a>) Grow(n <a href="../builtin/index.html#int">int</a>)</pre>
+				<p>Grow grows b&apos;s capacity, if necessary, to guarantee space for
+another n bytes. After Grow(n), at least n bytes can be written to b
+without another allocation. If n is negative, Grow panics.
+
+				
+				
+				
+			
+				
+				<h3 id="Builder.Len">func (*Builder) <a href="../../src/strings/builder.go?s=1592:1619#L43">Len</a>
+					<a class="permalink" href="index.html#Builder.Len">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (b *<a href="index.html#Builder">Builder</a>) Len() <a href="../builtin/index.html#int">int</a></pre>
+				<p>Len returns the number of accumulated bytes; b.Len() == len(b.String()).
+
+				
+				
+				
+			
+				
+				<h3 id="Builder.Reset">func (*Builder) <a href="../../src/strings/builder.go?s=1910:1935#L51">Reset</a>
+					<a class="permalink" href="index.html#Builder.Reset">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (b *<a href="index.html#Builder">Builder</a>) Reset()</pre>
+				<p>Reset resets the <a href="index.html#Builder">Builder</a> to be empty.
+
+				
+				
+				
+			
+				
+				<h3 id="Builder.String">func (*Builder) <a href="../../src/strings/builder.go?s=1418:1451#L38">String</a>
+					<a class="permalink" href="index.html#Builder.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (b *<a href="index.html#Builder">Builder</a>) String() <a href="../builtin/index.html#string">string</a></pre>
+				<p>String returns the accumulated string.
+
+				
+				
+				
+			
+				
+				<h3 id="Builder.Write">func (*Builder) <a href="../../src/strings/builder.go?s=2657:2703#L79">Write</a>
+					<a class="permalink" href="index.html#Builder.Write">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (b *<a href="index.html#Builder">Builder</a>) Write(p []<a href="../builtin/index.html#byte">byte</a>) (<a href="../builtin/index.html#int">int</a>, <a href="../builtin/index.html#error">error</a>)</pre>
+				<p>Write appends the contents of p to b&apos;s buffer.
+Write always returns len(p), nil.
+
+				
+				
+				
+			
+				
+				<h3 id="Builder.WriteByte">func (*Builder) <a href="../../src/strings/builder.go?s=2857:2898#L87">WriteByte</a>
+					<a class="permalink" href="index.html#Builder.WriteByte">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (b *<a href="index.html#Builder">Builder</a>) WriteByte(c <a href="../builtin/index.html#byte">byte</a>) <a href="../builtin/index.html#error">error</a></pre>
+				<p>WriteByte appends the byte c to b&apos;s buffer.
+The returned error is always nil.
+
+				
+				
+				
+			
+				
+				<h3 id="Builder.WriteRune">func (*Builder) <a href="../../src/strings/builder.go?s=3083:3131#L95">WriteRune</a>
+					<a class="permalink" href="index.html#Builder.WriteRune">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (b *<a href="index.html#Builder">Builder</a>) WriteRune(r <a href="../builtin/index.html#rune">rune</a>) (<a href="../builtin/index.html#int">int</a>, <a href="../builtin/index.html#error">error</a>)</pre>
+				<p>WriteRune appends the UTF-8 encoding of Unicode code point r to b&apos;s buffer.
+It returns the length of r and a nil error.
+
+				
+				
+				
+			
+				
+				<h3 id="Builder.WriteString">func (*Builder) <a href="../../src/strings/builder.go?s=3335:3387#L104">WriteString</a>
+					<a class="permalink" href="index.html#Builder.WriteString">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (b *<a href="index.html#Builder">Builder</a>) WriteString(s <a href="../builtin/index.html#string">string</a>) (<a href="../builtin/index.html#int">int</a>, <a href="../builtin/index.html#error">error</a>)</pre>
+				<p>WriteString appends the contents of s to b&apos;s buffer.
+It returns the length of s and a nil error.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Reader">type <a href="../../src/strings/reader.go?s=492:622#L7">Reader</a>
+				<a class="permalink" href="index.html#Reader">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A Reader implements the <a href="http://localhost:8080/io#Reader">io.Reader</a>, <a href="http://localhost:8080/io#ReaderAt">io.ReaderAt</a>, <a href="http://localhost:8080/io#ByteReader">io.ByteReader</a>, <a href="http://localhost:8080/io#ByteScanner">io.ByteScanner</a>,
+<a href="http://localhost:8080/io#RuneReader">io.RuneReader</a>, <a href="http://localhost:8080/io#RuneScanner">io.RuneScanner</a>, <a href="http://localhost:8080/io#Seeker">io.Seeker</a>, and <a href="http://localhost:8080/io#WriterTo">io.WriterTo</a> interfaces by reading
+from a string.
+The zero value for Reader operates like a Reader of an empty string.
+
+			<pre>type Reader struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="NewReader">func <a href="../../src/strings/reader.go?s=3953:3985#L150">NewReader</a>
+					<a class="permalink" href="index.html#NewReader">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func NewReader(s <a href="../builtin/index.html#string">string</a>) *<a href="index.html#Reader">Reader</a></pre>
+				<p>NewReader returns a new <a href="index.html#Reader">Reader</a> reading from s.
+It is similar to <a href="http://localhost:8080/bytes#NewBufferString">bytes.NewBufferString</a> but more efficient and non-writable.
+
+				
+				
+			
+
+			
+				
+				<h3 id="Reader.Len">func (*Reader) <a href="../../src/strings/reader.go?s=699:725#L15">Len</a>
+					<a class="permalink" href="index.html#Reader.Len">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (r *<a href="index.html#Reader">Reader</a>) Len() <a href="../builtin/index.html#int">int</a></pre>
+				<p>Len returns the number of bytes of the unread portion of the
+string.
+
+				
+				
+				
+			
+				
+				<h3 id="Reader.Read">func (*Reader) <a href="../../src/strings/reader.go?s=1143:1193#L29">Read</a>
+					<a class="permalink" href="index.html#Reader.Read">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (r *<a href="index.html#Reader">Reader</a>) Read(b []<a href="../builtin/index.html#byte">byte</a>) (n <a href="../builtin/index.html#int">int</a>, err <a href="../builtin/index.html#error">error</a>)</pre>
+				<p>Read implements the <a href="http://localhost:8080/io#Reader">io.Reader</a> interface.
+
+				
+				
+				
+			
+				
+				<h3 id="Reader.ReadAt">func (*Reader) <a href="../../src/strings/reader.go?s=1366:1429#L40">ReadAt</a>
+					<a class="permalink" href="index.html#Reader.ReadAt">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (r *<a href="index.html#Reader">Reader</a>) ReadAt(b []<a href="../builtin/index.html#byte">byte</a>, off <a href="../builtin/index.html#int64">int64</a>) (n <a href="../builtin/index.html#int">int</a>, err <a href="../builtin/index.html#error">error</a>)</pre>
+				<p>ReadAt implements the <a href="http://localhost:8080/io#ReaderAt">io.ReaderAt</a> interface.
+
+				
+				
+				
+			
+				
+				<h3 id="Reader.ReadByte">func (*Reader) <a href="../../src/strings/reader.go?s=1731:1772#L56">ReadByte</a>
+					<a class="permalink" href="index.html#Reader.ReadByte">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (r *<a href="index.html#Reader">Reader</a>) ReadByte() (<a href="../builtin/index.html#byte">byte</a>, <a href="../builtin/index.html#error">error</a>)</pre>
+				<p>ReadByte implements the <a href="http://localhost:8080/io#ByteReader">io.ByteReader</a> interface.
+
+				
+				
+				
+			
+				
+				<h3 id="Reader.ReadRune">func (*Reader) <a href="../../src/strings/reader.go?s=2162:2220#L77">ReadRune</a>
+					<a class="permalink" href="index.html#Reader.ReadRune">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (r *<a href="index.html#Reader">Reader</a>) ReadRune() (ch <a href="../builtin/index.html#rune">rune</a>, size <a href="../builtin/index.html#int">int</a>, err <a href="../builtin/index.html#error">error</a>)</pre>
+				<p>ReadRune implements the <a href="http://localhost:8080/io#RuneReader">io.RuneReader</a> interface.
+
+				
+				
+				
+			
+				
+				<h3 id="Reader.Reset">func (*Reader) <a href="../../src/strings/reader.go?s=3760:3792#L146">Reset</a>
+					<a class="permalink" href="index.html#Reader.Reset">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (r *<a href="index.html#Reader">Reader</a>) Reset(s <a href="../builtin/index.html#string">string</a>)</pre>
+				<p>Reset resets the <a href="index.html#Reader">Reader</a> to be reading from s.
+
+				
+				
+				
+			
+				
+				<h3 id="Reader.Seek">func (*Reader) <a href="../../src/strings/reader.go?s=2870:2932#L106">Seek</a>
+					<a class="permalink" href="index.html#Reader.Seek">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (r *<a href="index.html#Reader">Reader</a>) Seek(offset <a href="../builtin/index.html#int64">int64</a>, whence <a href="../builtin/index.html#int">int</a>) (<a href="../builtin/index.html#int64">int64</a>, <a href="../builtin/index.html#error">error</a>)</pre>
+				<p>Seek implements the <a href="http://localhost:8080/io#Seeker">io.Seeker</a> interface.
+
+				
+				
+				
+			
+				
+				<h3 id="Reader.Size">func (*Reader) <a href="../../src/strings/reader.go?s=1039:1068#L26">Size</a>
+					<a class="permalink" href="index.html#Reader.Size">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (r *<a href="index.html#Reader">Reader</a>) Size() <a href="../builtin/index.html#int64">int64</a></pre>
+				<p>Size returns the original length of the underlying string.
+Size is the number of bytes available for reading via <a href="index.html#Reader.ReadAt">Reader.ReadAt</a>.
+The returned value is always the same and is not affected by calls
+to any other method.
+
+				
+				
+				
+			
+				
+				<h3 id="Reader.UnreadByte">func (*Reader) <a href="../../src/strings/reader.go?s=1940:1975#L67">UnreadByte</a>
+					<a class="permalink" href="index.html#Reader.UnreadByte">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (r *<a href="index.html#Reader">Reader</a>) UnreadByte() <a href="../builtin/index.html#error">error</a></pre>
+				<p>UnreadByte implements the <a href="http://localhost:8080/io#ByteScanner">io.ByteScanner</a> interface.
+
+				
+				
+				
+			
+				
+				<h3 id="Reader.UnreadRune">func (*Reader) <a href="../../src/strings/reader.go?s=2528:2563#L93">UnreadRune</a>
+					<a class="permalink" href="index.html#Reader.UnreadRune">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (r *<a href="index.html#Reader">Reader</a>) UnreadRune() <a href="../builtin/index.html#error">error</a></pre>
+				<p>UnreadRune implements the <a href="http://localhost:8080/io#RuneScanner">io.RuneScanner</a> interface.
+
+				
+				
+				
+			
+				
+				<h3 id="Reader.WriteTo">func (*Reader) <a href="../../src/strings/reader.go?s=3352:3410#L127">WriteTo</a>
+					<a class="permalink" href="index.html#Reader.WriteTo">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (r *<a href="index.html#Reader">Reader</a>) WriteTo(w <a href="../io/index.html">io</a>.<a href="../io/index.html#Writer">Writer</a>) (n <a href="../builtin/index.html#int64">int64</a>, err <a href="../builtin/index.html#error">error</a>)</pre>
+				<p>WriteTo implements the <a href="http://localhost:8080/io#WriterTo">io.WriterTo</a> interface.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Replacer">type <a href="../../src/strings/replace.go?s=318:421#L4">Replacer</a>
+				<a class="permalink" href="index.html#Replacer">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Replacer replaces a list of strings with replacements.
+It is safe for concurrent use by multiple goroutines.
+
+			<pre>type Replacer struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="NewReplacer">func <a href="../../src/strings/replace.go?s=918:962#L22">NewReplacer</a>
+					<a class="permalink" href="index.html#NewReplacer">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func NewReplacer(oldnew ...<a href="../builtin/index.html#string">string</a>) *<a href="index.html#Replacer">Replacer</a></pre>
+				<p>NewReplacer returns a new <a href="index.html#Replacer">Replacer</a> from a list of old, new string
+pairs. Replacements are performed in the order they appear in the
+target string, without overlapping matches. The old string
+comparisons are done in argument order.
+<p>NewReplacer panics if given an odd number of arguments.
+
+				<div id="example_NewReplacer" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">r := strings.NewReplacer(&#34;&lt;&#34;, &#34;&amp;lt;&#34;, &#34;&gt;&#34;, &#34;&amp;gt;&#34;)
+fmt.Println(r.Replace(&#34;This is &lt;b&gt;HTML&lt;/b&gt;!&#34;))
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">This is &amp;lt;b&amp;gt;HTML&amp;lt;/b&amp;gt;!
+</pre>
+			
+		
+	</div>
+</div>
+
+				
+			
+
+			
+				
+				<h3 id="Replacer.Replace">func (*Replacer) <a href="../../src/strings/replace.go?s=2499:2542#L85">Replace</a>
+					<a class="permalink" href="index.html#Replacer.Replace">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (r *<a href="index.html#Replacer">Replacer</a>) Replace(s <a href="../builtin/index.html#string">string</a>) <a href="../builtin/index.html#string">string</a></pre>
+				<p>Replace returns a copy of s with all replacements performed.
+
+				
+				
+				
+			
+				
+				<h3 id="Replacer.WriteString">func (*Replacer) <a href="../../src/strings/replace.go?s=2657:2729#L91">WriteString</a>
+					<a class="permalink" href="index.html#Replacer.WriteString">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (r *<a href="index.html#Replacer">Replacer</a>) WriteString(w <a href="../io/index.html">io</a>.<a href="../io/index.html#Writer">Writer</a>, s <a href="../builtin/index.html#string">string</a>) (n <a href="../builtin/index.html#int">int</a>, err <a href="../builtin/index.html#error">error</a>)</pre>
+				<p>WriteString writes s to w with all replacements performed.
+
+				
+				
+				
+			
+		
+	
+
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>elliptic - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package elliptic
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "crypto/elliptic"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>Package elliptic implements the standard NIST P-224, P-256, P-384, and P-521
+elliptic curves over prime fields.
+<p>Direct use of this package is deprecated, beyond the <a href="index.html#P224">P224</a>, <a href="index.html#P256">P256</a>, <a href="index.html#P384">P384</a>,
+and <a href="index.html#P521">P521</a> values necessary to use <a href="http://localhost:8080/crypto/ecdsa">crypto/ecdsa</a>. Most other uses
+should migrate to the more efficient and safer <a href="http://localhost:8080/crypto/ecdh">crypto/ecdh</a>, or to
+third-party modules for lower-level functionality.
+
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+			
+			
+				
+				<dd><a href="index.html#GenerateKey">func GenerateKey(curve Curve, rand io.Reader) (priv []byte, x, y *big.Int, err error)</a></dd>
+			
+				
+				<dd><a href="index.html#Marshal">func Marshal(curve Curve, x, y *big.Int) []byte</a></dd>
+			
+				
+				<dd><a href="index.html#MarshalCompressed">func MarshalCompressed(curve Curve, x, y *big.Int) []byte</a></dd>
+			
+				
+				<dd><a href="index.html#Unmarshal">func Unmarshal(curve Curve, data []byte) (x, y *big.Int)</a></dd>
+			
+				
+				<dd><a href="index.html#UnmarshalCompressed">func UnmarshalCompressed(curve Curve, data []byte) (x, y *big.Int)</a></dd>
+			
+			
+				
+				<dd><a href="index.html#Curve">type Curve</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#P224">func P224() Curve</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#P256">func P256() Curve</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#P384">func P384() Curve</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#P521">func P521() Curve</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#CurveParams">type CurveParams</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#CurveParams.Add">func (curve *CurveParams) Add(x1, y1, x2, y2 *big.Int) (*big.Int, *big.Int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#CurveParams.Double">func (curve *CurveParams) Double(x1, y1 *big.Int) (*big.Int, *big.Int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#CurveParams.IsOnCurve">func (curve *CurveParams) IsOnCurve(x, y *big.Int) bool</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#CurveParams.Params">func (curve *CurveParams) Params() *CurveParams</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#CurveParams.ScalarBaseMult">func (curve *CurveParams) ScalarBaseMult(k []byte) (*big.Int, *big.Int)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#CurveParams.ScalarMult">func (curve *CurveParams) ScalarMult(Bx, By *big.Int, k []byte) (*big.Int, *big.Int)</a></dd>
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../../src/crypto/elliptic/elliptic.go">elliptic.go</a>
+			
+				<a href="../../../src/crypto/elliptic/nistec.go">nistec.go</a>
+			
+				<a href="../../../src/crypto/elliptic/nistec_p256.go">nistec_p256.go</a>
+			
+				<a href="../../../src/crypto/elliptic/params.go">params.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+		
+		
+			
+			
+			<h2 id="GenerateKey">func <a href="../../../src/crypto/elliptic/elliptic.go?s=2879:2964#L65">GenerateKey</a>
+				<a class="permalink" href="index.html#GenerateKey">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func GenerateKey(curve <a href="index.html#Curve">Curve</a>, rand <a href="../../io/index.html">io</a>.<a href="../../io/index.html#Reader">Reader</a>) (priv []<a href="../../builtin/index.html#byte">byte</a>, x, y *<a href="../../math/big/index.html">big</a>.<a href="../../math/big/index.html#Int">Int</a>, err <a href="../../builtin/index.html#error">error</a>)</pre>
+			<p>GenerateKey returns a public/private key pair. The private key is
+generated using the given reader, which must return random data.
+<p>Deprecated: for ECDH, use the GenerateKey methods of the <a href="http://localhost:8080/crypto/ecdh">crypto/ecdh</a> package;
+for ECDSA, use the GenerateKey function of the crypto/ecdsa package.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Marshal">func <a href="../../../src/crypto/elliptic/elliptic.go?s=4016:4063#L99">Marshal</a>
+				<a class="permalink" href="index.html#Marshal">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Marshal(curve <a href="index.html#Curve">Curve</a>, x, y *<a href="../../math/big/index.html">big</a>.<a href="../../math/big/index.html#Int">Int</a>) []<a href="../../builtin/index.html#byte">byte</a></pre>
+			<p>Marshal converts a point on the curve into the uncompressed form specified in
+SEC 1, Version 2.0, Section 2.3.3. If the point is not on the curve (or is
+the conventional point at infinity), the behavior is undefined.
+<p>Deprecated: for ECDH, use the crypto/ecdh package. This function returns an
+encoding equivalent to that of PublicKey.Bytes in crypto/ecdh.
+
+			
+			
+
+		
+			
+			
+			<h2 id="MarshalCompressed">func <a href="../../../src/crypto/elliptic/elliptic.go?s=4540:4597#L116">MarshalCompressed</a>
+				<a class="permalink" href="index.html#MarshalCompressed">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func MarshalCompressed(curve <a href="index.html#Curve">Curve</a>, x, y *<a href="../../math/big/index.html">big</a>.<a href="../../math/big/index.html#Int">Int</a>) []<a href="../../builtin/index.html#byte">byte</a></pre>
+			<p>MarshalCompressed converts a point on the curve into the compressed form
+specified in SEC 1, Version 2.0, Section 2.3.3. If the point is not on the
+curve (or is the conventional point at infinity), the behavior is undefined.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Unmarshal">func <a href="../../../src/crypto/elliptic/elliptic.go?s=5618:5674#L143">Unmarshal</a>
+				<a class="permalink" href="index.html#Unmarshal">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Unmarshal(curve <a href="index.html#Curve">Curve</a>, data []<a href="../../builtin/index.html#byte">byte</a>) (x, y *<a href="../../math/big/index.html">big</a>.<a href="../../math/big/index.html#Int">Int</a>)</pre>
+			<p>Unmarshal converts a point, serialized by <a href="index.html#Marshal">Marshal</a>, into an x, y pair. It is
+an error if the point is not in uncompressed form, is not on the curve, or is
+the point at infinity. On error, x = nil.
+<p>Deprecated: for ECDH, use the crypto/ecdh package. This function accepts an
+encoding equivalent to that of the NewPublicKey methods in crypto/ecdh.
+
+			
+			
+
+		
+			
+			
+			<h2 id="UnmarshalCompressed">func <a href="../../../src/crypto/elliptic/elliptic.go?s=6365:6431#L170">UnmarshalCompressed</a>
+				<a class="permalink" href="index.html#UnmarshalCompressed">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func UnmarshalCompressed(curve <a href="index.html#Curve">Curve</a>, data []<a href="../../builtin/index.html#byte">byte</a>) (x, y *<a href="../../math/big/index.html">big</a>.<a href="../../math/big/index.html#Int">Int</a>)</pre>
+			<p>UnmarshalCompressed converts a point, serialized by <a href="index.html#MarshalCompressed">MarshalCompressed</a>, into
+an x, y pair. It is an error if the point is not in compressed form, is not
+on the curve, or is the point at infinity. On error, x = nil.
+
+			
+			
+
+		
+		
+			
+			
+			<h2 id="Curve">type <a href="../../../src/crypto/elliptic/elliptic.go?s=1131:2519#L21">Curve</a>
+				<a class="permalink" href="index.html#Curve">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A Curve represents a short-form Weierstrass curve with a=-3.
+<p>The behavior of Add, Double, and ScalarMult when the input is not a point on
+the curve is undefined.
+<p>Note that the conventional point at infinity (0, 0) is not considered on the
+curve, although it can be returned by Add, Double, ScalarMult, or
+ScalarBaseMult (but not the <a href="index.html#Unmarshal">Unmarshal</a> or <a href="index.html#UnmarshalCompressed">UnmarshalCompressed</a> functions).
+<p>Using Curve implementations besides those returned by <a href="index.html#P224">P224</a>, <a href="index.html#P256">P256</a>, <a href="index.html#P384">P384</a>,
+and <a href="index.html#P521">P521</a> is deprecated.
+
+			<pre>type Curve interface {
+    <span class="comment">// Params returns the parameters for the curve.</span>
+    Params() *<a href="index.html#CurveParams">CurveParams</a>
+
+    <span class="comment">// IsOnCurve reports whether the given (x,y) lies on the curve.</span>
+    <span class="comment">//</span>
+    <span class="comment">// Deprecated: this is a low-level unsafe API. For ECDH, use the crypto/ecdh</span>
+    <span class="comment">// package. The NewPublicKey methods of NIST curves in crypto/ecdh accept</span>
+    <span class="comment">// the same encoding as the Unmarshal function, and perform on-curve checks.</span>
+    IsOnCurve(x, y *<a href="../../math/big/index.html">big</a>.<a href="../../math/big/index.html#Int">Int</a>) <a href="../../builtin/index.html#bool">bool</a>
+
+    <span class="comment">// Add returns the sum of (x1,y1) and (x2,y2).</span>
+    <span class="comment">//</span>
+    <span class="comment">// Deprecated: this is a low-level unsafe API.</span>
+    Add(x1, y1, x2, y2 *<a href="../../math/big/index.html">big</a>.<a href="../../math/big/index.html#Int">Int</a>) (x, y *<a href="../../math/big/index.html">big</a>.<a href="../../math/big/index.html#Int">Int</a>)
+
+    <span class="comment">// Double returns 2*(x,y).</span>
+    <span class="comment">//</span>
+    <span class="comment">// Deprecated: this is a low-level unsafe API.</span>
+    Double(x1, y1 *<a href="../../math/big/index.html">big</a>.<a href="../../math/big/index.html#Int">Int</a>) (x, y *<a href="../../math/big/index.html">big</a>.<a href="../../math/big/index.html#Int">Int</a>)
+
+    <span class="comment">// ScalarMult returns k*(x,y) where k is an integer in big-endian form.</span>
+    <span class="comment">//</span>
+    <span class="comment">// Deprecated: this is a low-level unsafe API. For ECDH, use the crypto/ecdh</span>
+    <span class="comment">// package. Most uses of ScalarMult can be replaced by a call to the ECDH</span>
+    <span class="comment">// methods of NIST curves in crypto/ecdh.</span>
+    ScalarMult(x1, y1 *<a href="../../math/big/index.html">big</a>.<a href="../../math/big/index.html#Int">Int</a>, k []<a href="../../builtin/index.html#byte">byte</a>) (x, y *<a href="../../math/big/index.html">big</a>.<a href="../../math/big/index.html#Int">Int</a>)
+
+    <span class="comment">// ScalarBaseMult returns k*G, where G is the base point of the group</span>
+    <span class="comment">// and k is an integer in big-endian form.</span>
+    <span class="comment">//</span>
+    <span class="comment">// Deprecated: this is a low-level unsafe API. For ECDH, use the crypto/ecdh</span>
+    <span class="comment">// package. Most uses of ScalarBaseMult can be replaced by a call to the</span>
+    <span class="comment">// PrivateKey.PublicKey method in crypto/ecdh.</span>
+    ScalarBaseMult(k []<a href="../../builtin/index.html#byte">byte</a>) (x, y *<a href="../../math/big/index.html">big</a>.<a href="../../math/big/index.html#Int">Int</a>)
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="P224">func <a href="../../../src/crypto/elliptic/elliptic.go?s=7847:7864#L230">P224</a>
+					<a class="permalink" href="index.html#P224">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func P224() <a href="index.html#Curve">Curve</a></pre>
+				<p>P224 returns a <a href="index.html#Curve">Curve</a> which implements NIST P-224 (FIPS 186-3, section D.2.2),
+also known as secp224r1. The CurveParams.Name of this <a href="index.html#Curve">Curve</a> is &quot;P-224&quot;.
+<p>Multiple invocations of this function will return the same value, so it can
+be used for equality checks and switch statements.
+<p>The cryptographic operations are implemented using constant-time algorithms.
+
+				
+				
+			
+				
+				<h3 id="P256">func <a href="../../../src/crypto/elliptic/elliptic.go?s=8301:8318#L243">P256</a>
+					<a class="permalink" href="index.html#P256">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func P256() <a href="index.html#Curve">Curve</a></pre>
+				<p>P256 returns a <a href="index.html#Curve">Curve</a> which implements NIST P-256 (FIPS 186-3, section D.2.3),
+also known as secp256r1 or prime256v1. The CurveParams.Name of this <a href="index.html#Curve">Curve</a> is
+&quot;P-256&quot;.
+<p>Multiple invocations of this function will return the same value, so it can
+be used for equality checks and switch statements.
+<p>The cryptographic operations are implemented using constant-time algorithms.
+
+				
+				
+			
+				
+				<h3 id="P384">func <a href="../../../src/crypto/elliptic/elliptic.go?s=8738:8755#L255">P384</a>
+					<a class="permalink" href="index.html#P384">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func P384() <a href="index.html#Curve">Curve</a></pre>
+				<p>P384 returns a <a href="index.html#Curve">Curve</a> which implements NIST P-384 (FIPS 186-3, section D.2.4),
+also known as secp384r1. The CurveParams.Name of this <a href="index.html#Curve">Curve</a> is &quot;P-384&quot;.
+<p>Multiple invocations of this function will return the same value, so it can
+be used for equality checks and switch statements.
+<p>The cryptographic operations are implemented using constant-time algorithms.
+
+				
+				
+			
+				
+				<h3 id="P521">func <a href="../../../src/crypto/elliptic/elliptic.go?s=9175:9192#L267">P521</a>
+					<a class="permalink" href="index.html#P521">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func P521() <a href="index.html#Curve">Curve</a></pre>
+				<p>P521 returns a <a href="index.html#Curve">Curve</a> which implements NIST P-521 (FIPS 186-3, section D.2.5),
+also known as secp521r1. The CurveParams.Name of this <a href="index.html#Curve">Curve</a> is &quot;P-521&quot;.
+<p>Multiple invocations of this function will return the same value, so it can
+be used for equality checks and switch statements.
+<p>The cryptographic operations are implemented using constant-time algorithms.
+
+				
+				
+			
+
+			
+		
+			
+			
+			<h2 id="CurveParams">type <a href="../../../src/crypto/elliptic/params.go?s=529:868#L5">CurveParams</a>
+				<a class="permalink" href="index.html#CurveParams">&#xb6;</a>
+				
+				
+			</h2>
+			<p>CurveParams contains the parameters of an elliptic curve and also provides
+a generic, non-constant time implementation of <a href="index.html#Curve">Curve</a>.
+<p>The generic Curve implementation is deprecated, and using custom curves
+(those not returned by <a href="index.html#P224">P224</a>, <a href="index.html#P256">P256</a>, <a href="index.html#P384">P384</a>, and <a href="index.html#P521">P521</a>) is not guaranteed
+to provide any security property.
+
+			<pre>type CurveParams struct {
+<span id="CurveParams.P"></span>    P       *<a href="../../math/big/index.html">big</a>.<a href="../../math/big/index.html#Int">Int</a> <span class="comment">// the order of the underlying field</span>
+<span id="CurveParams.N"></span>    N       *<a href="../../math/big/index.html">big</a>.<a href="../../math/big/index.html#Int">Int</a> <span class="comment">// the order of the base point</span>
+<span id="CurveParams.B"></span>    B       *<a href="../../math/big/index.html">big</a>.<a href="../../math/big/index.html#Int">Int</a> <span class="comment">// the constant of the curve equation</span>
+<span id="CurveParams.Gx"></span>    Gx, Gy  *<a href="../../math/big/index.html">big</a>.<a href="../../math/big/index.html#Int">Int</a> <span class="comment">// (x,y) of the base point</span>
+<span id="CurveParams.BitSize"></span>    BitSize <a href="../../builtin/index.html#int">int</a>      <span class="comment">// the size of the underlying field</span>
+<span id="CurveParams.Name"></span>    Name    <a href="../../builtin/index.html#string">string</a>   <span class="comment">// the canonical name of the curve</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="CurveParams.Add">func (*CurveParams) <a href="../../../src/crypto/elliptic/params.go?s=3668:3743#L100">Add</a>
+					<a class="permalink" href="index.html#CurveParams.Add">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (curve *<a href="index.html#CurveParams">CurveParams</a>) Add(x1, y1, x2, y2 *<a href="../../math/big/index.html">big</a>.<a href="../../math/big/index.html#Int">Int</a>) (*<a href="../../math/big/index.html">big</a>.<a href="../../math/big/index.html#Int">Int</a>, *<a href="../../math/big/index.html">big</a>.<a href="../../math/big/index.html#Int">Int</a>)</pre>
+				<p>Add implements [Curve.Add].
+<p>Deprecated: the <a href="index.html#CurveParams">CurveParams</a> methods are deprecated and are not guaranteed to
+provide any security property. For ECDH, use the <a href="http://localhost:8080/crypto/ecdh">crypto/ecdh</a> package.
+For ECDSA, use the <a href="http://localhost:8080/crypto/ecdsa">crypto/ecdsa</a> package with a <a href="index.html#Curve">Curve</a> value returned directly
+from <a href="index.html#P224">P224</a>, <a href="index.html#P256">P256</a>, <a href="index.html#P384">P384</a>, or <a href="index.html#P521">P521</a>.
+
+				
+				
+				
+			
+				
+				<h3 id="CurveParams.Double">func (*CurveParams) <a href="../../../src/crypto/elliptic/params.go?s=6129:6199#L198">Double</a>
+					<a class="permalink" href="index.html#CurveParams.Double">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (curve *<a href="index.html#CurveParams">CurveParams</a>) Double(x1, y1 *<a href="../../math/big/index.html">big</a>.<a href="../../math/big/index.html#Int">Int</a>) (*<a href="../../math/big/index.html">big</a>.<a href="../../math/big/index.html#Int">Int</a>, *<a href="../../math/big/index.html">big</a>.<a href="../../math/big/index.html#Int">Int</a>)</pre>
+				<p>Double implements [Curve.Double].
+<p>Deprecated: the [CurveParams】 methods are deprecated and are not guaranteed to
+provide any security property. For ECDH, use the <a href="http://localhost:8080/crypto/ecdh">crypto/ecdh</a> package.
+For ECDSA, use the <a href="http://localhost:8080/crypto/ecdsa">crypto/ecdsa</a> package with a <a href="index.html#Curve">Curve</a> value returned directly
+from <a href="index.html#P224">P224</a>, <a href="index.html#P256">P256</a>, <a href="index.html#P384">P384</a>, or <a href="index.html#P521">P521</a>.
+
+				
+				
+				
+			
+				
+				<h3 id="CurveParams.IsOnCurve">func (*CurveParams) <a href="../../../src/crypto/elliptic/params.go?s=1987:2042#L46">IsOnCurve</a>
+					<a class="permalink" href="index.html#CurveParams.IsOnCurve">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (curve *<a href="index.html#CurveParams">CurveParams</a>) IsOnCurve(x, y *<a href="../../math/big/index.html">big</a>.<a href="../../math/big/index.html#Int">Int</a>) <a href="../../builtin/index.html#bool">bool</a></pre>
+				<p>IsOnCurve implements [Curve.IsOnCurve].
+<p>Deprecated: the <a href="index.html#CurveParams">CurveParams</a> methods are deprecated and are not guaranteed to
+provide any security property. For ECDH, use the <a href="http://localhost:8080/crypto/ecdh">crypto/ecdh</a> package.
+For ECDSA, use the <a href="http://localhost:8080/crypto/ecdsa">crypto/ecdsa</a> package with a <a href="index.html#Curve">Curve</a> value returned directly
+from <a href="index.html#P224">P224</a>, <a href="index.html#P256">P256</a>, <a href="index.html#P384">P384</a>, or <a href="index.html#P521">P521</a>.
+
+				
+				
+				
+			
+				
+				<h3 id="CurveParams.Params">func (*CurveParams) <a href="../../../src/crypto/elliptic/params.go?s=870:917#L14">Params</a>
+					<a class="permalink" href="index.html#CurveParams.Params">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (curve *<a href="index.html#CurveParams">CurveParams</a>) Params() *<a href="index.html#CurveParams">CurveParams</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="CurveParams.ScalarBaseMult">func (*CurveParams) <a href="../../../src/crypto/elliptic/params.go?s=9281:9352#L307">ScalarBaseMult</a>
+					<a class="permalink" href="index.html#CurveParams.ScalarBaseMult">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (curve *<a href="index.html#CurveParams">CurveParams</a>) ScalarBaseMult(k []<a href="../../builtin/index.html#byte">byte</a>) (*<a href="../../math/big/index.html">big</a>.<a href="../../math/big/index.html#Int">Int</a>, *<a href="../../math/big/index.html">big</a>.<a href="../../math/big/index.html#Int">Int</a>)</pre>
+				<p>ScalarBaseMult implements [Curve.ScalarBaseMult].
+<p>Deprecated: the <a href="index.html#CurveParams">CurveParams</a> methods are deprecated and are not guaranteed to
+provide any security property. For ECDH, use the <a href="http://localhost:8080/crypto/ecdh">crypto/ecdh</a> package.
+For ECDSA, use the <a href="http://localhost:8080/crypto/ecdsa">crypto/ecdsa</a> package with a <a href="index.html#Curve">Curve</a> value returned directly
+from <a href="index.html#P224">P224</a>, <a href="index.html#P256">P256</a>, <a href="index.html#P384">P384</a>, or <a href="index.html#P521">P521</a>.
+
+				
+				
+				
+			
+				
+				<h3 id="CurveParams.ScalarMult">func (*CurveParams) <a href="../../../src/crypto/elliptic/params.go?s=8250:8334#L277">ScalarMult</a>
+					<a class="permalink" href="index.html#CurveParams.ScalarMult">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (curve *<a href="index.html#CurveParams">CurveParams</a>) ScalarMult(Bx, By *<a href="../../math/big/index.html">big</a>.<a href="../../math/big/index.html#Int">Int</a>, k []<a href="../../builtin/index.html#byte">byte</a>) (*<a href="../../math/big/index.html">big</a>.<a href="../../math/big/index.html#Int">Int</a>, *<a href="../../math/big/index.html">big</a>.<a href="../../math/big/index.html#Int">Int</a>)</pre>
+				<p>ScalarMult implements [Curve.ScalarMult].
+<p>Deprecated: the <a href="index.html#CurveParams">CurveParams</a> methods are deprecated and are not guaranteed to
+provide any security property. For ECDH, use the <a href="http://localhost:8080/crypto/ecdh">crypto/ecdh</a> package.
+For ECDSA, use the <a href="http://localhost:8080/crypto/ecdsa">crypto/ecdsa</a> package with a <a href="index.html#Curve">Curve</a> value returned directly
+from <a href="index.html#P224">P224</a>, <a href="index.html#P256">P256</a>, <a href="index.html#P384">P384</a>, or <a href="index.html#P521">P521</a>.
+
+				
+				
+				
+			
+		
+	
+
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

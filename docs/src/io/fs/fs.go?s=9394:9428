@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>src/io/fs/fs.go - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="./fs.go?s=9394:9428#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Source file
+    <a href="http://localhost:8080/src">src</a>/<a href="http://localhost:8080/src/io">io</a>/<a href="http://localhost:8080/src/io/fs">fs</a>/<span class="text-muted">fs.go</span>
+  </h1>
+
+
+
+
+
+  <h2>
+    Documentation: <a href="http://localhost:8080/pkg/io/fs">io/fs</a>
+  </h2>
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1&nbsp;&nbsp;</span><span class="comment">// Copyright 2020 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2&nbsp;&nbsp;</span><span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3&nbsp;&nbsp;</span><span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4&nbsp;&nbsp;</span>
+<span id="L5" class="ln">     5&nbsp;&nbsp;</span><span class="comment">// Package fs defines basic interfaces to a file system.</span>
+<span id="L6" class="ln">     6&nbsp;&nbsp;</span><span class="comment">// A file system can be provided by the host operating system</span>
+<span id="L7" class="ln">     7&nbsp;&nbsp;</span><span class="comment">// but also by other packages.</span>
+<span id="L8" class="ln">     8&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L9" class="ln">     9&nbsp;&nbsp;</span><span class="comment">// See the [testing/fstest] package for support with testing</span>
+<span id="L10" class="ln">    10&nbsp;&nbsp;</span><span class="comment">// implementations of file systems.</span>
+<span id="L11" class="ln">    11&nbsp;&nbsp;</span>package fs
+<span id="L12" class="ln">    12&nbsp;&nbsp;</span>
+<span id="L13" class="ln">    13&nbsp;&nbsp;</span>import (
+<span id="L14" class="ln">    14&nbsp;&nbsp;</span>	&#34;internal/oserror&#34;
+<span id="L15" class="ln">    15&nbsp;&nbsp;</span>	&#34;time&#34;
+<span id="L16" class="ln">    16&nbsp;&nbsp;</span>	&#34;unicode/utf8&#34;
+<span id="L17" class="ln">    17&nbsp;&nbsp;</span>)
+<span id="L18" class="ln">    18&nbsp;&nbsp;</span>
+<span id="L19" class="ln">    19&nbsp;&nbsp;</span><span class="comment">// An FS provides access to a hierarchical file system.</span>
+<span id="L20" class="ln">    20&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L21" class="ln">    21&nbsp;&nbsp;</span><span class="comment">// The FS interface is the minimum implementation required of the file system.</span>
+<span id="L22" class="ln">    22&nbsp;&nbsp;</span><span class="comment">// A file system may implement additional interfaces,</span>
+<span id="L23" class="ln">    23&nbsp;&nbsp;</span><span class="comment">// such as [ReadFileFS], to provide additional or optimized functionality.</span>
+<span id="L24" class="ln">    24&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L25" class="ln">    25&nbsp;&nbsp;</span><span class="comment">// [testing/fstest.TestFS] may be used to test implementations of an FS for</span>
+<span id="L26" class="ln">    26&nbsp;&nbsp;</span><span class="comment">// correctness.</span>
+<span id="L27" class="ln">    27&nbsp;&nbsp;</span>type FS interface {
+<span id="L28" class="ln">    28&nbsp;&nbsp;</span>	<span class="comment">// Open opens the named file.</span>
+<span id="L29" class="ln">    29&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L30" class="ln">    30&nbsp;&nbsp;</span>	<span class="comment">// When Open returns an error, it should be of type *PathError</span>
+<span id="L31" class="ln">    31&nbsp;&nbsp;</span>	<span class="comment">// with the Op field set to &#34;open&#34;, the Path field set to name,</span>
+<span id="L32" class="ln">    32&nbsp;&nbsp;</span>	<span class="comment">// and the Err field describing the problem.</span>
+<span id="L33" class="ln">    33&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L34" class="ln">    34&nbsp;&nbsp;</span>	<span class="comment">// Open should reject attempts to open names that do not satisfy</span>
+<span id="L35" class="ln">    35&nbsp;&nbsp;</span>	<span class="comment">// ValidPath(name), returning a *PathError with Err set to</span>
+<span id="L36" class="ln">    36&nbsp;&nbsp;</span>	<span class="comment">// ErrInvalid or ErrNotExist.</span>
+<span id="L37" class="ln">    37&nbsp;&nbsp;</span>	Open(name string) (File, error)
+<span id="L38" class="ln">    38&nbsp;&nbsp;</span>}
+<span id="L39" class="ln">    39&nbsp;&nbsp;</span>
+<span id="L40" class="ln">    40&nbsp;&nbsp;</span><span class="comment">// ValidPath reports whether the given path name</span>
+<span id="L41" class="ln">    41&nbsp;&nbsp;</span><span class="comment">// is valid for use in a call to Open.</span>
+<span id="L42" class="ln">    42&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L43" class="ln">    43&nbsp;&nbsp;</span><span class="comment">// Path names passed to open are UTF-8-encoded,</span>
+<span id="L44" class="ln">    44&nbsp;&nbsp;</span><span class="comment">// unrooted, slash-separated sequences of path elements, like “x/y/z”.</span>
+<span id="L45" class="ln">    45&nbsp;&nbsp;</span><span class="comment">// Path names must not contain an element that is “.” or “..” or the empty string,</span>
+<span id="L46" class="ln">    46&nbsp;&nbsp;</span><span class="comment">// except for the special case that the root directory is named “.”.</span>
+<span id="L47" class="ln">    47&nbsp;&nbsp;</span><span class="comment">// Paths must not start or end with a slash: “/x” and “x/” are invalid.</span>
+<span id="L48" class="ln">    48&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L49" class="ln">    49&nbsp;&nbsp;</span><span class="comment">// Note that paths are slash-separated on all systems, even Windows.</span>
+<span id="L50" class="ln">    50&nbsp;&nbsp;</span><span class="comment">// Paths containing other characters such as backslash and colon</span>
+<span id="L51" class="ln">    51&nbsp;&nbsp;</span><span class="comment">// are accepted as valid, but those characters must never be</span>
+<span id="L52" class="ln">    52&nbsp;&nbsp;</span><span class="comment">// interpreted by an [FS] implementation as path element separators.</span>
+<span id="L53" class="ln">    53&nbsp;&nbsp;</span>func ValidPath(name string) bool {
+<span id="L54" class="ln">    54&nbsp;&nbsp;</span>	if !utf8.ValidString(name) {
+<span id="L55" class="ln">    55&nbsp;&nbsp;</span>		return false
+<span id="L56" class="ln">    56&nbsp;&nbsp;</span>	}
+<span id="L57" class="ln">    57&nbsp;&nbsp;</span>
+<span id="L58" class="ln">    58&nbsp;&nbsp;</span>	if name == &#34;.&#34; {
+<span id="L59" class="ln">    59&nbsp;&nbsp;</span>		<span class="comment">// special case</span>
+<span id="L60" class="ln">    60&nbsp;&nbsp;</span>		return true
+<span id="L61" class="ln">    61&nbsp;&nbsp;</span>	}
+<span id="L62" class="ln">    62&nbsp;&nbsp;</span>
+<span id="L63" class="ln">    63&nbsp;&nbsp;</span>	<span class="comment">// Iterate over elements in name, checking each.</span>
+<span id="L64" class="ln">    64&nbsp;&nbsp;</span>	for {
+<span id="L65" class="ln">    65&nbsp;&nbsp;</span>		i := 0
+<span id="L66" class="ln">    66&nbsp;&nbsp;</span>		for i &lt; len(name) &amp;&amp; name[i] != &#39;/&#39; {
+<span id="L67" class="ln">    67&nbsp;&nbsp;</span>			i++
+<span id="L68" class="ln">    68&nbsp;&nbsp;</span>		}
+<span id="L69" class="ln">    69&nbsp;&nbsp;</span>		elem := name[:i]
+<span id="L70" class="ln">    70&nbsp;&nbsp;</span>		if elem == &#34;&#34; || elem == &#34;.&#34; || elem == &#34;..&#34; {
+<span id="L71" class="ln">    71&nbsp;&nbsp;</span>			return false
+<span id="L72" class="ln">    72&nbsp;&nbsp;</span>		}
+<span id="L73" class="ln">    73&nbsp;&nbsp;</span>		if i == len(name) {
+<span id="L74" class="ln">    74&nbsp;&nbsp;</span>			return true <span class="comment">// reached clean ending</span>
+<span id="L75" class="ln">    75&nbsp;&nbsp;</span>		}
+<span id="L76" class="ln">    76&nbsp;&nbsp;</span>		name = name[i+1:]
+<span id="L77" class="ln">    77&nbsp;&nbsp;</span>	}
+<span id="L78" class="ln">    78&nbsp;&nbsp;</span>}
+<span id="L79" class="ln">    79&nbsp;&nbsp;</span>
+<span id="L80" class="ln">    80&nbsp;&nbsp;</span><span class="comment">// A File provides access to a single file.</span>
+<span id="L81" class="ln">    81&nbsp;&nbsp;</span><span class="comment">// The File interface is the minimum implementation required of the file.</span>
+<span id="L82" class="ln">    82&nbsp;&nbsp;</span><span class="comment">// Directory files should also implement [ReadDirFile].</span>
+<span id="L83" class="ln">    83&nbsp;&nbsp;</span><span class="comment">// A file may implement [io.ReaderAt] or [io.Seeker] as optimizations.</span>
+<span id="L84" class="ln">    84&nbsp;&nbsp;</span>type File interface {
+<span id="L85" class="ln">    85&nbsp;&nbsp;</span>	Stat() (FileInfo, error)
+<span id="L86" class="ln">    86&nbsp;&nbsp;</span>	Read([]byte) (int, error)
+<span id="L87" class="ln">    87&nbsp;&nbsp;</span>	Close() error
+<span id="L88" class="ln">    88&nbsp;&nbsp;</span>}
+<span id="L89" class="ln">    89&nbsp;&nbsp;</span>
+<span id="L90" class="ln">    90&nbsp;&nbsp;</span><span class="comment">// A DirEntry is an entry read from a directory</span>
+<span id="L91" class="ln">    91&nbsp;&nbsp;</span><span class="comment">// (using the [ReadDir] function or a [ReadDirFile]&#39;s ReadDir method).</span>
+<span id="L92" class="ln">    92&nbsp;&nbsp;</span>type DirEntry interface {
+<span id="L93" class="ln">    93&nbsp;&nbsp;</span>	<span class="comment">// Name returns the name of the file (or subdirectory) described by the entry.</span>
+<span id="L94" class="ln">    94&nbsp;&nbsp;</span>	<span class="comment">// This name is only the final element of the path (the base name), not the entire path.</span>
+<span id="L95" class="ln">    95&nbsp;&nbsp;</span>	<span class="comment">// For example, Name would return &#34;hello.go&#34; not &#34;home/gopher/hello.go&#34;.</span>
+<span id="L96" class="ln">    96&nbsp;&nbsp;</span>	Name() string
+<span id="L97" class="ln">    97&nbsp;&nbsp;</span>
+<span id="L98" class="ln">    98&nbsp;&nbsp;</span>	<span class="comment">// IsDir reports whether the entry describes a directory.</span>
+<span id="L99" class="ln">    99&nbsp;&nbsp;</span>	IsDir() bool
+<span id="L100" class="ln">   100&nbsp;&nbsp;</span>
+<span id="L101" class="ln">   101&nbsp;&nbsp;</span>	<span class="comment">// Type returns the type bits for the entry.</span>
+<span id="L102" class="ln">   102&nbsp;&nbsp;</span>	<span class="comment">// The type bits are a subset of the usual FileMode bits, those returned by the FileMode.Type method.</span>
+<span id="L103" class="ln">   103&nbsp;&nbsp;</span>	Type() FileMode
+<span id="L104" class="ln">   104&nbsp;&nbsp;</span>
+<span id="L105" class="ln">   105&nbsp;&nbsp;</span>	<span class="comment">// Info returns the FileInfo for the file or subdirectory described by the entry.</span>
+<span id="L106" class="ln">   106&nbsp;&nbsp;</span>	<span class="comment">// The returned FileInfo may be from the time of the original directory read</span>
+<span id="L107" class="ln">   107&nbsp;&nbsp;</span>	<span class="comment">// or from the time of the call to Info. If the file has been removed or renamed</span>
+<span id="L108" class="ln">   108&nbsp;&nbsp;</span>	<span class="comment">// since the directory read, Info may return an error satisfying errors.Is(err, ErrNotExist).</span>
+<span id="L109" class="ln">   109&nbsp;&nbsp;</span>	<span class="comment">// If the entry denotes a symbolic link, Info reports the information about the link itself,</span>
+<span id="L110" class="ln">   110&nbsp;&nbsp;</span>	<span class="comment">// not the link&#39;s target.</span>
+<span id="L111" class="ln">   111&nbsp;&nbsp;</span>	Info() (FileInfo, error)
+<span id="L112" class="ln">   112&nbsp;&nbsp;</span>}
+<span id="L113" class="ln">   113&nbsp;&nbsp;</span>
+<span id="L114" class="ln">   114&nbsp;&nbsp;</span><span class="comment">// A ReadDirFile is a directory file whose entries can be read with the ReadDir method.</span>
+<span id="L115" class="ln">   115&nbsp;&nbsp;</span><span class="comment">// Every directory file should implement this interface.</span>
+<span id="L116" class="ln">   116&nbsp;&nbsp;</span><span class="comment">// (It is permissible for any file to implement this interface,</span>
+<span id="L117" class="ln">   117&nbsp;&nbsp;</span><span class="comment">// but if so ReadDir should return an error for non-directories.)</span>
+<span id="L118" class="ln">   118&nbsp;&nbsp;</span>type ReadDirFile interface {
+<span id="L119" class="ln">   119&nbsp;&nbsp;</span>	File
+<span id="L120" class="ln">   120&nbsp;&nbsp;</span>
+<span id="L121" class="ln">   121&nbsp;&nbsp;</span>	<span class="comment">// ReadDir reads the contents of the directory and returns</span>
+<span id="L122" class="ln">   122&nbsp;&nbsp;</span>	<span class="comment">// a slice of up to n DirEntry values in directory order.</span>
+<span id="L123" class="ln">   123&nbsp;&nbsp;</span>	<span class="comment">// Subsequent calls on the same file will yield further DirEntry values.</span>
+<span id="L124" class="ln">   124&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L125" class="ln">   125&nbsp;&nbsp;</span>	<span class="comment">// If n &gt; 0, ReadDir returns at most n DirEntry structures.</span>
+<span id="L126" class="ln">   126&nbsp;&nbsp;</span>	<span class="comment">// In this case, if ReadDir returns an empty slice, it will return</span>
+<span id="L127" class="ln">   127&nbsp;&nbsp;</span>	<span class="comment">// a non-nil error explaining why.</span>
+<span id="L128" class="ln">   128&nbsp;&nbsp;</span>	<span class="comment">// At the end of a directory, the error is io.EOF.</span>
+<span id="L129" class="ln">   129&nbsp;&nbsp;</span>	<span class="comment">// (ReadDir must return io.EOF itself, not an error wrapping io.EOF.)</span>
+<span id="L130" class="ln">   130&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L131" class="ln">   131&nbsp;&nbsp;</span>	<span class="comment">// If n &lt;= 0, ReadDir returns all the DirEntry values from the directory</span>
+<span id="L132" class="ln">   132&nbsp;&nbsp;</span>	<span class="comment">// in a single slice. In this case, if ReadDir succeeds (reads all the way</span>
+<span id="L133" class="ln">   133&nbsp;&nbsp;</span>	<span class="comment">// to the end of the directory), it returns the slice and a nil error.</span>
+<span id="L134" class="ln">   134&nbsp;&nbsp;</span>	<span class="comment">// If it encounters an error before the end of the directory,</span>
+<span id="L135" class="ln">   135&nbsp;&nbsp;</span>	<span class="comment">// ReadDir returns the DirEntry list read until that point and a non-nil error.</span>
+<span id="L136" class="ln">   136&nbsp;&nbsp;</span>	ReadDir(n int) ([]DirEntry, error)
+<span id="L137" class="ln">   137&nbsp;&nbsp;</span>}
+<span id="L138" class="ln">   138&nbsp;&nbsp;</span>
+<span id="L139" class="ln">   139&nbsp;&nbsp;</span><span class="comment">// Generic file system errors.</span>
+<span id="L140" class="ln">   140&nbsp;&nbsp;</span><span class="comment">// Errors returned by file systems can be tested against these errors</span>
+<span id="L141" class="ln">   141&nbsp;&nbsp;</span><span class="comment">// using [errors.Is].</span>
+<span id="L142" class="ln">   142&nbsp;&nbsp;</span>var (
+<span id="L143" class="ln">   143&nbsp;&nbsp;</span>	ErrInvalid    = errInvalid()    <span class="comment">// &#34;invalid argument&#34;</span>
+<span id="L144" class="ln">   144&nbsp;&nbsp;</span>	ErrPermission = errPermission() <span class="comment">// &#34;permission denied&#34;</span>
+<span id="L145" class="ln">   145&nbsp;&nbsp;</span>	ErrExist      = errExist()      <span class="comment">// &#34;file already exists&#34;</span>
+<span id="L146" class="ln">   146&nbsp;&nbsp;</span>	ErrNotExist   = errNotExist()   <span class="comment">// &#34;file does not exist&#34;</span>
+<span id="L147" class="ln">   147&nbsp;&nbsp;</span>	ErrClosed     = errClosed()     <span class="comment">// &#34;file already closed&#34;</span>
+<span id="L148" class="ln">   148&nbsp;&nbsp;</span>)
+<span id="L149" class="ln">   149&nbsp;&nbsp;</span>
+<span id="L150" class="ln">   150&nbsp;&nbsp;</span>func errInvalid() error    { return oserror.ErrInvalid }
+<span id="L151" class="ln">   151&nbsp;&nbsp;</span>func errPermission() error { return oserror.ErrPermission }
+<span id="L152" class="ln">   152&nbsp;&nbsp;</span>func errExist() error      { return oserror.ErrExist }
+<span id="L153" class="ln">   153&nbsp;&nbsp;</span>func errNotExist() error   { return oserror.ErrNotExist }
+<span id="L154" class="ln">   154&nbsp;&nbsp;</span>func errClosed() error     { return oserror.ErrClosed }
+<span id="L155" class="ln">   155&nbsp;&nbsp;</span>
+<span id="L156" class="ln">   156&nbsp;&nbsp;</span><span class="comment">// A FileInfo describes a file and is returned by [Stat].</span>
+<span id="L157" class="ln">   157&nbsp;&nbsp;</span>type FileInfo interface {
+<span id="L158" class="ln">   158&nbsp;&nbsp;</span>	Name() string       <span class="comment">// base name of the file</span>
+<span id="L159" class="ln">   159&nbsp;&nbsp;</span>	Size() int64        <span class="comment">// length in bytes for regular files; system-dependent for others</span>
+<span id="L160" class="ln">   160&nbsp;&nbsp;</span>	Mode() FileMode     <span class="comment">// file mode bits</span>
+<span id="L161" class="ln">   161&nbsp;&nbsp;</span>	ModTime() time.Time <span class="comment">// modification time</span>
+<span id="L162" class="ln">   162&nbsp;&nbsp;</span>	IsDir() bool        <span class="comment">// abbreviation for Mode().IsDir()</span>
+<span id="L163" class="ln">   163&nbsp;&nbsp;</span>	Sys() any           <span class="comment">// underlying data source (can return nil)</span>
+<span id="L164" class="ln">   164&nbsp;&nbsp;</span>}
+<span id="L165" class="ln">   165&nbsp;&nbsp;</span>
+<span id="L166" class="ln">   166&nbsp;&nbsp;</span><span class="comment">// A FileMode represents a file&#39;s mode and permission bits.</span>
+<span id="L167" class="ln">   167&nbsp;&nbsp;</span><span class="comment">// The bits have the same definition on all systems, so that</span>
+<span id="L168" class="ln">   168&nbsp;&nbsp;</span><span class="comment">// information about files can be moved from one system</span>
+<span id="L169" class="ln">   169&nbsp;&nbsp;</span><span class="comment">// to another portably. Not all bits apply to all systems.</span>
+<span id="L170" class="ln">   170&nbsp;&nbsp;</span><span class="comment">// The only required bit is [ModeDir] for directories.</span>
+<span id="L171" class="ln">   171&nbsp;&nbsp;</span>type FileMode uint32
+<span id="L172" class="ln">   172&nbsp;&nbsp;</span>
+<span id="L173" class="ln">   173&nbsp;&nbsp;</span><span class="comment">// The defined file mode bits are the most significant bits of the [FileMode].</span>
+<span id="L174" class="ln">   174&nbsp;&nbsp;</span><span class="comment">// The nine least-significant bits are the standard Unix rwxrwxrwx permissions.</span>
+<span id="L175" class="ln">   175&nbsp;&nbsp;</span><span class="comment">// The values of these bits should be considered part of the public API and</span>
+<span id="L176" class="ln">   176&nbsp;&nbsp;</span><span class="comment">// may be used in wire protocols or disk representations: they must not be</span>
+<span id="L177" class="ln">   177&nbsp;&nbsp;</span><span class="comment">// changed, although new bits might be added.</span>
+<span id="L178" class="ln">   178&nbsp;&nbsp;</span>const (
+<span id="L179" class="ln">   179&nbsp;&nbsp;</span>	<span class="comment">// The single letters are the abbreviations</span>
+<span id="L180" class="ln">   180&nbsp;&nbsp;</span>	<span class="comment">// used by the String method&#39;s formatting.</span>
+<span id="L181" class="ln">   181&nbsp;&nbsp;</span>	ModeDir        FileMode = 1 &lt;&lt; (32 - 1 - iota) <span class="comment">// d: is a directory</span>
+<span id="L182" class="ln">   182&nbsp;&nbsp;</span>	ModeAppend                                     <span class="comment">// a: append-only</span>
+<span id="L183" class="ln">   183&nbsp;&nbsp;</span>	ModeExclusive                                  <span class="comment">// l: exclusive use</span>
+<span id="L184" class="ln">   184&nbsp;&nbsp;</span>	ModeTemporary                                  <span class="comment">// T: temporary file; Plan 9 only</span>
+<span id="L185" class="ln">   185&nbsp;&nbsp;</span>	ModeSymlink                                    <span class="comment">// L: symbolic link</span>
+<span id="L186" class="ln">   186&nbsp;&nbsp;</span>	ModeDevice                                     <span class="comment">// D: device file</span>
+<span id="L187" class="ln">   187&nbsp;&nbsp;</span>	ModeNamedPipe                                  <span class="comment">// p: named pipe (FIFO)</span>
+<span id="L188" class="ln">   188&nbsp;&nbsp;</span>	ModeSocket                                     <span class="comment">// S: Unix domain socket</span>
+<span id="L189" class="ln">   189&nbsp;&nbsp;</span>	ModeSetuid                                     <span class="comment">// u: setuid</span>
+<span id="L190" class="ln">   190&nbsp;&nbsp;</span>	ModeSetgid                                     <span class="comment">// g: setgid</span>
+<span id="L191" class="ln">   191&nbsp;&nbsp;</span>	ModeCharDevice                                 <span class="comment">// c: Unix character device, when ModeDevice is set</span>
+<span id="L192" class="ln">   192&nbsp;&nbsp;</span>	ModeSticky                                     <span class="comment">// t: sticky</span>
+<span id="L193" class="ln">   193&nbsp;&nbsp;</span>	ModeIrregular                                  <span class="comment">// ?: non-regular file; nothing else is known about this file</span>
+<span id="L194" class="ln">   194&nbsp;&nbsp;</span>
+<span id="L195" class="ln">   195&nbsp;&nbsp;</span>	<span class="comment">// Mask for the type bits. For regular files, none will be set.</span>
+<span id="L196" class="ln">   196&nbsp;&nbsp;</span>	ModeType = ModeDir | ModeSymlink | ModeNamedPipe | ModeSocket | ModeDevice | ModeCharDevice | ModeIrregular
+<span id="L197" class="ln">   197&nbsp;&nbsp;</span>
+<span id="L198" class="ln">   198&nbsp;&nbsp;</span>	ModePerm FileMode = 0777 <span class="comment">// Unix permission bits</span>
+<span id="L199" class="ln">   199&nbsp;&nbsp;</span>)
+<span id="L200" class="ln">   200&nbsp;&nbsp;</span>
+<span id="L201" class="ln">   201&nbsp;&nbsp;</span>func (m FileMode) String() string {
+<span id="L202" class="ln">   202&nbsp;&nbsp;</span>	const str = &#34;dalTLDpSugct?&#34;
+<span id="L203" class="ln">   203&nbsp;&nbsp;</span>	var buf [32]byte <span class="comment">// Mode is uint32.</span>
+<span id="L204" class="ln">   204&nbsp;&nbsp;</span>	w := 0
+<span id="L205" class="ln">   205&nbsp;&nbsp;</span>	for i, c := range str {
+<span id="L206" class="ln">   206&nbsp;&nbsp;</span>		if m&amp;(1&lt;&lt;uint(32-1-i)) != 0 {
+<span id="L207" class="ln">   207&nbsp;&nbsp;</span>			buf[w] = byte(c)
+<span id="L208" class="ln">   208&nbsp;&nbsp;</span>			w++
+<span id="L209" class="ln">   209&nbsp;&nbsp;</span>		}
+<span id="L210" class="ln">   210&nbsp;&nbsp;</span>	}
+<span id="L211" class="ln">   211&nbsp;&nbsp;</span>	if w == 0 {
+<span id="L212" class="ln">   212&nbsp;&nbsp;</span>		buf[w] = &#39;-&#39;
+<span id="L213" class="ln">   213&nbsp;&nbsp;</span>		w++
+<span id="L214" class="ln">   214&nbsp;&nbsp;</span>	}
+<span id="L215" class="ln">   215&nbsp;&nbsp;</span>	const rwx = &#34;rwxrwxrwx&#34;
+<span id="L216" class="ln">   216&nbsp;&nbsp;</span>	for i, c := range rwx {
+<span id="L217" class="ln">   217&nbsp;&nbsp;</span>		if m&amp;(1&lt;&lt;uint(9-1-i)) != 0 {
+<span id="L218" class="ln">   218&nbsp;&nbsp;</span>			buf[w] = byte(c)
+<span id="L219" class="ln">   219&nbsp;&nbsp;</span>		} else {
+<span id="L220" class="ln">   220&nbsp;&nbsp;</span>			buf[w] = &#39;-&#39;
+<span id="L221" class="ln">   221&nbsp;&nbsp;</span>		}
+<span id="L222" class="ln">   222&nbsp;&nbsp;</span>		w++
+<span id="L223" class="ln">   223&nbsp;&nbsp;</span>	}
+<span id="L224" class="ln">   224&nbsp;&nbsp;</span>	return string(buf[:w])
+<span id="L225" class="ln">   225&nbsp;&nbsp;</span>}
+<span id="L226" class="ln">   226&nbsp;&nbsp;</span>
+<span id="L227" class="ln">   227&nbsp;&nbsp;</span><span class="comment">// IsDir reports whether m describes a directory.</span>
+<span id="L228" class="ln">   228&nbsp;&nbsp;</span><span class="comment">// That is, it tests for the [ModeDir] bit being set in m.</span>
+<span id="L229" class="ln">   229&nbsp;&nbsp;</span>func (m FileMode) IsDir() bool {
+<span id="L230" class="ln">   230&nbsp;&nbsp;</span>	return m&amp;ModeDir != 0
+<span id="L231" class="ln">   231&nbsp;&nbsp;</span>}
+<span id="L232" class="ln">   232&nbsp;&nbsp;</span>
+<span id="L233" class="ln">   233&nbsp;&nbsp;</span><span class="comment">// IsRegular reports whether m describes a regular file.</span>
+<span id="L234" class="ln">   234&nbsp;&nbsp;</span><span class="comment">// That is, it tests that no mode type bits are set.</span>
+<span id="L235" class="ln">   235&nbsp;&nbsp;</span>func (m FileMode) IsRegular() bool {
+<span id="L236" class="ln">   236&nbsp;&nbsp;</span>	return m&amp;ModeType == 0
+<span id="L237" class="ln">   237&nbsp;&nbsp;</span>}
+<span id="L238" class="ln">   238&nbsp;&nbsp;</span>
+<span id="L239" class="ln">   239&nbsp;&nbsp;</span><span class="comment">// Perm returns the Unix permission bits in m (m &amp; [ModePerm]).</span>
+<span id="L240" class="ln">   240&nbsp;&nbsp;</span>func (m FileMode) Perm() FileMode {
+<span id="L241" class="ln">   241&nbsp;&nbsp;</span>	return m &amp; ModePerm
+<span id="L242" class="ln">   242&nbsp;&nbsp;</span>}
+<span id="L243" class="ln">   243&nbsp;&nbsp;</span>
+<span id="L244" class="ln">   244&nbsp;&nbsp;</span><span class="comment">// Type returns type bits in m (m &amp; [ModeType]).</span>
+<span id="L245" class="ln">   245&nbsp;&nbsp;</span>func (m FileMode) Type() FileMode {
+<span id="L246" class="ln">   246&nbsp;&nbsp;</span>	return m &amp; ModeType
+<span id="L247" class="ln">   247&nbsp;&nbsp;</span>}
+<span id="L248" class="ln">   248&nbsp;&nbsp;</span>
+<span id="L249" class="ln">   249&nbsp;&nbsp;</span><span class="comment">// PathError records an error and the operation and file path that caused it.</span>
+<span id="L250" class="ln">   250&nbsp;&nbsp;</span>type PathError struct {
+<span id="L251" class="ln">   251&nbsp;&nbsp;</span>	Op   string
+<span id="L252" class="ln">   252&nbsp;&nbsp;</span>	Path string
+<span id="L253" class="ln">   253&nbsp;&nbsp;</span>	Err  error
+<span id="L254" class="ln">   254&nbsp;&nbsp;</span>}
+<span id="L255" class="ln">   255&nbsp;&nbsp;</span>
+<span id="L256" class="ln">   256&nbsp;&nbsp;</span>func (e *PathError) Error() string { return e.Op + &#34; &#34; + e.Path + &#34;: &#34; + e.Err.Error() }
+<span id="L257" class="ln">   257&nbsp;&nbsp;</span>
+<span id="L258" class="ln">   258&nbsp;&nbsp;</span><span class="selection">func (e *PathError) Unwrap() error</span> { return e.Err }
+<span id="L259" class="ln">   259&nbsp;&nbsp;</span>
+<span id="L260" class="ln">   260&nbsp;&nbsp;</span><span class="comment">// Timeout reports whether this error represents a timeout.</span>
+<span id="L261" class="ln">   261&nbsp;&nbsp;</span>func (e *PathError) Timeout() bool {
+<span id="L262" class="ln">   262&nbsp;&nbsp;</span>	t, ok := e.Err.(interface{ Timeout() bool })
+<span id="L263" class="ln">   263&nbsp;&nbsp;</span>	return ok &amp;&amp; t.Timeout()
+<span id="L264" class="ln">   264&nbsp;&nbsp;</span>}
+<span id="L265" class="ln">   265&nbsp;&nbsp;</span>
+</pre><p><a href="fs.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

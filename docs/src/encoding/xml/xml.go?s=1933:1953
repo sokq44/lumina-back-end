@@ -1,0 +1,2140 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>src/encoding/xml/xml.go - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="./xml.go?s=1933:1953#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Source file
+    <a href="http://localhost:8080/src">src</a>/<a href="http://localhost:8080/src/encoding">encoding</a>/<a href="http://localhost:8080/src/encoding/xml">xml</a>/<span class="text-muted">xml.go</span>
+  </h1>
+
+
+
+
+
+  <h2>
+    Documentation: <a href="http://localhost:8080/pkg/encoding/xml">encoding/xml</a>
+  </h2>
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1&nbsp;&nbsp;</span><span class="comment">// Copyright 2009 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2&nbsp;&nbsp;</span><span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3&nbsp;&nbsp;</span><span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4&nbsp;&nbsp;</span>
+<span id="L5" class="ln">     5&nbsp;&nbsp;</span><span class="comment">// Package xml implements a simple XML 1.0 parser that</span>
+<span id="L6" class="ln">     6&nbsp;&nbsp;</span><span class="comment">// understands XML name spaces.</span>
+<span id="L7" class="ln">     7&nbsp;&nbsp;</span>package xml
+<span id="L8" class="ln">     8&nbsp;&nbsp;</span>
+<span id="L9" class="ln">     9&nbsp;&nbsp;</span><span class="comment">// References:</span>
+<span id="L10" class="ln">    10&nbsp;&nbsp;</span><span class="comment">//    Annotated XML spec: https://www.xml.com/axml/testaxml.htm</span>
+<span id="L11" class="ln">    11&nbsp;&nbsp;</span><span class="comment">//    XML name spaces: https://www.w3.org/TR/REC-xml-names/</span>
+<span id="L12" class="ln">    12&nbsp;&nbsp;</span>
+<span id="L13" class="ln">    13&nbsp;&nbsp;</span>import (
+<span id="L14" class="ln">    14&nbsp;&nbsp;</span>	&#34;bufio&#34;
+<span id="L15" class="ln">    15&nbsp;&nbsp;</span>	&#34;bytes&#34;
+<span id="L16" class="ln">    16&nbsp;&nbsp;</span>	&#34;errors&#34;
+<span id="L17" class="ln">    17&nbsp;&nbsp;</span>	&#34;fmt&#34;
+<span id="L18" class="ln">    18&nbsp;&nbsp;</span>	&#34;io&#34;
+<span id="L19" class="ln">    19&nbsp;&nbsp;</span>	&#34;strconv&#34;
+<span id="L20" class="ln">    20&nbsp;&nbsp;</span>	&#34;strings&#34;
+<span id="L21" class="ln">    21&nbsp;&nbsp;</span>	&#34;unicode&#34;
+<span id="L22" class="ln">    22&nbsp;&nbsp;</span>	&#34;unicode/utf8&#34;
+<span id="L23" class="ln">    23&nbsp;&nbsp;</span>)
+<span id="L24" class="ln">    24&nbsp;&nbsp;</span>
+<span id="L25" class="ln">    25&nbsp;&nbsp;</span><span class="comment">// A SyntaxError represents a syntax error in the XML input stream.</span>
+<span id="L26" class="ln">    26&nbsp;&nbsp;</span>type SyntaxError struct {
+<span id="L27" class="ln">    27&nbsp;&nbsp;</span>	Msg  string
+<span id="L28" class="ln">    28&nbsp;&nbsp;</span>	Line int
+<span id="L29" class="ln">    29&nbsp;&nbsp;</span>}
+<span id="L30" class="ln">    30&nbsp;&nbsp;</span>
+<span id="L31" class="ln">    31&nbsp;&nbsp;</span>func (e *SyntaxError) Error() string {
+<span id="L32" class="ln">    32&nbsp;&nbsp;</span>	return &#34;XML syntax error on line &#34; + strconv.Itoa(e.Line) + &#34;: &#34; + e.Msg
+<span id="L33" class="ln">    33&nbsp;&nbsp;</span>}
+<span id="L34" class="ln">    34&nbsp;&nbsp;</span>
+<span id="L35" class="ln">    35&nbsp;&nbsp;</span><span class="comment">// A Name represents an XML name (Local) annotated</span>
+<span id="L36" class="ln">    36&nbsp;&nbsp;</span><span class="comment">// with a name space identifier (Space).</span>
+<span id="L37" class="ln">    37&nbsp;&nbsp;</span><span class="comment">// In tokens returned by [Decoder.Token], the Space identifier</span>
+<span id="L38" class="ln">    38&nbsp;&nbsp;</span><span class="comment">// is given as a canonical URL, not the short prefix used</span>
+<span id="L39" class="ln">    39&nbsp;&nbsp;</span><span class="comment">// in the document being parsed.</span>
+<span id="L40" class="ln">    40&nbsp;&nbsp;</span>type Name struct {
+<span id="L41" class="ln">    41&nbsp;&nbsp;</span>	Space, Local string
+<span id="L42" class="ln">    42&nbsp;&nbsp;</span>}
+<span id="L43" class="ln">    43&nbsp;&nbsp;</span>
+<span id="L44" class="ln">    44&nbsp;&nbsp;</span><span class="comment">// An Attr represents an attribute in an XML element (Name=Value).</span>
+<span id="L45" class="ln">    45&nbsp;&nbsp;</span>type Attr struct {
+<span id="L46" class="ln">    46&nbsp;&nbsp;</span>	Name  Name
+<span id="L47" class="ln">    47&nbsp;&nbsp;</span>	Value string
+<span id="L48" class="ln">    48&nbsp;&nbsp;</span>}
+<span id="L49" class="ln">    49&nbsp;&nbsp;</span>
+<span id="L50" class="ln">    50&nbsp;&nbsp;</span><span class="comment">// A Token is an interface holding one of the token types:</span>
+<span id="L51" class="ln">    51&nbsp;&nbsp;</span><span class="comment">// [StartElement], [EndElement], [CharData], [Comment], [ProcInst], or [Directive].</span>
+<span id="L52" class="ln">    52&nbsp;&nbsp;</span>type Token any
+<span id="L53" class="ln">    53&nbsp;&nbsp;</span>
+<span id="L54" class="ln">    54&nbsp;&nbsp;</span><span class="comment">// A StartElement represents an XML start element.</span>
+<span id="L55" class="ln">    55&nbsp;&nbsp;</span>type StartElement struct {
+<span id="L56" class="ln">    56&nbsp;&nbsp;</span>	Name Name
+<span id="L57" class="ln">    57&nbsp;&nbsp;</span>	Attr []Attr
+<span id="L58" class="ln">    58&nbsp;&nbsp;</span>}
+<span id="L59" class="ln">    59&nbsp;&nbsp;</span>
+<span id="L60" class="ln">    60&nbsp;&nbsp;</span><span class="comment">// Copy creates a new copy of StartElement.</span>
+<span id="L61" class="ln">    61&nbsp;&nbsp;</span>func (e StartElement) Copy() StartElement {
+<span id="L62" class="ln">    62&nbsp;&nbsp;</span>	attrs := make([]Attr, len(e.Attr))
+<span id="L63" class="ln">    63&nbsp;&nbsp;</span>	copy(attrs, e.Attr)
+<span id="L64" class="ln">    64&nbsp;&nbsp;</span>	e.Attr = attrs
+<span id="L65" class="ln">    65&nbsp;&nbsp;</span>	return e
+<span id="L66" class="ln">    66&nbsp;&nbsp;</span>}
+<span id="L67" class="ln">    67&nbsp;&nbsp;</span>
+<span id="L68" class="ln">    68&nbsp;&nbsp;</span><span class="comment">// End returns the corresponding XML end element.</span>
+<span id="L69" class="ln">    69&nbsp;&nbsp;</span>func (e StartElement) End() EndElement {
+<span id="L70" class="ln">    70&nbsp;&nbsp;</span>	return EndElement{e.Name}
+<span id="L71" class="ln">    71&nbsp;&nbsp;</span>}
+<span id="L72" class="ln">    72&nbsp;&nbsp;</span>
+<span id="L73" class="ln">    73&nbsp;&nbsp;</span><span class="comment">// An EndElement represents an XML end element.</span>
+<span id="L74" class="ln">    74&nbsp;&nbsp;</span>type EndElement struct {
+<span id="L75" class="ln">    75&nbsp;&nbsp;</span>	Name Name
+<span id="L76" class="ln">    76&nbsp;&nbsp;</span>}
+<span id="L77" class="ln">    77&nbsp;&nbsp;</span>
+<span id="L78" class="ln">    78&nbsp;&nbsp;</span><span class="comment">// A CharData represents XML character data (raw text),</span>
+<span id="L79" class="ln">    79&nbsp;&nbsp;</span><span class="comment">// in which XML escape sequences have been replaced by</span>
+<span id="L80" class="ln">    80&nbsp;&nbsp;</span><span class="comment">// the characters they represent.</span>
+<span id="L81" class="ln">    81&nbsp;&nbsp;</span><span class="selection">type CharData []byte</span>
+<span id="L82" class="ln">    82&nbsp;&nbsp;</span>
+<span id="L83" class="ln">    83&nbsp;&nbsp;</span><span class="comment">// Copy creates a new copy of CharData.</span>
+<span id="L84" class="ln">    84&nbsp;&nbsp;</span>func (c CharData) Copy() CharData { return CharData(bytes.Clone(c)) }
+<span id="L85" class="ln">    85&nbsp;&nbsp;</span>
+<span id="L86" class="ln">    86&nbsp;&nbsp;</span><span class="comment">// A Comment represents an XML comment of the form &lt;!--comment--&gt;.</span>
+<span id="L87" class="ln">    87&nbsp;&nbsp;</span><span class="comment">// The bytes do not include the &lt;!-- and --&gt; comment markers.</span>
+<span id="L88" class="ln">    88&nbsp;&nbsp;</span>type Comment []byte
+<span id="L89" class="ln">    89&nbsp;&nbsp;</span>
+<span id="L90" class="ln">    90&nbsp;&nbsp;</span><span class="comment">// Copy creates a new copy of Comment.</span>
+<span id="L91" class="ln">    91&nbsp;&nbsp;</span>func (c Comment) Copy() Comment { return Comment(bytes.Clone(c)) }
+<span id="L92" class="ln">    92&nbsp;&nbsp;</span>
+<span id="L93" class="ln">    93&nbsp;&nbsp;</span><span class="comment">// A ProcInst represents an XML processing instruction of the form &lt;?target inst?&gt;</span>
+<span id="L94" class="ln">    94&nbsp;&nbsp;</span>type ProcInst struct {
+<span id="L95" class="ln">    95&nbsp;&nbsp;</span>	Target string
+<span id="L96" class="ln">    96&nbsp;&nbsp;</span>	Inst   []byte
+<span id="L97" class="ln">    97&nbsp;&nbsp;</span>}
+<span id="L98" class="ln">    98&nbsp;&nbsp;</span>
+<span id="L99" class="ln">    99&nbsp;&nbsp;</span><span class="comment">// Copy creates a new copy of ProcInst.</span>
+<span id="L100" class="ln">   100&nbsp;&nbsp;</span>func (p ProcInst) Copy() ProcInst {
+<span id="L101" class="ln">   101&nbsp;&nbsp;</span>	p.Inst = bytes.Clone(p.Inst)
+<span id="L102" class="ln">   102&nbsp;&nbsp;</span>	return p
+<span id="L103" class="ln">   103&nbsp;&nbsp;</span>}
+<span id="L104" class="ln">   104&nbsp;&nbsp;</span>
+<span id="L105" class="ln">   105&nbsp;&nbsp;</span><span class="comment">// A Directive represents an XML directive of the form &lt;!text&gt;.</span>
+<span id="L106" class="ln">   106&nbsp;&nbsp;</span><span class="comment">// The bytes do not include the &lt;! and &gt; markers.</span>
+<span id="L107" class="ln">   107&nbsp;&nbsp;</span>type Directive []byte
+<span id="L108" class="ln">   108&nbsp;&nbsp;</span>
+<span id="L109" class="ln">   109&nbsp;&nbsp;</span><span class="comment">// Copy creates a new copy of Directive.</span>
+<span id="L110" class="ln">   110&nbsp;&nbsp;</span>func (d Directive) Copy() Directive { return Directive(bytes.Clone(d)) }
+<span id="L111" class="ln">   111&nbsp;&nbsp;</span>
+<span id="L112" class="ln">   112&nbsp;&nbsp;</span><span class="comment">// CopyToken returns a copy of a Token.</span>
+<span id="L113" class="ln">   113&nbsp;&nbsp;</span>func CopyToken(t Token) Token {
+<span id="L114" class="ln">   114&nbsp;&nbsp;</span>	switch v := t.(type) {
+<span id="L115" class="ln">   115&nbsp;&nbsp;</span>	case CharData:
+<span id="L116" class="ln">   116&nbsp;&nbsp;</span>		return v.Copy()
+<span id="L117" class="ln">   117&nbsp;&nbsp;</span>	case Comment:
+<span id="L118" class="ln">   118&nbsp;&nbsp;</span>		return v.Copy()
+<span id="L119" class="ln">   119&nbsp;&nbsp;</span>	case Directive:
+<span id="L120" class="ln">   120&nbsp;&nbsp;</span>		return v.Copy()
+<span id="L121" class="ln">   121&nbsp;&nbsp;</span>	case ProcInst:
+<span id="L122" class="ln">   122&nbsp;&nbsp;</span>		return v.Copy()
+<span id="L123" class="ln">   123&nbsp;&nbsp;</span>	case StartElement:
+<span id="L124" class="ln">   124&nbsp;&nbsp;</span>		return v.Copy()
+<span id="L125" class="ln">   125&nbsp;&nbsp;</span>	}
+<span id="L126" class="ln">   126&nbsp;&nbsp;</span>	return t
+<span id="L127" class="ln">   127&nbsp;&nbsp;</span>}
+<span id="L128" class="ln">   128&nbsp;&nbsp;</span>
+<span id="L129" class="ln">   129&nbsp;&nbsp;</span><span class="comment">// A TokenReader is anything that can decode a stream of XML tokens, including a</span>
+<span id="L130" class="ln">   130&nbsp;&nbsp;</span><span class="comment">// [Decoder].</span>
+<span id="L131" class="ln">   131&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L132" class="ln">   132&nbsp;&nbsp;</span><span class="comment">// When Token encounters an error or end-of-file condition after successfully</span>
+<span id="L133" class="ln">   133&nbsp;&nbsp;</span><span class="comment">// reading a token, it returns the token. It may return the (non-nil) error from</span>
+<span id="L134" class="ln">   134&nbsp;&nbsp;</span><span class="comment">// the same call or return the error (and a nil token) from a subsequent call.</span>
+<span id="L135" class="ln">   135&nbsp;&nbsp;</span><span class="comment">// An instance of this general case is that a TokenReader returning a non-nil</span>
+<span id="L136" class="ln">   136&nbsp;&nbsp;</span><span class="comment">// token at the end of the token stream may return either io.EOF or a nil error.</span>
+<span id="L137" class="ln">   137&nbsp;&nbsp;</span><span class="comment">// The next Read should return nil, [io.EOF].</span>
+<span id="L138" class="ln">   138&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L139" class="ln">   139&nbsp;&nbsp;</span><span class="comment">// Implementations of Token are discouraged from returning a nil token with a</span>
+<span id="L140" class="ln">   140&nbsp;&nbsp;</span><span class="comment">// nil error. Callers should treat a return of nil, nil as indicating that</span>
+<span id="L141" class="ln">   141&nbsp;&nbsp;</span><span class="comment">// nothing happened; in particular it does not indicate EOF.</span>
+<span id="L142" class="ln">   142&nbsp;&nbsp;</span>type TokenReader interface {
+<span id="L143" class="ln">   143&nbsp;&nbsp;</span>	Token() (Token, error)
+<span id="L144" class="ln">   144&nbsp;&nbsp;</span>}
+<span id="L145" class="ln">   145&nbsp;&nbsp;</span>
+<span id="L146" class="ln">   146&nbsp;&nbsp;</span><span class="comment">// A Decoder represents an XML parser reading a particular input stream.</span>
+<span id="L147" class="ln">   147&nbsp;&nbsp;</span><span class="comment">// The parser assumes that its input is encoded in UTF-8.</span>
+<span id="L148" class="ln">   148&nbsp;&nbsp;</span>type Decoder struct {
+<span id="L149" class="ln">   149&nbsp;&nbsp;</span>	<span class="comment">// Strict defaults to true, enforcing the requirements</span>
+<span id="L150" class="ln">   150&nbsp;&nbsp;</span>	<span class="comment">// of the XML specification.</span>
+<span id="L151" class="ln">   151&nbsp;&nbsp;</span>	<span class="comment">// If set to false, the parser allows input containing common</span>
+<span id="L152" class="ln">   152&nbsp;&nbsp;</span>	<span class="comment">// mistakes:</span>
+<span id="L153" class="ln">   153&nbsp;&nbsp;</span>	<span class="comment">//	* If an element is missing an end tag, the parser invents</span>
+<span id="L154" class="ln">   154&nbsp;&nbsp;</span>	<span class="comment">//	  end tags as necessary to keep the return values from Token</span>
+<span id="L155" class="ln">   155&nbsp;&nbsp;</span>	<span class="comment">//	  properly balanced.</span>
+<span id="L156" class="ln">   156&nbsp;&nbsp;</span>	<span class="comment">//	* In attribute values and character data, unknown or malformed</span>
+<span id="L157" class="ln">   157&nbsp;&nbsp;</span>	<span class="comment">//	  character entities (sequences beginning with &amp;) are left alone.</span>
+<span id="L158" class="ln">   158&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L159" class="ln">   159&nbsp;&nbsp;</span>	<span class="comment">// Setting:</span>
+<span id="L160" class="ln">   160&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L161" class="ln">   161&nbsp;&nbsp;</span>	<span class="comment">//	d.Strict = false</span>
+<span id="L162" class="ln">   162&nbsp;&nbsp;</span>	<span class="comment">//	d.AutoClose = xml.HTMLAutoClose</span>
+<span id="L163" class="ln">   163&nbsp;&nbsp;</span>	<span class="comment">//	d.Entity = xml.HTMLEntity</span>
+<span id="L164" class="ln">   164&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L165" class="ln">   165&nbsp;&nbsp;</span>	<span class="comment">// creates a parser that can handle typical HTML.</span>
+<span id="L166" class="ln">   166&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L167" class="ln">   167&nbsp;&nbsp;</span>	<span class="comment">// Strict mode does not enforce the requirements of the XML name spaces TR.</span>
+<span id="L168" class="ln">   168&nbsp;&nbsp;</span>	<span class="comment">// In particular it does not reject name space tags using undefined prefixes.</span>
+<span id="L169" class="ln">   169&nbsp;&nbsp;</span>	<span class="comment">// Such tags are recorded with the unknown prefix as the name space URL.</span>
+<span id="L170" class="ln">   170&nbsp;&nbsp;</span>	Strict bool
+<span id="L171" class="ln">   171&nbsp;&nbsp;</span>
+<span id="L172" class="ln">   172&nbsp;&nbsp;</span>	<span class="comment">// When Strict == false, AutoClose indicates a set of elements to</span>
+<span id="L173" class="ln">   173&nbsp;&nbsp;</span>	<span class="comment">// consider closed immediately after they are opened, regardless</span>
+<span id="L174" class="ln">   174&nbsp;&nbsp;</span>	<span class="comment">// of whether an end element is present.</span>
+<span id="L175" class="ln">   175&nbsp;&nbsp;</span>	AutoClose []string
+<span id="L176" class="ln">   176&nbsp;&nbsp;</span>
+<span id="L177" class="ln">   177&nbsp;&nbsp;</span>	<span class="comment">// Entity can be used to map non-standard entity names to string replacements.</span>
+<span id="L178" class="ln">   178&nbsp;&nbsp;</span>	<span class="comment">// The parser behaves as if these standard mappings are present in the map,</span>
+<span id="L179" class="ln">   179&nbsp;&nbsp;</span>	<span class="comment">// regardless of the actual map content:</span>
+<span id="L180" class="ln">   180&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L181" class="ln">   181&nbsp;&nbsp;</span>	<span class="comment">//	&#34;lt&#34;: &#34;&lt;&#34;,</span>
+<span id="L182" class="ln">   182&nbsp;&nbsp;</span>	<span class="comment">//	&#34;gt&#34;: &#34;&gt;&#34;,</span>
+<span id="L183" class="ln">   183&nbsp;&nbsp;</span>	<span class="comment">//	&#34;amp&#34;: &#34;&amp;&#34;,</span>
+<span id="L184" class="ln">   184&nbsp;&nbsp;</span>	<span class="comment">//	&#34;apos&#34;: &#34;&#39;&#34;,</span>
+<span id="L185" class="ln">   185&nbsp;&nbsp;</span>	<span class="comment">//	&#34;quot&#34;: `&#34;`,</span>
+<span id="L186" class="ln">   186&nbsp;&nbsp;</span>	Entity map[string]string
+<span id="L187" class="ln">   187&nbsp;&nbsp;</span>
+<span id="L188" class="ln">   188&nbsp;&nbsp;</span>	<span class="comment">// CharsetReader, if non-nil, defines a function to generate</span>
+<span id="L189" class="ln">   189&nbsp;&nbsp;</span>	<span class="comment">// charset-conversion readers, converting from the provided</span>
+<span id="L190" class="ln">   190&nbsp;&nbsp;</span>	<span class="comment">// non-UTF-8 charset into UTF-8. If CharsetReader is nil or</span>
+<span id="L191" class="ln">   191&nbsp;&nbsp;</span>	<span class="comment">// returns an error, parsing stops with an error. One of the</span>
+<span id="L192" class="ln">   192&nbsp;&nbsp;</span>	<span class="comment">// CharsetReader&#39;s result values must be non-nil.</span>
+<span id="L193" class="ln">   193&nbsp;&nbsp;</span>	CharsetReader func(charset string, input io.Reader) (io.Reader, error)
+<span id="L194" class="ln">   194&nbsp;&nbsp;</span>
+<span id="L195" class="ln">   195&nbsp;&nbsp;</span>	<span class="comment">// DefaultSpace sets the default name space used for unadorned tags,</span>
+<span id="L196" class="ln">   196&nbsp;&nbsp;</span>	<span class="comment">// as if the entire XML stream were wrapped in an element containing</span>
+<span id="L197" class="ln">   197&nbsp;&nbsp;</span>	<span class="comment">// the attribute xmlns=&#34;DefaultSpace&#34;.</span>
+<span id="L198" class="ln">   198&nbsp;&nbsp;</span>	DefaultSpace string
+<span id="L199" class="ln">   199&nbsp;&nbsp;</span>
+<span id="L200" class="ln">   200&nbsp;&nbsp;</span>	r              io.ByteReader
+<span id="L201" class="ln">   201&nbsp;&nbsp;</span>	t              TokenReader
+<span id="L202" class="ln">   202&nbsp;&nbsp;</span>	buf            bytes.Buffer
+<span id="L203" class="ln">   203&nbsp;&nbsp;</span>	saved          *bytes.Buffer
+<span id="L204" class="ln">   204&nbsp;&nbsp;</span>	stk            *stack
+<span id="L205" class="ln">   205&nbsp;&nbsp;</span>	free           *stack
+<span id="L206" class="ln">   206&nbsp;&nbsp;</span>	needClose      bool
+<span id="L207" class="ln">   207&nbsp;&nbsp;</span>	toClose        Name
+<span id="L208" class="ln">   208&nbsp;&nbsp;</span>	nextToken      Token
+<span id="L209" class="ln">   209&nbsp;&nbsp;</span>	nextByte       int
+<span id="L210" class="ln">   210&nbsp;&nbsp;</span>	ns             map[string]string
+<span id="L211" class="ln">   211&nbsp;&nbsp;</span>	err            error
+<span id="L212" class="ln">   212&nbsp;&nbsp;</span>	line           int
+<span id="L213" class="ln">   213&nbsp;&nbsp;</span>	linestart      int64
+<span id="L214" class="ln">   214&nbsp;&nbsp;</span>	offset         int64
+<span id="L215" class="ln">   215&nbsp;&nbsp;</span>	unmarshalDepth int
+<span id="L216" class="ln">   216&nbsp;&nbsp;</span>}
+<span id="L217" class="ln">   217&nbsp;&nbsp;</span>
+<span id="L218" class="ln">   218&nbsp;&nbsp;</span><span class="comment">// NewDecoder creates a new XML parser reading from r.</span>
+<span id="L219" class="ln">   219&nbsp;&nbsp;</span><span class="comment">// If r does not implement [io.ByteReader], NewDecoder will</span>
+<span id="L220" class="ln">   220&nbsp;&nbsp;</span><span class="comment">// do its own buffering.</span>
+<span id="L221" class="ln">   221&nbsp;&nbsp;</span>func NewDecoder(r io.Reader) *Decoder {
+<span id="L222" class="ln">   222&nbsp;&nbsp;</span>	d := &amp;Decoder{
+<span id="L223" class="ln">   223&nbsp;&nbsp;</span>		ns:       make(map[string]string),
+<span id="L224" class="ln">   224&nbsp;&nbsp;</span>		nextByte: -1,
+<span id="L225" class="ln">   225&nbsp;&nbsp;</span>		line:     1,
+<span id="L226" class="ln">   226&nbsp;&nbsp;</span>		Strict:   true,
+<span id="L227" class="ln">   227&nbsp;&nbsp;</span>	}
+<span id="L228" class="ln">   228&nbsp;&nbsp;</span>	d.switchToReader(r)
+<span id="L229" class="ln">   229&nbsp;&nbsp;</span>	return d
+<span id="L230" class="ln">   230&nbsp;&nbsp;</span>}
+<span id="L231" class="ln">   231&nbsp;&nbsp;</span>
+<span id="L232" class="ln">   232&nbsp;&nbsp;</span><span class="comment">// NewTokenDecoder creates a new XML parser using an underlying token stream.</span>
+<span id="L233" class="ln">   233&nbsp;&nbsp;</span>func NewTokenDecoder(t TokenReader) *Decoder {
+<span id="L234" class="ln">   234&nbsp;&nbsp;</span>	<span class="comment">// Is it already a Decoder?</span>
+<span id="L235" class="ln">   235&nbsp;&nbsp;</span>	if d, ok := t.(*Decoder); ok {
+<span id="L236" class="ln">   236&nbsp;&nbsp;</span>		return d
+<span id="L237" class="ln">   237&nbsp;&nbsp;</span>	}
+<span id="L238" class="ln">   238&nbsp;&nbsp;</span>	d := &amp;Decoder{
+<span id="L239" class="ln">   239&nbsp;&nbsp;</span>		ns:       make(map[string]string),
+<span id="L240" class="ln">   240&nbsp;&nbsp;</span>		t:        t,
+<span id="L241" class="ln">   241&nbsp;&nbsp;</span>		nextByte: -1,
+<span id="L242" class="ln">   242&nbsp;&nbsp;</span>		line:     1,
+<span id="L243" class="ln">   243&nbsp;&nbsp;</span>		Strict:   true,
+<span id="L244" class="ln">   244&nbsp;&nbsp;</span>	}
+<span id="L245" class="ln">   245&nbsp;&nbsp;</span>	return d
+<span id="L246" class="ln">   246&nbsp;&nbsp;</span>}
+<span id="L247" class="ln">   247&nbsp;&nbsp;</span>
+<span id="L248" class="ln">   248&nbsp;&nbsp;</span><span class="comment">// Token returns the next XML token in the input stream.</span>
+<span id="L249" class="ln">   249&nbsp;&nbsp;</span><span class="comment">// At the end of the input stream, Token returns nil, [io.EOF].</span>
+<span id="L250" class="ln">   250&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L251" class="ln">   251&nbsp;&nbsp;</span><span class="comment">// Slices of bytes in the returned token data refer to the</span>
+<span id="L252" class="ln">   252&nbsp;&nbsp;</span><span class="comment">// parser&#39;s internal buffer and remain valid only until the next</span>
+<span id="L253" class="ln">   253&nbsp;&nbsp;</span><span class="comment">// call to Token. To acquire a copy of the bytes, call [CopyToken]</span>
+<span id="L254" class="ln">   254&nbsp;&nbsp;</span><span class="comment">// or the token&#39;s Copy method.</span>
+<span id="L255" class="ln">   255&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L256" class="ln">   256&nbsp;&nbsp;</span><span class="comment">// Token expands self-closing elements such as &lt;br&gt;</span>
+<span id="L257" class="ln">   257&nbsp;&nbsp;</span><span class="comment">// into separate start and end elements returned by successive calls.</span>
+<span id="L258" class="ln">   258&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L259" class="ln">   259&nbsp;&nbsp;</span><span class="comment">// Token guarantees that the [StartElement] and [EndElement]</span>
+<span id="L260" class="ln">   260&nbsp;&nbsp;</span><span class="comment">// tokens it returns are properly nested and matched:</span>
+<span id="L261" class="ln">   261&nbsp;&nbsp;</span><span class="comment">// if Token encounters an unexpected end element</span>
+<span id="L262" class="ln">   262&nbsp;&nbsp;</span><span class="comment">// or EOF before all expected end elements,</span>
+<span id="L263" class="ln">   263&nbsp;&nbsp;</span><span class="comment">// it will return an error.</span>
+<span id="L264" class="ln">   264&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L265" class="ln">   265&nbsp;&nbsp;</span><span class="comment">// If [Decoder.CharsetReader] is called and returns an error,</span>
+<span id="L266" class="ln">   266&nbsp;&nbsp;</span><span class="comment">// the error is wrapped and returned.</span>
+<span id="L267" class="ln">   267&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L268" class="ln">   268&nbsp;&nbsp;</span><span class="comment">// Token implements XML name spaces as described by</span>
+<span id="L269" class="ln">   269&nbsp;&nbsp;</span><span class="comment">// https://www.w3.org/TR/REC-xml-names/. Each of the</span>
+<span id="L270" class="ln">   270&nbsp;&nbsp;</span><span class="comment">// [Name] structures contained in the Token has the Space</span>
+<span id="L271" class="ln">   271&nbsp;&nbsp;</span><span class="comment">// set to the URL identifying its name space when known.</span>
+<span id="L272" class="ln">   272&nbsp;&nbsp;</span><span class="comment">// If Token encounters an unrecognized name space prefix,</span>
+<span id="L273" class="ln">   273&nbsp;&nbsp;</span><span class="comment">// it uses the prefix as the Space rather than report an error.</span>
+<span id="L274" class="ln">   274&nbsp;&nbsp;</span>func (d *Decoder) Token() (Token, error) {
+<span id="L275" class="ln">   275&nbsp;&nbsp;</span>	var t Token
+<span id="L276" class="ln">   276&nbsp;&nbsp;</span>	var err error
+<span id="L277" class="ln">   277&nbsp;&nbsp;</span>	if d.stk != nil &amp;&amp; d.stk.kind == stkEOF {
+<span id="L278" class="ln">   278&nbsp;&nbsp;</span>		return nil, io.EOF
+<span id="L279" class="ln">   279&nbsp;&nbsp;</span>	}
+<span id="L280" class="ln">   280&nbsp;&nbsp;</span>	if d.nextToken != nil {
+<span id="L281" class="ln">   281&nbsp;&nbsp;</span>		t = d.nextToken
+<span id="L282" class="ln">   282&nbsp;&nbsp;</span>		d.nextToken = nil
+<span id="L283" class="ln">   283&nbsp;&nbsp;</span>	} else {
+<span id="L284" class="ln">   284&nbsp;&nbsp;</span>		if t, err = d.rawToken(); t == nil &amp;&amp; err != nil {
+<span id="L285" class="ln">   285&nbsp;&nbsp;</span>			if err == io.EOF &amp;&amp; d.stk != nil &amp;&amp; d.stk.kind != stkEOF {
+<span id="L286" class="ln">   286&nbsp;&nbsp;</span>				err = d.syntaxError(&#34;unexpected EOF&#34;)
+<span id="L287" class="ln">   287&nbsp;&nbsp;</span>			}
+<span id="L288" class="ln">   288&nbsp;&nbsp;</span>			return nil, err
+<span id="L289" class="ln">   289&nbsp;&nbsp;</span>		}
+<span id="L290" class="ln">   290&nbsp;&nbsp;</span>		<span class="comment">// We still have a token to process, so clear any</span>
+<span id="L291" class="ln">   291&nbsp;&nbsp;</span>		<span class="comment">// errors (e.g. EOF) and proceed.</span>
+<span id="L292" class="ln">   292&nbsp;&nbsp;</span>		err = nil
+<span id="L293" class="ln">   293&nbsp;&nbsp;</span>	}
+<span id="L294" class="ln">   294&nbsp;&nbsp;</span>	if !d.Strict {
+<span id="L295" class="ln">   295&nbsp;&nbsp;</span>		if t1, ok := d.autoClose(t); ok {
+<span id="L296" class="ln">   296&nbsp;&nbsp;</span>			d.nextToken = t
+<span id="L297" class="ln">   297&nbsp;&nbsp;</span>			t = t1
+<span id="L298" class="ln">   298&nbsp;&nbsp;</span>		}
+<span id="L299" class="ln">   299&nbsp;&nbsp;</span>	}
+<span id="L300" class="ln">   300&nbsp;&nbsp;</span>	switch t1 := t.(type) {
+<span id="L301" class="ln">   301&nbsp;&nbsp;</span>	case StartElement:
+<span id="L302" class="ln">   302&nbsp;&nbsp;</span>		<span class="comment">// In XML name spaces, the translations listed in the</span>
+<span id="L303" class="ln">   303&nbsp;&nbsp;</span>		<span class="comment">// attributes apply to the element name and</span>
+<span id="L304" class="ln">   304&nbsp;&nbsp;</span>		<span class="comment">// to the other attribute names, so process</span>
+<span id="L305" class="ln">   305&nbsp;&nbsp;</span>		<span class="comment">// the translations first.</span>
+<span id="L306" class="ln">   306&nbsp;&nbsp;</span>		for _, a := range t1.Attr {
+<span id="L307" class="ln">   307&nbsp;&nbsp;</span>			if a.Name.Space == xmlnsPrefix {
+<span id="L308" class="ln">   308&nbsp;&nbsp;</span>				v, ok := d.ns[a.Name.Local]
+<span id="L309" class="ln">   309&nbsp;&nbsp;</span>				d.pushNs(a.Name.Local, v, ok)
+<span id="L310" class="ln">   310&nbsp;&nbsp;</span>				d.ns[a.Name.Local] = a.Value
+<span id="L311" class="ln">   311&nbsp;&nbsp;</span>			}
+<span id="L312" class="ln">   312&nbsp;&nbsp;</span>			if a.Name.Space == &#34;&#34; &amp;&amp; a.Name.Local == xmlnsPrefix {
+<span id="L313" class="ln">   313&nbsp;&nbsp;</span>				<span class="comment">// Default space for untagged names</span>
+<span id="L314" class="ln">   314&nbsp;&nbsp;</span>				v, ok := d.ns[&#34;&#34;]
+<span id="L315" class="ln">   315&nbsp;&nbsp;</span>				d.pushNs(&#34;&#34;, v, ok)
+<span id="L316" class="ln">   316&nbsp;&nbsp;</span>				d.ns[&#34;&#34;] = a.Value
+<span id="L317" class="ln">   317&nbsp;&nbsp;</span>			}
+<span id="L318" class="ln">   318&nbsp;&nbsp;</span>		}
+<span id="L319" class="ln">   319&nbsp;&nbsp;</span>
+<span id="L320" class="ln">   320&nbsp;&nbsp;</span>		d.pushElement(t1.Name)
+<span id="L321" class="ln">   321&nbsp;&nbsp;</span>		d.translate(&amp;t1.Name, true)
+<span id="L322" class="ln">   322&nbsp;&nbsp;</span>		for i := range t1.Attr {
+<span id="L323" class="ln">   323&nbsp;&nbsp;</span>			d.translate(&amp;t1.Attr[i].Name, false)
+<span id="L324" class="ln">   324&nbsp;&nbsp;</span>		}
+<span id="L325" class="ln">   325&nbsp;&nbsp;</span>		t = t1
+<span id="L326" class="ln">   326&nbsp;&nbsp;</span>
+<span id="L327" class="ln">   327&nbsp;&nbsp;</span>	case EndElement:
+<span id="L328" class="ln">   328&nbsp;&nbsp;</span>		if !d.popElement(&amp;t1) {
+<span id="L329" class="ln">   329&nbsp;&nbsp;</span>			return nil, d.err
+<span id="L330" class="ln">   330&nbsp;&nbsp;</span>		}
+<span id="L331" class="ln">   331&nbsp;&nbsp;</span>		t = t1
+<span id="L332" class="ln">   332&nbsp;&nbsp;</span>	}
+<span id="L333" class="ln">   333&nbsp;&nbsp;</span>	return t, err
+<span id="L334" class="ln">   334&nbsp;&nbsp;</span>}
+<span id="L335" class="ln">   335&nbsp;&nbsp;</span>
+<span id="L336" class="ln">   336&nbsp;&nbsp;</span>const (
+<span id="L337" class="ln">   337&nbsp;&nbsp;</span>	xmlURL      = &#34;http://www.w3.org/XML/1998/namespace&#34;
+<span id="L338" class="ln">   338&nbsp;&nbsp;</span>	xmlnsPrefix = &#34;xmlns&#34;
+<span id="L339" class="ln">   339&nbsp;&nbsp;</span>	xmlPrefix   = &#34;xml&#34;
+<span id="L340" class="ln">   340&nbsp;&nbsp;</span>)
+<span id="L341" class="ln">   341&nbsp;&nbsp;</span>
+<span id="L342" class="ln">   342&nbsp;&nbsp;</span><span class="comment">// Apply name space translation to name n.</span>
+<span id="L343" class="ln">   343&nbsp;&nbsp;</span><span class="comment">// The default name space (for Space==&#34;&#34;)</span>
+<span id="L344" class="ln">   344&nbsp;&nbsp;</span><span class="comment">// applies only to element names, not to attribute names.</span>
+<span id="L345" class="ln">   345&nbsp;&nbsp;</span>func (d *Decoder) translate(n *Name, isElementName bool) {
+<span id="L346" class="ln">   346&nbsp;&nbsp;</span>	switch {
+<span id="L347" class="ln">   347&nbsp;&nbsp;</span>	case n.Space == xmlnsPrefix:
+<span id="L348" class="ln">   348&nbsp;&nbsp;</span>		return
+<span id="L349" class="ln">   349&nbsp;&nbsp;</span>	case n.Space == &#34;&#34; &amp;&amp; !isElementName:
+<span id="L350" class="ln">   350&nbsp;&nbsp;</span>		return
+<span id="L351" class="ln">   351&nbsp;&nbsp;</span>	case n.Space == xmlPrefix:
+<span id="L352" class="ln">   352&nbsp;&nbsp;</span>		n.Space = xmlURL
+<span id="L353" class="ln">   353&nbsp;&nbsp;</span>	case n.Space == &#34;&#34; &amp;&amp; n.Local == xmlnsPrefix:
+<span id="L354" class="ln">   354&nbsp;&nbsp;</span>		return
+<span id="L355" class="ln">   355&nbsp;&nbsp;</span>	}
+<span id="L356" class="ln">   356&nbsp;&nbsp;</span>	if v, ok := d.ns[n.Space]; ok {
+<span id="L357" class="ln">   357&nbsp;&nbsp;</span>		n.Space = v
+<span id="L358" class="ln">   358&nbsp;&nbsp;</span>	} else if n.Space == &#34;&#34; {
+<span id="L359" class="ln">   359&nbsp;&nbsp;</span>		n.Space = d.DefaultSpace
+<span id="L360" class="ln">   360&nbsp;&nbsp;</span>	}
+<span id="L361" class="ln">   361&nbsp;&nbsp;</span>}
+<span id="L362" class="ln">   362&nbsp;&nbsp;</span>
+<span id="L363" class="ln">   363&nbsp;&nbsp;</span>func (d *Decoder) switchToReader(r io.Reader) {
+<span id="L364" class="ln">   364&nbsp;&nbsp;</span>	<span class="comment">// Get efficient byte at a time reader.</span>
+<span id="L365" class="ln">   365&nbsp;&nbsp;</span>	<span class="comment">// Assume that if reader has its own</span>
+<span id="L366" class="ln">   366&nbsp;&nbsp;</span>	<span class="comment">// ReadByte, it&#39;s efficient enough.</span>
+<span id="L367" class="ln">   367&nbsp;&nbsp;</span>	<span class="comment">// Otherwise, use bufio.</span>
+<span id="L368" class="ln">   368&nbsp;&nbsp;</span>	if rb, ok := r.(io.ByteReader); ok {
+<span id="L369" class="ln">   369&nbsp;&nbsp;</span>		d.r = rb
+<span id="L370" class="ln">   370&nbsp;&nbsp;</span>	} else {
+<span id="L371" class="ln">   371&nbsp;&nbsp;</span>		d.r = bufio.NewReader(r)
+<span id="L372" class="ln">   372&nbsp;&nbsp;</span>	}
+<span id="L373" class="ln">   373&nbsp;&nbsp;</span>}
+<span id="L374" class="ln">   374&nbsp;&nbsp;</span>
+<span id="L375" class="ln">   375&nbsp;&nbsp;</span><span class="comment">// Parsing state - stack holds old name space translations</span>
+<span id="L376" class="ln">   376&nbsp;&nbsp;</span><span class="comment">// and the current set of open elements. The translations to pop when</span>
+<span id="L377" class="ln">   377&nbsp;&nbsp;</span><span class="comment">// ending a given tag are *below* it on the stack, which is</span>
+<span id="L378" class="ln">   378&nbsp;&nbsp;</span><span class="comment">// more work but forced on us by XML.</span>
+<span id="L379" class="ln">   379&nbsp;&nbsp;</span>type stack struct {
+<span id="L380" class="ln">   380&nbsp;&nbsp;</span>	next *stack
+<span id="L381" class="ln">   381&nbsp;&nbsp;</span>	kind int
+<span id="L382" class="ln">   382&nbsp;&nbsp;</span>	name Name
+<span id="L383" class="ln">   383&nbsp;&nbsp;</span>	ok   bool
+<span id="L384" class="ln">   384&nbsp;&nbsp;</span>}
+<span id="L385" class="ln">   385&nbsp;&nbsp;</span>
+<span id="L386" class="ln">   386&nbsp;&nbsp;</span>const (
+<span id="L387" class="ln">   387&nbsp;&nbsp;</span>	stkStart = iota
+<span id="L388" class="ln">   388&nbsp;&nbsp;</span>	stkNs
+<span id="L389" class="ln">   389&nbsp;&nbsp;</span>	stkEOF
+<span id="L390" class="ln">   390&nbsp;&nbsp;</span>)
+<span id="L391" class="ln">   391&nbsp;&nbsp;</span>
+<span id="L392" class="ln">   392&nbsp;&nbsp;</span>func (d *Decoder) push(kind int) *stack {
+<span id="L393" class="ln">   393&nbsp;&nbsp;</span>	s := d.free
+<span id="L394" class="ln">   394&nbsp;&nbsp;</span>	if s != nil {
+<span id="L395" class="ln">   395&nbsp;&nbsp;</span>		d.free = s.next
+<span id="L396" class="ln">   396&nbsp;&nbsp;</span>	} else {
+<span id="L397" class="ln">   397&nbsp;&nbsp;</span>		s = new(stack)
+<span id="L398" class="ln">   398&nbsp;&nbsp;</span>	}
+<span id="L399" class="ln">   399&nbsp;&nbsp;</span>	s.next = d.stk
+<span id="L400" class="ln">   400&nbsp;&nbsp;</span>	s.kind = kind
+<span id="L401" class="ln">   401&nbsp;&nbsp;</span>	d.stk = s
+<span id="L402" class="ln">   402&nbsp;&nbsp;</span>	return s
+<span id="L403" class="ln">   403&nbsp;&nbsp;</span>}
+<span id="L404" class="ln">   404&nbsp;&nbsp;</span>
+<span id="L405" class="ln">   405&nbsp;&nbsp;</span>func (d *Decoder) pop() *stack {
+<span id="L406" class="ln">   406&nbsp;&nbsp;</span>	s := d.stk
+<span id="L407" class="ln">   407&nbsp;&nbsp;</span>	if s != nil {
+<span id="L408" class="ln">   408&nbsp;&nbsp;</span>		d.stk = s.next
+<span id="L409" class="ln">   409&nbsp;&nbsp;</span>		s.next = d.free
+<span id="L410" class="ln">   410&nbsp;&nbsp;</span>		d.free = s
+<span id="L411" class="ln">   411&nbsp;&nbsp;</span>	}
+<span id="L412" class="ln">   412&nbsp;&nbsp;</span>	return s
+<span id="L413" class="ln">   413&nbsp;&nbsp;</span>}
+<span id="L414" class="ln">   414&nbsp;&nbsp;</span>
+<span id="L415" class="ln">   415&nbsp;&nbsp;</span><span class="comment">// Record that after the current element is finished</span>
+<span id="L416" class="ln">   416&nbsp;&nbsp;</span><span class="comment">// (that element is already pushed on the stack)</span>
+<span id="L417" class="ln">   417&nbsp;&nbsp;</span><span class="comment">// Token should return EOF until popEOF is called.</span>
+<span id="L418" class="ln">   418&nbsp;&nbsp;</span>func (d *Decoder) pushEOF() {
+<span id="L419" class="ln">   419&nbsp;&nbsp;</span>	<span class="comment">// Walk down stack to find Start.</span>
+<span id="L420" class="ln">   420&nbsp;&nbsp;</span>	<span class="comment">// It might not be the top, because there might be stkNs</span>
+<span id="L421" class="ln">   421&nbsp;&nbsp;</span>	<span class="comment">// entries above it.</span>
+<span id="L422" class="ln">   422&nbsp;&nbsp;</span>	start := d.stk
+<span id="L423" class="ln">   423&nbsp;&nbsp;</span>	for start.kind != stkStart {
+<span id="L424" class="ln">   424&nbsp;&nbsp;</span>		start = start.next
+<span id="L425" class="ln">   425&nbsp;&nbsp;</span>	}
+<span id="L426" class="ln">   426&nbsp;&nbsp;</span>	<span class="comment">// The stkNs entries below a start are associated with that</span>
+<span id="L427" class="ln">   427&nbsp;&nbsp;</span>	<span class="comment">// element too; skip over them.</span>
+<span id="L428" class="ln">   428&nbsp;&nbsp;</span>	for start.next != nil &amp;&amp; start.next.kind == stkNs {
+<span id="L429" class="ln">   429&nbsp;&nbsp;</span>		start = start.next
+<span id="L430" class="ln">   430&nbsp;&nbsp;</span>	}
+<span id="L431" class="ln">   431&nbsp;&nbsp;</span>	s := d.free
+<span id="L432" class="ln">   432&nbsp;&nbsp;</span>	if s != nil {
+<span id="L433" class="ln">   433&nbsp;&nbsp;</span>		d.free = s.next
+<span id="L434" class="ln">   434&nbsp;&nbsp;</span>	} else {
+<span id="L435" class="ln">   435&nbsp;&nbsp;</span>		s = new(stack)
+<span id="L436" class="ln">   436&nbsp;&nbsp;</span>	}
+<span id="L437" class="ln">   437&nbsp;&nbsp;</span>	s.kind = stkEOF
+<span id="L438" class="ln">   438&nbsp;&nbsp;</span>	s.next = start.next
+<span id="L439" class="ln">   439&nbsp;&nbsp;</span>	start.next = s
+<span id="L440" class="ln">   440&nbsp;&nbsp;</span>}
+<span id="L441" class="ln">   441&nbsp;&nbsp;</span>
+<span id="L442" class="ln">   442&nbsp;&nbsp;</span><span class="comment">// Undo a pushEOF.</span>
+<span id="L443" class="ln">   443&nbsp;&nbsp;</span><span class="comment">// The element must have been finished, so the EOF should be at the top of the stack.</span>
+<span id="L444" class="ln">   444&nbsp;&nbsp;</span>func (d *Decoder) popEOF() bool {
+<span id="L445" class="ln">   445&nbsp;&nbsp;</span>	if d.stk == nil || d.stk.kind != stkEOF {
+<span id="L446" class="ln">   446&nbsp;&nbsp;</span>		return false
+<span id="L447" class="ln">   447&nbsp;&nbsp;</span>	}
+<span id="L448" class="ln">   448&nbsp;&nbsp;</span>	d.pop()
+<span id="L449" class="ln">   449&nbsp;&nbsp;</span>	return true
+<span id="L450" class="ln">   450&nbsp;&nbsp;</span>}
+<span id="L451" class="ln">   451&nbsp;&nbsp;</span>
+<span id="L452" class="ln">   452&nbsp;&nbsp;</span><span class="comment">// Record that we are starting an element with the given name.</span>
+<span id="L453" class="ln">   453&nbsp;&nbsp;</span>func (d *Decoder) pushElement(name Name) {
+<span id="L454" class="ln">   454&nbsp;&nbsp;</span>	s := d.push(stkStart)
+<span id="L455" class="ln">   455&nbsp;&nbsp;</span>	s.name = name
+<span id="L456" class="ln">   456&nbsp;&nbsp;</span>}
+<span id="L457" class="ln">   457&nbsp;&nbsp;</span>
+<span id="L458" class="ln">   458&nbsp;&nbsp;</span><span class="comment">// Record that we are changing the value of ns[local].</span>
+<span id="L459" class="ln">   459&nbsp;&nbsp;</span><span class="comment">// The old value is url, ok.</span>
+<span id="L460" class="ln">   460&nbsp;&nbsp;</span>func (d *Decoder) pushNs(local string, url string, ok bool) {
+<span id="L461" class="ln">   461&nbsp;&nbsp;</span>	s := d.push(stkNs)
+<span id="L462" class="ln">   462&nbsp;&nbsp;</span>	s.name.Local = local
+<span id="L463" class="ln">   463&nbsp;&nbsp;</span>	s.name.Space = url
+<span id="L464" class="ln">   464&nbsp;&nbsp;</span>	s.ok = ok
+<span id="L465" class="ln">   465&nbsp;&nbsp;</span>}
+<span id="L466" class="ln">   466&nbsp;&nbsp;</span>
+<span id="L467" class="ln">   467&nbsp;&nbsp;</span><span class="comment">// Creates a SyntaxError with the current line number.</span>
+<span id="L468" class="ln">   468&nbsp;&nbsp;</span>func (d *Decoder) syntaxError(msg string) error {
+<span id="L469" class="ln">   469&nbsp;&nbsp;</span>	return &amp;SyntaxError{Msg: msg, Line: d.line}
+<span id="L470" class="ln">   470&nbsp;&nbsp;</span>}
+<span id="L471" class="ln">   471&nbsp;&nbsp;</span>
+<span id="L472" class="ln">   472&nbsp;&nbsp;</span><span class="comment">// Record that we are ending an element with the given name.</span>
+<span id="L473" class="ln">   473&nbsp;&nbsp;</span><span class="comment">// The name must match the record at the top of the stack,</span>
+<span id="L474" class="ln">   474&nbsp;&nbsp;</span><span class="comment">// which must be a pushElement record.</span>
+<span id="L475" class="ln">   475&nbsp;&nbsp;</span><span class="comment">// After popping the element, apply any undo records from</span>
+<span id="L476" class="ln">   476&nbsp;&nbsp;</span><span class="comment">// the stack to restore the name translations that existed</span>
+<span id="L477" class="ln">   477&nbsp;&nbsp;</span><span class="comment">// before we saw this element.</span>
+<span id="L478" class="ln">   478&nbsp;&nbsp;</span>func (d *Decoder) popElement(t *EndElement) bool {
+<span id="L479" class="ln">   479&nbsp;&nbsp;</span>	s := d.pop()
+<span id="L480" class="ln">   480&nbsp;&nbsp;</span>	name := t.Name
+<span id="L481" class="ln">   481&nbsp;&nbsp;</span>	switch {
+<span id="L482" class="ln">   482&nbsp;&nbsp;</span>	case s == nil || s.kind != stkStart:
+<span id="L483" class="ln">   483&nbsp;&nbsp;</span>		d.err = d.syntaxError(&#34;unexpected end element &lt;/&#34; + name.Local + &#34;&gt;&#34;)
+<span id="L484" class="ln">   484&nbsp;&nbsp;</span>		return false
+<span id="L485" class="ln">   485&nbsp;&nbsp;</span>	case s.name.Local != name.Local:
+<span id="L486" class="ln">   486&nbsp;&nbsp;</span>		if !d.Strict {
+<span id="L487" class="ln">   487&nbsp;&nbsp;</span>			d.needClose = true
+<span id="L488" class="ln">   488&nbsp;&nbsp;</span>			d.toClose = t.Name
+<span id="L489" class="ln">   489&nbsp;&nbsp;</span>			t.Name = s.name
+<span id="L490" class="ln">   490&nbsp;&nbsp;</span>			return true
+<span id="L491" class="ln">   491&nbsp;&nbsp;</span>		}
+<span id="L492" class="ln">   492&nbsp;&nbsp;</span>		d.err = d.syntaxError(&#34;element &lt;&#34; + s.name.Local + &#34;&gt; closed by &lt;/&#34; + name.Local + &#34;&gt;&#34;)
+<span id="L493" class="ln">   493&nbsp;&nbsp;</span>		return false
+<span id="L494" class="ln">   494&nbsp;&nbsp;</span>	case s.name.Space != name.Space:
+<span id="L495" class="ln">   495&nbsp;&nbsp;</span>		d.err = d.syntaxError(&#34;element &lt;&#34; + s.name.Local + &#34;&gt; in space &#34; + s.name.Space +
+<span id="L496" class="ln">   496&nbsp;&nbsp;</span>			&#34; closed by &lt;/&#34; + name.Local + &#34;&gt; in space &#34; + name.Space)
+<span id="L497" class="ln">   497&nbsp;&nbsp;</span>		return false
+<span id="L498" class="ln">   498&nbsp;&nbsp;</span>	}
+<span id="L499" class="ln">   499&nbsp;&nbsp;</span>
+<span id="L500" class="ln">   500&nbsp;&nbsp;</span>	d.translate(&amp;t.Name, true)
+<span id="L501" class="ln">   501&nbsp;&nbsp;</span>
+<span id="L502" class="ln">   502&nbsp;&nbsp;</span>	<span class="comment">// Pop stack until a Start or EOF is on the top, undoing the</span>
+<span id="L503" class="ln">   503&nbsp;&nbsp;</span>	<span class="comment">// translations that were associated with the element we just closed.</span>
+<span id="L504" class="ln">   504&nbsp;&nbsp;</span>	for d.stk != nil &amp;&amp; d.stk.kind != stkStart &amp;&amp; d.stk.kind != stkEOF {
+<span id="L505" class="ln">   505&nbsp;&nbsp;</span>		s := d.pop()
+<span id="L506" class="ln">   506&nbsp;&nbsp;</span>		if s.ok {
+<span id="L507" class="ln">   507&nbsp;&nbsp;</span>			d.ns[s.name.Local] = s.name.Space
+<span id="L508" class="ln">   508&nbsp;&nbsp;</span>		} else {
+<span id="L509" class="ln">   509&nbsp;&nbsp;</span>			delete(d.ns, s.name.Local)
+<span id="L510" class="ln">   510&nbsp;&nbsp;</span>		}
+<span id="L511" class="ln">   511&nbsp;&nbsp;</span>	}
+<span id="L512" class="ln">   512&nbsp;&nbsp;</span>
+<span id="L513" class="ln">   513&nbsp;&nbsp;</span>	return true
+<span id="L514" class="ln">   514&nbsp;&nbsp;</span>}
+<span id="L515" class="ln">   515&nbsp;&nbsp;</span>
+<span id="L516" class="ln">   516&nbsp;&nbsp;</span><span class="comment">// If the top element on the stack is autoclosing and</span>
+<span id="L517" class="ln">   517&nbsp;&nbsp;</span><span class="comment">// t is not the end tag, invent the end tag.</span>
+<span id="L518" class="ln">   518&nbsp;&nbsp;</span>func (d *Decoder) autoClose(t Token) (Token, bool) {
+<span id="L519" class="ln">   519&nbsp;&nbsp;</span>	if d.stk == nil || d.stk.kind != stkStart {
+<span id="L520" class="ln">   520&nbsp;&nbsp;</span>		return nil, false
+<span id="L521" class="ln">   521&nbsp;&nbsp;</span>	}
+<span id="L522" class="ln">   522&nbsp;&nbsp;</span>	for _, s := range d.AutoClose {
+<span id="L523" class="ln">   523&nbsp;&nbsp;</span>		if strings.EqualFold(s, d.stk.name.Local) {
+<span id="L524" class="ln">   524&nbsp;&nbsp;</span>			<span class="comment">// This one should be auto closed if t doesn&#39;t close it.</span>
+<span id="L525" class="ln">   525&nbsp;&nbsp;</span>			et, ok := t.(EndElement)
+<span id="L526" class="ln">   526&nbsp;&nbsp;</span>			if !ok || !strings.EqualFold(et.Name.Local, d.stk.name.Local) {
+<span id="L527" class="ln">   527&nbsp;&nbsp;</span>				return EndElement{d.stk.name}, true
+<span id="L528" class="ln">   528&nbsp;&nbsp;</span>			}
+<span id="L529" class="ln">   529&nbsp;&nbsp;</span>			break
+<span id="L530" class="ln">   530&nbsp;&nbsp;</span>		}
+<span id="L531" class="ln">   531&nbsp;&nbsp;</span>	}
+<span id="L532" class="ln">   532&nbsp;&nbsp;</span>	return nil, false
+<span id="L533" class="ln">   533&nbsp;&nbsp;</span>}
+<span id="L534" class="ln">   534&nbsp;&nbsp;</span>
+<span id="L535" class="ln">   535&nbsp;&nbsp;</span>var errRawToken = errors.New(&#34;xml: cannot use RawToken from UnmarshalXML method&#34;)
+<span id="L536" class="ln">   536&nbsp;&nbsp;</span>
+<span id="L537" class="ln">   537&nbsp;&nbsp;</span><span class="comment">// RawToken is like [Decoder.Token] but does not verify that</span>
+<span id="L538" class="ln">   538&nbsp;&nbsp;</span><span class="comment">// start and end elements match and does not translate</span>
+<span id="L539" class="ln">   539&nbsp;&nbsp;</span><span class="comment">// name space prefixes to their corresponding URLs.</span>
+<span id="L540" class="ln">   540&nbsp;&nbsp;</span>func (d *Decoder) RawToken() (Token, error) {
+<span id="L541" class="ln">   541&nbsp;&nbsp;</span>	if d.unmarshalDepth &gt; 0 {
+<span id="L542" class="ln">   542&nbsp;&nbsp;</span>		return nil, errRawToken
+<span id="L543" class="ln">   543&nbsp;&nbsp;</span>	}
+<span id="L544" class="ln">   544&nbsp;&nbsp;</span>	return d.rawToken()
+<span id="L545" class="ln">   545&nbsp;&nbsp;</span>}
+<span id="L546" class="ln">   546&nbsp;&nbsp;</span>
+<span id="L547" class="ln">   547&nbsp;&nbsp;</span>func (d *Decoder) rawToken() (Token, error) {
+<span id="L548" class="ln">   548&nbsp;&nbsp;</span>	if d.t != nil {
+<span id="L549" class="ln">   549&nbsp;&nbsp;</span>		return d.t.Token()
+<span id="L550" class="ln">   550&nbsp;&nbsp;</span>	}
+<span id="L551" class="ln">   551&nbsp;&nbsp;</span>	if d.err != nil {
+<span id="L552" class="ln">   552&nbsp;&nbsp;</span>		return nil, d.err
+<span id="L553" class="ln">   553&nbsp;&nbsp;</span>	}
+<span id="L554" class="ln">   554&nbsp;&nbsp;</span>	if d.needClose {
+<span id="L555" class="ln">   555&nbsp;&nbsp;</span>		<span class="comment">// The last element we read was self-closing and</span>
+<span id="L556" class="ln">   556&nbsp;&nbsp;</span>		<span class="comment">// we returned just the StartElement half.</span>
+<span id="L557" class="ln">   557&nbsp;&nbsp;</span>		<span class="comment">// Return the EndElement half now.</span>
+<span id="L558" class="ln">   558&nbsp;&nbsp;</span>		d.needClose = false
+<span id="L559" class="ln">   559&nbsp;&nbsp;</span>		return EndElement{d.toClose}, nil
+<span id="L560" class="ln">   560&nbsp;&nbsp;</span>	}
+<span id="L561" class="ln">   561&nbsp;&nbsp;</span>
+<span id="L562" class="ln">   562&nbsp;&nbsp;</span>	b, ok := d.getc()
+<span id="L563" class="ln">   563&nbsp;&nbsp;</span>	if !ok {
+<span id="L564" class="ln">   564&nbsp;&nbsp;</span>		return nil, d.err
+<span id="L565" class="ln">   565&nbsp;&nbsp;</span>	}
+<span id="L566" class="ln">   566&nbsp;&nbsp;</span>
+<span id="L567" class="ln">   567&nbsp;&nbsp;</span>	if b != &#39;&lt;&#39; {
+<span id="L568" class="ln">   568&nbsp;&nbsp;</span>		<span class="comment">// Text section.</span>
+<span id="L569" class="ln">   569&nbsp;&nbsp;</span>		d.ungetc(b)
+<span id="L570" class="ln">   570&nbsp;&nbsp;</span>		data := d.text(-1, false)
+<span id="L571" class="ln">   571&nbsp;&nbsp;</span>		if data == nil {
+<span id="L572" class="ln">   572&nbsp;&nbsp;</span>			return nil, d.err
+<span id="L573" class="ln">   573&nbsp;&nbsp;</span>		}
+<span id="L574" class="ln">   574&nbsp;&nbsp;</span>		return CharData(data), nil
+<span id="L575" class="ln">   575&nbsp;&nbsp;</span>	}
+<span id="L576" class="ln">   576&nbsp;&nbsp;</span>
+<span id="L577" class="ln">   577&nbsp;&nbsp;</span>	if b, ok = d.mustgetc(); !ok {
+<span id="L578" class="ln">   578&nbsp;&nbsp;</span>		return nil, d.err
+<span id="L579" class="ln">   579&nbsp;&nbsp;</span>	}
+<span id="L580" class="ln">   580&nbsp;&nbsp;</span>	switch b {
+<span id="L581" class="ln">   581&nbsp;&nbsp;</span>	case &#39;/&#39;:
+<span id="L582" class="ln">   582&nbsp;&nbsp;</span>		<span class="comment">// &lt;/: End element</span>
+<span id="L583" class="ln">   583&nbsp;&nbsp;</span>		var name Name
+<span id="L584" class="ln">   584&nbsp;&nbsp;</span>		if name, ok = d.nsname(); !ok {
+<span id="L585" class="ln">   585&nbsp;&nbsp;</span>			if d.err == nil {
+<span id="L586" class="ln">   586&nbsp;&nbsp;</span>				d.err = d.syntaxError(&#34;expected element name after &lt;/&#34;)
+<span id="L587" class="ln">   587&nbsp;&nbsp;</span>			}
+<span id="L588" class="ln">   588&nbsp;&nbsp;</span>			return nil, d.err
+<span id="L589" class="ln">   589&nbsp;&nbsp;</span>		}
+<span id="L590" class="ln">   590&nbsp;&nbsp;</span>		d.space()
+<span id="L591" class="ln">   591&nbsp;&nbsp;</span>		if b, ok = d.mustgetc(); !ok {
+<span id="L592" class="ln">   592&nbsp;&nbsp;</span>			return nil, d.err
+<span id="L593" class="ln">   593&nbsp;&nbsp;</span>		}
+<span id="L594" class="ln">   594&nbsp;&nbsp;</span>		if b != &#39;&gt;&#39; {
+<span id="L595" class="ln">   595&nbsp;&nbsp;</span>			d.err = d.syntaxError(&#34;invalid characters between &lt;/&#34; + name.Local + &#34; and &gt;&#34;)
+<span id="L596" class="ln">   596&nbsp;&nbsp;</span>			return nil, d.err
+<span id="L597" class="ln">   597&nbsp;&nbsp;</span>		}
+<span id="L598" class="ln">   598&nbsp;&nbsp;</span>		return EndElement{name}, nil
+<span id="L599" class="ln">   599&nbsp;&nbsp;</span>
+<span id="L600" class="ln">   600&nbsp;&nbsp;</span>	case &#39;?&#39;:
+<span id="L601" class="ln">   601&nbsp;&nbsp;</span>		<span class="comment">// &lt;?: Processing instruction.</span>
+<span id="L602" class="ln">   602&nbsp;&nbsp;</span>		var target string
+<span id="L603" class="ln">   603&nbsp;&nbsp;</span>		if target, ok = d.name(); !ok {
+<span id="L604" class="ln">   604&nbsp;&nbsp;</span>			if d.err == nil {
+<span id="L605" class="ln">   605&nbsp;&nbsp;</span>				d.err = d.syntaxError(&#34;expected target name after &lt;?&#34;)
+<span id="L606" class="ln">   606&nbsp;&nbsp;</span>			}
+<span id="L607" class="ln">   607&nbsp;&nbsp;</span>			return nil, d.err
+<span id="L608" class="ln">   608&nbsp;&nbsp;</span>		}
+<span id="L609" class="ln">   609&nbsp;&nbsp;</span>		d.space()
+<span id="L610" class="ln">   610&nbsp;&nbsp;</span>		d.buf.Reset()
+<span id="L611" class="ln">   611&nbsp;&nbsp;</span>		var b0 byte
+<span id="L612" class="ln">   612&nbsp;&nbsp;</span>		for {
+<span id="L613" class="ln">   613&nbsp;&nbsp;</span>			if b, ok = d.mustgetc(); !ok {
+<span id="L614" class="ln">   614&nbsp;&nbsp;</span>				return nil, d.err
+<span id="L615" class="ln">   615&nbsp;&nbsp;</span>			}
+<span id="L616" class="ln">   616&nbsp;&nbsp;</span>			d.buf.WriteByte(b)
+<span id="L617" class="ln">   617&nbsp;&nbsp;</span>			if b0 == &#39;?&#39; &amp;&amp; b == &#39;&gt;&#39; {
+<span id="L618" class="ln">   618&nbsp;&nbsp;</span>				break
+<span id="L619" class="ln">   619&nbsp;&nbsp;</span>			}
+<span id="L620" class="ln">   620&nbsp;&nbsp;</span>			b0 = b
+<span id="L621" class="ln">   621&nbsp;&nbsp;</span>		}
+<span id="L622" class="ln">   622&nbsp;&nbsp;</span>		data := d.buf.Bytes()
+<span id="L623" class="ln">   623&nbsp;&nbsp;</span>		data = data[0 : len(data)-2] <span class="comment">// chop ?&gt;</span>
+<span id="L624" class="ln">   624&nbsp;&nbsp;</span>
+<span id="L625" class="ln">   625&nbsp;&nbsp;</span>		if target == &#34;xml&#34; {
+<span id="L626" class="ln">   626&nbsp;&nbsp;</span>			content := string(data)
+<span id="L627" class="ln">   627&nbsp;&nbsp;</span>			ver := procInst(&#34;version&#34;, content)
+<span id="L628" class="ln">   628&nbsp;&nbsp;</span>			if ver != &#34;&#34; &amp;&amp; ver != &#34;1.0&#34; {
+<span id="L629" class="ln">   629&nbsp;&nbsp;</span>				d.err = fmt.Errorf(&#34;xml: unsupported version %q; only version 1.0 is supported&#34;, ver)
+<span id="L630" class="ln">   630&nbsp;&nbsp;</span>				return nil, d.err
+<span id="L631" class="ln">   631&nbsp;&nbsp;</span>			}
+<span id="L632" class="ln">   632&nbsp;&nbsp;</span>			enc := procInst(&#34;encoding&#34;, content)
+<span id="L633" class="ln">   633&nbsp;&nbsp;</span>			if enc != &#34;&#34; &amp;&amp; enc != &#34;utf-8&#34; &amp;&amp; enc != &#34;UTF-8&#34; &amp;&amp; !strings.EqualFold(enc, &#34;utf-8&#34;) {
+<span id="L634" class="ln">   634&nbsp;&nbsp;</span>				if d.CharsetReader == nil {
+<span id="L635" class="ln">   635&nbsp;&nbsp;</span>					d.err = fmt.Errorf(&#34;xml: encoding %q declared but Decoder.CharsetReader is nil&#34;, enc)
+<span id="L636" class="ln">   636&nbsp;&nbsp;</span>					return nil, d.err
+<span id="L637" class="ln">   637&nbsp;&nbsp;</span>				}
+<span id="L638" class="ln">   638&nbsp;&nbsp;</span>				newr, err := d.CharsetReader(enc, d.r.(io.Reader))
+<span id="L639" class="ln">   639&nbsp;&nbsp;</span>				if err != nil {
+<span id="L640" class="ln">   640&nbsp;&nbsp;</span>					d.err = fmt.Errorf(&#34;xml: opening charset %q: %w&#34;, enc, err)
+<span id="L641" class="ln">   641&nbsp;&nbsp;</span>					return nil, d.err
+<span id="L642" class="ln">   642&nbsp;&nbsp;</span>				}
+<span id="L643" class="ln">   643&nbsp;&nbsp;</span>				if newr == nil {
+<span id="L644" class="ln">   644&nbsp;&nbsp;</span>					panic(&#34;CharsetReader returned a nil Reader for charset &#34; + enc)
+<span id="L645" class="ln">   645&nbsp;&nbsp;</span>				}
+<span id="L646" class="ln">   646&nbsp;&nbsp;</span>				d.switchToReader(newr)
+<span id="L647" class="ln">   647&nbsp;&nbsp;</span>			}
+<span id="L648" class="ln">   648&nbsp;&nbsp;</span>		}
+<span id="L649" class="ln">   649&nbsp;&nbsp;</span>		return ProcInst{target, data}, nil
+<span id="L650" class="ln">   650&nbsp;&nbsp;</span>
+<span id="L651" class="ln">   651&nbsp;&nbsp;</span>	case &#39;!&#39;:
+<span id="L652" class="ln">   652&nbsp;&nbsp;</span>		<span class="comment">// &lt;!: Maybe comment, maybe CDATA.</span>
+<span id="L653" class="ln">   653&nbsp;&nbsp;</span>		if b, ok = d.mustgetc(); !ok {
+<span id="L654" class="ln">   654&nbsp;&nbsp;</span>			return nil, d.err
+<span id="L655" class="ln">   655&nbsp;&nbsp;</span>		}
+<span id="L656" class="ln">   656&nbsp;&nbsp;</span>		switch b {
+<span id="L657" class="ln">   657&nbsp;&nbsp;</span>		case &#39;-&#39;: <span class="comment">// &lt;!-</span>
+<span id="L658" class="ln">   658&nbsp;&nbsp;</span>			<span class="comment">// Probably &lt;!-- for a comment.</span>
+<span id="L659" class="ln">   659&nbsp;&nbsp;</span>			if b, ok = d.mustgetc(); !ok {
+<span id="L660" class="ln">   660&nbsp;&nbsp;</span>				return nil, d.err
+<span id="L661" class="ln">   661&nbsp;&nbsp;</span>			}
+<span id="L662" class="ln">   662&nbsp;&nbsp;</span>			if b != &#39;-&#39; {
+<span id="L663" class="ln">   663&nbsp;&nbsp;</span>				d.err = d.syntaxError(&#34;invalid sequence &lt;!- not part of &lt;!--&#34;)
+<span id="L664" class="ln">   664&nbsp;&nbsp;</span>				return nil, d.err
+<span id="L665" class="ln">   665&nbsp;&nbsp;</span>			}
+<span id="L666" class="ln">   666&nbsp;&nbsp;</span>			<span class="comment">// Look for terminator.</span>
+<span id="L667" class="ln">   667&nbsp;&nbsp;</span>			d.buf.Reset()
+<span id="L668" class="ln">   668&nbsp;&nbsp;</span>			var b0, b1 byte
+<span id="L669" class="ln">   669&nbsp;&nbsp;</span>			for {
+<span id="L670" class="ln">   670&nbsp;&nbsp;</span>				if b, ok = d.mustgetc(); !ok {
+<span id="L671" class="ln">   671&nbsp;&nbsp;</span>					return nil, d.err
+<span id="L672" class="ln">   672&nbsp;&nbsp;</span>				}
+<span id="L673" class="ln">   673&nbsp;&nbsp;</span>				d.buf.WriteByte(b)
+<span id="L674" class="ln">   674&nbsp;&nbsp;</span>				if b0 == &#39;-&#39; &amp;&amp; b1 == &#39;-&#39; {
+<span id="L675" class="ln">   675&nbsp;&nbsp;</span>					if b != &#39;&gt;&#39; {
+<span id="L676" class="ln">   676&nbsp;&nbsp;</span>						d.err = d.syntaxError(
+<span id="L677" class="ln">   677&nbsp;&nbsp;</span>							`invalid sequence &#34;--&#34; not allowed in comments`)
+<span id="L678" class="ln">   678&nbsp;&nbsp;</span>						return nil, d.err
+<span id="L679" class="ln">   679&nbsp;&nbsp;</span>					}
+<span id="L680" class="ln">   680&nbsp;&nbsp;</span>					break
+<span id="L681" class="ln">   681&nbsp;&nbsp;</span>				}
+<span id="L682" class="ln">   682&nbsp;&nbsp;</span>				b0, b1 = b1, b
+<span id="L683" class="ln">   683&nbsp;&nbsp;</span>			}
+<span id="L684" class="ln">   684&nbsp;&nbsp;</span>			data := d.buf.Bytes()
+<span id="L685" class="ln">   685&nbsp;&nbsp;</span>			data = data[0 : len(data)-3] <span class="comment">// chop --&gt;</span>
+<span id="L686" class="ln">   686&nbsp;&nbsp;</span>			return Comment(data), nil
+<span id="L687" class="ln">   687&nbsp;&nbsp;</span>
+<span id="L688" class="ln">   688&nbsp;&nbsp;</span>		case &#39;[&#39;: <span class="comment">// &lt;![</span>
+<span id="L689" class="ln">   689&nbsp;&nbsp;</span>			<span class="comment">// Probably &lt;![CDATA[.</span>
+<span id="L690" class="ln">   690&nbsp;&nbsp;</span>			for i := 0; i &lt; 6; i++ {
+<span id="L691" class="ln">   691&nbsp;&nbsp;</span>				if b, ok = d.mustgetc(); !ok {
+<span id="L692" class="ln">   692&nbsp;&nbsp;</span>					return nil, d.err
+<span id="L693" class="ln">   693&nbsp;&nbsp;</span>				}
+<span id="L694" class="ln">   694&nbsp;&nbsp;</span>				if b != &#34;CDATA[&#34;[i] {
+<span id="L695" class="ln">   695&nbsp;&nbsp;</span>					d.err = d.syntaxError(&#34;invalid &lt;![ sequence&#34;)
+<span id="L696" class="ln">   696&nbsp;&nbsp;</span>					return nil, d.err
+<span id="L697" class="ln">   697&nbsp;&nbsp;</span>				}
+<span id="L698" class="ln">   698&nbsp;&nbsp;</span>			}
+<span id="L699" class="ln">   699&nbsp;&nbsp;</span>			<span class="comment">// Have &lt;![CDATA[.  Read text until ]]&gt;.</span>
+<span id="L700" class="ln">   700&nbsp;&nbsp;</span>			data := d.text(-1, true)
+<span id="L701" class="ln">   701&nbsp;&nbsp;</span>			if data == nil {
+<span id="L702" class="ln">   702&nbsp;&nbsp;</span>				return nil, d.err
+<span id="L703" class="ln">   703&nbsp;&nbsp;</span>			}
+<span id="L704" class="ln">   704&nbsp;&nbsp;</span>			return CharData(data), nil
+<span id="L705" class="ln">   705&nbsp;&nbsp;</span>		}
+<span id="L706" class="ln">   706&nbsp;&nbsp;</span>
+<span id="L707" class="ln">   707&nbsp;&nbsp;</span>		<span class="comment">// Probably a directive: &lt;!DOCTYPE ...&gt;, &lt;!ENTITY ...&gt;, etc.</span>
+<span id="L708" class="ln">   708&nbsp;&nbsp;</span>		<span class="comment">// We don&#39;t care, but accumulate for caller. Quoted angle</span>
+<span id="L709" class="ln">   709&nbsp;&nbsp;</span>		<span class="comment">// brackets do not count for nesting.</span>
+<span id="L710" class="ln">   710&nbsp;&nbsp;</span>		d.buf.Reset()
+<span id="L711" class="ln">   711&nbsp;&nbsp;</span>		d.buf.WriteByte(b)
+<span id="L712" class="ln">   712&nbsp;&nbsp;</span>		inquote := uint8(0)
+<span id="L713" class="ln">   713&nbsp;&nbsp;</span>		depth := 0
+<span id="L714" class="ln">   714&nbsp;&nbsp;</span>		for {
+<span id="L715" class="ln">   715&nbsp;&nbsp;</span>			if b, ok = d.mustgetc(); !ok {
+<span id="L716" class="ln">   716&nbsp;&nbsp;</span>				return nil, d.err
+<span id="L717" class="ln">   717&nbsp;&nbsp;</span>			}
+<span id="L718" class="ln">   718&nbsp;&nbsp;</span>			if inquote == 0 &amp;&amp; b == &#39;&gt;&#39; &amp;&amp; depth == 0 {
+<span id="L719" class="ln">   719&nbsp;&nbsp;</span>				break
+<span id="L720" class="ln">   720&nbsp;&nbsp;</span>			}
+<span id="L721" class="ln">   721&nbsp;&nbsp;</span>		HandleB:
+<span id="L722" class="ln">   722&nbsp;&nbsp;</span>			d.buf.WriteByte(b)
+<span id="L723" class="ln">   723&nbsp;&nbsp;</span>			switch {
+<span id="L724" class="ln">   724&nbsp;&nbsp;</span>			case b == inquote:
+<span id="L725" class="ln">   725&nbsp;&nbsp;</span>				inquote = 0
+<span id="L726" class="ln">   726&nbsp;&nbsp;</span>
+<span id="L727" class="ln">   727&nbsp;&nbsp;</span>			case inquote != 0:
+<span id="L728" class="ln">   728&nbsp;&nbsp;</span>				<span class="comment">// in quotes, no special action</span>
+<span id="L729" class="ln">   729&nbsp;&nbsp;</span>
+<span id="L730" class="ln">   730&nbsp;&nbsp;</span>			case b == &#39;\&#39;&#39; || b == &#39;&#34;&#39;:
+<span id="L731" class="ln">   731&nbsp;&nbsp;</span>				inquote = b
+<span id="L732" class="ln">   732&nbsp;&nbsp;</span>
+<span id="L733" class="ln">   733&nbsp;&nbsp;</span>			case b == &#39;&gt;&#39; &amp;&amp; inquote == 0:
+<span id="L734" class="ln">   734&nbsp;&nbsp;</span>				depth--
+<span id="L735" class="ln">   735&nbsp;&nbsp;</span>
+<span id="L736" class="ln">   736&nbsp;&nbsp;</span>			case b == &#39;&lt;&#39; &amp;&amp; inquote == 0:
+<span id="L737" class="ln">   737&nbsp;&nbsp;</span>				<span class="comment">// Look for &lt;!-- to begin comment.</span>
+<span id="L738" class="ln">   738&nbsp;&nbsp;</span>				s := &#34;!--&#34;
+<span id="L739" class="ln">   739&nbsp;&nbsp;</span>				for i := 0; i &lt; len(s); i++ {
+<span id="L740" class="ln">   740&nbsp;&nbsp;</span>					if b, ok = d.mustgetc(); !ok {
+<span id="L741" class="ln">   741&nbsp;&nbsp;</span>						return nil, d.err
+<span id="L742" class="ln">   742&nbsp;&nbsp;</span>					}
+<span id="L743" class="ln">   743&nbsp;&nbsp;</span>					if b != s[i] {
+<span id="L744" class="ln">   744&nbsp;&nbsp;</span>						for j := 0; j &lt; i; j++ {
+<span id="L745" class="ln">   745&nbsp;&nbsp;</span>							d.buf.WriteByte(s[j])
+<span id="L746" class="ln">   746&nbsp;&nbsp;</span>						}
+<span id="L747" class="ln">   747&nbsp;&nbsp;</span>						depth++
+<span id="L748" class="ln">   748&nbsp;&nbsp;</span>						goto HandleB
+<span id="L749" class="ln">   749&nbsp;&nbsp;</span>					}
+<span id="L750" class="ln">   750&nbsp;&nbsp;</span>				}
+<span id="L751" class="ln">   751&nbsp;&nbsp;</span>
+<span id="L752" class="ln">   752&nbsp;&nbsp;</span>				<span class="comment">// Remove &lt; that was written above.</span>
+<span id="L753" class="ln">   753&nbsp;&nbsp;</span>				d.buf.Truncate(d.buf.Len() - 1)
+<span id="L754" class="ln">   754&nbsp;&nbsp;</span>
+<span id="L755" class="ln">   755&nbsp;&nbsp;</span>				<span class="comment">// Look for terminator.</span>
+<span id="L756" class="ln">   756&nbsp;&nbsp;</span>				var b0, b1 byte
+<span id="L757" class="ln">   757&nbsp;&nbsp;</span>				for {
+<span id="L758" class="ln">   758&nbsp;&nbsp;</span>					if b, ok = d.mustgetc(); !ok {
+<span id="L759" class="ln">   759&nbsp;&nbsp;</span>						return nil, d.err
+<span id="L760" class="ln">   760&nbsp;&nbsp;</span>					}
+<span id="L761" class="ln">   761&nbsp;&nbsp;</span>					if b0 == &#39;-&#39; &amp;&amp; b1 == &#39;-&#39; &amp;&amp; b == &#39;&gt;&#39; {
+<span id="L762" class="ln">   762&nbsp;&nbsp;</span>						break
+<span id="L763" class="ln">   763&nbsp;&nbsp;</span>					}
+<span id="L764" class="ln">   764&nbsp;&nbsp;</span>					b0, b1 = b1, b
+<span id="L765" class="ln">   765&nbsp;&nbsp;</span>				}
+<span id="L766" class="ln">   766&nbsp;&nbsp;</span>
+<span id="L767" class="ln">   767&nbsp;&nbsp;</span>				<span class="comment">// Replace the comment with a space in the returned Directive</span>
+<span id="L768" class="ln">   768&nbsp;&nbsp;</span>				<span class="comment">// body, so that markup parts that were separated by the comment</span>
+<span id="L769" class="ln">   769&nbsp;&nbsp;</span>				<span class="comment">// (like a &#34;&lt;&#34; and a &#34;!&#34;) don&#39;t get joined when re-encoding the</span>
+<span id="L770" class="ln">   770&nbsp;&nbsp;</span>				<span class="comment">// Directive, taking new semantic meaning.</span>
+<span id="L771" class="ln">   771&nbsp;&nbsp;</span>				d.buf.WriteByte(&#39; &#39;)
+<span id="L772" class="ln">   772&nbsp;&nbsp;</span>			}
+<span id="L773" class="ln">   773&nbsp;&nbsp;</span>		}
+<span id="L774" class="ln">   774&nbsp;&nbsp;</span>		return Directive(d.buf.Bytes()), nil
+<span id="L775" class="ln">   775&nbsp;&nbsp;</span>	}
+<span id="L776" class="ln">   776&nbsp;&nbsp;</span>
+<span id="L777" class="ln">   777&nbsp;&nbsp;</span>	<span class="comment">// Must be an open element like &lt;a href=&#34;foo&#34;&gt;</span>
+<span id="L778" class="ln">   778&nbsp;&nbsp;</span>	d.ungetc(b)
+<span id="L779" class="ln">   779&nbsp;&nbsp;</span>
+<span id="L780" class="ln">   780&nbsp;&nbsp;</span>	var (
+<span id="L781" class="ln">   781&nbsp;&nbsp;</span>		name  Name
+<span id="L782" class="ln">   782&nbsp;&nbsp;</span>		empty bool
+<span id="L783" class="ln">   783&nbsp;&nbsp;</span>		attr  []Attr
+<span id="L784" class="ln">   784&nbsp;&nbsp;</span>	)
+<span id="L785" class="ln">   785&nbsp;&nbsp;</span>	if name, ok = d.nsname(); !ok {
+<span id="L786" class="ln">   786&nbsp;&nbsp;</span>		if d.err == nil {
+<span id="L787" class="ln">   787&nbsp;&nbsp;</span>			d.err = d.syntaxError(&#34;expected element name after &lt;&#34;)
+<span id="L788" class="ln">   788&nbsp;&nbsp;</span>		}
+<span id="L789" class="ln">   789&nbsp;&nbsp;</span>		return nil, d.err
+<span id="L790" class="ln">   790&nbsp;&nbsp;</span>	}
+<span id="L791" class="ln">   791&nbsp;&nbsp;</span>
+<span id="L792" class="ln">   792&nbsp;&nbsp;</span>	attr = []Attr{}
+<span id="L793" class="ln">   793&nbsp;&nbsp;</span>	for {
+<span id="L794" class="ln">   794&nbsp;&nbsp;</span>		d.space()
+<span id="L795" class="ln">   795&nbsp;&nbsp;</span>		if b, ok = d.mustgetc(); !ok {
+<span id="L796" class="ln">   796&nbsp;&nbsp;</span>			return nil, d.err
+<span id="L797" class="ln">   797&nbsp;&nbsp;</span>		}
+<span id="L798" class="ln">   798&nbsp;&nbsp;</span>		if b == &#39;/&#39; {
+<span id="L799" class="ln">   799&nbsp;&nbsp;</span>			empty = true
+<span id="L800" class="ln">   800&nbsp;&nbsp;</span>			if b, ok = d.mustgetc(); !ok {
+<span id="L801" class="ln">   801&nbsp;&nbsp;</span>				return nil, d.err
+<span id="L802" class="ln">   802&nbsp;&nbsp;</span>			}
+<span id="L803" class="ln">   803&nbsp;&nbsp;</span>			if b != &#39;&gt;&#39; {
+<span id="L804" class="ln">   804&nbsp;&nbsp;</span>				d.err = d.syntaxError(&#34;expected /&gt; in element&#34;)
+<span id="L805" class="ln">   805&nbsp;&nbsp;</span>				return nil, d.err
+<span id="L806" class="ln">   806&nbsp;&nbsp;</span>			}
+<span id="L807" class="ln">   807&nbsp;&nbsp;</span>			break
+<span id="L808" class="ln">   808&nbsp;&nbsp;</span>		}
+<span id="L809" class="ln">   809&nbsp;&nbsp;</span>		if b == &#39;&gt;&#39; {
+<span id="L810" class="ln">   810&nbsp;&nbsp;</span>			break
+<span id="L811" class="ln">   811&nbsp;&nbsp;</span>		}
+<span id="L812" class="ln">   812&nbsp;&nbsp;</span>		d.ungetc(b)
+<span id="L813" class="ln">   813&nbsp;&nbsp;</span>
+<span id="L814" class="ln">   814&nbsp;&nbsp;</span>		a := Attr{}
+<span id="L815" class="ln">   815&nbsp;&nbsp;</span>		if a.Name, ok = d.nsname(); !ok {
+<span id="L816" class="ln">   816&nbsp;&nbsp;</span>			if d.err == nil {
+<span id="L817" class="ln">   817&nbsp;&nbsp;</span>				d.err = d.syntaxError(&#34;expected attribute name in element&#34;)
+<span id="L818" class="ln">   818&nbsp;&nbsp;</span>			}
+<span id="L819" class="ln">   819&nbsp;&nbsp;</span>			return nil, d.err
+<span id="L820" class="ln">   820&nbsp;&nbsp;</span>		}
+<span id="L821" class="ln">   821&nbsp;&nbsp;</span>		d.space()
+<span id="L822" class="ln">   822&nbsp;&nbsp;</span>		if b, ok = d.mustgetc(); !ok {
+<span id="L823" class="ln">   823&nbsp;&nbsp;</span>			return nil, d.err
+<span id="L824" class="ln">   824&nbsp;&nbsp;</span>		}
+<span id="L825" class="ln">   825&nbsp;&nbsp;</span>		if b != &#39;=&#39; {
+<span id="L826" class="ln">   826&nbsp;&nbsp;</span>			if d.Strict {
+<span id="L827" class="ln">   827&nbsp;&nbsp;</span>				d.err = d.syntaxError(&#34;attribute name without = in element&#34;)
+<span id="L828" class="ln">   828&nbsp;&nbsp;</span>				return nil, d.err
+<span id="L829" class="ln">   829&nbsp;&nbsp;</span>			}
+<span id="L830" class="ln">   830&nbsp;&nbsp;</span>			d.ungetc(b)
+<span id="L831" class="ln">   831&nbsp;&nbsp;</span>			a.Value = a.Name.Local
+<span id="L832" class="ln">   832&nbsp;&nbsp;</span>		} else {
+<span id="L833" class="ln">   833&nbsp;&nbsp;</span>			d.space()
+<span id="L834" class="ln">   834&nbsp;&nbsp;</span>			data := d.attrval()
+<span id="L835" class="ln">   835&nbsp;&nbsp;</span>			if data == nil {
+<span id="L836" class="ln">   836&nbsp;&nbsp;</span>				return nil, d.err
+<span id="L837" class="ln">   837&nbsp;&nbsp;</span>			}
+<span id="L838" class="ln">   838&nbsp;&nbsp;</span>			a.Value = string(data)
+<span id="L839" class="ln">   839&nbsp;&nbsp;</span>		}
+<span id="L840" class="ln">   840&nbsp;&nbsp;</span>		attr = append(attr, a)
+<span id="L841" class="ln">   841&nbsp;&nbsp;</span>	}
+<span id="L842" class="ln">   842&nbsp;&nbsp;</span>	if empty {
+<span id="L843" class="ln">   843&nbsp;&nbsp;</span>		d.needClose = true
+<span id="L844" class="ln">   844&nbsp;&nbsp;</span>		d.toClose = name
+<span id="L845" class="ln">   845&nbsp;&nbsp;</span>	}
+<span id="L846" class="ln">   846&nbsp;&nbsp;</span>	return StartElement{name, attr}, nil
+<span id="L847" class="ln">   847&nbsp;&nbsp;</span>}
+<span id="L848" class="ln">   848&nbsp;&nbsp;</span>
+<span id="L849" class="ln">   849&nbsp;&nbsp;</span>func (d *Decoder) attrval() []byte {
+<span id="L850" class="ln">   850&nbsp;&nbsp;</span>	b, ok := d.mustgetc()
+<span id="L851" class="ln">   851&nbsp;&nbsp;</span>	if !ok {
+<span id="L852" class="ln">   852&nbsp;&nbsp;</span>		return nil
+<span id="L853" class="ln">   853&nbsp;&nbsp;</span>	}
+<span id="L854" class="ln">   854&nbsp;&nbsp;</span>	<span class="comment">// Handle quoted attribute values</span>
+<span id="L855" class="ln">   855&nbsp;&nbsp;</span>	if b == &#39;&#34;&#39; || b == &#39;\&#39;&#39; {
+<span id="L856" class="ln">   856&nbsp;&nbsp;</span>		return d.text(int(b), false)
+<span id="L857" class="ln">   857&nbsp;&nbsp;</span>	}
+<span id="L858" class="ln">   858&nbsp;&nbsp;</span>	<span class="comment">// Handle unquoted attribute values for strict parsers</span>
+<span id="L859" class="ln">   859&nbsp;&nbsp;</span>	if d.Strict {
+<span id="L860" class="ln">   860&nbsp;&nbsp;</span>		d.err = d.syntaxError(&#34;unquoted or missing attribute value in element&#34;)
+<span id="L861" class="ln">   861&nbsp;&nbsp;</span>		return nil
+<span id="L862" class="ln">   862&nbsp;&nbsp;</span>	}
+<span id="L863" class="ln">   863&nbsp;&nbsp;</span>	<span class="comment">// Handle unquoted attribute values for unstrict parsers</span>
+<span id="L864" class="ln">   864&nbsp;&nbsp;</span>	d.ungetc(b)
+<span id="L865" class="ln">   865&nbsp;&nbsp;</span>	d.buf.Reset()
+<span id="L866" class="ln">   866&nbsp;&nbsp;</span>	for {
+<span id="L867" class="ln">   867&nbsp;&nbsp;</span>		b, ok = d.mustgetc()
+<span id="L868" class="ln">   868&nbsp;&nbsp;</span>		if !ok {
+<span id="L869" class="ln">   869&nbsp;&nbsp;</span>			return nil
+<span id="L870" class="ln">   870&nbsp;&nbsp;</span>		}
+<span id="L871" class="ln">   871&nbsp;&nbsp;</span>		<span class="comment">// https://www.w3.org/TR/REC-html40/intro/sgmltut.html#h-3.2.2</span>
+<span id="L872" class="ln">   872&nbsp;&nbsp;</span>		if &#39;a&#39; &lt;= b &amp;&amp; b &lt;= &#39;z&#39; || &#39;A&#39; &lt;= b &amp;&amp; b &lt;= &#39;Z&#39; ||
+<span id="L873" class="ln">   873&nbsp;&nbsp;</span>			&#39;0&#39; &lt;= b &amp;&amp; b &lt;= &#39;9&#39; || b == &#39;_&#39; || b == &#39;:&#39; || b == &#39;-&#39; {
+<span id="L874" class="ln">   874&nbsp;&nbsp;</span>			d.buf.WriteByte(b)
+<span id="L875" class="ln">   875&nbsp;&nbsp;</span>		} else {
+<span id="L876" class="ln">   876&nbsp;&nbsp;</span>			d.ungetc(b)
+<span id="L877" class="ln">   877&nbsp;&nbsp;</span>			break
+<span id="L878" class="ln">   878&nbsp;&nbsp;</span>		}
+<span id="L879" class="ln">   879&nbsp;&nbsp;</span>	}
+<span id="L880" class="ln">   880&nbsp;&nbsp;</span>	return d.buf.Bytes()
+<span id="L881" class="ln">   881&nbsp;&nbsp;</span>}
+<span id="L882" class="ln">   882&nbsp;&nbsp;</span>
+<span id="L883" class="ln">   883&nbsp;&nbsp;</span><span class="comment">// Skip spaces if any</span>
+<span id="L884" class="ln">   884&nbsp;&nbsp;</span>func (d *Decoder) space() {
+<span id="L885" class="ln">   885&nbsp;&nbsp;</span>	for {
+<span id="L886" class="ln">   886&nbsp;&nbsp;</span>		b, ok := d.getc()
+<span id="L887" class="ln">   887&nbsp;&nbsp;</span>		if !ok {
+<span id="L888" class="ln">   888&nbsp;&nbsp;</span>			return
+<span id="L889" class="ln">   889&nbsp;&nbsp;</span>		}
+<span id="L890" class="ln">   890&nbsp;&nbsp;</span>		switch b {
+<span id="L891" class="ln">   891&nbsp;&nbsp;</span>		case &#39; &#39;, &#39;\r&#39;, &#39;\n&#39;, &#39;\t&#39;:
+<span id="L892" class="ln">   892&nbsp;&nbsp;</span>		default:
+<span id="L893" class="ln">   893&nbsp;&nbsp;</span>			d.ungetc(b)
+<span id="L894" class="ln">   894&nbsp;&nbsp;</span>			return
+<span id="L895" class="ln">   895&nbsp;&nbsp;</span>		}
+<span id="L896" class="ln">   896&nbsp;&nbsp;</span>	}
+<span id="L897" class="ln">   897&nbsp;&nbsp;</span>}
+<span id="L898" class="ln">   898&nbsp;&nbsp;</span>
+<span id="L899" class="ln">   899&nbsp;&nbsp;</span><span class="comment">// Read a single byte.</span>
+<span id="L900" class="ln">   900&nbsp;&nbsp;</span><span class="comment">// If there is no byte to read, return ok==false</span>
+<span id="L901" class="ln">   901&nbsp;&nbsp;</span><span class="comment">// and leave the error in d.err.</span>
+<span id="L902" class="ln">   902&nbsp;&nbsp;</span><span class="comment">// Maintain line number.</span>
+<span id="L903" class="ln">   903&nbsp;&nbsp;</span>func (d *Decoder) getc() (b byte, ok bool) {
+<span id="L904" class="ln">   904&nbsp;&nbsp;</span>	if d.err != nil {
+<span id="L905" class="ln">   905&nbsp;&nbsp;</span>		return 0, false
+<span id="L906" class="ln">   906&nbsp;&nbsp;</span>	}
+<span id="L907" class="ln">   907&nbsp;&nbsp;</span>	if d.nextByte &gt;= 0 {
+<span id="L908" class="ln">   908&nbsp;&nbsp;</span>		b = byte(d.nextByte)
+<span id="L909" class="ln">   909&nbsp;&nbsp;</span>		d.nextByte = -1
+<span id="L910" class="ln">   910&nbsp;&nbsp;</span>	} else {
+<span id="L911" class="ln">   911&nbsp;&nbsp;</span>		b, d.err = d.r.ReadByte()
+<span id="L912" class="ln">   912&nbsp;&nbsp;</span>		if d.err != nil {
+<span id="L913" class="ln">   913&nbsp;&nbsp;</span>			return 0, false
+<span id="L914" class="ln">   914&nbsp;&nbsp;</span>		}
+<span id="L915" class="ln">   915&nbsp;&nbsp;</span>		if d.saved != nil {
+<span id="L916" class="ln">   916&nbsp;&nbsp;</span>			d.saved.WriteByte(b)
+<span id="L917" class="ln">   917&nbsp;&nbsp;</span>		}
+<span id="L918" class="ln">   918&nbsp;&nbsp;</span>	}
+<span id="L919" class="ln">   919&nbsp;&nbsp;</span>	if b == &#39;\n&#39; {
+<span id="L920" class="ln">   920&nbsp;&nbsp;</span>		d.line++
+<span id="L921" class="ln">   921&nbsp;&nbsp;</span>		d.linestart = d.offset + 1
+<span id="L922" class="ln">   922&nbsp;&nbsp;</span>	}
+<span id="L923" class="ln">   923&nbsp;&nbsp;</span>	d.offset++
+<span id="L924" class="ln">   924&nbsp;&nbsp;</span>	return b, true
+<span id="L925" class="ln">   925&nbsp;&nbsp;</span>}
+<span id="L926" class="ln">   926&nbsp;&nbsp;</span>
+<span id="L927" class="ln">   927&nbsp;&nbsp;</span><span class="comment">// InputOffset returns the input stream byte offset of the current decoder position.</span>
+<span id="L928" class="ln">   928&nbsp;&nbsp;</span><span class="comment">// The offset gives the location of the end of the most recently returned token</span>
+<span id="L929" class="ln">   929&nbsp;&nbsp;</span><span class="comment">// and the beginning of the next token.</span>
+<span id="L930" class="ln">   930&nbsp;&nbsp;</span>func (d *Decoder) InputOffset() int64 {
+<span id="L931" class="ln">   931&nbsp;&nbsp;</span>	return d.offset
+<span id="L932" class="ln">   932&nbsp;&nbsp;</span>}
+<span id="L933" class="ln">   933&nbsp;&nbsp;</span>
+<span id="L934" class="ln">   934&nbsp;&nbsp;</span><span class="comment">// InputPos returns the line of the current decoder position and the 1 based</span>
+<span id="L935" class="ln">   935&nbsp;&nbsp;</span><span class="comment">// input position of the line. The position gives the location of the end of the</span>
+<span id="L936" class="ln">   936&nbsp;&nbsp;</span><span class="comment">// most recently returned token.</span>
+<span id="L937" class="ln">   937&nbsp;&nbsp;</span>func (d *Decoder) InputPos() (line, column int) {
+<span id="L938" class="ln">   938&nbsp;&nbsp;</span>	return d.line, int(d.offset-d.linestart) + 1
+<span id="L939" class="ln">   939&nbsp;&nbsp;</span>}
+<span id="L940" class="ln">   940&nbsp;&nbsp;</span>
+<span id="L941" class="ln">   941&nbsp;&nbsp;</span><span class="comment">// Return saved offset.</span>
+<span id="L942" class="ln">   942&nbsp;&nbsp;</span><span class="comment">// If we did ungetc (nextByte &gt;= 0), have to back up one.</span>
+<span id="L943" class="ln">   943&nbsp;&nbsp;</span>func (d *Decoder) savedOffset() int {
+<span id="L944" class="ln">   944&nbsp;&nbsp;</span>	n := d.saved.Len()
+<span id="L945" class="ln">   945&nbsp;&nbsp;</span>	if d.nextByte &gt;= 0 {
+<span id="L946" class="ln">   946&nbsp;&nbsp;</span>		n--
+<span id="L947" class="ln">   947&nbsp;&nbsp;</span>	}
+<span id="L948" class="ln">   948&nbsp;&nbsp;</span>	return n
+<span id="L949" class="ln">   949&nbsp;&nbsp;</span>}
+<span id="L950" class="ln">   950&nbsp;&nbsp;</span>
+<span id="L951" class="ln">   951&nbsp;&nbsp;</span><span class="comment">// Must read a single byte.</span>
+<span id="L952" class="ln">   952&nbsp;&nbsp;</span><span class="comment">// If there is no byte to read,</span>
+<span id="L953" class="ln">   953&nbsp;&nbsp;</span><span class="comment">// set d.err to SyntaxError(&#34;unexpected EOF&#34;)</span>
+<span id="L954" class="ln">   954&nbsp;&nbsp;</span><span class="comment">// and return ok==false</span>
+<span id="L955" class="ln">   955&nbsp;&nbsp;</span>func (d *Decoder) mustgetc() (b byte, ok bool) {
+<span id="L956" class="ln">   956&nbsp;&nbsp;</span>	if b, ok = d.getc(); !ok {
+<span id="L957" class="ln">   957&nbsp;&nbsp;</span>		if d.err == io.EOF {
+<span id="L958" class="ln">   958&nbsp;&nbsp;</span>			d.err = d.syntaxError(&#34;unexpected EOF&#34;)
+<span id="L959" class="ln">   959&nbsp;&nbsp;</span>		}
+<span id="L960" class="ln">   960&nbsp;&nbsp;</span>	}
+<span id="L961" class="ln">   961&nbsp;&nbsp;</span>	return
+<span id="L962" class="ln">   962&nbsp;&nbsp;</span>}
+<span id="L963" class="ln">   963&nbsp;&nbsp;</span>
+<span id="L964" class="ln">   964&nbsp;&nbsp;</span><span class="comment">// Unread a single byte.</span>
+<span id="L965" class="ln">   965&nbsp;&nbsp;</span>func (d *Decoder) ungetc(b byte) {
+<span id="L966" class="ln">   966&nbsp;&nbsp;</span>	if b == &#39;\n&#39; {
+<span id="L967" class="ln">   967&nbsp;&nbsp;</span>		d.line--
+<span id="L968" class="ln">   968&nbsp;&nbsp;</span>	}
+<span id="L969" class="ln">   969&nbsp;&nbsp;</span>	d.nextByte = int(b)
+<span id="L970" class="ln">   970&nbsp;&nbsp;</span>	d.offset--
+<span id="L971" class="ln">   971&nbsp;&nbsp;</span>}
+<span id="L972" class="ln">   972&nbsp;&nbsp;</span>
+<span id="L973" class="ln">   973&nbsp;&nbsp;</span>var entity = map[string]rune{
+<span id="L974" class="ln">   974&nbsp;&nbsp;</span>	&#34;lt&#34;:   &#39;&lt;&#39;,
+<span id="L975" class="ln">   975&nbsp;&nbsp;</span>	&#34;gt&#34;:   &#39;&gt;&#39;,
+<span id="L976" class="ln">   976&nbsp;&nbsp;</span>	&#34;amp&#34;:  &#39;&amp;&#39;,
+<span id="L977" class="ln">   977&nbsp;&nbsp;</span>	&#34;apos&#34;: &#39;\&#39;&#39;,
+<span id="L978" class="ln">   978&nbsp;&nbsp;</span>	&#34;quot&#34;: &#39;&#34;&#39;,
+<span id="L979" class="ln">   979&nbsp;&nbsp;</span>}
+<span id="L980" class="ln">   980&nbsp;&nbsp;</span>
+<span id="L981" class="ln">   981&nbsp;&nbsp;</span><span class="comment">// Read plain text section (XML calls it character data).</span>
+<span id="L982" class="ln">   982&nbsp;&nbsp;</span><span class="comment">// If quote &gt;= 0, we are in a quoted string and need to find the matching quote.</span>
+<span id="L983" class="ln">   983&nbsp;&nbsp;</span><span class="comment">// If cdata == true, we are in a &lt;![CDATA[ section and need to find ]]&gt;.</span>
+<span id="L984" class="ln">   984&nbsp;&nbsp;</span><span class="comment">// On failure return nil and leave the error in d.err.</span>
+<span id="L985" class="ln">   985&nbsp;&nbsp;</span>func (d *Decoder) text(quote int, cdata bool) []byte {
+<span id="L986" class="ln">   986&nbsp;&nbsp;</span>	var b0, b1 byte
+<span id="L987" class="ln">   987&nbsp;&nbsp;</span>	var trunc int
+<span id="L988" class="ln">   988&nbsp;&nbsp;</span>	d.buf.Reset()
+<span id="L989" class="ln">   989&nbsp;&nbsp;</span>Input:
+<span id="L990" class="ln">   990&nbsp;&nbsp;</span>	for {
+<span id="L991" class="ln">   991&nbsp;&nbsp;</span>		b, ok := d.getc()
+<span id="L992" class="ln">   992&nbsp;&nbsp;</span>		if !ok {
+<span id="L993" class="ln">   993&nbsp;&nbsp;</span>			if cdata {
+<span id="L994" class="ln">   994&nbsp;&nbsp;</span>				if d.err == io.EOF {
+<span id="L995" class="ln">   995&nbsp;&nbsp;</span>					d.err = d.syntaxError(&#34;unexpected EOF in CDATA section&#34;)
+<span id="L996" class="ln">   996&nbsp;&nbsp;</span>				}
+<span id="L997" class="ln">   997&nbsp;&nbsp;</span>				return nil
+<span id="L998" class="ln">   998&nbsp;&nbsp;</span>			}
+<span id="L999" class="ln">   999&nbsp;&nbsp;</span>			break Input
+<span id="L1000" class="ln">  1000&nbsp;&nbsp;</span>		}
+<span id="L1001" class="ln">  1001&nbsp;&nbsp;</span>
+<span id="L1002" class="ln">  1002&nbsp;&nbsp;</span>		<span class="comment">// &lt;![CDATA[ section ends with ]]&gt;.</span>
+<span id="L1003" class="ln">  1003&nbsp;&nbsp;</span>		<span class="comment">// It is an error for ]]&gt; to appear in ordinary text.</span>
+<span id="L1004" class="ln">  1004&nbsp;&nbsp;</span>		if b0 == &#39;]&#39; &amp;&amp; b1 == &#39;]&#39; &amp;&amp; b == &#39;&gt;&#39; {
+<span id="L1005" class="ln">  1005&nbsp;&nbsp;</span>			if cdata {
+<span id="L1006" class="ln">  1006&nbsp;&nbsp;</span>				trunc = 2
+<span id="L1007" class="ln">  1007&nbsp;&nbsp;</span>				break Input
+<span id="L1008" class="ln">  1008&nbsp;&nbsp;</span>			}
+<span id="L1009" class="ln">  1009&nbsp;&nbsp;</span>			d.err = d.syntaxError(&#34;unescaped ]]&gt; not in CDATA section&#34;)
+<span id="L1010" class="ln">  1010&nbsp;&nbsp;</span>			return nil
+<span id="L1011" class="ln">  1011&nbsp;&nbsp;</span>		}
+<span id="L1012" class="ln">  1012&nbsp;&nbsp;</span>
+<span id="L1013" class="ln">  1013&nbsp;&nbsp;</span>		<span class="comment">// Stop reading text if we see a &lt;.</span>
+<span id="L1014" class="ln">  1014&nbsp;&nbsp;</span>		if b == &#39;&lt;&#39; &amp;&amp; !cdata {
+<span id="L1015" class="ln">  1015&nbsp;&nbsp;</span>			if quote &gt;= 0 {
+<span id="L1016" class="ln">  1016&nbsp;&nbsp;</span>				d.err = d.syntaxError(&#34;unescaped &lt; inside quoted string&#34;)
+<span id="L1017" class="ln">  1017&nbsp;&nbsp;</span>				return nil
+<span id="L1018" class="ln">  1018&nbsp;&nbsp;</span>			}
+<span id="L1019" class="ln">  1019&nbsp;&nbsp;</span>			d.ungetc(&#39;&lt;&#39;)
+<span id="L1020" class="ln">  1020&nbsp;&nbsp;</span>			break Input
+<span id="L1021" class="ln">  1021&nbsp;&nbsp;</span>		}
+<span id="L1022" class="ln">  1022&nbsp;&nbsp;</span>		if quote &gt;= 0 &amp;&amp; b == byte(quote) {
+<span id="L1023" class="ln">  1023&nbsp;&nbsp;</span>			break Input
+<span id="L1024" class="ln">  1024&nbsp;&nbsp;</span>		}
+<span id="L1025" class="ln">  1025&nbsp;&nbsp;</span>		if b == &#39;&amp;&#39; &amp;&amp; !cdata {
+<span id="L1026" class="ln">  1026&nbsp;&nbsp;</span>			<span class="comment">// Read escaped character expression up to semicolon.</span>
+<span id="L1027" class="ln">  1027&nbsp;&nbsp;</span>			<span class="comment">// XML in all its glory allows a document to define and use</span>
+<span id="L1028" class="ln">  1028&nbsp;&nbsp;</span>			<span class="comment">// its own character names with &lt;!ENTITY ...&gt; directives.</span>
+<span id="L1029" class="ln">  1029&nbsp;&nbsp;</span>			<span class="comment">// Parsers are required to recognize lt, gt, amp, apos, and quot</span>
+<span id="L1030" class="ln">  1030&nbsp;&nbsp;</span>			<span class="comment">// even if they have not been declared.</span>
+<span id="L1031" class="ln">  1031&nbsp;&nbsp;</span>			before := d.buf.Len()
+<span id="L1032" class="ln">  1032&nbsp;&nbsp;</span>			d.buf.WriteByte(&#39;&amp;&#39;)
+<span id="L1033" class="ln">  1033&nbsp;&nbsp;</span>			var ok bool
+<span id="L1034" class="ln">  1034&nbsp;&nbsp;</span>			var text string
+<span id="L1035" class="ln">  1035&nbsp;&nbsp;</span>			var haveText bool
+<span id="L1036" class="ln">  1036&nbsp;&nbsp;</span>			if b, ok = d.mustgetc(); !ok {
+<span id="L1037" class="ln">  1037&nbsp;&nbsp;</span>				return nil
+<span id="L1038" class="ln">  1038&nbsp;&nbsp;</span>			}
+<span id="L1039" class="ln">  1039&nbsp;&nbsp;</span>			if b == &#39;#&#39; {
+<span id="L1040" class="ln">  1040&nbsp;&nbsp;</span>				d.buf.WriteByte(b)
+<span id="L1041" class="ln">  1041&nbsp;&nbsp;</span>				if b, ok = d.mustgetc(); !ok {
+<span id="L1042" class="ln">  1042&nbsp;&nbsp;</span>					return nil
+<span id="L1043" class="ln">  1043&nbsp;&nbsp;</span>				}
+<span id="L1044" class="ln">  1044&nbsp;&nbsp;</span>				base := 10
+<span id="L1045" class="ln">  1045&nbsp;&nbsp;</span>				if b == &#39;x&#39; {
+<span id="L1046" class="ln">  1046&nbsp;&nbsp;</span>					base = 16
+<span id="L1047" class="ln">  1047&nbsp;&nbsp;</span>					d.buf.WriteByte(b)
+<span id="L1048" class="ln">  1048&nbsp;&nbsp;</span>					if b, ok = d.mustgetc(); !ok {
+<span id="L1049" class="ln">  1049&nbsp;&nbsp;</span>						return nil
+<span id="L1050" class="ln">  1050&nbsp;&nbsp;</span>					}
+<span id="L1051" class="ln">  1051&nbsp;&nbsp;</span>				}
+<span id="L1052" class="ln">  1052&nbsp;&nbsp;</span>				start := d.buf.Len()
+<span id="L1053" class="ln">  1053&nbsp;&nbsp;</span>				for &#39;0&#39; &lt;= b &amp;&amp; b &lt;= &#39;9&#39; ||
+<span id="L1054" class="ln">  1054&nbsp;&nbsp;</span>					base == 16 &amp;&amp; &#39;a&#39; &lt;= b &amp;&amp; b &lt;= &#39;f&#39; ||
+<span id="L1055" class="ln">  1055&nbsp;&nbsp;</span>					base == 16 &amp;&amp; &#39;A&#39; &lt;= b &amp;&amp; b &lt;= &#39;F&#39; {
+<span id="L1056" class="ln">  1056&nbsp;&nbsp;</span>					d.buf.WriteByte(b)
+<span id="L1057" class="ln">  1057&nbsp;&nbsp;</span>					if b, ok = d.mustgetc(); !ok {
+<span id="L1058" class="ln">  1058&nbsp;&nbsp;</span>						return nil
+<span id="L1059" class="ln">  1059&nbsp;&nbsp;</span>					}
+<span id="L1060" class="ln">  1060&nbsp;&nbsp;</span>				}
+<span id="L1061" class="ln">  1061&nbsp;&nbsp;</span>				if b != &#39;;&#39; {
+<span id="L1062" class="ln">  1062&nbsp;&nbsp;</span>					d.ungetc(b)
+<span id="L1063" class="ln">  1063&nbsp;&nbsp;</span>				} else {
+<span id="L1064" class="ln">  1064&nbsp;&nbsp;</span>					s := string(d.buf.Bytes()[start:])
+<span id="L1065" class="ln">  1065&nbsp;&nbsp;</span>					d.buf.WriteByte(&#39;;&#39;)
+<span id="L1066" class="ln">  1066&nbsp;&nbsp;</span>					n, err := strconv.ParseUint(s, base, 64)
+<span id="L1067" class="ln">  1067&nbsp;&nbsp;</span>					if err == nil &amp;&amp; n &lt;= unicode.MaxRune {
+<span id="L1068" class="ln">  1068&nbsp;&nbsp;</span>						text = string(rune(n))
+<span id="L1069" class="ln">  1069&nbsp;&nbsp;</span>						haveText = true
+<span id="L1070" class="ln">  1070&nbsp;&nbsp;</span>					}
+<span id="L1071" class="ln">  1071&nbsp;&nbsp;</span>				}
+<span id="L1072" class="ln">  1072&nbsp;&nbsp;</span>			} else {
+<span id="L1073" class="ln">  1073&nbsp;&nbsp;</span>				d.ungetc(b)
+<span id="L1074" class="ln">  1074&nbsp;&nbsp;</span>				if !d.readName() {
+<span id="L1075" class="ln">  1075&nbsp;&nbsp;</span>					if d.err != nil {
+<span id="L1076" class="ln">  1076&nbsp;&nbsp;</span>						return nil
+<span id="L1077" class="ln">  1077&nbsp;&nbsp;</span>					}
+<span id="L1078" class="ln">  1078&nbsp;&nbsp;</span>				}
+<span id="L1079" class="ln">  1079&nbsp;&nbsp;</span>				if b, ok = d.mustgetc(); !ok {
+<span id="L1080" class="ln">  1080&nbsp;&nbsp;</span>					return nil
+<span id="L1081" class="ln">  1081&nbsp;&nbsp;</span>				}
+<span id="L1082" class="ln">  1082&nbsp;&nbsp;</span>				if b != &#39;;&#39; {
+<span id="L1083" class="ln">  1083&nbsp;&nbsp;</span>					d.ungetc(b)
+<span id="L1084" class="ln">  1084&nbsp;&nbsp;</span>				} else {
+<span id="L1085" class="ln">  1085&nbsp;&nbsp;</span>					name := d.buf.Bytes()[before+1:]
+<span id="L1086" class="ln">  1086&nbsp;&nbsp;</span>					d.buf.WriteByte(&#39;;&#39;)
+<span id="L1087" class="ln">  1087&nbsp;&nbsp;</span>					if isName(name) {
+<span id="L1088" class="ln">  1088&nbsp;&nbsp;</span>						s := string(name)
+<span id="L1089" class="ln">  1089&nbsp;&nbsp;</span>						if r, ok := entity[s]; ok {
+<span id="L1090" class="ln">  1090&nbsp;&nbsp;</span>							text = string(r)
+<span id="L1091" class="ln">  1091&nbsp;&nbsp;</span>							haveText = true
+<span id="L1092" class="ln">  1092&nbsp;&nbsp;</span>						} else if d.Entity != nil {
+<span id="L1093" class="ln">  1093&nbsp;&nbsp;</span>							text, haveText = d.Entity[s]
+<span id="L1094" class="ln">  1094&nbsp;&nbsp;</span>						}
+<span id="L1095" class="ln">  1095&nbsp;&nbsp;</span>					}
+<span id="L1096" class="ln">  1096&nbsp;&nbsp;</span>				}
+<span id="L1097" class="ln">  1097&nbsp;&nbsp;</span>			}
+<span id="L1098" class="ln">  1098&nbsp;&nbsp;</span>
+<span id="L1099" class="ln">  1099&nbsp;&nbsp;</span>			if haveText {
+<span id="L1100" class="ln">  1100&nbsp;&nbsp;</span>				d.buf.Truncate(before)
+<span id="L1101" class="ln">  1101&nbsp;&nbsp;</span>				d.buf.WriteString(text)
+<span id="L1102" class="ln">  1102&nbsp;&nbsp;</span>				b0, b1 = 0, 0
+<span id="L1103" class="ln">  1103&nbsp;&nbsp;</span>				continue Input
+<span id="L1104" class="ln">  1104&nbsp;&nbsp;</span>			}
+<span id="L1105" class="ln">  1105&nbsp;&nbsp;</span>			if !d.Strict {
+<span id="L1106" class="ln">  1106&nbsp;&nbsp;</span>				b0, b1 = 0, 0
+<span id="L1107" class="ln">  1107&nbsp;&nbsp;</span>				continue Input
+<span id="L1108" class="ln">  1108&nbsp;&nbsp;</span>			}
+<span id="L1109" class="ln">  1109&nbsp;&nbsp;</span>			ent := string(d.buf.Bytes()[before:])
+<span id="L1110" class="ln">  1110&nbsp;&nbsp;</span>			if ent[len(ent)-1] != &#39;;&#39; {
+<span id="L1111" class="ln">  1111&nbsp;&nbsp;</span>				ent += &#34; (no semicolon)&#34;
+<span id="L1112" class="ln">  1112&nbsp;&nbsp;</span>			}
+<span id="L1113" class="ln">  1113&nbsp;&nbsp;</span>			d.err = d.syntaxError(&#34;invalid character entity &#34; + ent)
+<span id="L1114" class="ln">  1114&nbsp;&nbsp;</span>			return nil
+<span id="L1115" class="ln">  1115&nbsp;&nbsp;</span>		}
+<span id="L1116" class="ln">  1116&nbsp;&nbsp;</span>
+<span id="L1117" class="ln">  1117&nbsp;&nbsp;</span>		<span class="comment">// We must rewrite unescaped \r and \r\n into \n.</span>
+<span id="L1118" class="ln">  1118&nbsp;&nbsp;</span>		if b == &#39;\r&#39; {
+<span id="L1119" class="ln">  1119&nbsp;&nbsp;</span>			d.buf.WriteByte(&#39;\n&#39;)
+<span id="L1120" class="ln">  1120&nbsp;&nbsp;</span>		} else if b1 == &#39;\r&#39; &amp;&amp; b == &#39;\n&#39; {
+<span id="L1121" class="ln">  1121&nbsp;&nbsp;</span>			<span class="comment">// Skip \r\n--we already wrote \n.</span>
+<span id="L1122" class="ln">  1122&nbsp;&nbsp;</span>		} else {
+<span id="L1123" class="ln">  1123&nbsp;&nbsp;</span>			d.buf.WriteByte(b)
+<span id="L1124" class="ln">  1124&nbsp;&nbsp;</span>		}
+<span id="L1125" class="ln">  1125&nbsp;&nbsp;</span>
+<span id="L1126" class="ln">  1126&nbsp;&nbsp;</span>		b0, b1 = b1, b
+<span id="L1127" class="ln">  1127&nbsp;&nbsp;</span>	}
+<span id="L1128" class="ln">  1128&nbsp;&nbsp;</span>	data := d.buf.Bytes()
+<span id="L1129" class="ln">  1129&nbsp;&nbsp;</span>	data = data[0 : len(data)-trunc]
+<span id="L1130" class="ln">  1130&nbsp;&nbsp;</span>
+<span id="L1131" class="ln">  1131&nbsp;&nbsp;</span>	<span class="comment">// Inspect each rune for being a disallowed character.</span>
+<span id="L1132" class="ln">  1132&nbsp;&nbsp;</span>	buf := data
+<span id="L1133" class="ln">  1133&nbsp;&nbsp;</span>	for len(buf) &gt; 0 {
+<span id="L1134" class="ln">  1134&nbsp;&nbsp;</span>		r, size := utf8.DecodeRune(buf)
+<span id="L1135" class="ln">  1135&nbsp;&nbsp;</span>		if r == utf8.RuneError &amp;&amp; size == 1 {
+<span id="L1136" class="ln">  1136&nbsp;&nbsp;</span>			d.err = d.syntaxError(&#34;invalid UTF-8&#34;)
+<span id="L1137" class="ln">  1137&nbsp;&nbsp;</span>			return nil
+<span id="L1138" class="ln">  1138&nbsp;&nbsp;</span>		}
+<span id="L1139" class="ln">  1139&nbsp;&nbsp;</span>		buf = buf[size:]
+<span id="L1140" class="ln">  1140&nbsp;&nbsp;</span>		if !isInCharacterRange(r) {
+<span id="L1141" class="ln">  1141&nbsp;&nbsp;</span>			d.err = d.syntaxError(fmt.Sprintf(&#34;illegal character code %U&#34;, r))
+<span id="L1142" class="ln">  1142&nbsp;&nbsp;</span>			return nil
+<span id="L1143" class="ln">  1143&nbsp;&nbsp;</span>		}
+<span id="L1144" class="ln">  1144&nbsp;&nbsp;</span>	}
+<span id="L1145" class="ln">  1145&nbsp;&nbsp;</span>
+<span id="L1146" class="ln">  1146&nbsp;&nbsp;</span>	return data
+<span id="L1147" class="ln">  1147&nbsp;&nbsp;</span>}
+<span id="L1148" class="ln">  1148&nbsp;&nbsp;</span>
+<span id="L1149" class="ln">  1149&nbsp;&nbsp;</span><span class="comment">// Decide whether the given rune is in the XML Character Range, per</span>
+<span id="L1150" class="ln">  1150&nbsp;&nbsp;</span><span class="comment">// the Char production of https://www.xml.com/axml/testaxml.htm,</span>
+<span id="L1151" class="ln">  1151&nbsp;&nbsp;</span><span class="comment">// Section 2.2 Characters.</span>
+<span id="L1152" class="ln">  1152&nbsp;&nbsp;</span>func isInCharacterRange(r rune) (inrange bool) {
+<span id="L1153" class="ln">  1153&nbsp;&nbsp;</span>	return r == 0x09 ||
+<span id="L1154" class="ln">  1154&nbsp;&nbsp;</span>		r == 0x0A ||
+<span id="L1155" class="ln">  1155&nbsp;&nbsp;</span>		r == 0x0D ||
+<span id="L1156" class="ln">  1156&nbsp;&nbsp;</span>		r &gt;= 0x20 &amp;&amp; r &lt;= 0xD7FF ||
+<span id="L1157" class="ln">  1157&nbsp;&nbsp;</span>		r &gt;= 0xE000 &amp;&amp; r &lt;= 0xFFFD ||
+<span id="L1158" class="ln">  1158&nbsp;&nbsp;</span>		r &gt;= 0x10000 &amp;&amp; r &lt;= 0x10FFFF
+<span id="L1159" class="ln">  1159&nbsp;&nbsp;</span>}
+<span id="L1160" class="ln">  1160&nbsp;&nbsp;</span>
+<span id="L1161" class="ln">  1161&nbsp;&nbsp;</span><span class="comment">// Get name space name: name with a : stuck in the middle.</span>
+<span id="L1162" class="ln">  1162&nbsp;&nbsp;</span><span class="comment">// The part before the : is the name space identifier.</span>
+<span id="L1163" class="ln">  1163&nbsp;&nbsp;</span>func (d *Decoder) nsname() (name Name, ok bool) {
+<span id="L1164" class="ln">  1164&nbsp;&nbsp;</span>	s, ok := d.name()
+<span id="L1165" class="ln">  1165&nbsp;&nbsp;</span>	if !ok {
+<span id="L1166" class="ln">  1166&nbsp;&nbsp;</span>		return
+<span id="L1167" class="ln">  1167&nbsp;&nbsp;</span>	}
+<span id="L1168" class="ln">  1168&nbsp;&nbsp;</span>	if strings.Count(s, &#34;:&#34;) &gt; 1 {
+<span id="L1169" class="ln">  1169&nbsp;&nbsp;</span>		return name, false
+<span id="L1170" class="ln">  1170&nbsp;&nbsp;</span>	} else if space, local, ok := strings.Cut(s, &#34;:&#34;); !ok || space == &#34;&#34; || local == &#34;&#34; {
+<span id="L1171" class="ln">  1171&nbsp;&nbsp;</span>		name.Local = s
+<span id="L1172" class="ln">  1172&nbsp;&nbsp;</span>	} else {
+<span id="L1173" class="ln">  1173&nbsp;&nbsp;</span>		name.Space = space
+<span id="L1174" class="ln">  1174&nbsp;&nbsp;</span>		name.Local = local
+<span id="L1175" class="ln">  1175&nbsp;&nbsp;</span>	}
+<span id="L1176" class="ln">  1176&nbsp;&nbsp;</span>	return name, true
+<span id="L1177" class="ln">  1177&nbsp;&nbsp;</span>}
+<span id="L1178" class="ln">  1178&nbsp;&nbsp;</span>
+<span id="L1179" class="ln">  1179&nbsp;&nbsp;</span><span class="comment">// Get name: /first(first|second)*/</span>
+<span id="L1180" class="ln">  1180&nbsp;&nbsp;</span><span class="comment">// Do not set d.err if the name is missing (unless unexpected EOF is received):</span>
+<span id="L1181" class="ln">  1181&nbsp;&nbsp;</span><span class="comment">// let the caller provide better context.</span>
+<span id="L1182" class="ln">  1182&nbsp;&nbsp;</span>func (d *Decoder) name() (s string, ok bool) {
+<span id="L1183" class="ln">  1183&nbsp;&nbsp;</span>	d.buf.Reset()
+<span id="L1184" class="ln">  1184&nbsp;&nbsp;</span>	if !d.readName() {
+<span id="L1185" class="ln">  1185&nbsp;&nbsp;</span>		return &#34;&#34;, false
+<span id="L1186" class="ln">  1186&nbsp;&nbsp;</span>	}
+<span id="L1187" class="ln">  1187&nbsp;&nbsp;</span>
+<span id="L1188" class="ln">  1188&nbsp;&nbsp;</span>	<span class="comment">// Now we check the characters.</span>
+<span id="L1189" class="ln">  1189&nbsp;&nbsp;</span>	b := d.buf.Bytes()
+<span id="L1190" class="ln">  1190&nbsp;&nbsp;</span>	if !isName(b) {
+<span id="L1191" class="ln">  1191&nbsp;&nbsp;</span>		d.err = d.syntaxError(&#34;invalid XML name: &#34; + string(b))
+<span id="L1192" class="ln">  1192&nbsp;&nbsp;</span>		return &#34;&#34;, false
+<span id="L1193" class="ln">  1193&nbsp;&nbsp;</span>	}
+<span id="L1194" class="ln">  1194&nbsp;&nbsp;</span>	return string(b), true
+<span id="L1195" class="ln">  1195&nbsp;&nbsp;</span>}
+<span id="L1196" class="ln">  1196&nbsp;&nbsp;</span>
+<span id="L1197" class="ln">  1197&nbsp;&nbsp;</span><span class="comment">// Read a name and append its bytes to d.buf.</span>
+<span id="L1198" class="ln">  1198&nbsp;&nbsp;</span><span class="comment">// The name is delimited by any single-byte character not valid in names.</span>
+<span id="L1199" class="ln">  1199&nbsp;&nbsp;</span><span class="comment">// All multi-byte characters are accepted; the caller must check their validity.</span>
+<span id="L1200" class="ln">  1200&nbsp;&nbsp;</span>func (d *Decoder) readName() (ok bool) {
+<span id="L1201" class="ln">  1201&nbsp;&nbsp;</span>	var b byte
+<span id="L1202" class="ln">  1202&nbsp;&nbsp;</span>	if b, ok = d.mustgetc(); !ok {
+<span id="L1203" class="ln">  1203&nbsp;&nbsp;</span>		return
+<span id="L1204" class="ln">  1204&nbsp;&nbsp;</span>	}
+<span id="L1205" class="ln">  1205&nbsp;&nbsp;</span>	if b &lt; utf8.RuneSelf &amp;&amp; !isNameByte(b) {
+<span id="L1206" class="ln">  1206&nbsp;&nbsp;</span>		d.ungetc(b)
+<span id="L1207" class="ln">  1207&nbsp;&nbsp;</span>		return false
+<span id="L1208" class="ln">  1208&nbsp;&nbsp;</span>	}
+<span id="L1209" class="ln">  1209&nbsp;&nbsp;</span>	d.buf.WriteByte(b)
+<span id="L1210" class="ln">  1210&nbsp;&nbsp;</span>
+<span id="L1211" class="ln">  1211&nbsp;&nbsp;</span>	for {
+<span id="L1212" class="ln">  1212&nbsp;&nbsp;</span>		if b, ok = d.mustgetc(); !ok {
+<span id="L1213" class="ln">  1213&nbsp;&nbsp;</span>			return
+<span id="L1214" class="ln">  1214&nbsp;&nbsp;</span>		}
+<span id="L1215" class="ln">  1215&nbsp;&nbsp;</span>		if b &lt; utf8.RuneSelf &amp;&amp; !isNameByte(b) {
+<span id="L1216" class="ln">  1216&nbsp;&nbsp;</span>			d.ungetc(b)
+<span id="L1217" class="ln">  1217&nbsp;&nbsp;</span>			break
+<span id="L1218" class="ln">  1218&nbsp;&nbsp;</span>		}
+<span id="L1219" class="ln">  1219&nbsp;&nbsp;</span>		d.buf.WriteByte(b)
+<span id="L1220" class="ln">  1220&nbsp;&nbsp;</span>	}
+<span id="L1221" class="ln">  1221&nbsp;&nbsp;</span>	return true
+<span id="L1222" class="ln">  1222&nbsp;&nbsp;</span>}
+<span id="L1223" class="ln">  1223&nbsp;&nbsp;</span>
+<span id="L1224" class="ln">  1224&nbsp;&nbsp;</span>func isNameByte(c byte) bool {
+<span id="L1225" class="ln">  1225&nbsp;&nbsp;</span>	return &#39;A&#39; &lt;= c &amp;&amp; c &lt;= &#39;Z&#39; ||
+<span id="L1226" class="ln">  1226&nbsp;&nbsp;</span>		&#39;a&#39; &lt;= c &amp;&amp; c &lt;= &#39;z&#39; ||
+<span id="L1227" class="ln">  1227&nbsp;&nbsp;</span>		&#39;0&#39; &lt;= c &amp;&amp; c &lt;= &#39;9&#39; ||
+<span id="L1228" class="ln">  1228&nbsp;&nbsp;</span>		c == &#39;_&#39; || c == &#39;:&#39; || c == &#39;.&#39; || c == &#39;-&#39;
+<span id="L1229" class="ln">  1229&nbsp;&nbsp;</span>}
+<span id="L1230" class="ln">  1230&nbsp;&nbsp;</span>
+<span id="L1231" class="ln">  1231&nbsp;&nbsp;</span>func isName(s []byte) bool {
+<span id="L1232" class="ln">  1232&nbsp;&nbsp;</span>	if len(s) == 0 {
+<span id="L1233" class="ln">  1233&nbsp;&nbsp;</span>		return false
+<span id="L1234" class="ln">  1234&nbsp;&nbsp;</span>	}
+<span id="L1235" class="ln">  1235&nbsp;&nbsp;</span>	c, n := utf8.DecodeRune(s)
+<span id="L1236" class="ln">  1236&nbsp;&nbsp;</span>	if c == utf8.RuneError &amp;&amp; n == 1 {
+<span id="L1237" class="ln">  1237&nbsp;&nbsp;</span>		return false
+<span id="L1238" class="ln">  1238&nbsp;&nbsp;</span>	}
+<span id="L1239" class="ln">  1239&nbsp;&nbsp;</span>	if !unicode.Is(first, c) {
+<span id="L1240" class="ln">  1240&nbsp;&nbsp;</span>		return false
+<span id="L1241" class="ln">  1241&nbsp;&nbsp;</span>	}
+<span id="L1242" class="ln">  1242&nbsp;&nbsp;</span>	for n &lt; len(s) {
+<span id="L1243" class="ln">  1243&nbsp;&nbsp;</span>		s = s[n:]
+<span id="L1244" class="ln">  1244&nbsp;&nbsp;</span>		c, n = utf8.DecodeRune(s)
+<span id="L1245" class="ln">  1245&nbsp;&nbsp;</span>		if c == utf8.RuneError &amp;&amp; n == 1 {
+<span id="L1246" class="ln">  1246&nbsp;&nbsp;</span>			return false
+<span id="L1247" class="ln">  1247&nbsp;&nbsp;</span>		}
+<span id="L1248" class="ln">  1248&nbsp;&nbsp;</span>		if !unicode.Is(first, c) &amp;&amp; !unicode.Is(second, c) {
+<span id="L1249" class="ln">  1249&nbsp;&nbsp;</span>			return false
+<span id="L1250" class="ln">  1250&nbsp;&nbsp;</span>		}
+<span id="L1251" class="ln">  1251&nbsp;&nbsp;</span>	}
+<span id="L1252" class="ln">  1252&nbsp;&nbsp;</span>	return true
+<span id="L1253" class="ln">  1253&nbsp;&nbsp;</span>}
+<span id="L1254" class="ln">  1254&nbsp;&nbsp;</span>
+<span id="L1255" class="ln">  1255&nbsp;&nbsp;</span>func isNameString(s string) bool {
+<span id="L1256" class="ln">  1256&nbsp;&nbsp;</span>	if len(s) == 0 {
+<span id="L1257" class="ln">  1257&nbsp;&nbsp;</span>		return false
+<span id="L1258" class="ln">  1258&nbsp;&nbsp;</span>	}
+<span id="L1259" class="ln">  1259&nbsp;&nbsp;</span>	c, n := utf8.DecodeRuneInString(s)
+<span id="L1260" class="ln">  1260&nbsp;&nbsp;</span>	if c == utf8.RuneError &amp;&amp; n == 1 {
+<span id="L1261" class="ln">  1261&nbsp;&nbsp;</span>		return false
+<span id="L1262" class="ln">  1262&nbsp;&nbsp;</span>	}
+<span id="L1263" class="ln">  1263&nbsp;&nbsp;</span>	if !unicode.Is(first, c) {
+<span id="L1264" class="ln">  1264&nbsp;&nbsp;</span>		return false
+<span id="L1265" class="ln">  1265&nbsp;&nbsp;</span>	}
+<span id="L1266" class="ln">  1266&nbsp;&nbsp;</span>	for n &lt; len(s) {
+<span id="L1267" class="ln">  1267&nbsp;&nbsp;</span>		s = s[n:]
+<span id="L1268" class="ln">  1268&nbsp;&nbsp;</span>		c, n = utf8.DecodeRuneInString(s)
+<span id="L1269" class="ln">  1269&nbsp;&nbsp;</span>		if c == utf8.RuneError &amp;&amp; n == 1 {
+<span id="L1270" class="ln">  1270&nbsp;&nbsp;</span>			return false
+<span id="L1271" class="ln">  1271&nbsp;&nbsp;</span>		}
+<span id="L1272" class="ln">  1272&nbsp;&nbsp;</span>		if !unicode.Is(first, c) &amp;&amp; !unicode.Is(second, c) {
+<span id="L1273" class="ln">  1273&nbsp;&nbsp;</span>			return false
+<span id="L1274" class="ln">  1274&nbsp;&nbsp;</span>		}
+<span id="L1275" class="ln">  1275&nbsp;&nbsp;</span>	}
+<span id="L1276" class="ln">  1276&nbsp;&nbsp;</span>	return true
+<span id="L1277" class="ln">  1277&nbsp;&nbsp;</span>}
+<span id="L1278" class="ln">  1278&nbsp;&nbsp;</span>
+<span id="L1279" class="ln">  1279&nbsp;&nbsp;</span><span class="comment">// These tables were generated by cut and paste from Appendix B of</span>
+<span id="L1280" class="ln">  1280&nbsp;&nbsp;</span><span class="comment">// the XML spec at https://www.xml.com/axml/testaxml.htm</span>
+<span id="L1281" class="ln">  1281&nbsp;&nbsp;</span><span class="comment">// and then reformatting. First corresponds to (Letter | &#39;_&#39; | &#39;:&#39;)</span>
+<span id="L1282" class="ln">  1282&nbsp;&nbsp;</span><span class="comment">// and second corresponds to NameChar.</span>
+<span id="L1283" class="ln">  1283&nbsp;&nbsp;</span>
+<span id="L1284" class="ln">  1284&nbsp;&nbsp;</span>var first = &amp;unicode.RangeTable{
+<span id="L1285" class="ln">  1285&nbsp;&nbsp;</span>	R16: []unicode.Range16{
+<span id="L1286" class="ln">  1286&nbsp;&nbsp;</span>		{0x003A, 0x003A, 1},
+<span id="L1287" class="ln">  1287&nbsp;&nbsp;</span>		{0x0041, 0x005A, 1},
+<span id="L1288" class="ln">  1288&nbsp;&nbsp;</span>		{0x005F, 0x005F, 1},
+<span id="L1289" class="ln">  1289&nbsp;&nbsp;</span>		{0x0061, 0x007A, 1},
+<span id="L1290" class="ln">  1290&nbsp;&nbsp;</span>		{0x00C0, 0x00D6, 1},
+<span id="L1291" class="ln">  1291&nbsp;&nbsp;</span>		{0x00D8, 0x00F6, 1},
+<span id="L1292" class="ln">  1292&nbsp;&nbsp;</span>		{0x00F8, 0x00FF, 1},
+<span id="L1293" class="ln">  1293&nbsp;&nbsp;</span>		{0x0100, 0x0131, 1},
+<span id="L1294" class="ln">  1294&nbsp;&nbsp;</span>		{0x0134, 0x013E, 1},
+<span id="L1295" class="ln">  1295&nbsp;&nbsp;</span>		{0x0141, 0x0148, 1},
+<span id="L1296" class="ln">  1296&nbsp;&nbsp;</span>		{0x014A, 0x017E, 1},
+<span id="L1297" class="ln">  1297&nbsp;&nbsp;</span>		{0x0180, 0x01C3, 1},
+<span id="L1298" class="ln">  1298&nbsp;&nbsp;</span>		{0x01CD, 0x01F0, 1},
+<span id="L1299" class="ln">  1299&nbsp;&nbsp;</span>		{0x01F4, 0x01F5, 1},
+<span id="L1300" class="ln">  1300&nbsp;&nbsp;</span>		{0x01FA, 0x0217, 1},
+<span id="L1301" class="ln">  1301&nbsp;&nbsp;</span>		{0x0250, 0x02A8, 1},
+<span id="L1302" class="ln">  1302&nbsp;&nbsp;</span>		{0x02BB, 0x02C1, 1},
+<span id="L1303" class="ln">  1303&nbsp;&nbsp;</span>		{0x0386, 0x0386, 1},
+<span id="L1304" class="ln">  1304&nbsp;&nbsp;</span>		{0x0388, 0x038A, 1},
+<span id="L1305" class="ln">  1305&nbsp;&nbsp;</span>		{0x038C, 0x038C, 1},
+<span id="L1306" class="ln">  1306&nbsp;&nbsp;</span>		{0x038E, 0x03A1, 1},
+<span id="L1307" class="ln">  1307&nbsp;&nbsp;</span>		{0x03A3, 0x03CE, 1},
+<span id="L1308" class="ln">  1308&nbsp;&nbsp;</span>		{0x03D0, 0x03D6, 1},
+<span id="L1309" class="ln">  1309&nbsp;&nbsp;</span>		{0x03DA, 0x03E0, 2},
+<span id="L1310" class="ln">  1310&nbsp;&nbsp;</span>		{0x03E2, 0x03F3, 1},
+<span id="L1311" class="ln">  1311&nbsp;&nbsp;</span>		{0x0401, 0x040C, 1},
+<span id="L1312" class="ln">  1312&nbsp;&nbsp;</span>		{0x040E, 0x044F, 1},
+<span id="L1313" class="ln">  1313&nbsp;&nbsp;</span>		{0x0451, 0x045C, 1},
+<span id="L1314" class="ln">  1314&nbsp;&nbsp;</span>		{0x045E, 0x0481, 1},
+<span id="L1315" class="ln">  1315&nbsp;&nbsp;</span>		{0x0490, 0x04C4, 1},
+<span id="L1316" class="ln">  1316&nbsp;&nbsp;</span>		{0x04C7, 0x04C8, 1},
+<span id="L1317" class="ln">  1317&nbsp;&nbsp;</span>		{0x04CB, 0x04CC, 1},
+<span id="L1318" class="ln">  1318&nbsp;&nbsp;</span>		{0x04D0, 0x04EB, 1},
+<span id="L1319" class="ln">  1319&nbsp;&nbsp;</span>		{0x04EE, 0x04F5, 1},
+<span id="L1320" class="ln">  1320&nbsp;&nbsp;</span>		{0x04F8, 0x04F9, 1},
+<span id="L1321" class="ln">  1321&nbsp;&nbsp;</span>		{0x0531, 0x0556, 1},
+<span id="L1322" class="ln">  1322&nbsp;&nbsp;</span>		{0x0559, 0x0559, 1},
+<span id="L1323" class="ln">  1323&nbsp;&nbsp;</span>		{0x0561, 0x0586, 1},
+<span id="L1324" class="ln">  1324&nbsp;&nbsp;</span>		{0x05D0, 0x05EA, 1},
+<span id="L1325" class="ln">  1325&nbsp;&nbsp;</span>		{0x05F0, 0x05F2, 1},
+<span id="L1326" class="ln">  1326&nbsp;&nbsp;</span>		{0x0621, 0x063A, 1},
+<span id="L1327" class="ln">  1327&nbsp;&nbsp;</span>		{0x0641, 0x064A, 1},
+<span id="L1328" class="ln">  1328&nbsp;&nbsp;</span>		{0x0671, 0x06B7, 1},
+<span id="L1329" class="ln">  1329&nbsp;&nbsp;</span>		{0x06BA, 0x06BE, 1},
+<span id="L1330" class="ln">  1330&nbsp;&nbsp;</span>		{0x06C0, 0x06CE, 1},
+<span id="L1331" class="ln">  1331&nbsp;&nbsp;</span>		{0x06D0, 0x06D3, 1},
+<span id="L1332" class="ln">  1332&nbsp;&nbsp;</span>		{0x06D5, 0x06D5, 1},
+<span id="L1333" class="ln">  1333&nbsp;&nbsp;</span>		{0x06E5, 0x06E6, 1},
+<span id="L1334" class="ln">  1334&nbsp;&nbsp;</span>		{0x0905, 0x0939, 1},
+<span id="L1335" class="ln">  1335&nbsp;&nbsp;</span>		{0x093D, 0x093D, 1},
+<span id="L1336" class="ln">  1336&nbsp;&nbsp;</span>		{0x0958, 0x0961, 1},
+<span id="L1337" class="ln">  1337&nbsp;&nbsp;</span>		{0x0985, 0x098C, 1},
+<span id="L1338" class="ln">  1338&nbsp;&nbsp;</span>		{0x098F, 0x0990, 1},
+<span id="L1339" class="ln">  1339&nbsp;&nbsp;</span>		{0x0993, 0x09A8, 1},
+<span id="L1340" class="ln">  1340&nbsp;&nbsp;</span>		{0x09AA, 0x09B0, 1},
+<span id="L1341" class="ln">  1341&nbsp;&nbsp;</span>		{0x09B2, 0x09B2, 1},
+<span id="L1342" class="ln">  1342&nbsp;&nbsp;</span>		{0x09B6, 0x09B9, 1},
+<span id="L1343" class="ln">  1343&nbsp;&nbsp;</span>		{0x09DC, 0x09DD, 1},
+<span id="L1344" class="ln">  1344&nbsp;&nbsp;</span>		{0x09DF, 0x09E1, 1},
+<span id="L1345" class="ln">  1345&nbsp;&nbsp;</span>		{0x09F0, 0x09F1, 1},
+<span id="L1346" class="ln">  1346&nbsp;&nbsp;</span>		{0x0A05, 0x0A0A, 1},
+<span id="L1347" class="ln">  1347&nbsp;&nbsp;</span>		{0x0A0F, 0x0A10, 1},
+<span id="L1348" class="ln">  1348&nbsp;&nbsp;</span>		{0x0A13, 0x0A28, 1},
+<span id="L1349" class="ln">  1349&nbsp;&nbsp;</span>		{0x0A2A, 0x0A30, 1},
+<span id="L1350" class="ln">  1350&nbsp;&nbsp;</span>		{0x0A32, 0x0A33, 1},
+<span id="L1351" class="ln">  1351&nbsp;&nbsp;</span>		{0x0A35, 0x0A36, 1},
+<span id="L1352" class="ln">  1352&nbsp;&nbsp;</span>		{0x0A38, 0x0A39, 1},
+<span id="L1353" class="ln">  1353&nbsp;&nbsp;</span>		{0x0A59, 0x0A5C, 1},
+<span id="L1354" class="ln">  1354&nbsp;&nbsp;</span>		{0x0A5E, 0x0A5E, 1},
+<span id="L1355" class="ln">  1355&nbsp;&nbsp;</span>		{0x0A72, 0x0A74, 1},
+<span id="L1356" class="ln">  1356&nbsp;&nbsp;</span>		{0x0A85, 0x0A8B, 1},
+<span id="L1357" class="ln">  1357&nbsp;&nbsp;</span>		{0x0A8D, 0x0A8D, 1},
+<span id="L1358" class="ln">  1358&nbsp;&nbsp;</span>		{0x0A8F, 0x0A91, 1},
+<span id="L1359" class="ln">  1359&nbsp;&nbsp;</span>		{0x0A93, 0x0AA8, 1},
+<span id="L1360" class="ln">  1360&nbsp;&nbsp;</span>		{0x0AAA, 0x0AB0, 1},
+<span id="L1361" class="ln">  1361&nbsp;&nbsp;</span>		{0x0AB2, 0x0AB3, 1},
+<span id="L1362" class="ln">  1362&nbsp;&nbsp;</span>		{0x0AB5, 0x0AB9, 1},
+<span id="L1363" class="ln">  1363&nbsp;&nbsp;</span>		{0x0ABD, 0x0AE0, 0x23},
+<span id="L1364" class="ln">  1364&nbsp;&nbsp;</span>		{0x0B05, 0x0B0C, 1},
+<span id="L1365" class="ln">  1365&nbsp;&nbsp;</span>		{0x0B0F, 0x0B10, 1},
+<span id="L1366" class="ln">  1366&nbsp;&nbsp;</span>		{0x0B13, 0x0B28, 1},
+<span id="L1367" class="ln">  1367&nbsp;&nbsp;</span>		{0x0B2A, 0x0B30, 1},
+<span id="L1368" class="ln">  1368&nbsp;&nbsp;</span>		{0x0B32, 0x0B33, 1},
+<span id="L1369" class="ln">  1369&nbsp;&nbsp;</span>		{0x0B36, 0x0B39, 1},
+<span id="L1370" class="ln">  1370&nbsp;&nbsp;</span>		{0x0B3D, 0x0B3D, 1},
+<span id="L1371" class="ln">  1371&nbsp;&nbsp;</span>		{0x0B5C, 0x0B5D, 1},
+<span id="L1372" class="ln">  1372&nbsp;&nbsp;</span>		{0x0B5F, 0x0B61, 1},
+<span id="L1373" class="ln">  1373&nbsp;&nbsp;</span>		{0x0B85, 0x0B8A, 1},
+<span id="L1374" class="ln">  1374&nbsp;&nbsp;</span>		{0x0B8E, 0x0B90, 1},
+<span id="L1375" class="ln">  1375&nbsp;&nbsp;</span>		{0x0B92, 0x0B95, 1},
+<span id="L1376" class="ln">  1376&nbsp;&nbsp;</span>		{0x0B99, 0x0B9A, 1},
+<span id="L1377" class="ln">  1377&nbsp;&nbsp;</span>		{0x0B9C, 0x0B9C, 1},
+<span id="L1378" class="ln">  1378&nbsp;&nbsp;</span>		{0x0B9E, 0x0B9F, 1},
+<span id="L1379" class="ln">  1379&nbsp;&nbsp;</span>		{0x0BA3, 0x0BA4, 1},
+<span id="L1380" class="ln">  1380&nbsp;&nbsp;</span>		{0x0BA8, 0x0BAA, 1},
+<span id="L1381" class="ln">  1381&nbsp;&nbsp;</span>		{0x0BAE, 0x0BB5, 1},
+<span id="L1382" class="ln">  1382&nbsp;&nbsp;</span>		{0x0BB7, 0x0BB9, 1},
+<span id="L1383" class="ln">  1383&nbsp;&nbsp;</span>		{0x0C05, 0x0C0C, 1},
+<span id="L1384" class="ln">  1384&nbsp;&nbsp;</span>		{0x0C0E, 0x0C10, 1},
+<span id="L1385" class="ln">  1385&nbsp;&nbsp;</span>		{0x0C12, 0x0C28, 1},
+<span id="L1386" class="ln">  1386&nbsp;&nbsp;</span>		{0x0C2A, 0x0C33, 1},
+<span id="L1387" class="ln">  1387&nbsp;&nbsp;</span>		{0x0C35, 0x0C39, 1},
+<span id="L1388" class="ln">  1388&nbsp;&nbsp;</span>		{0x0C60, 0x0C61, 1},
+<span id="L1389" class="ln">  1389&nbsp;&nbsp;</span>		{0x0C85, 0x0C8C, 1},
+<span id="L1390" class="ln">  1390&nbsp;&nbsp;</span>		{0x0C8E, 0x0C90, 1},
+<span id="L1391" class="ln">  1391&nbsp;&nbsp;</span>		{0x0C92, 0x0CA8, 1},
+<span id="L1392" class="ln">  1392&nbsp;&nbsp;</span>		{0x0CAA, 0x0CB3, 1},
+<span id="L1393" class="ln">  1393&nbsp;&nbsp;</span>		{0x0CB5, 0x0CB9, 1},
+<span id="L1394" class="ln">  1394&nbsp;&nbsp;</span>		{0x0CDE, 0x0CDE, 1},
+<span id="L1395" class="ln">  1395&nbsp;&nbsp;</span>		{0x0CE0, 0x0CE1, 1},
+<span id="L1396" class="ln">  1396&nbsp;&nbsp;</span>		{0x0D05, 0x0D0C, 1},
+<span id="L1397" class="ln">  1397&nbsp;&nbsp;</span>		{0x0D0E, 0x0D10, 1},
+<span id="L1398" class="ln">  1398&nbsp;&nbsp;</span>		{0x0D12, 0x0D28, 1},
+<span id="L1399" class="ln">  1399&nbsp;&nbsp;</span>		{0x0D2A, 0x0D39, 1},
+<span id="L1400" class="ln">  1400&nbsp;&nbsp;</span>		{0x0D60, 0x0D61, 1},
+<span id="L1401" class="ln">  1401&nbsp;&nbsp;</span>		{0x0E01, 0x0E2E, 1},
+<span id="L1402" class="ln">  1402&nbsp;&nbsp;</span>		{0x0E30, 0x0E30, 1},
+<span id="L1403" class="ln">  1403&nbsp;&nbsp;</span>		{0x0E32, 0x0E33, 1},
+<span id="L1404" class="ln">  1404&nbsp;&nbsp;</span>		{0x0E40, 0x0E45, 1},
+<span id="L1405" class="ln">  1405&nbsp;&nbsp;</span>		{0x0E81, 0x0E82, 1},
+<span id="L1406" class="ln">  1406&nbsp;&nbsp;</span>		{0x0E84, 0x0E84, 1},
+<span id="L1407" class="ln">  1407&nbsp;&nbsp;</span>		{0x0E87, 0x0E88, 1},
+<span id="L1408" class="ln">  1408&nbsp;&nbsp;</span>		{0x0E8A, 0x0E8D, 3},
+<span id="L1409" class="ln">  1409&nbsp;&nbsp;</span>		{0x0E94, 0x0E97, 1},
+<span id="L1410" class="ln">  1410&nbsp;&nbsp;</span>		{0x0E99, 0x0E9F, 1},
+<span id="L1411" class="ln">  1411&nbsp;&nbsp;</span>		{0x0EA1, 0x0EA3, 1},
+<span id="L1412" class="ln">  1412&nbsp;&nbsp;</span>		{0x0EA5, 0x0EA7, 2},
+<span id="L1413" class="ln">  1413&nbsp;&nbsp;</span>		{0x0EAA, 0x0EAB, 1},
+<span id="L1414" class="ln">  1414&nbsp;&nbsp;</span>		{0x0EAD, 0x0EAE, 1},
+<span id="L1415" class="ln">  1415&nbsp;&nbsp;</span>		{0x0EB0, 0x0EB0, 1},
+<span id="L1416" class="ln">  1416&nbsp;&nbsp;</span>		{0x0EB2, 0x0EB3, 1},
+<span id="L1417" class="ln">  1417&nbsp;&nbsp;</span>		{0x0EBD, 0x0EBD, 1},
+<span id="L1418" class="ln">  1418&nbsp;&nbsp;</span>		{0x0EC0, 0x0EC4, 1},
+<span id="L1419" class="ln">  1419&nbsp;&nbsp;</span>		{0x0F40, 0x0F47, 1},
+<span id="L1420" class="ln">  1420&nbsp;&nbsp;</span>		{0x0F49, 0x0F69, 1},
+<span id="L1421" class="ln">  1421&nbsp;&nbsp;</span>		{0x10A0, 0x10C5, 1},
+<span id="L1422" class="ln">  1422&nbsp;&nbsp;</span>		{0x10D0, 0x10F6, 1},
+<span id="L1423" class="ln">  1423&nbsp;&nbsp;</span>		{0x1100, 0x1100, 1},
+<span id="L1424" class="ln">  1424&nbsp;&nbsp;</span>		{0x1102, 0x1103, 1},
+<span id="L1425" class="ln">  1425&nbsp;&nbsp;</span>		{0x1105, 0x1107, 1},
+<span id="L1426" class="ln">  1426&nbsp;&nbsp;</span>		{0x1109, 0x1109, 1},
+<span id="L1427" class="ln">  1427&nbsp;&nbsp;</span>		{0x110B, 0x110C, 1},
+<span id="L1428" class="ln">  1428&nbsp;&nbsp;</span>		{0x110E, 0x1112, 1},
+<span id="L1429" class="ln">  1429&nbsp;&nbsp;</span>		{0x113C, 0x1140, 2},
+<span id="L1430" class="ln">  1430&nbsp;&nbsp;</span>		{0x114C, 0x1150, 2},
+<span id="L1431" class="ln">  1431&nbsp;&nbsp;</span>		{0x1154, 0x1155, 1},
+<span id="L1432" class="ln">  1432&nbsp;&nbsp;</span>		{0x1159, 0x1159, 1},
+<span id="L1433" class="ln">  1433&nbsp;&nbsp;</span>		{0x115F, 0x1161, 1},
+<span id="L1434" class="ln">  1434&nbsp;&nbsp;</span>		{0x1163, 0x1169, 2},
+<span id="L1435" class="ln">  1435&nbsp;&nbsp;</span>		{0x116D, 0x116E, 1},
+<span id="L1436" class="ln">  1436&nbsp;&nbsp;</span>		{0x1172, 0x1173, 1},
+<span id="L1437" class="ln">  1437&nbsp;&nbsp;</span>		{0x1175, 0x119E, 0x119E - 0x1175},
+<span id="L1438" class="ln">  1438&nbsp;&nbsp;</span>		{0x11A8, 0x11AB, 0x11AB - 0x11A8},
+<span id="L1439" class="ln">  1439&nbsp;&nbsp;</span>		{0x11AE, 0x11AF, 1},
+<span id="L1440" class="ln">  1440&nbsp;&nbsp;</span>		{0x11B7, 0x11B8, 1},
+<span id="L1441" class="ln">  1441&nbsp;&nbsp;</span>		{0x11BA, 0x11BA, 1},
+<span id="L1442" class="ln">  1442&nbsp;&nbsp;</span>		{0x11BC, 0x11C2, 1},
+<span id="L1443" class="ln">  1443&nbsp;&nbsp;</span>		{0x11EB, 0x11F0, 0x11F0 - 0x11EB},
+<span id="L1444" class="ln">  1444&nbsp;&nbsp;</span>		{0x11F9, 0x11F9, 1},
+<span id="L1445" class="ln">  1445&nbsp;&nbsp;</span>		{0x1E00, 0x1E9B, 1},
+<span id="L1446" class="ln">  1446&nbsp;&nbsp;</span>		{0x1EA0, 0x1EF9, 1},
+<span id="L1447" class="ln">  1447&nbsp;&nbsp;</span>		{0x1F00, 0x1F15, 1},
+<span id="L1448" class="ln">  1448&nbsp;&nbsp;</span>		{0x1F18, 0x1F1D, 1},
+<span id="L1449" class="ln">  1449&nbsp;&nbsp;</span>		{0x1F20, 0x1F45, 1},
+<span id="L1450" class="ln">  1450&nbsp;&nbsp;</span>		{0x1F48, 0x1F4D, 1},
+<span id="L1451" class="ln">  1451&nbsp;&nbsp;</span>		{0x1F50, 0x1F57, 1},
+<span id="L1452" class="ln">  1452&nbsp;&nbsp;</span>		{0x1F59, 0x1F5B, 0x1F5B - 0x1F59},
+<span id="L1453" class="ln">  1453&nbsp;&nbsp;</span>		{0x1F5D, 0x1F5D, 1},
+<span id="L1454" class="ln">  1454&nbsp;&nbsp;</span>		{0x1F5F, 0x1F7D, 1},
+<span id="L1455" class="ln">  1455&nbsp;&nbsp;</span>		{0x1F80, 0x1FB4, 1},
+<span id="L1456" class="ln">  1456&nbsp;&nbsp;</span>		{0x1FB6, 0x1FBC, 1},
+<span id="L1457" class="ln">  1457&nbsp;&nbsp;</span>		{0x1FBE, 0x1FBE, 1},
+<span id="L1458" class="ln">  1458&nbsp;&nbsp;</span>		{0x1FC2, 0x1FC4, 1},
+<span id="L1459" class="ln">  1459&nbsp;&nbsp;</span>		{0x1FC6, 0x1FCC, 1},
+<span id="L1460" class="ln">  1460&nbsp;&nbsp;</span>		{0x1FD0, 0x1FD3, 1},
+<span id="L1461" class="ln">  1461&nbsp;&nbsp;</span>		{0x1FD6, 0x1FDB, 1},
+<span id="L1462" class="ln">  1462&nbsp;&nbsp;</span>		{0x1FE0, 0x1FEC, 1},
+<span id="L1463" class="ln">  1463&nbsp;&nbsp;</span>		{0x1FF2, 0x1FF4, 1},
+<span id="L1464" class="ln">  1464&nbsp;&nbsp;</span>		{0x1FF6, 0x1FFC, 1},
+<span id="L1465" class="ln">  1465&nbsp;&nbsp;</span>		{0x2126, 0x2126, 1},
+<span id="L1466" class="ln">  1466&nbsp;&nbsp;</span>		{0x212A, 0x212B, 1},
+<span id="L1467" class="ln">  1467&nbsp;&nbsp;</span>		{0x212E, 0x212E, 1},
+<span id="L1468" class="ln">  1468&nbsp;&nbsp;</span>		{0x2180, 0x2182, 1},
+<span id="L1469" class="ln">  1469&nbsp;&nbsp;</span>		{0x3007, 0x3007, 1},
+<span id="L1470" class="ln">  1470&nbsp;&nbsp;</span>		{0x3021, 0x3029, 1},
+<span id="L1471" class="ln">  1471&nbsp;&nbsp;</span>		{0x3041, 0x3094, 1},
+<span id="L1472" class="ln">  1472&nbsp;&nbsp;</span>		{0x30A1, 0x30FA, 1},
+<span id="L1473" class="ln">  1473&nbsp;&nbsp;</span>		{0x3105, 0x312C, 1},
+<span id="L1474" class="ln">  1474&nbsp;&nbsp;</span>		{0x4E00, 0x9FA5, 1},
+<span id="L1475" class="ln">  1475&nbsp;&nbsp;</span>		{0xAC00, 0xD7A3, 1},
+<span id="L1476" class="ln">  1476&nbsp;&nbsp;</span>	},
+<span id="L1477" class="ln">  1477&nbsp;&nbsp;</span>}
+<span id="L1478" class="ln">  1478&nbsp;&nbsp;</span>
+<span id="L1479" class="ln">  1479&nbsp;&nbsp;</span>var second = &amp;unicode.RangeTable{
+<span id="L1480" class="ln">  1480&nbsp;&nbsp;</span>	R16: []unicode.Range16{
+<span id="L1481" class="ln">  1481&nbsp;&nbsp;</span>		{0x002D, 0x002E, 1},
+<span id="L1482" class="ln">  1482&nbsp;&nbsp;</span>		{0x0030, 0x0039, 1},
+<span id="L1483" class="ln">  1483&nbsp;&nbsp;</span>		{0x00B7, 0x00B7, 1},
+<span id="L1484" class="ln">  1484&nbsp;&nbsp;</span>		{0x02D0, 0x02D1, 1},
+<span id="L1485" class="ln">  1485&nbsp;&nbsp;</span>		{0x0300, 0x0345, 1},
+<span id="L1486" class="ln">  1486&nbsp;&nbsp;</span>		{0x0360, 0x0361, 1},
+<span id="L1487" class="ln">  1487&nbsp;&nbsp;</span>		{0x0387, 0x0387, 1},
+<span id="L1488" class="ln">  1488&nbsp;&nbsp;</span>		{0x0483, 0x0486, 1},
+<span id="L1489" class="ln">  1489&nbsp;&nbsp;</span>		{0x0591, 0x05A1, 1},
+<span id="L1490" class="ln">  1490&nbsp;&nbsp;</span>		{0x05A3, 0x05B9, 1},
+<span id="L1491" class="ln">  1491&nbsp;&nbsp;</span>		{0x05BB, 0x05BD, 1},
+<span id="L1492" class="ln">  1492&nbsp;&nbsp;</span>		{0x05BF, 0x05BF, 1},
+<span id="L1493" class="ln">  1493&nbsp;&nbsp;</span>		{0x05C1, 0x05C2, 1},
+<span id="L1494" class="ln">  1494&nbsp;&nbsp;</span>		{0x05C4, 0x0640, 0x0640 - 0x05C4},
+<span id="L1495" class="ln">  1495&nbsp;&nbsp;</span>		{0x064B, 0x0652, 1},
+<span id="L1496" class="ln">  1496&nbsp;&nbsp;</span>		{0x0660, 0x0669, 1},
+<span id="L1497" class="ln">  1497&nbsp;&nbsp;</span>		{0x0670, 0x0670, 1},
+<span id="L1498" class="ln">  1498&nbsp;&nbsp;</span>		{0x06D6, 0x06DC, 1},
+<span id="L1499" class="ln">  1499&nbsp;&nbsp;</span>		{0x06DD, 0x06DF, 1},
+<span id="L1500" class="ln">  1500&nbsp;&nbsp;</span>		{0x06E0, 0x06E4, 1},
+<span id="L1501" class="ln">  1501&nbsp;&nbsp;</span>		{0x06E7, 0x06E8, 1},
+<span id="L1502" class="ln">  1502&nbsp;&nbsp;</span>		{0x06EA, 0x06ED, 1},
+<span id="L1503" class="ln">  1503&nbsp;&nbsp;</span>		{0x06F0, 0x06F9, 1},
+<span id="L1504" class="ln">  1504&nbsp;&nbsp;</span>		{0x0901, 0x0903, 1},
+<span id="L1505" class="ln">  1505&nbsp;&nbsp;</span>		{0x093C, 0x093C, 1},
+<span id="L1506" class="ln">  1506&nbsp;&nbsp;</span>		{0x093E, 0x094C, 1},
+<span id="L1507" class="ln">  1507&nbsp;&nbsp;</span>		{0x094D, 0x094D, 1},
+<span id="L1508" class="ln">  1508&nbsp;&nbsp;</span>		{0x0951, 0x0954, 1},
+<span id="L1509" class="ln">  1509&nbsp;&nbsp;</span>		{0x0962, 0x0963, 1},
+<span id="L1510" class="ln">  1510&nbsp;&nbsp;</span>		{0x0966, 0x096F, 1},
+<span id="L1511" class="ln">  1511&nbsp;&nbsp;</span>		{0x0981, 0x0983, 1},
+<span id="L1512" class="ln">  1512&nbsp;&nbsp;</span>		{0x09BC, 0x09BC, 1},
+<span id="L1513" class="ln">  1513&nbsp;&nbsp;</span>		{0x09BE, 0x09BF, 1},
+<span id="L1514" class="ln">  1514&nbsp;&nbsp;</span>		{0x09C0, 0x09C4, 1},
+<span id="L1515" class="ln">  1515&nbsp;&nbsp;</span>		{0x09C7, 0x09C8, 1},
+<span id="L1516" class="ln">  1516&nbsp;&nbsp;</span>		{0x09CB, 0x09CD, 1},
+<span id="L1517" class="ln">  1517&nbsp;&nbsp;</span>		{0x09D7, 0x09D7, 1},
+<span id="L1518" class="ln">  1518&nbsp;&nbsp;</span>		{0x09E2, 0x09E3, 1},
+<span id="L1519" class="ln">  1519&nbsp;&nbsp;</span>		{0x09E6, 0x09EF, 1},
+<span id="L1520" class="ln">  1520&nbsp;&nbsp;</span>		{0x0A02, 0x0A3C, 0x3A},
+<span id="L1521" class="ln">  1521&nbsp;&nbsp;</span>		{0x0A3E, 0x0A3F, 1},
+<span id="L1522" class="ln">  1522&nbsp;&nbsp;</span>		{0x0A40, 0x0A42, 1},
+<span id="L1523" class="ln">  1523&nbsp;&nbsp;</span>		{0x0A47, 0x0A48, 1},
+<span id="L1524" class="ln">  1524&nbsp;&nbsp;</span>		{0x0A4B, 0x0A4D, 1},
+<span id="L1525" class="ln">  1525&nbsp;&nbsp;</span>		{0x0A66, 0x0A6F, 1},
+<span id="L1526" class="ln">  1526&nbsp;&nbsp;</span>		{0x0A70, 0x0A71, 1},
+<span id="L1527" class="ln">  1527&nbsp;&nbsp;</span>		{0x0A81, 0x0A83, 1},
+<span id="L1528" class="ln">  1528&nbsp;&nbsp;</span>		{0x0ABC, 0x0ABC, 1},
+<span id="L1529" class="ln">  1529&nbsp;&nbsp;</span>		{0x0ABE, 0x0AC5, 1},
+<span id="L1530" class="ln">  1530&nbsp;&nbsp;</span>		{0x0AC7, 0x0AC9, 1},
+<span id="L1531" class="ln">  1531&nbsp;&nbsp;</span>		{0x0ACB, 0x0ACD, 1},
+<span id="L1532" class="ln">  1532&nbsp;&nbsp;</span>		{0x0AE6, 0x0AEF, 1},
+<span id="L1533" class="ln">  1533&nbsp;&nbsp;</span>		{0x0B01, 0x0B03, 1},
+<span id="L1534" class="ln">  1534&nbsp;&nbsp;</span>		{0x0B3C, 0x0B3C, 1},
+<span id="L1535" class="ln">  1535&nbsp;&nbsp;</span>		{0x0B3E, 0x0B43, 1},
+<span id="L1536" class="ln">  1536&nbsp;&nbsp;</span>		{0x0B47, 0x0B48, 1},
+<span id="L1537" class="ln">  1537&nbsp;&nbsp;</span>		{0x0B4B, 0x0B4D, 1},
+<span id="L1538" class="ln">  1538&nbsp;&nbsp;</span>		{0x0B56, 0x0B57, 1},
+<span id="L1539" class="ln">  1539&nbsp;&nbsp;</span>		{0x0B66, 0x0B6F, 1},
+<span id="L1540" class="ln">  1540&nbsp;&nbsp;</span>		{0x0B82, 0x0B83, 1},
+<span id="L1541" class="ln">  1541&nbsp;&nbsp;</span>		{0x0BBE, 0x0BC2, 1},
+<span id="L1542" class="ln">  1542&nbsp;&nbsp;</span>		{0x0BC6, 0x0BC8, 1},
+<span id="L1543" class="ln">  1543&nbsp;&nbsp;</span>		{0x0BCA, 0x0BCD, 1},
+<span id="L1544" class="ln">  1544&nbsp;&nbsp;</span>		{0x0BD7, 0x0BD7, 1},
+<span id="L1545" class="ln">  1545&nbsp;&nbsp;</span>		{0x0BE7, 0x0BEF, 1},
+<span id="L1546" class="ln">  1546&nbsp;&nbsp;</span>		{0x0C01, 0x0C03, 1},
+<span id="L1547" class="ln">  1547&nbsp;&nbsp;</span>		{0x0C3E, 0x0C44, 1},
+<span id="L1548" class="ln">  1548&nbsp;&nbsp;</span>		{0x0C46, 0x0C48, 1},
+<span id="L1549" class="ln">  1549&nbsp;&nbsp;</span>		{0x0C4A, 0x0C4D, 1},
+<span id="L1550" class="ln">  1550&nbsp;&nbsp;</span>		{0x0C55, 0x0C56, 1},
+<span id="L1551" class="ln">  1551&nbsp;&nbsp;</span>		{0x0C66, 0x0C6F, 1},
+<span id="L1552" class="ln">  1552&nbsp;&nbsp;</span>		{0x0C82, 0x0C83, 1},
+<span id="L1553" class="ln">  1553&nbsp;&nbsp;</span>		{0x0CBE, 0x0CC4, 1},
+<span id="L1554" class="ln">  1554&nbsp;&nbsp;</span>		{0x0CC6, 0x0CC8, 1},
+<span id="L1555" class="ln">  1555&nbsp;&nbsp;</span>		{0x0CCA, 0x0CCD, 1},
+<span id="L1556" class="ln">  1556&nbsp;&nbsp;</span>		{0x0CD5, 0x0CD6, 1},
+<span id="L1557" class="ln">  1557&nbsp;&nbsp;</span>		{0x0CE6, 0x0CEF, 1},
+<span id="L1558" class="ln">  1558&nbsp;&nbsp;</span>		{0x0D02, 0x0D03, 1},
+<span id="L1559" class="ln">  1559&nbsp;&nbsp;</span>		{0x0D3E, 0x0D43, 1},
+<span id="L1560" class="ln">  1560&nbsp;&nbsp;</span>		{0x0D46, 0x0D48, 1},
+<span id="L1561" class="ln">  1561&nbsp;&nbsp;</span>		{0x0D4A, 0x0D4D, 1},
+<span id="L1562" class="ln">  1562&nbsp;&nbsp;</span>		{0x0D57, 0x0D57, 1},
+<span id="L1563" class="ln">  1563&nbsp;&nbsp;</span>		{0x0D66, 0x0D6F, 1},
+<span id="L1564" class="ln">  1564&nbsp;&nbsp;</span>		{0x0E31, 0x0E31, 1},
+<span id="L1565" class="ln">  1565&nbsp;&nbsp;</span>		{0x0E34, 0x0E3A, 1},
+<span id="L1566" class="ln">  1566&nbsp;&nbsp;</span>		{0x0E46, 0x0E46, 1},
+<span id="L1567" class="ln">  1567&nbsp;&nbsp;</span>		{0x0E47, 0x0E4E, 1},
+<span id="L1568" class="ln">  1568&nbsp;&nbsp;</span>		{0x0E50, 0x0E59, 1},
+<span id="L1569" class="ln">  1569&nbsp;&nbsp;</span>		{0x0EB1, 0x0EB1, 1},
+<span id="L1570" class="ln">  1570&nbsp;&nbsp;</span>		{0x0EB4, 0x0EB9, 1},
+<span id="L1571" class="ln">  1571&nbsp;&nbsp;</span>		{0x0EBB, 0x0EBC, 1},
+<span id="L1572" class="ln">  1572&nbsp;&nbsp;</span>		{0x0EC6, 0x0EC6, 1},
+<span id="L1573" class="ln">  1573&nbsp;&nbsp;</span>		{0x0EC8, 0x0ECD, 1},
+<span id="L1574" class="ln">  1574&nbsp;&nbsp;</span>		{0x0ED0, 0x0ED9, 1},
+<span id="L1575" class="ln">  1575&nbsp;&nbsp;</span>		{0x0F18, 0x0F19, 1},
+<span id="L1576" class="ln">  1576&nbsp;&nbsp;</span>		{0x0F20, 0x0F29, 1},
+<span id="L1577" class="ln">  1577&nbsp;&nbsp;</span>		{0x0F35, 0x0F39, 2},
+<span id="L1578" class="ln">  1578&nbsp;&nbsp;</span>		{0x0F3E, 0x0F3F, 1},
+<span id="L1579" class="ln">  1579&nbsp;&nbsp;</span>		{0x0F71, 0x0F84, 1},
+<span id="L1580" class="ln">  1580&nbsp;&nbsp;</span>		{0x0F86, 0x0F8B, 1},
+<span id="L1581" class="ln">  1581&nbsp;&nbsp;</span>		{0x0F90, 0x0F95, 1},
+<span id="L1582" class="ln">  1582&nbsp;&nbsp;</span>		{0x0F97, 0x0F97, 1},
+<span id="L1583" class="ln">  1583&nbsp;&nbsp;</span>		{0x0F99, 0x0FAD, 1},
+<span id="L1584" class="ln">  1584&nbsp;&nbsp;</span>		{0x0FB1, 0x0FB7, 1},
+<span id="L1585" class="ln">  1585&nbsp;&nbsp;</span>		{0x0FB9, 0x0FB9, 1},
+<span id="L1586" class="ln">  1586&nbsp;&nbsp;</span>		{0x20D0, 0x20DC, 1},
+<span id="L1587" class="ln">  1587&nbsp;&nbsp;</span>		{0x20E1, 0x3005, 0x3005 - 0x20E1},
+<span id="L1588" class="ln">  1588&nbsp;&nbsp;</span>		{0x302A, 0x302F, 1},
+<span id="L1589" class="ln">  1589&nbsp;&nbsp;</span>		{0x3031, 0x3035, 1},
+<span id="L1590" class="ln">  1590&nbsp;&nbsp;</span>		{0x3099, 0x309A, 1},
+<span id="L1591" class="ln">  1591&nbsp;&nbsp;</span>		{0x309D, 0x309E, 1},
+<span id="L1592" class="ln">  1592&nbsp;&nbsp;</span>		{0x30FC, 0x30FE, 1},
+<span id="L1593" class="ln">  1593&nbsp;&nbsp;</span>	},
+<span id="L1594" class="ln">  1594&nbsp;&nbsp;</span>}
+<span id="L1595" class="ln">  1595&nbsp;&nbsp;</span>
+<span id="L1596" class="ln">  1596&nbsp;&nbsp;</span><span class="comment">// HTMLEntity is an entity map containing translations for the</span>
+<span id="L1597" class="ln">  1597&nbsp;&nbsp;</span><span class="comment">// standard HTML entity characters.</span>
+<span id="L1598" class="ln">  1598&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L1599" class="ln">  1599&nbsp;&nbsp;</span><span class="comment">// See the [Decoder.Strict] and [Decoder.Entity] fields&#39; documentation.</span>
+<span id="L1600" class="ln">  1600&nbsp;&nbsp;</span>var HTMLEntity map[string]string = htmlEntity
+<span id="L1601" class="ln">  1601&nbsp;&nbsp;</span>
+<span id="L1602" class="ln">  1602&nbsp;&nbsp;</span>var htmlEntity = map[string]string{
+<span id="L1603" class="ln">  1603&nbsp;&nbsp;</span>	<span class="comment">/*
+<span id="L1604" class="ln">  1604&nbsp;&nbsp;</span>		hget http://www.w3.org/TR/html4/sgml/entities.html |
+<span id="L1605" class="ln">  1605&nbsp;&nbsp;</span>		ssam &#39;
+<span id="L1606" class="ln">  1606&nbsp;&nbsp;</span>			,y /\&amp;gt;/ x/\&amp;lt;(.|\n)+/ s/\n/ /g
+<span id="L1607" class="ln">  1607&nbsp;&nbsp;</span>			,x v/^\&amp;lt;!ENTITY/d
+<span id="L1608" class="ln">  1608&nbsp;&nbsp;</span>			,s/\&amp;lt;!ENTITY ([^ ]+) .*U\+([0-9A-F][0-9A-F][0-9A-F][0-9A-F]) .+/	&#34;\1&#34;: &#34;\\u\2&#34;,/g
+<span id="L1609" class="ln">  1609&nbsp;&nbsp;</span>		&#39;
+<span id="L1610" class="ln">  1610&nbsp;&nbsp;</span>	*/</span>
+<span id="L1611" class="ln">  1611&nbsp;&nbsp;</span>	&#34;nbsp&#34;:     &#34;\u00A0&#34;,
+<span id="L1612" class="ln">  1612&nbsp;&nbsp;</span>	&#34;iexcl&#34;:    &#34;\u00A1&#34;,
+<span id="L1613" class="ln">  1613&nbsp;&nbsp;</span>	&#34;cent&#34;:     &#34;\u00A2&#34;,
+<span id="L1614" class="ln">  1614&nbsp;&nbsp;</span>	&#34;pound&#34;:    &#34;\u00A3&#34;,
+<span id="L1615" class="ln">  1615&nbsp;&nbsp;</span>	&#34;curren&#34;:   &#34;\u00A4&#34;,
+<span id="L1616" class="ln">  1616&nbsp;&nbsp;</span>	&#34;yen&#34;:      &#34;\u00A5&#34;,
+<span id="L1617" class="ln">  1617&nbsp;&nbsp;</span>	&#34;brvbar&#34;:   &#34;\u00A6&#34;,
+<span id="L1618" class="ln">  1618&nbsp;&nbsp;</span>	&#34;sect&#34;:     &#34;\u00A7&#34;,
+<span id="L1619" class="ln">  1619&nbsp;&nbsp;</span>	&#34;uml&#34;:      &#34;\u00A8&#34;,
+<span id="L1620" class="ln">  1620&nbsp;&nbsp;</span>	&#34;copy&#34;:     &#34;\u00A9&#34;,
+<span id="L1621" class="ln">  1621&nbsp;&nbsp;</span>	&#34;ordf&#34;:     &#34;\u00AA&#34;,
+<span id="L1622" class="ln">  1622&nbsp;&nbsp;</span>	&#34;laquo&#34;:    &#34;\u00AB&#34;,
+<span id="L1623" class="ln">  1623&nbsp;&nbsp;</span>	&#34;not&#34;:      &#34;\u00AC&#34;,
+<span id="L1624" class="ln">  1624&nbsp;&nbsp;</span>	&#34;shy&#34;:      &#34;\u00AD&#34;,
+<span id="L1625" class="ln">  1625&nbsp;&nbsp;</span>	&#34;reg&#34;:      &#34;\u00AE&#34;,
+<span id="L1626" class="ln">  1626&nbsp;&nbsp;</span>	&#34;macr&#34;:     &#34;\u00AF&#34;,
+<span id="L1627" class="ln">  1627&nbsp;&nbsp;</span>	&#34;deg&#34;:      &#34;\u00B0&#34;,
+<span id="L1628" class="ln">  1628&nbsp;&nbsp;</span>	&#34;plusmn&#34;:   &#34;\u00B1&#34;,
+<span id="L1629" class="ln">  1629&nbsp;&nbsp;</span>	&#34;sup2&#34;:     &#34;\u00B2&#34;,
+<span id="L1630" class="ln">  1630&nbsp;&nbsp;</span>	&#34;sup3&#34;:     &#34;\u00B3&#34;,
+<span id="L1631" class="ln">  1631&nbsp;&nbsp;</span>	&#34;acute&#34;:    &#34;\u00B4&#34;,
+<span id="L1632" class="ln">  1632&nbsp;&nbsp;</span>	&#34;micro&#34;:    &#34;\u00B5&#34;,
+<span id="L1633" class="ln">  1633&nbsp;&nbsp;</span>	&#34;para&#34;:     &#34;\u00B6&#34;,
+<span id="L1634" class="ln">  1634&nbsp;&nbsp;</span>	&#34;middot&#34;:   &#34;\u00B7&#34;,
+<span id="L1635" class="ln">  1635&nbsp;&nbsp;</span>	&#34;cedil&#34;:    &#34;\u00B8&#34;,
+<span id="L1636" class="ln">  1636&nbsp;&nbsp;</span>	&#34;sup1&#34;:     &#34;\u00B9&#34;,
+<span id="L1637" class="ln">  1637&nbsp;&nbsp;</span>	&#34;ordm&#34;:     &#34;\u00BA&#34;,
+<span id="L1638" class="ln">  1638&nbsp;&nbsp;</span>	&#34;raquo&#34;:    &#34;\u00BB&#34;,
+<span id="L1639" class="ln">  1639&nbsp;&nbsp;</span>	&#34;frac14&#34;:   &#34;\u00BC&#34;,
+<span id="L1640" class="ln">  1640&nbsp;&nbsp;</span>	&#34;frac12&#34;:   &#34;\u00BD&#34;,
+<span id="L1641" class="ln">  1641&nbsp;&nbsp;</span>	&#34;frac34&#34;:   &#34;\u00BE&#34;,
+<span id="L1642" class="ln">  1642&nbsp;&nbsp;</span>	&#34;iquest&#34;:   &#34;\u00BF&#34;,
+<span id="L1643" class="ln">  1643&nbsp;&nbsp;</span>	&#34;Agrave&#34;:   &#34;\u00C0&#34;,
+<span id="L1644" class="ln">  1644&nbsp;&nbsp;</span>	&#34;Aacute&#34;:   &#34;\u00C1&#34;,
+<span id="L1645" class="ln">  1645&nbsp;&nbsp;</span>	&#34;Acirc&#34;:    &#34;\u00C2&#34;,
+<span id="L1646" class="ln">  1646&nbsp;&nbsp;</span>	&#34;Atilde&#34;:   &#34;\u00C3&#34;,
+<span id="L1647" class="ln">  1647&nbsp;&nbsp;</span>	&#34;Auml&#34;:     &#34;\u00C4&#34;,
+<span id="L1648" class="ln">  1648&nbsp;&nbsp;</span>	&#34;Aring&#34;:    &#34;\u00C5&#34;,
+<span id="L1649" class="ln">  1649&nbsp;&nbsp;</span>	&#34;AElig&#34;:    &#34;\u00C6&#34;,
+<span id="L1650" class="ln">  1650&nbsp;&nbsp;</span>	&#34;Ccedil&#34;:   &#34;\u00C7&#34;,
+<span id="L1651" class="ln">  1651&nbsp;&nbsp;</span>	&#34;Egrave&#34;:   &#34;\u00C8&#34;,
+<span id="L1652" class="ln">  1652&nbsp;&nbsp;</span>	&#34;Eacute&#34;:   &#34;\u00C9&#34;,
+<span id="L1653" class="ln">  1653&nbsp;&nbsp;</span>	&#34;Ecirc&#34;:    &#34;\u00CA&#34;,
+<span id="L1654" class="ln">  1654&nbsp;&nbsp;</span>	&#34;Euml&#34;:     &#34;\u00CB&#34;,
+<span id="L1655" class="ln">  1655&nbsp;&nbsp;</span>	&#34;Igrave&#34;:   &#34;\u00CC&#34;,
+<span id="L1656" class="ln">  1656&nbsp;&nbsp;</span>	&#34;Iacute&#34;:   &#34;\u00CD&#34;,
+<span id="L1657" class="ln">  1657&nbsp;&nbsp;</span>	&#34;Icirc&#34;:    &#34;\u00CE&#34;,
+<span id="L1658" class="ln">  1658&nbsp;&nbsp;</span>	&#34;Iuml&#34;:     &#34;\u00CF&#34;,
+<span id="L1659" class="ln">  1659&nbsp;&nbsp;</span>	&#34;ETH&#34;:      &#34;\u00D0&#34;,
+<span id="L1660" class="ln">  1660&nbsp;&nbsp;</span>	&#34;Ntilde&#34;:   &#34;\u00D1&#34;,
+<span id="L1661" class="ln">  1661&nbsp;&nbsp;</span>	&#34;Ograve&#34;:   &#34;\u00D2&#34;,
+<span id="L1662" class="ln">  1662&nbsp;&nbsp;</span>	&#34;Oacute&#34;:   &#34;\u00D3&#34;,
+<span id="L1663" class="ln">  1663&nbsp;&nbsp;</span>	&#34;Ocirc&#34;:    &#34;\u00D4&#34;,
+<span id="L1664" class="ln">  1664&nbsp;&nbsp;</span>	&#34;Otilde&#34;:   &#34;\u00D5&#34;,
+<span id="L1665" class="ln">  1665&nbsp;&nbsp;</span>	&#34;Ouml&#34;:     &#34;\u00D6&#34;,
+<span id="L1666" class="ln">  1666&nbsp;&nbsp;</span>	&#34;times&#34;:    &#34;\u00D7&#34;,
+<span id="L1667" class="ln">  1667&nbsp;&nbsp;</span>	&#34;Oslash&#34;:   &#34;\u00D8&#34;,
+<span id="L1668" class="ln">  1668&nbsp;&nbsp;</span>	&#34;Ugrave&#34;:   &#34;\u00D9&#34;,
+<span id="L1669" class="ln">  1669&nbsp;&nbsp;</span>	&#34;Uacute&#34;:   &#34;\u00DA&#34;,
+<span id="L1670" class="ln">  1670&nbsp;&nbsp;</span>	&#34;Ucirc&#34;:    &#34;\u00DB&#34;,
+<span id="L1671" class="ln">  1671&nbsp;&nbsp;</span>	&#34;Uuml&#34;:     &#34;\u00DC&#34;,
+<span id="L1672" class="ln">  1672&nbsp;&nbsp;</span>	&#34;Yacute&#34;:   &#34;\u00DD&#34;,
+<span id="L1673" class="ln">  1673&nbsp;&nbsp;</span>	&#34;THORN&#34;:    &#34;\u00DE&#34;,
+<span id="L1674" class="ln">  1674&nbsp;&nbsp;</span>	&#34;szlig&#34;:    &#34;\u00DF&#34;,
+<span id="L1675" class="ln">  1675&nbsp;&nbsp;</span>	&#34;agrave&#34;:   &#34;\u00E0&#34;,
+<span id="L1676" class="ln">  1676&nbsp;&nbsp;</span>	&#34;aacute&#34;:   &#34;\u00E1&#34;,
+<span id="L1677" class="ln">  1677&nbsp;&nbsp;</span>	&#34;acirc&#34;:    &#34;\u00E2&#34;,
+<span id="L1678" class="ln">  1678&nbsp;&nbsp;</span>	&#34;atilde&#34;:   &#34;\u00E3&#34;,
+<span id="L1679" class="ln">  1679&nbsp;&nbsp;</span>	&#34;auml&#34;:     &#34;\u00E4&#34;,
+<span id="L1680" class="ln">  1680&nbsp;&nbsp;</span>	&#34;aring&#34;:    &#34;\u00E5&#34;,
+<span id="L1681" class="ln">  1681&nbsp;&nbsp;</span>	&#34;aelig&#34;:    &#34;\u00E6&#34;,
+<span id="L1682" class="ln">  1682&nbsp;&nbsp;</span>	&#34;ccedil&#34;:   &#34;\u00E7&#34;,
+<span id="L1683" class="ln">  1683&nbsp;&nbsp;</span>	&#34;egrave&#34;:   &#34;\u00E8&#34;,
+<span id="L1684" class="ln">  1684&nbsp;&nbsp;</span>	&#34;eacute&#34;:   &#34;\u00E9&#34;,
+<span id="L1685" class="ln">  1685&nbsp;&nbsp;</span>	&#34;ecirc&#34;:    &#34;\u00EA&#34;,
+<span id="L1686" class="ln">  1686&nbsp;&nbsp;</span>	&#34;euml&#34;:     &#34;\u00EB&#34;,
+<span id="L1687" class="ln">  1687&nbsp;&nbsp;</span>	&#34;igrave&#34;:   &#34;\u00EC&#34;,
+<span id="L1688" class="ln">  1688&nbsp;&nbsp;</span>	&#34;iacute&#34;:   &#34;\u00ED&#34;,
+<span id="L1689" class="ln">  1689&nbsp;&nbsp;</span>	&#34;icirc&#34;:    &#34;\u00EE&#34;,
+<span id="L1690" class="ln">  1690&nbsp;&nbsp;</span>	&#34;iuml&#34;:     &#34;\u00EF&#34;,
+<span id="L1691" class="ln">  1691&nbsp;&nbsp;</span>	&#34;eth&#34;:      &#34;\u00F0&#34;,
+<span id="L1692" class="ln">  1692&nbsp;&nbsp;</span>	&#34;ntilde&#34;:   &#34;\u00F1&#34;,
+<span id="L1693" class="ln">  1693&nbsp;&nbsp;</span>	&#34;ograve&#34;:   &#34;\u00F2&#34;,
+<span id="L1694" class="ln">  1694&nbsp;&nbsp;</span>	&#34;oacute&#34;:   &#34;\u00F3&#34;,
+<span id="L1695" class="ln">  1695&nbsp;&nbsp;</span>	&#34;ocirc&#34;:    &#34;\u00F4&#34;,
+<span id="L1696" class="ln">  1696&nbsp;&nbsp;</span>	&#34;otilde&#34;:   &#34;\u00F5&#34;,
+<span id="L1697" class="ln">  1697&nbsp;&nbsp;</span>	&#34;ouml&#34;:     &#34;\u00F6&#34;,
+<span id="L1698" class="ln">  1698&nbsp;&nbsp;</span>	&#34;divide&#34;:   &#34;\u00F7&#34;,
+<span id="L1699" class="ln">  1699&nbsp;&nbsp;</span>	&#34;oslash&#34;:   &#34;\u00F8&#34;,
+<span id="L1700" class="ln">  1700&nbsp;&nbsp;</span>	&#34;ugrave&#34;:   &#34;\u00F9&#34;,
+<span id="L1701" class="ln">  1701&nbsp;&nbsp;</span>	&#34;uacute&#34;:   &#34;\u00FA&#34;,
+<span id="L1702" class="ln">  1702&nbsp;&nbsp;</span>	&#34;ucirc&#34;:    &#34;\u00FB&#34;,
+<span id="L1703" class="ln">  1703&nbsp;&nbsp;</span>	&#34;uuml&#34;:     &#34;\u00FC&#34;,
+<span id="L1704" class="ln">  1704&nbsp;&nbsp;</span>	&#34;yacute&#34;:   &#34;\u00FD&#34;,
+<span id="L1705" class="ln">  1705&nbsp;&nbsp;</span>	&#34;thorn&#34;:    &#34;\u00FE&#34;,
+<span id="L1706" class="ln">  1706&nbsp;&nbsp;</span>	&#34;yuml&#34;:     &#34;\u00FF&#34;,
+<span id="L1707" class="ln">  1707&nbsp;&nbsp;</span>	&#34;fnof&#34;:     &#34;\u0192&#34;,
+<span id="L1708" class="ln">  1708&nbsp;&nbsp;</span>	&#34;Alpha&#34;:    &#34;\u0391&#34;,
+<span id="L1709" class="ln">  1709&nbsp;&nbsp;</span>	&#34;Beta&#34;:     &#34;\u0392&#34;,
+<span id="L1710" class="ln">  1710&nbsp;&nbsp;</span>	&#34;Gamma&#34;:    &#34;\u0393&#34;,
+<span id="L1711" class="ln">  1711&nbsp;&nbsp;</span>	&#34;Delta&#34;:    &#34;\u0394&#34;,
+<span id="L1712" class="ln">  1712&nbsp;&nbsp;</span>	&#34;Epsilon&#34;:  &#34;\u0395&#34;,
+<span id="L1713" class="ln">  1713&nbsp;&nbsp;</span>	&#34;Zeta&#34;:     &#34;\u0396&#34;,
+<span id="L1714" class="ln">  1714&nbsp;&nbsp;</span>	&#34;Eta&#34;:      &#34;\u0397&#34;,
+<span id="L1715" class="ln">  1715&nbsp;&nbsp;</span>	&#34;Theta&#34;:    &#34;\u0398&#34;,
+<span id="L1716" class="ln">  1716&nbsp;&nbsp;</span>	&#34;Iota&#34;:     &#34;\u0399&#34;,
+<span id="L1717" class="ln">  1717&nbsp;&nbsp;</span>	&#34;Kappa&#34;:    &#34;\u039A&#34;,
+<span id="L1718" class="ln">  1718&nbsp;&nbsp;</span>	&#34;Lambda&#34;:   &#34;\u039B&#34;,
+<span id="L1719" class="ln">  1719&nbsp;&nbsp;</span>	&#34;Mu&#34;:       &#34;\u039C&#34;,
+<span id="L1720" class="ln">  1720&nbsp;&nbsp;</span>	&#34;Nu&#34;:       &#34;\u039D&#34;,
+<span id="L1721" class="ln">  1721&nbsp;&nbsp;</span>	&#34;Xi&#34;:       &#34;\u039E&#34;,
+<span id="L1722" class="ln">  1722&nbsp;&nbsp;</span>	&#34;Omicron&#34;:  &#34;\u039F&#34;,
+<span id="L1723" class="ln">  1723&nbsp;&nbsp;</span>	&#34;Pi&#34;:       &#34;\u03A0&#34;,
+<span id="L1724" class="ln">  1724&nbsp;&nbsp;</span>	&#34;Rho&#34;:      &#34;\u03A1&#34;,
+<span id="L1725" class="ln">  1725&nbsp;&nbsp;</span>	&#34;Sigma&#34;:    &#34;\u03A3&#34;,
+<span id="L1726" class="ln">  1726&nbsp;&nbsp;</span>	&#34;Tau&#34;:      &#34;\u03A4&#34;,
+<span id="L1727" class="ln">  1727&nbsp;&nbsp;</span>	&#34;Upsilon&#34;:  &#34;\u03A5&#34;,
+<span id="L1728" class="ln">  1728&nbsp;&nbsp;</span>	&#34;Phi&#34;:      &#34;\u03A6&#34;,
+<span id="L1729" class="ln">  1729&nbsp;&nbsp;</span>	&#34;Chi&#34;:      &#34;\u03A7&#34;,
+<span id="L1730" class="ln">  1730&nbsp;&nbsp;</span>	&#34;Psi&#34;:      &#34;\u03A8&#34;,
+<span id="L1731" class="ln">  1731&nbsp;&nbsp;</span>	&#34;Omega&#34;:    &#34;\u03A9&#34;,
+<span id="L1732" class="ln">  1732&nbsp;&nbsp;</span>	&#34;alpha&#34;:    &#34;\u03B1&#34;,
+<span id="L1733" class="ln">  1733&nbsp;&nbsp;</span>	&#34;beta&#34;:     &#34;\u03B2&#34;,
+<span id="L1734" class="ln">  1734&nbsp;&nbsp;</span>	&#34;gamma&#34;:    &#34;\u03B3&#34;,
+<span id="L1735" class="ln">  1735&nbsp;&nbsp;</span>	&#34;delta&#34;:    &#34;\u03B4&#34;,
+<span id="L1736" class="ln">  1736&nbsp;&nbsp;</span>	&#34;epsilon&#34;:  &#34;\u03B5&#34;,
+<span id="L1737" class="ln">  1737&nbsp;&nbsp;</span>	&#34;zeta&#34;:     &#34;\u03B6&#34;,
+<span id="L1738" class="ln">  1738&nbsp;&nbsp;</span>	&#34;eta&#34;:      &#34;\u03B7&#34;,
+<span id="L1739" class="ln">  1739&nbsp;&nbsp;</span>	&#34;theta&#34;:    &#34;\u03B8&#34;,
+<span id="L1740" class="ln">  1740&nbsp;&nbsp;</span>	&#34;iota&#34;:     &#34;\u03B9&#34;,
+<span id="L1741" class="ln">  1741&nbsp;&nbsp;</span>	&#34;kappa&#34;:    &#34;\u03BA&#34;,
+<span id="L1742" class="ln">  1742&nbsp;&nbsp;</span>	&#34;lambda&#34;:   &#34;\u03BB&#34;,
+<span id="L1743" class="ln">  1743&nbsp;&nbsp;</span>	&#34;mu&#34;:       &#34;\u03BC&#34;,
+<span id="L1744" class="ln">  1744&nbsp;&nbsp;</span>	&#34;nu&#34;:       &#34;\u03BD&#34;,
+<span id="L1745" class="ln">  1745&nbsp;&nbsp;</span>	&#34;xi&#34;:       &#34;\u03BE&#34;,
+<span id="L1746" class="ln">  1746&nbsp;&nbsp;</span>	&#34;omicron&#34;:  &#34;\u03BF&#34;,
+<span id="L1747" class="ln">  1747&nbsp;&nbsp;</span>	&#34;pi&#34;:       &#34;\u03C0&#34;,
+<span id="L1748" class="ln">  1748&nbsp;&nbsp;</span>	&#34;rho&#34;:      &#34;\u03C1&#34;,
+<span id="L1749" class="ln">  1749&nbsp;&nbsp;</span>	&#34;sigmaf&#34;:   &#34;\u03C2&#34;,
+<span id="L1750" class="ln">  1750&nbsp;&nbsp;</span>	&#34;sigma&#34;:    &#34;\u03C3&#34;,
+<span id="L1751" class="ln">  1751&nbsp;&nbsp;</span>	&#34;tau&#34;:      &#34;\u03C4&#34;,
+<span id="L1752" class="ln">  1752&nbsp;&nbsp;</span>	&#34;upsilon&#34;:  &#34;\u03C5&#34;,
+<span id="L1753" class="ln">  1753&nbsp;&nbsp;</span>	&#34;phi&#34;:      &#34;\u03C6&#34;,
+<span id="L1754" class="ln">  1754&nbsp;&nbsp;</span>	&#34;chi&#34;:      &#34;\u03C7&#34;,
+<span id="L1755" class="ln">  1755&nbsp;&nbsp;</span>	&#34;psi&#34;:      &#34;\u03C8&#34;,
+<span id="L1756" class="ln">  1756&nbsp;&nbsp;</span>	&#34;omega&#34;:    &#34;\u03C9&#34;,
+<span id="L1757" class="ln">  1757&nbsp;&nbsp;</span>	&#34;thetasym&#34;: &#34;\u03D1&#34;,
+<span id="L1758" class="ln">  1758&nbsp;&nbsp;</span>	&#34;upsih&#34;:    &#34;\u03D2&#34;,
+<span id="L1759" class="ln">  1759&nbsp;&nbsp;</span>	&#34;piv&#34;:      &#34;\u03D6&#34;,
+<span id="L1760" class="ln">  1760&nbsp;&nbsp;</span>	&#34;bull&#34;:     &#34;\u2022&#34;,
+<span id="L1761" class="ln">  1761&nbsp;&nbsp;</span>	&#34;hellip&#34;:   &#34;\u2026&#34;,
+<span id="L1762" class="ln">  1762&nbsp;&nbsp;</span>	&#34;prime&#34;:    &#34;\u2032&#34;,
+<span id="L1763" class="ln">  1763&nbsp;&nbsp;</span>	&#34;Prime&#34;:    &#34;\u2033&#34;,
+<span id="L1764" class="ln">  1764&nbsp;&nbsp;</span>	&#34;oline&#34;:    &#34;\u203E&#34;,
+<span id="L1765" class="ln">  1765&nbsp;&nbsp;</span>	&#34;frasl&#34;:    &#34;\u2044&#34;,
+<span id="L1766" class="ln">  1766&nbsp;&nbsp;</span>	&#34;weierp&#34;:   &#34;\u2118&#34;,
+<span id="L1767" class="ln">  1767&nbsp;&nbsp;</span>	&#34;image&#34;:    &#34;\u2111&#34;,
+<span id="L1768" class="ln">  1768&nbsp;&nbsp;</span>	&#34;real&#34;:     &#34;\u211C&#34;,
+<span id="L1769" class="ln">  1769&nbsp;&nbsp;</span>	&#34;trade&#34;:    &#34;\u2122&#34;,
+<span id="L1770" class="ln">  1770&nbsp;&nbsp;</span>	&#34;alefsym&#34;:  &#34;\u2135&#34;,
+<span id="L1771" class="ln">  1771&nbsp;&nbsp;</span>	&#34;larr&#34;:     &#34;\u2190&#34;,
+<span id="L1772" class="ln">  1772&nbsp;&nbsp;</span>	&#34;uarr&#34;:     &#34;\u2191&#34;,
+<span id="L1773" class="ln">  1773&nbsp;&nbsp;</span>	&#34;rarr&#34;:     &#34;\u2192&#34;,
+<span id="L1774" class="ln">  1774&nbsp;&nbsp;</span>	&#34;darr&#34;:     &#34;\u2193&#34;,
+<span id="L1775" class="ln">  1775&nbsp;&nbsp;</span>	&#34;harr&#34;:     &#34;\u2194&#34;,
+<span id="L1776" class="ln">  1776&nbsp;&nbsp;</span>	&#34;crarr&#34;:    &#34;\u21B5&#34;,
+<span id="L1777" class="ln">  1777&nbsp;&nbsp;</span>	&#34;lArr&#34;:     &#34;\u21D0&#34;,
+<span id="L1778" class="ln">  1778&nbsp;&nbsp;</span>	&#34;uArr&#34;:     &#34;\u21D1&#34;,
+<span id="L1779" class="ln">  1779&nbsp;&nbsp;</span>	&#34;rArr&#34;:     &#34;\u21D2&#34;,
+<span id="L1780" class="ln">  1780&nbsp;&nbsp;</span>	&#34;dArr&#34;:     &#34;\u21D3&#34;,
+<span id="L1781" class="ln">  1781&nbsp;&nbsp;</span>	&#34;hArr&#34;:     &#34;\u21D4&#34;,
+<span id="L1782" class="ln">  1782&nbsp;&nbsp;</span>	&#34;forall&#34;:   &#34;\u2200&#34;,
+<span id="L1783" class="ln">  1783&nbsp;&nbsp;</span>	&#34;part&#34;:     &#34;\u2202&#34;,
+<span id="L1784" class="ln">  1784&nbsp;&nbsp;</span>	&#34;exist&#34;:    &#34;\u2203&#34;,
+<span id="L1785" class="ln">  1785&nbsp;&nbsp;</span>	&#34;empty&#34;:    &#34;\u2205&#34;,
+<span id="L1786" class="ln">  1786&nbsp;&nbsp;</span>	&#34;nabla&#34;:    &#34;\u2207&#34;,
+<span id="L1787" class="ln">  1787&nbsp;&nbsp;</span>	&#34;isin&#34;:     &#34;\u2208&#34;,
+<span id="L1788" class="ln">  1788&nbsp;&nbsp;</span>	&#34;notin&#34;:    &#34;\u2209&#34;,
+<span id="L1789" class="ln">  1789&nbsp;&nbsp;</span>	&#34;ni&#34;:       &#34;\u220B&#34;,
+<span id="L1790" class="ln">  1790&nbsp;&nbsp;</span>	&#34;prod&#34;:     &#34;\u220F&#34;,
+<span id="L1791" class="ln">  1791&nbsp;&nbsp;</span>	&#34;sum&#34;:      &#34;\u2211&#34;,
+<span id="L1792" class="ln">  1792&nbsp;&nbsp;</span>	&#34;minus&#34;:    &#34;\u2212&#34;,
+<span id="L1793" class="ln">  1793&nbsp;&nbsp;</span>	&#34;lowast&#34;:   &#34;\u2217&#34;,
+<span id="L1794" class="ln">  1794&nbsp;&nbsp;</span>	&#34;radic&#34;:    &#34;\u221A&#34;,
+<span id="L1795" class="ln">  1795&nbsp;&nbsp;</span>	&#34;prop&#34;:     &#34;\u221D&#34;,
+<span id="L1796" class="ln">  1796&nbsp;&nbsp;</span>	&#34;infin&#34;:    &#34;\u221E&#34;,
+<span id="L1797" class="ln">  1797&nbsp;&nbsp;</span>	&#34;ang&#34;:      &#34;\u2220&#34;,
+<span id="L1798" class="ln">  1798&nbsp;&nbsp;</span>	&#34;and&#34;:      &#34;\u2227&#34;,
+<span id="L1799" class="ln">  1799&nbsp;&nbsp;</span>	&#34;or&#34;:       &#34;\u2228&#34;,
+<span id="L1800" class="ln">  1800&nbsp;&nbsp;</span>	&#34;cap&#34;:      &#34;\u2229&#34;,
+<span id="L1801" class="ln">  1801&nbsp;&nbsp;</span>	&#34;cup&#34;:      &#34;\u222A&#34;,
+<span id="L1802" class="ln">  1802&nbsp;&nbsp;</span>	&#34;int&#34;:      &#34;\u222B&#34;,
+<span id="L1803" class="ln">  1803&nbsp;&nbsp;</span>	&#34;there4&#34;:   &#34;\u2234&#34;,
+<span id="L1804" class="ln">  1804&nbsp;&nbsp;</span>	&#34;sim&#34;:      &#34;\u223C&#34;,
+<span id="L1805" class="ln">  1805&nbsp;&nbsp;</span>	&#34;cong&#34;:     &#34;\u2245&#34;,
+<span id="L1806" class="ln">  1806&nbsp;&nbsp;</span>	&#34;asymp&#34;:    &#34;\u2248&#34;,
+<span id="L1807" class="ln">  1807&nbsp;&nbsp;</span>	&#34;ne&#34;:       &#34;\u2260&#34;,
+<span id="L1808" class="ln">  1808&nbsp;&nbsp;</span>	&#34;equiv&#34;:    &#34;\u2261&#34;,
+<span id="L1809" class="ln">  1809&nbsp;&nbsp;</span>	&#34;le&#34;:       &#34;\u2264&#34;,
+<span id="L1810" class="ln">  1810&nbsp;&nbsp;</span>	&#34;ge&#34;:       &#34;\u2265&#34;,
+<span id="L1811" class="ln">  1811&nbsp;&nbsp;</span>	&#34;sub&#34;:      &#34;\u2282&#34;,
+<span id="L1812" class="ln">  1812&nbsp;&nbsp;</span>	&#34;sup&#34;:      &#34;\u2283&#34;,
+<span id="L1813" class="ln">  1813&nbsp;&nbsp;</span>	&#34;nsub&#34;:     &#34;\u2284&#34;,
+<span id="L1814" class="ln">  1814&nbsp;&nbsp;</span>	&#34;sube&#34;:     &#34;\u2286&#34;,
+<span id="L1815" class="ln">  1815&nbsp;&nbsp;</span>	&#34;supe&#34;:     &#34;\u2287&#34;,
+<span id="L1816" class="ln">  1816&nbsp;&nbsp;</span>	&#34;oplus&#34;:    &#34;\u2295&#34;,
+<span id="L1817" class="ln">  1817&nbsp;&nbsp;</span>	&#34;otimes&#34;:   &#34;\u2297&#34;,
+<span id="L1818" class="ln">  1818&nbsp;&nbsp;</span>	&#34;perp&#34;:     &#34;\u22A5&#34;,
+<span id="L1819" class="ln">  1819&nbsp;&nbsp;</span>	&#34;sdot&#34;:     &#34;\u22C5&#34;,
+<span id="L1820" class="ln">  1820&nbsp;&nbsp;</span>	&#34;lceil&#34;:    &#34;\u2308&#34;,
+<span id="L1821" class="ln">  1821&nbsp;&nbsp;</span>	&#34;rceil&#34;:    &#34;\u2309&#34;,
+<span id="L1822" class="ln">  1822&nbsp;&nbsp;</span>	&#34;lfloor&#34;:   &#34;\u230A&#34;,
+<span id="L1823" class="ln">  1823&nbsp;&nbsp;</span>	&#34;rfloor&#34;:   &#34;\u230B&#34;,
+<span id="L1824" class="ln">  1824&nbsp;&nbsp;</span>	&#34;lang&#34;:     &#34;\u2329&#34;,
+<span id="L1825" class="ln">  1825&nbsp;&nbsp;</span>	&#34;rang&#34;:     &#34;\u232A&#34;,
+<span id="L1826" class="ln">  1826&nbsp;&nbsp;</span>	&#34;loz&#34;:      &#34;\u25CA&#34;,
+<span id="L1827" class="ln">  1827&nbsp;&nbsp;</span>	&#34;spades&#34;:   &#34;\u2660&#34;,
+<span id="L1828" class="ln">  1828&nbsp;&nbsp;</span>	&#34;clubs&#34;:    &#34;\u2663&#34;,
+<span id="L1829" class="ln">  1829&nbsp;&nbsp;</span>	&#34;hearts&#34;:   &#34;\u2665&#34;,
+<span id="L1830" class="ln">  1830&nbsp;&nbsp;</span>	&#34;diams&#34;:    &#34;\u2666&#34;,
+<span id="L1831" class="ln">  1831&nbsp;&nbsp;</span>	&#34;quot&#34;:     &#34;\u0022&#34;,
+<span id="L1832" class="ln">  1832&nbsp;&nbsp;</span>	&#34;amp&#34;:      &#34;\u0026&#34;,
+<span id="L1833" class="ln">  1833&nbsp;&nbsp;</span>	&#34;lt&#34;:       &#34;\u003C&#34;,
+<span id="L1834" class="ln">  1834&nbsp;&nbsp;</span>	&#34;gt&#34;:       &#34;\u003E&#34;,
+<span id="L1835" class="ln">  1835&nbsp;&nbsp;</span>	&#34;OElig&#34;:    &#34;\u0152&#34;,
+<span id="L1836" class="ln">  1836&nbsp;&nbsp;</span>	&#34;oelig&#34;:    &#34;\u0153&#34;,
+<span id="L1837" class="ln">  1837&nbsp;&nbsp;</span>	&#34;Scaron&#34;:   &#34;\u0160&#34;,
+<span id="L1838" class="ln">  1838&nbsp;&nbsp;</span>	&#34;scaron&#34;:   &#34;\u0161&#34;,
+<span id="L1839" class="ln">  1839&nbsp;&nbsp;</span>	&#34;Yuml&#34;:     &#34;\u0178&#34;,
+<span id="L1840" class="ln">  1840&nbsp;&nbsp;</span>	&#34;circ&#34;:     &#34;\u02C6&#34;,
+<span id="L1841" class="ln">  1841&nbsp;&nbsp;</span>	&#34;tilde&#34;:    &#34;\u02DC&#34;,
+<span id="L1842" class="ln">  1842&nbsp;&nbsp;</span>	&#34;ensp&#34;:     &#34;\u2002&#34;,
+<span id="L1843" class="ln">  1843&nbsp;&nbsp;</span>	&#34;emsp&#34;:     &#34;\u2003&#34;,
+<span id="L1844" class="ln">  1844&nbsp;&nbsp;</span>	&#34;thinsp&#34;:   &#34;\u2009&#34;,
+<span id="L1845" class="ln">  1845&nbsp;&nbsp;</span>	&#34;zwnj&#34;:     &#34;\u200C&#34;,
+<span id="L1846" class="ln">  1846&nbsp;&nbsp;</span>	&#34;zwj&#34;:      &#34;\u200D&#34;,
+<span id="L1847" class="ln">  1847&nbsp;&nbsp;</span>	&#34;lrm&#34;:      &#34;\u200E&#34;,
+<span id="L1848" class="ln">  1848&nbsp;&nbsp;</span>	&#34;rlm&#34;:      &#34;\u200F&#34;,
+<span id="L1849" class="ln">  1849&nbsp;&nbsp;</span>	&#34;ndash&#34;:    &#34;\u2013&#34;,
+<span id="L1850" class="ln">  1850&nbsp;&nbsp;</span>	&#34;mdash&#34;:    &#34;\u2014&#34;,
+<span id="L1851" class="ln">  1851&nbsp;&nbsp;</span>	&#34;lsquo&#34;:    &#34;\u2018&#34;,
+<span id="L1852" class="ln">  1852&nbsp;&nbsp;</span>	&#34;rsquo&#34;:    &#34;\u2019&#34;,
+<span id="L1853" class="ln">  1853&nbsp;&nbsp;</span>	&#34;sbquo&#34;:    &#34;\u201A&#34;,
+<span id="L1854" class="ln">  1854&nbsp;&nbsp;</span>	&#34;ldquo&#34;:    &#34;\u201C&#34;,
+<span id="L1855" class="ln">  1855&nbsp;&nbsp;</span>	&#34;rdquo&#34;:    &#34;\u201D&#34;,
+<span id="L1856" class="ln">  1856&nbsp;&nbsp;</span>	&#34;bdquo&#34;:    &#34;\u201E&#34;,
+<span id="L1857" class="ln">  1857&nbsp;&nbsp;</span>	&#34;dagger&#34;:   &#34;\u2020&#34;,
+<span id="L1858" class="ln">  1858&nbsp;&nbsp;</span>	&#34;Dagger&#34;:   &#34;\u2021&#34;,
+<span id="L1859" class="ln">  1859&nbsp;&nbsp;</span>	&#34;permil&#34;:   &#34;\u2030&#34;,
+<span id="L1860" class="ln">  1860&nbsp;&nbsp;</span>	&#34;lsaquo&#34;:   &#34;\u2039&#34;,
+<span id="L1861" class="ln">  1861&nbsp;&nbsp;</span>	&#34;rsaquo&#34;:   &#34;\u203A&#34;,
+<span id="L1862" class="ln">  1862&nbsp;&nbsp;</span>	&#34;euro&#34;:     &#34;\u20AC&#34;,
+<span id="L1863" class="ln">  1863&nbsp;&nbsp;</span>}
+<span id="L1864" class="ln">  1864&nbsp;&nbsp;</span>
+<span id="L1865" class="ln">  1865&nbsp;&nbsp;</span><span class="comment">// HTMLAutoClose is the set of HTML elements that</span>
+<span id="L1866" class="ln">  1866&nbsp;&nbsp;</span><span class="comment">// should be considered to close automatically.</span>
+<span id="L1867" class="ln">  1867&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L1868" class="ln">  1868&nbsp;&nbsp;</span><span class="comment">// See the [Decoder.Strict] and [Decoder.Entity] fields&#39; documentation.</span>
+<span id="L1869" class="ln">  1869&nbsp;&nbsp;</span>var HTMLAutoClose []string = htmlAutoClose
+<span id="L1870" class="ln">  1870&nbsp;&nbsp;</span>
+<span id="L1871" class="ln">  1871&nbsp;&nbsp;</span>var htmlAutoClose = []string{
+<span id="L1872" class="ln">  1872&nbsp;&nbsp;</span>	<span class="comment">/*
+<span id="L1873" class="ln">  1873&nbsp;&nbsp;</span>		hget http://www.w3.org/TR/html4/loose.dtd |
+<span id="L1874" class="ln">  1874&nbsp;&nbsp;</span>		9 sed -n &#39;s/&lt;!ELEMENT ([^ ]*) +- O EMPTY.+/	&#34;\1&#34;,/p&#39; | tr A-Z a-z
+<span id="L1875" class="ln">  1875&nbsp;&nbsp;</span>	*/</span>
+<span id="L1876" class="ln">  1876&nbsp;&nbsp;</span>	&#34;basefont&#34;,
+<span id="L1877" class="ln">  1877&nbsp;&nbsp;</span>	&#34;br&#34;,
+<span id="L1878" class="ln">  1878&nbsp;&nbsp;</span>	&#34;area&#34;,
+<span id="L1879" class="ln">  1879&nbsp;&nbsp;</span>	&#34;link&#34;,
+<span id="L1880" class="ln">  1880&nbsp;&nbsp;</span>	&#34;img&#34;,
+<span id="L1881" class="ln">  1881&nbsp;&nbsp;</span>	&#34;param&#34;,
+<span id="L1882" class="ln">  1882&nbsp;&nbsp;</span>	&#34;hr&#34;,
+<span id="L1883" class="ln">  1883&nbsp;&nbsp;</span>	&#34;input&#34;,
+<span id="L1884" class="ln">  1884&nbsp;&nbsp;</span>	&#34;col&#34;,
+<span id="L1885" class="ln">  1885&nbsp;&nbsp;</span>	&#34;frame&#34;,
+<span id="L1886" class="ln">  1886&nbsp;&nbsp;</span>	&#34;isindex&#34;,
+<span id="L1887" class="ln">  1887&nbsp;&nbsp;</span>	&#34;base&#34;,
+<span id="L1888" class="ln">  1888&nbsp;&nbsp;</span>	&#34;meta&#34;,
+<span id="L1889" class="ln">  1889&nbsp;&nbsp;</span>}
+<span id="L1890" class="ln">  1890&nbsp;&nbsp;</span>
+<span id="L1891" class="ln">  1891&nbsp;&nbsp;</span>var (
+<span id="L1892" class="ln">  1892&nbsp;&nbsp;</span>	escQuot = []byte(&#34;&amp;#34;&#34;) <span class="comment">// shorter than &#34;&amp;quot;&#34;</span>
+<span id="L1893" class="ln">  1893&nbsp;&nbsp;</span>	escApos = []byte(&#34;&amp;#39;&#34;) <span class="comment">// shorter than &#34;&amp;apos;&#34;</span>
+<span id="L1894" class="ln">  1894&nbsp;&nbsp;</span>	escAmp  = []byte(&#34;&amp;amp;&#34;)
+<span id="L1895" class="ln">  1895&nbsp;&nbsp;</span>	escLT   = []byte(&#34;&amp;lt;&#34;)
+<span id="L1896" class="ln">  1896&nbsp;&nbsp;</span>	escGT   = []byte(&#34;&amp;gt;&#34;)
+<span id="L1897" class="ln">  1897&nbsp;&nbsp;</span>	escTab  = []byte(&#34;&amp;#x9;&#34;)
+<span id="L1898" class="ln">  1898&nbsp;&nbsp;</span>	escNL   = []byte(&#34;&amp;#xA;&#34;)
+<span id="L1899" class="ln">  1899&nbsp;&nbsp;</span>	escCR   = []byte(&#34;&amp;#xD;&#34;)
+<span id="L1900" class="ln">  1900&nbsp;&nbsp;</span>	escFFFD = []byte(&#34;\uFFFD&#34;) <span class="comment">// Unicode replacement character</span>
+<span id="L1901" class="ln">  1901&nbsp;&nbsp;</span>)
+<span id="L1902" class="ln">  1902&nbsp;&nbsp;</span>
+<span id="L1903" class="ln">  1903&nbsp;&nbsp;</span><span class="comment">// EscapeText writes to w the properly escaped XML equivalent</span>
+<span id="L1904" class="ln">  1904&nbsp;&nbsp;</span><span class="comment">// of the plain text data s.</span>
+<span id="L1905" class="ln">  1905&nbsp;&nbsp;</span>func EscapeText(w io.Writer, s []byte) error {
+<span id="L1906" class="ln">  1906&nbsp;&nbsp;</span>	return escapeText(w, s, true)
+<span id="L1907" class="ln">  1907&nbsp;&nbsp;</span>}
+<span id="L1908" class="ln">  1908&nbsp;&nbsp;</span>
+<span id="L1909" class="ln">  1909&nbsp;&nbsp;</span><span class="comment">// escapeText writes to w the properly escaped XML equivalent</span>
+<span id="L1910" class="ln">  1910&nbsp;&nbsp;</span><span class="comment">// of the plain text data s. If escapeNewline is true, newline</span>
+<span id="L1911" class="ln">  1911&nbsp;&nbsp;</span><span class="comment">// characters will be escaped.</span>
+<span id="L1912" class="ln">  1912&nbsp;&nbsp;</span>func escapeText(w io.Writer, s []byte, escapeNewline bool) error {
+<span id="L1913" class="ln">  1913&nbsp;&nbsp;</span>	var esc []byte
+<span id="L1914" class="ln">  1914&nbsp;&nbsp;</span>	last := 0
+<span id="L1915" class="ln">  1915&nbsp;&nbsp;</span>	for i := 0; i &lt; len(s); {
+<span id="L1916" class="ln">  1916&nbsp;&nbsp;</span>		r, width := utf8.DecodeRune(s[i:])
+<span id="L1917" class="ln">  1917&nbsp;&nbsp;</span>		i += width
+<span id="L1918" class="ln">  1918&nbsp;&nbsp;</span>		switch r {
+<span id="L1919" class="ln">  1919&nbsp;&nbsp;</span>		case &#39;&#34;&#39;:
+<span id="L1920" class="ln">  1920&nbsp;&nbsp;</span>			esc = escQuot
+<span id="L1921" class="ln">  1921&nbsp;&nbsp;</span>		case &#39;\&#39;&#39;:
+<span id="L1922" class="ln">  1922&nbsp;&nbsp;</span>			esc = escApos
+<span id="L1923" class="ln">  1923&nbsp;&nbsp;</span>		case &#39;&amp;&#39;:
+<span id="L1924" class="ln">  1924&nbsp;&nbsp;</span>			esc = escAmp
+<span id="L1925" class="ln">  1925&nbsp;&nbsp;</span>		case &#39;&lt;&#39;:
+<span id="L1926" class="ln">  1926&nbsp;&nbsp;</span>			esc = escLT
+<span id="L1927" class="ln">  1927&nbsp;&nbsp;</span>		case &#39;&gt;&#39;:
+<span id="L1928" class="ln">  1928&nbsp;&nbsp;</span>			esc = escGT
+<span id="L1929" class="ln">  1929&nbsp;&nbsp;</span>		case &#39;\t&#39;:
+<span id="L1930" class="ln">  1930&nbsp;&nbsp;</span>			esc = escTab
+<span id="L1931" class="ln">  1931&nbsp;&nbsp;</span>		case &#39;\n&#39;:
+<span id="L1932" class="ln">  1932&nbsp;&nbsp;</span>			if !escapeNewline {
+<span id="L1933" class="ln">  1933&nbsp;&nbsp;</span>				continue
+<span id="L1934" class="ln">  1934&nbsp;&nbsp;</span>			}
+<span id="L1935" class="ln">  1935&nbsp;&nbsp;</span>			esc = escNL
+<span id="L1936" class="ln">  1936&nbsp;&nbsp;</span>		case &#39;\r&#39;:
+<span id="L1937" class="ln">  1937&nbsp;&nbsp;</span>			esc = escCR
+<span id="L1938" class="ln">  1938&nbsp;&nbsp;</span>		default:
+<span id="L1939" class="ln">  1939&nbsp;&nbsp;</span>			if !isInCharacterRange(r) || (r == 0xFFFD &amp;&amp; width == 1) {
+<span id="L1940" class="ln">  1940&nbsp;&nbsp;</span>				esc = escFFFD
+<span id="L1941" class="ln">  1941&nbsp;&nbsp;</span>				break
+<span id="L1942" class="ln">  1942&nbsp;&nbsp;</span>			}
+<span id="L1943" class="ln">  1943&nbsp;&nbsp;</span>			continue
+<span id="L1944" class="ln">  1944&nbsp;&nbsp;</span>		}
+<span id="L1945" class="ln">  1945&nbsp;&nbsp;</span>		if _, err := w.Write(s[last : i-width]); err != nil {
+<span id="L1946" class="ln">  1946&nbsp;&nbsp;</span>			return err
+<span id="L1947" class="ln">  1947&nbsp;&nbsp;</span>		}
+<span id="L1948" class="ln">  1948&nbsp;&nbsp;</span>		if _, err := w.Write(esc); err != nil {
+<span id="L1949" class="ln">  1949&nbsp;&nbsp;</span>			return err
+<span id="L1950" class="ln">  1950&nbsp;&nbsp;</span>		}
+<span id="L1951" class="ln">  1951&nbsp;&nbsp;</span>		last = i
+<span id="L1952" class="ln">  1952&nbsp;&nbsp;</span>	}
+<span id="L1953" class="ln">  1953&nbsp;&nbsp;</span>	_, err := w.Write(s[last:])
+<span id="L1954" class="ln">  1954&nbsp;&nbsp;</span>	return err
+<span id="L1955" class="ln">  1955&nbsp;&nbsp;</span>}
+<span id="L1956" class="ln">  1956&nbsp;&nbsp;</span>
+<span id="L1957" class="ln">  1957&nbsp;&nbsp;</span><span class="comment">// EscapeString writes to p the properly escaped XML equivalent</span>
+<span id="L1958" class="ln">  1958&nbsp;&nbsp;</span><span class="comment">// of the plain text data s.</span>
+<span id="L1959" class="ln">  1959&nbsp;&nbsp;</span>func (p *printer) EscapeString(s string) {
+<span id="L1960" class="ln">  1960&nbsp;&nbsp;</span>	var esc []byte
+<span id="L1961" class="ln">  1961&nbsp;&nbsp;</span>	last := 0
+<span id="L1962" class="ln">  1962&nbsp;&nbsp;</span>	for i := 0; i &lt; len(s); {
+<span id="L1963" class="ln">  1963&nbsp;&nbsp;</span>		r, width := utf8.DecodeRuneInString(s[i:])
+<span id="L1964" class="ln">  1964&nbsp;&nbsp;</span>		i += width
+<span id="L1965" class="ln">  1965&nbsp;&nbsp;</span>		switch r {
+<span id="L1966" class="ln">  1966&nbsp;&nbsp;</span>		case &#39;&#34;&#39;:
+<span id="L1967" class="ln">  1967&nbsp;&nbsp;</span>			esc = escQuot
+<span id="L1968" class="ln">  1968&nbsp;&nbsp;</span>		case &#39;\&#39;&#39;:
+<span id="L1969" class="ln">  1969&nbsp;&nbsp;</span>			esc = escApos
+<span id="L1970" class="ln">  1970&nbsp;&nbsp;</span>		case &#39;&amp;&#39;:
+<span id="L1971" class="ln">  1971&nbsp;&nbsp;</span>			esc = escAmp
+<span id="L1972" class="ln">  1972&nbsp;&nbsp;</span>		case &#39;&lt;&#39;:
+<span id="L1973" class="ln">  1973&nbsp;&nbsp;</span>			esc = escLT
+<span id="L1974" class="ln">  1974&nbsp;&nbsp;</span>		case &#39;&gt;&#39;:
+<span id="L1975" class="ln">  1975&nbsp;&nbsp;</span>			esc = escGT
+<span id="L1976" class="ln">  1976&nbsp;&nbsp;</span>		case &#39;\t&#39;:
+<span id="L1977" class="ln">  1977&nbsp;&nbsp;</span>			esc = escTab
+<span id="L1978" class="ln">  1978&nbsp;&nbsp;</span>		case &#39;\n&#39;:
+<span id="L1979" class="ln">  1979&nbsp;&nbsp;</span>			esc = escNL
+<span id="L1980" class="ln">  1980&nbsp;&nbsp;</span>		case &#39;\r&#39;:
+<span id="L1981" class="ln">  1981&nbsp;&nbsp;</span>			esc = escCR
+<span id="L1982" class="ln">  1982&nbsp;&nbsp;</span>		default:
+<span id="L1983" class="ln">  1983&nbsp;&nbsp;</span>			if !isInCharacterRange(r) || (r == 0xFFFD &amp;&amp; width == 1) {
+<span id="L1984" class="ln">  1984&nbsp;&nbsp;</span>				esc = escFFFD
+<span id="L1985" class="ln">  1985&nbsp;&nbsp;</span>				break
+<span id="L1986" class="ln">  1986&nbsp;&nbsp;</span>			}
+<span id="L1987" class="ln">  1987&nbsp;&nbsp;</span>			continue
+<span id="L1988" class="ln">  1988&nbsp;&nbsp;</span>		}
+<span id="L1989" class="ln">  1989&nbsp;&nbsp;</span>		p.WriteString(s[last : i-width])
+<span id="L1990" class="ln">  1990&nbsp;&nbsp;</span>		p.Write(esc)
+<span id="L1991" class="ln">  1991&nbsp;&nbsp;</span>		last = i
+<span id="L1992" class="ln">  1992&nbsp;&nbsp;</span>	}
+<span id="L1993" class="ln">  1993&nbsp;&nbsp;</span>	p.WriteString(s[last:])
+<span id="L1994" class="ln">  1994&nbsp;&nbsp;</span>}
+<span id="L1995" class="ln">  1995&nbsp;&nbsp;</span>
+<span id="L1996" class="ln">  1996&nbsp;&nbsp;</span><span class="comment">// Escape is like [EscapeText] but omits the error return value.</span>
+<span id="L1997" class="ln">  1997&nbsp;&nbsp;</span><span class="comment">// It is provided for backwards compatibility with Go 1.0.</span>
+<span id="L1998" class="ln">  1998&nbsp;&nbsp;</span><span class="comment">// Code targeting Go 1.1 or later should use [EscapeText].</span>
+<span id="L1999" class="ln">  1999&nbsp;&nbsp;</span>func Escape(w io.Writer, s []byte) {
+<span id="L2000" class="ln">  2000&nbsp;&nbsp;</span>	EscapeText(w, s)
+<span id="L2001" class="ln">  2001&nbsp;&nbsp;</span>}
+<span id="L2002" class="ln">  2002&nbsp;&nbsp;</span>
+<span id="L2003" class="ln">  2003&nbsp;&nbsp;</span>var (
+<span id="L2004" class="ln">  2004&nbsp;&nbsp;</span>	cdataStart  = []byte(&#34;&lt;![CDATA[&#34;)
+<span id="L2005" class="ln">  2005&nbsp;&nbsp;</span>	cdataEnd    = []byte(&#34;]]&gt;&#34;)
+<span id="L2006" class="ln">  2006&nbsp;&nbsp;</span>	cdataEscape = []byte(&#34;]]]]&gt;&lt;![CDATA[&gt;&#34;)
+<span id="L2007" class="ln">  2007&nbsp;&nbsp;</span>)
+<span id="L2008" class="ln">  2008&nbsp;&nbsp;</span>
+<span id="L2009" class="ln">  2009&nbsp;&nbsp;</span><span class="comment">// emitCDATA writes to w the CDATA-wrapped plain text data s.</span>
+<span id="L2010" class="ln">  2010&nbsp;&nbsp;</span><span class="comment">// It escapes CDATA directives nested in s.</span>
+<span id="L2011" class="ln">  2011&nbsp;&nbsp;</span>func emitCDATA(w io.Writer, s []byte) error {
+<span id="L2012" class="ln">  2012&nbsp;&nbsp;</span>	if len(s) == 0 {
+<span id="L2013" class="ln">  2013&nbsp;&nbsp;</span>		return nil
+<span id="L2014" class="ln">  2014&nbsp;&nbsp;</span>	}
+<span id="L2015" class="ln">  2015&nbsp;&nbsp;</span>	if _, err := w.Write(cdataStart); err != nil {
+<span id="L2016" class="ln">  2016&nbsp;&nbsp;</span>		return err
+<span id="L2017" class="ln">  2017&nbsp;&nbsp;</span>	}
+<span id="L2018" class="ln">  2018&nbsp;&nbsp;</span>
+<span id="L2019" class="ln">  2019&nbsp;&nbsp;</span>	for {
+<span id="L2020" class="ln">  2020&nbsp;&nbsp;</span>		before, after, ok := bytes.Cut(s, cdataEnd)
+<span id="L2021" class="ln">  2021&nbsp;&nbsp;</span>		if !ok {
+<span id="L2022" class="ln">  2022&nbsp;&nbsp;</span>			break
+<span id="L2023" class="ln">  2023&nbsp;&nbsp;</span>		}
+<span id="L2024" class="ln">  2024&nbsp;&nbsp;</span>		<span class="comment">// Found a nested CDATA directive end.</span>
+<span id="L2025" class="ln">  2025&nbsp;&nbsp;</span>		if _, err := w.Write(before); err != nil {
+<span id="L2026" class="ln">  2026&nbsp;&nbsp;</span>			return err
+<span id="L2027" class="ln">  2027&nbsp;&nbsp;</span>		}
+<span id="L2028" class="ln">  2028&nbsp;&nbsp;</span>		if _, err := w.Write(cdataEscape); err != nil {
+<span id="L2029" class="ln">  2029&nbsp;&nbsp;</span>			return err
+<span id="L2030" class="ln">  2030&nbsp;&nbsp;</span>		}
+<span id="L2031" class="ln">  2031&nbsp;&nbsp;</span>		s = after
+<span id="L2032" class="ln">  2032&nbsp;&nbsp;</span>	}
+<span id="L2033" class="ln">  2033&nbsp;&nbsp;</span>
+<span id="L2034" class="ln">  2034&nbsp;&nbsp;</span>	if _, err := w.Write(s); err != nil {
+<span id="L2035" class="ln">  2035&nbsp;&nbsp;</span>		return err
+<span id="L2036" class="ln">  2036&nbsp;&nbsp;</span>	}
+<span id="L2037" class="ln">  2037&nbsp;&nbsp;</span>
+<span id="L2038" class="ln">  2038&nbsp;&nbsp;</span>	_, err := w.Write(cdataEnd)
+<span id="L2039" class="ln">  2039&nbsp;&nbsp;</span>	return err
+<span id="L2040" class="ln">  2040&nbsp;&nbsp;</span>}
+<span id="L2041" class="ln">  2041&nbsp;&nbsp;</span>
+<span id="L2042" class="ln">  2042&nbsp;&nbsp;</span><span class="comment">// procInst parses the `param=&#34;...&#34;` or `param=&#39;...&#39;`</span>
+<span id="L2043" class="ln">  2043&nbsp;&nbsp;</span><span class="comment">// value out of the provided string, returning &#34;&#34; if not found.</span>
+<span id="L2044" class="ln">  2044&nbsp;&nbsp;</span>func procInst(param, s string) string {
+<span id="L2045" class="ln">  2045&nbsp;&nbsp;</span>	<span class="comment">// TODO: this parsing is somewhat lame and not exact.</span>
+<span id="L2046" class="ln">  2046&nbsp;&nbsp;</span>	<span class="comment">// It works for all actual cases, though.</span>
+<span id="L2047" class="ln">  2047&nbsp;&nbsp;</span>	param = param + &#34;=&#34;
+<span id="L2048" class="ln">  2048&nbsp;&nbsp;</span>	_, v, _ := strings.Cut(s, param)
+<span id="L2049" class="ln">  2049&nbsp;&nbsp;</span>	if v == &#34;&#34; {
+<span id="L2050" class="ln">  2050&nbsp;&nbsp;</span>		return &#34;&#34;
+<span id="L2051" class="ln">  2051&nbsp;&nbsp;</span>	}
+<span id="L2052" class="ln">  2052&nbsp;&nbsp;</span>	if v[0] != &#39;\&#39;&#39; &amp;&amp; v[0] != &#39;&#34;&#39; {
+<span id="L2053" class="ln">  2053&nbsp;&nbsp;</span>		return &#34;&#34;
+<span id="L2054" class="ln">  2054&nbsp;&nbsp;</span>	}
+<span id="L2055" class="ln">  2055&nbsp;&nbsp;</span>	unquote, _, ok := strings.Cut(v[1:], v[:1])
+<span id="L2056" class="ln">  2056&nbsp;&nbsp;</span>	if !ok {
+<span id="L2057" class="ln">  2057&nbsp;&nbsp;</span>		return &#34;&#34;
+<span id="L2058" class="ln">  2058&nbsp;&nbsp;</span>	}
+<span id="L2059" class="ln">  2059&nbsp;&nbsp;</span>	return unquote
+<span id="L2060" class="ln">  2060&nbsp;&nbsp;</span>}
+<span id="L2061" class="ln">  2061&nbsp;&nbsp;</span>
+</pre><p><a href="xml.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

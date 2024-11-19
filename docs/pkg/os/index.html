@@ -1,0 +1,3522 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>os - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package os
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "os"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+				<dd><a href="index.html#pkg-examples" class="examplesLink">Examples</a></dd>
+			
+			
+				<dd><a href="index.html#pkg-subdirectories">Subdirectories</a></dd>
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>Package os provides a platform-independent interface to operating system
+functionality. The design is Unix-like, although the error handling is
+Go-like; failing calls return values of type error rather than error numbers.
+Often, more information is available within the error. For example,
+if a call that takes a file name fails, such as Open or Stat, the error
+will include the failing file name when printed and will be of type
+*PathError, which may be unpacked for more information.
+<p>The os interface is intended to be uniform across all operating systems.
+Features not generally available appear in the system-specific package syscall.
+<p>Here is a simple example, opening a file and reading some of it.
+<pre>file, err := os.Open(&quot;file.go&quot;) // For read access.
+if err != nil {
+	log.Fatal(err)
+}
+</pre>
+<p>If the open fails, the error string will be self-explanatory, like
+<pre>open file.go: no such file or directory
+</pre>
+<p>The file&apos;s data can then be read into a slice of bytes. Read and
+Write take their byte counts from the length of the argument slice.
+<pre>data := make([]byte, 100)
+count, err := file.Read(data)
+if err != nil {
+	log.Fatal(err)
+}
+fmt.Printf(&quot;read %d bytes: %q\n&quot;, count, data[:count])
+</pre>
+<p>Note: The maximum number of concurrent operations on a File may be limited by
+the OS or the system. The number should be high, but exceeding it may degrade
+performance or cause other issues.
+
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+				<dd><a href="index.html#pkg-constants">Constants</a></dd>
+			
+			
+				<dd><a href="index.html#pkg-variables">Variables</a></dd>
+			
+			
+				
+				<dd><a href="index.html#Chdir">func Chdir(dir string) error</a></dd>
+			
+				
+				<dd><a href="index.html#Chmod">func Chmod(name string, mode FileMode) error</a></dd>
+			
+				
+				<dd><a href="index.html#Chown">func Chown(name string, uid, gid int) error</a></dd>
+			
+				
+				<dd><a href="index.html#Chtimes">func Chtimes(name string, atime time.Time, mtime time.Time) error</a></dd>
+			
+				
+				<dd><a href="index.html#Clearenv">func Clearenv()</a></dd>
+			
+				
+				<dd><a href="index.html#DirFS">func DirFS(dir string) fs.FS</a></dd>
+			
+				
+				<dd><a href="index.html#Environ">func Environ() []string</a></dd>
+			
+				
+				<dd><a href="index.html#Executable">func Executable() (string, error)</a></dd>
+			
+				
+				<dd><a href="index.html#Exit">func Exit(code int)</a></dd>
+			
+				
+				<dd><a href="index.html#Expand">func Expand(s string, mapping func(string) string) string</a></dd>
+			
+				
+				<dd><a href="index.html#ExpandEnv">func ExpandEnv(s string) string</a></dd>
+			
+				
+				<dd><a href="index.html#Getegid">func Getegid() int</a></dd>
+			
+				
+				<dd><a href="index.html#Getenv">func Getenv(key string) string</a></dd>
+			
+				
+				<dd><a href="index.html#Geteuid">func Geteuid() int</a></dd>
+			
+				
+				<dd><a href="index.html#Getgid">func Getgid() int</a></dd>
+			
+				
+				<dd><a href="index.html#Getgroups">func Getgroups() ([]int, error)</a></dd>
+			
+				
+				<dd><a href="index.html#Getpagesize">func Getpagesize() int</a></dd>
+			
+				
+				<dd><a href="index.html#Getpid">func Getpid() int</a></dd>
+			
+				
+				<dd><a href="index.html#Getppid">func Getppid() int</a></dd>
+			
+				
+				<dd><a href="index.html#Getuid">func Getuid() int</a></dd>
+			
+				
+				<dd><a href="index.html#Getwd">func Getwd() (dir string, err error)</a></dd>
+			
+				
+				<dd><a href="index.html#Hostname">func Hostname() (name string, err error)</a></dd>
+			
+				
+				<dd><a href="index.html#IsExist">func IsExist(err error) bool</a></dd>
+			
+				
+				<dd><a href="index.html#IsNotExist">func IsNotExist(err error) bool</a></dd>
+			
+				
+				<dd><a href="index.html#IsPathSeparator">func IsPathSeparator(c uint8) bool</a></dd>
+			
+				
+				<dd><a href="index.html#IsPermission">func IsPermission(err error) bool</a></dd>
+			
+				
+				<dd><a href="index.html#IsTimeout">func IsTimeout(err error) bool</a></dd>
+			
+				
+				<dd><a href="index.html#Lchown">func Lchown(name string, uid, gid int) error</a></dd>
+			
+				
+				<dd><a href="index.html#Link">func Link(oldname, newname string) error</a></dd>
+			
+				
+				<dd><a href="index.html#LookupEnv">func LookupEnv(key string) (string, bool)</a></dd>
+			
+				
+				<dd><a href="index.html#Mkdir">func Mkdir(name string, perm FileMode) error</a></dd>
+			
+				
+				<dd><a href="index.html#MkdirAll">func MkdirAll(path string, perm FileMode) error</a></dd>
+			
+				
+				<dd><a href="index.html#MkdirTemp">func MkdirTemp(dir, pattern string) (string, error)</a></dd>
+			
+				
+				<dd><a href="index.html#NewSyscallError">func NewSyscallError(syscall string, err error) error</a></dd>
+			
+				
+				<dd><a href="index.html#Pipe">func Pipe() (r *File, w *File, err error)</a></dd>
+			
+				
+				<dd><a href="index.html#ReadFile">func ReadFile(name string) ([]byte, error)</a></dd>
+			
+				
+				<dd><a href="index.html#Readlink">func Readlink(name string) (string, error)</a></dd>
+			
+				
+				<dd><a href="index.html#Remove">func Remove(name string) error</a></dd>
+			
+				
+				<dd><a href="index.html#RemoveAll">func RemoveAll(path string) error</a></dd>
+			
+				
+				<dd><a href="index.html#Rename">func Rename(oldpath, newpath string) error</a></dd>
+			
+				
+				<dd><a href="index.html#SameFile">func SameFile(fi1, fi2 FileInfo) bool</a></dd>
+			
+				
+				<dd><a href="index.html#Setenv">func Setenv(key, value string) error</a></dd>
+			
+				
+				<dd><a href="index.html#Symlink">func Symlink(oldname, newname string) error</a></dd>
+			
+				
+				<dd><a href="index.html#TempDir">func TempDir() string</a></dd>
+			
+				
+				<dd><a href="index.html#Truncate">func Truncate(name string, size int64) error</a></dd>
+			
+				
+				<dd><a href="index.html#Unsetenv">func Unsetenv(key string) error</a></dd>
+			
+				
+				<dd><a href="index.html#UserCacheDir">func UserCacheDir() (string, error)</a></dd>
+			
+				
+				<dd><a href="index.html#UserConfigDir">func UserConfigDir() (string, error)</a></dd>
+			
+				
+				<dd><a href="index.html#UserHomeDir">func UserHomeDir() (string, error)</a></dd>
+			
+				
+				<dd><a href="index.html#WriteFile">func WriteFile(name string, data []byte, perm FileMode) error</a></dd>
+			
+			
+				
+				<dd><a href="index.html#DirEntry">type DirEntry</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ReadDir">func ReadDir(name string) ([]DirEntry, error)</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#File">type File</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Create">func Create(name string) (*File, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#CreateTemp">func CreateTemp(dir, pattern string) (*File, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#NewFile">func NewFile(fd uintptr, name string) *File</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Open">func Open(name string) (*File, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#OpenFile">func OpenFile(name string, flag int, perm FileMode) (*File, error)</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#File.Chdir">func (f *File) Chdir() error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#File.Chmod">func (f *File) Chmod(mode FileMode) error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#File.Chown">func (f *File) Chown(uid, gid int) error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#File.Close">func (f *File) Close() error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#File.Fd">func (f *File) Fd() uintptr</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#File.Name">func (f *File) Name() string</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#File.Read">func (f *File) Read(b []byte) (n int, err error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#File.ReadAt">func (f *File) ReadAt(b []byte, off int64) (n int, err error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#File.ReadDir">func (f *File) ReadDir(n int) ([]DirEntry, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#File.ReadFrom">func (f *File) ReadFrom(r io.Reader) (n int64, err error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#File.Readdir">func (f *File) Readdir(n int) ([]FileInfo, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#File.Readdirnames">func (f *File) Readdirnames(n int) (names []string, err error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#File.Seek">func (f *File) Seek(offset int64, whence int) (ret int64, err error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#File.SetDeadline">func (f *File) SetDeadline(t time.Time) error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#File.SetReadDeadline">func (f *File) SetReadDeadline(t time.Time) error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#File.SetWriteDeadline">func (f *File) SetWriteDeadline(t time.Time) error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#File.Stat">func (f *File) Stat() (FileInfo, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#File.Sync">func (f *File) Sync() error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#File.SyscallConn">func (f *File) SyscallConn() (syscall.RawConn, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#File.Truncate">func (f *File) Truncate(size int64) error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#File.Write">func (f *File) Write(b []byte) (n int, err error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#File.WriteAt">func (f *File) WriteAt(b []byte, off int64) (n int, err error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#File.WriteString">func (f *File) WriteString(s string) (n int, err error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#File.WriteTo">func (f *File) WriteTo(w io.Writer) (n int64, err error)</a></dd>
+				
+			
+				
+				<dd><a href="index.html#FileInfo">type FileInfo</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Lstat">func Lstat(name string) (FileInfo, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Stat">func Stat(name string) (FileInfo, error)</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#FileMode">type FileMode</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#LinkError">type LinkError</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#LinkError.Error">func (e *LinkError) Error() string</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#LinkError.Unwrap">func (e *LinkError) Unwrap() error</a></dd>
+				
+			
+				
+				<dd><a href="index.html#PathError">type PathError</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#ProcAttr">type ProcAttr</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#Process">type Process</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#FindProcess">func FindProcess(pid int) (*Process, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#StartProcess">func StartProcess(name string, argv []string, attr *ProcAttr) (*Process, error)</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Process.Kill">func (p *Process) Kill() error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Process.Release">func (p *Process) Release() error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Process.Signal">func (p *Process) Signal(sig Signal) error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Process.Wait">func (p *Process) Wait() (*ProcessState, error)</a></dd>
+				
+			
+				
+				<dd><a href="index.html#ProcessState">type ProcessState</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ProcessState.ExitCode">func (p *ProcessState) ExitCode() int</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ProcessState.Exited">func (p *ProcessState) Exited() bool</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ProcessState.Pid">func (p *ProcessState) Pid() int</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ProcessState.String">func (p *ProcessState) String() string</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ProcessState.Success">func (p *ProcessState) Success() bool</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ProcessState.Sys">func (p *ProcessState) Sys() any</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ProcessState.SysUsage">func (p *ProcessState) SysUsage() any</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ProcessState.SystemTime">func (p *ProcessState) SystemTime() time.Duration</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#ProcessState.UserTime">func (p *ProcessState) UserTime() time.Duration</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Signal">type Signal</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#SyscallError">type SyscallError</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#SyscallError.Error">func (e *SyscallError) Error() string</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#SyscallError.Timeout">func (e *SyscallError) Timeout() bool</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#SyscallError.Unwrap">func (e *SyscallError) Unwrap() error</a></dd>
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+		<div id="pkg-examples">
+			<h3>Examples</h3>
+			<div class="js-expandAll expandAll collapsed">(Expand All)</div>
+			<dl>
+			
+			<dd><a class="exampleLink" href="index.html#example_Chmod">Chmod</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Chtimes">Chtimes</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_CreateTemp">CreateTemp</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_CreateTemp_suffix">CreateTemp (Suffix)</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_ErrNotExist">ErrNotExist</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Expand">Expand</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_ExpandEnv">ExpandEnv</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_FileMode">FileMode</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Getenv">Getenv</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_LookupEnv">LookupEnv</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Mkdir">Mkdir</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_MkdirAll">MkdirAll</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_MkdirTemp">MkdirTemp</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_MkdirTemp_suffix">MkdirTemp (Suffix)</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_OpenFile">OpenFile</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_OpenFile_append">OpenFile (Append)</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_ReadDir">ReadDir</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_ReadFile">ReadFile</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Readlink">Readlink</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Unsetenv">Unsetenv</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_UserCacheDir">UserCacheDir</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_UserConfigDir">UserConfigDir</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_WriteFile">WriteFile</a></dd>
+			
+			</dl>
+		</div>
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../src/os/dir.go">dir.go</a>
+			
+				<a href="../../src/os/dir_unix.go">dir_unix.go</a>
+			
+				<a href="../../src/os/dirent_linux.go">dirent_linux.go</a>
+			
+				<a href="../../src/os/endian_little.go">endian_little.go</a>
+			
+				<a href="../../src/os/env.go">env.go</a>
+			
+				<a href="../../src/os/error.go">error.go</a>
+			
+				<a href="../../src/os/error_errno.go">error_errno.go</a>
+			
+				<a href="../../src/os/error_posix.go">error_posix.go</a>
+			
+				<a href="../../src/os/exec.go">exec.go</a>
+			
+				<a href="../../src/os/exec_posix.go">exec_posix.go</a>
+			
+				<a href="../../src/os/exec_unix.go">exec_unix.go</a>
+			
+				<a href="../../src/os/executable.go">executable.go</a>
+			
+				<a href="../../src/os/executable_procfs.go">executable_procfs.go</a>
+			
+				<a href="../../src/os/file.go">file.go</a>
+			
+				<a href="../../src/os/file_open_unix.go">file_open_unix.go</a>
+			
+				<a href="../../src/os/file_posix.go">file_posix.go</a>
+			
+				<a href="../../src/os/file_unix.go">file_unix.go</a>
+			
+				<a href="../../src/os/getwd.go">getwd.go</a>
+			
+				<a href="../../src/os/path.go">path.go</a>
+			
+				<a href="../../src/os/path_unix.go">path_unix.go</a>
+			
+				<a href="../../src/os/pipe2_unix.go">pipe2_unix.go</a>
+			
+				<a href="../../src/os/proc.go">proc.go</a>
+			
+				<a href="../../src/os/rawconn.go">rawconn.go</a>
+			
+				<a href="../../src/os/removeall_at.go">removeall_at.go</a>
+			
+				<a href="../../src/os/stat.go">stat.go</a>
+			
+				<a href="../../src/os/stat_linux.go">stat_linux.go</a>
+			
+				<a href="../../src/os/stat_unix.go">stat_unix.go</a>
+			
+				<a href="../../src/os/sticky_notbsd.go">sticky_notbsd.go</a>
+			
+				<a href="../../src/os/sys.go">sys.go</a>
+			
+				<a href="../../src/os/sys_linux.go">sys_linux.go</a>
+			
+				<a href="../../src/os/sys_unix.go">sys_unix.go</a>
+			
+				<a href="../../src/os/tempfile.go">tempfile.go</a>
+			
+				<a href="../../src/os/types.go">types.go</a>
+			
+				<a href="../../src/os/types_unix.go">types_unix.go</a>
+			
+				<a href="../../src/os/wait_waitid.go">wait_waitid.go</a>
+			
+				<a href="../../src/os/zero_copy_linux.go">zero_copy_linux.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+			<h2 id="pkg-constants">Constants</h2>
+			
+				<p>Flags to OpenFile wrapping those of the underlying system. Not all
+flags may be implemented on a given system.
+
+				<pre>const (
+    <span class="comment">// Exactly one of O_RDONLY, O_WRONLY, or O_RDWR must be specified.</span>
+    <span id="O_RDONLY">O_RDONLY</span> <a href="../builtin/index.html#int">int</a> = <a href="../syscall/index.html">syscall</a>.<a href="../syscall/index.html#O_RDONLY">O_RDONLY</a> <span class="comment">// open the file read-only.</span>
+    <span id="O_WRONLY">O_WRONLY</span> <a href="../builtin/index.html#int">int</a> = <a href="../syscall/index.html">syscall</a>.<a href="../syscall/index.html#O_WRONLY">O_WRONLY</a> <span class="comment">// open the file write-only.</span>
+    <span id="O_RDWR">O_RDWR</span>   <a href="../builtin/index.html#int">int</a> = <a href="../syscall/index.html">syscall</a>.<a href="../syscall/index.html#O_RDWR">O_RDWR</a>   <span class="comment">// open the file read-write.</span>
+    <span class="comment">// The remaining values may be or&#39;ed in to control behavior.</span>
+    <span id="O_APPEND">O_APPEND</span> <a href="../builtin/index.html#int">int</a> = <a href="../syscall/index.html">syscall</a>.<a href="../syscall/index.html#O_APPEND">O_APPEND</a> <span class="comment">// append data to the file when writing.</span>
+    <span id="O_CREATE">O_CREATE</span> <a href="../builtin/index.html#int">int</a> = <a href="../syscall/index.html">syscall</a>.<a href="../syscall/index.html#O_CREAT">O_CREAT</a>  <span class="comment">// create a new file if none exists.</span>
+    <span id="O_EXCL">O_EXCL</span>   <a href="../builtin/index.html#int">int</a> = <a href="../syscall/index.html">syscall</a>.<a href="../syscall/index.html#O_EXCL">O_EXCL</a>   <span class="comment">// used with O_CREATE, file must not exist.</span>
+    <span id="O_SYNC">O_SYNC</span>   <a href="../builtin/index.html#int">int</a> = <a href="../syscall/index.html">syscall</a>.<a href="../syscall/index.html#O_SYNC">O_SYNC</a>   <span class="comment">// open for synchronous I/O.</span>
+    <span id="O_TRUNC">O_TRUNC</span>  <a href="../builtin/index.html#int">int</a> = <a href="../syscall/index.html">syscall</a>.<a href="../syscall/index.html#O_TRUNC">O_TRUNC</a>  <span class="comment">// truncate regular writable file when opened.</span>
+)</pre>
+			
+				<p>Seek whence values.
+<p>Deprecated: Use io.SeekStart, io.SeekCurrent, and io.SeekEnd.
+
+				<pre>const (
+    <span id="SEEK_SET">SEEK_SET</span> <a href="../builtin/index.html#int">int</a> = 0 <span class="comment">// seek relative to the origin of the file</span>
+    <span id="SEEK_CUR">SEEK_CUR</span> <a href="../builtin/index.html#int">int</a> = 1 <span class="comment">// seek relative to the current offset</span>
+    <span id="SEEK_END">SEEK_END</span> <a href="../builtin/index.html#int">int</a> = 2 <span class="comment">// seek relative to the end</span>
+)</pre>
+			
+				
+				<pre>const (
+    <span id="PathSeparator">PathSeparator</span>     = &#39;/&#39; <span class="comment">// OS-specific path separator</span>
+    <span id="PathListSeparator">PathListSeparator</span> = &#39;:&#39; <span class="comment">// OS-specific path list separator</span>
+)</pre>
+			
+				<p>The defined file mode bits are the most significant bits of the FileMode.
+The nine least-significant bits are the standard Unix rwxrwxrwx permissions.
+The values of these bits should be considered part of the public API and
+may be used in wire protocols or disk representations: they must not be
+changed, although new bits might be added.
+
+				<pre>const (
+    <span class="comment">// The single letters are the abbreviations</span>
+    <span class="comment">// used by the String method&#39;s formatting.</span>
+    <span id="ModeDir">ModeDir</span>        = <a href="../io/fs/index.html">fs</a>.<a href="../io/fs/index.html#ModeDir">ModeDir</a>        <span class="comment">// d: is a directory</span>
+    <span id="ModeAppend">ModeAppend</span>     = <a href="../io/fs/index.html">fs</a>.<a href="../io/fs/index.html#ModeAppend">ModeAppend</a>     <span class="comment">// a: append-only</span>
+    <span id="ModeExclusive">ModeExclusive</span>  = <a href="../io/fs/index.html">fs</a>.<a href="../io/fs/index.html#ModeExclusive">ModeExclusive</a>  <span class="comment">// l: exclusive use</span>
+    <span id="ModeTemporary">ModeTemporary</span>  = <a href="../io/fs/index.html">fs</a>.<a href="../io/fs/index.html#ModeTemporary">ModeTemporary</a>  <span class="comment">// T: temporary file; Plan 9 only</span>
+    <span id="ModeSymlink">ModeSymlink</span>    = <a href="../io/fs/index.html">fs</a>.<a href="../io/fs/index.html#ModeSymlink">ModeSymlink</a>    <span class="comment">// L: symbolic link</span>
+    <span id="ModeDevice">ModeDevice</span>     = <a href="../io/fs/index.html">fs</a>.<a href="../io/fs/index.html#ModeDevice">ModeDevice</a>     <span class="comment">// D: device file</span>
+    <span id="ModeNamedPipe">ModeNamedPipe</span>  = <a href="../io/fs/index.html">fs</a>.<a href="../io/fs/index.html#ModeNamedPipe">ModeNamedPipe</a>  <span class="comment">// p: named pipe (FIFO)</span>
+    <span id="ModeSocket">ModeSocket</span>     = <a href="../io/fs/index.html">fs</a>.<a href="../io/fs/index.html#ModeSocket">ModeSocket</a>     <span class="comment">// S: Unix domain socket</span>
+    <span id="ModeSetuid">ModeSetuid</span>     = <a href="../io/fs/index.html">fs</a>.<a href="../io/fs/index.html#ModeSetuid">ModeSetuid</a>     <span class="comment">// u: setuid</span>
+    <span id="ModeSetgid">ModeSetgid</span>     = <a href="../io/fs/index.html">fs</a>.<a href="../io/fs/index.html#ModeSetgid">ModeSetgid</a>     <span class="comment">// g: setgid</span>
+    <span id="ModeCharDevice">ModeCharDevice</span> = <a href="../io/fs/index.html">fs</a>.<a href="../io/fs/index.html#ModeCharDevice">ModeCharDevice</a> <span class="comment">// c: Unix character device, when ModeDevice is set</span>
+    <span id="ModeSticky">ModeSticky</span>     = <a href="../io/fs/index.html">fs</a>.<a href="../io/fs/index.html#ModeSticky">ModeSticky</a>     <span class="comment">// t: sticky</span>
+    <span id="ModeIrregular">ModeIrregular</span>  = <a href="../io/fs/index.html">fs</a>.<a href="../io/fs/index.html#ModeIrregular">ModeIrregular</a>  <span class="comment">// ?: non-regular file; nothing else is known about this file</span>
+
+    <span class="comment">// Mask for the type bits. For regular files, none will be set.</span>
+    <span id="ModeType">ModeType</span> = <a href="../io/fs/index.html">fs</a>.<a href="../io/fs/index.html#ModeType">ModeType</a>
+
+    <span id="ModePerm">ModePerm</span> = <a href="../io/fs/index.html">fs</a>.<a href="../io/fs/index.html#ModePerm">ModePerm</a> <span class="comment">// Unix permission bits, 0o777</span>
+)</pre>
+			
+				<p>DevNull is the name of the operating system&apos;s “null device.”
+On Unix-like systems, it is &quot;/dev/null&quot;; on Windows, &quot;NUL&quot;.
+
+				<pre>const <span id="DevNull">DevNull</span> = &#34;/dev/null&#34;</pre>
+			
+		
+		
+			<h2 id="pkg-variables">Variables</h2>
+			
+				<p>Portable analogs of some common system call errors.
+<p>Errors returned from this package may be tested against these errors
+with errors.Is.
+
+				<pre>var (
+    <span class="comment">// ErrInvalid indicates an invalid argument.</span>
+    <span class="comment">// Methods on File will return this error when the receiver is nil.</span>
+    <span id="ErrInvalid">ErrInvalid</span> = <a href="../io/fs/index.html">fs</a>.<a href="../io/fs/index.html#ErrInvalid">ErrInvalid</a> <span class="comment">// &#34;invalid argument&#34;</span>
+
+    <span id="ErrPermission">ErrPermission</span> = <a href="../io/fs/index.html">fs</a>.<a href="../io/fs/index.html#ErrPermission">ErrPermission</a> <span class="comment">// &#34;permission denied&#34;</span>
+    <span id="ErrExist">ErrExist</span>      = <a href="../io/fs/index.html">fs</a>.<a href="../io/fs/index.html#ErrExist">ErrExist</a>      <span class="comment">// &#34;file already exists&#34;</span>
+    <span id="ErrNotExist">ErrNotExist</span>   = <a href="../io/fs/index.html">fs</a>.<a href="../io/fs/index.html#ErrNotExist">ErrNotExist</a>   <span class="comment">// &#34;file does not exist&#34;</span>
+    <span id="ErrClosed">ErrClosed</span>     = <a href="../io/fs/index.html">fs</a>.<a href="../io/fs/index.html#ErrClosed">ErrClosed</a>     <span class="comment">// &#34;file already closed&#34;</span>
+
+    <span id="ErrNoDeadline">ErrNoDeadline</span>       = errNoDeadline()       <span class="comment">// &#34;file type does not support deadline&#34;</span>
+    <span id="ErrDeadlineExceeded">ErrDeadlineExceeded</span> = errDeadlineExceeded() <span class="comment">// &#34;i/o timeout&#34;</span>
+)</pre>
+			
+				<p>Stdin, Stdout, and Stderr are open Files pointing to the standard input,
+standard output, and standard error file descriptors.
+<p>Note that the Go runtime writes to standard error for panics and crashes;
+closing Stderr may cause those messages to go elsewhere, perhaps
+to a file opened later.
+
+				<pre>var (
+    <span id="Stdin">Stdin</span>  = <a href="index.html#NewFile">NewFile</a>(<a href="../builtin/index.html#uintptr">uintptr</a>(<a href="../syscall/index.html">syscall</a>.<a href="../syscall/index.html#Stdin">Stdin</a>), &#34;/dev/stdin&#34;)
+    <span id="Stdout">Stdout</span> = <a href="index.html#NewFile">NewFile</a>(<a href="../builtin/index.html#uintptr">uintptr</a>(<a href="../syscall/index.html">syscall</a>.<a href="../syscall/index.html#Stdout">Stdout</a>), &#34;/dev/stdout&#34;)
+    <span id="Stderr">Stderr</span> = <a href="index.html#NewFile">NewFile</a>(<a href="../builtin/index.html#uintptr">uintptr</a>(<a href="../syscall/index.html">syscall</a>.<a href="../syscall/index.html#Stderr">Stderr</a>), &#34;/dev/stderr&#34;)
+)</pre>
+			
+				<p>Args hold the command-line arguments, starting with the program name.
+
+				<pre>var <span id="Args">Args</span> []<a href="../builtin/index.html#string">string</a></pre>
+			
+				<p>ErrProcessDone indicates a Process has finished.
+
+				<pre>var <span id="ErrProcessDone">ErrProcessDone</span> = <a href="../errors/index.html">errors</a>.<a href="../errors/index.html#New">New</a>(&#34;os: process already finished&#34;)</pre>
+			
+		
+		
+			
+			
+			<h2 id="Chdir">func <a href="../../src/os/file.go?s=9728:9756#L325">Chdir</a>
+				<a class="permalink" href="index.html#Chdir">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Chdir(dir <a href="../builtin/index.html#string">string</a>) <a href="../builtin/index.html#error">error</a></pre>
+			<p>Chdir changes the current working directory to the named directory.
+If there is an error, it will be of type *PathError.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Chmod">func <a href="../../src/os/file.go?s=17944:17988#L584">Chmod</a>
+				<a class="permalink" href="index.html#Chmod">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Chmod(name <a href="../builtin/index.html#string">string</a>, mode <a href="index.html#FileMode">FileMode</a>) <a href="../builtin/index.html#error">error</a></pre>
+			<p>Chmod changes the mode of the named file to mode.
+If the file is a symbolic link, it changes the mode of the link&apos;s target.
+If there is an error, it will be of type *PathError.
+<p>A different subset of the mode bits are used, depending on the
+operating system.
+<p>On Unix, the mode&apos;s permission bits, ModeSetuid, ModeSetgid, and
+ModeSticky are used.
+<p>On Windows, only the 0200 bit (owner writable) of mode is used; it
+controls whether the file&apos;s read-only attribute is set or cleared.
+The other bits are currently unused. For compatibility with Go 1.12
+and earlier, use a non-zero mode. Use mode 0400 for a read-only
+file and 0600 for a readable+writable file.
+<p>On Plan 9, the mode&apos;s permission bits, ModeAppend, ModeExclusive,
+and ModeTemporary are used.
+
+			<div id="example_Chmod" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">
+if err := os.Chmod(&#34;some-filename&#34;, 0644); err != nil {
+    log.Fatal(err)
+}
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Chown">func <a href="../../src/os/file_posix.go?s=2914:2957#L95">Chown</a>
+				<a class="permalink" href="index.html#Chown">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Chown(name <a href="../builtin/index.html#string">string</a>, uid, gid <a href="../builtin/index.html#int">int</a>) <a href="../builtin/index.html#error">error</a></pre>
+			<p>Chown changes the numeric uid and gid of the named file.
+If the file is a symbolic link, it changes the uid and gid of the link&apos;s target.
+A uid or gid of -1 means to not change that value.
+If there is an error, it will be of type *PathError.
+<p>On Windows or Plan 9, Chown always returns the syscall.EWINDOWS or
+EPLAN9 error, wrapped in *PathError.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Chtimes">func <a href="../../src/os/file_posix.go?s=5074:5139#L169">Chtimes</a>
+				<a class="permalink" href="index.html#Chtimes">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Chtimes(name <a href="../builtin/index.html#string">string</a>, atime <a href="../time/index.html">time</a>.<a href="../time/index.html#Time">Time</a>, mtime <a href="../time/index.html">time</a>.<a href="../time/index.html#Time">Time</a>) <a href="../builtin/index.html#error">error</a></pre>
+			<p>Chtimes changes the access and modification times of the named
+file, similar to the Unix utime() or utimes() functions.
+A zero time.Time value will leave the corresponding file time unchanged.
+<p>The underlying filesystem may truncate or round the values to a
+less precise time unit.
+If there is an error, it will be of type *PathError.
+
+			<div id="example_Chtimes" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">
+mtime := time.Date(2006, time.February, 1, 3, 4, 5, 0, time.UTC)
+atime := time.Date(2007, time.March, 2, 4, 5, 6, 0, time.UTC)
+if err := os.Chtimes(&#34;some-filename&#34;, atime, mtime); err != nil {
+    log.Fatal(err)
+}
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Clearenv">func <a href="../../src/os/env.go?s=3748:3763#L123">Clearenv</a>
+				<a class="permalink" href="index.html#Clearenv">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Clearenv()</pre>
+			<p>Clearenv deletes all environment variables.
+
+			
+			
+
+		
+			
+			
+			<h2 id="DirFS">func <a href="../../src/os/file.go?s=21365:21393#L660">DirFS</a>
+				<a class="permalink" href="index.html#DirFS">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func DirFS(dir <a href="../builtin/index.html#string">string</a>) <a href="../io/fs/index.html">fs</a>.<a href="../io/fs/index.html#FS">FS</a></pre>
+			<p>DirFS returns a file system (an fs.FS) for the tree of files rooted at the directory dir.
+<p>Note that DirFS(&quot;/prefix&quot;) only guarantees that the Open calls it makes to the
+operating system will begin with &quot;/prefix&quot;: DirFS(&quot;/prefix&quot;).Open(&quot;file&quot;) is the
+same as os.Open(&quot;/prefix/file&quot;). So if /prefix/file is a symbolic link pointing outside
+the /prefix tree, then using DirFS does not stop the access any more than using
+os.Open does. Additionally, the root of the fs.FS returned for a relative path,
+DirFS(&quot;prefix&quot;), will be affected by later calls to Chdir. DirFS is therefore not
+a general substitute for a chroot-style security mechanism when the directory tree
+contains arbitrary content.
+<p>The directory dir must not be &quot;&quot;.
+<p>The result implements <a href="http://localhost:8080/io/fs#StatFS">io/fs.StatFS</a>, <a href="http://localhost:8080/io/fs#ReadFileFS">io/fs.ReadFileFS</a> and
+<a href="http://localhost:8080/io/fs#ReadDirFS">io/fs.ReadDirFS</a>.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Environ">func <a href="../../src/os/env.go?s=3884:3907#L129">Environ</a>
+				<a class="permalink" href="index.html#Environ">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Environ() []<a href="../builtin/index.html#string">string</a></pre>
+			<p>Environ returns a copy of strings representing the environment,
+in the form &quot;key=value&quot;.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Executable">func <a href="../../src/os/executable.go?s=715:748#L8">Executable</a>
+				<a class="permalink" href="index.html#Executable">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Executable() (<a href="../builtin/index.html#string">string</a>, <a href="../builtin/index.html#error">error</a>)</pre>
+			<p>Executable returns the path name for the executable that started
+the current process. There is no guarantee that the path is still
+pointing to the correct executable. If a symlink was used to start
+the process, depending on the operating system, the result might
+be the symlink or the path it pointed to. If a stable result is
+needed, path/filepath.EvalSymlinks might help.
+<p>Executable returns an absolute path unless an error occurred.
+<p>The main use case is finding resources located relative to an
+executable.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Exit">func <a href="../../src/os/proc.go?s=1651:1670#L52">Exit</a>
+				<a class="permalink" href="index.html#Exit">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Exit(code <a href="../builtin/index.html#int">int</a>)</pre>
+			<p>Exit causes the current program to exit with the given status code.
+Conventionally, code zero indicates success, non-zero an error.
+The program terminates immediately; deferred functions are not run.
+<p>For portability, the status code should be in the range [0, 125].
+
+			
+			
+
+		
+			
+			
+			<h2 id="Expand">func <a href="../../src/os/env.go?s=403:460#L6">Expand</a>
+				<a class="permalink" href="index.html#Expand">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Expand(s <a href="../builtin/index.html#string">string</a>, mapping func(<a href="../builtin/index.html#string">string</a>) <a href="../builtin/index.html#string">string</a>) <a href="../builtin/index.html#string">string</a></pre>
+			<p>Expand replaces ${var} or $var in the string based on the mapping function.
+For example, os.ExpandEnv(s) is equivalent to os.Expand(s, os.Getenv).
+
+			<div id="example_Expand" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">mapper := func(placeholderName string) string {
+    switch placeholderName {
+    case &#34;DAY_PART&#34;:
+        return &#34;morning&#34;
+    case &#34;NAME&#34;:
+        return &#34;Gopher&#34;
+    }
+
+    return &#34;&#34;
+}
+
+fmt.Println(os.Expand(&#34;Good ${DAY_PART}, $NAME!&#34;, mapper))
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">Good morning, Gopher!
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="ExpandEnv">func <a href="../../src/os/env.go?s=1321:1352#L40">ExpandEnv</a>
+				<a class="permalink" href="index.html#ExpandEnv">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func ExpandEnv(s <a href="../builtin/index.html#string">string</a>) <a href="../builtin/index.html#string">string</a></pre>
+			<p>ExpandEnv replaces ${var} or $var in the string according to the values
+of the current environment variables. References to undefined
+variables are replaced by the empty string.
+
+			<div id="example_ExpandEnv" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">os.Setenv(&#34;NAME&#34;, &#34;gopher&#34;)
+os.Setenv(&#34;BURROW&#34;, &#34;/usr/gopher&#34;)
+
+fmt.Println(os.ExpandEnv(&#34;$NAME lives in ${BURROW}.&#34;))
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">gopher lives in /usr/gopher.
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Getegid">func <a href="../../src/os/proc.go?s=1019:1037#L36">Getegid</a>
+				<a class="permalink" href="index.html#Getegid">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Getegid() <a href="../builtin/index.html#int">int</a></pre>
+			<p>Getegid returns the numeric effective group id of the caller.
+<p>On Windows, it returns -1.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Getenv">func <a href="../../src/os/env.go?s=2861:2891#L91">Getenv</a>
+				<a class="permalink" href="index.html#Getenv">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Getenv(key <a href="../builtin/index.html#string">string</a>) <a href="../builtin/index.html#string">string</a></pre>
+			<p>Getenv retrieves the value of the environment variable named by the key.
+It returns the value, which will be empty if the variable is not present.
+To distinguish between an empty value and an unset value, use LookupEnv.
+
+			<div id="example_Getenv" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">os.Setenv(&#34;NAME&#34;, &#34;gopher&#34;)
+os.Setenv(&#34;BURROW&#34;, &#34;/usr/gopher&#34;)
+
+fmt.Printf(&#34;%s lives in %s.\n&#34;, os.Getenv(&#34;NAME&#34;), os.Getenv(&#34;BURROW&#34;))
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">gopher lives in /usr/gopher.
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Geteuid">func <a href="../../src/os/proc.go?s=738:756#L26">Geteuid</a>
+				<a class="permalink" href="index.html#Geteuid">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Geteuid() <a href="../builtin/index.html#int">int</a></pre>
+			<p>Geteuid returns the numeric effective user id of the caller.
+<p>On Windows, it returns -1.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Getgid">func <a href="../../src/os/proc.go?s=874:891#L31">Getgid</a>
+				<a class="permalink" href="index.html#Getgid">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Getgid() <a href="../builtin/index.html#int">int</a></pre>
+			<p>Getgid returns the numeric group id of the caller.
+<p>On Windows, it returns -1.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Getgroups">func <a href="../../src/os/proc.go?s=1255:1286#L42">Getgroups</a>
+				<a class="permalink" href="index.html#Getgroups">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Getgroups() ([]<a href="../builtin/index.html#int">int</a>, <a href="../builtin/index.html#error">error</a>)</pre>
+			<p>Getgroups returns a list of the numeric ids of groups that the caller belongs to.
+<p>On Windows, it returns syscall.EWINDOWS. See the os/user package
+for a possible alternative.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Getpagesize">func <a href="../../src/os/types.go?s=269:291#L3">Getpagesize</a>
+				<a class="permalink" href="index.html#Getpagesize">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Getpagesize() <a href="../builtin/index.html#int">int</a></pre>
+			<p>Getpagesize returns the underlying system&apos;s memory page size.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Getpid">func <a href="../../src/os/exec.go?s=2427:2444#L68">Getpid</a>
+				<a class="permalink" href="index.html#Getpid">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Getpid() <a href="../builtin/index.html#int">int</a></pre>
+			<p>Getpid returns the process id of the caller.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Getppid">func <a href="../../src/os/exec.go?s=2532:2550#L71">Getppid</a>
+				<a class="permalink" href="index.html#Getppid">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Getppid() <a href="../builtin/index.html#int">int</a></pre>
+			<p>Getppid returns the process id of the caller&apos;s parent.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Getuid">func <a href="../../src/os/proc.go?s=594:611#L21">Getuid</a>
+				<a class="permalink" href="index.html#Getuid">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Getuid() <a href="../builtin/index.html#int">int</a></pre>
+			<p>Getuid returns the numeric user id of the caller.
+<p>On Windows, it returns -1.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Getwd">func <a href="../../src/os/getwd.go?s=468:504#L12">Getwd</a>
+				<a class="permalink" href="index.html#Getwd">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Getwd() (dir <a href="../builtin/index.html#string">string</a>, err <a href="../builtin/index.html#error">error</a>)</pre>
+			<p>Getwd returns a rooted path name corresponding to the
+current directory. If the current directory can be
+reached via multiple paths (due to symbolic links),
+Getwd may return any one of them.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Hostname">func <a href="../../src/os/sys.go?s=230:270#L1">Hostname</a>
+				<a class="permalink" href="index.html#Hostname">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Hostname() (name <a href="../builtin/index.html#string">string</a>, err <a href="../builtin/index.html#error">error</a>)</pre>
+			<p>Hostname returns the host name reported by the kernel.
+
+			
+			
+
+		
+			
+			
+			<h2 id="IsExist">func <a href="../../src/os/error.go?s=2731:2759#L70">IsExist</a>
+				<a class="permalink" href="index.html#IsExist">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func IsExist(err <a href="../builtin/index.html#error">error</a>) <a href="../builtin/index.html#bool">bool</a></pre>
+			<p>IsExist returns a boolean indicating whether the error is known to report
+that a file or directory already exists. It is satisfied by ErrExist as
+well as some syscall errors.
+<p>This function predates errors.Is. It only supports errors returned by
+the os package. New code should use errors.Is(err, fs.ErrExist).
+
+			
+			
+
+		
+			
+			
+			<h2 id="IsNotExist">func <a href="../../src/os/error.go?s=3143:3174#L80">IsNotExist</a>
+				<a class="permalink" href="index.html#IsNotExist">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func IsNotExist(err <a href="../builtin/index.html#error">error</a>) <a href="../builtin/index.html#bool">bool</a></pre>
+			<p>IsNotExist returns a boolean indicating whether the error is known to
+report that a file or directory does not exist. It is satisfied by
+ErrNotExist as well as some syscall errors.
+<p>This function predates errors.Is. It only supports errors returned by
+the os package. New code should use errors.Is(err, fs.ErrNotExist).
+
+			
+			
+
+		
+			
+			
+			<h2 id="IsPathSeparator">func <a href="../../src/os/path_unix.go?s=414:448#L5">IsPathSeparator</a>
+				<a class="permalink" href="index.html#IsPathSeparator">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func IsPathSeparator(c <a href="../builtin/index.html#uint8">uint8</a>) <a href="../builtin/index.html#bool">bool</a></pre>
+			<p>IsPathSeparator reports whether c is a directory separator character.
+
+			
+			
+
+		
+			
+			
+			<h2 id="IsPermission">func <a href="../../src/os/error.go?s=3553:3586#L90">IsPermission</a>
+				<a class="permalink" href="index.html#IsPermission">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func IsPermission(err <a href="../builtin/index.html#error">error</a>) <a href="../builtin/index.html#bool">bool</a></pre>
+			<p>IsPermission returns a boolean indicating whether the error is known to
+report that permission is denied. It is satisfied by ErrPermission as well
+as some syscall errors.
+<p>This function predates errors.Is. It only supports errors returned by
+the os package. New code should use errors.Is(err, fs.ErrPermission).
+
+			
+			
+
+		
+			
+			
+			<h2 id="IsTimeout">func <a href="../../src/os/error.go?s=4084:4114#L102">IsTimeout</a>
+				<a class="permalink" href="index.html#IsTimeout">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func IsTimeout(err <a href="../builtin/index.html#error">error</a>) <a href="../builtin/index.html#bool">bool</a></pre>
+			<p>IsTimeout returns a boolean indicating whether the error is known
+to report that a timeout occurred.
+<p>This function predates errors.Is, and the notion of whether an
+error indicates a timeout can be ambiguous. For example, the Unix
+error EWOULDBLOCK sometimes indicates a timeout and sometimes does not.
+New code should use errors.Is with a value appropriate to the call
+returning the error, such as os.ErrDeadlineExceeded.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Lchown">func <a href="../../src/os/file_posix.go?s=3413:3457#L111">Lchown</a>
+				<a class="permalink" href="index.html#Lchown">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Lchown(name <a href="../builtin/index.html#string">string</a>, uid, gid <a href="../builtin/index.html#int">int</a>) <a href="../builtin/index.html#error">error</a></pre>
+			<p>Lchown changes the numeric uid and gid of the named file.
+If the file is a symbolic link, it changes the uid and gid of the link itself.
+If there is an error, it will be of type *PathError.
+<p>On Windows, it always returns the syscall.EWINDOWS error, wrapped
+in *PathError.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Link">func <a href="../../src/os/file_unix.go?s=12383:12423#L395">Link</a>
+				<a class="permalink" href="index.html#Link">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Link(oldname, newname <a href="../builtin/index.html#string">string</a>) <a href="../builtin/index.html#error">error</a></pre>
+			<p>Link creates newname as a hard link to the oldname file.
+If there is an error, it will be of type *LinkError.
+
+			
+			
+
+		
+			
+			
+			<h2 id="LookupEnv">func <a href="../../src/os/env.go?s=3236:3277#L102">LookupEnv</a>
+				<a class="permalink" href="index.html#LookupEnv">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func LookupEnv(key <a href="../builtin/index.html#string">string</a>) (<a href="../builtin/index.html#string">string</a>, <a href="../builtin/index.html#bool">bool</a>)</pre>
+			<p>LookupEnv retrieves the value of the environment variable named
+by the key. If the variable is present in the environment the
+value (which may be empty) is returned and the boolean is true.
+Otherwise the returned value will be empty and the boolean will
+be false.
+
+			<div id="example_LookupEnv" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">show := func(key string) {
+    val, ok := os.LookupEnv(key)
+    if !ok {
+        fmt.Printf(&#34;%s not set\n&#34;, key)
+    } else {
+        fmt.Printf(&#34;%s=%s\n&#34;, key, val)
+    }
+}
+
+os.Setenv(&#34;SOME_KEY&#34;, &#34;value&#34;)
+os.Setenv(&#34;EMPTY_KEY&#34;, &#34;&#34;)
+
+show(&#34;SOME_KEY&#34;)
+show(&#34;EMPTY_KEY&#34;)
+show(&#34;MISSING_KEY&#34;)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">SOME_KEY=value
+EMPTY_KEY=
+MISSING_KEY not set
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Mkdir">func <a href="../../src/os/file.go?s=8923:8967#L291">Mkdir</a>
+				<a class="permalink" href="index.html#Mkdir">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Mkdir(name <a href="../builtin/index.html#string">string</a>, perm <a href="index.html#FileMode">FileMode</a>) <a href="../builtin/index.html#error">error</a></pre>
+			<p>Mkdir creates a new directory with the specified name and permission
+bits (before umask).
+If there is an error, it will be of type *PathError.
+
+			<div id="example_Mkdir" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">
+err := os.Mkdir(&#34;testdir&#34;, 0750)
+if err != nil &amp;&amp; !os.IsExist(err) {
+    log.Fatal(err)
+}
+err = os.WriteFile(&#34;testdir/testfile.txt&#34;, []byte(&#34;Hello, Gophers!&#34;), 0660)
+if err != nil {
+    log.Fatal(err)
+}
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="MkdirAll">func <a href="../../src/os/path.go?s=497:544#L8">MkdirAll</a>
+				<a class="permalink" href="index.html#MkdirAll">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func MkdirAll(path <a href="../builtin/index.html#string">string</a>, perm <a href="index.html#FileMode">FileMode</a>) <a href="../builtin/index.html#error">error</a></pre>
+			<p>MkdirAll creates a directory named path,
+along with any necessary parents, and returns nil,
+or else returns an error.
+The permission bits perm (before umask) are used for all
+directories that MkdirAll creates.
+If path is already a directory, MkdirAll does nothing
+and returns nil.
+
+			<div id="example_MkdirAll" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">
+err := os.MkdirAll(&#34;test/subdir&#34;, 0750)
+if err != nil {
+    log.Fatal(err)
+}
+err = os.WriteFile(&#34;test/subdir/testfile.txt&#34;, []byte(&#34;Hello, Gophers!&#34;), 0660)
+if err != nil {
+    log.Fatal(err)
+}
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="MkdirTemp">func <a href="../../src/os/tempfile.go?s=3040:3091#L73">MkdirTemp</a>
+				<a class="permalink" href="index.html#MkdirTemp">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func MkdirTemp(dir, pattern <a href="../builtin/index.html#string">string</a>) (<a href="../builtin/index.html#string">string</a>, <a href="../builtin/index.html#error">error</a>)</pre>
+			<p>MkdirTemp creates a new temporary directory in the directory dir
+and returns the pathname of the new directory.
+The new directory&apos;s name is generated by adding a random string to the end of pattern.
+If pattern includes a &quot;*&quot;, the random string replaces the last &quot;*&quot; instead.
+If dir is the empty string, MkdirTemp uses the default directory for temporary files, as returned by TempDir.
+Multiple programs or goroutines calling MkdirTemp simultaneously will not choose the same directory.
+It is the caller&apos;s responsibility to remove the directory when it is no longer needed.
+
+			<div id="example_MkdirTemp" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">
+dir, err := os.MkdirTemp(&#34;&#34;, &#34;example&#34;)
+if err != nil {
+    log.Fatal(err)
+}
+defer os.RemoveAll(dir) <span class="comment">// clean up</span>
+
+file := filepath.Join(dir, &#34;tmpfile&#34;)
+if err := os.WriteFile(file, []byte(&#34;content&#34;), 0666); err != nil {
+    log.Fatal(err)
+}
+</pre>
+			
+		
+	</div>
+</div>
+<div id="example_MkdirTemp_suffix" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example (Suffix)</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example (Suffix)</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">
+logsDir, err := os.MkdirTemp(&#34;&#34;, &#34;*-logs&#34;)
+if err != nil {
+    log.Fatal(err)
+}
+defer os.RemoveAll(logsDir) <span class="comment">// clean up</span>
+
+<span class="comment">// Logs can be cleaned out earlier if needed by searching</span>
+<span class="comment">// for all directories whose suffix ends in *-logs.</span>
+globPattern := filepath.Join(os.TempDir(), &#34;*-logs&#34;)
+matches, err := filepath.Glob(globPattern)
+if err != nil {
+    log.Fatalf(&#34;Failed to match %q: %v&#34;, globPattern, err)
+}
+
+for _, match := range matches {
+    if err := os.RemoveAll(match); err != nil {
+        log.Printf(&#34;Failed to remove %q: %v&#34;, match, err)
+    }
+}
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="NewSyscallError">func <a href="../../src/os/error.go?s=2275:2328#L57">NewSyscallError</a>
+				<a class="permalink" href="index.html#NewSyscallError">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func NewSyscallError(syscall <a href="../builtin/index.html#string">string</a>, err <a href="../builtin/index.html#error">error</a>) <a href="../builtin/index.html#error">error</a></pre>
+			<p>NewSyscallError returns, as an error, a new SyscallError
+with the given system call name and error details.
+As a convenience, if err is nil, NewSyscallError returns nil.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Pipe">func <a href="../../src/os/pipe2_unix.go?s=393:434#L3">Pipe</a>
+				<a class="permalink" href="index.html#Pipe">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Pipe() (r *<a href="index.html#File">File</a>, w *<a href="index.html#File">File</a>, err <a href="../builtin/index.html#error">error</a>)</pre>
+			<p>Pipe returns a connected pair of Files; reads from r return bytes written to w.
+It returns the files and an error, if any.
+
+			
+			
+
+		
+			
+			
+			<h2 id="ReadFile">func <a href="../../src/os/file.go?s=23995:24037#L757">ReadFile</a>
+				<a class="permalink" href="index.html#ReadFile">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func ReadFile(name <a href="../builtin/index.html#string">string</a>) ([]<a href="../builtin/index.html#byte">byte</a>, <a href="../builtin/index.html#error">error</a>)</pre>
+			<p>ReadFile reads the named file and returns the contents.
+A successful call returns err == nil, not err == EOF.
+Because ReadFile reads the whole file, it does not treat an EOF from Read
+as an error to be reported.
+
+			<div id="example_ReadFile" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">data, err := os.ReadFile(&#34;testdata/hello&#34;)
+if err != nil {
+    log.Fatal(err)
+}
+os.Stdout.Write(data)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">Hello, Gophers!
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Readlink">func <a href="../../src/os/file.go?s=12124:12166#L390">Readlink</a>
+				<a class="permalink" href="index.html#Readlink">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Readlink(name <a href="../builtin/index.html#string">string</a>) (<a href="../builtin/index.html#string">string</a>, <a href="../builtin/index.html#error">error</a>)</pre>
+			<p>Readlink returns the destination of the named symbolic link.
+If there is an error, it will be of type *PathError.
+<p>If the link destination is relative, Readlink returns the relative path
+without resolving it to an absolute one.
+
+			<div id="example_Readlink" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code"><span class="comment">// First, we create a relative symlink to a file.</span>
+d, err := os.MkdirTemp(&#34;&#34;, &#34;&#34;)
+if err != nil {
+    log.Fatal(err)
+}
+defer os.RemoveAll(d)
+targetPath := filepath.Join(d, &#34;hello.txt&#34;)
+if err := os.WriteFile(targetPath, []byte(&#34;Hello, Gophers!&#34;), 0644); err != nil {
+    log.Fatal(err)
+}
+linkPath := filepath.Join(d, &#34;hello.link&#34;)
+if err := os.Symlink(&#34;hello.txt&#34;, filepath.Join(d, &#34;hello.link&#34;)); err != nil {
+    if errors.Is(err, errors.ErrUnsupported) {
+        <span class="comment">// Allow the example to run on platforms that do not support symbolic links.</span>
+        fmt.Printf(&#34;%s links to %s\n&#34;, filepath.Base(linkPath), &#34;hello.txt&#34;)
+        return
+    }
+    log.Fatal(err)
+}
+
+<span class="comment">// Readlink returns the relative path as passed to os.Symlink.</span>
+dst, err := os.Readlink(linkPath)
+if err != nil {
+    log.Fatal(err)
+}
+fmt.Printf(&#34;%s links to %s\n&#34;, filepath.Base(linkPath), dst)
+
+var dstAbs string
+if filepath.IsAbs(dst) {
+    dstAbs = dst
+} else {
+    <span class="comment">// Symlink targets are relative to the directory containing the link.</span>
+    dstAbs = filepath.Join(filepath.Dir(linkPath), dst)
+}
+
+<span class="comment">// Check that the target is correct by comparing it with os.Stat</span>
+<span class="comment">// on the original target path.</span>
+dstInfo, err := os.Stat(dstAbs)
+if err != nil {
+    log.Fatal(err)
+}
+targetInfo, err := os.Stat(targetPath)
+if err != nil {
+    log.Fatal(err)
+}
+if !os.SameFile(dstInfo, targetInfo) {
+    log.Fatalf(&#34;link destination (%s) is not the same file as %s&#34;, dstAbs, targetPath)
+}
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">hello.link links to hello.txt
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Remove">func <a href="../../src/os/file_unix.go?s=11159:11189#L348">Remove</a>
+				<a class="permalink" href="index.html#Remove">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Remove(name <a href="../builtin/index.html#string">string</a>) <a href="../builtin/index.html#error">error</a></pre>
+			<p>Remove removes the named file or (empty) directory.
+If there is an error, it will be of type *PathError.
+
+			
+			
+
+		
+			
+			
+			<h2 id="RemoveAll">func <a href="../../src/os/path.go?s=2000:2033#L62">RemoveAll</a>
+				<a class="permalink" href="index.html#RemoveAll">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func RemoveAll(path <a href="../builtin/index.html#string">string</a>) <a href="../builtin/index.html#error">error</a></pre>
+			<p>RemoveAll removes path and any children it contains.
+It removes everything it can but returns the first error
+it encounters. If the path does not exist, RemoveAll
+returns nil (no error).
+If there is an error, it will be of type *PathError.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Rename">func <a href="../../src/os/file.go?s=11801:11843#L381">Rename</a>
+				<a class="permalink" href="index.html#Rename">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Rename(oldpath, newpath <a href="../builtin/index.html#string">string</a>) <a href="../builtin/index.html#error">error</a></pre>
+			<p>Rename renames (moves) oldpath to newpath.
+If newpath already exists and is not a directory, Rename replaces it.
+OS-specific restrictions may apply when oldpath and newpath are in different directories.
+Even within the same directory, on non-Unix platforms Rename is not an atomic operation.
+If there is an error, it will be of type *LinkError.
+
+			
+			
+
+		
+			
+			
+			<h2 id="SameFile">func <a href="../../src/os/types.go?s=2698:2735#L57">SameFile</a>
+				<a class="permalink" href="index.html#SameFile">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func SameFile(fi1, fi2 <a href="index.html#FileInfo">FileInfo</a>) <a href="../builtin/index.html#bool">bool</a></pre>
+			<p>SameFile reports whether fi1 and fi2 describe the same file.
+For example, on Unix this means that the device and inode fields
+of the two underlying structures are identical; on other systems
+the decision may be based on the path names.
+SameFile only applies to results returned by this package&apos;s Stat.
+It returns false in other cases.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Setenv">func <a href="../../src/os/env.go?s=3435:3471#L109">Setenv</a>
+				<a class="permalink" href="index.html#Setenv">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Setenv(key, value <a href="../builtin/index.html#string">string</a>) <a href="../builtin/index.html#error">error</a></pre>
+			<p>Setenv sets the value of the environment variable named by the key.
+It returns an error, if any.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Symlink">func <a href="../../src/os/file_unix.go?s=12849:12892#L409">Symlink</a>
+				<a class="permalink" href="index.html#Symlink">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Symlink(oldname, newname <a href="../builtin/index.html#string">string</a>) <a href="../builtin/index.html#error">error</a></pre>
+			<p>Symlink creates newname as a symbolic link to oldname.
+On Windows, a symlink to a non-existent oldname creates a file symlink;
+if oldname is later created as a directory the symlink will not work.
+If there is an error, it will be of type *LinkError.
+
+			
+			
+
+		
+			
+			
+			<h2 id="TempDir">func <a href="../../src/os/file.go?s=13570:13591#L431">TempDir</a>
+				<a class="permalink" href="index.html#TempDir">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func TempDir() <a href="../builtin/index.html#string">string</a></pre>
+			<p>TempDir returns the default directory to use for temporary files.
+<p>On Unix systems, it returns $TMPDIR if non-empty, else /tmp.
+On Windows, it uses GetTempPath, returning the first non-empty
+value from %TMP%, %TEMP%, %USERPROFILE%, or the Windows directory.
+On Plan 9, it returns /tmp.
+<p>The directory is neither guaranteed to exist nor have accessible
+permissions.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Truncate">func <a href="../../src/os/file_unix.go?s=10835:10879#L336">Truncate</a>
+				<a class="permalink" href="index.html#Truncate">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Truncate(name <a href="../builtin/index.html#string">string</a>, size <a href="../builtin/index.html#int64">int64</a>) <a href="../builtin/index.html#error">error</a></pre>
+			<p>Truncate changes the size of the named file.
+If the file is a symbolic link, it changes the size of the link&apos;s target.
+If there is an error, it will be of type *PathError.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Unsetenv">func <a href="../../src/os/env.go?s=3634:3665#L118">Unsetenv</a>
+				<a class="permalink" href="index.html#Unsetenv">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Unsetenv(key <a href="../builtin/index.html#string">string</a>) <a href="../builtin/index.html#error">error</a></pre>
+			<p>Unsetenv unsets a single environment variable.
+
+			<div id="example_Unsetenv" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">
+os.Setenv(&#34;TMPDIR&#34;, &#34;/my/tmp&#34;)
+defer os.Unsetenv(&#34;TMPDIR&#34;)
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="UserCacheDir">func <a href="../../src/os/file.go?s=14230:14265#L448">UserCacheDir</a>
+				<a class="permalink" href="index.html#UserCacheDir">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func UserCacheDir() (<a href="../builtin/index.html#string">string</a>, <a href="../builtin/index.html#error">error</a>)</pre>
+			<p>UserCacheDir returns the default root directory to use for user-specific
+cached data. Users should create their own application-specific subdirectory
+within this one and use that.
+<p>On Unix systems, it returns $XDG_CACHE_HOME as specified by
+<a href="https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html">https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html</a> if
+non-empty, else $HOME/.cache.
+On Darwin, it returns $HOME/Library/Caches.
+On Windows, it returns %LocalAppData%.
+On Plan 9, it returns $home/lib/cache.
+<p>If the location cannot be determined (for example, $HOME is not defined),
+then it will return an error.
+
+			<div id="example_UserCacheDir" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">dir, dirErr := os.UserCacheDir()
+if dirErr == nil {
+    dir = filepath.Join(dir, &#34;ExampleUserCacheDir&#34;)
+}
+
+getCache := func(name string) ([]byte, error) {
+    if dirErr != nil {
+        return nil, &amp;os.PathError{Op: &#34;getCache&#34;, Path: name, Err: os.ErrNotExist}
+    }
+    return os.ReadFile(filepath.Join(dir, name))
+}
+
+var mkdirOnce sync.Once
+putCache := func(name string, b []byte) error {
+    if dirErr != nil {
+        return &amp;os.PathError{Op: &#34;putCache&#34;, Path: name, Err: dirErr}
+    }
+    mkdirOnce.Do(func() {
+        if err := os.MkdirAll(dir, 0700); err != nil {
+            log.Printf(&#34;can&#39;t create user cache dir: %v&#34;, err)
+        }
+    })
+    return os.WriteFile(filepath.Join(dir, name), b, 0600)
+}
+
+<span class="comment">// Read and store cached data.</span>
+<span class="comment">// …</span>
+_ = getCache
+_ = putCache
+
+<span class="comment"></pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="UserConfigDir">func <a href="../../src/os/file.go?s=15576:15612#L499">UserConfigDir</a>
+				<a class="permalink" href="index.html#UserConfigDir">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func UserConfigDir() (<a href="../builtin/index.html#string">string</a>, <a href="../builtin/index.html#error">error</a>)</pre>
+			<p>UserConfigDir returns the default root directory to use for user-specific
+configuration data. Users should create their own application-specific
+subdirectory within this one and use that.
+<p>On Unix systems, it returns $XDG_CONFIG_HOME as specified by
+<a href="https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html">https://specifications.freedesktop.org/basedir-spec/basedir-spec-latest.html</a> if
+non-empty, else $HOME/.config.
+On Darwin, it returns $HOME/Library/Application Support.
+On Windows, it returns %AppData%.
+On Plan 9, it returns $home/lib.
+<p>If the location cannot be determined (for example, $HOME is not defined),
+then it will return an error.
+
+			<div id="example_UserConfigDir" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">dir, dirErr := os.UserConfigDir()
+
+var (
+    configPath string
+    origConfig []byte
+)
+if dirErr == nil {
+    configPath = filepath.Join(dir, &#34;ExampleUserConfigDir&#34;, &#34;example.conf&#34;)
+    var err error
+    origConfig, err = os.ReadFile(configPath)
+    if err != nil &amp;&amp; !os.IsNotExist(err) {
+        <span class="comment">// The user has a config file but we couldn&#39;t read it.</span>
+        <span class="comment">// Report the error instead of ignoring their configuration.</span>
+        log.Fatal(err)
+    }
+}
+
+<span class="comment">// Use and perhaps make changes to the config.</span>
+config := bytes.Clone(origConfig)
+<span class="comment">// …</span>
+
+<span class="comment">// Save changes.</span>
+if !bytes.Equal(config, origConfig) {
+    if configPath == &#34;&#34; {
+        log.Printf(&#34;not saving config changes: %v&#34;, dirErr)
+    } else {
+        err := os.MkdirAll(filepath.Dir(configPath), 0700)
+        if err == nil {
+            err = os.WriteFile(configPath, config, 0600)
+        }
+        if err != nil {
+            log.Printf(&#34;error saving config changes: %v&#34;, err)
+        }
+    }
+}
+
+<span class="comment"></pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="UserHomeDir">func <a href="../../src/os/file.go?s=16673:16707#L545">UserHomeDir</a>
+				<a class="permalink" href="index.html#UserHomeDir">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func UserHomeDir() (<a href="../builtin/index.html#string">string</a>, <a href="../builtin/index.html#error">error</a>)</pre>
+			<p>UserHomeDir returns the current user&apos;s home directory.
+<p>On Unix, including macOS, it returns the $HOME environment variable.
+On Windows, it returns %USERPROFILE%.
+On Plan 9, it returns the $home environment variable.
+<p>If the expected variable is not set in the environment, UserHomeDir
+returns either a platform-specific default value or a non-nil error.
+
+			
+			
+
+		
+			
+			
+			<h2 id="WriteFile">func <a href="../../src/os/file.go?s=25245:25306#L804">WriteFile</a>
+				<a class="permalink" href="index.html#WriteFile">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func WriteFile(name <a href="../builtin/index.html#string">string</a>, data []<a href="../builtin/index.html#byte">byte</a>, perm <a href="index.html#FileMode">FileMode</a>) <a href="../builtin/index.html#error">error</a></pre>
+			<p>WriteFile writes data to the named file, creating it if necessary.
+If the file does not exist, WriteFile creates it with permissions perm (before umask);
+otherwise WriteFile truncates it before writing, without changing permissions.
+Since WriteFile requires multiple system calls to complete, a failure mid-operation
+can leave the file in a partially written state.
+
+			<div id="example_WriteFile" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">
+err := os.WriteFile(&#34;testdata/hello&#34;, []byte(&#34;Hello, Gophers!&#34;), 0666)
+if err != nil {
+    log.Fatal(err)
+}
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+		
+			
+			
+			<h2 id="DirEntry">type <a href="../../src/os/dir.go?s=2939:2966#L72">DirEntry</a>
+				<a class="permalink" href="index.html#DirEntry">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A DirEntry is an entry read from a directory
+(using the ReadDir function or a File&apos;s ReadDir method).
+
+			<pre>type DirEntry = <a href="../io/fs/index.html">fs</a>.<a href="../io/fs/index.html#DirEntry">DirEntry</a></pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="ReadDir">func <a href="../../src/os/dir.go?s=4248:4293#L105">ReadDir</a>
+					<a class="permalink" href="index.html#ReadDir">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func ReadDir(name <a href="../builtin/index.html#string">string</a>) ([]<a href="index.html#DirEntry">DirEntry</a>, <a href="../builtin/index.html#error">error</a>)</pre>
+				<p>ReadDir reads the named directory,
+returning all its directory entries sorted by filename.
+If an error occurs reading the directory,
+ReadDir returns the entries it was able to read before the error,
+along with the error.
+
+				<div id="example_ReadDir" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">
+files, err := os.ReadDir(&#34;.&#34;)
+if err != nil {
+    log.Fatal(err)
+}
+
+for _, file := range files {
+    fmt.Println(file.Name())
+}
+</pre>
+			
+		
+	</div>
+</div>
+
+				
+			
+
+			
+		
+			
+			
+			<h2 id="File">type <a href="../../src/os/types.go?s=370:412#L6">File</a>
+				<a class="permalink" href="index.html#File">&#xb6;</a>
+				
+				
+			</h2>
+			<p>File represents an open file descriptor.
+
+			<pre>type File struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="Create">func <a href="../../src/os/file.go?s=10680:10719#L352">Create</a>
+					<a class="permalink" href="index.html#Create">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func Create(name <a href="../builtin/index.html#string">string</a>) (*<a href="index.html#File">File</a>, <a href="../builtin/index.html#error">error</a>)</pre>
+				<p>Create creates or truncates the named file. If the file already exists,
+it is truncated. If the file does not exist, it is created with mode 0666
+(before umask). If successful, methods on the returned File can
+be used for I/O; the associated file descriptor has mode O_RDWR.
+If there is an error, it will be of type *PathError.
+
+				
+				
+			
+				
+				<h3 id="CreateTemp">func <a href="../../src/os/tempfile.go?s=1289:1340#L23">CreateTemp</a>
+					<a class="permalink" href="index.html#CreateTemp">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func CreateTemp(dir, pattern <a href="../builtin/index.html#string">string</a>) (*<a href="index.html#File">File</a>, <a href="../builtin/index.html#error">error</a>)</pre>
+				<p>CreateTemp creates a new temporary file in the directory dir,
+opens the file for reading and writing, and returns the resulting file.
+The filename is generated by taking pattern and adding a random string to the end.
+If pattern includes a &quot;*&quot;, the random string replaces the last &quot;*&quot;.
+If dir is the empty string, CreateTemp uses the default directory for temporary files, as returned by TempDir.
+Multiple programs or goroutines calling CreateTemp simultaneously will not choose the same file.
+The caller can use the file&apos;s Name method to find the pathname of the file.
+It is the caller&apos;s responsibility to remove the file when it is no longer needed.
+
+				<div id="example_CreateTemp" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">
+f, err := os.CreateTemp(&#34;&#34;, &#34;example&#34;)
+if err != nil {
+    log.Fatal(err)
+}
+defer os.Remove(f.Name()) <span class="comment">// clean up</span>
+
+if _, err := f.Write([]byte(&#34;content&#34;)); err != nil {
+    log.Fatal(err)
+}
+if err := f.Close(); err != nil {
+    log.Fatal(err)
+}
+</pre>
+			
+		
+	</div>
+</div>
+<div id="example_CreateTemp_suffix" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example (Suffix)</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example (Suffix)</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">
+f, err := os.CreateTemp(&#34;&#34;, &#34;example.*.txt&#34;)
+if err != nil {
+    log.Fatal(err)
+}
+defer os.Remove(f.Name()) <span class="comment">// clean up</span>
+
+if _, err := f.Write([]byte(&#34;content&#34;)); err != nil {
+    f.Close()
+    log.Fatal(err)
+}
+if err := f.Close(); err != nil {
+    log.Fatal(err)
+}
+</pre>
+			
+		
+	</div>
+</div>
+
+				
+			
+				
+				<h3 id="NewFile">func <a href="../../src/os/file_unix.go?s=3671:3714#L95">NewFile</a>
+					<a class="permalink" href="index.html#NewFile">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func NewFile(fd <a href="../builtin/index.html#uintptr">uintptr</a>, name <a href="../builtin/index.html#string">string</a>) *<a href="index.html#File">File</a></pre>
+				<p>NewFile returns a new File with the given file descriptor and
+name. The returned value will be nil if fd is not a valid file
+descriptor. On Unix systems, if the file descriptor is in
+non-blocking mode, NewFile will attempt to return a pollable File
+(one for which the SetDeadline methods work).
+<p>After passing it to NewFile, fd may become invalid under the same
+conditions described in the comments of the Fd method, and the same
+constraints apply.
+
+				
+				
+			
+				
+				<h3 id="Open">func <a href="../../src/os/file.go?s=10258:10295#L343">Open</a>
+					<a class="permalink" href="index.html#Open">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func Open(name <a href="../builtin/index.html#string">string</a>) (*<a href="index.html#File">File</a>, <a href="../builtin/index.html#error">error</a>)</pre>
+				<p>Open opens the named file for reading. If successful, methods on
+the returned file can be used for reading; the associated file
+descriptor has mode O_RDONLY.
+If there is an error, it will be of type *PathError.
+
+				
+				
+			
+				
+				<h3 id="OpenFile">func <a href="../../src/os/file.go?s=11165:11231#L362">OpenFile</a>
+					<a class="permalink" href="index.html#OpenFile">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func OpenFile(name <a href="../builtin/index.html#string">string</a>, flag <a href="../builtin/index.html#int">int</a>, perm <a href="index.html#FileMode">FileMode</a>) (*<a href="index.html#File">File</a>, <a href="../builtin/index.html#error">error</a>)</pre>
+				<p>OpenFile is the generalized open call; most users will use Open
+or Create instead. It opens the named file with specified flag
+(O_RDONLY etc.). If the file does not exist, and the O_CREATE flag
+is passed, it is created with mode perm (before umask). If successful,
+methods on the returned File can be used for I/O.
+If there is an error, it will be of type *PathError.
+
+				<div id="example_OpenFile" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">
+f, err := os.OpenFile(&#34;notes.txt&#34;, os.O_RDWR|os.O_CREATE, 0644)
+if err != nil {
+    log.Fatal(err)
+}
+if err := f.Close(); err != nil {
+    log.Fatal(err)
+}
+</pre>
+			
+		
+	</div>
+</div>
+<div id="example_OpenFile_append" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example (Append)</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example (Append)</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">
+<span class="comment">// If the file doesn&#39;t exist, create it, or append to the file</span>
+f, err := os.OpenFile(&#34;access.log&#34;, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+if err != nil {
+    log.Fatal(err)
+}
+if _, err := f.Write([]byte(&#34;appended some data\n&#34;)); err != nil {
+    f.Close() <span class="comment">// ignore error; Write error takes precedence</span>
+    log.Fatal(err)
+}
+if err := f.Close(); err != nil {
+    log.Fatal(err)
+}
+</pre>
+			
+		
+	</div>
+</div>
+
+				
+			
+
+			
+				
+				<h3 id="File.Chdir">func (*File) <a href="../../src/os/file_posix.go?s=5686:5714#L189">Chdir</a>
+					<a class="permalink" href="index.html#File.Chdir">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (f *<a href="index.html#File">File</a>) Chdir() <a href="../builtin/index.html#error">error</a></pre>
+				<p>Chdir changes the current working directory to the file,
+which must be a directory.
+If there is an error, it will be of type *PathError.
+
+				
+				
+				
+			
+				
+				<h3 id="File.Chmod">func (*File) <a href="../../src/os/file.go?s=18122:18163#L588">Chmod</a>
+					<a class="permalink" href="index.html#File.Chmod">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (f *<a href="index.html#File">File</a>) Chmod(mode <a href="index.html#FileMode">FileMode</a>) <a href="../builtin/index.html#error">error</a></pre>
+				<p>Chmod changes the mode of the file to mode.
+If there is an error, it will be of type *PathError.
+
+				
+				
+				
+			
+				
+				<h3 id="File.Chown">func (*File) <a href="../../src/os/file_posix.go?s=3832:3872#L126">Chown</a>
+					<a class="permalink" href="index.html#File.Chown">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (f *<a href="index.html#File">File</a>) Chown(uid, gid <a href="../builtin/index.html#int">int</a>) <a href="../builtin/index.html#error">error</a></pre>
+				<p>Chown changes the numeric uid and gid of the named file.
+If there is an error, it will be of type *PathError.
+<p>On Windows, it always returns the syscall.EWINDOWS error, wrapped
+in *PathError.
+
+				
+				
+				
+			
+				
+				<h3 id="File.Close">func (*File) <a href="../../src/os/file_posix.go?s=519:547#L9">Close</a>
+					<a class="permalink" href="index.html#File.Close">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (f *<a href="index.html#File">File</a>) Close() <a href="../builtin/index.html#error">error</a></pre>
+				<p>Close closes the File, rendering it unusable for I/O.
+On files that support SetDeadline, any pending I/O operations will
+be canceled and return immediately with an ErrClosed error.
+Close will return an error if it has already been called.
+
+				
+				
+				
+			
+				
+				<h3 id="File.Fd">func (*File) <a href="../../src/os/file_unix.go?s=2762:2789#L69">Fd</a>
+					<a class="permalink" href="index.html#File.Fd">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (f *<a href="index.html#File">File</a>) Fd() <a href="../builtin/index.html#uintptr">uintptr</a></pre>
+				<p>Fd returns the integer Unix file descriptor referencing the open file.
+If f is closed, the file descriptor becomes invalid.
+If f is garbage collected, a finalizer may close the file descriptor,
+making it invalid; see runtime.SetFinalizer for more information on when
+a finalizer might be run. On Unix systems this will cause the SetDeadline
+methods to stop working.
+Because file descriptors can be reused, the returned file descriptor may
+only be closed through the Close method of f, or by its finalizer during
+garbage collection. Otherwise, during garbage collection the finalizer
+may close an unrelated file descriptor with the same (reused) number.
+<p>As an alternative, see the f.SyscallConn method.
+
+				
+				
+				
+			
+				
+				<h3 id="File.Name">func (*File) <a href="../../src/os/file.go?s=1841:1869#L46">Name</a>
+					<a class="permalink" href="index.html#File.Name">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (f *<a href="index.html#File">File</a>) Name() <a href="../builtin/index.html#string">string</a></pre>
+				<p>Name returns the name of the file as presented to Open.
+
+				
+				
+				
+			
+				
+				<h3 id="File.Read">func (*File) <a href="../../src/os/file.go?s=3970:4018#L104">Read</a>
+					<a class="permalink" href="index.html#File.Read">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (f *<a href="index.html#File">File</a>) Read(b []<a href="../builtin/index.html#byte">byte</a>) (n <a href="../builtin/index.html#int">int</a>, err <a href="../builtin/index.html#error">error</a>)</pre>
+				<p>Read reads up to len(b) bytes from the File and stores them in b.
+It returns the number of bytes read and any error encountered.
+At end of file, Read returns 0, io.EOF.
+
+				
+				
+				
+			
+				
+				<h3 id="File.ReadAt">func (*File) <a href="../../src/os/file.go?s=4373:4434#L116">ReadAt</a>
+					<a class="permalink" href="index.html#File.ReadAt">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (f *<a href="index.html#File">File</a>) ReadAt(b []<a href="../builtin/index.html#byte">byte</a>, off <a href="../builtin/index.html#int64">int64</a>) (n <a href="../builtin/index.html#int">int</a>, err <a href="../builtin/index.html#error">error</a>)</pre>
+				<p>ReadAt reads len(b) bytes from the File starting at byte offset off.
+It returns the number of bytes read and the error, if any.
+ReadAt always returns a non-nil error when n &lt; len(b).
+At end of file, that error is io.EOF.
+
+				
+				
+				
+			
+				
+				<h3 id="File.ReadDir">func (*File) <a href="../../src/os/dir.go?s=3540:3589#L84">ReadDir</a>
+					<a class="permalink" href="index.html#File.ReadDir">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (f *<a href="index.html#File">File</a>) ReadDir(n <a href="../builtin/index.html#int">int</a>) ([]<a href="index.html#DirEntry">DirEntry</a>, <a href="../builtin/index.html#error">error</a>)</pre>
+				<p>ReadDir reads the contents of the directory associated with the file f
+and returns a slice of DirEntry values in directory order.
+Subsequent calls on the same file will yield later DirEntry records in the directory.
+<p>If n &gt; 0, ReadDir returns at most n DirEntry records.
+In this case, if ReadDir returns an empty slice, it will return an error explaining why.
+At the end of a directory, the error is io.EOF.
+<p>If n &lt;= 0, ReadDir returns all the DirEntry records remaining in the directory.
+When it succeeds, it returns a nil error (not io.EOF).
+
+				
+				
+				
+			
+				
+				<h3 id="File.ReadFrom">func (*File) <a href="../../src/os/file.go?s=4802:4859#L139">ReadFrom</a>
+					<a class="permalink" href="index.html#File.ReadFrom">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (f *<a href="index.html#File">File</a>) ReadFrom(r <a href="../io/index.html">io</a>.<a href="../io/index.html#Reader">Reader</a>) (n <a href="../builtin/index.html#int64">int64</a>, err <a href="../builtin/index.html#error">error</a>)</pre>
+				<p>ReadFrom implements io.ReaderFrom.
+
+				
+				
+				
+			
+				
+				<h3 id="File.Readdir">func (*File) <a href="../../src/os/dir.go?s=1183:1232#L27">Readdir</a>
+					<a class="permalink" href="index.html#File.Readdir">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (f *<a href="index.html#File">File</a>) Readdir(n <a href="../builtin/index.html#int">int</a>) ([]<a href="index.html#FileInfo">FileInfo</a>, <a href="../builtin/index.html#error">error</a>)</pre>
+				<p>Readdir reads the contents of the directory associated with file and
+returns a slice of up to n FileInfo values, as would be returned
+by Lstat, in directory order. Subsequent calls on the same file will yield
+further FileInfos.
+<p>If n &gt; 0, Readdir returns at most n FileInfo structures. In this case, if
+Readdir returns an empty slice, it will return a non-nil error
+explaining why. At the end of a directory, the error is io.EOF.
+<p>If n &lt;= 0, Readdir returns all the FileInfo from the directory in
+a single slice. In this case, if Readdir succeeds (reads all
+the way to the end of the directory), it returns the slice and a
+nil error. If it encounters an error before the end of the
+directory, Readdir returns the FileInfo read until that point
+and a non-nil error.
+<p>Most clients are better served by the more efficient ReadDir method.
+
+				
+				
+				
+			
+				
+				<h3 id="File.Readdirnames">func (*File) <a href="../../src/os/dir.go?s=2401:2463#L56">Readdirnames</a>
+					<a class="permalink" href="index.html#File.Readdirnames">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (f *<a href="index.html#File">File</a>) Readdirnames(n <a href="../builtin/index.html#int">int</a>) (names []<a href="../builtin/index.html#string">string</a>, err <a href="../builtin/index.html#error">error</a>)</pre>
+				<p>Readdirnames reads the contents of the directory associated with file
+and returns a slice of up to n names of files in the directory,
+in directory order. Subsequent calls on the same file will yield
+further names.
+<p>If n &gt; 0, Readdirnames returns at most n names. In this case, if
+Readdirnames returns an empty slice, it will return a non-nil error
+explaining why. At the end of a directory, the error is io.EOF.
+<p>If n &lt;= 0, Readdirnames returns all the names from the directory in
+a single slice. In this case, if Readdirnames succeeds (reads all
+the way to the end of the directory), it returns the slice and a
+nil error. If it encounters an error before the end of the
+directory, Readdirnames returns the names read until that point and
+a non-nil error.
+
+				
+				
+				
+			
+				
+				<h3 id="File.Seek">func (*File) <a href="../../src/os/file.go?s=8237:8305#L267">Seek</a>
+					<a class="permalink" href="index.html#File.Seek">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (f *<a href="index.html#File">File</a>) Seek(offset <a href="../builtin/index.html#int64">int64</a>, whence <a href="../builtin/index.html#int">int</a>) (ret <a href="../builtin/index.html#int64">int64</a>, err <a href="../builtin/index.html#error">error</a>)</pre>
+				<p>Seek sets the offset for the next Read or Write on file to offset, interpreted
+according to whence: 0 means relative to the origin of the file, 1 means
+relative to the current offset, and 2 means relative to the end.
+It returns the new offset and an error, if any.
+The behavior of Seek on a file opened with O_APPEND is not specified.
+
+				
+				
+				
+			
+				
+				<h3 id="File.SetDeadline">func (*File) <a href="../../src/os/file.go?s=19489:19534#L614">SetDeadline</a>
+					<a class="permalink" href="index.html#File.SetDeadline">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (f *<a href="index.html#File">File</a>) SetDeadline(t <a href="../time/index.html">time</a>.<a href="../time/index.html#Time">Time</a>) <a href="../builtin/index.html#error">error</a></pre>
+				<p>SetDeadline sets the read and write deadlines for a File.
+It is equivalent to calling both SetReadDeadline and SetWriteDeadline.
+<p>Only some kinds of files support setting a deadline. Calls to SetDeadline
+for files that do not support deadlines will return ErrNoDeadline.
+On most systems ordinary files do not support deadlines, but pipes do.
+<p>A deadline is an absolute time after which I/O operations fail with an
+error instead of blocking. The deadline applies to all future and pending
+I/O, not just the immediately following call to Read or Write.
+After a deadline has been exceeded, the connection can be refreshed
+by setting a deadline in the future.
+<p>If the deadline is exceeded a call to Read or Write or to other I/O
+methods will return an error that wraps ErrDeadlineExceeded.
+This can be tested using errors.Is(err, os.ErrDeadlineExceeded).
+That error implements the Timeout method, and calling the Timeout
+method will return true, but there are other possible errors for which
+the Timeout will return true even if the deadline has not been exceeded.
+<p>An idle timeout can be implemented by repeatedly extending
+the deadline after successful Read or Write calls.
+<p>A zero value for t means I/O operations will not time out.
+
+				
+				
+				
+			
+				
+				<h3 id="File.SetReadDeadline">func (*File) <a href="../../src/os/file.go?s=19777:19826#L622">SetReadDeadline</a>
+					<a class="permalink" href="index.html#File.SetReadDeadline">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (f *<a href="index.html#File">File</a>) SetReadDeadline(t <a href="../time/index.html">time</a>.<a href="../time/index.html#Time">Time</a>) <a href="../builtin/index.html#error">error</a></pre>
+				<p>SetReadDeadline sets the deadline for future Read calls and any
+currently-blocked Read call.
+A zero value for t means Read will not time out.
+Not all files support setting deadlines; see SetDeadline.
+
+				
+				
+				
+			
+				
+				<h3 id="File.SetWriteDeadline">func (*File) <a href="../../src/os/file.go?s=20192:20242#L632">SetWriteDeadline</a>
+					<a class="permalink" href="index.html#File.SetWriteDeadline">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (f *<a href="index.html#File">File</a>) SetWriteDeadline(t <a href="../time/index.html">time</a>.<a href="../time/index.html#Time">Time</a>) <a href="../builtin/index.html#error">error</a></pre>
+				<p>SetWriteDeadline sets the deadline for any future Write calls and any
+currently-blocked Write call.
+Even if Write times out, it may return n &gt; 0, indicating that
+some of the data was successfully written.
+A zero value for t means Write will not time out.
+Not all files support setting deadlines; see SetDeadline.
+
+				
+				
+				
+			
+				
+				<h3 id="File.Stat">func (*File) <a href="../../src/os/stat_unix.go?s=350:389#L5">Stat</a>
+					<a class="permalink" href="index.html#File.Stat">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (f *<a href="index.html#File">File</a>) Stat() (<a href="index.html#FileInfo">FileInfo</a>, <a href="../builtin/index.html#error">error</a>)</pre>
+				<p>Stat returns the FileInfo structure describing file.
+If there is an error, it will be of type *PathError.
+
+				
+				
+				
+			
+				
+				<h3 id="File.Sync">func (*File) <a href="../../src/os/file_posix.go?s=4544:4571#L152">Sync</a>
+					<a class="permalink" href="index.html#File.Sync">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (f *<a href="index.html#File">File</a>) Sync() <a href="../builtin/index.html#error">error</a></pre>
+				<p>Sync commits the current contents of the file to stable storage.
+Typically, this means flushing the file system&apos;s in-memory copy
+of recently written data to disk.
+
+				
+				
+				
+			
+				
+				<h3 id="File.SyscallConn">func (*File) <a href="../../src/os/file.go?s=20360:20413#L638">SyscallConn</a>
+					<a class="permalink" href="index.html#File.SyscallConn">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (f *<a href="index.html#File">File</a>) SyscallConn() (<a href="../syscall/index.html">syscall</a>.<a href="../syscall/index.html#RawConn">RawConn</a>, <a href="../builtin/index.html#error">error</a>)</pre>
+				<p>SyscallConn returns a raw file.
+This implements the syscall.Conn interface.
+
+				
+				
+				
+			
+				
+				<h3 id="File.Truncate">func (*File) <a href="../../src/os/file_posix.go?s=4167:4208#L139">Truncate</a>
+					<a class="permalink" href="index.html#File.Truncate">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (f *<a href="index.html#File">File</a>) Truncate(size <a href="../builtin/index.html#int64">int64</a>) <a href="../builtin/index.html#error">error</a></pre>
+				<p>Truncate changes the size of the file.
+It does not change the I/O offset.
+If there is an error, it will be of type *PathError.
+
+				
+				
+				
+			
+				
+				<h3 id="File.Write">func (*File) <a href="../../src/os/file.go?s=5864:5913#L175">Write</a>
+					<a class="permalink" href="index.html#File.Write">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (f *<a href="index.html#File">File</a>) Write(b []<a href="../builtin/index.html#byte">byte</a>) (n <a href="../builtin/index.html#int">int</a>, err <a href="../builtin/index.html#error">error</a>)</pre>
+				<p>Write writes len(b) bytes from b to the File.
+It returns the number of bytes written and an error, if any.
+Write returns a non-nil error when n != len(b).
+
+				
+				
+				
+			
+				
+				<h3 id="File.WriteAt">func (*File) <a href="../../src/os/file.go?s=6522:6584#L203">WriteAt</a>
+					<a class="permalink" href="index.html#File.WriteAt">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (f *<a href="index.html#File">File</a>) WriteAt(b []<a href="../builtin/index.html#byte">byte</a>, off <a href="../builtin/index.html#int64">int64</a>) (n <a href="../builtin/index.html#int">int</a>, err <a href="../builtin/index.html#error">error</a>)</pre>
+				<p>WriteAt writes len(b) bytes to the File starting at byte offset off.
+It returns the number of bytes written and an error, if any.
+WriteAt returns a non-nil error when n != len(b).
+<p>If file was opened with the O_APPEND flag, WriteAt returns an error.
+
+				
+				
+				
+			
+				
+				<h3 id="File.WriteString">func (*File) <a href="../../src/os/file.go?s=8642:8697#L283">WriteString</a>
+					<a class="permalink" href="index.html#File.WriteString">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (f *<a href="index.html#File">File</a>) WriteString(s <a href="../builtin/index.html#string">string</a>) (n <a href="../builtin/index.html#int">int</a>, err <a href="../builtin/index.html#error">error</a>)</pre>
+				<p>WriteString is like Write, but writes the contents of string s rather than
+a slice of bytes.
+
+				
+				
+				
+			
+				
+				<h3 id="File.WriteTo">func (*File) <a href="../../src/os/file.go?s=7010:7066#L229">WriteTo</a>
+					<a class="permalink" href="index.html#File.WriteTo">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (f *<a href="index.html#File">File</a>) WriteTo(w <a href="../io/index.html">io</a>.<a href="../io/index.html#Writer">Writer</a>) (n <a href="../builtin/index.html#int64">int64</a>, err <a href="../builtin/index.html#error">error</a>)</pre>
+				<p>WriteTo implements io.WriterTo.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="FileInfo">type <a href="../../src/os/types.go?s=480:507#L11">FileInfo</a>
+				<a class="permalink" href="index.html#FileInfo">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A FileInfo describes a file and is returned by Stat and Lstat.
+
+			<pre>type FileInfo = <a href="../io/fs/index.html">fs</a>.<a href="../io/fs/index.html#FileInfo">FileInfo</a></pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="Lstat">func <a href="../../src/os/stat.go?s=874:915#L14">Lstat</a>
+					<a class="permalink" href="index.html#Lstat">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func Lstat(name <a href="../builtin/index.html#string">string</a>) (<a href="index.html#FileInfo">FileInfo</a>, <a href="../builtin/index.html#error">error</a>)</pre>
+				<p>Lstat returns a FileInfo describing the named file.
+If the file is a symbolic link, the returned FileInfo
+describes the symbolic link. Lstat makes no attempt to follow the link.
+If there is an error, it will be of type *PathError.
+<p>On Windows, if the file is a reparse point that is a surrogate for another
+named entity (such as a symbolic link or mounted folder), the returned
+FileInfo describes the reparse point, and makes no attempt to resolve it.
+
+				
+				
+			
+				
+				<h3 id="Stat">func <a href="../../src/os/stat.go?s=309:349#L1">Stat</a>
+					<a class="permalink" href="index.html#Stat">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func Stat(name <a href="../builtin/index.html#string">string</a>) (<a href="index.html#FileInfo">FileInfo</a>, <a href="../builtin/index.html#error">error</a>)</pre>
+				<p>Stat returns a FileInfo describing the named file.
+If there is an error, it will be of type *PathError.
+
+				
+				
+			
+
+			
+		
+			
+			
+			<h2 id="FileMode">type <a href="../../src/os/types.go?s=798:825#L18">FileMode</a>
+				<a class="permalink" href="index.html#FileMode">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A FileMode represents a file&apos;s mode and permission bits.
+The bits have the same definition on all systems, so that
+information about files can be moved from one system
+to another portably. Not all bits apply to all systems.
+The only required bit is ModeDir for directories.
+
+			<pre>type FileMode = <a href="../io/fs/index.html">fs</a>.<a href="../io/fs/index.html#FileMode">FileMode</a></pre>
+
+			
+
+			
+
+			<div id="example_FileMode" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">
+fi, err := os.Lstat(&#34;some-filename&#34;)
+if err != nil {
+    log.Fatal(err)
+}
+
+fmt.Printf(&#34;permissions: %#o\n&#34;, fi.Mode().Perm()) <span class="comment">// 0400, 0777, etc.</span>
+switch mode := fi.Mode(); {
+case mode.IsRegular():
+    fmt.Println(&#34;regular file&#34;)
+case mode.IsDir():
+    fmt.Println(&#34;directory&#34;)
+case mode&amp;fs.ModeSymlink != 0:
+    fmt.Println(&#34;symbolic link&#34;)
+case mode&amp;fs.ModeNamedPipe != 0:
+    fmt.Println(&#34;named pipe&#34;)
+}
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="LinkError">type <a href="../../src/os/file.go?s=3560:3632#L86">LinkError</a>
+				<a class="permalink" href="index.html#LinkError">&#xb6;</a>
+				
+				
+			</h2>
+			<p>LinkError records an error during a link or symlink or rename
+system call and the paths that caused it.
+
+			<pre>type LinkError struct {
+<span id="LinkError.Op"></span>    Op  <a href="../builtin/index.html#string">string</a>
+<span id="LinkError.Old"></span>    Old <a href="../builtin/index.html#string">string</a>
+<span id="LinkError.New"></span>    New <a href="../builtin/index.html#string">string</a>
+<span id="LinkError.Err"></span>    Err <a href="../builtin/index.html#error">error</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="LinkError.Error">func (*LinkError) <a href="../../src/os/file.go?s=3634:3668#L93">Error</a>
+					<a class="permalink" href="index.html#LinkError.Error">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (e *<a href="index.html#LinkError">LinkError</a>) Error() <a href="../builtin/index.html#string">string</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="LinkError.Unwrap">func (*LinkError) <a href="../../src/os/file.go?s=3738:3772#L97">Unwrap</a>
+					<a class="permalink" href="index.html#LinkError.Unwrap">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (e *<a href="index.html#LinkError">LinkError</a>) Unwrap() <a href="../builtin/index.html#error">error</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="PathError">type <a href="../../src/os/error.go?s=1648:1677#L36">PathError</a>
+				<a class="permalink" href="index.html#PathError">&#xb6;</a>
+				
+				
+			</h2>
+			<p>PathError records an error and the operation and file path that caused it.
+
+			<pre>type PathError = <a href="../io/fs/index.html">fs</a>.<a href="../io/fs/index.html#PathError">PathError</a></pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="ProcAttr">type <a href="../../src/os/exec.go?s=1048:2130#L34">ProcAttr</a>
+				<a class="permalink" href="index.html#ProcAttr">&#xb6;</a>
+				
+				
+			</h2>
+			<p>ProcAttr holds the attributes that will be applied to a new process
+started by StartProcess.
+
+			<pre>type ProcAttr struct {
+    <span class="comment">// If Dir is non-empty, the child changes into the directory before</span>
+    <span class="comment">// creating the process.</span>
+<span id="ProcAttr.Dir"></span>    Dir <a href="../builtin/index.html#string">string</a>
+    <span class="comment">// If Env is non-nil, it gives the environment variables for the</span>
+    <span class="comment">// new process in the form returned by Environ.</span>
+    <span class="comment">// If it is nil, the result of Environ will be used.</span>
+<span id="ProcAttr.Env"></span>    Env []<a href="../builtin/index.html#string">string</a>
+<span id="ProcAttr.Files"></span>    <span class="comment">// Files specifies the open files inherited by the new process. The</span>
+    <span class="comment">// first three entries correspond to standard input, standard output, and</span>
+    <span class="comment">// standard error. An implementation may support additional entries,</span>
+    <span class="comment">// depending on the underlying operating system. A nil entry corresponds</span>
+    <span class="comment">// to that file being closed when the process starts.</span>
+    <span class="comment">// On Unix systems, StartProcess will change these File values</span>
+    <span class="comment">// to blocking mode, which means that SetDeadline will stop working</span>
+    <span class="comment">// and calling Close will not interrupt a Read or Write.</span>
+    Files []*<a href="index.html#File">File</a>
+
+    <span class="comment">// Operating system-specific process creation attributes.</span>
+    <span class="comment">// Note that setting this field means that your program</span>
+    <span class="comment">// may not execute properly or even compile on some</span>
+    <span class="comment">// operating systems.</span>
+<span id="ProcAttr.Sys"></span>    Sys *<a href="../syscall/index.html">syscall</a>.<a href="../syscall/index.html#SysProcAttr">SysProcAttr</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="Process">type <a href="../../src/os/exec.go?s=459:682#L11">Process</a>
+				<a class="permalink" href="index.html#Process">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Process stores the information about a process created by StartProcess.
+
+			<pre>type Process struct {
+<span id="Process.Pid"></span>    Pid <a href="../builtin/index.html#int">int</a>
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="FindProcess">func <a href="../../src/os/exec.go?s=2995:3038#L82">FindProcess</a>
+					<a class="permalink" href="index.html#FindProcess">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func FindProcess(pid <a href="../builtin/index.html#int">int</a>) (*<a href="index.html#Process">Process</a>, <a href="../builtin/index.html#error">error</a>)</pre>
+				<p>FindProcess looks for a running process by its pid.
+<p>The Process it returns can be used to obtain information
+about the underlying operating system process.
+<p>On Unix systems, FindProcess always succeeds and returns a Process
+for the given pid, regardless of whether the process exists. To test whether
+the process actually exists, see whether p.Signal(syscall.Signal(0)) reports
+an error.
+
+				
+				
+			
+				
+				<h3 id="StartProcess">func <a href="../../src/os/exec.go?s=3706:3785#L99">StartProcess</a>
+					<a class="permalink" href="index.html#StartProcess">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func StartProcess(name <a href="../builtin/index.html#string">string</a>, argv []<a href="../builtin/index.html#string">string</a>, attr *<a href="index.html#ProcAttr">ProcAttr</a>) (*<a href="index.html#Process">Process</a>, <a href="../builtin/index.html#error">error</a>)</pre>
+				<p>StartProcess starts a new process with the program, arguments and attributes
+specified by name, argv and attr. The argv slice will become os.Args in the
+new process, so it normally starts with the program name.
+<p>If the calling goroutine has locked the operating system thread
+with runtime.LockOSThread and modified any inheritable OS-level
+thread state (for example, Linux or Plan 9 name spaces), the new
+process will inherit the caller&apos;s thread state.
+<p>StartProcess is a low-level interface. The os/exec package provides
+higher-level interfaces.
+<p>If there is an error, it will be of type *PathError.
+
+				
+				
+			
+
+			
+				
+				<h3 id="Process.Kill">func (*Process) <a href="../../src/os/exec.go?s=4258:4288#L114">Kill</a>
+					<a class="permalink" href="index.html#Process.Kill">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#Process">Process</a>) Kill() <a href="../builtin/index.html#error">error</a></pre>
+				<p>Kill causes the Process to exit immediately. Kill does not wait until
+the Process has actually exited. This only kills the Process itself,
+not any other processes it may have started.
+
+				
+				
+				
+			
+				
+				<h3 id="Process.Release">func (*Process) <a href="../../src/os/exec.go?s=4006:4039#L107">Release</a>
+					<a class="permalink" href="index.html#Process.Release">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#Process">Process</a>) Release() <a href="../builtin/index.html#error">error</a></pre>
+				<p>Release releases any resources associated with the Process p,
+rendering it unusable in the future.
+Release only needs to be called if Wait is not.
+
+				
+				
+				
+			
+				
+				<h3 id="Process.Signal">func (*Process) <a href="../../src/os/exec.go?s=4766:4808#L129">Signal</a>
+					<a class="permalink" href="index.html#Process.Signal">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#Process">Process</a>) Signal(sig <a href="index.html#Signal">Signal</a>) <a href="../builtin/index.html#error">error</a></pre>
+				<p>Signal sends a signal to the Process.
+Sending Interrupt on Windows is not implemented.
+
+				
+				
+				
+			
+				
+				<h3 id="Process.Wait">func (*Process) <a href="../../src/os/exec.go?s=4603:4650#L123">Wait</a>
+					<a class="permalink" href="index.html#Process.Wait">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#Process">Process</a>) Wait() (*<a href="index.html#ProcessState">ProcessState</a>, <a href="../builtin/index.html#error">error</a>)</pre>
+				<p>Wait waits for the Process to exit, and then returns a
+ProcessState describing its status and an error, if any.
+Wait releases any resources associated with the Process.
+On most operating systems, the Process must be a child
+of the current process or an error will be returned.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="ProcessState">type <a href="../../src/os/exec_posix.go?s=1878:2038#L61">ProcessState</a>
+				<a class="permalink" href="index.html#ProcessState">&#xb6;</a>
+				
+				
+			</h2>
+			<p>ProcessState stores information about a process, as reported by Wait.
+
+			<pre>type ProcessState struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="ProcessState.ExitCode">func (*ProcessState) <a href="../../src/os/exec_posix.go?s=3371:3408#L120">ExitCode</a>
+					<a class="permalink" href="index.html#ProcessState.ExitCode">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#ProcessState">ProcessState</a>) ExitCode() <a href="../builtin/index.html#int">int</a></pre>
+				<p>ExitCode returns the exit code of the exited process, or -1
+if the process hasn&apos;t exited or was terminated by a signal.
+
+				
+				
+				
+			
+				
+				<h3 id="ProcessState.Exited">func (*ProcessState) <a href="../../src/os/exec.go?s=5334:5370#L146">Exited</a>
+					<a class="permalink" href="index.html#ProcessState.Exited">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#ProcessState">ProcessState</a>) Exited() <a href="../builtin/index.html#bool">bool</a></pre>
+				<p>Exited reports whether the program has exited.
+On Unix systems this reports true if the program exited due to calling exit,
+but false if the program terminated due to a signal.
+
+				
+				
+				
+			
+				
+				<h3 id="ProcessState.Pid">func (*ProcessState) <a href="../../src/os/exec_posix.go?s=2093:2125#L68">Pid</a>
+					<a class="permalink" href="index.html#ProcessState.Pid">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#ProcessState">ProcessState</a>) Pid() <a href="../builtin/index.html#int">int</a></pre>
+				<p>Pid returns the process id of the exited process.
+
+				
+				
+				
+			
+				
+				<h3 id="ProcessState.String">func (*ProcessState) <a href="../../src/os/exec_posix.go?s=2406:2444#L88">String</a>
+					<a class="permalink" href="index.html#ProcessState.String">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#ProcessState">ProcessState</a>) String() <a href="../builtin/index.html#string">string</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="ProcessState.Success">func (*ProcessState) <a href="../../src/os/exec.go?s=5494:5531#L152">Success</a>
+					<a class="permalink" href="index.html#ProcessState.Success">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#ProcessState">ProcessState</a>) Success() <a href="../builtin/index.html#bool">bool</a></pre>
+				<p>Success reports whether the program exited successfully,
+such as with exit status 0 on Unix.
+
+				
+				
+				
+			
+				
+				<h3 id="ProcessState.Sys">func (*ProcessState) <a href="../../src/os/exec.go?s=5738:5770#L159">Sys</a>
+					<a class="permalink" href="index.html#ProcessState.Sys">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#ProcessState">ProcessState</a>) Sys() <a href="../builtin/index.html#any">any</a></pre>
+				<p>Sys returns system-dependent exit information about
+the process. Convert it to the appropriate underlying
+type, such as syscall.WaitStatus on Unix, to access its contents.
+
+				
+				
+				
+			
+				
+				<h3 id="ProcessState.SysUsage">func (*ProcessState) <a href="../../src/os/exec.go?s=6091:6128#L168">SysUsage</a>
+					<a class="permalink" href="index.html#ProcessState.SysUsage">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#ProcessState">ProcessState</a>) SysUsage() <a href="../builtin/index.html#any">any</a></pre>
+				<p>SysUsage returns system-dependent resource usage information about
+the exited process. Convert it to the appropriate underlying
+type, such as *syscall.Rusage on Unix, to access its contents.
+(On Unix, *syscall.Rusage matches struct rusage as defined in the
+getrusage(2) manual page.)
+
+				
+				
+				
+			
+				
+				<h3 id="ProcessState.SystemTime">func (*ProcessState) <a href="../../src/os/exec.go?s=5070:5119#L139">SystemTime</a>
+					<a class="permalink" href="index.html#ProcessState.SystemTime">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#ProcessState">ProcessState</a>) SystemTime() <a href="../time/index.html">time</a>.<a href="../time/index.html#Duration">Duration</a></pre>
+				<p>SystemTime returns the system CPU time of the exited process and its children.
+
+				
+				
+				
+			
+				
+				<h3 id="ProcessState.UserTime">func (*ProcessState) <a href="../../src/os/exec.go?s=4914:4961#L134">UserTime</a>
+					<a class="permalink" href="index.html#ProcessState.UserTime">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (p *<a href="index.html#ProcessState">ProcessState</a>) UserTime() <a href="../time/index.html">time</a>.<a href="../time/index.html#Duration">Duration</a></pre>
+				<p>UserTime returns the user CPU time of the exited process and its children.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Signal">type <a href="../../src/os/exec.go?s=2286:2377#L62">Signal</a>
+				<a class="permalink" href="index.html#Signal">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A Signal represents an operating system signal.
+The usual underlying implementation is operating system-dependent:
+on Unix it is syscall.Signal.
+
+			<pre>type Signal interface {
+    String() <a href="../builtin/index.html#string">string</a>
+    Signal() <span class="comment">// to distinguish from other Stringers</span>
+}</pre>
+
+			
+
+			
+				<p>The only signal values guaranteed to be present in the os package on all
+systems are os.Interrupt (send the process an interrupt) and os.Kill (force
+the process to exit). On Windows, sending os.Interrupt to a process with
+os.Process.Signal is not implemented; it will return an error instead of
+sending a signal.
+
+				<pre>var (
+    <span id="Interrupt">Interrupt</span> <a href="index.html#Signal">Signal</a> = <a href="../syscall/index.html">syscall</a>.<a href="../syscall/index.html#SIGINT">SIGINT</a>
+    <span id="Kill">Kill</span>      <a href="index.html#Signal">Signal</a> = <a href="../syscall/index.html">syscall</a>.<a href="../syscall/index.html#SIGKILL">SIGKILL</a>
+)</pre>
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="SyscallError">type <a href="../../src/os/error.go?s=1741:1800#L39">SyscallError</a>
+				<a class="permalink" href="index.html#SyscallError">&#xb6;</a>
+				
+				
+			</h2>
+			<p>SyscallError records an error from a specific system call.
+
+			<pre>type SyscallError struct {
+<span id="SyscallError.Syscall"></span>    Syscall <a href="../builtin/index.html#string">string</a>
+<span id="SyscallError.Err"></span>    Err     <a href="../builtin/index.html#error">error</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="SyscallError.Error">func (*SyscallError) <a href="../../src/os/error.go?s=1802:1839#L44">Error</a>
+					<a class="permalink" href="index.html#SyscallError.Error">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (e *<a href="index.html#SyscallError">SyscallError</a>) Error() <a href="../builtin/index.html#string">string</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="SyscallError.Timeout">func (*SyscallError) <a href="../../src/os/error.go?s=2001:2038#L49">Timeout</a>
+					<a class="permalink" href="index.html#SyscallError.Timeout">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (e *<a href="index.html#SyscallError">SyscallError</a>) Timeout() <a href="../builtin/index.html#bool">bool</a></pre>
+				<p>Timeout reports whether this error represents a timeout.
+
+				
+				
+				
+			
+				
+				<h3 id="SyscallError.Unwrap">func (*SyscallError) <a href="../../src/os/error.go?s=1885:1922#L46">Unwrap</a>
+					<a class="permalink" href="index.html#SyscallError.Unwrap">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (e *<a href="index.html#SyscallError">SyscallError</a>) Unwrap() <a href="../builtin/index.html#error">error</a></pre>
+				
+				
+				
+				
+			
+		
+	
+
+	
+
+
+
+
+
+	
+	
+		<h2 id="pkg-subdirectories">Subdirectories</h2>
+	
+	<div class="pkg-dir">
+		<table>
+			<tr>
+				<th class="pkg-name">Name</th>
+				<th class="pkg-synopsis">Synopsis</th>
+			</tr>
+
+			
+			<tr>
+				<td colspan="2"><a href="../../index.html">..</a></td>
+			</tr>
+			
+
+			
+				<tr>
+				
+					<td class="pkg-name" style="padding-left: 0px;">
+						<a href="exec/index.html">exec</a>
+					</td>
+				
+					<td class="pkg-synopsis">
+						Package exec runs external commands.
+					</td>
+				</tr>
+			
+				<tr>
+				
+					<td class="pkg-name" style="padding-left: 0px;">
+						<a href="signal/index.html">signal</a>
+					</td>
+				
+					<td class="pkg-synopsis">
+						Package signal implements access to incoming signals.
+					</td>
+				</tr>
+			
+				<tr>
+				
+					<td class="pkg-name" style="padding-left: 0px;">
+						<a href="user/index.html">user</a>
+					</td>
+				
+					<td class="pkg-synopsis">
+						Package user allows user account lookups by name or id.
+					</td>
+				</tr>
+			
+		</table>
+	</div>
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

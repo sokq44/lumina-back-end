@@ -1,0 +1,1872 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>fmt - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package fmt
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "fmt"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+				<dd><a href="index.html#pkg-examples" class="examplesLink">Examples</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>Package fmt implements formatted I/O with functions analogous
+to C&apos;s printf and scanf.  The format &apos;verbs&apos; are derived from C&apos;s but
+are simpler.
+<h3 id="hdr-Printing">Printing</h3>
+<p>The verbs:
+<p>General:
+<pre>%v	the value in a default format
+	when printing structs, the plus flag (%+v) adds field names
+%#v	a Go-syntax representation of the value
+%T	a Go-syntax representation of the type of the value
+%%	a literal percent sign; consumes no value
+</pre>
+<p>Boolean:
+<pre>%t	the word true or false
+</pre>
+<p>Integer:
+<pre>%b	base 2
+%c	the character represented by the corresponding Unicode code point
+%d	base 10
+%o	base 8
+%O	base 8 with 0o prefix
+%q	a single-quoted character literal safely escaped with Go syntax.
+%x	base 16, with lower-case letters for a-f
+%X	base 16, with upper-case letters for A-F
+%U	Unicode format: U+1234; same as &quot;U+%04X&quot;
+</pre>
+<p>Floating-point and complex constituents:
+<pre>%b	decimalless scientific notation with exponent a power of two,
+	in the manner of strconv.FormatFloat with the &apos;b&apos; format,
+	e.g. -123456p-78
+%e	scientific notation, e.g. -1.234456e+78
+%E	scientific notation, e.g. -1.234456E+78
+%f	decimal point but no exponent, e.g. 123.456
+%F	synonym for %f
+%g	%e for large exponents, %f otherwise. Precision is discussed below.
+%G	%E for large exponents, %F otherwise
+%x	hexadecimal notation (with decimal power of two exponent), e.g. -0x1.23abcp+20
+%X	upper-case hexadecimal notation, e.g. -0X1.23ABCP+20
+</pre>
+<p>String and slice of bytes (treated equivalently with these verbs):
+<pre>%s	the uninterpreted bytes of the string or slice
+%q	a double-quoted string safely escaped with Go syntax
+%x	base 16, lower-case, two characters per byte
+%X	base 16, upper-case, two characters per byte
+</pre>
+<p>Slice:
+<pre>%p	address of 0th element in base 16 notation, with leading 0x
+</pre>
+<p>Pointer:
+<pre>%p	base 16 notation, with leading 0x
+The %b, %d, %o, %x and %X verbs also work with pointers,
+formatting the value exactly as if it were an integer.
+</pre>
+<p>The default format for %v is:
+<pre>bool:                    %t
+int, int8 etc.:          %d
+uint, uint8 etc.:        %d, %#x if printed with %#v
+float32, complex64, etc: %g
+string:                  %s
+chan:                    %p
+pointer:                 %p
+</pre>
+<p>For compound objects, the elements are printed using these rules, recursively,
+laid out like this:
+<pre>struct:             {field0 field1 ...}
+array, slice:       [elem0 elem1 ...]
+maps:               map[key1:value1 key2:value2 ...]
+pointer to above:   &amp;{}, &amp;[], &amp;map[]
+</pre>
+<p>Width is specified by an optional decimal number immediately preceding the verb.
+If absent, the width is whatever is necessary to represent the value.
+Precision is specified after the (optional) width by a period followed by a
+decimal number. If no period is present, a default precision is used.
+A period with no following number specifies a precision of zero.
+Examples:
+<pre>%f     default width, default precision
+%9f    width 9, default precision
+%.2f   default width, precision 2
+%9.2f  width 9, precision 2
+%9.f   width 9, precision 0
+</pre>
+<p>Width and precision are measured in units of Unicode code points,
+that is, runes. (This differs from C&apos;s printf where the
+units are always measured in bytes.) Either or both of the flags
+may be replaced with the character &apos;*&apos;, causing their values to be
+obtained from the next operand (preceding the one to format),
+which must be of type int.
+<p>For most values, width is the minimum number of runes to output,
+padding the formatted form with spaces if necessary.
+<p>For strings, byte slices and byte arrays, however, precision
+limits the length of the input to be formatted (not the size of
+the output), truncating if necessary. Normally it is measured in
+runes, but for these types when formatted with the %x or %X format
+it is measured in bytes.
+<p>For floating-point values, width sets the minimum width of the field and
+precision sets the number of places after the decimal, if appropriate,
+except that for %g/%G precision sets the maximum number of significant
+digits (trailing zeros are removed). For example, given 12.345 the format
+%6.3f prints 12.345 while %.3g prints 12.3. The default precision for %e, %f
+and %#g is 6; for %g it is the smallest number of digits necessary to identify
+the value uniquely.
+<p>For complex numbers, the width and precision apply to the two
+components independently and the result is parenthesized, so %f applied
+to 1.2+3.4i produces (1.200000+3.400000i).
+<p>When formatting a single integer code point or a rune string (type []rune)
+with %q, invalid Unicode code points are changed to the Unicode replacement
+character, U+FFFD, as in strconv.QuoteRune.
+<p>Other flags:
+<pre>&apos;+&apos;	always print a sign for numeric values;
+	guarantee ASCII-only output for %q (%+q)
+&apos;-&apos;	pad with spaces on the right rather than the left (left-justify the field)
+&apos;#&apos;	alternate format: add leading 0b for binary (%#b), 0 for octal (%#o),
+	0x or 0X for hex (%#x or %#X); suppress 0x for %p (%#p);
+	for %q, print a raw (backquoted) string if strconv.CanBackquote
+	returns true;
+	always print a decimal point for %e, %E, %f, %F, %g and %G;
+	do not remove trailing zeros for %g and %G;
+	write e.g. U+0078 &apos;x&apos; if the character is printable for %U (%#U).
+&apos; &apos;	(space) leave a space for elided sign in numbers (% d);
+	put spaces between bytes printing strings or slices in hex (% x, % X)
+&apos;0&apos;	pad with leading zeros rather than spaces;
+	for numbers, this moves the padding after the sign;
+	ignored for strings, byte slices and byte arrays
+</pre>
+<p>Flags are ignored by verbs that do not expect them.
+For example there is no alternate decimal format, so %#d and %d
+behave identically.
+<p>For each Printf-like function, there is also a Print function
+that takes no format and is equivalent to saying %v for every
+operand.  Another variant Println inserts blanks between
+operands and appends a newline.
+<p>Regardless of the verb, if an operand is an interface value,
+the internal concrete value is used, not the interface itself.
+Thus:
+<pre>var i interface{} = 23
+fmt.Printf(&quot;%v\n&quot;, i)
+</pre>
+<p>will print 23.
+<p>Except when printed using the verbs %T and %p, special
+formatting considerations apply for operands that implement
+certain interfaces. In order of application:
+<p>1. If the operand is a reflect.Value, the operand is replaced by the
+concrete value that it holds, and printing continues with the next rule.
+<p>2. If an operand implements the Formatter interface, it will
+be invoked. In this case the interpretation of verbs and flags is
+controlled by that implementation.
+<p>3. If the %v verb is used with the # flag (%#v) and the operand
+implements the GoStringer interface, that will be invoked.
+<p>If the format (which is implicitly %v for Println etc.) is valid
+for a string (%s %q %x %X), or is %v but not %#v,
+the following two rules apply:
+<p>4. If an operand implements the error interface, the Error method
+will be invoked to convert the object to a string, which will then
+be formatted as required by the verb (if any).
+<p>5. If an operand implements method String() string, that method
+will be invoked to convert the object to a string, which will then
+be formatted as required by the verb (if any).
+<p>For compound operands such as slices and structs, the format
+applies to the elements of each operand, recursively, not to the
+operand as a whole. Thus %q will quote each element of a slice
+of strings, and %6.2f will control formatting for each element
+of a floating-point array.
+<p>However, when printing a byte slice with a string-like verb
+(%s %q %x %X), it is treated identically to a string, as a single item.
+<p>To avoid recursion in cases such as
+<pre>type X string
+func (x X) String() string { return Sprintf(&quot;&lt;%s&gt;&quot;, x) }
+</pre>
+<p>convert the value before recurring:
+<pre>func (x X) String() string { return Sprintf(&quot;&lt;%s&gt;&quot;, string(x)) }
+</pre>
+<p>Infinite recursion can also be triggered by self-referential data
+structures, such as a slice that contains itself as an element, if
+that type has a String method. Such pathologies are rare, however,
+and the package does not protect against them.
+<p>When printing a struct, fmt cannot and therefore does not invoke
+formatting methods such as Error or String on unexported fields.
+<h3 id="hdr-Explicit_argument_indexes">Explicit argument indexes</h3>
+<p>In Printf, Sprintf, and Fprintf, the default behavior is for each
+formatting verb to format successive arguments passed in the call.
+However, the notation [n] immediately before the verb indicates that the
+nth one-indexed argument is to be formatted instead. The same notation
+before a &apos;*&apos; for a width or precision selects the argument index holding
+the value. After processing a bracketed expression [n], subsequent verbs
+will use arguments n+1, n+2, etc. unless otherwise directed.
+<p>For example,
+<pre>fmt.Sprintf(&quot;%[2]d %[1]d\n&quot;, 11, 22)
+</pre>
+<p>will yield &quot;22 11&quot;, while
+<pre>fmt.Sprintf(&quot;%[3]*.[2]*[1]f&quot;, 12.0, 2, 6)
+</pre>
+<p>equivalent to
+<pre>fmt.Sprintf(&quot;%6.2f&quot;, 12.0)
+</pre>
+<p>will yield &quot; 12.00&quot;. Because an explicit index affects subsequent verbs,
+this notation can be used to print the same values multiple times
+by resetting the index for the first argument to be repeated:
+<pre>fmt.Sprintf(&quot;%d %d %#[1]x %#x&quot;, 16, 17)
+</pre>
+<p>will yield &quot;16 17 0x10 0x11&quot;.
+<h3 id="hdr-Format_errors">Format errors</h3>
+<p>If an invalid argument is given for a verb, such as providing
+a string to %d, the generated string will contain a
+description of the problem, as in these examples:
+<pre>Wrong type or unknown verb: %!verb(type=value)
+	Printf(&quot;%d&quot;, &quot;hi&quot;):        %!d(string=hi)
+Too many arguments: %!(EXTRA type=value)
+	Printf(&quot;hi&quot;, &quot;guys&quot;):      hi%!(EXTRA string=guys)
+Too few arguments: %!verb(MISSING)
+	Printf(&quot;hi%d&quot;):            hi%!d(MISSING)
+Non-int for width or precision: %!(BADWIDTH) or %!(BADPREC)
+	Printf(&quot;%*s&quot;, 4.5, &quot;hi&quot;):  %!(BADWIDTH)hi
+	Printf(&quot;%.*s&quot;, 4.5, &quot;hi&quot;): %!(BADPREC)hi
+Invalid or invalid use of argument index: %!(BADINDEX)
+	Printf(&quot;%*[2]d&quot;, 7):       %!d(BADINDEX)
+	Printf(&quot;%.[2]d&quot;, 7):       %!d(BADINDEX)
+</pre>
+<p>All errors begin with the string &quot;%!&quot; followed sometimes
+by a single character (the verb) and end with a parenthesized
+description.
+<p>If an Error or String method triggers a panic when called by a
+print routine, the fmt package reformats the error message
+from the panic, decorating it with an indication that it came
+through the fmt package.  For example, if a String method
+calls panic(&quot;bad&quot;), the resulting formatted message will look
+like
+<pre>%!s(PANIC=bad)
+</pre>
+<p>The %!s just shows the print verb in use when the failure
+occurred. If the panic is caused by a nil receiver to an Error
+or String method, however, the output is the undecorated
+string, &quot;&lt;nil&gt;&quot;.
+<h3 id="hdr-Scanning">Scanning</h3>
+<p>An analogous set of functions scans formatted text to yield
+values.  Scan, Scanf and Scanln read from os.Stdin; Fscan,
+Fscanf and Fscanln read from a specified io.Reader; Sscan,
+Sscanf and Sscanln read from an argument string.
+<p>Scan, Fscan, Sscan treat newlines in the input as spaces.
+<p>Scanln, Fscanln and Sscanln stop scanning at a newline and
+require that the items be followed by a newline or EOF.
+<p>Scanf, Fscanf, and Sscanf parse the arguments according to a
+format string, analogous to that of Printf. In the text that
+follows, &apos;space&apos; means any Unicode whitespace character
+except newline.
+<p>In the format string, a verb introduced by the % character
+consumes and parses input; these verbs are described in more
+detail below. A character other than %, space, or newline in
+the format consumes exactly that input character, which must
+be present. A newline with zero or more spaces before it in
+the format string consumes zero or more spaces in the input
+followed by a single newline or the end of the input. A space
+following a newline in the format string consumes zero or more
+spaces in the input. Otherwise, any run of one or more spaces
+in the format string consumes as many spaces as possible in
+the input. Unless the run of spaces in the format string
+appears adjacent to a newline, the run must consume at least
+one space from the input or find the end of the input.
+<p>The handling of spaces and newlines differs from that of C&apos;s
+scanf family: in C, newlines are treated as any other space,
+and it is never an error when a run of spaces in the format
+string finds no spaces to consume in the input.
+<p>The verbs behave analogously to those of Printf.
+For example, %x will scan an integer as a hexadecimal number,
+and %v will scan the default representation format for the value.
+The Printf verbs %p and %T and the flags # and + are not implemented.
+For floating-point and complex values, all valid formatting verbs
+(%b %e %E %f %F %g %G %x %X and %v) are equivalent and accept
+both decimal and hexadecimal notation (for example: &quot;2.3e+7&quot;, &quot;0x4.5p-8&quot;)
+and digit-separating underscores (for example: &quot;3.14159_26535_89793&quot;).
+<p>Input processed by verbs is implicitly space-delimited: the
+implementation of every verb except %c starts by discarding
+leading spaces from the remaining input, and the %s verb
+(and %v reading into a string) stops consuming input at the first
+space or newline character.
+<p>The familiar base-setting prefixes 0b (binary), 0o and 0 (octal),
+and 0x (hexadecimal) are accepted when scanning integers
+without a format or with the %v verb, as are digit-separating
+underscores.
+<p>Width is interpreted in the input text but there is no
+syntax for scanning with a precision (no %5.2f, just %5f).
+If width is provided, it applies after leading spaces are
+trimmed and specifies the maximum number of runes to read
+to satisfy the verb. For example,
+<pre>Sscanf(&quot; 1234567 &quot;, &quot;%5s%d&quot;, &amp;s, &amp;i)
+</pre>
+<p>will set s to &quot;12345&quot; and i to 67 while
+<pre>Sscanf(&quot; 12 34 567 &quot;, &quot;%5s%d&quot;, &amp;s, &amp;i)
+</pre>
+<p>will set s to &quot;12&quot; and i to 34.
+<p>In all the scanning functions, a carriage return followed
+immediately by a newline is treated as a plain newline
+(\r\n means the same as \n).
+<p>In all the scanning functions, if an operand implements method
+Scan (that is, it implements the Scanner interface) that
+method will be used to scan the text for that operand.  Also,
+if the number of arguments scanned is less than the number of
+arguments provided, an error is returned.
+<p>All arguments to be scanned must be either pointers to basic
+types or implementations of the Scanner interface.
+<p>Like Scanf and Fscanf, Sscanf need not consume its entire input.
+There is no way to recover how much of the input string Sscanf used.
+<p>Note: Fscan etc. can read one character (rune) past the input
+they return, which means that a loop calling a scan routine
+may skip some of the input.  This is usually a problem only
+when there is no space between input values.  If the reader
+provided to Fscan implements ReadRune, that method will be used
+to read characters.  If the reader also implements UnreadRune,
+that method will be used to save the character and successive
+calls will not lose data.  To attach ReadRune and UnreadRune
+methods to a reader without that capability, use
+bufio.NewReader.
+
+				<div id="example__formats" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example (Formats)</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example (Formats)</span></p>
+		<p>These examples demonstrate the basics of printing using a format string. Printf,
+Sprintf, and Fprintf all take a format string that specifies how to format the
+subsequent arguments. For example, %d (we call that a &#39;verb&#39;) says to print the
+corresponding argument, which must be an integer (or something containing an
+integer, such as a slice of ints) in decimal. The verb %v (&#39;v&#39; for &#39;value&#39;)
+always formats the argument in its default form, just how Print or Println would
+show it. The special verb %T (&#39;T&#39; for &#39;Type&#39;) prints the type of the argument
+rather than its value. The examples are not exhaustive; see the package comment
+for all the details.
+</p>
+		
+		
+			<p>Code:</p>
+			<pre class="code"><span class="comment">// A basic set of examples showing that %v is the default format, in this</span>
+<span class="comment">// case decimal for integers, which can be explicitly requested with %d;</span>
+<span class="comment">// the output is just what Println generates.</span>
+integer := 23
+<span class="comment">// Each of these prints &#34;23&#34; (without the quotes).</span>
+fmt.Println(integer)
+fmt.Printf(&#34;%v\n&#34;, integer)
+fmt.Printf(&#34;%d\n&#34;, integer)
+
+<span class="comment">// The special verb %T shows the type of an item rather than its value.</span>
+fmt.Printf(&#34;%T %T\n&#34;, integer, &amp;integer)
+<span class="comment">// Result: int *int</span>
+
+<span class="comment">// Println(x) is the same as Printf(&#34;%v\n&#34;, x) so we will use only Printf</span>
+<span class="comment">// in the following examples. Each one demonstrates how to format values of</span>
+<span class="comment">// a particular type, such as integers or strings. We start each format</span>
+<span class="comment">// string with %v to show the default output and follow that with one or</span>
+<span class="comment">// more custom formats.</span>
+
+<span class="comment">// Booleans print as &#34;true&#34; or &#34;false&#34; with %v or %t.</span>
+truth := true
+fmt.Printf(&#34;%v %t\n&#34;, truth, truth)
+<span class="comment">// Result: true true</span>
+
+<span class="comment">// Integers print as decimals with %v and %d,</span>
+<span class="comment">// or in hex with %x, octal with %o, or binary with %b.</span>
+answer := 42
+fmt.Printf(&#34;%v %d %x %o %b\n&#34;, answer, answer, answer, answer, answer)
+<span class="comment">// Result: 42 42 2a 52 101010</span>
+
+<span class="comment">// Floats have multiple formats: %v and %g print a compact representation,</span>
+<span class="comment">// while %f prints a decimal point and %e uses exponential notation. The</span>
+<span class="comment">// format %6.2f used here shows how to set the width and precision to</span>
+<span class="comment">// control the appearance of a floating-point value. In this instance, 6 is</span>
+<span class="comment">// the total width of the printed text for the value (note the extra spaces</span>
+<span class="comment">// in the output) and 2 is the number of decimal places to show.</span>
+pi := math.Pi
+fmt.Printf(&#34;%v %g %.2f (%6.2f) %e\n&#34;, pi, pi, pi, pi, pi)
+<span class="comment">// Result: 3.141592653589793 3.141592653589793 3.14 (  3.14) 3.141593e+00</span>
+
+<span class="comment">// Complex numbers format as parenthesized pairs of floats, with an &#39;i&#39;</span>
+<span class="comment">// after the imaginary part.</span>
+point := 110.7 + 22.5i
+fmt.Printf(&#34;%v %g %.2f %.2e\n&#34;, point, point, point, point)
+<span class="comment">// Result: (110.7+22.5i) (110.7+22.5i) (110.70+22.50i) (1.11e+02+2.25e+01i)</span>
+
+<span class="comment">// Runes are integers but when printed with %c show the character with that</span>
+<span class="comment">// Unicode value. The %q verb shows them as quoted characters, %U as a</span>
+<span class="comment">// hex Unicode code point, and %#U as both a code point and a quoted</span>
+<span class="comment">// printable form if the rune is printable.</span>
+smile := &#39;😀&#39;
+fmt.Printf(&#34;%v %d %c %q %U %#U\n&#34;, smile, smile, smile, smile, smile, smile)
+<span class="comment">// Result: 128512 128512 😀 &#39;😀&#39; U+1F600 U+1F600 &#39;😀&#39;</span>
+
+<span class="comment">// Strings are formatted with %v and %s as-is, with %q as quoted strings,</span>
+<span class="comment">// and %#q as backquoted strings.</span>
+placeholders := `foo &#34;bar&#34;`
+fmt.Printf(&#34;%v %s %q %#q\n&#34;, placeholders, placeholders, placeholders, placeholders)
+<span class="comment">// Result: foo &#34;bar&#34; foo &#34;bar&#34; &#34;foo \&#34;bar\&#34;&#34; `foo &#34;bar&#34;`</span>
+
+<span class="comment">// Maps formatted with %v show keys and values in their default formats.</span>
+<span class="comment">// The %#v form (the # is called a &#34;flag&#34; in this context) shows the map in</span>
+<span class="comment">// the Go source format. Maps are printed in a consistent order, sorted</span>
+<span class="comment">// by the values of the keys.</span>
+isLegume := map[string]bool{
+    &#34;peanut&#34;:    true,
+    &#34;dachshund&#34;: false,
+}
+fmt.Printf(&#34;%v %#v\n&#34;, isLegume, isLegume)
+<span class="comment">// Result: map[dachshund:false peanut:true] map[string]bool{&#34;dachshund&#34;:false, &#34;peanut&#34;:true}</span>
+
+<span class="comment">// Structs formatted with %v show field values in their default formats.</span>
+<span class="comment">// The %+v form shows the fields by name, while %#v formats the struct in</span>
+<span class="comment">// Go source format.</span>
+person := struct {
+    Name string
+    Age  int
+}{&#34;Kim&#34;, 22}
+fmt.Printf(&#34;%v %+v %#v\n&#34;, person, person, person)
+<span class="comment">// Result: {Kim 22} {Name:Kim Age:22} struct { Name string; Age int }{Name:&#34;Kim&#34;, Age:22}</span>
+
+<span class="comment">// The default format for a pointer shows the underlying value preceded by</span>
+<span class="comment">// an ampersand. The %p verb prints the pointer value in hex. We use a</span>
+<span class="comment">// typed nil for the argument to %p here because the value of any non-nil</span>
+<span class="comment">// pointer would change from run to run; run the commented-out Printf</span>
+<span class="comment">// call yourself to see.</span>
+pointer := &amp;person
+fmt.Printf(&#34;%v %p\n&#34;, pointer, (*int)(nil))
+<span class="comment">// Result: &amp;{Kim 22} 0x0</span>
+<span class="comment">// fmt.Printf(&#34;%v %p\n&#34;, pointer, pointer)</span>
+<span class="comment">// Result: &amp;{Kim 22} 0x010203 // See comment above.</span>
+
+<span class="comment">// Arrays and slices are formatted by applying the format to each element.</span>
+greats := [5]string{&#34;Kitano&#34;, &#34;Kobayashi&#34;, &#34;Kurosawa&#34;, &#34;Miyazaki&#34;, &#34;Ozu&#34;}
+fmt.Printf(&#34;%v %q\n&#34;, greats, greats)
+<span class="comment">// Result: [Kitano Kobayashi Kurosawa Miyazaki Ozu] [&#34;Kitano&#34; &#34;Kobayashi&#34; &#34;Kurosawa&#34; &#34;Miyazaki&#34; &#34;Ozu&#34;]</span>
+
+kGreats := greats[:3]
+fmt.Printf(&#34;%v %q %#v\n&#34;, kGreats, kGreats, kGreats)
+<span class="comment">// Result: [Kitano Kobayashi Kurosawa] [&#34;Kitano&#34; &#34;Kobayashi&#34; &#34;Kurosawa&#34;] []string{&#34;Kitano&#34;, &#34;Kobayashi&#34;, &#34;Kurosawa&#34;}</span>
+
+<span class="comment">// Byte slices are special. Integer verbs like %d print the elements in</span>
+<span class="comment">// that format. The %s and %q forms treat the slice like a string. The %x</span>
+<span class="comment">// verb has a special form with the space flag that puts a space between</span>
+<span class="comment">// the bytes.</span>
+cmd := []byte(&#34;a⌘&#34;)
+fmt.Printf(&#34;%v %d %s %q %x % x\n&#34;, cmd, cmd, cmd, cmd, cmd, cmd)
+<span class="comment">// Result: [97 226 140 152] [97 226 140 152] a⌘ &#34;a⌘&#34; 61e28c98 61 e2 8c 98</span>
+
+<span class="comment">// Types that implement Stringer are printed the same as strings. Because</span>
+<span class="comment">// Stringers return a string, we can print them using a string-specific</span>
+<span class="comment">// verb such as %q.</span>
+now := time.Unix(123456789, 0).UTC() <span class="comment">// time.Time implements fmt.Stringer.</span>
+fmt.Printf(&#34;%v %q\n&#34;, now, now)
+<span class="comment">// Result: 1973-11-29 21:33:09 +0000 UTC &#34;1973-11-29 21:33:09 +0000 UTC&#34;</span>
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">23
+23
+23
+int *int
+true true
+42 42 2a 52 101010
+3.141592653589793 3.141592653589793 3.14 (  3.14) 3.141593e+00
+(110.7+22.5i) (110.7+22.5i) (110.70+22.50i) (1.11e+02+2.25e+01i)
+128512 128512 😀 &#39;😀&#39; U+1F600 U+1F600 &#39;😀&#39;
+foo &#34;bar&#34; foo &#34;bar&#34; &#34;foo \&#34;bar\&#34;&#34; `foo &#34;bar&#34;`
+map[dachshund:false peanut:true] map[string]bool{&#34;dachshund&#34;:false, &#34;peanut&#34;:true}
+{Kim 22} {Name:Kim Age:22} struct { Name string; Age int }{Name:&#34;Kim&#34;, Age:22}
+&amp;{Kim 22} 0x0
+[Kitano Kobayashi Kurosawa Miyazaki Ozu] [&#34;Kitano&#34; &#34;Kobayashi&#34; &#34;Kurosawa&#34; &#34;Miyazaki&#34; &#34;Ozu&#34;]
+[Kitano Kobayashi Kurosawa] [&#34;Kitano&#34; &#34;Kobayashi&#34; &#34;Kurosawa&#34;] []string{&#34;Kitano&#34;, &#34;Kobayashi&#34;, &#34;Kurosawa&#34;}
+[97 226 140 152] [97 226 140 152] a⌘ &#34;a⌘&#34; 61e28c98 61 e2 8c 98
+1973-11-29 21:33:09 +0000 UTC &#34;1973-11-29 21:33:09 +0000 UTC&#34;
+</pre>
+			
+		
+	</div>
+</div>
+<div id="example__printers" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example (Printers)</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example (Printers)</span></p>
+		<p>Print, Println, and Printf lay out their arguments differently. In this example
+we can compare their behaviors. Println always adds blanks between the items it
+prints, while Print adds blanks only between non-string arguments and Printf
+does exactly what it is told.
+Sprint, Sprintln, Sprintf, Fprint, Fprintln, and Fprintf behave the same as
+their corresponding Print, Println, and Printf functions shown here.
+</p>
+		
+		
+			<p>Code:</p>
+			<pre class="code">a, b := 3.0, 4.0
+h := math.Hypot(a, b)
+
+<span class="comment">// Print inserts blanks between arguments when neither is a string.</span>
+<span class="comment">// It does not add a newline to the output, so we add one explicitly.</span>
+fmt.Print(&#34;The vector (&#34;, a, b, &#34;) has length &#34;, h, &#34;.\n&#34;)
+
+<span class="comment">// Println always inserts spaces between its arguments,</span>
+<span class="comment">// so it cannot be used to produce the same output as Print in this case;</span>
+<span class="comment">// its output has extra spaces.</span>
+<span class="comment">// Also, Println always adds a newline to the output.</span>
+fmt.Println(&#34;The vector (&#34;, a, b, &#34;) has length&#34;, h, &#34;.&#34;)
+
+<span class="comment">// Printf provides complete control but is more complex to use.</span>
+<span class="comment">// It does not add a newline to the output, so we add one explicitly</span>
+<span class="comment">// at the end of the format specifier string.</span>
+fmt.Printf(&#34;The vector (%g %g) has length %g.\n&#34;, a, b, h)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">The vector (3 4) has length 5.
+The vector ( 3 4 ) has length 5 .
+The vector (3 4) has length 5.
+</pre>
+			
+		
+	</div>
+</div>
+
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+			
+			
+				
+				<dd><a href="index.html#Append">func Append(b []byte, a ...any) []byte</a></dd>
+			
+				
+				<dd><a href="index.html#Appendf">func Appendf(b []byte, format string, a ...any) []byte</a></dd>
+			
+				
+				<dd><a href="index.html#Appendln">func Appendln(b []byte, a ...any) []byte</a></dd>
+			
+				
+				<dd><a href="index.html#Errorf">func Errorf(format string, a ...any) error</a></dd>
+			
+				
+				<dd><a href="index.html#FormatString">func FormatString(state State, verb rune) string</a></dd>
+			
+				
+				<dd><a href="index.html#Fprint">func Fprint(w io.Writer, a ...any) (n int, err error)</a></dd>
+			
+				
+				<dd><a href="index.html#Fprintf">func Fprintf(w io.Writer, format string, a ...any) (n int, err error)</a></dd>
+			
+				
+				<dd><a href="index.html#Fprintln">func Fprintln(w io.Writer, a ...any) (n int, err error)</a></dd>
+			
+				
+				<dd><a href="index.html#Fscan">func Fscan(r io.Reader, a ...any) (n int, err error)</a></dd>
+			
+				
+				<dd><a href="index.html#Fscanf">func Fscanf(r io.Reader, format string, a ...any) (n int, err error)</a></dd>
+			
+				
+				<dd><a href="index.html#Fscanln">func Fscanln(r io.Reader, a ...any) (n int, err error)</a></dd>
+			
+				
+				<dd><a href="index.html#Print">func Print(a ...any) (n int, err error)</a></dd>
+			
+				
+				<dd><a href="index.html#Printf">func Printf(format string, a ...any) (n int, err error)</a></dd>
+			
+				
+				<dd><a href="index.html#Println">func Println(a ...any) (n int, err error)</a></dd>
+			
+				
+				<dd><a href="index.html#Scan">func Scan(a ...any) (n int, err error)</a></dd>
+			
+				
+				<dd><a href="index.html#Scanf">func Scanf(format string, a ...any) (n int, err error)</a></dd>
+			
+				
+				<dd><a href="index.html#Scanln">func Scanln(a ...any) (n int, err error)</a></dd>
+			
+				
+				<dd><a href="index.html#Sprint">func Sprint(a ...any) string</a></dd>
+			
+				
+				<dd><a href="index.html#Sprintf">func Sprintf(format string, a ...any) string</a></dd>
+			
+				
+				<dd><a href="index.html#Sprintln">func Sprintln(a ...any) string</a></dd>
+			
+				
+				<dd><a href="index.html#Sscan">func Sscan(str string, a ...any) (n int, err error)</a></dd>
+			
+				
+				<dd><a href="index.html#Sscanf">func Sscanf(str string, format string, a ...any) (n int, err error)</a></dd>
+			
+				
+				<dd><a href="index.html#Sscanln">func Sscanln(str string, a ...any) (n int, err error)</a></dd>
+			
+			
+				
+				<dd><a href="index.html#Formatter">type Formatter</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#GoStringer">type GoStringer</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#ScanState">type ScanState</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#Scanner">type Scanner</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#State">type State</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#Stringer">type Stringer</a></dd>
+				
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+		<div id="pkg-examples">
+			<h3>Examples</h3>
+			<div class="js-expandAll expandAll collapsed">(Expand All)</div>
+			<dl>
+			
+			<dd><a class="exampleLink" href="index.html#example_Errorf">Errorf</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Fprint">Fprint</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Fprintf">Fprintf</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Fprintln">Fprintln</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Fscanf">Fscanf</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Fscanln">Fscanln</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_GoStringer">GoStringer</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Print">Print</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Printf">Printf</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Println">Println</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Sprint">Sprint</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Sprintf">Sprintf</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Sprintln">Sprintln</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Sscanf">Sscanf</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Stringer">Stringer</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example__formats">Package (Formats)</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example__printers">Package (Printers)</a></dd>
+			
+			</dl>
+		</div>
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../src/fmt/doc.go">doc.go</a>
+			
+				<a href="../../src/fmt/errors.go">errors.go</a>
+			
+				<a href="../../src/fmt/format.go">format.go</a>
+			
+				<a href="../../src/fmt/print.go">print.go</a>
+			
+				<a href="../../src/fmt/scan.go">scan.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+		
+		
+			
+			
+			<h2 id="Append">func <a href="../../src/fmt/print.go?s=8509:8547#L277">Append</a>
+				<a class="permalink" href="index.html#Append">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Append(b []<a href="../builtin/index.html#byte">byte</a>, a ...<a href="../builtin/index.html#any">any</a>) []<a href="../builtin/index.html#byte">byte</a></pre>
+			<p>Append formats using the default formats for its operands, appends the result to
+the byte slice, and returns the updated slice.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Appendf">func <a href="../../src/fmt/print.go?s=7259:7313#L237">Appendf</a>
+				<a class="permalink" href="index.html#Appendf">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Appendf(b []<a href="../builtin/index.html#byte">byte</a>, format <a href="../builtin/index.html#string">string</a>, a ...<a href="../builtin/index.html#any">any</a>) []<a href="../builtin/index.html#byte">byte</a></pre>
+			<p>Appendf formats according to a format specifier, appends the result to the byte
+slice, and returns the updated slice.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Appendln">func <a href="../../src/fmt/print.go?s=9947:9987#L320">Appendln</a>
+				<a class="permalink" href="index.html#Appendln">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Appendln(b []<a href="../builtin/index.html#byte">byte</a>, a ...<a href="../builtin/index.html#any">any</a>) []<a href="../builtin/index.html#byte">byte</a></pre>
+			<p>Appendln formats using the default formats for its operands, appends the result
+to the byte slice, and returns the updated slice. Spaces are always added
+between operands and a newline is appended.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Errorf">func <a href="../../src/fmt/errors.go?s=796:838#L12">Errorf</a>
+				<a class="permalink" href="index.html#Errorf">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Errorf(format <a href="../builtin/index.html#string">string</a>, a ...<a href="../builtin/index.html#any">any</a>) <a href="../builtin/index.html#error">error</a></pre>
+			<p>Errorf formats according to a format specifier and returns the string as a
+value that satisfies error.
+<p>If the format specifier includes a %w verb with an error operand,
+the returned error will implement an Unwrap method returning the operand.
+If there is more than one %w verb, the returned error will implement an
+Unwrap method returning a []error containing all the %w operands in the
+order they appear in the arguments.
+It is invalid to supply the %w verb with an operand that does not implement
+the error interface. The %w verb is otherwise a synonym for %v.
+
+			<div id="example_Errorf" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		<p>The Errorf function lets us use formatting features
+to create descriptive error messages.
+</p>
+		
+		
+			<p>Code:</p>
+			<pre class="code">const name, id = &#34;bueller&#34;, 17
+err := fmt.Errorf(&#34;user %q (id %d) not found&#34;, name, id)
+fmt.Println(err.Error())
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">user &#34;bueller&#34; (id 17) not found
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="FormatString">func <a href="../../src/fmt/print.go?s=2750:2798#L71">FormatString</a>
+				<a class="permalink" href="index.html#FormatString">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func FormatString(state <a href="index.html#State">State</a>, verb <a href="../builtin/index.html#rune">rune</a>) <a href="../builtin/index.html#string">string</a></pre>
+			<p>FormatString returns a string representing the fully qualified formatting
+directive captured by the State, followed by the argument verb. (State does not
+itself contain the verb.) The result has a leading percent sign followed by any
+flags, the width, and the precision. Missing flags, width, and precision are
+omitted. This function allows a Formatter to reconstruct the original
+directive triggering the call to Format.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Fprint">func <a href="../../src/fmt/print.go?s=7669:7722#L250">Fprint</a>
+				<a class="permalink" href="index.html#Fprint">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Fprint(w <a href="../io/index.html">io</a>.<a href="../io/index.html#Writer">Writer</a>, a ...<a href="../builtin/index.html#any">any</a>) (n <a href="../builtin/index.html#int">int</a>, err <a href="../builtin/index.html#error">error</a>)</pre>
+			<p>Fprint formats using the default formats for its operands and writes to w.
+Spaces are added between operands when neither is a string.
+It returns the number of bytes written and any write error encountered.
+
+			<div id="example_Fprint" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">const name, age = &#34;Kim&#34;, 22
+n, err := fmt.Fprint(os.Stdout, name, &#34; is &#34;, age, &#34; years old.\n&#34;)
+
+<span class="comment">// The n and err return values from Fprint are</span>
+<span class="comment">// those returned by the underlying io.Writer.</span>
+if err != nil {
+    fmt.Fprintf(os.Stderr, &#34;Fprint: %v\n&#34;, err)
+}
+fmt.Print(n, &#34; bytes written.\n&#34;)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">Kim is 22 years old.
+21 bytes written.
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Fprintf">func <a href="../../src/fmt/print.go?s=6500:6569#L212">Fprintf</a>
+				<a class="permalink" href="index.html#Fprintf">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Fprintf(w <a href="../io/index.html">io</a>.<a href="../io/index.html#Writer">Writer</a>, format <a href="../builtin/index.html#string">string</a>, a ...<a href="../builtin/index.html#any">any</a>) (n <a href="../builtin/index.html#int">int</a>, err <a href="../builtin/index.html#error">error</a>)</pre>
+			<p>Fprintf formats according to a format specifier and writes to w.
+It returns the number of bytes written and any write error encountered.
+
+			<div id="example_Fprintf" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">const name, age = &#34;Kim&#34;, 22
+n, err := fmt.Fprintf(os.Stdout, &#34;%s is %d years old.\n&#34;, name, age)
+
+<span class="comment">// The n and err return values from Fprintf are</span>
+<span class="comment">// those returned by the underlying io.Writer.</span>
+if err != nil {
+    fmt.Fprintf(os.Stderr, &#34;Fprintf: %v\n&#34;, err)
+}
+fmt.Printf(&#34;%d bytes written.\n&#34;, n)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">Kim is 22 years old.
+21 bytes written.
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Fprintln">func <a href="../../src/fmt/print.go?s=9002:9057#L292">Fprintln</a>
+				<a class="permalink" href="index.html#Fprintln">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Fprintln(w <a href="../io/index.html">io</a>.<a href="../io/index.html#Writer">Writer</a>, a ...<a href="../builtin/index.html#any">any</a>) (n <a href="../builtin/index.html#int">int</a>, err <a href="../builtin/index.html#error">error</a>)</pre>
+			<p>Fprintln formats using the default formats for its operands and writes to w.
+Spaces are always added between operands and a newline is appended.
+It returns the number of bytes written and any write error encountered.
+
+			<div id="example_Fprintln" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">const name, age = &#34;Kim&#34;, 22
+n, err := fmt.Fprintln(os.Stdout, name, &#34;is&#34;, age, &#34;years old.&#34;)
+
+<span class="comment">// The n and err return values from Fprintln are</span>
+<span class="comment">// those returned by the underlying io.Writer.</span>
+if err != nil {
+    fmt.Fprintf(os.Stderr, &#34;Fprintln: %v\n&#34;, err)
+}
+fmt.Println(n, &#34;bytes written.&#34;)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">Kim is 22 years old.
+21 bytes written.
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Fscan">func <a href="../../src/fmt/scan.go?s=4863:4915#L111">Fscan</a>
+				<a class="permalink" href="index.html#Fscan">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Fscan(r <a href="../io/index.html">io</a>.<a href="../io/index.html#Reader">Reader</a>, a ...<a href="../builtin/index.html#any">any</a>) (n <a href="../builtin/index.html#int">int</a>, err <a href="../builtin/index.html#error">error</a>)</pre>
+			<p>Fscan scans text read from r, storing successive space-separated
+values into successive arguments. Newlines count as space. It
+returns the number of items successfully scanned. If that is less
+than the number of arguments, err will report why.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Fscanf">func <a href="../../src/fmt/scan.go?s=5520:5588#L131">Fscanf</a>
+				<a class="permalink" href="index.html#Fscanf">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Fscanf(r <a href="../io/index.html">io</a>.<a href="../io/index.html#Reader">Reader</a>, format <a href="../builtin/index.html#string">string</a>, a ...<a href="../builtin/index.html#any">any</a>) (n <a href="../builtin/index.html#int">int</a>, err <a href="../builtin/index.html#error">error</a>)</pre>
+			<p>Fscanf scans text read from r, storing successive space-separated
+values into successive arguments as determined by the format. It
+returns the number of items successfully parsed.
+Newlines in the input must match newlines in the format.
+
+			<div id="example_Fscanf" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">var (
+    i int
+    b bool
+    s string
+)
+r := strings.NewReader(&#34;5 true gophers&#34;)
+n, err := fmt.Fscanf(r, &#34;%d %t %s&#34;, &amp;i, &amp;b, &amp;s)
+if err != nil {
+    fmt.Fprintf(os.Stderr, &#34;Fscanf: %v\n&#34;, err)
+}
+fmt.Println(i, b, s)
+fmt.Println(n)
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">5 true gophers
+3
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Fscanln">func <a href="../../src/fmt/scan.go?s=5128:5182#L120">Fscanln</a>
+				<a class="permalink" href="index.html#Fscanln">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Fscanln(r <a href="../io/index.html">io</a>.<a href="../io/index.html#Reader">Reader</a>, a ...<a href="../builtin/index.html#any">any</a>) (n <a href="../builtin/index.html#int">int</a>, err <a href="../builtin/index.html#error">error</a>)</pre>
+			<p>Fscanln is similar to Fscan, but stops scanning at a newline and
+after the final item there must be a newline or EOF.
+
+			<div id="example_Fscanln" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">s := `dmr 1771 1.61803398875
+    ken 271828 3.14159`
+r := strings.NewReader(s)
+var a string
+var b int
+var c float64
+for {
+    n, err := fmt.Fscanln(r, &amp;a, &amp;b, &amp;c)
+    if err == io.EOF {
+        break
+    }
+    if err != nil {
+        panic(err)
+    }
+    fmt.Printf(&#34;%d: %s, %d, %f\n&#34;, n, a, b, c)
+}
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">3: dmr, 1771, 1.618034
+3: ken, 271828, 3.141590
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Print">func <a href="../../src/fmt/print.go?s=8033:8072#L261">Print</a>
+				<a class="permalink" href="index.html#Print">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Print(a ...<a href="../builtin/index.html#any">any</a>) (n <a href="../builtin/index.html#int">int</a>, err <a href="../builtin/index.html#error">error</a>)</pre>
+			<p>Print formats using the default formats for its operands and writes to standard output.
+Spaces are added between operands when neither is a string.
+It returns the number of bytes written and any write error encountered.
+
+			<div id="example_Print" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">const name, age = &#34;Kim&#34;, 22
+fmt.Print(name, &#34; is &#34;, age, &#34; years old.\n&#34;)
+
+<span class="comment">// It is conventional not to worry about any</span>
+<span class="comment">// error returned by Print.</span>
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">Kim is 22 years old.
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Printf">func <a href="../../src/fmt/print.go?s=6816:6871#L222">Printf</a>
+				<a class="permalink" href="index.html#Printf">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Printf(format <a href="../builtin/index.html#string">string</a>, a ...<a href="../builtin/index.html#any">any</a>) (n <a href="../builtin/index.html#int">int</a>, err <a href="../builtin/index.html#error">error</a>)</pre>
+			<p>Printf formats according to a format specifier and writes to standard output.
+It returns the number of bytes written and any write error encountered.
+
+			<div id="example_Printf" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">const name, age = &#34;Kim&#34;, 22
+fmt.Printf(&#34;%s is %d years old.\n&#34;, name, age)
+
+<span class="comment">// It is conventional not to worry about any</span>
+<span class="comment">// error returned by Printf.</span>
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">Kim is 22 years old.
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Println">func <a href="../../src/fmt/print.go?s=9380:9421#L303">Println</a>
+				<a class="permalink" href="index.html#Println">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Println(a ...<a href="../builtin/index.html#any">any</a>) (n <a href="../builtin/index.html#int">int</a>, err <a href="../builtin/index.html#error">error</a>)</pre>
+			<p>Println formats using the default formats for its operands and writes to standard output.
+Spaces are always added between operands and a newline is appended.
+It returns the number of bytes written and any write error encountered.
+
+			<div id="example_Println" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">const name, age = &#34;Kim&#34;, 22
+fmt.Println(name, &#34;is&#34;, age, &#34;years old.&#34;)
+
+<span class="comment">// It is conventional not to worry about any</span>
+<span class="comment">// error returned by Println.</span>
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">Kim is 22 years old.
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Scan">func <a href="../../src/fmt/scan.go?s=2653:2691#L53">Scan</a>
+				<a class="permalink" href="index.html#Scan">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Scan(a ...<a href="../builtin/index.html#any">any</a>) (n <a href="../builtin/index.html#int">int</a>, err <a href="../builtin/index.html#error">error</a>)</pre>
+			<p>Scan scans text read from standard input, storing successive
+space-separated values into successive arguments. Newlines count
+as space. It returns the number of items successfully scanned.
+If that is less than the number of arguments, err will report why.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Scanf">func <a href="../../src/fmt/scan.go?s=3385:3439#L70">Scanf</a>
+				<a class="permalink" href="index.html#Scanf">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Scanf(format <a href="../builtin/index.html#string">string</a>, a ...<a href="../builtin/index.html#any">any</a>) (n <a href="../builtin/index.html#int">int</a>, err <a href="../builtin/index.html#error">error</a>)</pre>
+			<p>Scanf scans text read from standard input, storing successive
+space-separated values into successive arguments as determined by
+the format. It returns the number of items successfully scanned.
+If that is less than the number of arguments, err will report why.
+Newlines in the input must match newlines in the format.
+The one exception: the verb %c always scans the next rune in the
+input, even if it is a space (or tab etc.) or newline.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Scanln">func <a href="../../src/fmt/scan.go?s=2849:2889#L59">Scanln</a>
+				<a class="permalink" href="index.html#Scanln">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Scanln(a ...<a href="../builtin/index.html#any">any</a>) (n <a href="../builtin/index.html#int">int</a>, err <a href="../builtin/index.html#error">error</a>)</pre>
+			<p>Scanln is similar to Scan, but stops scanning at a newline and
+after the final item there must be a newline or EOF.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Sprint">func <a href="../../src/fmt/print.go?s=8268:8296#L267">Sprint</a>
+				<a class="permalink" href="index.html#Sprint">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Sprint(a ...<a href="../builtin/index.html#any">any</a>) <a href="../builtin/index.html#string">string</a></pre>
+			<p>Sprint formats using the default formats for its operands and returns the resulting string.
+Spaces are added between operands when neither is a string.
+
+			<div id="example_Sprint" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">const name, age = &#34;Kim&#34;, 22
+s := fmt.Sprint(name, &#34; is &#34;, age, &#34; years old.\n&#34;)
+
+io.WriteString(os.Stdout, s) <span class="comment">// Ignoring error for simplicity.</span>
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">Kim is 22 years old.
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Sprintf">func <a href="../../src/fmt/print.go?s=7003:7047#L227">Sprintf</a>
+				<a class="permalink" href="index.html#Sprintf">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Sprintf(format <a href="../builtin/index.html#string">string</a>, a ...<a href="../builtin/index.html#any">any</a>) <a href="../builtin/index.html#string">string</a></pre>
+			<p>Sprintf formats according to a format specifier and returns the resulting string.
+
+			<div id="example_Sprintf" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">const name, age = &#34;Kim&#34;, 22
+s := fmt.Sprintf(&#34;%s is %d years old.\n&#34;, name, age)
+
+io.WriteString(os.Stdout, s) <span class="comment">// Ignoring error for simplicity.</span>
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">Kim is 22 years old.
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Sprintln">func <a href="../../src/fmt/print.go?s=9629:9659#L309">Sprintln</a>
+				<a class="permalink" href="index.html#Sprintln">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Sprintln(a ...<a href="../builtin/index.html#any">any</a>) <a href="../builtin/index.html#string">string</a></pre>
+			<p>Sprintln formats using the default formats for its operands and returns the resulting string.
+Spaces are always added between operands and a newline is appended.
+
+			<div id="example_Sprintln" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">const name, age = &#34;Kim&#34;, 22
+s := fmt.Sprintln(name, &#34;is&#34;, age, &#34;years old.&#34;)
+
+io.WriteString(os.Stdout, s) <span class="comment">// Ignoring error for simplicity.</span>
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">Kim is 22 years old.
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Sscan">func <a href="../../src/fmt/scan.go?s=3902:3953#L89">Sscan</a>
+				<a class="permalink" href="index.html#Sscan">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Sscan(str <a href="../builtin/index.html#string">string</a>, a ...<a href="../builtin/index.html#any">any</a>) (n <a href="../builtin/index.html#int">int</a>, err <a href="../builtin/index.html#error">error</a>)</pre>
+			<p>Sscan scans the argument string, storing successive space-separated
+values into successive arguments. Newlines count as space. It
+returns the number of items successfully scanned. If that is less
+than the number of arguments, err will report why.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Sscanf">func <a href="../../src/fmt/scan.go?s=4482:4549#L103">Sscanf</a>
+				<a class="permalink" href="index.html#Sscanf">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Sscanf(str <a href="../builtin/index.html#string">string</a>, format <a href="../builtin/index.html#string">string</a>, a ...<a href="../builtin/index.html#any">any</a>) (n <a href="../builtin/index.html#int">int</a>, err <a href="../builtin/index.html#error">error</a>)</pre>
+			<p>Sscanf scans the argument string, storing successive space-separated
+values into successive arguments as determined by the format. It
+returns the number of items successfully parsed.
+Newlines in the input must match newlines in the format.
+
+			<div id="example_Sscanf" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">var name string
+var age int
+n, err := fmt.Sscanf(&#34;Kim is 22 years old&#34;, &#34;%s is %d years old&#34;, &amp;name, &amp;age)
+if err != nil {
+    panic(err)
+}
+fmt.Printf(&#34;%d: %s, %d\n&#34;, n, name, age)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">2: Kim, 22
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Sscanln">func <a href="../../src/fmt/scan.go?s=4126:4179#L95">Sscanln</a>
+				<a class="permalink" href="index.html#Sscanln">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Sscanln(str <a href="../builtin/index.html#string">string</a>, a ...<a href="../builtin/index.html#any">any</a>) (n <a href="../builtin/index.html#int">int</a>, err <a href="../builtin/index.html#error">error</a>)</pre>
+			<p>Sscanln is similar to Sscan, but stops scanning at a newline and
+after the final item there must be a newline or EOF.
+
+			
+			
+
+		
+		
+			
+			
+			<h2 id="Formatter">type <a href="../../src/fmt/print.go?s=1676:1732#L44">Formatter</a>
+				<a class="permalink" href="index.html#Formatter">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Formatter is implemented by any value that has a Format method.
+The implementation controls how State and rune are interpreted,
+and may call Sprint() or Fprint(f) etc. to generate its output.
+
+			<pre>type Formatter interface {
+    Format(f <a href="index.html#State">State</a>, verb <a href="../builtin/index.html#rune">rune</a>)
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="GoStringer">type <a href="../../src/fmt/print.go?s=2260:2308#L61">GoStringer</a>
+				<a class="permalink" href="index.html#GoStringer">&#xb6;</a>
+				
+				
+			</h2>
+			<p>GoStringer is implemented by any value that has a GoString method,
+which defines the Go syntax for that value.
+The GoString method is used to print values passed as an operand
+to a %#v format.
+
+			<pre>type GoStringer interface {
+    GoString() <a href="../builtin/index.html#string">string</a>
+}</pre>
+
+			
+
+			
+
+			<div id="example_GoStringer" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">package fmt_test
+
+import (
+    &#34;fmt&#34;
+)
+
+<span class="comment">// Address has a City, State and a Country.</span>
+type Address struct {
+    City    string
+    State   string
+    Country string
+}
+
+<span class="comment">// Person has a Name, Age and Address.</span>
+type Person struct {
+    Name string
+    Age  uint
+    Addr *Address
+}
+
+<span class="comment">// GoString makes Person satisfy the GoStringer interface.</span>
+<span class="comment">// The return value is valid Go code that can be used to reproduce the Person struct.</span>
+func (p Person) GoString() string {
+    if p.Addr != nil {
+        return fmt.Sprintf(&#34;Person{Name: %q, Age: %d, Addr: &amp;Address{City: %q, State: %q, Country: %q}}&#34;, p.Name, int(p.Age), p.Addr.City, p.Addr.State, p.Addr.Country)
+    }
+    return fmt.Sprintf(&#34;Person{Name: %q, Age: %d}&#34;, p.Name, int(p.Age))
+}
+
+func ExampleGoStringer() {
+    p1 := Person{
+        Name: &#34;Warren&#34;,
+        Age:  31,
+        Addr: &amp;Address{
+            City:    &#34;Denver&#34;,
+            State:   &#34;CO&#34;,
+            Country: &#34;U.S.A.&#34;,
+        },
+    }
+    <span class="comment">// If GoString() wasn&#39;t implemented, the output of `fmt.Printf(&#34;%#v&#34;, p1)` would be similar to</span>
+    <span class="comment">// Person{Name:&#34;Warren&#34;, Age:0x1f, Addr:(*main.Address)(0x10448240)}</span>
+    fmt.Printf(&#34;%#v\n&#34;, p1)
+
+    p2 := Person{
+        Name: &#34;Theia&#34;,
+        Age:  4,
+    }
+    <span class="comment">// If GoString() wasn&#39;t implemented, the output of `fmt.Printf(&#34;%#v&#34;, p2)` would be similar to</span>
+    <span class="comment">// Person{Name:&#34;Theia&#34;, Age:0x4, Addr:(*main.Address)(nil)}</span>
+    fmt.Printf(&#34;%#v\n&#34;, p2)
+
+    <span class="comment">// Output:</span>
+    <span class="comment">// Person{Name: &#34;Warren&#34;, Age: 31, Addr: &amp;Address{City: &#34;Denver&#34;, State: &#34;CO&#34;, Country: &#34;U.S.A.&#34;}}</span>
+    <span class="comment">// Person{Name: &#34;Theia&#34;, Age: 4}</span>
+}
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="ScanState">type <a href="../../src/fmt/scan.go?s=441:2021#L11">ScanState</a>
+				<a class="permalink" href="index.html#ScanState">&#xb6;</a>
+				
+				
+			</h2>
+			<p>ScanState represents the scanner state passed to custom scanners.
+Scanners may do rune-at-a-time scanning or ask the ScanState
+to discover the next space-delimited token.
+
+			<pre>type ScanState interface {
+    <span class="comment">// ReadRune reads the next rune (Unicode code point) from the input.</span>
+    <span class="comment">// If invoked during Scanln, Fscanln, or Sscanln, ReadRune() will</span>
+    <span class="comment">// return EOF after returning the first &#39;\n&#39; or when reading beyond</span>
+    <span class="comment">// the specified width.</span>
+    ReadRune() (r <a href="../builtin/index.html#rune">rune</a>, size <a href="../builtin/index.html#int">int</a>, err <a href="../builtin/index.html#error">error</a>)
+    <span class="comment">// UnreadRune causes the next call to ReadRune to return the same rune.</span>
+    UnreadRune() <a href="../builtin/index.html#error">error</a>
+    <span class="comment">// SkipSpace skips space in the input. Newlines are treated appropriately</span>
+    <span class="comment">// for the operation being performed; see the package documentation</span>
+    <span class="comment">// for more information.</span>
+    SkipSpace()
+    <span class="comment">// Token skips space in the input if skipSpace is true, then returns the</span>
+    <span class="comment">// run of Unicode code points c satisfying f(c).  If f is nil,</span>
+    <span class="comment">// !unicode.IsSpace(c) is used; that is, the token will hold non-space</span>
+    <span class="comment">// characters. Newlines are treated appropriately for the operation being</span>
+    <span class="comment">// performed; see the package documentation for more information.</span>
+    <span class="comment">// The returned slice points to shared data that may be overwritten</span>
+    <span class="comment">// by the next call to Token, a call to a Scan function using the ScanState</span>
+    <span class="comment">// as input, or when the calling Scan method returns.</span>
+    Token(skipSpace <a href="../builtin/index.html#bool">bool</a>, f func(<a href="../builtin/index.html#rune">rune</a>) <a href="../builtin/index.html#bool">bool</a>) (token []<a href="../builtin/index.html#byte">byte</a>, err <a href="../builtin/index.html#error">error</a>)
+    <span class="comment">// Width returns the value of the width option and whether it has been set.</span>
+    <span class="comment">// The unit is Unicode code points.</span>
+    Width() (wid <a href="../builtin/index.html#int">int</a>, ok <a href="../builtin/index.html#bool">bool</a>)
+    <span class="comment">// Because ReadRune is implemented by the interface, Read should never be</span>
+    <span class="comment">// called by the scanning routines and a valid implementation of</span>
+    <span class="comment">// ScanState may choose always to return an error from Read.</span>
+    Read(buf []<a href="../builtin/index.html#byte">byte</a>) (n <a href="../builtin/index.html#int">int</a>, err <a href="../builtin/index.html#error">error</a>)
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="Scanner">type <a href="../../src/fmt/scan.go?s=2317:2383#L45">Scanner</a>
+				<a class="permalink" href="index.html#Scanner">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Scanner is implemented by any value that has a Scan method, which scans
+the input for the representation of a value and stores the result in the
+receiver, which must be a pointer to be useful. The Scan method is called
+for any argument to Scan, Scanf, or Scanln that implements it.
+
+			<pre>type Scanner interface {
+    Scan(state <a href="index.html#ScanState">ScanState</a>, verb <a href="../builtin/index.html#rune">rune</a>) <a href="../builtin/index.html#error">error</a>
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="State">type <a href="../../src/fmt/print.go?s=1033:1473#L29">State</a>
+				<a class="permalink" href="index.html#State">&#xb6;</a>
+				
+				
+			</h2>
+			<p>State represents the printer state passed to custom formatters.
+It provides access to the io.Writer interface plus information about
+the flags and options for the operand&apos;s format specifier.
+
+			<pre>type State interface {
+    <span class="comment">// Write is the function to call to emit formatted output to be printed.</span>
+    Write(b []<a href="../builtin/index.html#byte">byte</a>) (n <a href="../builtin/index.html#int">int</a>, err <a href="../builtin/index.html#error">error</a>)
+    <span class="comment">// Width returns the value of the width option and whether it has been set.</span>
+    Width() (wid <a href="../builtin/index.html#int">int</a>, ok <a href="../builtin/index.html#bool">bool</a>)
+    <span class="comment">// Precision returns the value of the precision option and whether it has been set.</span>
+    Precision() (prec <a href="../builtin/index.html#int">int</a>, ok <a href="../builtin/index.html#bool">bool</a>)
+
+    <span class="comment">// Flag reports whether the flag c, a character, has been set.</span>
+    Flag(c <a href="../builtin/index.html#int">int</a>) <a href="../builtin/index.html#bool">bool</a>
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+		
+			
+			
+			<h2 id="Stringer">type <a href="../../src/fmt/print.go?s=2009:2053#L53">Stringer</a>
+				<a class="permalink" href="index.html#Stringer">&#xb6;</a>
+				
+				
+			</h2>
+			<p>Stringer is implemented by any value that has a String method,
+which defines the “native” format for that value.
+The String method is used to print values passed as an operand
+to any format that accepts a string or to an unformatted printer
+such as Print.
+
+			<pre>type Stringer interface {
+    String() <a href="../builtin/index.html#string">string</a>
+}</pre>
+
+			
+
+			
+
+			<div id="example_Stringer" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">package fmt_test
+
+import (
+    &#34;fmt&#34;
+)
+
+<span class="comment">// Animal has a Name and an Age to represent an animal.</span>
+type Animal struct {
+    Name string
+    Age  uint
+}
+
+<span class="comment">// String makes Animal satisfy the Stringer interface.</span>
+func (a Animal) String() string {
+    return fmt.Sprintf(&#34;%v (%d)&#34;, a.Name, a.Age)
+}
+
+func ExampleStringer() {
+    a := Animal{
+        Name: &#34;Gopher&#34;,
+        Age:  2,
+    }
+    fmt.Println(a)
+    <span class="comment">// Output: Gopher (2)</span>
+}
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+			
+
+			
+
+			
+		
+	
+
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

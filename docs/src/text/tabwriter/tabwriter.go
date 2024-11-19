@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>src/text/tabwriter/tabwriter.go - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="tabwriter.go#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Source file
+    <a href="http://localhost:8080/src">src</a>/<a href="http://localhost:8080/src/text">text</a>/<a href="http://localhost:8080/src/text/tabwriter">tabwriter</a>/<span class="text-muted">tabwriter.go</span>
+  </h1>
+
+
+
+
+
+  <h2>
+    Documentation: <a href="http://localhost:8080/pkg/text/tabwriter">text/tabwriter</a>
+  </h2>
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1&nbsp;&nbsp;</span><span class="comment">// Copyright 2009 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2&nbsp;&nbsp;</span><span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3&nbsp;&nbsp;</span><span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4&nbsp;&nbsp;</span>
+<span id="L5" class="ln">     5&nbsp;&nbsp;</span><span class="comment">// Package tabwriter implements a write filter (tabwriter.Writer) that</span>
+<span id="L6" class="ln">     6&nbsp;&nbsp;</span><span class="comment">// translates tabbed columns in input into properly aligned text.</span>
+<span id="L7" class="ln">     7&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L8" class="ln">     8&nbsp;&nbsp;</span><span class="comment">// The package is using the Elastic Tabstops algorithm described at</span>
+<span id="L9" class="ln">     9&nbsp;&nbsp;</span><span class="comment">// http://nickgravgaard.com/elastictabstops/index.html.</span>
+<span id="L10" class="ln">    10&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L11" class="ln">    11&nbsp;&nbsp;</span><span class="comment">// The text/tabwriter package is frozen and is not accepting new features.</span>
+<span id="L12" class="ln">    12&nbsp;&nbsp;</span>package tabwriter
+<span id="L13" class="ln">    13&nbsp;&nbsp;</span>
+<span id="L14" class="ln">    14&nbsp;&nbsp;</span>import (
+<span id="L15" class="ln">    15&nbsp;&nbsp;</span>	&#34;io&#34;
+<span id="L16" class="ln">    16&nbsp;&nbsp;</span>	&#34;unicode/utf8&#34;
+<span id="L17" class="ln">    17&nbsp;&nbsp;</span>)
+<span id="L18" class="ln">    18&nbsp;&nbsp;</span>
+<span id="L19" class="ln">    19&nbsp;&nbsp;</span><span class="comment">// ----------------------------------------------------------------------------</span>
+<span id="L20" class="ln">    20&nbsp;&nbsp;</span><span class="comment">// Filter implementation</span>
+<span id="L21" class="ln">    21&nbsp;&nbsp;</span>
+<span id="L22" class="ln">    22&nbsp;&nbsp;</span><span class="comment">// A cell represents a segment of text terminated by tabs or line breaks.</span>
+<span id="L23" class="ln">    23&nbsp;&nbsp;</span><span class="comment">// The text itself is stored in a separate buffer; cell only describes the</span>
+<span id="L24" class="ln">    24&nbsp;&nbsp;</span><span class="comment">// segment&#39;s size in bytes, its width in runes, and whether it&#39;s an htab</span>
+<span id="L25" class="ln">    25&nbsp;&nbsp;</span><span class="comment">// (&#39;\t&#39;) terminated cell.</span>
+<span id="L26" class="ln">    26&nbsp;&nbsp;</span>type cell struct {
+<span id="L27" class="ln">    27&nbsp;&nbsp;</span>	size  int  <span class="comment">// cell size in bytes</span>
+<span id="L28" class="ln">    28&nbsp;&nbsp;</span>	width int  <span class="comment">// cell width in runes</span>
+<span id="L29" class="ln">    29&nbsp;&nbsp;</span>	htab  bool <span class="comment">// true if the cell is terminated by an htab (&#39;\t&#39;)</span>
+<span id="L30" class="ln">    30&nbsp;&nbsp;</span>}
+<span id="L31" class="ln">    31&nbsp;&nbsp;</span>
+<span id="L32" class="ln">    32&nbsp;&nbsp;</span><span class="comment">// A Writer is a filter that inserts padding around tab-delimited</span>
+<span id="L33" class="ln">    33&nbsp;&nbsp;</span><span class="comment">// columns in its input to align them in the output.</span>
+<span id="L34" class="ln">    34&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L35" class="ln">    35&nbsp;&nbsp;</span><span class="comment">// The Writer treats incoming bytes as UTF-8-encoded text consisting</span>
+<span id="L36" class="ln">    36&nbsp;&nbsp;</span><span class="comment">// of cells terminated by horizontal (&#39;\t&#39;) or vertical (&#39;\v&#39;) tabs,</span>
+<span id="L37" class="ln">    37&nbsp;&nbsp;</span><span class="comment">// and newline (&#39;\n&#39;) or formfeed (&#39;\f&#39;) characters; both newline and</span>
+<span id="L38" class="ln">    38&nbsp;&nbsp;</span><span class="comment">// formfeed act as line breaks.</span>
+<span id="L39" class="ln">    39&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L40" class="ln">    40&nbsp;&nbsp;</span><span class="comment">// Tab-terminated cells in contiguous lines constitute a column. The</span>
+<span id="L41" class="ln">    41&nbsp;&nbsp;</span><span class="comment">// Writer inserts padding as needed to make all cells in a column have</span>
+<span id="L42" class="ln">    42&nbsp;&nbsp;</span><span class="comment">// the same width, effectively aligning the columns. It assumes that</span>
+<span id="L43" class="ln">    43&nbsp;&nbsp;</span><span class="comment">// all characters have the same width, except for tabs for which a</span>
+<span id="L44" class="ln">    44&nbsp;&nbsp;</span><span class="comment">// tabwidth must be specified. Column cells must be tab-terminated, not</span>
+<span id="L45" class="ln">    45&nbsp;&nbsp;</span><span class="comment">// tab-separated: non-tab terminated trailing text at the end of a line</span>
+<span id="L46" class="ln">    46&nbsp;&nbsp;</span><span class="comment">// forms a cell but that cell is not part of an aligned column.</span>
+<span id="L47" class="ln">    47&nbsp;&nbsp;</span><span class="comment">// For instance, in this example (where | stands for a horizontal tab):</span>
+<span id="L48" class="ln">    48&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L49" class="ln">    49&nbsp;&nbsp;</span><span class="comment">//	aaaa|bbb|d</span>
+<span id="L50" class="ln">    50&nbsp;&nbsp;</span><span class="comment">//	aa  |b  |dd</span>
+<span id="L51" class="ln">    51&nbsp;&nbsp;</span><span class="comment">//	a   |</span>
+<span id="L52" class="ln">    52&nbsp;&nbsp;</span><span class="comment">//	aa  |cccc|eee</span>
+<span id="L53" class="ln">    53&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L54" class="ln">    54&nbsp;&nbsp;</span><span class="comment">// the b and c are in distinct columns (the b column is not contiguous</span>
+<span id="L55" class="ln">    55&nbsp;&nbsp;</span><span class="comment">// all the way). The d and e are not in a column at all (there&#39;s no</span>
+<span id="L56" class="ln">    56&nbsp;&nbsp;</span><span class="comment">// terminating tab, nor would the column be contiguous).</span>
+<span id="L57" class="ln">    57&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L58" class="ln">    58&nbsp;&nbsp;</span><span class="comment">// The Writer assumes that all Unicode code points have the same width;</span>
+<span id="L59" class="ln">    59&nbsp;&nbsp;</span><span class="comment">// this may not be true in some fonts or if the string contains combining</span>
+<span id="L60" class="ln">    60&nbsp;&nbsp;</span><span class="comment">// characters.</span>
+<span id="L61" class="ln">    61&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L62" class="ln">    62&nbsp;&nbsp;</span><span class="comment">// If DiscardEmptyColumns is set, empty columns that are terminated</span>
+<span id="L63" class="ln">    63&nbsp;&nbsp;</span><span class="comment">// entirely by vertical (or &#34;soft&#34;) tabs are discarded. Columns</span>
+<span id="L64" class="ln">    64&nbsp;&nbsp;</span><span class="comment">// terminated by horizontal (or &#34;hard&#34;) tabs are not affected by</span>
+<span id="L65" class="ln">    65&nbsp;&nbsp;</span><span class="comment">// this flag.</span>
+<span id="L66" class="ln">    66&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L67" class="ln">    67&nbsp;&nbsp;</span><span class="comment">// If a Writer is configured to filter HTML, HTML tags and entities</span>
+<span id="L68" class="ln">    68&nbsp;&nbsp;</span><span class="comment">// are passed through. The widths of tags and entities are</span>
+<span id="L69" class="ln">    69&nbsp;&nbsp;</span><span class="comment">// assumed to be zero (tags) and one (entities) for formatting purposes.</span>
+<span id="L70" class="ln">    70&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L71" class="ln">    71&nbsp;&nbsp;</span><span class="comment">// A segment of text may be escaped by bracketing it with Escape</span>
+<span id="L72" class="ln">    72&nbsp;&nbsp;</span><span class="comment">// characters. The tabwriter passes escaped text segments through</span>
+<span id="L73" class="ln">    73&nbsp;&nbsp;</span><span class="comment">// unchanged. In particular, it does not interpret any tabs or line</span>
+<span id="L74" class="ln">    74&nbsp;&nbsp;</span><span class="comment">// breaks within the segment. If the StripEscape flag is set, the</span>
+<span id="L75" class="ln">    75&nbsp;&nbsp;</span><span class="comment">// Escape characters are stripped from the output; otherwise they</span>
+<span id="L76" class="ln">    76&nbsp;&nbsp;</span><span class="comment">// are passed through as well. For the purpose of formatting, the</span>
+<span id="L77" class="ln">    77&nbsp;&nbsp;</span><span class="comment">// width of the escaped text is always computed excluding the Escape</span>
+<span id="L78" class="ln">    78&nbsp;&nbsp;</span><span class="comment">// characters.</span>
+<span id="L79" class="ln">    79&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L80" class="ln">    80&nbsp;&nbsp;</span><span class="comment">// The formfeed character acts like a newline but it also terminates</span>
+<span id="L81" class="ln">    81&nbsp;&nbsp;</span><span class="comment">// all columns in the current line (effectively calling Flush). Tab-</span>
+<span id="L82" class="ln">    82&nbsp;&nbsp;</span><span class="comment">// terminated cells in the next line start new columns. Unless found</span>
+<span id="L83" class="ln">    83&nbsp;&nbsp;</span><span class="comment">// inside an HTML tag or inside an escaped text segment, formfeed</span>
+<span id="L84" class="ln">    84&nbsp;&nbsp;</span><span class="comment">// characters appear as newlines in the output.</span>
+<span id="L85" class="ln">    85&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L86" class="ln">    86&nbsp;&nbsp;</span><span class="comment">// The Writer must buffer input internally, because proper spacing</span>
+<span id="L87" class="ln">    87&nbsp;&nbsp;</span><span class="comment">// of one line may depend on the cells in future lines. Clients must</span>
+<span id="L88" class="ln">    88&nbsp;&nbsp;</span><span class="comment">// call Flush when done calling Write.</span>
+<span id="L89" class="ln">    89&nbsp;&nbsp;</span>type Writer struct {
+<span id="L90" class="ln">    90&nbsp;&nbsp;</span>	<span class="comment">// configuration</span>
+<span id="L91" class="ln">    91&nbsp;&nbsp;</span>	output   io.Writer
+<span id="L92" class="ln">    92&nbsp;&nbsp;</span>	minwidth int
+<span id="L93" class="ln">    93&nbsp;&nbsp;</span>	tabwidth int
+<span id="L94" class="ln">    94&nbsp;&nbsp;</span>	padding  int
+<span id="L95" class="ln">    95&nbsp;&nbsp;</span>	padbytes [8]byte
+<span id="L96" class="ln">    96&nbsp;&nbsp;</span>	flags    uint
+<span id="L97" class="ln">    97&nbsp;&nbsp;</span>
+<span id="L98" class="ln">    98&nbsp;&nbsp;</span>	<span class="comment">// current state</span>
+<span id="L99" class="ln">    99&nbsp;&nbsp;</span>	buf     []byte   <span class="comment">// collected text excluding tabs or line breaks</span>
+<span id="L100" class="ln">   100&nbsp;&nbsp;</span>	pos     int      <span class="comment">// buffer position up to which cell.width of incomplete cell has been computed</span>
+<span id="L101" class="ln">   101&nbsp;&nbsp;</span>	cell    cell     <span class="comment">// current incomplete cell; cell.width is up to buf[pos] excluding ignored sections</span>
+<span id="L102" class="ln">   102&nbsp;&nbsp;</span>	endChar byte     <span class="comment">// terminating char of escaped sequence (Escape for escapes, &#39;&gt;&#39;, &#39;;&#39; for HTML tags/entities, or 0)</span>
+<span id="L103" class="ln">   103&nbsp;&nbsp;</span>	lines   [][]cell <span class="comment">// list of lines; each line is a list of cells</span>
+<span id="L104" class="ln">   104&nbsp;&nbsp;</span>	widths  []int    <span class="comment">// list of column widths in runes - re-used during formatting</span>
+<span id="L105" class="ln">   105&nbsp;&nbsp;</span>}
+<span id="L106" class="ln">   106&nbsp;&nbsp;</span>
+<span id="L107" class="ln">   107&nbsp;&nbsp;</span><span class="comment">// addLine adds a new line.</span>
+<span id="L108" class="ln">   108&nbsp;&nbsp;</span><span class="comment">// flushed is a hint indicating whether the underlying writer was just flushed.</span>
+<span id="L109" class="ln">   109&nbsp;&nbsp;</span><span class="comment">// If so, the previous line is not likely to be a good indicator of the new line&#39;s cells.</span>
+<span id="L110" class="ln">   110&nbsp;&nbsp;</span>func (b *Writer) addLine(flushed bool) {
+<span id="L111" class="ln">   111&nbsp;&nbsp;</span>	<span class="comment">// Grow slice instead of appending,</span>
+<span id="L112" class="ln">   112&nbsp;&nbsp;</span>	<span class="comment">// as that gives us an opportunity</span>
+<span id="L113" class="ln">   113&nbsp;&nbsp;</span>	<span class="comment">// to re-use an existing []cell.</span>
+<span id="L114" class="ln">   114&nbsp;&nbsp;</span>	if n := len(b.lines) + 1; n &lt;= cap(b.lines) {
+<span id="L115" class="ln">   115&nbsp;&nbsp;</span>		b.lines = b.lines[:n]
+<span id="L116" class="ln">   116&nbsp;&nbsp;</span>		b.lines[n-1] = b.lines[n-1][:0]
+<span id="L117" class="ln">   117&nbsp;&nbsp;</span>	} else {
+<span id="L118" class="ln">   118&nbsp;&nbsp;</span>		b.lines = append(b.lines, nil)
+<span id="L119" class="ln">   119&nbsp;&nbsp;</span>	}
+<span id="L120" class="ln">   120&nbsp;&nbsp;</span>
+<span id="L121" class="ln">   121&nbsp;&nbsp;</span>	if !flushed {
+<span id="L122" class="ln">   122&nbsp;&nbsp;</span>		<span class="comment">// The previous line is probably a good indicator</span>
+<span id="L123" class="ln">   123&nbsp;&nbsp;</span>		<span class="comment">// of how many cells the current line will have.</span>
+<span id="L124" class="ln">   124&nbsp;&nbsp;</span>		<span class="comment">// If the current line&#39;s capacity is smaller than that,</span>
+<span id="L125" class="ln">   125&nbsp;&nbsp;</span>		<span class="comment">// abandon it and make a new one.</span>
+<span id="L126" class="ln">   126&nbsp;&nbsp;</span>		if n := len(b.lines); n &gt;= 2 {
+<span id="L127" class="ln">   127&nbsp;&nbsp;</span>			if prev := len(b.lines[n-2]); prev &gt; cap(b.lines[n-1]) {
+<span id="L128" class="ln">   128&nbsp;&nbsp;</span>				b.lines[n-1] = make([]cell, 0, prev)
+<span id="L129" class="ln">   129&nbsp;&nbsp;</span>			}
+<span id="L130" class="ln">   130&nbsp;&nbsp;</span>		}
+<span id="L131" class="ln">   131&nbsp;&nbsp;</span>	}
+<span id="L132" class="ln">   132&nbsp;&nbsp;</span>}
+<span id="L133" class="ln">   133&nbsp;&nbsp;</span>
+<span id="L134" class="ln">   134&nbsp;&nbsp;</span><span class="comment">// Reset the current state.</span>
+<span id="L135" class="ln">   135&nbsp;&nbsp;</span>func (b *Writer) reset() {
+<span id="L136" class="ln">   136&nbsp;&nbsp;</span>	b.buf = b.buf[:0]
+<span id="L137" class="ln">   137&nbsp;&nbsp;</span>	b.pos = 0
+<span id="L138" class="ln">   138&nbsp;&nbsp;</span>	b.cell = cell{}
+<span id="L139" class="ln">   139&nbsp;&nbsp;</span>	b.endChar = 0
+<span id="L140" class="ln">   140&nbsp;&nbsp;</span>	b.lines = b.lines[0:0]
+<span id="L141" class="ln">   141&nbsp;&nbsp;</span>	b.widths = b.widths[0:0]
+<span id="L142" class="ln">   142&nbsp;&nbsp;</span>	b.addLine(true)
+<span id="L143" class="ln">   143&nbsp;&nbsp;</span>}
+<span id="L144" class="ln">   144&nbsp;&nbsp;</span>
+<span id="L145" class="ln">   145&nbsp;&nbsp;</span><span class="comment">// Internal representation (current state):</span>
+<span id="L146" class="ln">   146&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L147" class="ln">   147&nbsp;&nbsp;</span><span class="comment">// - all text written is appended to buf; tabs and line breaks are stripped away</span>
+<span id="L148" class="ln">   148&nbsp;&nbsp;</span><span class="comment">// - at any given time there is a (possibly empty) incomplete cell at the end</span>
+<span id="L149" class="ln">   149&nbsp;&nbsp;</span><span class="comment">//   (the cell starts after a tab or line break)</span>
+<span id="L150" class="ln">   150&nbsp;&nbsp;</span><span class="comment">// - cell.size is the number of bytes belonging to the cell so far</span>
+<span id="L151" class="ln">   151&nbsp;&nbsp;</span><span class="comment">// - cell.width is text width in runes of that cell from the start of the cell to</span>
+<span id="L152" class="ln">   152&nbsp;&nbsp;</span><span class="comment">//   position pos; html tags and entities are excluded from this width if html</span>
+<span id="L153" class="ln">   153&nbsp;&nbsp;</span><span class="comment">//   filtering is enabled</span>
+<span id="L154" class="ln">   154&nbsp;&nbsp;</span><span class="comment">// - the sizes and widths of processed text are kept in the lines list</span>
+<span id="L155" class="ln">   155&nbsp;&nbsp;</span><span class="comment">//   which contains a list of cells for each line</span>
+<span id="L156" class="ln">   156&nbsp;&nbsp;</span><span class="comment">// - the widths list is a temporary list with current widths used during</span>
+<span id="L157" class="ln">   157&nbsp;&nbsp;</span><span class="comment">//   formatting; it is kept in Writer because it&#39;s re-used</span>
+<span id="L158" class="ln">   158&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L159" class="ln">   159&nbsp;&nbsp;</span><span class="comment">//                    |&lt;---------- size ----------&gt;|</span>
+<span id="L160" class="ln">   160&nbsp;&nbsp;</span><span class="comment">//                    |                            |</span>
+<span id="L161" class="ln">   161&nbsp;&nbsp;</span><span class="comment">//                    |&lt;- width -&gt;|&lt;- ignored -&gt;|  |</span>
+<span id="L162" class="ln">   162&nbsp;&nbsp;</span><span class="comment">//                    |           |             |  |</span>
+<span id="L163" class="ln">   163&nbsp;&nbsp;</span><span class="comment">// [---processed---tab------------&lt;tag&gt;...&lt;/tag&gt;...]</span>
+<span id="L164" class="ln">   164&nbsp;&nbsp;</span><span class="comment">// ^                  ^                         ^</span>
+<span id="L165" class="ln">   165&nbsp;&nbsp;</span><span class="comment">// |                  |                         |</span>
+<span id="L166" class="ln">   166&nbsp;&nbsp;</span><span class="comment">// buf                start of incomplete cell  pos</span>
+<span id="L167" class="ln">   167&nbsp;&nbsp;</span>
+<span id="L168" class="ln">   168&nbsp;&nbsp;</span><span class="comment">// Formatting can be controlled with these flags.</span>
+<span id="L169" class="ln">   169&nbsp;&nbsp;</span>const (
+<span id="L170" class="ln">   170&nbsp;&nbsp;</span>	<span class="comment">// Ignore html tags and treat entities (starting with &#39;&amp;&#39;</span>
+<span id="L171" class="ln">   171&nbsp;&nbsp;</span>	<span class="comment">// and ending in &#39;;&#39;) as single characters (width = 1).</span>
+<span id="L172" class="ln">   172&nbsp;&nbsp;</span>	FilterHTML uint = 1 &lt;&lt; iota
+<span id="L173" class="ln">   173&nbsp;&nbsp;</span>
+<span id="L174" class="ln">   174&nbsp;&nbsp;</span>	<span class="comment">// Strip Escape characters bracketing escaped text segments</span>
+<span id="L175" class="ln">   175&nbsp;&nbsp;</span>	<span class="comment">// instead of passing them through unchanged with the text.</span>
+<span id="L176" class="ln">   176&nbsp;&nbsp;</span>	StripEscape
+<span id="L177" class="ln">   177&nbsp;&nbsp;</span>
+<span id="L178" class="ln">   178&nbsp;&nbsp;</span>	<span class="comment">// Force right-alignment of cell content.</span>
+<span id="L179" class="ln">   179&nbsp;&nbsp;</span>	<span class="comment">// Default is left-alignment.</span>
+<span id="L180" class="ln">   180&nbsp;&nbsp;</span>	AlignRight
+<span id="L181" class="ln">   181&nbsp;&nbsp;</span>
+<span id="L182" class="ln">   182&nbsp;&nbsp;</span>	<span class="comment">// Handle empty columns as if they were not present in</span>
+<span id="L183" class="ln">   183&nbsp;&nbsp;</span>	<span class="comment">// the input in the first place.</span>
+<span id="L184" class="ln">   184&nbsp;&nbsp;</span>	DiscardEmptyColumns
+<span id="L185" class="ln">   185&nbsp;&nbsp;</span>
+<span id="L186" class="ln">   186&nbsp;&nbsp;</span>	<span class="comment">// Always use tabs for indentation columns (i.e., padding of</span>
+<span id="L187" class="ln">   187&nbsp;&nbsp;</span>	<span class="comment">// leading empty cells on the left) independent of padchar.</span>
+<span id="L188" class="ln">   188&nbsp;&nbsp;</span>	TabIndent
+<span id="L189" class="ln">   189&nbsp;&nbsp;</span>
+<span id="L190" class="ln">   190&nbsp;&nbsp;</span>	<span class="comment">// Print a vertical bar (&#39;|&#39;) between columns (after formatting).</span>
+<span id="L191" class="ln">   191&nbsp;&nbsp;</span>	<span class="comment">// Discarded columns appear as zero-width columns (&#34;||&#34;).</span>
+<span id="L192" class="ln">   192&nbsp;&nbsp;</span>	Debug
+<span id="L193" class="ln">   193&nbsp;&nbsp;</span>)
+<span id="L194" class="ln">   194&nbsp;&nbsp;</span>
+<span id="L195" class="ln">   195&nbsp;&nbsp;</span><span class="comment">// A Writer must be initialized with a call to Init. The first parameter (output)</span>
+<span id="L196" class="ln">   196&nbsp;&nbsp;</span><span class="comment">// specifies the filter output. The remaining parameters control the formatting:</span>
+<span id="L197" class="ln">   197&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L198" class="ln">   198&nbsp;&nbsp;</span><span class="comment">//	minwidth	minimal cell width including any padding</span>
+<span id="L199" class="ln">   199&nbsp;&nbsp;</span><span class="comment">//	tabwidth	width of tab characters (equivalent number of spaces)</span>
+<span id="L200" class="ln">   200&nbsp;&nbsp;</span><span class="comment">//	padding		padding added to a cell before computing its width</span>
+<span id="L201" class="ln">   201&nbsp;&nbsp;</span><span class="comment">//	padchar		ASCII char used for padding</span>
+<span id="L202" class="ln">   202&nbsp;&nbsp;</span><span class="comment">//			if padchar == &#39;\t&#39;, the Writer will assume that the</span>
+<span id="L203" class="ln">   203&nbsp;&nbsp;</span><span class="comment">//			width of a &#39;\t&#39; in the formatted output is tabwidth,</span>
+<span id="L204" class="ln">   204&nbsp;&nbsp;</span><span class="comment">//			and cells are left-aligned independent of align_left</span>
+<span id="L205" class="ln">   205&nbsp;&nbsp;</span><span class="comment">//			(for correct-looking results, tabwidth must correspond</span>
+<span id="L206" class="ln">   206&nbsp;&nbsp;</span><span class="comment">//			to the tab width in the viewer displaying the result)</span>
+<span id="L207" class="ln">   207&nbsp;&nbsp;</span><span class="comment">//	flags		formatting control</span>
+<span id="L208" class="ln">   208&nbsp;&nbsp;</span>func (b *Writer) Init(output io.Writer, minwidth, tabwidth, padding int, padchar byte, flags uint) *Writer {
+<span id="L209" class="ln">   209&nbsp;&nbsp;</span>	if minwidth &lt; 0 || tabwidth &lt; 0 || padding &lt; 0 {
+<span id="L210" class="ln">   210&nbsp;&nbsp;</span>		panic(&#34;negative minwidth, tabwidth, or padding&#34;)
+<span id="L211" class="ln">   211&nbsp;&nbsp;</span>	}
+<span id="L212" class="ln">   212&nbsp;&nbsp;</span>	b.output = output
+<span id="L213" class="ln">   213&nbsp;&nbsp;</span>	b.minwidth = minwidth
+<span id="L214" class="ln">   214&nbsp;&nbsp;</span>	b.tabwidth = tabwidth
+<span id="L215" class="ln">   215&nbsp;&nbsp;</span>	b.padding = padding
+<span id="L216" class="ln">   216&nbsp;&nbsp;</span>	for i := range b.padbytes {
+<span id="L217" class="ln">   217&nbsp;&nbsp;</span>		b.padbytes[i] = padchar
+<span id="L218" class="ln">   218&nbsp;&nbsp;</span>	}
+<span id="L219" class="ln">   219&nbsp;&nbsp;</span>	if padchar == &#39;\t&#39; {
+<span id="L220" class="ln">   220&nbsp;&nbsp;</span>		<span class="comment">// tab padding enforces left-alignment</span>
+<span id="L221" class="ln">   221&nbsp;&nbsp;</span>		flags &amp;^= AlignRight
+<span id="L222" class="ln">   222&nbsp;&nbsp;</span>	}
+<span id="L223" class="ln">   223&nbsp;&nbsp;</span>	b.flags = flags
+<span id="L224" class="ln">   224&nbsp;&nbsp;</span>
+<span id="L225" class="ln">   225&nbsp;&nbsp;</span>	b.reset()
+<span id="L226" class="ln">   226&nbsp;&nbsp;</span>
+<span id="L227" class="ln">   227&nbsp;&nbsp;</span>	return b
+<span id="L228" class="ln">   228&nbsp;&nbsp;</span>}
+<span id="L229" class="ln">   229&nbsp;&nbsp;</span>
+<span id="L230" class="ln">   230&nbsp;&nbsp;</span><span class="comment">// debugging support (keep code around)</span>
+<span id="L231" class="ln">   231&nbsp;&nbsp;</span>func (b *Writer) dump() {
+<span id="L232" class="ln">   232&nbsp;&nbsp;</span>	pos := 0
+<span id="L233" class="ln">   233&nbsp;&nbsp;</span>	for i, line := range b.lines {
+<span id="L234" class="ln">   234&nbsp;&nbsp;</span>		print(&#34;(&#34;, i, &#34;) &#34;)
+<span id="L235" class="ln">   235&nbsp;&nbsp;</span>		for _, c := range line {
+<span id="L236" class="ln">   236&nbsp;&nbsp;</span>			print(&#34;[&#34;, string(b.buf[pos:pos+c.size]), &#34;]&#34;)
+<span id="L237" class="ln">   237&nbsp;&nbsp;</span>			pos += c.size
+<span id="L238" class="ln">   238&nbsp;&nbsp;</span>		}
+<span id="L239" class="ln">   239&nbsp;&nbsp;</span>		print(&#34;\n&#34;)
+<span id="L240" class="ln">   240&nbsp;&nbsp;</span>	}
+<span id="L241" class="ln">   241&nbsp;&nbsp;</span>	print(&#34;\n&#34;)
+<span id="L242" class="ln">   242&nbsp;&nbsp;</span>}
+<span id="L243" class="ln">   243&nbsp;&nbsp;</span>
+<span id="L244" class="ln">   244&nbsp;&nbsp;</span><span class="comment">// local error wrapper so we can distinguish errors we want to return</span>
+<span id="L245" class="ln">   245&nbsp;&nbsp;</span><span class="comment">// as errors from genuine panics (which we don&#39;t want to return as errors)</span>
+<span id="L246" class="ln">   246&nbsp;&nbsp;</span>type osError struct {
+<span id="L247" class="ln">   247&nbsp;&nbsp;</span>	err error
+<span id="L248" class="ln">   248&nbsp;&nbsp;</span>}
+<span id="L249" class="ln">   249&nbsp;&nbsp;</span>
+<span id="L250" class="ln">   250&nbsp;&nbsp;</span>func (b *Writer) write0(buf []byte) {
+<span id="L251" class="ln">   251&nbsp;&nbsp;</span>	n, err := b.output.Write(buf)
+<span id="L252" class="ln">   252&nbsp;&nbsp;</span>	if n != len(buf) &amp;&amp; err == nil {
+<span id="L253" class="ln">   253&nbsp;&nbsp;</span>		err = io.ErrShortWrite
+<span id="L254" class="ln">   254&nbsp;&nbsp;</span>	}
+<span id="L255" class="ln">   255&nbsp;&nbsp;</span>	if err != nil {
+<span id="L256" class="ln">   256&nbsp;&nbsp;</span>		panic(osError{err})
+<span id="L257" class="ln">   257&nbsp;&nbsp;</span>	}
+<span id="L258" class="ln">   258&nbsp;&nbsp;</span>}
+<span id="L259" class="ln">   259&nbsp;&nbsp;</span>
+<span id="L260" class="ln">   260&nbsp;&nbsp;</span>func (b *Writer) writeN(src []byte, n int) {
+<span id="L261" class="ln">   261&nbsp;&nbsp;</span>	for n &gt; len(src) {
+<span id="L262" class="ln">   262&nbsp;&nbsp;</span>		b.write0(src)
+<span id="L263" class="ln">   263&nbsp;&nbsp;</span>		n -= len(src)
+<span id="L264" class="ln">   264&nbsp;&nbsp;</span>	}
+<span id="L265" class="ln">   265&nbsp;&nbsp;</span>	b.write0(src[0:n])
+<span id="L266" class="ln">   266&nbsp;&nbsp;</span>}
+<span id="L267" class="ln">   267&nbsp;&nbsp;</span>
+<span id="L268" class="ln">   268&nbsp;&nbsp;</span>var (
+<span id="L269" class="ln">   269&nbsp;&nbsp;</span>	newline = []byte{&#39;\n&#39;}
+<span id="L270" class="ln">   270&nbsp;&nbsp;</span>	tabs    = []byte(&#34;\t\t\t\t\t\t\t\t&#34;)
+<span id="L271" class="ln">   271&nbsp;&nbsp;</span>)
+<span id="L272" class="ln">   272&nbsp;&nbsp;</span>
+<span id="L273" class="ln">   273&nbsp;&nbsp;</span>func (b *Writer) writePadding(textw, cellw int, useTabs bool) {
+<span id="L274" class="ln">   274&nbsp;&nbsp;</span>	if b.padbytes[0] == &#39;\t&#39; || useTabs {
+<span id="L275" class="ln">   275&nbsp;&nbsp;</span>		<span class="comment">// padding is done with tabs</span>
+<span id="L276" class="ln">   276&nbsp;&nbsp;</span>		if b.tabwidth == 0 {
+<span id="L277" class="ln">   277&nbsp;&nbsp;</span>			return <span class="comment">// tabs have no width - can&#39;t do any padding</span>
+<span id="L278" class="ln">   278&nbsp;&nbsp;</span>		}
+<span id="L279" class="ln">   279&nbsp;&nbsp;</span>		<span class="comment">// make cellw the smallest multiple of b.tabwidth</span>
+<span id="L280" class="ln">   280&nbsp;&nbsp;</span>		cellw = (cellw + b.tabwidth - 1) / b.tabwidth * b.tabwidth
+<span id="L281" class="ln">   281&nbsp;&nbsp;</span>		n := cellw - textw <span class="comment">// amount of padding</span>
+<span id="L282" class="ln">   282&nbsp;&nbsp;</span>		if n &lt; 0 {
+<span id="L283" class="ln">   283&nbsp;&nbsp;</span>			panic(&#34;internal error&#34;)
+<span id="L284" class="ln">   284&nbsp;&nbsp;</span>		}
+<span id="L285" class="ln">   285&nbsp;&nbsp;</span>		b.writeN(tabs, (n+b.tabwidth-1)/b.tabwidth)
+<span id="L286" class="ln">   286&nbsp;&nbsp;</span>		return
+<span id="L287" class="ln">   287&nbsp;&nbsp;</span>	}
+<span id="L288" class="ln">   288&nbsp;&nbsp;</span>
+<span id="L289" class="ln">   289&nbsp;&nbsp;</span>	<span class="comment">// padding is done with non-tab characters</span>
+<span id="L290" class="ln">   290&nbsp;&nbsp;</span>	b.writeN(b.padbytes[0:], cellw-textw)
+<span id="L291" class="ln">   291&nbsp;&nbsp;</span>}
+<span id="L292" class="ln">   292&nbsp;&nbsp;</span>
+<span id="L293" class="ln">   293&nbsp;&nbsp;</span>var vbar = []byte{&#39;|&#39;}
+<span id="L294" class="ln">   294&nbsp;&nbsp;</span>
+<span id="L295" class="ln">   295&nbsp;&nbsp;</span>func (b *Writer) writeLines(pos0 int, line0, line1 int) (pos int) {
+<span id="L296" class="ln">   296&nbsp;&nbsp;</span>	pos = pos0
+<span id="L297" class="ln">   297&nbsp;&nbsp;</span>	for i := line0; i &lt; line1; i++ {
+<span id="L298" class="ln">   298&nbsp;&nbsp;</span>		line := b.lines[i]
+<span id="L299" class="ln">   299&nbsp;&nbsp;</span>
+<span id="L300" class="ln">   300&nbsp;&nbsp;</span>		<span class="comment">// if TabIndent is set, use tabs to pad leading empty cells</span>
+<span id="L301" class="ln">   301&nbsp;&nbsp;</span>		useTabs := b.flags&amp;TabIndent != 0
+<span id="L302" class="ln">   302&nbsp;&nbsp;</span>
+<span id="L303" class="ln">   303&nbsp;&nbsp;</span>		for j, c := range line {
+<span id="L304" class="ln">   304&nbsp;&nbsp;</span>			if j &gt; 0 &amp;&amp; b.flags&amp;Debug != 0 {
+<span id="L305" class="ln">   305&nbsp;&nbsp;</span>				<span class="comment">// indicate column break</span>
+<span id="L306" class="ln">   306&nbsp;&nbsp;</span>				b.write0(vbar)
+<span id="L307" class="ln">   307&nbsp;&nbsp;</span>			}
+<span id="L308" class="ln">   308&nbsp;&nbsp;</span>
+<span id="L309" class="ln">   309&nbsp;&nbsp;</span>			if c.size == 0 {
+<span id="L310" class="ln">   310&nbsp;&nbsp;</span>				<span class="comment">// empty cell</span>
+<span id="L311" class="ln">   311&nbsp;&nbsp;</span>				if j &lt; len(b.widths) {
+<span id="L312" class="ln">   312&nbsp;&nbsp;</span>					b.writePadding(c.width, b.widths[j], useTabs)
+<span id="L313" class="ln">   313&nbsp;&nbsp;</span>				}
+<span id="L314" class="ln">   314&nbsp;&nbsp;</span>			} else {
+<span id="L315" class="ln">   315&nbsp;&nbsp;</span>				<span class="comment">// non-empty cell</span>
+<span id="L316" class="ln">   316&nbsp;&nbsp;</span>				useTabs = false
+<span id="L317" class="ln">   317&nbsp;&nbsp;</span>				if b.flags&amp;AlignRight == 0 { <span class="comment">// align left</span>
+<span id="L318" class="ln">   318&nbsp;&nbsp;</span>					b.write0(b.buf[pos : pos+c.size])
+<span id="L319" class="ln">   319&nbsp;&nbsp;</span>					pos += c.size
+<span id="L320" class="ln">   320&nbsp;&nbsp;</span>					if j &lt; len(b.widths) {
+<span id="L321" class="ln">   321&nbsp;&nbsp;</span>						b.writePadding(c.width, b.widths[j], false)
+<span id="L322" class="ln">   322&nbsp;&nbsp;</span>					}
+<span id="L323" class="ln">   323&nbsp;&nbsp;</span>				} else { <span class="comment">// align right</span>
+<span id="L324" class="ln">   324&nbsp;&nbsp;</span>					if j &lt; len(b.widths) {
+<span id="L325" class="ln">   325&nbsp;&nbsp;</span>						b.writePadding(c.width, b.widths[j], false)
+<span id="L326" class="ln">   326&nbsp;&nbsp;</span>					}
+<span id="L327" class="ln">   327&nbsp;&nbsp;</span>					b.write0(b.buf[pos : pos+c.size])
+<span id="L328" class="ln">   328&nbsp;&nbsp;</span>					pos += c.size
+<span id="L329" class="ln">   329&nbsp;&nbsp;</span>				}
+<span id="L330" class="ln">   330&nbsp;&nbsp;</span>			}
+<span id="L331" class="ln">   331&nbsp;&nbsp;</span>		}
+<span id="L332" class="ln">   332&nbsp;&nbsp;</span>
+<span id="L333" class="ln">   333&nbsp;&nbsp;</span>		if i+1 == len(b.lines) {
+<span id="L334" class="ln">   334&nbsp;&nbsp;</span>			<span class="comment">// last buffered line - we don&#39;t have a newline, so just write</span>
+<span id="L335" class="ln">   335&nbsp;&nbsp;</span>			<span class="comment">// any outstanding buffered data</span>
+<span id="L336" class="ln">   336&nbsp;&nbsp;</span>			b.write0(b.buf[pos : pos+b.cell.size])
+<span id="L337" class="ln">   337&nbsp;&nbsp;</span>			pos += b.cell.size
+<span id="L338" class="ln">   338&nbsp;&nbsp;</span>		} else {
+<span id="L339" class="ln">   339&nbsp;&nbsp;</span>			<span class="comment">// not the last line - write newline</span>
+<span id="L340" class="ln">   340&nbsp;&nbsp;</span>			b.write0(newline)
+<span id="L341" class="ln">   341&nbsp;&nbsp;</span>		}
+<span id="L342" class="ln">   342&nbsp;&nbsp;</span>	}
+<span id="L343" class="ln">   343&nbsp;&nbsp;</span>	return
+<span id="L344" class="ln">   344&nbsp;&nbsp;</span>}
+<span id="L345" class="ln">   345&nbsp;&nbsp;</span>
+<span id="L346" class="ln">   346&nbsp;&nbsp;</span><span class="comment">// Format the text between line0 and line1 (excluding line1); pos</span>
+<span id="L347" class="ln">   347&nbsp;&nbsp;</span><span class="comment">// is the buffer position corresponding to the beginning of line0.</span>
+<span id="L348" class="ln">   348&nbsp;&nbsp;</span><span class="comment">// Returns the buffer position corresponding to the beginning of</span>
+<span id="L349" class="ln">   349&nbsp;&nbsp;</span><span class="comment">// line1 and an error, if any.</span>
+<span id="L350" class="ln">   350&nbsp;&nbsp;</span>func (b *Writer) format(pos0 int, line0, line1 int) (pos int) {
+<span id="L351" class="ln">   351&nbsp;&nbsp;</span>	pos = pos0
+<span id="L352" class="ln">   352&nbsp;&nbsp;</span>	column := len(b.widths)
+<span id="L353" class="ln">   353&nbsp;&nbsp;</span>	for this := line0; this &lt; line1; this++ {
+<span id="L354" class="ln">   354&nbsp;&nbsp;</span>		line := b.lines[this]
+<span id="L355" class="ln">   355&nbsp;&nbsp;</span>
+<span id="L356" class="ln">   356&nbsp;&nbsp;</span>		if column &gt;= len(line)-1 {
+<span id="L357" class="ln">   357&nbsp;&nbsp;</span>			continue
+<span id="L358" class="ln">   358&nbsp;&nbsp;</span>		}
+<span id="L359" class="ln">   359&nbsp;&nbsp;</span>		<span class="comment">// cell exists in this column =&gt; this line</span>
+<span id="L360" class="ln">   360&nbsp;&nbsp;</span>		<span class="comment">// has more cells than the previous line</span>
+<span id="L361" class="ln">   361&nbsp;&nbsp;</span>		<span class="comment">// (the last cell per line is ignored because cells are</span>
+<span id="L362" class="ln">   362&nbsp;&nbsp;</span>		<span class="comment">// tab-terminated; the last cell per line describes the</span>
+<span id="L363" class="ln">   363&nbsp;&nbsp;</span>		<span class="comment">// text before the newline/formfeed and does not belong</span>
+<span id="L364" class="ln">   364&nbsp;&nbsp;</span>		<span class="comment">// to a column)</span>
+<span id="L365" class="ln">   365&nbsp;&nbsp;</span>
+<span id="L366" class="ln">   366&nbsp;&nbsp;</span>		<span class="comment">// print unprinted lines until beginning of block</span>
+<span id="L367" class="ln">   367&nbsp;&nbsp;</span>		pos = b.writeLines(pos, line0, this)
+<span id="L368" class="ln">   368&nbsp;&nbsp;</span>		line0 = this
+<span id="L369" class="ln">   369&nbsp;&nbsp;</span>
+<span id="L370" class="ln">   370&nbsp;&nbsp;</span>		<span class="comment">// column block begin</span>
+<span id="L371" class="ln">   371&nbsp;&nbsp;</span>		width := b.minwidth <span class="comment">// minimal column width</span>
+<span id="L372" class="ln">   372&nbsp;&nbsp;</span>		discardable := true <span class="comment">// true if all cells in this column are empty and &#34;soft&#34;</span>
+<span id="L373" class="ln">   373&nbsp;&nbsp;</span>		for ; this &lt; line1; this++ {
+<span id="L374" class="ln">   374&nbsp;&nbsp;</span>			line = b.lines[this]
+<span id="L375" class="ln">   375&nbsp;&nbsp;</span>			if column &gt;= len(line)-1 {
+<span id="L376" class="ln">   376&nbsp;&nbsp;</span>				break
+<span id="L377" class="ln">   377&nbsp;&nbsp;</span>			}
+<span id="L378" class="ln">   378&nbsp;&nbsp;</span>			<span class="comment">// cell exists in this column</span>
+<span id="L379" class="ln">   379&nbsp;&nbsp;</span>			c := line[column]
+<span id="L380" class="ln">   380&nbsp;&nbsp;</span>			<span class="comment">// update width</span>
+<span id="L381" class="ln">   381&nbsp;&nbsp;</span>			if w := c.width + b.padding; w &gt; width {
+<span id="L382" class="ln">   382&nbsp;&nbsp;</span>				width = w
+<span id="L383" class="ln">   383&nbsp;&nbsp;</span>			}
+<span id="L384" class="ln">   384&nbsp;&nbsp;</span>			<span class="comment">// update discardable</span>
+<span id="L385" class="ln">   385&nbsp;&nbsp;</span>			if c.width &gt; 0 || c.htab {
+<span id="L386" class="ln">   386&nbsp;&nbsp;</span>				discardable = false
+<span id="L387" class="ln">   387&nbsp;&nbsp;</span>			}
+<span id="L388" class="ln">   388&nbsp;&nbsp;</span>		}
+<span id="L389" class="ln">   389&nbsp;&nbsp;</span>		<span class="comment">// column block end</span>
+<span id="L390" class="ln">   390&nbsp;&nbsp;</span>
+<span id="L391" class="ln">   391&nbsp;&nbsp;</span>		<span class="comment">// discard empty columns if necessary</span>
+<span id="L392" class="ln">   392&nbsp;&nbsp;</span>		if discardable &amp;&amp; b.flags&amp;DiscardEmptyColumns != 0 {
+<span id="L393" class="ln">   393&nbsp;&nbsp;</span>			width = 0
+<span id="L394" class="ln">   394&nbsp;&nbsp;</span>		}
+<span id="L395" class="ln">   395&nbsp;&nbsp;</span>
+<span id="L396" class="ln">   396&nbsp;&nbsp;</span>		<span class="comment">// format and print all columns to the right of this column</span>
+<span id="L397" class="ln">   397&nbsp;&nbsp;</span>		<span class="comment">// (we know the widths of this column and all columns to the left)</span>
+<span id="L398" class="ln">   398&nbsp;&nbsp;</span>		b.widths = append(b.widths, width) <span class="comment">// push width</span>
+<span id="L399" class="ln">   399&nbsp;&nbsp;</span>		pos = b.format(pos, line0, this)
+<span id="L400" class="ln">   400&nbsp;&nbsp;</span>		b.widths = b.widths[0 : len(b.widths)-1] <span class="comment">// pop width</span>
+<span id="L401" class="ln">   401&nbsp;&nbsp;</span>		line0 = this
+<span id="L402" class="ln">   402&nbsp;&nbsp;</span>	}
+<span id="L403" class="ln">   403&nbsp;&nbsp;</span>
+<span id="L404" class="ln">   404&nbsp;&nbsp;</span>	<span class="comment">// print unprinted lines until end</span>
+<span id="L405" class="ln">   405&nbsp;&nbsp;</span>	return b.writeLines(pos, line0, line1)
+<span id="L406" class="ln">   406&nbsp;&nbsp;</span>}
+<span id="L407" class="ln">   407&nbsp;&nbsp;</span>
+<span id="L408" class="ln">   408&nbsp;&nbsp;</span><span class="comment">// Append text to current cell.</span>
+<span id="L409" class="ln">   409&nbsp;&nbsp;</span>func (b *Writer) append(text []byte) {
+<span id="L410" class="ln">   410&nbsp;&nbsp;</span>	b.buf = append(b.buf, text...)
+<span id="L411" class="ln">   411&nbsp;&nbsp;</span>	b.cell.size += len(text)
+<span id="L412" class="ln">   412&nbsp;&nbsp;</span>}
+<span id="L413" class="ln">   413&nbsp;&nbsp;</span>
+<span id="L414" class="ln">   414&nbsp;&nbsp;</span><span class="comment">// Update the cell width.</span>
+<span id="L415" class="ln">   415&nbsp;&nbsp;</span>func (b *Writer) updateWidth() {
+<span id="L416" class="ln">   416&nbsp;&nbsp;</span>	b.cell.width += utf8.RuneCount(b.buf[b.pos:])
+<span id="L417" class="ln">   417&nbsp;&nbsp;</span>	b.pos = len(b.buf)
+<span id="L418" class="ln">   418&nbsp;&nbsp;</span>}
+<span id="L419" class="ln">   419&nbsp;&nbsp;</span>
+<span id="L420" class="ln">   420&nbsp;&nbsp;</span><span class="comment">// To escape a text segment, bracket it with Escape characters.</span>
+<span id="L421" class="ln">   421&nbsp;&nbsp;</span><span class="comment">// For instance, the tab in this string &#34;Ignore this tab: \xff\t\xff&#34;</span>
+<span id="L422" class="ln">   422&nbsp;&nbsp;</span><span class="comment">// does not terminate a cell and constitutes a single character of</span>
+<span id="L423" class="ln">   423&nbsp;&nbsp;</span><span class="comment">// width one for formatting purposes.</span>
+<span id="L424" class="ln">   424&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L425" class="ln">   425&nbsp;&nbsp;</span><span class="comment">// The value 0xff was chosen because it cannot appear in a valid UTF-8 sequence.</span>
+<span id="L426" class="ln">   426&nbsp;&nbsp;</span>const Escape = &#39;\xff&#39;
+<span id="L427" class="ln">   427&nbsp;&nbsp;</span>
+<span id="L428" class="ln">   428&nbsp;&nbsp;</span><span class="comment">// Start escaped mode.</span>
+<span id="L429" class="ln">   429&nbsp;&nbsp;</span>func (b *Writer) startEscape(ch byte) {
+<span id="L430" class="ln">   430&nbsp;&nbsp;</span>	switch ch {
+<span id="L431" class="ln">   431&nbsp;&nbsp;</span>	case Escape:
+<span id="L432" class="ln">   432&nbsp;&nbsp;</span>		b.endChar = Escape
+<span id="L433" class="ln">   433&nbsp;&nbsp;</span>	case &#39;&lt;&#39;:
+<span id="L434" class="ln">   434&nbsp;&nbsp;</span>		b.endChar = &#39;&gt;&#39;
+<span id="L435" class="ln">   435&nbsp;&nbsp;</span>	case &#39;&amp;&#39;:
+<span id="L436" class="ln">   436&nbsp;&nbsp;</span>		b.endChar = &#39;;&#39;
+<span id="L437" class="ln">   437&nbsp;&nbsp;</span>	}
+<span id="L438" class="ln">   438&nbsp;&nbsp;</span>}
+<span id="L439" class="ln">   439&nbsp;&nbsp;</span>
+<span id="L440" class="ln">   440&nbsp;&nbsp;</span><span class="comment">// Terminate escaped mode. If the escaped text was an HTML tag, its width</span>
+<span id="L441" class="ln">   441&nbsp;&nbsp;</span><span class="comment">// is assumed to be zero for formatting purposes; if it was an HTML entity,</span>
+<span id="L442" class="ln">   442&nbsp;&nbsp;</span><span class="comment">// its width is assumed to be one. In all other cases, the width is the</span>
+<span id="L443" class="ln">   443&nbsp;&nbsp;</span><span class="comment">// unicode width of the text.</span>
+<span id="L444" class="ln">   444&nbsp;&nbsp;</span>func (b *Writer) endEscape() {
+<span id="L445" class="ln">   445&nbsp;&nbsp;</span>	switch b.endChar {
+<span id="L446" class="ln">   446&nbsp;&nbsp;</span>	case Escape:
+<span id="L447" class="ln">   447&nbsp;&nbsp;</span>		b.updateWidth()
+<span id="L448" class="ln">   448&nbsp;&nbsp;</span>		if b.flags&amp;StripEscape == 0 {
+<span id="L449" class="ln">   449&nbsp;&nbsp;</span>			b.cell.width -= 2 <span class="comment">// don&#39;t count the Escape chars</span>
+<span id="L450" class="ln">   450&nbsp;&nbsp;</span>		}
+<span id="L451" class="ln">   451&nbsp;&nbsp;</span>	case &#39;&gt;&#39;: <span class="comment">// tag of zero width</span>
+<span id="L452" class="ln">   452&nbsp;&nbsp;</span>	case &#39;;&#39;:
+<span id="L453" class="ln">   453&nbsp;&nbsp;</span>		b.cell.width++ <span class="comment">// entity, count as one rune</span>
+<span id="L454" class="ln">   454&nbsp;&nbsp;</span>	}
+<span id="L455" class="ln">   455&nbsp;&nbsp;</span>	b.pos = len(b.buf)
+<span id="L456" class="ln">   456&nbsp;&nbsp;</span>	b.endChar = 0
+<span id="L457" class="ln">   457&nbsp;&nbsp;</span>}
+<span id="L458" class="ln">   458&nbsp;&nbsp;</span>
+<span id="L459" class="ln">   459&nbsp;&nbsp;</span><span class="comment">// Terminate the current cell by adding it to the list of cells of the</span>
+<span id="L460" class="ln">   460&nbsp;&nbsp;</span><span class="comment">// current line. Returns the number of cells in that line.</span>
+<span id="L461" class="ln">   461&nbsp;&nbsp;</span>func (b *Writer) terminateCell(htab bool) int {
+<span id="L462" class="ln">   462&nbsp;&nbsp;</span>	b.cell.htab = htab
+<span id="L463" class="ln">   463&nbsp;&nbsp;</span>	line := &amp;b.lines[len(b.lines)-1]
+<span id="L464" class="ln">   464&nbsp;&nbsp;</span>	*line = append(*line, b.cell)
+<span id="L465" class="ln">   465&nbsp;&nbsp;</span>	b.cell = cell{}
+<span id="L466" class="ln">   466&nbsp;&nbsp;</span>	return len(*line)
+<span id="L467" class="ln">   467&nbsp;&nbsp;</span>}
+<span id="L468" class="ln">   468&nbsp;&nbsp;</span>
+<span id="L469" class="ln">   469&nbsp;&nbsp;</span>func (b *Writer) handlePanic(err *error, op string) {
+<span id="L470" class="ln">   470&nbsp;&nbsp;</span>	if e := recover(); e != nil {
+<span id="L471" class="ln">   471&nbsp;&nbsp;</span>		if op == &#34;Flush&#34; {
+<span id="L472" class="ln">   472&nbsp;&nbsp;</span>			<span class="comment">// If Flush ran into a panic, we still need to reset.</span>
+<span id="L473" class="ln">   473&nbsp;&nbsp;</span>			b.reset()
+<span id="L474" class="ln">   474&nbsp;&nbsp;</span>		}
+<span id="L475" class="ln">   475&nbsp;&nbsp;</span>		if nerr, ok := e.(osError); ok {
+<span id="L476" class="ln">   476&nbsp;&nbsp;</span>			*err = nerr.err
+<span id="L477" class="ln">   477&nbsp;&nbsp;</span>			return
+<span id="L478" class="ln">   478&nbsp;&nbsp;</span>		}
+<span id="L479" class="ln">   479&nbsp;&nbsp;</span>		panic(&#34;tabwriter: panic during &#34; + op)
+<span id="L480" class="ln">   480&nbsp;&nbsp;</span>	}
+<span id="L481" class="ln">   481&nbsp;&nbsp;</span>}
+<span id="L482" class="ln">   482&nbsp;&nbsp;</span>
+<span id="L483" class="ln">   483&nbsp;&nbsp;</span><span class="comment">// Flush should be called after the last call to Write to ensure</span>
+<span id="L484" class="ln">   484&nbsp;&nbsp;</span><span class="comment">// that any data buffered in the Writer is written to output. Any</span>
+<span id="L485" class="ln">   485&nbsp;&nbsp;</span><span class="comment">// incomplete escape sequence at the end is considered</span>
+<span id="L486" class="ln">   486&nbsp;&nbsp;</span><span class="comment">// complete for formatting purposes.</span>
+<span id="L487" class="ln">   487&nbsp;&nbsp;</span>func (b *Writer) Flush() error {
+<span id="L488" class="ln">   488&nbsp;&nbsp;</span>	return b.flush()
+<span id="L489" class="ln">   489&nbsp;&nbsp;</span>}
+<span id="L490" class="ln">   490&nbsp;&nbsp;</span>
+<span id="L491" class="ln">   491&nbsp;&nbsp;</span><span class="comment">// flush is the internal version of Flush, with a named return value which we</span>
+<span id="L492" class="ln">   492&nbsp;&nbsp;</span><span class="comment">// don&#39;t want to expose.</span>
+<span id="L493" class="ln">   493&nbsp;&nbsp;</span>func (b *Writer) flush() (err error) {
+<span id="L494" class="ln">   494&nbsp;&nbsp;</span>	defer b.handlePanic(&amp;err, &#34;Flush&#34;)
+<span id="L495" class="ln">   495&nbsp;&nbsp;</span>	b.flushNoDefers()
+<span id="L496" class="ln">   496&nbsp;&nbsp;</span>	return nil
+<span id="L497" class="ln">   497&nbsp;&nbsp;</span>}
+<span id="L498" class="ln">   498&nbsp;&nbsp;</span>
+<span id="L499" class="ln">   499&nbsp;&nbsp;</span><span class="comment">// flushNoDefers is like flush, but without a deferred handlePanic call. This</span>
+<span id="L500" class="ln">   500&nbsp;&nbsp;</span><span class="comment">// can be called from other methods which already have their own deferred</span>
+<span id="L501" class="ln">   501&nbsp;&nbsp;</span><span class="comment">// handlePanic calls, such as Write, and avoid the extra defer work.</span>
+<span id="L502" class="ln">   502&nbsp;&nbsp;</span>func (b *Writer) flushNoDefers() {
+<span id="L503" class="ln">   503&nbsp;&nbsp;</span>	<span class="comment">// add current cell if not empty</span>
+<span id="L504" class="ln">   504&nbsp;&nbsp;</span>	if b.cell.size &gt; 0 {
+<span id="L505" class="ln">   505&nbsp;&nbsp;</span>		if b.endChar != 0 {
+<span id="L506" class="ln">   506&nbsp;&nbsp;</span>			<span class="comment">// inside escape - terminate it even if incomplete</span>
+<span id="L507" class="ln">   507&nbsp;&nbsp;</span>			b.endEscape()
+<span id="L508" class="ln">   508&nbsp;&nbsp;</span>		}
+<span id="L509" class="ln">   509&nbsp;&nbsp;</span>		b.terminateCell(false)
+<span id="L510" class="ln">   510&nbsp;&nbsp;</span>	}
+<span id="L511" class="ln">   511&nbsp;&nbsp;</span>
+<span id="L512" class="ln">   512&nbsp;&nbsp;</span>	<span class="comment">// format contents of buffer</span>
+<span id="L513" class="ln">   513&nbsp;&nbsp;</span>	b.format(0, 0, len(b.lines))
+<span id="L514" class="ln">   514&nbsp;&nbsp;</span>	b.reset()
+<span id="L515" class="ln">   515&nbsp;&nbsp;</span>}
+<span id="L516" class="ln">   516&nbsp;&nbsp;</span>
+<span id="L517" class="ln">   517&nbsp;&nbsp;</span>var hbar = []byte(&#34;---\n&#34;)
+<span id="L518" class="ln">   518&nbsp;&nbsp;</span>
+<span id="L519" class="ln">   519&nbsp;&nbsp;</span><span class="comment">// Write writes buf to the writer b.</span>
+<span id="L520" class="ln">   520&nbsp;&nbsp;</span><span class="comment">// The only errors returned are ones encountered</span>
+<span id="L521" class="ln">   521&nbsp;&nbsp;</span><span class="comment">// while writing to the underlying output stream.</span>
+<span id="L522" class="ln">   522&nbsp;&nbsp;</span>func (b *Writer) Write(buf []byte) (n int, err error) {
+<span id="L523" class="ln">   523&nbsp;&nbsp;</span>	defer b.handlePanic(&amp;err, &#34;Write&#34;)
+<span id="L524" class="ln">   524&nbsp;&nbsp;</span>
+<span id="L525" class="ln">   525&nbsp;&nbsp;</span>	<span class="comment">// split text into cells</span>
+<span id="L526" class="ln">   526&nbsp;&nbsp;</span>	n = 0
+<span id="L527" class="ln">   527&nbsp;&nbsp;</span>	for i, ch := range buf {
+<span id="L528" class="ln">   528&nbsp;&nbsp;</span>		if b.endChar == 0 {
+<span id="L529" class="ln">   529&nbsp;&nbsp;</span>			<span class="comment">// outside escape</span>
+<span id="L530" class="ln">   530&nbsp;&nbsp;</span>			switch ch {
+<span id="L531" class="ln">   531&nbsp;&nbsp;</span>			case &#39;\t&#39;, &#39;\v&#39;, &#39;\n&#39;, &#39;\f&#39;:
+<span id="L532" class="ln">   532&nbsp;&nbsp;</span>				<span class="comment">// end of cell</span>
+<span id="L533" class="ln">   533&nbsp;&nbsp;</span>				b.append(buf[n:i])
+<span id="L534" class="ln">   534&nbsp;&nbsp;</span>				b.updateWidth()
+<span id="L535" class="ln">   535&nbsp;&nbsp;</span>				n = i + 1 <span class="comment">// ch consumed</span>
+<span id="L536" class="ln">   536&nbsp;&nbsp;</span>				ncells := b.terminateCell(ch == &#39;\t&#39;)
+<span id="L537" class="ln">   537&nbsp;&nbsp;</span>				if ch == &#39;\n&#39; || ch == &#39;\f&#39; {
+<span id="L538" class="ln">   538&nbsp;&nbsp;</span>					<span class="comment">// terminate line</span>
+<span id="L539" class="ln">   539&nbsp;&nbsp;</span>					b.addLine(ch == &#39;\f&#39;)
+<span id="L540" class="ln">   540&nbsp;&nbsp;</span>					if ch == &#39;\f&#39; || ncells == 1 {
+<span id="L541" class="ln">   541&nbsp;&nbsp;</span>						<span class="comment">// A &#39;\f&#39; always forces a flush. Otherwise, if the previous</span>
+<span id="L542" class="ln">   542&nbsp;&nbsp;</span>						<span class="comment">// line has only one cell which does not have an impact on</span>
+<span id="L543" class="ln">   543&nbsp;&nbsp;</span>						<span class="comment">// the formatting of the following lines (the last cell per</span>
+<span id="L544" class="ln">   544&nbsp;&nbsp;</span>						<span class="comment">// line is ignored by format()), thus we can flush the</span>
+<span id="L545" class="ln">   545&nbsp;&nbsp;</span>						<span class="comment">// Writer contents.</span>
+<span id="L546" class="ln">   546&nbsp;&nbsp;</span>						b.flushNoDefers()
+<span id="L547" class="ln">   547&nbsp;&nbsp;</span>						if ch == &#39;\f&#39; &amp;&amp; b.flags&amp;Debug != 0 {
+<span id="L548" class="ln">   548&nbsp;&nbsp;</span>							<span class="comment">// indicate section break</span>
+<span id="L549" class="ln">   549&nbsp;&nbsp;</span>							b.write0(hbar)
+<span id="L550" class="ln">   550&nbsp;&nbsp;</span>						}
+<span id="L551" class="ln">   551&nbsp;&nbsp;</span>					}
+<span id="L552" class="ln">   552&nbsp;&nbsp;</span>				}
+<span id="L553" class="ln">   553&nbsp;&nbsp;</span>
+<span id="L554" class="ln">   554&nbsp;&nbsp;</span>			case Escape:
+<span id="L555" class="ln">   555&nbsp;&nbsp;</span>				<span class="comment">// start of escaped sequence</span>
+<span id="L556" class="ln">   556&nbsp;&nbsp;</span>				b.append(buf[n:i])
+<span id="L557" class="ln">   557&nbsp;&nbsp;</span>				b.updateWidth()
+<span id="L558" class="ln">   558&nbsp;&nbsp;</span>				n = i
+<span id="L559" class="ln">   559&nbsp;&nbsp;</span>				if b.flags&amp;StripEscape != 0 {
+<span id="L560" class="ln">   560&nbsp;&nbsp;</span>					n++ <span class="comment">// strip Escape</span>
+<span id="L561" class="ln">   561&nbsp;&nbsp;</span>				}
+<span id="L562" class="ln">   562&nbsp;&nbsp;</span>				b.startEscape(Escape)
+<span id="L563" class="ln">   563&nbsp;&nbsp;</span>
+<span id="L564" class="ln">   564&nbsp;&nbsp;</span>			case &#39;&lt;&#39;, &#39;&amp;&#39;:
+<span id="L565" class="ln">   565&nbsp;&nbsp;</span>				<span class="comment">// possibly an html tag/entity</span>
+<span id="L566" class="ln">   566&nbsp;&nbsp;</span>				if b.flags&amp;FilterHTML != 0 {
+<span id="L567" class="ln">   567&nbsp;&nbsp;</span>					<span class="comment">// begin of tag/entity</span>
+<span id="L568" class="ln">   568&nbsp;&nbsp;</span>					b.append(buf[n:i])
+<span id="L569" class="ln">   569&nbsp;&nbsp;</span>					b.updateWidth()
+<span id="L570" class="ln">   570&nbsp;&nbsp;</span>					n = i
+<span id="L571" class="ln">   571&nbsp;&nbsp;</span>					b.startEscape(ch)
+<span id="L572" class="ln">   572&nbsp;&nbsp;</span>				}
+<span id="L573" class="ln">   573&nbsp;&nbsp;</span>			}
+<span id="L574" class="ln">   574&nbsp;&nbsp;</span>
+<span id="L575" class="ln">   575&nbsp;&nbsp;</span>		} else {
+<span id="L576" class="ln">   576&nbsp;&nbsp;</span>			<span class="comment">// inside escape</span>
+<span id="L577" class="ln">   577&nbsp;&nbsp;</span>			if ch == b.endChar {
+<span id="L578" class="ln">   578&nbsp;&nbsp;</span>				<span class="comment">// end of tag/entity</span>
+<span id="L579" class="ln">   579&nbsp;&nbsp;</span>				j := i + 1
+<span id="L580" class="ln">   580&nbsp;&nbsp;</span>				if ch == Escape &amp;&amp; b.flags&amp;StripEscape != 0 {
+<span id="L581" class="ln">   581&nbsp;&nbsp;</span>					j = i <span class="comment">// strip Escape</span>
+<span id="L582" class="ln">   582&nbsp;&nbsp;</span>				}
+<span id="L583" class="ln">   583&nbsp;&nbsp;</span>				b.append(buf[n:j])
+<span id="L584" class="ln">   584&nbsp;&nbsp;</span>				n = i + 1 <span class="comment">// ch consumed</span>
+<span id="L585" class="ln">   585&nbsp;&nbsp;</span>				b.endEscape()
+<span id="L586" class="ln">   586&nbsp;&nbsp;</span>			}
+<span id="L587" class="ln">   587&nbsp;&nbsp;</span>		}
+<span id="L588" class="ln">   588&nbsp;&nbsp;</span>	}
+<span id="L589" class="ln">   589&nbsp;&nbsp;</span>
+<span id="L590" class="ln">   590&nbsp;&nbsp;</span>	<span class="comment">// append leftover text</span>
+<span id="L591" class="ln">   591&nbsp;&nbsp;</span>	b.append(buf[n:])
+<span id="L592" class="ln">   592&nbsp;&nbsp;</span>	n = len(buf)
+<span id="L593" class="ln">   593&nbsp;&nbsp;</span>	return
+<span id="L594" class="ln">   594&nbsp;&nbsp;</span>}
+<span id="L595" class="ln">   595&nbsp;&nbsp;</span>
+<span id="L596" class="ln">   596&nbsp;&nbsp;</span><span class="comment">// NewWriter allocates and initializes a new tabwriter.Writer.</span>
+<span id="L597" class="ln">   597&nbsp;&nbsp;</span><span class="comment">// The parameters are the same as for the Init function.</span>
+<span id="L598" class="ln">   598&nbsp;&nbsp;</span>func NewWriter(output io.Writer, minwidth, tabwidth, padding int, padchar byte, flags uint) *Writer {
+<span id="L599" class="ln">   599&nbsp;&nbsp;</span>	return new(Writer).Init(output, minwidth, tabwidth, padding, padchar, flags)
+<span id="L600" class="ln">   600&nbsp;&nbsp;</span>}
+<span id="L601" class="ln">   601&nbsp;&nbsp;</span>
+</pre><p><a href="tabwriter.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

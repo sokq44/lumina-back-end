@@ -1,0 +1,3631 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>Packages - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Packages
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2018 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+
+
+	
+	
+		<div id="manual-nav">
+			<img alt="" class="gopher" src="lib/godoc/gopher/pkg.png"/>
+			<dl>
+				<dt><a href="index.html#stdlib">Standard library</a></dt>
+				
+					<dt><a href="index.html#thirdparty">Third party</a></dt>
+				
+				<dt><a href="index.html#other">Other packages</a></dt>
+				<dd><a href="index.html#subrepo">Sub-repositories</a></dd>
+				<dd><a href="index.html#community">Community</a></dd>
+			</dl>
+		</div>
+
+		<div id="stdlib" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Standard library section">Standard library ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Standard library section">Standard library ▾</h2>
+				<div class="pkg-dir">
+					<table>
+						<tr>
+							<th class="pkg-name">Name</th>
+							<th class="pkg-synopsis">Synopsis</th>
+						</tr>
+
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 0px;">
+										<a href="pkg/archive/index.html">archive</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/archive/tar/index.html">tar</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package tar implements access to tar archives.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/archive/zip/index.html">zip</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package zip provides support for reading and writing ZIP archives.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 0px;">
+										<a href="pkg/arena/index.html">arena</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									The arena package provides the ability to allocate memory for a collection of Go values and free that space manually all at once, safely.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 0px;">
+										<a href="pkg/backend/index.html">backend</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Module responsible for the backend of the article-writing application.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/backend/config/index.html">config</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									This Package is responsible for providing sensitive data crucial for the application in order to work properly.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/backend/handlers/index.html">handlers</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									This package provides all the handlers for all the endpoints the API has.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/backend/middleware/index.html">middleware</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									This package is responsible for all kinds of middleware through which a request goes before the desired handler function.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/backend/models/index.html">models</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/backend/utils/index.html">utils</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 40px;">
+										<a href="pkg/backend/utils/crypt/index.html">crypt</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 40px;">
+										<a href="pkg/backend/utils/database/index.html">database</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 40px;">
+										<a href="pkg/backend/utils/emails/index.html">emails</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 40px;">
+										<a href="pkg/backend/utils/errhandle/index.html">errhandle</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 40px;">
+										<a href="pkg/backend/utils/jwt/index.html">jwt</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 0px;">
+										<a href="pkg/bufio/index.html">bufio</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package bufio implements buffered I/O. It wraps an io.Reader or io.Writer object, creating another object (Reader or Writer) that also implements the interface but provides buffering and some help for textual I/O.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 0px;">
+										<a href="pkg/builtin/index.html">builtin</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package builtin provides documentation for Go&#39;s predeclared identifiers.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 0px;">
+										<a href="pkg/bytes/index.html">bytes</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package bytes implements functions for the manipulation of byte slices.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 0px;">
+										<a href="pkg/cmp/index.html">cmp</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package cmp provides types and functions related to comparing ordered values.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 0px;">
+										<a href="pkg/compress/index.html">compress</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/compress/bzip2/index.html">bzip2</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package bzip2 implements bzip2 decompression.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/compress/flate/index.html">flate</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package flate implements the DEFLATE compressed data format, described in RFC 1951.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/compress/gzip/index.html">gzip</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package gzip implements reading and writing of gzip format compressed files, as specified in RFC 1952.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/compress/lzw/index.html">lzw</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package lzw implements the Lempel-Ziv-Welch compressed data format, described in T. A. Welch, “A Technique for High-Performance Data Compression”, Computer, 17(6) (June 1984), pp 8-19.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/compress/zlib/index.html">zlib</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package zlib implements reading and writing of zlib format compressed data, as specified in RFC 1950.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 0px;">
+										<a href="pkg/container/index.html">container</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/container/heap/index.html">heap</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package heap provides heap operations for any type that implements heap.Interface.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/container/list/index.html">list</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package list implements a doubly linked list.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/container/ring/index.html">ring</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package ring implements operations on circular lists.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 0px;">
+										<a href="pkg/context/index.html">context</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package context defines the Context type, which carries deadlines, cancellation signals, and other request-scoped values across API boundaries and between processes.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 0px;">
+										<a href="pkg/crypto/index.html">crypto</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package crypto collects common cryptographic constants.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/crypto/aes/index.html">aes</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package aes implements AES encryption (formerly Rijndael), as defined in U.S. Federal Information Processing Standards Publication 197.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/crypto/boring/index.html">boring</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package boring exposes functions that are only available when building with Go+BoringCrypto.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/crypto/cipher/index.html">cipher</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package cipher implements standard block cipher modes that can be wrapped around low-level block cipher implementations.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/crypto/des/index.html">des</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package des implements the Data Encryption Standard (DES) and the Triple Data Encryption Algorithm (TDEA) as defined in U.S. Federal Information Processing Standards Publication 46-3.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/crypto/dsa/index.html">dsa</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package dsa implements the Digital Signature Algorithm, as defined in FIPS 186-3.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/crypto/ecdh/index.html">ecdh</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package ecdh implements Elliptic Curve Diffie-Hellman over NIST curves and Curve25519.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/crypto/ecdsa/index.html">ecdsa</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package ecdsa implements the Elliptic Curve Digital Signature Algorithm, as defined in FIPS 186-4 and SEC 1, Version 2.0.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/crypto/ed25519/index.html">ed25519</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package ed25519 implements the Ed25519 signature algorithm.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/crypto/elliptic/index.html">elliptic</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package elliptic implements the standard NIST P-224, P-256, P-384, and P-521 elliptic curves over prime fields.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/crypto/hmac/index.html">hmac</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package hmac implements the Keyed-Hash Message Authentication Code (HMAC) as defined in U.S. Federal Information Processing Standards Publication 198.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/crypto/md5/index.html">md5</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package md5 implements the MD5 hash algorithm as defined in RFC 1321.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/crypto/rand/index.html">rand</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package rand implements a cryptographically secure random number generator.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/crypto/rc4/index.html">rc4</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package rc4 implements RC4 encryption, as defined in Bruce Schneier&#39;s Applied Cryptography.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/crypto/rsa/index.html">rsa</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package rsa implements RSA encryption as specified in PKCS #1 and RFC 8017.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/crypto/sha1/index.html">sha1</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package sha1 implements the SHA-1 hash algorithm as defined in RFC 3174.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/crypto/sha256/index.html">sha256</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package sha256 implements the SHA224 and SHA256 hash algorithms as defined in FIPS 180-4.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/crypto/sha512/index.html">sha512</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package sha512 implements the SHA-384, SHA-512, SHA-512/224, and SHA-512/256 hash algorithms as defined in FIPS 180-4.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/crypto/subtle/index.html">subtle</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package subtle implements functions that are often useful in cryptographic code but require careful thought to use correctly.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/crypto/tls/index.html">tls</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package tls partially implements TLS 1.2, as specified in RFC 5246, and TLS 1.3, as specified in RFC 8446.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 40px;">
+										<a href="pkg/crypto/tls/fipsonly/index.html">fipsonly</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package fipsonly restricts all TLS configuration to FIPS-approved settings.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/crypto/x509/index.html">x509</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package x509 implements a subset of the X.509 standard.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 40px;">
+										<a href="pkg/crypto/x509/pkix/index.html">pkix</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package pkix contains shared, low level structures used for ASN.1 parsing and serialization of X.509 certificates, CRL and OCSP.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 0px;">
+										<a href="pkg/database/index.html">database</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/database/sql/index.html">sql</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package sql provides a generic interface around SQL (or SQL-like) databases.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 40px;">
+										<a href="pkg/database/sql/driver/index.html">driver</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package driver defines interfaces to be implemented by database drivers as used by package sql.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 0px;">
+										<a href="pkg/debug/index.html">debug</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/debug/buildinfo/index.html">buildinfo</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package buildinfo provides access to information embedded in a Go binary about how it was built.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/debug/dwarf/index.html">dwarf</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package dwarf provides access to DWARF debugging information loaded from executable files, as defined in the DWARF 2.0 Standard at http://dwarfstd.org/doc/dwarf-2.0.0.pdf.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/debug/elf/index.html">elf</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package elf implements access to ELF object files.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/debug/gosym/index.html">gosym</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package gosym implements access to the Go symbol and line number tables embedded in Go binaries generated by the gc compilers.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/debug/macho/index.html">macho</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package macho implements access to Mach-O object files.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/debug/pe/index.html">pe</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package pe implements access to PE (Microsoft Windows Portable Executable) files.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/debug/plan9obj/index.html">plan9obj</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package plan9obj implements access to Plan 9 a.out object files.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 0px;">
+										<a href="pkg/embed/index.html">embed</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package embed provides access to files embedded in the running Go program.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 0px;">
+										<a href="pkg/encoding/index.html">encoding</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package encoding defines interfaces shared by other packages that convert data to and from byte-level and textual representations.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/encoding/ascii85/index.html">ascii85</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package ascii85 implements the ascii85 data encoding as used in the btoa tool and Adobe&#39;s PostScript and PDF document formats.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/encoding/asn1/index.html">asn1</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package asn1 implements parsing of DER-encoded ASN.1 data structures, as defined in ITU-T Rec X.690.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/encoding/base32/index.html">base32</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package base32 implements base32 encoding as specified by RFC 4648.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/encoding/base64/index.html">base64</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package base64 implements base64 encoding as specified by RFC 4648.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/encoding/binary/index.html">binary</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package binary implements simple translation between numbers and byte sequences and encoding and decoding of varints.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/encoding/csv/index.html">csv</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package csv reads and writes comma-separated values (CSV) files.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/encoding/gob/index.html">gob</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package gob manages streams of gobs - binary values exchanged between an [Encoder] (transmitter) and a [Decoder] (receiver).
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/encoding/hex/index.html">hex</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package hex implements hexadecimal encoding and decoding.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/encoding/json/index.html">json</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package json implements encoding and decoding of JSON as defined in RFC 7159.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/encoding/pem/index.html">pem</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package pem implements the PEM data encoding, which originated in Privacy Enhanced Mail.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/encoding/xml/index.html">xml</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package xml implements a simple XML 1.0 parser that understands XML name spaces.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 0px;">
+										<a href="pkg/errors/index.html">errors</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package errors implements functions to manipulate errors.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 0px;">
+										<a href="pkg/expvar/index.html">expvar</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package expvar provides a standardized interface to public variables, such as operation counters in servers.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							</tr>
+						
+							<tr>
+							
+							</tr>
+						
+							<tr>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 0px;">
+										<a href="pkg/flag/index.html">flag</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package flag implements command-line flag parsing.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 0px;">
+										<a href="pkg/fmt/index.html">fmt</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package fmt implements formatted I/O with functions analogous to C&#39;s printf and scanf.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							</tr>
+						
+							<tr>
+							
+							</tr>
+						
+							<tr>
+							
+							</tr>
+						
+							<tr>
+							
+							</tr>
+						
+							<tr>
+							
+							</tr>
+						
+							<tr>
+							
+							</tr>
+						
+							<tr>
+							
+							</tr>
+						
+							<tr>
+							
+							</tr>
+						
+							<tr>
+							
+							</tr>
+						
+							<tr>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 0px;">
+										<a href="pkg/go/index.html">go</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/go/ast/index.html">ast</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package ast declares the types used to represent syntax trees for Go packages.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/go/build/index.html">build</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package build gathers information about Go packages.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 40px;">
+										<a href="pkg/go/build/constraint/index.html">constraint</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package constraint implements parsing and evaluation of build constraint lines.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/go/constant/index.html">constant</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package constant implements Values representing untyped Go constants and their corresponding operations.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/go/doc/index.html">doc</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package doc extracts source code documentation from a Go AST.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 40px;">
+										<a href="pkg/go/doc/comment/index.html">comment</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package comment implements parsing and reformatting of Go doc comments, (documentation comments), which are comments that immediately precede a top-level declaration of a package, const, func, type, or var.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/go/format/index.html">format</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package format implements standard formatting of Go source.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/go/importer/index.html">importer</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package importer provides access to export data importers.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/go/parser/index.html">parser</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package parser implements a parser for Go source files.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/go/printer/index.html">printer</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package printer implements printing of AST nodes.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/go/scanner/index.html">scanner</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package scanner implements a scanner for Go source text.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/go/token/index.html">token</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package token defines constants representing the lexical tokens of the Go programming language and basic operations on tokens (printing, predicates).
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/go/types/index.html">types</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package types declares the data types and implements the algorithms for type-checking of Go packages.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/go/version/index.html">version</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package version provides operations on [Go versions] in [Go toolchain name syntax]: strings like &#34;go1.20&#34;, &#34;go1.21.0&#34;, &#34;go1.22rc2&#34;, and &#34;go1.23.4-bigcorp&#34;.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 0px;">
+										<a href="pkg/hash/index.html">hash</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package hash provides interfaces for hash functions.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/hash/adler32/index.html">adler32</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package adler32 implements the Adler-32 checksum.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/hash/crc32/index.html">crc32</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package crc32 implements the 32-bit cyclic redundancy check, or CRC-32, checksum.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/hash/crc64/index.html">crc64</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package crc64 implements the 64-bit cyclic redundancy check, or CRC-64, checksum.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/hash/fnv/index.html">fnv</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package fnv implements FNV-1 and FNV-1a, non-cryptographic hash functions created by Glenn Fowler, Landon Curt Noll, and Phong Vo.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/hash/maphash/index.html">maphash</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package maphash provides hash functions on byte sequences.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 0px;">
+										<a href="pkg/html/index.html">html</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package html provides functions for escaping and unescaping HTML text.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/html/template/index.html">template</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package template (html/template) implements data-driven templates for generating HTML output safe against code injection.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 0px;">
+										<a href="pkg/image/index.html">image</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package image implements a basic 2-D image library.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/image/color/index.html">color</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package color implements a basic color library.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 40px;">
+										<a href="pkg/image/color/palette/index.html">palette</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package palette provides standard color palettes.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/image/draw/index.html">draw</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package draw provides image composition functions.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/image/gif/index.html">gif</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package gif implements a GIF image decoder and encoder.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/image/jpeg/index.html">jpeg</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package jpeg implements a JPEG image decoder and encoder.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/image/png/index.html">png</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package png implements a PNG image decoder and encoder.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 0px;">
+										<a href="pkg/index/index.html">index</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/index/suffixarray/index.html">suffixarray</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package suffixarray implements substring search in logarithmic time using an in-memory suffix array.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 0px;">
+										<a href="pkg/io/index.html">io</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package io provides basic interfaces to I/O primitives.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/io/fs/index.html">fs</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package fs defines basic interfaces to a file system.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/io/ioutil/index.html">ioutil</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package ioutil implements some I/O utility functions.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 0px;">
+										<a href="pkg/iter/index.html">iter</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package iter provides basic definitions and operations related to iteration in Go.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 0px;">
+										<a href="pkg/log/index.html">log</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package log implements a simple logging package.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/log/slog/index.html">slog</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package slog provides structured logging, in which log records include a message, a severity level, and various other attributes expressed as key-value pairs.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/log/syslog/index.html">syslog</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package syslog provides a simple interface to the system log service.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 0px;">
+										<a href="pkg/maps/index.html">maps</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package maps defines various functions useful with maps of any type.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 0px;">
+										<a href="pkg/math/index.html">math</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package math provides basic constants and mathematical functions.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/math/big/index.html">big</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package big implements arbitrary-precision arithmetic (big numbers).
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/math/bits/index.html">bits</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package bits implements bit counting and manipulation functions for the predeclared unsigned integer types.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/math/cmplx/index.html">cmplx</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package cmplx provides basic constants and mathematical functions for complex numbers.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/math/rand/index.html">rand</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package rand implements pseudo-random number generators suitable for tasks such as simulation, but it should not be used for security-sensitive work.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 40px;">
+										<a href="pkg/math/rand/v2/index.html">v2</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package rand implements pseudo-random number generators suitable for tasks such as simulation, but it should not be used for security-sensitive work.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 0px;">
+										<a href="pkg/mime/index.html">mime</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package mime implements parts of the MIME spec.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/mime/multipart/index.html">multipart</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package multipart implements MIME multipart parsing, as defined in RFC 2046.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/mime/quotedprintable/index.html">quotedprintable</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package quotedprintable implements quoted-printable encoding as specified by RFC 2045.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 0px;">
+										<a href="pkg/net/index.html">net</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package net provides a portable interface for network I/O, including TCP/IP, UDP, domain name resolution, and Unix domain sockets.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/net/http/index.html">http</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package http provides HTTP client and server implementations.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 40px;">
+										<a href="pkg/net/http/cgi/index.html">cgi</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package cgi implements CGI (Common Gateway Interface) as specified in RFC 3875.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 40px;">
+										<a href="pkg/net/http/cookiejar/index.html">cookiejar</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package cookiejar implements an in-memory RFC 6265-compliant http.CookieJar.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 40px;">
+										<a href="pkg/net/http/fcgi/index.html">fcgi</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package fcgi implements the FastCGI protocol.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 40px;">
+										<a href="pkg/net/http/httptest/index.html">httptest</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package httptest provides utilities for HTTP testing.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 40px;">
+										<a href="pkg/net/http/httptrace/index.html">httptrace</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package httptrace provides mechanisms to trace the events within HTTP client requests.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 40px;">
+										<a href="pkg/net/http/httputil/index.html">httputil</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package httputil provides HTTP utility functions, complementing the more common ones in the net/http package.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 40px;">
+										<a href="pkg/net/http/pprof/index.html">pprof</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package pprof serves via its HTTP server runtime profiling data in the format expected by the pprof visualization tool.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/net/mail/index.html">mail</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package mail implements parsing of mail messages.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/net/netip/index.html">netip</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package netip defines an IP address type that&#39;s a small value type.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/net/rpc/index.html">rpc</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package rpc provides access to the exported methods of an object across a network or other I/O connection.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 40px;">
+										<a href="pkg/net/rpc/jsonrpc/index.html">jsonrpc</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package jsonrpc implements a JSON-RPC 1.0 ClientCodec and ServerCodec for the rpc package.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/net/smtp/index.html">smtp</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package smtp implements the Simple Mail Transfer Protocol as defined in RFC 5321.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/net/textproto/index.html">textproto</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package textproto implements generic support for text-based request/response protocols in the style of HTTP, NNTP, and SMTP.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/net/url/index.html">url</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package url parses URLs and implements query escaping.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 0px;">
+										<a href="pkg/os/index.html">os</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package os provides a platform-independent interface to operating system functionality.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/os/exec/index.html">exec</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package exec runs external commands.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/os/signal/index.html">signal</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package signal implements access to incoming signals.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/os/user/index.html">user</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package user allows user account lookups by name or id.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 0px;">
+										<a href="pkg/path/index.html">path</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package path implements utility routines for manipulating slash-separated paths.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/path/filepath/index.html">filepath</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package filepath implements utility routines for manipulating filename paths in a way compatible with the target operating system-defined file paths.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 0px;">
+										<a href="pkg/plugin/index.html">plugin</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package plugin implements loading and symbol resolution of Go plugins.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 0px;">
+										<a href="pkg/reflect/index.html">reflect</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package reflect implements run-time reflection, allowing a program to manipulate objects with arbitrary types.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 0px;">
+										<a href="pkg/regexp/index.html">regexp</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package regexp implements regular expression search.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/regexp/syntax/index.html">syntax</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package syntax parses regular expressions into parse trees and compiles parse trees into programs.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 0px;">
+										<a href="pkg/runtime/index.html">runtime</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package runtime contains operations that interact with Go&#39;s runtime system, such as functions to control goroutines.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/runtime/asan/index.html">asan</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/runtime/cgo/index.html">cgo</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package cgo contains runtime support for code generated by the cgo tool.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/runtime/coverage/index.html">coverage</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/runtime/debug/index.html">debug</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package debug contains facilities for programs to debug themselves while they are running.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/runtime/metrics/index.html">metrics</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package metrics provides a stable interface to access implementation-defined metrics exported by the Go runtime.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/runtime/msan/index.html">msan</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/runtime/pprof/index.html">pprof</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package pprof writes runtime profiling data in the format expected by the pprof visualization tool.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/runtime/race/index.html">race</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package race implements data race detection logic.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/runtime/trace/index.html">trace</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package trace contains facilities for programs to generate traces for the Go execution tracer.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 0px;">
+										<a href="pkg/slices/index.html">slices</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package slices defines various functions useful with slices of any type.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 0px;">
+										<a href="pkg/sort/index.html">sort</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package sort provides primitives for sorting slices and user-defined collections.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 0px;">
+										<a href="pkg/strconv/index.html">strconv</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package strconv implements conversions to and from string representations of basic data types.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 0px;">
+										<a href="pkg/strings/index.html">strings</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package strings implements simple functions to manipulate UTF-8 encoded strings.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 0px;">
+										<a href="pkg/sync/index.html">sync</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package sync provides basic synchronization primitives such as mutual exclusion locks.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/sync/atomic/index.html">atomic</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package atomic provides low-level atomic memory primitives useful for implementing synchronization algorithms.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 0px;">
+										<a href="pkg/syscall/index.html">syscall</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package syscall contains an interface to the low-level operating system primitives.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/syscall/js/index.html">js</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package js gives access to the WebAssembly host environment when using the js/wasm architecture.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 0px;">
+										<a href="pkg/testing/index.html">testing</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package testing provides support for automated testing of Go packages.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/testing/fstest/index.html">fstest</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package fstest implements support for testing implementations and users of file systems.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/testing/iotest/index.html">iotest</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package iotest implements Readers and Writers useful mainly for testing.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/testing/quick/index.html">quick</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package quick implements utility functions to help with black box testing.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/testing/slogtest/index.html">slogtest</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package slogtest implements support for testing implementations of log/slog.Handler.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 0px;">
+										<a href="pkg/text/index.html">text</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/text/scanner/index.html">scanner</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package scanner provides a scanner and tokenizer for UTF-8-encoded text.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/text/tabwriter/index.html">tabwriter</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package tabwriter implements a write filter (tabwriter.Writer) that translates tabbed columns in input into properly aligned text.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/text/template/index.html">template</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package template implements data-driven templates for generating textual output.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 40px;">
+										<a href="pkg/text/template/parse/index.html">parse</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package parse builds parse trees for templates as defined by text/template and html/template.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 0px;">
+										<a href="pkg/time/index.html">time</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package time provides functionality for measuring and displaying time.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/time/tzdata/index.html">tzdata</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package tzdata provides an embedded copy of the timezone database.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 0px;">
+										<a href="pkg/unicode/index.html">unicode</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package unicode provides data and functions to test some properties of Unicode code points.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/unicode/utf16/index.html">utf16</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package utf16 implements encoding and decoding of UTF-16 sequences.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 20px;">
+										<a href="pkg/unicode/utf8/index.html">utf8</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package utf8 implements functions and constants to support text encoded in UTF-8.
+								</td>
+							
+							</tr>
+						
+							<tr>
+							
+							
+									<td class="pkg-name" style="padding-left: 0px;">
+										<a href="pkg/unsafe/index.html">unsafe</a>
+									</td>
+							
+								<td class="pkg-synopsis">
+									Package unsafe contains operations that step around the type safety of Go programs.
+								</td>
+							
+							</tr>
+						
+					</table>
+				</div> <!-- .pkg-dir -->
+			</div> <!-- .expanded -->
+		</div> <!-- #stdlib .toggleVisible -->
+
+	
+		<div id="thirdparty" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Third party section">Third party ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Third party section">Third party ▾</h2>
+				<div class="pkg-dir">
+					<table>
+						<tr>
+							<th class="pkg-name">Name</th>
+							<th class="pkg-synopsis">Synopsis</th>
+						</tr>
+
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+								
+										<td class="pkg-name" style="padding-left: 0px;">
+											<a href="http://localhost:8080/pkg/filippo.io/">filippo.io</a>
+										</td>
+								
+									<td class="pkg-synopsis">
+										
+									</td>
+								
+							</tr>
+						
+							<tr>
+								
+								
+										<td class="pkg-name" style="padding-left: 20px;">
+											<a href="pkg/filippo.io/edwards25519/index.html">edwards25519</a>
+										</td>
+								
+									<td class="pkg-synopsis">
+										Package edwards25519 implements group logic for the twisted Edwards curve
+									</td>
+								
+							</tr>
+						
+							<tr>
+								
+								
+										<td class="pkg-name" style="padding-left: 40px;">
+											<a href="pkg/filippo.io/edwards25519/field/index.html">field</a>
+										</td>
+								
+									<td class="pkg-synopsis">
+										Package field implements fast arithmetic modulo 2^255-19.
+									</td>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+								
+										<td class="pkg-name" style="padding-left: 0px;">
+											<a href="http://localhost:8080/pkg/github.com/">github.com</a>
+										</td>
+								
+									<td class="pkg-synopsis">
+										
+									</td>
+								
+							</tr>
+						
+							<tr>
+								
+								
+										<td class="pkg-name" style="padding-left: 20px;">
+											<a href="http://localhost:8080/pkg/github.com/go-sql-driver/">go-sql-driver</a>
+										</td>
+								
+									<td class="pkg-synopsis">
+										
+									</td>
+								
+							</tr>
+						
+							<tr>
+								
+								
+										<td class="pkg-name" style="padding-left: 40px;">
+											<a href="pkg/github.com/go-sql-driver/mysql/index.html">mysql</a>
+										</td>
+								
+									<td class="pkg-synopsis">
+										Package mysql provides a MySQL driver for Go&#39;s database/sql package.
+									</td>
+								
+							</tr>
+						
+							<tr>
+								
+								
+										<td class="pkg-name" style="padding-left: 20px;">
+											<a href="http://localhost:8080/pkg/github.com/google/">google</a>
+										</td>
+								
+									<td class="pkg-synopsis">
+										
+									</td>
+								
+							</tr>
+						
+							<tr>
+								
+								
+										<td class="pkg-name" style="padding-left: 40px;">
+											<a href="pkg/github.com/google/uuid/index.html">uuid</a>
+										</td>
+								
+									<td class="pkg-synopsis">
+										Package uuid generates and inspects UUIDs.
+									</td>
+								
+							</tr>
+						
+							<tr>
+								
+								
+										<td class="pkg-name" style="padding-left: 20px;">
+											<a href="http://localhost:8080/pkg/github.com/joho/">joho</a>
+										</td>
+								
+									<td class="pkg-synopsis">
+										
+									</td>
+								
+							</tr>
+						
+							<tr>
+								
+								
+										<td class="pkg-name" style="padding-left: 40px;">
+											<a href="pkg/github.com/joho/godotenv/index.html">godotenv</a>
+										</td>
+								
+									<td class="pkg-synopsis">
+										Package godotenv is a go port of the ruby dotenv library (https://github.com/bkeepers/dotenv)
+									</td>
+								
+							</tr>
+						
+							<tr>
+								
+								
+										<td class="pkg-name" style="padding-left: 60px;">
+											<a href="pkg/github.com/joho/godotenv/autoload/index.html">autoload</a>
+										</td>
+								
+									<td class="pkg-synopsis">
+										
+									</td>
+								
+							</tr>
+						
+							<tr>
+								
+								
+										<td class="pkg-name" style="padding-left: 60px;">
+											<a href="pkg/github.com/joho/godotenv/cmd/index.html">cmd</a>
+										</td>
+								
+									<td class="pkg-synopsis">
+										
+									</td>
+								
+							</tr>
+						
+							<tr>
+								
+								
+										<td class="pkg-name" style="padding-left: 80px;">
+											<a href="pkg/github.com/joho/godotenv/cmd/godotenv/index.html">godotenv</a>
+										</td>
+								
+									<td class="pkg-synopsis">
+										
+									</td>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+							<tr>
+								
+							</tr>
+						
+					</table>
+				</div> <!-- .pkg-dir -->
+			</div> <!-- .expanded -->
+		</div> <!-- #stdlib .toggleVisible -->
+	
+
+	<h2 id="other">Other packages</h2>
+	<h3 id="subrepo">Sub-repositories</h3>
+	<p>
+	These packages are part of the Go Project but outside the main Go tree.
+	They are developed under looser <a href="https://golang.org/doc/go1compat">compatibility requirements</a> than the Go core.
+	Install them with "<a href="cmd/go/index.html#hdr-Download_and_install_packages_and_dependencies">go get</a>".
+	</p>
+	<ul>
+		<li><a href="http://pkg.go.dev/golang.org/x/benchmarks">benchmarks</a> — benchmarks to measure Go as it is developed.</li>
+		<li><a href="http://pkg.go.dev/golang.org/x/blog">blog</a> — <a href="http://blog.golang.org/">blog.golang.org</a>'s implementation.</li>
+		<li><a href="http://pkg.go.dev/golang.org/x/build">build</a> — <a href="http://build.golang.org/">build.golang.org</a>'s implementation.</li>
+		<li><a href="http://pkg.go.dev/golang.org/x/crypto">crypto</a> — additional cryptography packages.</li>
+		<li><a href="http://pkg.go.dev/golang.org/x/debug">debug</a> — an experimental debugger for Go.</li>
+		<li><a href="http://pkg.go.dev/golang.org/x/image">image</a> — additional imaging packages.</li>
+		<li><a href="http://pkg.go.dev/golang.org/x/mobile">mobile</a> — experimental support for Go on mobile platforms.</li>
+		<li><a href="http://pkg.go.dev/golang.org/x/net">net</a> — additional networking packages.</li>
+		<li><a href="http://pkg.go.dev/golang.org/x/perf">perf</a> — packages and tools for performance measurement, storage, and analysis.</li>
+		<li><a href="http://pkg.go.dev/golang.org/x/pkgsite">pkgsite</a> — home of the pkg.go.dev website.</li>
+		<li><a href="http://pkg.go.dev/golang.org/x/review">review</a> — a tool for working with Gerrit code reviews.</li>
+		<li><a href="http://pkg.go.dev/golang.org/x/sync">sync</a> — additional concurrency primitives.</li>
+		<li><a href="http://pkg.go.dev/golang.org/x/sys">sys</a> — packages for making system calls.</li>
+		<li><a href="http://pkg.go.dev/golang.org/x/text">text</a> — packages for working with text.</li>
+		<li><a href="http://pkg.go.dev/golang.org/x/time">time</a> — additional time packages.</li>
+		<li><a href="http://pkg.go.dev/golang.org/x/tools">tools</a> — godoc, goimports, gorename, and other tools.</li>
+		<li><a href="http://pkg.go.dev/golang.org/x/tour">tour</a> — <a href="http://tour.golang.org/">tour.golang.org</a>'s implementation.</li>
+		<li><a href="http://pkg.go.dev/golang.org/x/exp">exp</a> — experimental and deprecated packages (handle with care; may change without warning).</li>
+	</ul>
+
+	<h3 id="community">Community</h3>
+	<p>
+	These services can help you find Open Source packages provided by the community.
+	</p>
+	<ul>
+		<li><a href="http://pkg.go.dev/">Pkg.go.dev</a> - the Go package discovery site.</li>
+		<li><a href="http://localhost:8080/wiki/Projects">Projects at the Go Wiki</a> - a curated list of Go projects.</li>
+	</ul>
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

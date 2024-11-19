@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>slogtest - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package slogtest
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "testing/slogtest"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+				<dd><a href="index.html#pkg-examples" class="examplesLink">Examples</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>Package slogtest implements support for testing implementations of log/slog.Handler.
+
+				<div id="example__parsing" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example (Parsing)</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example (Parsing)</span></p>
+		<p>This example demonstrates one technique for testing a handler with this
+package. The handler is given a [bytes.Buffer] to write to, and each line
+of the resulting output is parsed.
+For JSON output, [encoding/json.Unmarshal] produces a result in the desired
+format when given a pointer to a map[string]any.
+</p>
+		
+		
+			<p>Code:</p>
+			<pre class="code">var buf bytes.Buffer
+h := slog.NewJSONHandler(&amp;buf, nil)
+
+results := func() []map[string]any {
+    var ms []map[string]any
+    for _, line := range bytes.Split(buf.Bytes(), []byte{&#39;\n&#39;}) {
+        if len(line) == 0 {
+            continue
+        }
+        var m map[string]any
+        if err := json.Unmarshal(line, &amp;m); err != nil {
+            panic(err) <span class="comment">// In a real test, use t.Fatal.</span>
+        }
+        ms = append(ms, m)
+    }
+    return ms
+}
+err := slogtest.TestHandler(h, results)
+if err != nil {
+    log.Fatal(err)
+}
+
+<span class="comment"></pre>
+			
+		
+	</div>
+</div>
+
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+			
+			
+				
+				<dd><a href="index.html#Run">func Run(t *testing.T, newHandler func(*testing.T) slog.Handler, result func(*testing.T) map[string]any)</a></dd>
+			
+				
+				<dd><a href="index.html#TestHandler">func TestHandler(h slog.Handler, results func() []map[string]any) error</a></dd>
+			
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+		<div id="pkg-examples">
+			<h3>Examples</h3>
+			<div class="js-expandAll expandAll collapsed">(Expand All)</div>
+			<dl>
+			
+			<dd><a class="exampleLink" href="index.html#example__parsing">Package (Parsing)</a></dd>
+			
+			</dl>
+		</div>
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../../src/testing/slogtest/slogtest.go">slogtest.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+		
+		
+			
+			
+			<h2 id="Run">func <a href="../../../src/testing/slogtest/slogtest.go?s=8119:8223#L273">Run</a>
+				<a class="permalink" href="index.html#Run">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Run(t *<a href="../index.html">testing</a>.<a href="../index.html#T">T</a>, newHandler func(*<a href="../index.html">testing</a>.<a href="../index.html#T">T</a>) <a href="../../log/slog/index.html">slog</a>.<a href="../../log/slog/index.html#Handler">Handler</a>, result func(*<a href="../index.html">testing</a>.<a href="../index.html#T">T</a>) map[<a href="../../builtin/index.html#string">string</a>]<a href="../../builtin/index.html#any">any</a>)</pre>
+			<p>Run exercises a <a href="http://localhost:8080/log/slog#Handler">slog.Handler</a> on the same test cases as <a href="index.html#TestHandler">TestHandler</a>, but
+runs each case in a subtest. For each test case, it first calls newHandler to
+get an instance of the handler under test, then runs the test case, then
+calls result to get the result. If the test case fails, it calls t.Error.
+
+			
+			
+
+		
+			
+			
+			<h2 id="TestHandler">func <a href="../../../src/testing/slogtest/slogtest.go?s=7159:7230#L241">TestHandler</a>
+				<a class="permalink" href="index.html#TestHandler">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func TestHandler(h <a href="../../log/slog/index.html">slog</a>.<a href="../../log/slog/index.html#Handler">Handler</a>, results func() []map[<a href="../../builtin/index.html#string">string</a>]<a href="../../builtin/index.html#any">any</a>) <a href="../../builtin/index.html#error">error</a></pre>
+			<p>TestHandler tests a <a href="http://localhost:8080/log/slog#Handler">slog.Handler</a>.
+If TestHandler finds any misbehaviors, it returns an error for each,
+combined into a single error with <a href="http://localhost:8080/errors#Join">errors.Join</a>.
+<p>TestHandler installs the given Handler in a <a href="http://localhost:8080/log/slog#Logger">slog.Logger</a> and
+makes several calls to the Logger&apos;s output methods.
+The Handler should be enabled for levels Info and above.
+<p>The results function is invoked after all such calls.
+It should return a slice of map[string]any, one for each call to a Logger output method.
+The keys and values of the map should correspond to the keys and values of the Handler&apos;s
+output. Each group in the output should be represented as its own nested map[string]any.
+The standard keys <a href="http://localhost:8080/log/slog#TimeKey">slog.TimeKey</a>, <a href="http://localhost:8080/log/slog#LevelKey">slog.LevelKey</a> and <a href="http://localhost:8080/log/slog#MessageKey">slog.MessageKey</a> should be used.
+<p>If the Handler outputs JSON, then calling <a href="http://localhost:8080/encoding/json#Unmarshal">encoding/json.Unmarshal</a> with a `map[string]any`
+will create the right data structure.
+<p>If a Handler intentionally drops an attribute that is checked by a test,
+then the results function should check for its absence and add it to the map it returns.
+
+			
+			
+
+		
+		
+	
+
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

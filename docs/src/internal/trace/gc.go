@@ -1,0 +1,1168 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>src/internal/trace/gc.go - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="gc.go#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Source file
+    <a href="http://localhost:8080/src">src</a>/<a href="http://localhost:8080/src/internal">internal</a>/<a href="http://localhost:8080/src/internal/trace">trace</a>/<span class="text-muted">gc.go</span>
+  </h1>
+
+
+
+
+
+  <h2>
+    Documentation: <a href="http://localhost:8080/pkg/internal/trace">internal/trace</a>
+  </h2>
+
+
+
+<div id="nav"></div>
+
+
+<script type='text/javascript'>document.ANALYSIS_DATA = null;</script>
+<pre><span id="L1" class="ln">     1&nbsp;&nbsp;</span><span class="comment">// Copyright 2017 The Go Authors. All rights reserved.</span>
+<span id="L2" class="ln">     2&nbsp;&nbsp;</span><span class="comment">// Use of this source code is governed by a BSD-style</span>
+<span id="L3" class="ln">     3&nbsp;&nbsp;</span><span class="comment">// license that can be found in the LICENSE file.</span>
+<span id="L4" class="ln">     4&nbsp;&nbsp;</span>
+<span id="L5" class="ln">     5&nbsp;&nbsp;</span>package trace
+<span id="L6" class="ln">     6&nbsp;&nbsp;</span>
+<span id="L7" class="ln">     7&nbsp;&nbsp;</span>import (
+<span id="L8" class="ln">     8&nbsp;&nbsp;</span>	&#34;container/heap&#34;
+<span id="L9" class="ln">     9&nbsp;&nbsp;</span>	tracev2 &#34;internal/trace/v2&#34;
+<span id="L10" class="ln">    10&nbsp;&nbsp;</span>	&#34;math&#34;
+<span id="L11" class="ln">    11&nbsp;&nbsp;</span>	&#34;sort&#34;
+<span id="L12" class="ln">    12&nbsp;&nbsp;</span>	&#34;strings&#34;
+<span id="L13" class="ln">    13&nbsp;&nbsp;</span>	&#34;time&#34;
+<span id="L14" class="ln">    14&nbsp;&nbsp;</span>)
+<span id="L15" class="ln">    15&nbsp;&nbsp;</span>
+<span id="L16" class="ln">    16&nbsp;&nbsp;</span><span class="comment">// MutatorUtil is a change in mutator utilization at a particular</span>
+<span id="L17" class="ln">    17&nbsp;&nbsp;</span><span class="comment">// time. Mutator utilization functions are represented as a</span>
+<span id="L18" class="ln">    18&nbsp;&nbsp;</span><span class="comment">// time-ordered []MutatorUtil.</span>
+<span id="L19" class="ln">    19&nbsp;&nbsp;</span>type MutatorUtil struct {
+<span id="L20" class="ln">    20&nbsp;&nbsp;</span>	Time int64
+<span id="L21" class="ln">    21&nbsp;&nbsp;</span>	<span class="comment">// Util is the mean mutator utilization starting at Time. This</span>
+<span id="L22" class="ln">    22&nbsp;&nbsp;</span>	<span class="comment">// is in the range [0, 1].</span>
+<span id="L23" class="ln">    23&nbsp;&nbsp;</span>	Util float64
+<span id="L24" class="ln">    24&nbsp;&nbsp;</span>}
+<span id="L25" class="ln">    25&nbsp;&nbsp;</span>
+<span id="L26" class="ln">    26&nbsp;&nbsp;</span><span class="comment">// UtilFlags controls the behavior of MutatorUtilization.</span>
+<span id="L27" class="ln">    27&nbsp;&nbsp;</span>type UtilFlags int
+<span id="L28" class="ln">    28&nbsp;&nbsp;</span>
+<span id="L29" class="ln">    29&nbsp;&nbsp;</span>const (
+<span id="L30" class="ln">    30&nbsp;&nbsp;</span>	<span class="comment">// UtilSTW means utilization should account for STW events.</span>
+<span id="L31" class="ln">    31&nbsp;&nbsp;</span>	<span class="comment">// This includes non-GC STW events, which are typically user-requested.</span>
+<span id="L32" class="ln">    32&nbsp;&nbsp;</span>	UtilSTW UtilFlags = 1 &lt;&lt; iota
+<span id="L33" class="ln">    33&nbsp;&nbsp;</span>	<span class="comment">// UtilBackground means utilization should account for</span>
+<span id="L34" class="ln">    34&nbsp;&nbsp;</span>	<span class="comment">// background mark workers.</span>
+<span id="L35" class="ln">    35&nbsp;&nbsp;</span>	UtilBackground
+<span id="L36" class="ln">    36&nbsp;&nbsp;</span>	<span class="comment">// UtilAssist means utilization should account for mark</span>
+<span id="L37" class="ln">    37&nbsp;&nbsp;</span>	<span class="comment">// assists.</span>
+<span id="L38" class="ln">    38&nbsp;&nbsp;</span>	UtilAssist
+<span id="L39" class="ln">    39&nbsp;&nbsp;</span>	<span class="comment">// UtilSweep means utilization should account for sweeping.</span>
+<span id="L40" class="ln">    40&nbsp;&nbsp;</span>	UtilSweep
+<span id="L41" class="ln">    41&nbsp;&nbsp;</span>
+<span id="L42" class="ln">    42&nbsp;&nbsp;</span>	<span class="comment">// UtilPerProc means each P should be given a separate</span>
+<span id="L43" class="ln">    43&nbsp;&nbsp;</span>	<span class="comment">// utilization function. Otherwise, there is a single function</span>
+<span id="L44" class="ln">    44&nbsp;&nbsp;</span>	<span class="comment">// and each P is given a fraction of the utilization.</span>
+<span id="L45" class="ln">    45&nbsp;&nbsp;</span>	UtilPerProc
+<span id="L46" class="ln">    46&nbsp;&nbsp;</span>)
+<span id="L47" class="ln">    47&nbsp;&nbsp;</span>
+<span id="L48" class="ln">    48&nbsp;&nbsp;</span><span class="comment">// MutatorUtilization returns a set of mutator utilization functions</span>
+<span id="L49" class="ln">    49&nbsp;&nbsp;</span><span class="comment">// for the given trace. Each function will always end with 0</span>
+<span id="L50" class="ln">    50&nbsp;&nbsp;</span><span class="comment">// utilization. The bounds of each function are implicit in the first</span>
+<span id="L51" class="ln">    51&nbsp;&nbsp;</span><span class="comment">// and last event; outside of these bounds each function is undefined.</span>
+<span id="L52" class="ln">    52&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L53" class="ln">    53&nbsp;&nbsp;</span><span class="comment">// If the UtilPerProc flag is not given, this always returns a single</span>
+<span id="L54" class="ln">    54&nbsp;&nbsp;</span><span class="comment">// utilization function. Otherwise, it returns one function per P.</span>
+<span id="L55" class="ln">    55&nbsp;&nbsp;</span>func MutatorUtilization(events []*Event, flags UtilFlags) [][]MutatorUtil {
+<span id="L56" class="ln">    56&nbsp;&nbsp;</span>	if len(events) == 0 {
+<span id="L57" class="ln">    57&nbsp;&nbsp;</span>		return nil
+<span id="L58" class="ln">    58&nbsp;&nbsp;</span>	}
+<span id="L59" class="ln">    59&nbsp;&nbsp;</span>
+<span id="L60" class="ln">    60&nbsp;&nbsp;</span>	type perP struct {
+<span id="L61" class="ln">    61&nbsp;&nbsp;</span>		<span class="comment">// gc &gt; 0 indicates that GC is active on this P.</span>
+<span id="L62" class="ln">    62&nbsp;&nbsp;</span>		gc int
+<span id="L63" class="ln">    63&nbsp;&nbsp;</span>		<span class="comment">// series the logical series number for this P. This</span>
+<span id="L64" class="ln">    64&nbsp;&nbsp;</span>		<span class="comment">// is necessary because Ps may be removed and then</span>
+<span id="L65" class="ln">    65&nbsp;&nbsp;</span>		<span class="comment">// re-added, and then the new P needs a new series.</span>
+<span id="L66" class="ln">    66&nbsp;&nbsp;</span>		series int
+<span id="L67" class="ln">    67&nbsp;&nbsp;</span>	}
+<span id="L68" class="ln">    68&nbsp;&nbsp;</span>	ps := []perP{}
+<span id="L69" class="ln">    69&nbsp;&nbsp;</span>	stw := 0
+<span id="L70" class="ln">    70&nbsp;&nbsp;</span>
+<span id="L71" class="ln">    71&nbsp;&nbsp;</span>	out := [][]MutatorUtil{}
+<span id="L72" class="ln">    72&nbsp;&nbsp;</span>	assists := map[uint64]bool{}
+<span id="L73" class="ln">    73&nbsp;&nbsp;</span>	block := map[uint64]*Event{}
+<span id="L74" class="ln">    74&nbsp;&nbsp;</span>	bgMark := map[uint64]bool{}
+<span id="L75" class="ln">    75&nbsp;&nbsp;</span>
+<span id="L76" class="ln">    76&nbsp;&nbsp;</span>	for _, ev := range events {
+<span id="L77" class="ln">    77&nbsp;&nbsp;</span>		switch ev.Type {
+<span id="L78" class="ln">    78&nbsp;&nbsp;</span>		case EvGomaxprocs:
+<span id="L79" class="ln">    79&nbsp;&nbsp;</span>			gomaxprocs := int(ev.Args[0])
+<span id="L80" class="ln">    80&nbsp;&nbsp;</span>			if len(ps) &gt; gomaxprocs {
+<span id="L81" class="ln">    81&nbsp;&nbsp;</span>				if flags&amp;UtilPerProc != 0 {
+<span id="L82" class="ln">    82&nbsp;&nbsp;</span>					<span class="comment">// End each P&#39;s series.</span>
+<span id="L83" class="ln">    83&nbsp;&nbsp;</span>					for _, p := range ps[gomaxprocs:] {
+<span id="L84" class="ln">    84&nbsp;&nbsp;</span>						out[p.series] = addUtil(out[p.series], MutatorUtil{ev.Ts, 0})
+<span id="L85" class="ln">    85&nbsp;&nbsp;</span>					}
+<span id="L86" class="ln">    86&nbsp;&nbsp;</span>				}
+<span id="L87" class="ln">    87&nbsp;&nbsp;</span>				ps = ps[:gomaxprocs]
+<span id="L88" class="ln">    88&nbsp;&nbsp;</span>			}
+<span id="L89" class="ln">    89&nbsp;&nbsp;</span>			for len(ps) &lt; gomaxprocs {
+<span id="L90" class="ln">    90&nbsp;&nbsp;</span>				<span class="comment">// Start new P&#39;s series.</span>
+<span id="L91" class="ln">    91&nbsp;&nbsp;</span>				series := 0
+<span id="L92" class="ln">    92&nbsp;&nbsp;</span>				if flags&amp;UtilPerProc != 0 || len(out) == 0 {
+<span id="L93" class="ln">    93&nbsp;&nbsp;</span>					series = len(out)
+<span id="L94" class="ln">    94&nbsp;&nbsp;</span>					out = append(out, []MutatorUtil{{ev.Ts, 1}})
+<span id="L95" class="ln">    95&nbsp;&nbsp;</span>				}
+<span id="L96" class="ln">    96&nbsp;&nbsp;</span>				ps = append(ps, perP{series: series})
+<span id="L97" class="ln">    97&nbsp;&nbsp;</span>			}
+<span id="L98" class="ln">    98&nbsp;&nbsp;</span>		case EvSTWStart:
+<span id="L99" class="ln">    99&nbsp;&nbsp;</span>			if flags&amp;UtilSTW != 0 {
+<span id="L100" class="ln">   100&nbsp;&nbsp;</span>				stw++
+<span id="L101" class="ln">   101&nbsp;&nbsp;</span>			}
+<span id="L102" class="ln">   102&nbsp;&nbsp;</span>		case EvSTWDone:
+<span id="L103" class="ln">   103&nbsp;&nbsp;</span>			if flags&amp;UtilSTW != 0 {
+<span id="L104" class="ln">   104&nbsp;&nbsp;</span>				stw--
+<span id="L105" class="ln">   105&nbsp;&nbsp;</span>			}
+<span id="L106" class="ln">   106&nbsp;&nbsp;</span>		case EvGCMarkAssistStart:
+<span id="L107" class="ln">   107&nbsp;&nbsp;</span>			if flags&amp;UtilAssist != 0 {
+<span id="L108" class="ln">   108&nbsp;&nbsp;</span>				ps[ev.P].gc++
+<span id="L109" class="ln">   109&nbsp;&nbsp;</span>				assists[ev.G] = true
+<span id="L110" class="ln">   110&nbsp;&nbsp;</span>			}
+<span id="L111" class="ln">   111&nbsp;&nbsp;</span>		case EvGCMarkAssistDone:
+<span id="L112" class="ln">   112&nbsp;&nbsp;</span>			if flags&amp;UtilAssist != 0 {
+<span id="L113" class="ln">   113&nbsp;&nbsp;</span>				ps[ev.P].gc--
+<span id="L114" class="ln">   114&nbsp;&nbsp;</span>				delete(assists, ev.G)
+<span id="L115" class="ln">   115&nbsp;&nbsp;</span>			}
+<span id="L116" class="ln">   116&nbsp;&nbsp;</span>		case EvGCSweepStart:
+<span id="L117" class="ln">   117&nbsp;&nbsp;</span>			if flags&amp;UtilSweep != 0 {
+<span id="L118" class="ln">   118&nbsp;&nbsp;</span>				ps[ev.P].gc++
+<span id="L119" class="ln">   119&nbsp;&nbsp;</span>			}
+<span id="L120" class="ln">   120&nbsp;&nbsp;</span>		case EvGCSweepDone:
+<span id="L121" class="ln">   121&nbsp;&nbsp;</span>			if flags&amp;UtilSweep != 0 {
+<span id="L122" class="ln">   122&nbsp;&nbsp;</span>				ps[ev.P].gc--
+<span id="L123" class="ln">   123&nbsp;&nbsp;</span>			}
+<span id="L124" class="ln">   124&nbsp;&nbsp;</span>		case EvGoStartLabel:
+<span id="L125" class="ln">   125&nbsp;&nbsp;</span>			if flags&amp;UtilBackground != 0 &amp;&amp; strings.HasPrefix(ev.SArgs[0], &#34;GC &#34;) &amp;&amp; ev.SArgs[0] != &#34;GC (idle)&#34; {
+<span id="L126" class="ln">   126&nbsp;&nbsp;</span>				<span class="comment">// Background mark worker.</span>
+<span id="L127" class="ln">   127&nbsp;&nbsp;</span>				<span class="comment">//</span>
+<span id="L128" class="ln">   128&nbsp;&nbsp;</span>				<span class="comment">// If we&#39;re in per-proc mode, we don&#39;t</span>
+<span id="L129" class="ln">   129&nbsp;&nbsp;</span>				<span class="comment">// count dedicated workers because</span>
+<span id="L130" class="ln">   130&nbsp;&nbsp;</span>				<span class="comment">// they kick all of the goroutines off</span>
+<span id="L131" class="ln">   131&nbsp;&nbsp;</span>				<span class="comment">// that P, so don&#39;t directly</span>
+<span id="L132" class="ln">   132&nbsp;&nbsp;</span>				<span class="comment">// contribute to goroutine latency.</span>
+<span id="L133" class="ln">   133&nbsp;&nbsp;</span>				if !(flags&amp;UtilPerProc != 0 &amp;&amp; ev.SArgs[0] == &#34;GC (dedicated)&#34;) {
+<span id="L134" class="ln">   134&nbsp;&nbsp;</span>					bgMark[ev.G] = true
+<span id="L135" class="ln">   135&nbsp;&nbsp;</span>					ps[ev.P].gc++
+<span id="L136" class="ln">   136&nbsp;&nbsp;</span>				}
+<span id="L137" class="ln">   137&nbsp;&nbsp;</span>			}
+<span id="L138" class="ln">   138&nbsp;&nbsp;</span>			fallthrough
+<span id="L139" class="ln">   139&nbsp;&nbsp;</span>		case EvGoStart:
+<span id="L140" class="ln">   140&nbsp;&nbsp;</span>			if assists[ev.G] {
+<span id="L141" class="ln">   141&nbsp;&nbsp;</span>				<span class="comment">// Unblocked during assist.</span>
+<span id="L142" class="ln">   142&nbsp;&nbsp;</span>				ps[ev.P].gc++
+<span id="L143" class="ln">   143&nbsp;&nbsp;</span>			}
+<span id="L144" class="ln">   144&nbsp;&nbsp;</span>			block[ev.G] = ev.Link
+<span id="L145" class="ln">   145&nbsp;&nbsp;</span>		default:
+<span id="L146" class="ln">   146&nbsp;&nbsp;</span>			if ev != block[ev.G] {
+<span id="L147" class="ln">   147&nbsp;&nbsp;</span>				continue
+<span id="L148" class="ln">   148&nbsp;&nbsp;</span>			}
+<span id="L149" class="ln">   149&nbsp;&nbsp;</span>
+<span id="L150" class="ln">   150&nbsp;&nbsp;</span>			if assists[ev.G] {
+<span id="L151" class="ln">   151&nbsp;&nbsp;</span>				<span class="comment">// Blocked during assist.</span>
+<span id="L152" class="ln">   152&nbsp;&nbsp;</span>				ps[ev.P].gc--
+<span id="L153" class="ln">   153&nbsp;&nbsp;</span>			}
+<span id="L154" class="ln">   154&nbsp;&nbsp;</span>			if bgMark[ev.G] {
+<span id="L155" class="ln">   155&nbsp;&nbsp;</span>				<span class="comment">// Background mark worker done.</span>
+<span id="L156" class="ln">   156&nbsp;&nbsp;</span>				ps[ev.P].gc--
+<span id="L157" class="ln">   157&nbsp;&nbsp;</span>				delete(bgMark, ev.G)
+<span id="L158" class="ln">   158&nbsp;&nbsp;</span>			}
+<span id="L159" class="ln">   159&nbsp;&nbsp;</span>			delete(block, ev.G)
+<span id="L160" class="ln">   160&nbsp;&nbsp;</span>		}
+<span id="L161" class="ln">   161&nbsp;&nbsp;</span>
+<span id="L162" class="ln">   162&nbsp;&nbsp;</span>		if flags&amp;UtilPerProc == 0 {
+<span id="L163" class="ln">   163&nbsp;&nbsp;</span>			<span class="comment">// Compute the current average utilization.</span>
+<span id="L164" class="ln">   164&nbsp;&nbsp;</span>			if len(ps) == 0 {
+<span id="L165" class="ln">   165&nbsp;&nbsp;</span>				continue
+<span id="L166" class="ln">   166&nbsp;&nbsp;</span>			}
+<span id="L167" class="ln">   167&nbsp;&nbsp;</span>			gcPs := 0
+<span id="L168" class="ln">   168&nbsp;&nbsp;</span>			if stw &gt; 0 {
+<span id="L169" class="ln">   169&nbsp;&nbsp;</span>				gcPs = len(ps)
+<span id="L170" class="ln">   170&nbsp;&nbsp;</span>			} else {
+<span id="L171" class="ln">   171&nbsp;&nbsp;</span>				for i := range ps {
+<span id="L172" class="ln">   172&nbsp;&nbsp;</span>					if ps[i].gc &gt; 0 {
+<span id="L173" class="ln">   173&nbsp;&nbsp;</span>						gcPs++
+<span id="L174" class="ln">   174&nbsp;&nbsp;</span>					}
+<span id="L175" class="ln">   175&nbsp;&nbsp;</span>				}
+<span id="L176" class="ln">   176&nbsp;&nbsp;</span>			}
+<span id="L177" class="ln">   177&nbsp;&nbsp;</span>			mu := MutatorUtil{ev.Ts, 1 - float64(gcPs)/float64(len(ps))}
+<span id="L178" class="ln">   178&nbsp;&nbsp;</span>
+<span id="L179" class="ln">   179&nbsp;&nbsp;</span>			<span class="comment">// Record the utilization change. (Since</span>
+<span id="L180" class="ln">   180&nbsp;&nbsp;</span>			<span class="comment">// len(ps) == len(out), we know len(out) &gt; 0.)</span>
+<span id="L181" class="ln">   181&nbsp;&nbsp;</span>			out[0] = addUtil(out[0], mu)
+<span id="L182" class="ln">   182&nbsp;&nbsp;</span>		} else {
+<span id="L183" class="ln">   183&nbsp;&nbsp;</span>			<span class="comment">// Check for per-P utilization changes.</span>
+<span id="L184" class="ln">   184&nbsp;&nbsp;</span>			for i := range ps {
+<span id="L185" class="ln">   185&nbsp;&nbsp;</span>				p := &amp;ps[i]
+<span id="L186" class="ln">   186&nbsp;&nbsp;</span>				util := 1.0
+<span id="L187" class="ln">   187&nbsp;&nbsp;</span>				if stw &gt; 0 || p.gc &gt; 0 {
+<span id="L188" class="ln">   188&nbsp;&nbsp;</span>					util = 0.0
+<span id="L189" class="ln">   189&nbsp;&nbsp;</span>				}
+<span id="L190" class="ln">   190&nbsp;&nbsp;</span>				out[p.series] = addUtil(out[p.series], MutatorUtil{ev.Ts, util})
+<span id="L191" class="ln">   191&nbsp;&nbsp;</span>			}
+<span id="L192" class="ln">   192&nbsp;&nbsp;</span>		}
+<span id="L193" class="ln">   193&nbsp;&nbsp;</span>	}
+<span id="L194" class="ln">   194&nbsp;&nbsp;</span>
+<span id="L195" class="ln">   195&nbsp;&nbsp;</span>	<span class="comment">// Add final 0 utilization event to any remaining series. This</span>
+<span id="L196" class="ln">   196&nbsp;&nbsp;</span>	<span class="comment">// is important to mark the end of the trace. The exact value</span>
+<span id="L197" class="ln">   197&nbsp;&nbsp;</span>	<span class="comment">// shouldn&#39;t matter since no window should extend beyond this,</span>
+<span id="L198" class="ln">   198&nbsp;&nbsp;</span>	<span class="comment">// but using 0 is symmetric with the start of the trace.</span>
+<span id="L199" class="ln">   199&nbsp;&nbsp;</span>	mu := MutatorUtil{events[len(events)-1].Ts, 0}
+<span id="L200" class="ln">   200&nbsp;&nbsp;</span>	for i := range ps {
+<span id="L201" class="ln">   201&nbsp;&nbsp;</span>		out[ps[i].series] = addUtil(out[ps[i].series], mu)
+<span id="L202" class="ln">   202&nbsp;&nbsp;</span>	}
+<span id="L203" class="ln">   203&nbsp;&nbsp;</span>	return out
+<span id="L204" class="ln">   204&nbsp;&nbsp;</span>}
+<span id="L205" class="ln">   205&nbsp;&nbsp;</span>
+<span id="L206" class="ln">   206&nbsp;&nbsp;</span><span class="comment">// MutatorUtilizationV2 returns a set of mutator utilization functions</span>
+<span id="L207" class="ln">   207&nbsp;&nbsp;</span><span class="comment">// for the given v2 trace, passed as an io.Reader. Each function will</span>
+<span id="L208" class="ln">   208&nbsp;&nbsp;</span><span class="comment">// always end with 0 utilization. The bounds of each function are implicit</span>
+<span id="L209" class="ln">   209&nbsp;&nbsp;</span><span class="comment">// in the first and last event; outside of these bounds each function is</span>
+<span id="L210" class="ln">   210&nbsp;&nbsp;</span><span class="comment">// undefined.</span>
+<span id="L211" class="ln">   211&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L212" class="ln">   212&nbsp;&nbsp;</span><span class="comment">// If the UtilPerProc flag is not given, this always returns a single</span>
+<span id="L213" class="ln">   213&nbsp;&nbsp;</span><span class="comment">// utilization function. Otherwise, it returns one function per P.</span>
+<span id="L214" class="ln">   214&nbsp;&nbsp;</span>func MutatorUtilizationV2(events []tracev2.Event, flags UtilFlags) [][]MutatorUtil {
+<span id="L215" class="ln">   215&nbsp;&nbsp;</span>	<span class="comment">// Set up a bunch of analysis state.</span>
+<span id="L216" class="ln">   216&nbsp;&nbsp;</span>	type perP struct {
+<span id="L217" class="ln">   217&nbsp;&nbsp;</span>		<span class="comment">// gc &gt; 0 indicates that GC is active on this P.</span>
+<span id="L218" class="ln">   218&nbsp;&nbsp;</span>		gc int
+<span id="L219" class="ln">   219&nbsp;&nbsp;</span>		<span class="comment">// series the logical series number for this P. This</span>
+<span id="L220" class="ln">   220&nbsp;&nbsp;</span>		<span class="comment">// is necessary because Ps may be removed and then</span>
+<span id="L221" class="ln">   221&nbsp;&nbsp;</span>		<span class="comment">// re-added, and then the new P needs a new series.</span>
+<span id="L222" class="ln">   222&nbsp;&nbsp;</span>		series int
+<span id="L223" class="ln">   223&nbsp;&nbsp;</span>	}
+<span id="L224" class="ln">   224&nbsp;&nbsp;</span>	type procsCount struct {
+<span id="L225" class="ln">   225&nbsp;&nbsp;</span>		<span class="comment">// time at which procs changed.</span>
+<span id="L226" class="ln">   226&nbsp;&nbsp;</span>		time int64
+<span id="L227" class="ln">   227&nbsp;&nbsp;</span>		<span class="comment">// n is the number of procs at that point.</span>
+<span id="L228" class="ln">   228&nbsp;&nbsp;</span>		n int
+<span id="L229" class="ln">   229&nbsp;&nbsp;</span>	}
+<span id="L230" class="ln">   230&nbsp;&nbsp;</span>	out := [][]MutatorUtil{}
+<span id="L231" class="ln">   231&nbsp;&nbsp;</span>	stw := 0
+<span id="L232" class="ln">   232&nbsp;&nbsp;</span>	ps := []perP{}
+<span id="L233" class="ln">   233&nbsp;&nbsp;</span>	inGC := make(map[tracev2.GoID]bool)
+<span id="L234" class="ln">   234&nbsp;&nbsp;</span>	states := make(map[tracev2.GoID]tracev2.GoState)
+<span id="L235" class="ln">   235&nbsp;&nbsp;</span>	bgMark := make(map[tracev2.GoID]bool)
+<span id="L236" class="ln">   236&nbsp;&nbsp;</span>	procs := []procsCount{}
+<span id="L237" class="ln">   237&nbsp;&nbsp;</span>	seenSync := false
+<span id="L238" class="ln">   238&nbsp;&nbsp;</span>
+<span id="L239" class="ln">   239&nbsp;&nbsp;</span>	<span class="comment">// Helpers.</span>
+<span id="L240" class="ln">   240&nbsp;&nbsp;</span>	handleSTW := func(r tracev2.Range) bool {
+<span id="L241" class="ln">   241&nbsp;&nbsp;</span>		return flags&amp;UtilSTW != 0 &amp;&amp; isGCSTW(r)
+<span id="L242" class="ln">   242&nbsp;&nbsp;</span>	}
+<span id="L243" class="ln">   243&nbsp;&nbsp;</span>	handleMarkAssist := func(r tracev2.Range) bool {
+<span id="L244" class="ln">   244&nbsp;&nbsp;</span>		return flags&amp;UtilAssist != 0 &amp;&amp; isGCMarkAssist(r)
+<span id="L245" class="ln">   245&nbsp;&nbsp;</span>	}
+<span id="L246" class="ln">   246&nbsp;&nbsp;</span>	handleSweep := func(r tracev2.Range) bool {
+<span id="L247" class="ln">   247&nbsp;&nbsp;</span>		return flags&amp;UtilSweep != 0 &amp;&amp; isGCSweep(r)
+<span id="L248" class="ln">   248&nbsp;&nbsp;</span>	}
+<span id="L249" class="ln">   249&nbsp;&nbsp;</span>
+<span id="L250" class="ln">   250&nbsp;&nbsp;</span>	<span class="comment">// Iterate through the trace, tracking mutator utilization.</span>
+<span id="L251" class="ln">   251&nbsp;&nbsp;</span>	var lastEv *tracev2.Event
+<span id="L252" class="ln">   252&nbsp;&nbsp;</span>	for i := range events {
+<span id="L253" class="ln">   253&nbsp;&nbsp;</span>		ev := &amp;events[i]
+<span id="L254" class="ln">   254&nbsp;&nbsp;</span>		lastEv = ev
+<span id="L255" class="ln">   255&nbsp;&nbsp;</span>
+<span id="L256" class="ln">   256&nbsp;&nbsp;</span>		<span class="comment">// Process the event.</span>
+<span id="L257" class="ln">   257&nbsp;&nbsp;</span>		switch ev.Kind() {
+<span id="L258" class="ln">   258&nbsp;&nbsp;</span>		case tracev2.EventSync:
+<span id="L259" class="ln">   259&nbsp;&nbsp;</span>			seenSync = true
+<span id="L260" class="ln">   260&nbsp;&nbsp;</span>		case tracev2.EventMetric:
+<span id="L261" class="ln">   261&nbsp;&nbsp;</span>			m := ev.Metric()
+<span id="L262" class="ln">   262&nbsp;&nbsp;</span>			if m.Name != &#34;/sched/gomaxprocs:threads&#34; {
+<span id="L263" class="ln">   263&nbsp;&nbsp;</span>				break
+<span id="L264" class="ln">   264&nbsp;&nbsp;</span>			}
+<span id="L265" class="ln">   265&nbsp;&nbsp;</span>			gomaxprocs := int(m.Value.Uint64())
+<span id="L266" class="ln">   266&nbsp;&nbsp;</span>			if len(ps) &gt; gomaxprocs {
+<span id="L267" class="ln">   267&nbsp;&nbsp;</span>				if flags&amp;UtilPerProc != 0 {
+<span id="L268" class="ln">   268&nbsp;&nbsp;</span>					<span class="comment">// End each P&#39;s series.</span>
+<span id="L269" class="ln">   269&nbsp;&nbsp;</span>					for _, p := range ps[gomaxprocs:] {
+<span id="L270" class="ln">   270&nbsp;&nbsp;</span>						out[p.series] = addUtil(out[p.series], MutatorUtil{int64(ev.Time()), 0})
+<span id="L271" class="ln">   271&nbsp;&nbsp;</span>					}
+<span id="L272" class="ln">   272&nbsp;&nbsp;</span>				}
+<span id="L273" class="ln">   273&nbsp;&nbsp;</span>				ps = ps[:gomaxprocs]
+<span id="L274" class="ln">   274&nbsp;&nbsp;</span>			}
+<span id="L275" class="ln">   275&nbsp;&nbsp;</span>			for len(ps) &lt; gomaxprocs {
+<span id="L276" class="ln">   276&nbsp;&nbsp;</span>				<span class="comment">// Start new P&#39;s series.</span>
+<span id="L277" class="ln">   277&nbsp;&nbsp;</span>				series := 0
+<span id="L278" class="ln">   278&nbsp;&nbsp;</span>				if flags&amp;UtilPerProc != 0 || len(out) == 0 {
+<span id="L279" class="ln">   279&nbsp;&nbsp;</span>					series = len(out)
+<span id="L280" class="ln">   280&nbsp;&nbsp;</span>					out = append(out, []MutatorUtil{{int64(ev.Time()), 1}})
+<span id="L281" class="ln">   281&nbsp;&nbsp;</span>				}
+<span id="L282" class="ln">   282&nbsp;&nbsp;</span>				ps = append(ps, perP{series: series})
+<span id="L283" class="ln">   283&nbsp;&nbsp;</span>			}
+<span id="L284" class="ln">   284&nbsp;&nbsp;</span>			if len(procs) == 0 || gomaxprocs != procs[len(procs)-1].n {
+<span id="L285" class="ln">   285&nbsp;&nbsp;</span>				procs = append(procs, procsCount{time: int64(ev.Time()), n: gomaxprocs})
+<span id="L286" class="ln">   286&nbsp;&nbsp;</span>			}
+<span id="L287" class="ln">   287&nbsp;&nbsp;</span>		}
+<span id="L288" class="ln">   288&nbsp;&nbsp;</span>		if len(ps) == 0 {
+<span id="L289" class="ln">   289&nbsp;&nbsp;</span>			<span class="comment">// We can&#39;t start doing any analysis until we see what GOMAXPROCS is.</span>
+<span id="L290" class="ln">   290&nbsp;&nbsp;</span>			<span class="comment">// It will show up very early in the trace, but we need to be robust to</span>
+<span id="L291" class="ln">   291&nbsp;&nbsp;</span>			<span class="comment">// something else being emitted beforehand.</span>
+<span id="L292" class="ln">   292&nbsp;&nbsp;</span>			continue
+<span id="L293" class="ln">   293&nbsp;&nbsp;</span>		}
+<span id="L294" class="ln">   294&nbsp;&nbsp;</span>
+<span id="L295" class="ln">   295&nbsp;&nbsp;</span>		switch ev.Kind() {
+<span id="L296" class="ln">   296&nbsp;&nbsp;</span>		case tracev2.EventRangeActive:
+<span id="L297" class="ln">   297&nbsp;&nbsp;</span>			if seenSync {
+<span id="L298" class="ln">   298&nbsp;&nbsp;</span>				<span class="comment">// If we&#39;ve seen a sync, then we can be sure we&#39;re not finding out about</span>
+<span id="L299" class="ln">   299&nbsp;&nbsp;</span>				<span class="comment">// something late; we have complete information after that point, and these</span>
+<span id="L300" class="ln">   300&nbsp;&nbsp;</span>				<span class="comment">// active events will just be redundant.</span>
+<span id="L301" class="ln">   301&nbsp;&nbsp;</span>				break
+<span id="L302" class="ln">   302&nbsp;&nbsp;</span>			}
+<span id="L303" class="ln">   303&nbsp;&nbsp;</span>			<span class="comment">// This range is active back to the start of the trace. We&#39;re failing to account</span>
+<span id="L304" class="ln">   304&nbsp;&nbsp;</span>			<span class="comment">// for this since we just found out about it now. Fix up the mutator utilization.</span>
+<span id="L305" class="ln">   305&nbsp;&nbsp;</span>			<span class="comment">//</span>
+<span id="L306" class="ln">   306&nbsp;&nbsp;</span>			<span class="comment">// N.B. A trace can&#39;t start during a STW, so we don&#39;t handle it here.</span>
+<span id="L307" class="ln">   307&nbsp;&nbsp;</span>			r := ev.Range()
+<span id="L308" class="ln">   308&nbsp;&nbsp;</span>			switch {
+<span id="L309" class="ln">   309&nbsp;&nbsp;</span>			case handleMarkAssist(r):
+<span id="L310" class="ln">   310&nbsp;&nbsp;</span>				if !states[ev.Goroutine()].Executing() {
+<span id="L311" class="ln">   311&nbsp;&nbsp;</span>					<span class="comment">// If the goroutine isn&#39;t executing, then the fact that it was in mark</span>
+<span id="L312" class="ln">   312&nbsp;&nbsp;</span>					<span class="comment">// assist doesn&#39;t actually count.</span>
+<span id="L313" class="ln">   313&nbsp;&nbsp;</span>					break
+<span id="L314" class="ln">   314&nbsp;&nbsp;</span>				}
+<span id="L315" class="ln">   315&nbsp;&nbsp;</span>				<span class="comment">// This G has been in a mark assist *and running on its P* since the start</span>
+<span id="L316" class="ln">   316&nbsp;&nbsp;</span>				<span class="comment">// of the trace.</span>
+<span id="L317" class="ln">   317&nbsp;&nbsp;</span>				fallthrough
+<span id="L318" class="ln">   318&nbsp;&nbsp;</span>			case handleSweep(r):
+<span id="L319" class="ln">   319&nbsp;&nbsp;</span>				<span class="comment">// This P has been in sweep (or mark assist, from above) in the start of the trace.</span>
+<span id="L320" class="ln">   320&nbsp;&nbsp;</span>				<span class="comment">//</span>
+<span id="L321" class="ln">   321&nbsp;&nbsp;</span>				<span class="comment">// We don&#39;t need to do anything if UtilPerProc is set. If we get an event like</span>
+<span id="L322" class="ln">   322&nbsp;&nbsp;</span>				<span class="comment">// this for a running P, it must show up the first time a P is mentioned. Therefore,</span>
+<span id="L323" class="ln">   323&nbsp;&nbsp;</span>				<span class="comment">// this P won&#39;t actually have any MutatorUtils on its list yet.</span>
+<span id="L324" class="ln">   324&nbsp;&nbsp;</span>				<span class="comment">//</span>
+<span id="L325" class="ln">   325&nbsp;&nbsp;</span>				<span class="comment">// However, if UtilPerProc isn&#39;t set, then we probably have data from other procs</span>
+<span id="L326" class="ln">   326&nbsp;&nbsp;</span>				<span class="comment">// and from previous events. We need to fix that up.</span>
+<span id="L327" class="ln">   327&nbsp;&nbsp;</span>				if flags&amp;UtilPerProc != 0 {
+<span id="L328" class="ln">   328&nbsp;&nbsp;</span>					break
+<span id="L329" class="ln">   329&nbsp;&nbsp;</span>				}
+<span id="L330" class="ln">   330&nbsp;&nbsp;</span>				<span class="comment">// Subtract out 1/gomaxprocs mutator utilization for all time periods</span>
+<span id="L331" class="ln">   331&nbsp;&nbsp;</span>				<span class="comment">// from the beginning of the trace until now.</span>
+<span id="L332" class="ln">   332&nbsp;&nbsp;</span>				mi, pi := 0, 0
+<span id="L333" class="ln">   333&nbsp;&nbsp;</span>				for mi &lt; len(out[0]) {
+<span id="L334" class="ln">   334&nbsp;&nbsp;</span>					if pi &lt; len(procs)-1 &amp;&amp; procs[pi+1].time &lt; out[0][mi].Time {
+<span id="L335" class="ln">   335&nbsp;&nbsp;</span>						pi++
+<span id="L336" class="ln">   336&nbsp;&nbsp;</span>						continue
+<span id="L337" class="ln">   337&nbsp;&nbsp;</span>					}
+<span id="L338" class="ln">   338&nbsp;&nbsp;</span>					out[0][mi].Util -= float64(1) / float64(procs[pi].n)
+<span id="L339" class="ln">   339&nbsp;&nbsp;</span>					if out[0][mi].Util &lt; 0 {
+<span id="L340" class="ln">   340&nbsp;&nbsp;</span>						out[0][mi].Util = 0
+<span id="L341" class="ln">   341&nbsp;&nbsp;</span>					}
+<span id="L342" class="ln">   342&nbsp;&nbsp;</span>					mi++
+<span id="L343" class="ln">   343&nbsp;&nbsp;</span>				}
+<span id="L344" class="ln">   344&nbsp;&nbsp;</span>			}
+<span id="L345" class="ln">   345&nbsp;&nbsp;</span>			<span class="comment">// After accounting for the portion we missed, this just acts like the</span>
+<span id="L346" class="ln">   346&nbsp;&nbsp;</span>			<span class="comment">// beginning of a new range.</span>
+<span id="L347" class="ln">   347&nbsp;&nbsp;</span>			fallthrough
+<span id="L348" class="ln">   348&nbsp;&nbsp;</span>		case tracev2.EventRangeBegin:
+<span id="L349" class="ln">   349&nbsp;&nbsp;</span>			r := ev.Range()
+<span id="L350" class="ln">   350&nbsp;&nbsp;</span>			if handleSTW(r) {
+<span id="L351" class="ln">   351&nbsp;&nbsp;</span>				stw++
+<span id="L352" class="ln">   352&nbsp;&nbsp;</span>			} else if handleSweep(r) {
+<span id="L353" class="ln">   353&nbsp;&nbsp;</span>				ps[ev.Proc()].gc++
+<span id="L354" class="ln">   354&nbsp;&nbsp;</span>			} else if handleMarkAssist(r) {
+<span id="L355" class="ln">   355&nbsp;&nbsp;</span>				ps[ev.Proc()].gc++
+<span id="L356" class="ln">   356&nbsp;&nbsp;</span>				if g := r.Scope.Goroutine(); g != tracev2.NoGoroutine {
+<span id="L357" class="ln">   357&nbsp;&nbsp;</span>					inGC[g] = true
+<span id="L358" class="ln">   358&nbsp;&nbsp;</span>				}
+<span id="L359" class="ln">   359&nbsp;&nbsp;</span>			}
+<span id="L360" class="ln">   360&nbsp;&nbsp;</span>		case tracev2.EventRangeEnd:
+<span id="L361" class="ln">   361&nbsp;&nbsp;</span>			r := ev.Range()
+<span id="L362" class="ln">   362&nbsp;&nbsp;</span>			if handleSTW(r) {
+<span id="L363" class="ln">   363&nbsp;&nbsp;</span>				stw--
+<span id="L364" class="ln">   364&nbsp;&nbsp;</span>			} else if handleSweep(r) {
+<span id="L365" class="ln">   365&nbsp;&nbsp;</span>				ps[ev.Proc()].gc--
+<span id="L366" class="ln">   366&nbsp;&nbsp;</span>			} else if handleMarkAssist(r) {
+<span id="L367" class="ln">   367&nbsp;&nbsp;</span>				ps[ev.Proc()].gc--
+<span id="L368" class="ln">   368&nbsp;&nbsp;</span>				if g := r.Scope.Goroutine(); g != tracev2.NoGoroutine {
+<span id="L369" class="ln">   369&nbsp;&nbsp;</span>					delete(inGC, g)
+<span id="L370" class="ln">   370&nbsp;&nbsp;</span>				}
+<span id="L371" class="ln">   371&nbsp;&nbsp;</span>			}
+<span id="L372" class="ln">   372&nbsp;&nbsp;</span>		case tracev2.EventStateTransition:
+<span id="L373" class="ln">   373&nbsp;&nbsp;</span>			st := ev.StateTransition()
+<span id="L374" class="ln">   374&nbsp;&nbsp;</span>			if st.Resource.Kind != tracev2.ResourceGoroutine {
+<span id="L375" class="ln">   375&nbsp;&nbsp;</span>				break
+<span id="L376" class="ln">   376&nbsp;&nbsp;</span>			}
+<span id="L377" class="ln">   377&nbsp;&nbsp;</span>			old, new := st.Goroutine()
+<span id="L378" class="ln">   378&nbsp;&nbsp;</span>			g := st.Resource.Goroutine()
+<span id="L379" class="ln">   379&nbsp;&nbsp;</span>			if inGC[g] || bgMark[g] {
+<span id="L380" class="ln">   380&nbsp;&nbsp;</span>				if !old.Executing() &amp;&amp; new.Executing() {
+<span id="L381" class="ln">   381&nbsp;&nbsp;</span>					<span class="comment">// Started running while doing GC things.</span>
+<span id="L382" class="ln">   382&nbsp;&nbsp;</span>					ps[ev.Proc()].gc++
+<span id="L383" class="ln">   383&nbsp;&nbsp;</span>				} else if old.Executing() &amp;&amp; !new.Executing() {
+<span id="L384" class="ln">   384&nbsp;&nbsp;</span>					<span class="comment">// Stopped running while doing GC things.</span>
+<span id="L385" class="ln">   385&nbsp;&nbsp;</span>					ps[ev.Proc()].gc--
+<span id="L386" class="ln">   386&nbsp;&nbsp;</span>				}
+<span id="L387" class="ln">   387&nbsp;&nbsp;</span>			}
+<span id="L388" class="ln">   388&nbsp;&nbsp;</span>			states[g] = new
+<span id="L389" class="ln">   389&nbsp;&nbsp;</span>		case tracev2.EventLabel:
+<span id="L390" class="ln">   390&nbsp;&nbsp;</span>			l := ev.Label()
+<span id="L391" class="ln">   391&nbsp;&nbsp;</span>			if flags&amp;UtilBackground != 0 &amp;&amp; strings.HasPrefix(l.Label, &#34;GC &#34;) &amp;&amp; l.Label != &#34;GC (idle)&#34; {
+<span id="L392" class="ln">   392&nbsp;&nbsp;</span>				<span class="comment">// Background mark worker.</span>
+<span id="L393" class="ln">   393&nbsp;&nbsp;</span>				<span class="comment">//</span>
+<span id="L394" class="ln">   394&nbsp;&nbsp;</span>				<span class="comment">// If we&#39;re in per-proc mode, we don&#39;t</span>
+<span id="L395" class="ln">   395&nbsp;&nbsp;</span>				<span class="comment">// count dedicated workers because</span>
+<span id="L396" class="ln">   396&nbsp;&nbsp;</span>				<span class="comment">// they kick all of the goroutines off</span>
+<span id="L397" class="ln">   397&nbsp;&nbsp;</span>				<span class="comment">// that P, so don&#39;t directly</span>
+<span id="L398" class="ln">   398&nbsp;&nbsp;</span>				<span class="comment">// contribute to goroutine latency.</span>
+<span id="L399" class="ln">   399&nbsp;&nbsp;</span>				if !(flags&amp;UtilPerProc != 0 &amp;&amp; l.Label == &#34;GC (dedicated)&#34;) {
+<span id="L400" class="ln">   400&nbsp;&nbsp;</span>					bgMark[ev.Goroutine()] = true
+<span id="L401" class="ln">   401&nbsp;&nbsp;</span>					ps[ev.Proc()].gc++
+<span id="L402" class="ln">   402&nbsp;&nbsp;</span>				}
+<span id="L403" class="ln">   403&nbsp;&nbsp;</span>			}
+<span id="L404" class="ln">   404&nbsp;&nbsp;</span>		}
+<span id="L405" class="ln">   405&nbsp;&nbsp;</span>
+<span id="L406" class="ln">   406&nbsp;&nbsp;</span>		if flags&amp;UtilPerProc == 0 {
+<span id="L407" class="ln">   407&nbsp;&nbsp;</span>			<span class="comment">// Compute the current average utilization.</span>
+<span id="L408" class="ln">   408&nbsp;&nbsp;</span>			if len(ps) == 0 {
+<span id="L409" class="ln">   409&nbsp;&nbsp;</span>				continue
+<span id="L410" class="ln">   410&nbsp;&nbsp;</span>			}
+<span id="L411" class="ln">   411&nbsp;&nbsp;</span>			gcPs := 0
+<span id="L412" class="ln">   412&nbsp;&nbsp;</span>			if stw &gt; 0 {
+<span id="L413" class="ln">   413&nbsp;&nbsp;</span>				gcPs = len(ps)
+<span id="L414" class="ln">   414&nbsp;&nbsp;</span>			} else {
+<span id="L415" class="ln">   415&nbsp;&nbsp;</span>				for i := range ps {
+<span id="L416" class="ln">   416&nbsp;&nbsp;</span>					if ps[i].gc &gt; 0 {
+<span id="L417" class="ln">   417&nbsp;&nbsp;</span>						gcPs++
+<span id="L418" class="ln">   418&nbsp;&nbsp;</span>					}
+<span id="L419" class="ln">   419&nbsp;&nbsp;</span>				}
+<span id="L420" class="ln">   420&nbsp;&nbsp;</span>			}
+<span id="L421" class="ln">   421&nbsp;&nbsp;</span>			mu := MutatorUtil{int64(ev.Time()), 1 - float64(gcPs)/float64(len(ps))}
+<span id="L422" class="ln">   422&nbsp;&nbsp;</span>
+<span id="L423" class="ln">   423&nbsp;&nbsp;</span>			<span class="comment">// Record the utilization change. (Since</span>
+<span id="L424" class="ln">   424&nbsp;&nbsp;</span>			<span class="comment">// len(ps) == len(out), we know len(out) &gt; 0.)</span>
+<span id="L425" class="ln">   425&nbsp;&nbsp;</span>			out[0] = addUtil(out[0], mu)
+<span id="L426" class="ln">   426&nbsp;&nbsp;</span>		} else {
+<span id="L427" class="ln">   427&nbsp;&nbsp;</span>			<span class="comment">// Check for per-P utilization changes.</span>
+<span id="L428" class="ln">   428&nbsp;&nbsp;</span>			for i := range ps {
+<span id="L429" class="ln">   429&nbsp;&nbsp;</span>				p := &amp;ps[i]
+<span id="L430" class="ln">   430&nbsp;&nbsp;</span>				util := 1.0
+<span id="L431" class="ln">   431&nbsp;&nbsp;</span>				if stw &gt; 0 || p.gc &gt; 0 {
+<span id="L432" class="ln">   432&nbsp;&nbsp;</span>					util = 0.0
+<span id="L433" class="ln">   433&nbsp;&nbsp;</span>				}
+<span id="L434" class="ln">   434&nbsp;&nbsp;</span>				out[p.series] = addUtil(out[p.series], MutatorUtil{int64(ev.Time()), util})
+<span id="L435" class="ln">   435&nbsp;&nbsp;</span>			}
+<span id="L436" class="ln">   436&nbsp;&nbsp;</span>		}
+<span id="L437" class="ln">   437&nbsp;&nbsp;</span>	}
+<span id="L438" class="ln">   438&nbsp;&nbsp;</span>
+<span id="L439" class="ln">   439&nbsp;&nbsp;</span>	<span class="comment">// No events in the stream.</span>
+<span id="L440" class="ln">   440&nbsp;&nbsp;</span>	if lastEv == nil {
+<span id="L441" class="ln">   441&nbsp;&nbsp;</span>		return nil
+<span id="L442" class="ln">   442&nbsp;&nbsp;</span>	}
+<span id="L443" class="ln">   443&nbsp;&nbsp;</span>
+<span id="L444" class="ln">   444&nbsp;&nbsp;</span>	<span class="comment">// Add final 0 utilization event to any remaining series. This</span>
+<span id="L445" class="ln">   445&nbsp;&nbsp;</span>	<span class="comment">// is important to mark the end of the trace. The exact value</span>
+<span id="L446" class="ln">   446&nbsp;&nbsp;</span>	<span class="comment">// shouldn&#39;t matter since no window should extend beyond this,</span>
+<span id="L447" class="ln">   447&nbsp;&nbsp;</span>	<span class="comment">// but using 0 is symmetric with the start of the trace.</span>
+<span id="L448" class="ln">   448&nbsp;&nbsp;</span>	mu := MutatorUtil{int64(lastEv.Time()), 0}
+<span id="L449" class="ln">   449&nbsp;&nbsp;</span>	for i := range ps {
+<span id="L450" class="ln">   450&nbsp;&nbsp;</span>		out[ps[i].series] = addUtil(out[ps[i].series], mu)
+<span id="L451" class="ln">   451&nbsp;&nbsp;</span>	}
+<span id="L452" class="ln">   452&nbsp;&nbsp;</span>	return out
+<span id="L453" class="ln">   453&nbsp;&nbsp;</span>}
+<span id="L454" class="ln">   454&nbsp;&nbsp;</span>
+<span id="L455" class="ln">   455&nbsp;&nbsp;</span>func addUtil(util []MutatorUtil, mu MutatorUtil) []MutatorUtil {
+<span id="L456" class="ln">   456&nbsp;&nbsp;</span>	if len(util) &gt; 0 {
+<span id="L457" class="ln">   457&nbsp;&nbsp;</span>		if mu.Util == util[len(util)-1].Util {
+<span id="L458" class="ln">   458&nbsp;&nbsp;</span>			<span class="comment">// No change.</span>
+<span id="L459" class="ln">   459&nbsp;&nbsp;</span>			return util
+<span id="L460" class="ln">   460&nbsp;&nbsp;</span>		}
+<span id="L461" class="ln">   461&nbsp;&nbsp;</span>		if mu.Time == util[len(util)-1].Time {
+<span id="L462" class="ln">   462&nbsp;&nbsp;</span>			<span class="comment">// Take the lowest utilization at a time stamp.</span>
+<span id="L463" class="ln">   463&nbsp;&nbsp;</span>			if mu.Util &lt; util[len(util)-1].Util {
+<span id="L464" class="ln">   464&nbsp;&nbsp;</span>				util[len(util)-1] = mu
+<span id="L465" class="ln">   465&nbsp;&nbsp;</span>			}
+<span id="L466" class="ln">   466&nbsp;&nbsp;</span>			return util
+<span id="L467" class="ln">   467&nbsp;&nbsp;</span>		}
+<span id="L468" class="ln">   468&nbsp;&nbsp;</span>	}
+<span id="L469" class="ln">   469&nbsp;&nbsp;</span>	return append(util, mu)
+<span id="L470" class="ln">   470&nbsp;&nbsp;</span>}
+<span id="L471" class="ln">   471&nbsp;&nbsp;</span>
+<span id="L472" class="ln">   472&nbsp;&nbsp;</span><span class="comment">// totalUtil is total utilization, measured in nanoseconds. This is a</span>
+<span id="L473" class="ln">   473&nbsp;&nbsp;</span><span class="comment">// separate type primarily to distinguish it from mean utilization,</span>
+<span id="L474" class="ln">   474&nbsp;&nbsp;</span><span class="comment">// which is also a float64.</span>
+<span id="L475" class="ln">   475&nbsp;&nbsp;</span>type totalUtil float64
+<span id="L476" class="ln">   476&nbsp;&nbsp;</span>
+<span id="L477" class="ln">   477&nbsp;&nbsp;</span>func totalUtilOf(meanUtil float64, dur int64) totalUtil {
+<span id="L478" class="ln">   478&nbsp;&nbsp;</span>	return totalUtil(meanUtil * float64(dur))
+<span id="L479" class="ln">   479&nbsp;&nbsp;</span>}
+<span id="L480" class="ln">   480&nbsp;&nbsp;</span>
+<span id="L481" class="ln">   481&nbsp;&nbsp;</span><span class="comment">// mean returns the mean utilization over dur.</span>
+<span id="L482" class="ln">   482&nbsp;&nbsp;</span>func (u totalUtil) mean(dur time.Duration) float64 {
+<span id="L483" class="ln">   483&nbsp;&nbsp;</span>	return float64(u) / float64(dur)
+<span id="L484" class="ln">   484&nbsp;&nbsp;</span>}
+<span id="L485" class="ln">   485&nbsp;&nbsp;</span>
+<span id="L486" class="ln">   486&nbsp;&nbsp;</span><span class="comment">// An MMUCurve is the minimum mutator utilization curve across</span>
+<span id="L487" class="ln">   487&nbsp;&nbsp;</span><span class="comment">// multiple window sizes.</span>
+<span id="L488" class="ln">   488&nbsp;&nbsp;</span>type MMUCurve struct {
+<span id="L489" class="ln">   489&nbsp;&nbsp;</span>	series []mmuSeries
+<span id="L490" class="ln">   490&nbsp;&nbsp;</span>}
+<span id="L491" class="ln">   491&nbsp;&nbsp;</span>
+<span id="L492" class="ln">   492&nbsp;&nbsp;</span>type mmuSeries struct {
+<span id="L493" class="ln">   493&nbsp;&nbsp;</span>	util []MutatorUtil
+<span id="L494" class="ln">   494&nbsp;&nbsp;</span>	<span class="comment">// sums[j] is the cumulative sum of util[:j].</span>
+<span id="L495" class="ln">   495&nbsp;&nbsp;</span>	sums []totalUtil
+<span id="L496" class="ln">   496&nbsp;&nbsp;</span>	<span class="comment">// bands summarizes util in non-overlapping bands of duration</span>
+<span id="L497" class="ln">   497&nbsp;&nbsp;</span>	<span class="comment">// bandDur.</span>
+<span id="L498" class="ln">   498&nbsp;&nbsp;</span>	bands []mmuBand
+<span id="L499" class="ln">   499&nbsp;&nbsp;</span>	<span class="comment">// bandDur is the duration of each band.</span>
+<span id="L500" class="ln">   500&nbsp;&nbsp;</span>	bandDur int64
+<span id="L501" class="ln">   501&nbsp;&nbsp;</span>}
+<span id="L502" class="ln">   502&nbsp;&nbsp;</span>
+<span id="L503" class="ln">   503&nbsp;&nbsp;</span>type mmuBand struct {
+<span id="L504" class="ln">   504&nbsp;&nbsp;</span>	<span class="comment">// minUtil is the minimum instantaneous mutator utilization in</span>
+<span id="L505" class="ln">   505&nbsp;&nbsp;</span>	<span class="comment">// this band.</span>
+<span id="L506" class="ln">   506&nbsp;&nbsp;</span>	minUtil float64
+<span id="L507" class="ln">   507&nbsp;&nbsp;</span>	<span class="comment">// cumUtil is the cumulative total mutator utilization between</span>
+<span id="L508" class="ln">   508&nbsp;&nbsp;</span>	<span class="comment">// time 0 and the left edge of this band.</span>
+<span id="L509" class="ln">   509&nbsp;&nbsp;</span>	cumUtil totalUtil
+<span id="L510" class="ln">   510&nbsp;&nbsp;</span>
+<span id="L511" class="ln">   511&nbsp;&nbsp;</span>	<span class="comment">// integrator is the integrator for the left edge of this</span>
+<span id="L512" class="ln">   512&nbsp;&nbsp;</span>	<span class="comment">// band.</span>
+<span id="L513" class="ln">   513&nbsp;&nbsp;</span>	integrator integrator
+<span id="L514" class="ln">   514&nbsp;&nbsp;</span>}
+<span id="L515" class="ln">   515&nbsp;&nbsp;</span>
+<span id="L516" class="ln">   516&nbsp;&nbsp;</span><span class="comment">// NewMMUCurve returns an MMU curve for the given mutator utilization</span>
+<span id="L517" class="ln">   517&nbsp;&nbsp;</span><span class="comment">// function.</span>
+<span id="L518" class="ln">   518&nbsp;&nbsp;</span>func NewMMUCurve(utils [][]MutatorUtil) *MMUCurve {
+<span id="L519" class="ln">   519&nbsp;&nbsp;</span>	series := make([]mmuSeries, len(utils))
+<span id="L520" class="ln">   520&nbsp;&nbsp;</span>	for i, util := range utils {
+<span id="L521" class="ln">   521&nbsp;&nbsp;</span>		series[i] = newMMUSeries(util)
+<span id="L522" class="ln">   522&nbsp;&nbsp;</span>	}
+<span id="L523" class="ln">   523&nbsp;&nbsp;</span>	return &amp;MMUCurve{series}
+<span id="L524" class="ln">   524&nbsp;&nbsp;</span>}
+<span id="L525" class="ln">   525&nbsp;&nbsp;</span>
+<span id="L526" class="ln">   526&nbsp;&nbsp;</span><span class="comment">// bandsPerSeries is the number of bands to divide each series into.</span>
+<span id="L527" class="ln">   527&nbsp;&nbsp;</span><span class="comment">// This is only changed by tests.</span>
+<span id="L528" class="ln">   528&nbsp;&nbsp;</span>var bandsPerSeries = 1000
+<span id="L529" class="ln">   529&nbsp;&nbsp;</span>
+<span id="L530" class="ln">   530&nbsp;&nbsp;</span>func newMMUSeries(util []MutatorUtil) mmuSeries {
+<span id="L531" class="ln">   531&nbsp;&nbsp;</span>	<span class="comment">// Compute cumulative sum.</span>
+<span id="L532" class="ln">   532&nbsp;&nbsp;</span>	sums := make([]totalUtil, len(util))
+<span id="L533" class="ln">   533&nbsp;&nbsp;</span>	var prev MutatorUtil
+<span id="L534" class="ln">   534&nbsp;&nbsp;</span>	var sum totalUtil
+<span id="L535" class="ln">   535&nbsp;&nbsp;</span>	for j, u := range util {
+<span id="L536" class="ln">   536&nbsp;&nbsp;</span>		sum += totalUtilOf(prev.Util, u.Time-prev.Time)
+<span id="L537" class="ln">   537&nbsp;&nbsp;</span>		sums[j] = sum
+<span id="L538" class="ln">   538&nbsp;&nbsp;</span>		prev = u
+<span id="L539" class="ln">   539&nbsp;&nbsp;</span>	}
+<span id="L540" class="ln">   540&nbsp;&nbsp;</span>
+<span id="L541" class="ln">   541&nbsp;&nbsp;</span>	<span class="comment">// Divide the utilization curve up into equal size</span>
+<span id="L542" class="ln">   542&nbsp;&nbsp;</span>	<span class="comment">// non-overlapping &#34;bands&#34; and compute a summary for each of</span>
+<span id="L543" class="ln">   543&nbsp;&nbsp;</span>	<span class="comment">// these bands.</span>
+<span id="L544" class="ln">   544&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L545" class="ln">   545&nbsp;&nbsp;</span>	<span class="comment">// Compute the duration of each band.</span>
+<span id="L546" class="ln">   546&nbsp;&nbsp;</span>	numBands := bandsPerSeries
+<span id="L547" class="ln">   547&nbsp;&nbsp;</span>	if numBands &gt; len(util) {
+<span id="L548" class="ln">   548&nbsp;&nbsp;</span>		<span class="comment">// There&#39;s no point in having lots of bands if there</span>
+<span id="L549" class="ln">   549&nbsp;&nbsp;</span>		<span class="comment">// aren&#39;t many events.</span>
+<span id="L550" class="ln">   550&nbsp;&nbsp;</span>		numBands = len(util)
+<span id="L551" class="ln">   551&nbsp;&nbsp;</span>	}
+<span id="L552" class="ln">   552&nbsp;&nbsp;</span>	dur := util[len(util)-1].Time - util[0].Time
+<span id="L553" class="ln">   553&nbsp;&nbsp;</span>	bandDur := (dur + int64(numBands) - 1) / int64(numBands)
+<span id="L554" class="ln">   554&nbsp;&nbsp;</span>	if bandDur &lt; 1 {
+<span id="L555" class="ln">   555&nbsp;&nbsp;</span>		bandDur = 1
+<span id="L556" class="ln">   556&nbsp;&nbsp;</span>	}
+<span id="L557" class="ln">   557&nbsp;&nbsp;</span>	<span class="comment">// Compute the bands. There are numBands+1 bands in order to</span>
+<span id="L558" class="ln">   558&nbsp;&nbsp;</span>	<span class="comment">// record the final cumulative sum.</span>
+<span id="L559" class="ln">   559&nbsp;&nbsp;</span>	bands := make([]mmuBand, numBands+1)
+<span id="L560" class="ln">   560&nbsp;&nbsp;</span>	s := mmuSeries{util, sums, bands, bandDur}
+<span id="L561" class="ln">   561&nbsp;&nbsp;</span>	leftSum := integrator{&amp;s, 0}
+<span id="L562" class="ln">   562&nbsp;&nbsp;</span>	for i := range bands {
+<span id="L563" class="ln">   563&nbsp;&nbsp;</span>		startTime, endTime := s.bandTime(i)
+<span id="L564" class="ln">   564&nbsp;&nbsp;</span>		cumUtil := leftSum.advance(startTime)
+<span id="L565" class="ln">   565&nbsp;&nbsp;</span>		predIdx := leftSum.pos
+<span id="L566" class="ln">   566&nbsp;&nbsp;</span>		minUtil := 1.0
+<span id="L567" class="ln">   567&nbsp;&nbsp;</span>		for i := predIdx; i &lt; len(util) &amp;&amp; util[i].Time &lt; endTime; i++ {
+<span id="L568" class="ln">   568&nbsp;&nbsp;</span>			minUtil = math.Min(minUtil, util[i].Util)
+<span id="L569" class="ln">   569&nbsp;&nbsp;</span>		}
+<span id="L570" class="ln">   570&nbsp;&nbsp;</span>		bands[i] = mmuBand{minUtil, cumUtil, leftSum}
+<span id="L571" class="ln">   571&nbsp;&nbsp;</span>	}
+<span id="L572" class="ln">   572&nbsp;&nbsp;</span>
+<span id="L573" class="ln">   573&nbsp;&nbsp;</span>	return s
+<span id="L574" class="ln">   574&nbsp;&nbsp;</span>}
+<span id="L575" class="ln">   575&nbsp;&nbsp;</span>
+<span id="L576" class="ln">   576&nbsp;&nbsp;</span>func (s *mmuSeries) bandTime(i int) (start, end int64) {
+<span id="L577" class="ln">   577&nbsp;&nbsp;</span>	start = int64(i)*s.bandDur + s.util[0].Time
+<span id="L578" class="ln">   578&nbsp;&nbsp;</span>	end = start + s.bandDur
+<span id="L579" class="ln">   579&nbsp;&nbsp;</span>	return
+<span id="L580" class="ln">   580&nbsp;&nbsp;</span>}
+<span id="L581" class="ln">   581&nbsp;&nbsp;</span>
+<span id="L582" class="ln">   582&nbsp;&nbsp;</span>type bandUtil struct {
+<span id="L583" class="ln">   583&nbsp;&nbsp;</span>	<span class="comment">// Utilization series index</span>
+<span id="L584" class="ln">   584&nbsp;&nbsp;</span>	series int
+<span id="L585" class="ln">   585&nbsp;&nbsp;</span>	<span class="comment">// Band index</span>
+<span id="L586" class="ln">   586&nbsp;&nbsp;</span>	i int
+<span id="L587" class="ln">   587&nbsp;&nbsp;</span>	<span class="comment">// Lower bound of mutator utilization for all windows</span>
+<span id="L588" class="ln">   588&nbsp;&nbsp;</span>	<span class="comment">// with a left edge in this band.</span>
+<span id="L589" class="ln">   589&nbsp;&nbsp;</span>	utilBound float64
+<span id="L590" class="ln">   590&nbsp;&nbsp;</span>}
+<span id="L591" class="ln">   591&nbsp;&nbsp;</span>
+<span id="L592" class="ln">   592&nbsp;&nbsp;</span>type bandUtilHeap []bandUtil
+<span id="L593" class="ln">   593&nbsp;&nbsp;</span>
+<span id="L594" class="ln">   594&nbsp;&nbsp;</span>func (h bandUtilHeap) Len() int {
+<span id="L595" class="ln">   595&nbsp;&nbsp;</span>	return len(h)
+<span id="L596" class="ln">   596&nbsp;&nbsp;</span>}
+<span id="L597" class="ln">   597&nbsp;&nbsp;</span>
+<span id="L598" class="ln">   598&nbsp;&nbsp;</span>func (h bandUtilHeap) Less(i, j int) bool {
+<span id="L599" class="ln">   599&nbsp;&nbsp;</span>	return h[i].utilBound &lt; h[j].utilBound
+<span id="L600" class="ln">   600&nbsp;&nbsp;</span>}
+<span id="L601" class="ln">   601&nbsp;&nbsp;</span>
+<span id="L602" class="ln">   602&nbsp;&nbsp;</span>func (h bandUtilHeap) Swap(i, j int) {
+<span id="L603" class="ln">   603&nbsp;&nbsp;</span>	h[i], h[j] = h[j], h[i]
+<span id="L604" class="ln">   604&nbsp;&nbsp;</span>}
+<span id="L605" class="ln">   605&nbsp;&nbsp;</span>
+<span id="L606" class="ln">   606&nbsp;&nbsp;</span>func (h *bandUtilHeap) Push(x any) {
+<span id="L607" class="ln">   607&nbsp;&nbsp;</span>	*h = append(*h, x.(bandUtil))
+<span id="L608" class="ln">   608&nbsp;&nbsp;</span>}
+<span id="L609" class="ln">   609&nbsp;&nbsp;</span>
+<span id="L610" class="ln">   610&nbsp;&nbsp;</span>func (h *bandUtilHeap) Pop() any {
+<span id="L611" class="ln">   611&nbsp;&nbsp;</span>	x := (*h)[len(*h)-1]
+<span id="L612" class="ln">   612&nbsp;&nbsp;</span>	*h = (*h)[:len(*h)-1]
+<span id="L613" class="ln">   613&nbsp;&nbsp;</span>	return x
+<span id="L614" class="ln">   614&nbsp;&nbsp;</span>}
+<span id="L615" class="ln">   615&nbsp;&nbsp;</span>
+<span id="L616" class="ln">   616&nbsp;&nbsp;</span><span class="comment">// UtilWindow is a specific window at Time.</span>
+<span id="L617" class="ln">   617&nbsp;&nbsp;</span>type UtilWindow struct {
+<span id="L618" class="ln">   618&nbsp;&nbsp;</span>	Time int64
+<span id="L619" class="ln">   619&nbsp;&nbsp;</span>	<span class="comment">// MutatorUtil is the mean mutator utilization in this window.</span>
+<span id="L620" class="ln">   620&nbsp;&nbsp;</span>	MutatorUtil float64
+<span id="L621" class="ln">   621&nbsp;&nbsp;</span>}
+<span id="L622" class="ln">   622&nbsp;&nbsp;</span>
+<span id="L623" class="ln">   623&nbsp;&nbsp;</span>type utilHeap []UtilWindow
+<span id="L624" class="ln">   624&nbsp;&nbsp;</span>
+<span id="L625" class="ln">   625&nbsp;&nbsp;</span>func (h utilHeap) Len() int {
+<span id="L626" class="ln">   626&nbsp;&nbsp;</span>	return len(h)
+<span id="L627" class="ln">   627&nbsp;&nbsp;</span>}
+<span id="L628" class="ln">   628&nbsp;&nbsp;</span>
+<span id="L629" class="ln">   629&nbsp;&nbsp;</span>func (h utilHeap) Less(i, j int) bool {
+<span id="L630" class="ln">   630&nbsp;&nbsp;</span>	if h[i].MutatorUtil != h[j].MutatorUtil {
+<span id="L631" class="ln">   631&nbsp;&nbsp;</span>		return h[i].MutatorUtil &gt; h[j].MutatorUtil
+<span id="L632" class="ln">   632&nbsp;&nbsp;</span>	}
+<span id="L633" class="ln">   633&nbsp;&nbsp;</span>	return h[i].Time &gt; h[j].Time
+<span id="L634" class="ln">   634&nbsp;&nbsp;</span>}
+<span id="L635" class="ln">   635&nbsp;&nbsp;</span>
+<span id="L636" class="ln">   636&nbsp;&nbsp;</span>func (h utilHeap) Swap(i, j int) {
+<span id="L637" class="ln">   637&nbsp;&nbsp;</span>	h[i], h[j] = h[j], h[i]
+<span id="L638" class="ln">   638&nbsp;&nbsp;</span>}
+<span id="L639" class="ln">   639&nbsp;&nbsp;</span>
+<span id="L640" class="ln">   640&nbsp;&nbsp;</span>func (h *utilHeap) Push(x any) {
+<span id="L641" class="ln">   641&nbsp;&nbsp;</span>	*h = append(*h, x.(UtilWindow))
+<span id="L642" class="ln">   642&nbsp;&nbsp;</span>}
+<span id="L643" class="ln">   643&nbsp;&nbsp;</span>
+<span id="L644" class="ln">   644&nbsp;&nbsp;</span>func (h *utilHeap) Pop() any {
+<span id="L645" class="ln">   645&nbsp;&nbsp;</span>	x := (*h)[len(*h)-1]
+<span id="L646" class="ln">   646&nbsp;&nbsp;</span>	*h = (*h)[:len(*h)-1]
+<span id="L647" class="ln">   647&nbsp;&nbsp;</span>	return x
+<span id="L648" class="ln">   648&nbsp;&nbsp;</span>}
+<span id="L649" class="ln">   649&nbsp;&nbsp;</span>
+<span id="L650" class="ln">   650&nbsp;&nbsp;</span><span class="comment">// An accumulator takes a windowed mutator utilization function and</span>
+<span id="L651" class="ln">   651&nbsp;&nbsp;</span><span class="comment">// tracks various statistics for that function.</span>
+<span id="L652" class="ln">   652&nbsp;&nbsp;</span>type accumulator struct {
+<span id="L653" class="ln">   653&nbsp;&nbsp;</span>	mmu float64
+<span id="L654" class="ln">   654&nbsp;&nbsp;</span>
+<span id="L655" class="ln">   655&nbsp;&nbsp;</span>	<span class="comment">// bound is the mutator utilization bound where adding any</span>
+<span id="L656" class="ln">   656&nbsp;&nbsp;</span>	<span class="comment">// mutator utilization above this bound cannot affect the</span>
+<span id="L657" class="ln">   657&nbsp;&nbsp;</span>	<span class="comment">// accumulated statistics.</span>
+<span id="L658" class="ln">   658&nbsp;&nbsp;</span>	bound float64
+<span id="L659" class="ln">   659&nbsp;&nbsp;</span>
+<span id="L660" class="ln">   660&nbsp;&nbsp;</span>	<span class="comment">// Worst N window tracking</span>
+<span id="L661" class="ln">   661&nbsp;&nbsp;</span>	nWorst int
+<span id="L662" class="ln">   662&nbsp;&nbsp;</span>	wHeap  utilHeap
+<span id="L663" class="ln">   663&nbsp;&nbsp;</span>
+<span id="L664" class="ln">   664&nbsp;&nbsp;</span>	<span class="comment">// Mutator utilization distribution tracking</span>
+<span id="L665" class="ln">   665&nbsp;&nbsp;</span>	mud *mud
+<span id="L666" class="ln">   666&nbsp;&nbsp;</span>	<span class="comment">// preciseMass is the distribution mass that must be precise</span>
+<span id="L667" class="ln">   667&nbsp;&nbsp;</span>	<span class="comment">// before accumulation is stopped.</span>
+<span id="L668" class="ln">   668&nbsp;&nbsp;</span>	preciseMass float64
+<span id="L669" class="ln">   669&nbsp;&nbsp;</span>	<span class="comment">// lastTime and lastMU are the previous point added to the</span>
+<span id="L670" class="ln">   670&nbsp;&nbsp;</span>	<span class="comment">// windowed mutator utilization function.</span>
+<span id="L671" class="ln">   671&nbsp;&nbsp;</span>	lastTime int64
+<span id="L672" class="ln">   672&nbsp;&nbsp;</span>	lastMU   float64
+<span id="L673" class="ln">   673&nbsp;&nbsp;</span>}
+<span id="L674" class="ln">   674&nbsp;&nbsp;</span>
+<span id="L675" class="ln">   675&nbsp;&nbsp;</span><span class="comment">// resetTime declares a discontinuity in the windowed mutator</span>
+<span id="L676" class="ln">   676&nbsp;&nbsp;</span><span class="comment">// utilization function by resetting the current time.</span>
+<span id="L677" class="ln">   677&nbsp;&nbsp;</span>func (acc *accumulator) resetTime() {
+<span id="L678" class="ln">   678&nbsp;&nbsp;</span>	<span class="comment">// This only matters for distribution collection, since that&#39;s</span>
+<span id="L679" class="ln">   679&nbsp;&nbsp;</span>	<span class="comment">// the only thing that depends on the progression of the</span>
+<span id="L680" class="ln">   680&nbsp;&nbsp;</span>	<span class="comment">// windowed mutator utilization function.</span>
+<span id="L681" class="ln">   681&nbsp;&nbsp;</span>	acc.lastTime = math.MaxInt64
+<span id="L682" class="ln">   682&nbsp;&nbsp;</span>}
+<span id="L683" class="ln">   683&nbsp;&nbsp;</span>
+<span id="L684" class="ln">   684&nbsp;&nbsp;</span><span class="comment">// addMU adds a point to the windowed mutator utilization function at</span>
+<span id="L685" class="ln">   685&nbsp;&nbsp;</span><span class="comment">// (time, mu). This must be called for monotonically increasing values</span>
+<span id="L686" class="ln">   686&nbsp;&nbsp;</span><span class="comment">// of time.</span>
+<span id="L687" class="ln">   687&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L688" class="ln">   688&nbsp;&nbsp;</span><span class="comment">// It returns true if further calls to addMU would be pointless.</span>
+<span id="L689" class="ln">   689&nbsp;&nbsp;</span>func (acc *accumulator) addMU(time int64, mu float64, window time.Duration) bool {
+<span id="L690" class="ln">   690&nbsp;&nbsp;</span>	if mu &lt; acc.mmu {
+<span id="L691" class="ln">   691&nbsp;&nbsp;</span>		acc.mmu = mu
+<span id="L692" class="ln">   692&nbsp;&nbsp;</span>	}
+<span id="L693" class="ln">   693&nbsp;&nbsp;</span>	acc.bound = acc.mmu
+<span id="L694" class="ln">   694&nbsp;&nbsp;</span>
+<span id="L695" class="ln">   695&nbsp;&nbsp;</span>	if acc.nWorst == 0 {
+<span id="L696" class="ln">   696&nbsp;&nbsp;</span>		<span class="comment">// If the minimum has reached zero, it can&#39;t go any</span>
+<span id="L697" class="ln">   697&nbsp;&nbsp;</span>		<span class="comment">// lower, so we can stop early.</span>
+<span id="L698" class="ln">   698&nbsp;&nbsp;</span>		return mu == 0
+<span id="L699" class="ln">   699&nbsp;&nbsp;</span>	}
+<span id="L700" class="ln">   700&nbsp;&nbsp;</span>
+<span id="L701" class="ln">   701&nbsp;&nbsp;</span>	<span class="comment">// Consider adding this window to the n worst.</span>
+<span id="L702" class="ln">   702&nbsp;&nbsp;</span>	if len(acc.wHeap) &lt; acc.nWorst || mu &lt; acc.wHeap[0].MutatorUtil {
+<span id="L703" class="ln">   703&nbsp;&nbsp;</span>		<span class="comment">// This window is lower than the K&#39;th worst window.</span>
+<span id="L704" class="ln">   704&nbsp;&nbsp;</span>		<span class="comment">//</span>
+<span id="L705" class="ln">   705&nbsp;&nbsp;</span>		<span class="comment">// Check if there&#39;s any overlapping window</span>
+<span id="L706" class="ln">   706&nbsp;&nbsp;</span>		<span class="comment">// already in the heap and keep whichever is</span>
+<span id="L707" class="ln">   707&nbsp;&nbsp;</span>		<span class="comment">// worse.</span>
+<span id="L708" class="ln">   708&nbsp;&nbsp;</span>		for i, ui := range acc.wHeap {
+<span id="L709" class="ln">   709&nbsp;&nbsp;</span>			if time+int64(window) &gt; ui.Time &amp;&amp; ui.Time+int64(window) &gt; time {
+<span id="L710" class="ln">   710&nbsp;&nbsp;</span>				if ui.MutatorUtil &lt;= mu {
+<span id="L711" class="ln">   711&nbsp;&nbsp;</span>					<span class="comment">// Keep the first window.</span>
+<span id="L712" class="ln">   712&nbsp;&nbsp;</span>					goto keep
+<span id="L713" class="ln">   713&nbsp;&nbsp;</span>				} else {
+<span id="L714" class="ln">   714&nbsp;&nbsp;</span>					<span class="comment">// Replace it with this window.</span>
+<span id="L715" class="ln">   715&nbsp;&nbsp;</span>					heap.Remove(&amp;acc.wHeap, i)
+<span id="L716" class="ln">   716&nbsp;&nbsp;</span>					break
+<span id="L717" class="ln">   717&nbsp;&nbsp;</span>				}
+<span id="L718" class="ln">   718&nbsp;&nbsp;</span>			}
+<span id="L719" class="ln">   719&nbsp;&nbsp;</span>		}
+<span id="L720" class="ln">   720&nbsp;&nbsp;</span>
+<span id="L721" class="ln">   721&nbsp;&nbsp;</span>		heap.Push(&amp;acc.wHeap, UtilWindow{time, mu})
+<span id="L722" class="ln">   722&nbsp;&nbsp;</span>		if len(acc.wHeap) &gt; acc.nWorst {
+<span id="L723" class="ln">   723&nbsp;&nbsp;</span>			heap.Pop(&amp;acc.wHeap)
+<span id="L724" class="ln">   724&nbsp;&nbsp;</span>		}
+<span id="L725" class="ln">   725&nbsp;&nbsp;</span>	keep:
+<span id="L726" class="ln">   726&nbsp;&nbsp;</span>	}
+<span id="L727" class="ln">   727&nbsp;&nbsp;</span>
+<span id="L728" class="ln">   728&nbsp;&nbsp;</span>	if len(acc.wHeap) &lt; acc.nWorst {
+<span id="L729" class="ln">   729&nbsp;&nbsp;</span>		<span class="comment">// We don&#39;t have N windows yet, so keep accumulating.</span>
+<span id="L730" class="ln">   730&nbsp;&nbsp;</span>		acc.bound = 1.0
+<span id="L731" class="ln">   731&nbsp;&nbsp;</span>	} else {
+<span id="L732" class="ln">   732&nbsp;&nbsp;</span>		<span class="comment">// Anything above the least worst window has no effect.</span>
+<span id="L733" class="ln">   733&nbsp;&nbsp;</span>		acc.bound = math.Max(acc.bound, acc.wHeap[0].MutatorUtil)
+<span id="L734" class="ln">   734&nbsp;&nbsp;</span>	}
+<span id="L735" class="ln">   735&nbsp;&nbsp;</span>
+<span id="L736" class="ln">   736&nbsp;&nbsp;</span>	if acc.mud != nil {
+<span id="L737" class="ln">   737&nbsp;&nbsp;</span>		if acc.lastTime != math.MaxInt64 {
+<span id="L738" class="ln">   738&nbsp;&nbsp;</span>			<span class="comment">// Update distribution.</span>
+<span id="L739" class="ln">   739&nbsp;&nbsp;</span>			acc.mud.add(acc.lastMU, mu, float64(time-acc.lastTime))
+<span id="L740" class="ln">   740&nbsp;&nbsp;</span>		}
+<span id="L741" class="ln">   741&nbsp;&nbsp;</span>		acc.lastTime, acc.lastMU = time, mu
+<span id="L742" class="ln">   742&nbsp;&nbsp;</span>		if _, mudBound, ok := acc.mud.approxInvCumulativeSum(); ok {
+<span id="L743" class="ln">   743&nbsp;&nbsp;</span>			acc.bound = math.Max(acc.bound, mudBound)
+<span id="L744" class="ln">   744&nbsp;&nbsp;</span>		} else {
+<span id="L745" class="ln">   745&nbsp;&nbsp;</span>			<span class="comment">// We haven&#39;t accumulated enough total precise</span>
+<span id="L746" class="ln">   746&nbsp;&nbsp;</span>			<span class="comment">// mass yet to even reach our goal, so keep</span>
+<span id="L747" class="ln">   747&nbsp;&nbsp;</span>			<span class="comment">// accumulating.</span>
+<span id="L748" class="ln">   748&nbsp;&nbsp;</span>			acc.bound = 1
+<span id="L749" class="ln">   749&nbsp;&nbsp;</span>		}
+<span id="L750" class="ln">   750&nbsp;&nbsp;</span>		<span class="comment">// It&#39;s not worth checking percentiles every time, so</span>
+<span id="L751" class="ln">   751&nbsp;&nbsp;</span>		<span class="comment">// just keep accumulating this band.</span>
+<span id="L752" class="ln">   752&nbsp;&nbsp;</span>		return false
+<span id="L753" class="ln">   753&nbsp;&nbsp;</span>	}
+<span id="L754" class="ln">   754&nbsp;&nbsp;</span>
+<span id="L755" class="ln">   755&nbsp;&nbsp;</span>	<span class="comment">// If we&#39;ve found enough 0 utilizations, we can stop immediately.</span>
+<span id="L756" class="ln">   756&nbsp;&nbsp;</span>	return len(acc.wHeap) == acc.nWorst &amp;&amp; acc.wHeap[0].MutatorUtil == 0
+<span id="L757" class="ln">   757&nbsp;&nbsp;</span>}
+<span id="L758" class="ln">   758&nbsp;&nbsp;</span>
+<span id="L759" class="ln">   759&nbsp;&nbsp;</span><span class="comment">// MMU returns the minimum mutator utilization for the given time</span>
+<span id="L760" class="ln">   760&nbsp;&nbsp;</span><span class="comment">// window. This is the minimum utilization for all windows of this</span>
+<span id="L761" class="ln">   761&nbsp;&nbsp;</span><span class="comment">// duration across the execution. The returned value is in the range</span>
+<span id="L762" class="ln">   762&nbsp;&nbsp;</span><span class="comment">// [0, 1].</span>
+<span id="L763" class="ln">   763&nbsp;&nbsp;</span>func (c *MMUCurve) MMU(window time.Duration) (mmu float64) {
+<span id="L764" class="ln">   764&nbsp;&nbsp;</span>	acc := accumulator{mmu: 1.0, bound: 1.0}
+<span id="L765" class="ln">   765&nbsp;&nbsp;</span>	c.mmu(window, &amp;acc)
+<span id="L766" class="ln">   766&nbsp;&nbsp;</span>	return acc.mmu
+<span id="L767" class="ln">   767&nbsp;&nbsp;</span>}
+<span id="L768" class="ln">   768&nbsp;&nbsp;</span>
+<span id="L769" class="ln">   769&nbsp;&nbsp;</span><span class="comment">// Examples returns n specific examples of the lowest mutator</span>
+<span id="L770" class="ln">   770&nbsp;&nbsp;</span><span class="comment">// utilization for the given window size. The returned windows will be</span>
+<span id="L771" class="ln">   771&nbsp;&nbsp;</span><span class="comment">// disjoint (otherwise there would be a huge number of</span>
+<span id="L772" class="ln">   772&nbsp;&nbsp;</span><span class="comment">// mostly-overlapping windows at the single lowest point). There are</span>
+<span id="L773" class="ln">   773&nbsp;&nbsp;</span><span class="comment">// no guarantees on which set of disjoint windows this returns.</span>
+<span id="L774" class="ln">   774&nbsp;&nbsp;</span>func (c *MMUCurve) Examples(window time.Duration, n int) (worst []UtilWindow) {
+<span id="L775" class="ln">   775&nbsp;&nbsp;</span>	acc := accumulator{mmu: 1.0, bound: 1.0, nWorst: n}
+<span id="L776" class="ln">   776&nbsp;&nbsp;</span>	c.mmu(window, &amp;acc)
+<span id="L777" class="ln">   777&nbsp;&nbsp;</span>	sort.Sort(sort.Reverse(acc.wHeap))
+<span id="L778" class="ln">   778&nbsp;&nbsp;</span>	return ([]UtilWindow)(acc.wHeap)
+<span id="L779" class="ln">   779&nbsp;&nbsp;</span>}
+<span id="L780" class="ln">   780&nbsp;&nbsp;</span>
+<span id="L781" class="ln">   781&nbsp;&nbsp;</span><span class="comment">// MUD returns mutator utilization distribution quantiles for the</span>
+<span id="L782" class="ln">   782&nbsp;&nbsp;</span><span class="comment">// given window size.</span>
+<span id="L783" class="ln">   783&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L784" class="ln">   784&nbsp;&nbsp;</span><span class="comment">// The mutator utilization distribution is the distribution of mean</span>
+<span id="L785" class="ln">   785&nbsp;&nbsp;</span><span class="comment">// mutator utilization across all windows of the given window size in</span>
+<span id="L786" class="ln">   786&nbsp;&nbsp;</span><span class="comment">// the trace.</span>
+<span id="L787" class="ln">   787&nbsp;&nbsp;</span><span class="comment">//</span>
+<span id="L788" class="ln">   788&nbsp;&nbsp;</span><span class="comment">// The minimum mutator utilization is the minimum (0th percentile) of</span>
+<span id="L789" class="ln">   789&nbsp;&nbsp;</span><span class="comment">// this distribution. (However, if only the minimum is desired, it&#39;s</span>
+<span id="L790" class="ln">   790&nbsp;&nbsp;</span><span class="comment">// more efficient to use the MMU method.)</span>
+<span id="L791" class="ln">   791&nbsp;&nbsp;</span>func (c *MMUCurve) MUD(window time.Duration, quantiles []float64) []float64 {
+<span id="L792" class="ln">   792&nbsp;&nbsp;</span>	if len(quantiles) == 0 {
+<span id="L793" class="ln">   793&nbsp;&nbsp;</span>		return []float64{}
+<span id="L794" class="ln">   794&nbsp;&nbsp;</span>	}
+<span id="L795" class="ln">   795&nbsp;&nbsp;</span>
+<span id="L796" class="ln">   796&nbsp;&nbsp;</span>	<span class="comment">// Each unrefined band contributes a known total mass to the</span>
+<span id="L797" class="ln">   797&nbsp;&nbsp;</span>	<span class="comment">// distribution (bandDur except at the end), but in an unknown</span>
+<span id="L798" class="ln">   798&nbsp;&nbsp;</span>	<span class="comment">// way. However, we know that all the mass it contributes must</span>
+<span id="L799" class="ln">   799&nbsp;&nbsp;</span>	<span class="comment">// be at or above its worst-case mean mutator utilization.</span>
+<span id="L800" class="ln">   800&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L801" class="ln">   801&nbsp;&nbsp;</span>	<span class="comment">// Hence, we refine bands until the highest desired</span>
+<span id="L802" class="ln">   802&nbsp;&nbsp;</span>	<span class="comment">// distribution quantile is less than the next worst-case mean</span>
+<span id="L803" class="ln">   803&nbsp;&nbsp;</span>	<span class="comment">// mutator utilization. At this point, all further</span>
+<span id="L804" class="ln">   804&nbsp;&nbsp;</span>	<span class="comment">// contributions to the distribution must be beyond the</span>
+<span id="L805" class="ln">   805&nbsp;&nbsp;</span>	<span class="comment">// desired quantile and hence cannot affect it.</span>
+<span id="L806" class="ln">   806&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L807" class="ln">   807&nbsp;&nbsp;</span>	<span class="comment">// First, find the highest desired distribution quantile.</span>
+<span id="L808" class="ln">   808&nbsp;&nbsp;</span>	maxQ := quantiles[0]
+<span id="L809" class="ln">   809&nbsp;&nbsp;</span>	for _, q := range quantiles {
+<span id="L810" class="ln">   810&nbsp;&nbsp;</span>		if q &gt; maxQ {
+<span id="L811" class="ln">   811&nbsp;&nbsp;</span>			maxQ = q
+<span id="L812" class="ln">   812&nbsp;&nbsp;</span>		}
+<span id="L813" class="ln">   813&nbsp;&nbsp;</span>	}
+<span id="L814" class="ln">   814&nbsp;&nbsp;</span>	<span class="comment">// The distribution&#39;s mass is in units of time (it&#39;s not</span>
+<span id="L815" class="ln">   815&nbsp;&nbsp;</span>	<span class="comment">// normalized because this would make it more annoying to</span>
+<span id="L816" class="ln">   816&nbsp;&nbsp;</span>	<span class="comment">// account for future contributions of unrefined bands). The</span>
+<span id="L817" class="ln">   817&nbsp;&nbsp;</span>	<span class="comment">// total final mass will be the duration of the trace itself</span>
+<span id="L818" class="ln">   818&nbsp;&nbsp;</span>	<span class="comment">// minus the window size. Using this, we can compute the mass</span>
+<span id="L819" class="ln">   819&nbsp;&nbsp;</span>	<span class="comment">// corresponding to quantile maxQ.</span>
+<span id="L820" class="ln">   820&nbsp;&nbsp;</span>	var duration int64
+<span id="L821" class="ln">   821&nbsp;&nbsp;</span>	for _, s := range c.series {
+<span id="L822" class="ln">   822&nbsp;&nbsp;</span>		duration1 := s.util[len(s.util)-1].Time - s.util[0].Time
+<span id="L823" class="ln">   823&nbsp;&nbsp;</span>		if duration1 &gt;= int64(window) {
+<span id="L824" class="ln">   824&nbsp;&nbsp;</span>			duration += duration1 - int64(window)
+<span id="L825" class="ln">   825&nbsp;&nbsp;</span>		}
+<span id="L826" class="ln">   826&nbsp;&nbsp;</span>	}
+<span id="L827" class="ln">   827&nbsp;&nbsp;</span>	qMass := float64(duration) * maxQ
+<span id="L828" class="ln">   828&nbsp;&nbsp;</span>
+<span id="L829" class="ln">   829&nbsp;&nbsp;</span>	<span class="comment">// Accumulate the MUD until we have precise information for</span>
+<span id="L830" class="ln">   830&nbsp;&nbsp;</span>	<span class="comment">// everything to the left of qMass.</span>
+<span id="L831" class="ln">   831&nbsp;&nbsp;</span>	acc := accumulator{mmu: 1.0, bound: 1.0, preciseMass: qMass, mud: new(mud)}
+<span id="L832" class="ln">   832&nbsp;&nbsp;</span>	acc.mud.setTrackMass(qMass)
+<span id="L833" class="ln">   833&nbsp;&nbsp;</span>	c.mmu(window, &amp;acc)
+<span id="L834" class="ln">   834&nbsp;&nbsp;</span>
+<span id="L835" class="ln">   835&nbsp;&nbsp;</span>	<span class="comment">// Evaluate the quantiles on the accumulated MUD.</span>
+<span id="L836" class="ln">   836&nbsp;&nbsp;</span>	out := make([]float64, len(quantiles))
+<span id="L837" class="ln">   837&nbsp;&nbsp;</span>	for i := range out {
+<span id="L838" class="ln">   838&nbsp;&nbsp;</span>		mu, _ := acc.mud.invCumulativeSum(float64(duration) * quantiles[i])
+<span id="L839" class="ln">   839&nbsp;&nbsp;</span>		if math.IsNaN(mu) {
+<span id="L840" class="ln">   840&nbsp;&nbsp;</span>			<span class="comment">// There are a few legitimate ways this can</span>
+<span id="L841" class="ln">   841&nbsp;&nbsp;</span>			<span class="comment">// happen:</span>
+<span id="L842" class="ln">   842&nbsp;&nbsp;</span>			<span class="comment">//</span>
+<span id="L843" class="ln">   843&nbsp;&nbsp;</span>			<span class="comment">// 1. If the window is the full trace</span>
+<span id="L844" class="ln">   844&nbsp;&nbsp;</span>			<span class="comment">// duration, then the windowed MU function is</span>
+<span id="L845" class="ln">   845&nbsp;&nbsp;</span>			<span class="comment">// only defined at a single point, so the MU</span>
+<span id="L846" class="ln">   846&nbsp;&nbsp;</span>			<span class="comment">// distribution is not well-defined.</span>
+<span id="L847" class="ln">   847&nbsp;&nbsp;</span>			<span class="comment">//</span>
+<span id="L848" class="ln">   848&nbsp;&nbsp;</span>			<span class="comment">// 2. If there are no events, then the MU</span>
+<span id="L849" class="ln">   849&nbsp;&nbsp;</span>			<span class="comment">// distribution has no mass.</span>
+<span id="L850" class="ln">   850&nbsp;&nbsp;</span>			<span class="comment">//</span>
+<span id="L851" class="ln">   851&nbsp;&nbsp;</span>			<span class="comment">// Either way, all of the quantiles will have</span>
+<span id="L852" class="ln">   852&nbsp;&nbsp;</span>			<span class="comment">// converged toward the MMU at this point.</span>
+<span id="L853" class="ln">   853&nbsp;&nbsp;</span>			mu = acc.mmu
+<span id="L854" class="ln">   854&nbsp;&nbsp;</span>		}
+<span id="L855" class="ln">   855&nbsp;&nbsp;</span>		out[i] = mu
+<span id="L856" class="ln">   856&nbsp;&nbsp;</span>	}
+<span id="L857" class="ln">   857&nbsp;&nbsp;</span>	return out
+<span id="L858" class="ln">   858&nbsp;&nbsp;</span>}
+<span id="L859" class="ln">   859&nbsp;&nbsp;</span>
+<span id="L860" class="ln">   860&nbsp;&nbsp;</span>func (c *MMUCurve) mmu(window time.Duration, acc *accumulator) {
+<span id="L861" class="ln">   861&nbsp;&nbsp;</span>	if window &lt;= 0 {
+<span id="L862" class="ln">   862&nbsp;&nbsp;</span>		acc.mmu = 0
+<span id="L863" class="ln">   863&nbsp;&nbsp;</span>		return
+<span id="L864" class="ln">   864&nbsp;&nbsp;</span>	}
+<span id="L865" class="ln">   865&nbsp;&nbsp;</span>
+<span id="L866" class="ln">   866&nbsp;&nbsp;</span>	var bandU bandUtilHeap
+<span id="L867" class="ln">   867&nbsp;&nbsp;</span>	windows := make([]time.Duration, len(c.series))
+<span id="L868" class="ln">   868&nbsp;&nbsp;</span>	for i, s := range c.series {
+<span id="L869" class="ln">   869&nbsp;&nbsp;</span>		windows[i] = window
+<span id="L870" class="ln">   870&nbsp;&nbsp;</span>		if max := time.Duration(s.util[len(s.util)-1].Time - s.util[0].Time); window &gt; max {
+<span id="L871" class="ln">   871&nbsp;&nbsp;</span>			windows[i] = max
+<span id="L872" class="ln">   872&nbsp;&nbsp;</span>		}
+<span id="L873" class="ln">   873&nbsp;&nbsp;</span>
+<span id="L874" class="ln">   874&nbsp;&nbsp;</span>		bandU1 := bandUtilHeap(s.mkBandUtil(i, windows[i]))
+<span id="L875" class="ln">   875&nbsp;&nbsp;</span>		if bandU == nil {
+<span id="L876" class="ln">   876&nbsp;&nbsp;</span>			bandU = bandU1
+<span id="L877" class="ln">   877&nbsp;&nbsp;</span>		} else {
+<span id="L878" class="ln">   878&nbsp;&nbsp;</span>			bandU = append(bandU, bandU1...)
+<span id="L879" class="ln">   879&nbsp;&nbsp;</span>		}
+<span id="L880" class="ln">   880&nbsp;&nbsp;</span>	}
+<span id="L881" class="ln">   881&nbsp;&nbsp;</span>
+<span id="L882" class="ln">   882&nbsp;&nbsp;</span>	<span class="comment">// Process bands from lowest utilization bound to highest.</span>
+<span id="L883" class="ln">   883&nbsp;&nbsp;</span>	heap.Init(&amp;bandU)
+<span id="L884" class="ln">   884&nbsp;&nbsp;</span>
+<span id="L885" class="ln">   885&nbsp;&nbsp;</span>	<span class="comment">// Refine each band into a precise window and MMU until</span>
+<span id="L886" class="ln">   886&nbsp;&nbsp;</span>	<span class="comment">// refining the next lowest band can no longer affect the MMU</span>
+<span id="L887" class="ln">   887&nbsp;&nbsp;</span>	<span class="comment">// or windows.</span>
+<span id="L888" class="ln">   888&nbsp;&nbsp;</span>	for len(bandU) &gt; 0 &amp;&amp; bandU[0].utilBound &lt; acc.bound {
+<span id="L889" class="ln">   889&nbsp;&nbsp;</span>		i := bandU[0].series
+<span id="L890" class="ln">   890&nbsp;&nbsp;</span>		c.series[i].bandMMU(bandU[0].i, windows[i], acc)
+<span id="L891" class="ln">   891&nbsp;&nbsp;</span>		heap.Pop(&amp;bandU)
+<span id="L892" class="ln">   892&nbsp;&nbsp;</span>	}
+<span id="L893" class="ln">   893&nbsp;&nbsp;</span>}
+<span id="L894" class="ln">   894&nbsp;&nbsp;</span>
+<span id="L895" class="ln">   895&nbsp;&nbsp;</span>func (c *mmuSeries) mkBandUtil(series int, window time.Duration) []bandUtil {
+<span id="L896" class="ln">   896&nbsp;&nbsp;</span>	<span class="comment">// For each band, compute the worst-possible total mutator</span>
+<span id="L897" class="ln">   897&nbsp;&nbsp;</span>	<span class="comment">// utilization for all windows that start in that band.</span>
+<span id="L898" class="ln">   898&nbsp;&nbsp;</span>
+<span id="L899" class="ln">   899&nbsp;&nbsp;</span>	<span class="comment">// minBands is the minimum number of bands a window can span</span>
+<span id="L900" class="ln">   900&nbsp;&nbsp;</span>	<span class="comment">// and maxBands is the maximum number of bands a window can</span>
+<span id="L901" class="ln">   901&nbsp;&nbsp;</span>	<span class="comment">// span in any alignment.</span>
+<span id="L902" class="ln">   902&nbsp;&nbsp;</span>	minBands := int((int64(window) + c.bandDur - 1) / c.bandDur)
+<span id="L903" class="ln">   903&nbsp;&nbsp;</span>	maxBands := int((int64(window) + 2*(c.bandDur-1)) / c.bandDur)
+<span id="L904" class="ln">   904&nbsp;&nbsp;</span>	if window &gt; 1 &amp;&amp; maxBands &lt; 2 {
+<span id="L905" class="ln">   905&nbsp;&nbsp;</span>		panic(&#34;maxBands &lt; 2&#34;)
+<span id="L906" class="ln">   906&nbsp;&nbsp;</span>	}
+<span id="L907" class="ln">   907&nbsp;&nbsp;</span>	tailDur := int64(window) % c.bandDur
+<span id="L908" class="ln">   908&nbsp;&nbsp;</span>	nUtil := len(c.bands) - maxBands + 1
+<span id="L909" class="ln">   909&nbsp;&nbsp;</span>	if nUtil &lt; 0 {
+<span id="L910" class="ln">   910&nbsp;&nbsp;</span>		nUtil = 0
+<span id="L911" class="ln">   911&nbsp;&nbsp;</span>	}
+<span id="L912" class="ln">   912&nbsp;&nbsp;</span>	bandU := make([]bandUtil, nUtil)
+<span id="L913" class="ln">   913&nbsp;&nbsp;</span>	for i := range bandU {
+<span id="L914" class="ln">   914&nbsp;&nbsp;</span>		<span class="comment">// To compute the worst-case MU, we assume the minimum</span>
+<span id="L915" class="ln">   915&nbsp;&nbsp;</span>		<span class="comment">// for any bands that are only partially overlapped by</span>
+<span id="L916" class="ln">   916&nbsp;&nbsp;</span>		<span class="comment">// some window and the mean for any bands that are</span>
+<span id="L917" class="ln">   917&nbsp;&nbsp;</span>		<span class="comment">// completely covered by all windows.</span>
+<span id="L918" class="ln">   918&nbsp;&nbsp;</span>		var util totalUtil
+<span id="L919" class="ln">   919&nbsp;&nbsp;</span>
+<span id="L920" class="ln">   920&nbsp;&nbsp;</span>		<span class="comment">// Find the lowest and second lowest of the partial</span>
+<span id="L921" class="ln">   921&nbsp;&nbsp;</span>		<span class="comment">// bands.</span>
+<span id="L922" class="ln">   922&nbsp;&nbsp;</span>		l := c.bands[i].minUtil
+<span id="L923" class="ln">   923&nbsp;&nbsp;</span>		r1 := c.bands[i+minBands-1].minUtil
+<span id="L924" class="ln">   924&nbsp;&nbsp;</span>		r2 := c.bands[i+maxBands-1].minUtil
+<span id="L925" class="ln">   925&nbsp;&nbsp;</span>		minBand := math.Min(l, math.Min(r1, r2))
+<span id="L926" class="ln">   926&nbsp;&nbsp;</span>		<span class="comment">// Assume the worst window maximally overlaps the</span>
+<span id="L927" class="ln">   927&nbsp;&nbsp;</span>		<span class="comment">// worst minimum and then the rest overlaps the second</span>
+<span id="L928" class="ln">   928&nbsp;&nbsp;</span>		<span class="comment">// worst minimum.</span>
+<span id="L929" class="ln">   929&nbsp;&nbsp;</span>		if minBands == 1 {
+<span id="L930" class="ln">   930&nbsp;&nbsp;</span>			util += totalUtilOf(minBand, int64(window))
+<span id="L931" class="ln">   931&nbsp;&nbsp;</span>		} else {
+<span id="L932" class="ln">   932&nbsp;&nbsp;</span>			util += totalUtilOf(minBand, c.bandDur)
+<span id="L933" class="ln">   933&nbsp;&nbsp;</span>			midBand := 0.0
+<span id="L934" class="ln">   934&nbsp;&nbsp;</span>			switch {
+<span id="L935" class="ln">   935&nbsp;&nbsp;</span>			case minBand == l:
+<span id="L936" class="ln">   936&nbsp;&nbsp;</span>				midBand = math.Min(r1, r2)
+<span id="L937" class="ln">   937&nbsp;&nbsp;</span>			case minBand == r1:
+<span id="L938" class="ln">   938&nbsp;&nbsp;</span>				midBand = math.Min(l, r2)
+<span id="L939" class="ln">   939&nbsp;&nbsp;</span>			case minBand == r2:
+<span id="L940" class="ln">   940&nbsp;&nbsp;</span>				midBand = math.Min(l, r1)
+<span id="L941" class="ln">   941&nbsp;&nbsp;</span>			}
+<span id="L942" class="ln">   942&nbsp;&nbsp;</span>			util += totalUtilOf(midBand, tailDur)
+<span id="L943" class="ln">   943&nbsp;&nbsp;</span>		}
+<span id="L944" class="ln">   944&nbsp;&nbsp;</span>
+<span id="L945" class="ln">   945&nbsp;&nbsp;</span>		<span class="comment">// Add the total mean MU of bands that are completely</span>
+<span id="L946" class="ln">   946&nbsp;&nbsp;</span>		<span class="comment">// overlapped by all windows.</span>
+<span id="L947" class="ln">   947&nbsp;&nbsp;</span>		if minBands &gt; 2 {
+<span id="L948" class="ln">   948&nbsp;&nbsp;</span>			util += c.bands[i+minBands-1].cumUtil - c.bands[i+1].cumUtil
+<span id="L949" class="ln">   949&nbsp;&nbsp;</span>		}
+<span id="L950" class="ln">   950&nbsp;&nbsp;</span>
+<span id="L951" class="ln">   951&nbsp;&nbsp;</span>		bandU[i] = bandUtil{series, i, util.mean(window)}
+<span id="L952" class="ln">   952&nbsp;&nbsp;</span>	}
+<span id="L953" class="ln">   953&nbsp;&nbsp;</span>
+<span id="L954" class="ln">   954&nbsp;&nbsp;</span>	return bandU
+<span id="L955" class="ln">   955&nbsp;&nbsp;</span>}
+<span id="L956" class="ln">   956&nbsp;&nbsp;</span>
+<span id="L957" class="ln">   957&nbsp;&nbsp;</span><span class="comment">// bandMMU computes the precise minimum mutator utilization for</span>
+<span id="L958" class="ln">   958&nbsp;&nbsp;</span><span class="comment">// windows with a left edge in band bandIdx.</span>
+<span id="L959" class="ln">   959&nbsp;&nbsp;</span>func (c *mmuSeries) bandMMU(bandIdx int, window time.Duration, acc *accumulator) {
+<span id="L960" class="ln">   960&nbsp;&nbsp;</span>	util := c.util
+<span id="L961" class="ln">   961&nbsp;&nbsp;</span>
+<span id="L962" class="ln">   962&nbsp;&nbsp;</span>	<span class="comment">// We think of the mutator utilization over time as the</span>
+<span id="L963" class="ln">   963&nbsp;&nbsp;</span>	<span class="comment">// box-filtered utilization function, which we call the</span>
+<span id="L964" class="ln">   964&nbsp;&nbsp;</span>	<span class="comment">// &#34;windowed mutator utilization function&#34;. The resulting</span>
+<span id="L965" class="ln">   965&nbsp;&nbsp;</span>	<span class="comment">// function is continuous and piecewise linear (unless</span>
+<span id="L966" class="ln">   966&nbsp;&nbsp;</span>	<span class="comment">// window==0, which we handle elsewhere), where the boundaries</span>
+<span id="L967" class="ln">   967&nbsp;&nbsp;</span>	<span class="comment">// between segments occur when either edge of the window</span>
+<span id="L968" class="ln">   968&nbsp;&nbsp;</span>	<span class="comment">// encounters a change in the instantaneous mutator</span>
+<span id="L969" class="ln">   969&nbsp;&nbsp;</span>	<span class="comment">// utilization function. Hence, the minimum of this function</span>
+<span id="L970" class="ln">   970&nbsp;&nbsp;</span>	<span class="comment">// will always occur when one of the edges of the window</span>
+<span id="L971" class="ln">   971&nbsp;&nbsp;</span>	<span class="comment">// aligns with a utilization change, so these are the only</span>
+<span id="L972" class="ln">   972&nbsp;&nbsp;</span>	<span class="comment">// points we need to consider.</span>
+<span id="L973" class="ln">   973&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L974" class="ln">   974&nbsp;&nbsp;</span>	<span class="comment">// We compute the mutator utilization function incrementally</span>
+<span id="L975" class="ln">   975&nbsp;&nbsp;</span>	<span class="comment">// by tracking the integral from t=0 to the left edge of the</span>
+<span id="L976" class="ln">   976&nbsp;&nbsp;</span>	<span class="comment">// window and to the right edge of the window.</span>
+<span id="L977" class="ln">   977&nbsp;&nbsp;</span>	left := c.bands[bandIdx].integrator
+<span id="L978" class="ln">   978&nbsp;&nbsp;</span>	right := left
+<span id="L979" class="ln">   979&nbsp;&nbsp;</span>	time, endTime := c.bandTime(bandIdx)
+<span id="L980" class="ln">   980&nbsp;&nbsp;</span>	if utilEnd := util[len(util)-1].Time - int64(window); utilEnd &lt; endTime {
+<span id="L981" class="ln">   981&nbsp;&nbsp;</span>		endTime = utilEnd
+<span id="L982" class="ln">   982&nbsp;&nbsp;</span>	}
+<span id="L983" class="ln">   983&nbsp;&nbsp;</span>	acc.resetTime()
+<span id="L984" class="ln">   984&nbsp;&nbsp;</span>	for {
+<span id="L985" class="ln">   985&nbsp;&nbsp;</span>		<span class="comment">// Advance edges to time and time+window.</span>
+<span id="L986" class="ln">   986&nbsp;&nbsp;</span>		mu := (right.advance(time+int64(window)) - left.advance(time)).mean(window)
+<span id="L987" class="ln">   987&nbsp;&nbsp;</span>		if acc.addMU(time, mu, window) {
+<span id="L988" class="ln">   988&nbsp;&nbsp;</span>			break
+<span id="L989" class="ln">   989&nbsp;&nbsp;</span>		}
+<span id="L990" class="ln">   990&nbsp;&nbsp;</span>		if time == endTime {
+<span id="L991" class="ln">   991&nbsp;&nbsp;</span>			break
+<span id="L992" class="ln">   992&nbsp;&nbsp;</span>		}
+<span id="L993" class="ln">   993&nbsp;&nbsp;</span>
+<span id="L994" class="ln">   994&nbsp;&nbsp;</span>		<span class="comment">// The maximum slope of the windowed mutator</span>
+<span id="L995" class="ln">   995&nbsp;&nbsp;</span>		<span class="comment">// utilization function is 1/window, so we can always</span>
+<span id="L996" class="ln">   996&nbsp;&nbsp;</span>		<span class="comment">// advance the time by at least (mu - mmu) * window</span>
+<span id="L997" class="ln">   997&nbsp;&nbsp;</span>		<span class="comment">// without dropping below mmu.</span>
+<span id="L998" class="ln">   998&nbsp;&nbsp;</span>		minTime := time + int64((mu-acc.bound)*float64(window))
+<span id="L999" class="ln">   999&nbsp;&nbsp;</span>
+<span id="L1000" class="ln">  1000&nbsp;&nbsp;</span>		<span class="comment">// Advance the window to the next time where either</span>
+<span id="L1001" class="ln">  1001&nbsp;&nbsp;</span>		<span class="comment">// the left or right edge of the window encounters a</span>
+<span id="L1002" class="ln">  1002&nbsp;&nbsp;</span>		<span class="comment">// change in the utilization curve.</span>
+<span id="L1003" class="ln">  1003&nbsp;&nbsp;</span>		if t1, t2 := left.next(time), right.next(time+int64(window))-int64(window); t1 &lt; t2 {
+<span id="L1004" class="ln">  1004&nbsp;&nbsp;</span>			time = t1
+<span id="L1005" class="ln">  1005&nbsp;&nbsp;</span>		} else {
+<span id="L1006" class="ln">  1006&nbsp;&nbsp;</span>			time = t2
+<span id="L1007" class="ln">  1007&nbsp;&nbsp;</span>		}
+<span id="L1008" class="ln">  1008&nbsp;&nbsp;</span>		if time &lt; minTime {
+<span id="L1009" class="ln">  1009&nbsp;&nbsp;</span>			time = minTime
+<span id="L1010" class="ln">  1010&nbsp;&nbsp;</span>		}
+<span id="L1011" class="ln">  1011&nbsp;&nbsp;</span>		if time &gt;= endTime {
+<span id="L1012" class="ln">  1012&nbsp;&nbsp;</span>			<span class="comment">// For MMUs we could stop here, but for MUDs</span>
+<span id="L1013" class="ln">  1013&nbsp;&nbsp;</span>			<span class="comment">// it&#39;s important that we span the entire</span>
+<span id="L1014" class="ln">  1014&nbsp;&nbsp;</span>			<span class="comment">// band.</span>
+<span id="L1015" class="ln">  1015&nbsp;&nbsp;</span>			time = endTime
+<span id="L1016" class="ln">  1016&nbsp;&nbsp;</span>		}
+<span id="L1017" class="ln">  1017&nbsp;&nbsp;</span>	}
+<span id="L1018" class="ln">  1018&nbsp;&nbsp;</span>}
+<span id="L1019" class="ln">  1019&nbsp;&nbsp;</span>
+<span id="L1020" class="ln">  1020&nbsp;&nbsp;</span><span class="comment">// An integrator tracks a position in a utilization function and</span>
+<span id="L1021" class="ln">  1021&nbsp;&nbsp;</span><span class="comment">// integrates it.</span>
+<span id="L1022" class="ln">  1022&nbsp;&nbsp;</span>type integrator struct {
+<span id="L1023" class="ln">  1023&nbsp;&nbsp;</span>	u *mmuSeries
+<span id="L1024" class="ln">  1024&nbsp;&nbsp;</span>	<span class="comment">// pos is the index in u.util of the current time&#39;s non-strict</span>
+<span id="L1025" class="ln">  1025&nbsp;&nbsp;</span>	<span class="comment">// predecessor.</span>
+<span id="L1026" class="ln">  1026&nbsp;&nbsp;</span>	pos int
+<span id="L1027" class="ln">  1027&nbsp;&nbsp;</span>}
+<span id="L1028" class="ln">  1028&nbsp;&nbsp;</span>
+<span id="L1029" class="ln">  1029&nbsp;&nbsp;</span><span class="comment">// advance returns the integral of the utilization function from 0 to</span>
+<span id="L1030" class="ln">  1030&nbsp;&nbsp;</span><span class="comment">// time. advance must be called on monotonically increasing values of</span>
+<span id="L1031" class="ln">  1031&nbsp;&nbsp;</span><span class="comment">// times.</span>
+<span id="L1032" class="ln">  1032&nbsp;&nbsp;</span>func (in *integrator) advance(time int64) totalUtil {
+<span id="L1033" class="ln">  1033&nbsp;&nbsp;</span>	util, pos := in.u.util, in.pos
+<span id="L1034" class="ln">  1034&nbsp;&nbsp;</span>	<span class="comment">// Advance pos until pos+1 is time&#39;s strict successor (making</span>
+<span id="L1035" class="ln">  1035&nbsp;&nbsp;</span>	<span class="comment">// pos time&#39;s non-strict predecessor).</span>
+<span id="L1036" class="ln">  1036&nbsp;&nbsp;</span>	<span class="comment">//</span>
+<span id="L1037" class="ln">  1037&nbsp;&nbsp;</span>	<span class="comment">// Very often, this will be nearby, so we optimize that case,</span>
+<span id="L1038" class="ln">  1038&nbsp;&nbsp;</span>	<span class="comment">// but it may be arbitrarily far away, so we handled that</span>
+<span id="L1039" class="ln">  1039&nbsp;&nbsp;</span>	<span class="comment">// efficiently, too.</span>
+<span id="L1040" class="ln">  1040&nbsp;&nbsp;</span>	const maxSeq = 8
+<span id="L1041" class="ln">  1041&nbsp;&nbsp;</span>	if pos+maxSeq &lt; len(util) &amp;&amp; util[pos+maxSeq].Time &gt; time {
+<span id="L1042" class="ln">  1042&nbsp;&nbsp;</span>		<span class="comment">// Nearby. Use a linear scan.</span>
+<span id="L1043" class="ln">  1043&nbsp;&nbsp;</span>		for pos+1 &lt; len(util) &amp;&amp; util[pos+1].Time &lt;= time {
+<span id="L1044" class="ln">  1044&nbsp;&nbsp;</span>			pos++
+<span id="L1045" class="ln">  1045&nbsp;&nbsp;</span>		}
+<span id="L1046" class="ln">  1046&nbsp;&nbsp;</span>	} else {
+<span id="L1047" class="ln">  1047&nbsp;&nbsp;</span>		<span class="comment">// Far. Binary search for time&#39;s strict successor.</span>
+<span id="L1048" class="ln">  1048&nbsp;&nbsp;</span>		l, r := pos, len(util)
+<span id="L1049" class="ln">  1049&nbsp;&nbsp;</span>		for l &lt; r {
+<span id="L1050" class="ln">  1050&nbsp;&nbsp;</span>			h := int(uint(l+r) &gt;&gt; 1)
+<span id="L1051" class="ln">  1051&nbsp;&nbsp;</span>			if util[h].Time &lt;= time {
+<span id="L1052" class="ln">  1052&nbsp;&nbsp;</span>				l = h + 1
+<span id="L1053" class="ln">  1053&nbsp;&nbsp;</span>			} else {
+<span id="L1054" class="ln">  1054&nbsp;&nbsp;</span>				r = h
+<span id="L1055" class="ln">  1055&nbsp;&nbsp;</span>			}
+<span id="L1056" class="ln">  1056&nbsp;&nbsp;</span>		}
+<span id="L1057" class="ln">  1057&nbsp;&nbsp;</span>		pos = l - 1 <span class="comment">// Non-strict predecessor.</span>
+<span id="L1058" class="ln">  1058&nbsp;&nbsp;</span>	}
+<span id="L1059" class="ln">  1059&nbsp;&nbsp;</span>	in.pos = pos
+<span id="L1060" class="ln">  1060&nbsp;&nbsp;</span>	var partial totalUtil
+<span id="L1061" class="ln">  1061&nbsp;&nbsp;</span>	if time != util[pos].Time {
+<span id="L1062" class="ln">  1062&nbsp;&nbsp;</span>		partial = totalUtilOf(util[pos].Util, time-util[pos].Time)
+<span id="L1063" class="ln">  1063&nbsp;&nbsp;</span>	}
+<span id="L1064" class="ln">  1064&nbsp;&nbsp;</span>	return in.u.sums[pos] + partial
+<span id="L1065" class="ln">  1065&nbsp;&nbsp;</span>}
+<span id="L1066" class="ln">  1066&nbsp;&nbsp;</span>
+<span id="L1067" class="ln">  1067&nbsp;&nbsp;</span><span class="comment">// next returns the smallest time t&#39; &gt; time of a change in the</span>
+<span id="L1068" class="ln">  1068&nbsp;&nbsp;</span><span class="comment">// utilization function.</span>
+<span id="L1069" class="ln">  1069&nbsp;&nbsp;</span>func (in *integrator) next(time int64) int64 {
+<span id="L1070" class="ln">  1070&nbsp;&nbsp;</span>	for _, u := range in.u.util[in.pos:] {
+<span id="L1071" class="ln">  1071&nbsp;&nbsp;</span>		if u.Time &gt; time {
+<span id="L1072" class="ln">  1072&nbsp;&nbsp;</span>			return u.Time
+<span id="L1073" class="ln">  1073&nbsp;&nbsp;</span>		}
+<span id="L1074" class="ln">  1074&nbsp;&nbsp;</span>	}
+<span id="L1075" class="ln">  1075&nbsp;&nbsp;</span>	return 1&lt;&lt;63 - 1
+<span id="L1076" class="ln">  1076&nbsp;&nbsp;</span>}
+<span id="L1077" class="ln">  1077&nbsp;&nbsp;</span>
+<span id="L1078" class="ln">  1078&nbsp;&nbsp;</span>func isGCSTW(r tracev2.Range) bool {
+<span id="L1079" class="ln">  1079&nbsp;&nbsp;</span>	return strings.HasPrefix(r.Name, &#34;stop-the-world&#34;) &amp;&amp; strings.Contains(r.Name, &#34;GC&#34;)
+<span id="L1080" class="ln">  1080&nbsp;&nbsp;</span>}
+<span id="L1081" class="ln">  1081&nbsp;&nbsp;</span>
+<span id="L1082" class="ln">  1082&nbsp;&nbsp;</span>func isGCMarkAssist(r tracev2.Range) bool {
+<span id="L1083" class="ln">  1083&nbsp;&nbsp;</span>	return r.Name == &#34;GC mark assist&#34;
+<span id="L1084" class="ln">  1084&nbsp;&nbsp;</span>}
+<span id="L1085" class="ln">  1085&nbsp;&nbsp;</span>
+<span id="L1086" class="ln">  1086&nbsp;&nbsp;</span>func isGCSweep(r tracev2.Range) bool {
+<span id="L1087" class="ln">  1087&nbsp;&nbsp;</span>	return r.Name == &#34;GC incremental sweep&#34;
+<span id="L1088" class="ln">  1088&nbsp;&nbsp;</span>}
+<span id="L1089" class="ln">  1089&nbsp;&nbsp;</span>
+</pre><p><a href="gc.go?m=text">View as plain text</a></p>
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

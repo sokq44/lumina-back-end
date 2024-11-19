@@ -1,0 +1,562 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>database - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package database
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "backend/utils/database"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+			
+			
+				
+				<dd><a href="index.html#InitDb">func InitDb()</a></dd>
+			
+			
+				
+				<dd><a href="index.html#Database">type Database</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#GetDb">func GetDb() *Database</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Database.CleanDb">func (db *Database) CleanDb() *errhandle.Error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Database.CreateEmailVerification">func (db *Database) CreateEmailVerification(e models.EmailVerification) *errhandle.Error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Database.CreatePasswordChange">func (db *Database) CreatePasswordChange(p models.PasswordChange) *errhandle.Error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Database.CreateRefreshToken">func (db *Database) CreateRefreshToken(token models.RefreshToken) *errhandle.Error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Database.CreateUser">func (db *Database) CreateUser(u models.User) *errhandle.Error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Database.DeleteEmailVerificationById">func (db *Database) DeleteEmailVerificationById(id string) *errhandle.Error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Database.DeletePasswordChangeById">func (db *Database) DeletePasswordChangeById(id string) *errhandle.Error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Database.DeleteRefreshTokenById">func (db *Database) DeleteRefreshTokenById(id string) *errhandle.Error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Database.DeleteRefreshTokenByToken">func (db *Database) DeleteRefreshTokenByToken(token string) *errhandle.Error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Database.DeleteUserById">func (db *Database) DeleteUserById(id string) *errhandle.Error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Database.GetEmailVerificationByToken">func (db *Database) GetEmailVerificationByToken(token string) (*models.EmailVerification, *errhandle.Error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Database.GetExpiredEmailVerifications">func (db *Database) GetExpiredEmailVerifications() ([]models.EmailVerification, *errhandle.Error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Database.GetExpiredPasswordChanges">func (db *Database) GetExpiredPasswordChanges() ([]models.PasswordChange, *errhandle.Error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Database.GetExpiredRefreshTokens">func (db *Database) GetExpiredRefreshTokens() ([]models.RefreshToken, *errhandle.Error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Database.GetPasswordChangeByToken">func (db *Database) GetPasswordChangeByToken(token string) (*models.PasswordChange, *errhandle.Error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Database.GetRefreshTokenByUserId">func (db *Database) GetRefreshTokenByUserId(userId string) (*models.RefreshToken, *errhandle.Error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Database.GetUserByEmail">func (db *Database) GetUserByEmail(email string) (*models.User, *errhandle.Error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Database.GetUserById">func (db *Database) GetUserById(id string) (*models.User, *errhandle.Error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Database.StartCleaningDb">func (db *Database) StartCleaningDb()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Database.UpdateUser">func (db *Database) UpdateUser(u models.User) *errhandle.Error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Database.UserExists">func (db *Database) UserExists(u models.User) (bool, *errhandle.Error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Database.VerifyUser">func (db *Database) VerifyUser(id string) *errhandle.Error</a></dd>
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../../../src/backend/utils/database/database.go">database.go</a>
+			
+				<a href="../../../../src/backend/utils/database/email-verification.go">email-verification.go</a>
+			
+				<a href="../../../../src/backend/utils/database/password-change.go">password-change.go</a>
+			
+				<a href="../../../../src/backend/utils/database/refresh-token.go">refresh-token.go</a>
+			
+				<a href="../../../../src/backend/utils/database/user.go">user.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+		
+		
+			
+			
+			<h2 id="InitDb">func <a href="../../../../src/backend/utils/database/database.go?s=265:278#L13">InitDb</a>
+				<a class="permalink" href="index.html#InitDb">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func InitDb()</pre>
+			
+			
+			
+
+		
+		
+			
+			
+			<h2 id="Database">type <a href="../../../../src/backend/utils/database/database.go?s=166:246#L6">Database</a>
+				<a class="permalink" href="index.html#Database">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type Database struct {
+<span id="Database.Connection"></span>    Connection      *<a href="../../../database/sql/index.html">sql</a>.<a href="../../../database/sql/index.html#DB">DB</a>
+<span id="Database.CleanupInterval"></span>    CleanupInterval <a href="../../../time/index.html">time</a>.<a href="../../../time/index.html#Duration">Duration</a>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="GetDb">func <a href="../../../../src/backend/utils/database/database.go?s=1078:1100#L49">GetDb</a>
+					<a class="permalink" href="index.html#GetDb">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func GetDb() *<a href="index.html#Database">Database</a></pre>
+				
+				
+				
+			
+
+			
+				
+				<h3 id="Database.CleanDb">func (*Database) <a href="../../../../src/backend/utils/database/database.go?s=1548:1594#L68">CleanDb</a>
+					<a class="permalink" href="index.html#Database.CleanDb">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (db *<a href="index.html#Database">Database</a>) CleanDb() *<a href="../errhandle/index.html">errhandle</a>.<a href="../errhandle/index.html#Error">Error</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="Database.CreateEmailVerification">func (*Database) <a href="../../../../src/backend/utils/database/email-verification.go?s=110:198#L1">CreateEmailVerification</a>
+					<a class="permalink" href="index.html#Database.CreateEmailVerification">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (db *<a href="index.html#Database">Database</a>) CreateEmailVerification(e <a href="../../models/index.html">models</a>.<a href="../../models/index.html#EmailVerification">EmailVerification</a>) *<a href="../errhandle/index.html">errhandle</a>.<a href="../errhandle/index.html#Error">Error</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="Database.CreatePasswordChange">func (*Database) <a href="../../../../src/backend/utils/database/password-change.go?s=110:192#L1">CreatePasswordChange</a>
+					<a class="permalink" href="index.html#Database.CreatePasswordChange">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (db *<a href="index.html#Database">Database</a>) CreatePasswordChange(p <a href="../../models/index.html">models</a>.<a href="../../models/index.html#PasswordChange">PasswordChange</a>) *<a href="../errhandle/index.html">errhandle</a>.<a href="../errhandle/index.html#Error">Error</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="Database.CreateRefreshToken">func (*Database) <a href="../../../../src/backend/utils/database/refresh-token.go?s=110:192#L1">CreateRefreshToken</a>
+					<a class="permalink" href="index.html#Database.CreateRefreshToken">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (db *<a href="index.html#Database">Database</a>) CreateRefreshToken(token <a href="../../models/index.html">models</a>.<a href="../../models/index.html#RefreshToken">RefreshToken</a>) *<a href="../errhandle/index.html">errhandle</a>.<a href="../errhandle/index.html#Error">Error</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="Database.CreateUser">func (*Database) <a href="../../../../src/backend/utils/database/user.go?s=110:172#L1">CreateUser</a>
+					<a class="permalink" href="index.html#Database.CreateUser">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (db *<a href="index.html#Database">Database</a>) CreateUser(u <a href="../../models/index.html">models</a>.<a href="../../models/index.html#User">User</a>) *<a href="../errhandle/index.html">errhandle</a>.<a href="../errhandle/index.html#Error">Error</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="Database.DeleteEmailVerificationById">func (*Database) <a href="../../../../src/backend/utils/database/email-verification.go?s=1865:1940#L61">DeleteEmailVerificationById</a>
+					<a class="permalink" href="index.html#Database.DeleteEmailVerificationById">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (db *<a href="index.html#Database">Database</a>) DeleteEmailVerificationById(id <a href="../../../builtin/index.html#string">string</a>) *<a href="../errhandle/index.html">errhandle</a>.<a href="../errhandle/index.html#Error">Error</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="Database.DeletePasswordChangeById">func (*Database) <a href="../../../../src/backend/utils/database/password-change.go?s=1775:1847#L60">DeletePasswordChangeById</a>
+					<a class="permalink" href="index.html#Database.DeletePasswordChangeById">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (db *<a href="index.html#Database">Database</a>) DeletePasswordChangeById(id <a href="../../../builtin/index.html#string">string</a>) *<a href="../errhandle/index.html">errhandle</a>.<a href="../errhandle/index.html#Error">Error</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="Database.DeleteRefreshTokenById">func (*Database) <a href="../../../../src/backend/utils/database/refresh-token.go?s=1706:1776#L54">DeleteRefreshTokenById</a>
+					<a class="permalink" href="index.html#Database.DeleteRefreshTokenById">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (db *<a href="index.html#Database">Database</a>) DeleteRefreshTokenById(id <a href="../../../builtin/index.html#string">string</a>) *<a href="../errhandle/index.html">errhandle</a>.<a href="../errhandle/index.html#Error">Error</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="Database.DeleteRefreshTokenByToken">func (*Database) <a href="../../../../src/backend/utils/database/refresh-token.go?s=2180:2256#L72">DeleteRefreshTokenByToken</a>
+					<a class="permalink" href="index.html#Database.DeleteRefreshTokenByToken">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (db *<a href="index.html#Database">Database</a>) DeleteRefreshTokenByToken(token <a href="../../../builtin/index.html#string">string</a>) *<a href="../errhandle/index.html">errhandle</a>.<a href="../errhandle/index.html#Error">Error</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="Database.DeleteUserById">func (*Database) <a href="../../../../src/backend/utils/database/user.go?s=1418:1480#L44">DeleteUserById</a>
+					<a class="permalink" href="index.html#Database.DeleteUserById">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (db *<a href="index.html#Database">Database</a>) DeleteUserById(id <a href="../../../builtin/index.html#string">string</a>) *<a href="../errhandle/index.html">errhandle</a>.<a href="../errhandle/index.html#Error">Error</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="Database.GetEmailVerificationByToken">func (*Database) <a href="../../../../src/backend/utils/database/email-verification.go?s=664:771#L19">GetEmailVerificationByToken</a>
+					<a class="permalink" href="index.html#Database.GetEmailVerificationByToken">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (db *<a href="index.html#Database">Database</a>) GetEmailVerificationByToken(token <a href="../../../builtin/index.html#string">string</a>) (*<a href="../../models/index.html">models</a>.<a href="../../models/index.html#EmailVerification">EmailVerification</a>, *<a href="../errhandle/index.html">errhandle</a>.<a href="../errhandle/index.html#Error">Error</a>)</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="Database.GetExpiredEmailVerifications">func (*Database) <a href="../../../../src/backend/utils/database/email-verification.go?s=2354:2451#L79">GetExpiredEmailVerifications</a>
+					<a class="permalink" href="index.html#Database.GetExpiredEmailVerifications">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (db *<a href="index.html#Database">Database</a>) GetExpiredEmailVerifications() ([]<a href="../../models/index.html">models</a>.<a href="../../models/index.html#EmailVerification">EmailVerification</a>, *<a href="../errhandle/index.html">errhandle</a>.<a href="../errhandle/index.html#Error">Error</a>)</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="Database.GetExpiredPasswordChanges">func (*Database) <a href="../../../../src/backend/utils/database/password-change.go?s=2254:2345#L78">GetExpiredPasswordChanges</a>
+					<a class="permalink" href="index.html#Database.GetExpiredPasswordChanges">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (db *<a href="index.html#Database">Database</a>) GetExpiredPasswordChanges() ([]<a href="../../models/index.html">models</a>.<a href="../../models/index.html#PasswordChange">PasswordChange</a>, *<a href="../errhandle/index.html">errhandle</a>.<a href="../errhandle/index.html#Error">Error</a>)</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="Database.GetExpiredRefreshTokens">func (*Database) <a href="../../../../src/backend/utils/database/refresh-token.go?s=2669:2756#L90">GetExpiredRefreshTokens</a>
+					<a class="permalink" href="index.html#Database.GetExpiredRefreshTokens">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (db *<a href="index.html#Database">Database</a>) GetExpiredRefreshTokens() ([]<a href="../../models/index.html">models</a>.<a href="../../models/index.html#RefreshToken">RefreshToken</a>, *<a href="../errhandle/index.html">errhandle</a>.<a href="../errhandle/index.html#Error">Error</a>)</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="Database.GetPasswordChangeByToken">func (*Database) <a href="../../../../src/backend/utils/database/password-change.go?s=683:784#L19">GetPasswordChangeByToken</a>
+					<a class="permalink" href="index.html#Database.GetPasswordChangeByToken">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (db *<a href="index.html#Database">Database</a>) GetPasswordChangeByToken(token <a href="../../../builtin/index.html#string">string</a>) (*<a href="../../models/index.html">models</a>.<a href="../../models/index.html#PasswordChange">PasswordChange</a>, *<a href="../errhandle/index.html">errhandle</a>.<a href="../errhandle/index.html#Error">Error</a>)</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="Database.GetRefreshTokenByUserId">func (*Database) <a href="../../../../src/backend/utils/database/refresh-token.go?s=680:779#L19">GetRefreshTokenByUserId</a>
+					<a class="permalink" href="index.html#Database.GetRefreshTokenByUserId">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (db *<a href="index.html#Database">Database</a>) GetRefreshTokenByUserId(userId <a href="../../../builtin/index.html#string">string</a>) (*<a href="../../models/index.html">models</a>.<a href="../../models/index.html#RefreshToken">RefreshToken</a>, *<a href="../errhandle/index.html">errhandle</a>.<a href="../errhandle/index.html#Error">Error</a>)</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="Database.GetUserByEmail">func (*Database) <a href="../../../../src/backend/utils/database/user.go?s=2721:2802#L86">GetUserByEmail</a>
+					<a class="permalink" href="index.html#Database.GetUserByEmail">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (db *<a href="index.html#Database">Database</a>) GetUserByEmail(email <a href="../../../builtin/index.html#string">string</a>) (*<a href="../../models/index.html">models</a>.<a href="../../models/index.html#User">User</a>, *<a href="../errhandle/index.html">errhandle</a>.<a href="../errhandle/index.html#Error">Error</a>)</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="Database.GetUserById">func (*Database) <a href="../../../../src/backend/utils/database/user.go?s=1854:1929#L59">GetUserById</a>
+					<a class="permalink" href="index.html#Database.GetUserById">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (db *<a href="index.html#Database">Database</a>) GetUserById(id <a href="../../../builtin/index.html#string">string</a>) (*<a href="../../models/index.html">models</a>.<a href="../../models/index.html#User">User</a>, *<a href="../errhandle/index.html">errhandle</a>.<a href="../errhandle/index.html#Error">Error</a>)</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="Database.StartCleaningDb">func (*Database) <a href="../../../../src/backend/utils/database/database.go?s=2291:2328#L108">StartCleaningDb</a>
+					<a class="permalink" href="index.html#Database.StartCleaningDb">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (db *<a href="index.html#Database">Database</a>) StartCleaningDb()</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="Database.UpdateUser">func (*Database) <a href="../../../../src/backend/utils/database/user.go?s=624:686#L19">UpdateUser</a>
+					<a class="permalink" href="index.html#Database.UpdateUser">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (db *<a href="index.html#Database">Database</a>) UpdateUser(u <a href="../../models/index.html">models</a>.<a href="../../models/index.html#User">User</a>) *<a href="../errhandle/index.html">errhandle</a>.<a href="../errhandle/index.html#Error">Error</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="Database.UserExists">func (*Database) <a href="../../../../src/backend/utils/database/user.go?s=3758:3828#L123">UserExists</a>
+					<a class="permalink" href="index.html#Database.UserExists">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (db *<a href="index.html#Database">Database</a>) UserExists(u <a href="../../models/index.html">models</a>.<a href="../../models/index.html#User">User</a>) (<a href="../../../builtin/index.html#bool">bool</a>, *<a href="../errhandle/index.html">errhandle</a>.<a href="../errhandle/index.html#Error">Error</a>)</pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="Database.VerifyUser">func (*Database) <a href="../../../../src/backend/utils/database/user.go?s=4354:4412#L145">VerifyUser</a>
+					<a class="permalink" href="index.html#Database.VerifyUser">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (db *<a href="index.html#Database">Database</a>) VerifyUser(id <a href="../../../builtin/index.html#string">string</a>) *<a href="../errhandle/index.html">errhandle</a>.<a href="../errhandle/index.html#Error">Error</a></pre>
+				
+				
+				
+				
+			
+		
+	
+
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

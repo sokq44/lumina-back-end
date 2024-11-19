@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>ecdh - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package ecdh
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "crypto/ecdh"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>Package ecdh implements Elliptic Curve Diffie-Hellman over
+NIST curves and Curve25519.
+
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+			
+			
+			
+				
+				<dd><a href="index.html#Curve">type Curve</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#P256">func P256() Curve</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#P384">func P384() Curve</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#P521">func P521() Curve</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#X25519">func X25519() Curve</a></dd>
+				
+				
+			
+				
+				<dd><a href="index.html#PrivateKey">type PrivateKey</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#PrivateKey.Bytes">func (k *PrivateKey) Bytes() []byte</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#PrivateKey.Curve">func (k *PrivateKey) Curve() Curve</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#PrivateKey.ECDH">func (k *PrivateKey) ECDH(remote *PublicKey) ([]byte, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#PrivateKey.Equal">func (k *PrivateKey) Equal(x crypto.PrivateKey) bool</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#PrivateKey.Public">func (k *PrivateKey) Public() crypto.PublicKey</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#PrivateKey.PublicKey">func (k *PrivateKey) PublicKey() *PublicKey</a></dd>
+				
+			
+				
+				<dd><a href="index.html#PublicKey">type PublicKey</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#PublicKey.Bytes">func (k *PublicKey) Bytes() []byte</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#PublicKey.Curve">func (k *PublicKey) Curve() Curve</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#PublicKey.Equal">func (k *PublicKey) Equal(x crypto.PublicKey) bool</a></dd>
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../../src/crypto/ecdh/ecdh.go">ecdh.go</a>
+			
+				<a href="../../../src/crypto/ecdh/nist.go">nist.go</a>
+			
+				<a href="../../../src/crypto/ecdh/x25519.go">x25519.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+		
+		
+		
+			
+			
+			<h2 id="Curve">type <a href="../../../src/crypto/ecdh/ecdh.go?s=356:2279#L8">Curve</a>
+				<a class="permalink" href="index.html#Curve">&#xb6;</a>
+				
+				
+			</h2>
+			
+			<pre>type Curve interface {
+    <span class="comment">// GenerateKey generates a random PrivateKey.</span>
+    <span class="comment">//</span>
+    <span class="comment">// Most applications should use [crypto/rand.Reader] as rand. Note that the</span>
+    <span class="comment">// returned key does not depend deterministically on the bytes read from rand,</span>
+    <span class="comment">// and may change between calls and/or between versions.</span>
+    GenerateKey(rand <a href="../../io/index.html">io</a>.<a href="../../io/index.html#Reader">Reader</a>) (*<a href="index.html#PrivateKey">PrivateKey</a>, <a href="../../builtin/index.html#error">error</a>)
+
+    <span class="comment">// NewPrivateKey checks that key is valid and returns a PrivateKey.</span>
+    <span class="comment">//</span>
+    <span class="comment">// For NIST curves, this follows SEC 1, Version 2.0, Section 2.3.6, which</span>
+    <span class="comment">// amounts to decoding the bytes as a fixed length big endian integer and</span>
+    <span class="comment">// checking that the result is lower than the order of the curve. The zero</span>
+    <span class="comment">// private key is also rejected, as the encoding of the corresponding public</span>
+    <span class="comment">// key would be irregular.</span>
+    <span class="comment">//</span>
+    <span class="comment">// For X25519, this only checks the scalar length.</span>
+    NewPrivateKey(key []<a href="../../builtin/index.html#byte">byte</a>) (*<a href="index.html#PrivateKey">PrivateKey</a>, <a href="../../builtin/index.html#error">error</a>)
+
+    <span class="comment">// NewPublicKey checks that key is valid and returns a PublicKey.</span>
+    <span class="comment">//</span>
+    <span class="comment">// For NIST curves, this decodes an uncompressed point according to SEC 1,</span>
+    <span class="comment">// Version 2.0, Section 2.3.4. Compressed encodings and the point at</span>
+    <span class="comment">// infinity are rejected.</span>
+    <span class="comment">//</span>
+    <span class="comment">// For X25519, this only checks the u-coordinate length. Adversarially</span>
+    <span class="comment">// selected public keys can cause ECDH to return an error.</span>
+    NewPublicKey(key []<a href="../../builtin/index.html#byte">byte</a>) (*<a href="index.html#PublicKey">PublicKey</a>, <a href="../../builtin/index.html#error">error</a>)
+    <span class="comment">// contains filtered or unexported methods</span>
+}</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="P256">func <a href="../../../src/crypto/ecdh/nist.go?s=6333:6350#L209">P256</a>
+					<a class="permalink" href="index.html#P256">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func P256() <a href="index.html#Curve">Curve</a></pre>
+				<p>P256 returns a <a href="index.html#Curve">Curve</a> which implements NIST P-256 (FIPS 186-3, section D.2.3),
+also known as secp256r1 or prime256v1.
+<p>Multiple invocations of this function will return the same value, which can
+be used for equality checks and switch statements.
+
+				
+				
+			
+				
+				<h3 id="P384">func <a href="../../../src/crypto/ecdh/nist.go?s=6964:6981#L228">P384</a>
+					<a class="permalink" href="index.html#P384">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func P384() <a href="index.html#Curve">Curve</a></pre>
+				<p>P384 returns a <a href="index.html#Curve">Curve</a> which implements NIST P-384 (FIPS 186-3, section D.2.4),
+also known as secp384r1.
+<p>Multiple invocations of this function will return the same value, which can
+be used for equality checks and switch statements.
+
+				
+				
+			
+				
+				<h3 id="P521">func <a href="../../../src/crypto/ecdh/nist.go?s=7693:7710#L249">P521</a>
+					<a class="permalink" href="index.html#P521">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func P521() <a href="index.html#Curve">Curve</a></pre>
+				<p>P521 returns a <a href="index.html#Curve">Curve</a> which implements NIST P-521 (FIPS 186-3, section D.2.5),
+also known as secp521r1.
+<p>Multiple invocations of this function will return the same value, which can
+be used for equality checks and switch statements.
+
+				
+				
+			
+				
+				<h3 id="X25519">func <a href="../../../src/crypto/ecdh/x25519.go?s=607:626#L15">X25519</a>
+					<a class="permalink" href="index.html#X25519">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func X25519() <a href="index.html#Curve">Curve</a></pre>
+				<p>X25519 returns a <a href="index.html#Curve">Curve</a> which implements the X25519 function over Curve25519
+(RFC 7748, Section 5).
+<p>Multiple invocations of this function will return the same value, so it can
+be used for equality checks and switch statements.
+
+				
+				
+			
+
+			
+		
+			
+			
+			<h2 id="PrivateKey">type <a href="../../../src/crypto/ecdh/ecdh.go?s=3829:4124#L97">PrivateKey</a>
+				<a class="permalink" href="index.html#PrivateKey">&#xb6;</a>
+				
+				
+			</h2>
+			<p>PrivateKey is an ECDH private key, usually kept secret.
+<p>These keys can be parsed with <a href="http://localhost:8080/crypto/x509#ParsePKCS8PrivateKey">crypto/x509.ParsePKCS8PrivateKey</a> and encoded
+with <a href="http://localhost:8080/crypto/x509#MarshalPKCS8PrivateKey">crypto/x509.MarshalPKCS8PrivateKey</a>. For NIST curves, they then need to
+be converted with <a href="http://localhost:8080/crypto/ecdsa#PrivateKey.ECDH">crypto/ecdsa.PrivateKey.ECDH</a> after parsing.
+
+			<pre>type PrivateKey struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="PrivateKey.Bytes">func (*PrivateKey) <a href="../../../src/crypto/ecdh/ecdh.go?s=4899:4934#L124">Bytes</a>
+					<a class="permalink" href="index.html#PrivateKey.Bytes">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (k *<a href="index.html#PrivateKey">PrivateKey</a>) Bytes() []<a href="../../builtin/index.html#byte">byte</a></pre>
+				<p>Bytes returns a copy of the encoding of the private key.
+
+				
+				
+				
+			
+				
+				<h3 id="PrivateKey.Curve">func (*PrivateKey) <a href="../../../src/crypto/ecdh/ecdh.go?s=5649:5683#L147">Curve</a>
+					<a class="permalink" href="index.html#PrivateKey.Curve">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (k *<a href="index.html#PrivateKey">PrivateKey</a>) Curve() <a href="index.html#Curve">Curve</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="PrivateKey.ECDH">func (*PrivateKey) <a href="../../../src/crypto/ecdh/ecdh.go?s=4620:4680#L116">ECDH</a>
+					<a class="permalink" href="index.html#PrivateKey.ECDH">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (k *<a href="index.html#PrivateKey">PrivateKey</a>) ECDH(remote *<a href="index.html#PublicKey">PublicKey</a>) ([]<a href="../../builtin/index.html#byte">byte</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+				<p>ECDH performs an ECDH exchange and returns the shared secret. The <a href="index.html#PrivateKey">PrivateKey</a>
+and <a href="index.html#PublicKey">PublicKey</a> must use the same curve.
+<p>For NIST curves, this performs ECDH as specified in SEC 1, Version 2.0,
+Section 3.3.1, and returns the x-coordinate encoded according to SEC 1,
+Version 2.0, Section 2.3.5. The result is never the point at infinity.
+<p>For <a href="index.html#X25519">X25519</a>, this performs ECDH as specified in RFC 7748, Section 6.1. If
+the result is the all-zero value, ECDH returns an error.
+
+				
+				
+				
+			
+				
+				<h3 id="PrivateKey.Equal">func (*PrivateKey) <a href="../../../src/crypto/ecdh/ecdh.go?s=5442:5494#L138">Equal</a>
+					<a class="permalink" href="index.html#PrivateKey.Equal">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (k *<a href="index.html#PrivateKey">PrivateKey</a>) Equal(x <a href="../index.html">crypto</a>.<a href="../index.html#PrivateKey">PrivateKey</a>) <a href="../../builtin/index.html#bool">bool</a></pre>
+				<p>Equal returns whether x represents the same private key as k.
+<p>Note that there can be equivalent private keys with different encodings which
+would return false from this check but behave the same way as inputs to [ECDH].
+<p>This check is performed in constant time as long as the key types and their
+curve match.
+
+				
+				
+				
+			
+				
+				<h3 id="PrivateKey.Public">func (*PrivateKey) <a href="../../../src/crypto/ecdh/ecdh.go?s=6442:6488#L176">Public</a>
+					<a class="permalink" href="index.html#PrivateKey.Public">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (k *<a href="index.html#PrivateKey">PrivateKey</a>) Public() <a href="../index.html">crypto</a>.<a href="../index.html#PublicKey">PublicKey</a></pre>
+				<p>Public implements the implicit interface of all standard library private
+keys. See the docs of <a href="http://localhost:8080/crypto#PrivateKey">crypto.PrivateKey</a>.
+
+				
+				
+				
+			
+				
+				<h3 id="PrivateKey.PublicKey">func (*PrivateKey) <a href="../../../src/crypto/ecdh/ecdh.go?s=5705:5748#L151">PublicKey</a>
+					<a class="permalink" href="index.html#PrivateKey.PublicKey">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (k *<a href="index.html#PrivateKey">PrivateKey</a>) PublicKey() *<a href="index.html#PublicKey">PublicKey</a></pre>
+				
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="PublicKey">type <a href="../../../src/crypto/ecdh/ecdh.go?s=2591:2684#L58">PublicKey</a>
+				<a class="permalink" href="index.html#PublicKey">&#xb6;</a>
+				
+				
+			</h2>
+			<p>PublicKey is an ECDH public key, usually a peer&apos;s ECDH share sent over the wire.
+<p>These keys can be parsed with <a href="http://localhost:8080/crypto/x509#ParsePKIXPublicKey">crypto/x509.ParsePKIXPublicKey</a> and encoded
+with <a href="http://localhost:8080/crypto/x509#MarshalPKIXPublicKey">crypto/x509.MarshalPKIXPublicKey</a>. For NIST curves, they then need to
+be converted with <a href="http://localhost:8080/crypto/ecdsa#PublicKey.ECDH">crypto/ecdsa.PublicKey.ECDH</a> after parsing.
+
+			<pre>type PublicKey struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="PublicKey.Bytes">func (*PublicKey) <a href="../../../src/crypto/ecdh/ecdh.go?s=2745:2779#L65">Bytes</a>
+					<a class="permalink" href="index.html#PublicKey.Bytes">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (k *<a href="index.html#PublicKey">PublicKey</a>) Bytes() []<a href="../../builtin/index.html#byte">byte</a></pre>
+				<p>Bytes returns a copy of the encoding of the public key.
+
+				
+				
+				
+			
+				
+				<h3 id="PublicKey.Curve">func (*PublicKey) <a href="../../../src/crypto/ecdh/ecdh.go?s=3484:3517#L88">Curve</a>
+					<a class="permalink" href="index.html#PublicKey.Curve">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (k *<a href="index.html#PublicKey">PublicKey</a>) Curve() <a href="index.html#Curve">Curve</a></pre>
+				
+				
+				
+				
+			
+				
+				<h3 id="PublicKey.Equal">func (*PublicKey) <a href="../../../src/crypto/ecdh/ecdh.go?s=3282:3332#L79">Equal</a>
+					<a class="permalink" href="index.html#PublicKey.Equal">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (k *<a href="index.html#PublicKey">PublicKey</a>) Equal(x <a href="../index.html">crypto</a>.<a href="../index.html#PublicKey">PublicKey</a>) <a href="../../builtin/index.html#bool">bool</a></pre>
+				<p>Equal returns whether x represents the same public key as k.
+<p>Note that there can be equivalent public keys with different encodings which
+would return false from this check but behave the same way as inputs to ECDH.
+<p>This check is performed in constant time as long as the key types and their
+curve match.
+
+				
+				
+				
+			
+		
+	
+
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

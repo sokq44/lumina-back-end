@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>format - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package format
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "go/format"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+				<dd><a href="index.html#pkg-examples" class="examplesLink">Examples</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>Package format implements standard formatting of Go source.
+<p>Note that formatting of Go source code changes over time, so tools relying on
+consistent formatting should execute a specific version of the gofmt binary
+instead of using this package. That way, the formatting will be stable, and
+the tools won&apos;t need to be recompiled each time gofmt changes.
+<p>For example, pre-submit checks that use this package directly would behave
+differently depending on what Go version each developer uses, causing the
+check to be inherently fragile.
+
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+			
+			
+				
+				<dd><a href="index.html#Node">func Node(dst io.Writer, fset *token.FileSet, node any) error</a></dd>
+			
+				
+				<dd><a href="index.html#Source">func Source(src []byte) ([]byte, error)</a></dd>
+			
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+		<div id="pkg-examples">
+			<h3>Examples</h3>
+			<div class="js-expandAll expandAll collapsed">(Expand All)</div>
+			<dl>
+			
+			<dd><a class="exampleLink" href="index.html#example_Node">Node</a></dd>
+			
+			</dl>
+		</div>
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../../src/go/format/format.go">format.go</a>
+			
+				<a href="../../../src/go/format/internal.go">internal.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+		
+		
+			
+			
+			<h2 id="Node">func <a href="../../../src/go/format/format.go?s=1998:2059#L43">Node</a>
+				<a class="permalink" href="index.html#Node">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Node(dst <a href="../../io/index.html">io</a>.<a href="../../io/index.html#Writer">Writer</a>, fset *<a href="../token/index.html">token</a>.<a href="../token/index.html#FileSet">FileSet</a>, node <a href="../../builtin/index.html#any">any</a>) <a href="../../builtin/index.html#error">error</a></pre>
+			<p>Node formats node in canonical gofmt style and writes the result to dst.
+<p>The node type must be *<a href="http://localhost:8080/go/ast#File">ast.File</a>, *<a href="http://localhost:8080/go/printer#CommentedNode">printer.CommentedNode</a>, []<a href="http://localhost:8080/go/ast#Decl">ast.Decl</a>,
+[]<a href="http://localhost:8080/go/ast#Stmt">ast.Stmt</a>, or assignment-compatible to <a href="http://localhost:8080/go/ast#Expr">ast.Expr</a>, <a href="http://localhost:8080/go/ast#Decl">ast.Decl</a>, <a href="http://localhost:8080/go/ast#Spec">ast.Spec</a>,
+or <a href="http://localhost:8080/go/ast#Stmt">ast.Stmt</a>. Node does not modify node. Imports are not sorted for
+nodes representing partial source files (for instance, if the node is
+not an *<a href="http://localhost:8080/go/ast#File">ast.File</a> or a *<a href="http://localhost:8080/go/printer#CommentedNode">printer.CommentedNode</a> not wrapping an *<a href="http://localhost:8080/go/ast#File">ast.File</a>).
+<p>The function may return early (before the entire result is written)
+and return a formatting error, for instance due to an incorrect AST.
+
+			<div id="example_Node" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">const expr = &#34;(6+2*3)/4&#34;
+
+<span class="comment">// parser.ParseExpr parses the argument and returns the</span>
+<span class="comment">// corresponding ast.Node.</span>
+node, err := parser.ParseExpr(expr)
+if err != nil {
+    log.Fatal(err)
+}
+
+<span class="comment">// Create a FileSet for node. Since the node does not come</span>
+<span class="comment">// from a real source file, fset will be empty.</span>
+fset := token.NewFileSet()
+
+var buf bytes.Buffer
+err = format.Node(&amp;buf, fset, node)
+if err != nil {
+    log.Fatal(err)
+}
+
+fmt.Println(buf.String())
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">(6 + 2*3) / 4
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Source">func <a href="../../../src/go/format/format.go?s=3585:3624#L91">Source</a>
+				<a class="permalink" href="index.html#Source">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Source(src []<a href="../../builtin/index.html#byte">byte</a>) ([]<a href="../../builtin/index.html#byte">byte</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+			<p>Source formats src in canonical gofmt style and returns the result
+or an (I/O or syntax) error. src is expected to be a syntactically
+correct Go source file, or a list of Go declarations or statements.
+<p>If src is a partial source file, the leading and trailing space of src
+is applied to the result (such that it has the same leading and trailing
+space as src), and the result is indented by the same amount as the first
+line of src containing code. Imports are not sorted for partial source files.
+
+			
+			
+
+		
+		
+	
+
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

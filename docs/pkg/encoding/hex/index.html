@@ -1,0 +1,635 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>hex - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package hex
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "encoding/hex"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+				<dd><a href="index.html#pkg-examples" class="examplesLink">Examples</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>Package hex implements hexadecimal encoding and decoding.
+
+				
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+			
+				<dd><a href="index.html#pkg-variables">Variables</a></dd>
+			
+			
+				
+				<dd><a href="index.html#AppendDecode">func AppendDecode(dst, src []byte) ([]byte, error)</a></dd>
+			
+				
+				<dd><a href="index.html#AppendEncode">func AppendEncode(dst, src []byte) []byte</a></dd>
+			
+				
+				<dd><a href="index.html#Decode">func Decode(dst, src []byte) (int, error)</a></dd>
+			
+				
+				<dd><a href="index.html#DecodeString">func DecodeString(s string) ([]byte, error)</a></dd>
+			
+				
+				<dd><a href="index.html#DecodedLen">func DecodedLen(x int) int</a></dd>
+			
+				
+				<dd><a href="index.html#Dump">func Dump(data []byte) string</a></dd>
+			
+				
+				<dd><a href="index.html#Dumper">func Dumper(w io.Writer) io.WriteCloser</a></dd>
+			
+				
+				<dd><a href="index.html#Encode">func Encode(dst, src []byte) int</a></dd>
+			
+				
+				<dd><a href="index.html#EncodeToString">func EncodeToString(src []byte) string</a></dd>
+			
+				
+				<dd><a href="index.html#EncodedLen">func EncodedLen(n int) int</a></dd>
+			
+				
+				<dd><a href="index.html#NewDecoder">func NewDecoder(r io.Reader) io.Reader</a></dd>
+			
+				
+				<dd><a href="index.html#NewEncoder">func NewEncoder(w io.Writer) io.Writer</a></dd>
+			
+			
+				
+				<dd><a href="index.html#InvalidByteError">type InvalidByteError</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#InvalidByteError.Error">func (e InvalidByteError) Error() string</a></dd>
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+		<div id="pkg-examples">
+			<h3>Examples</h3>
+			<div class="js-expandAll expandAll collapsed">(Expand All)</div>
+			<dl>
+			
+			<dd><a class="exampleLink" href="index.html#example_Decode">Decode</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_DecodeString">DecodeString</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Dump">Dump</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Dumper">Dumper</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_Encode">Encode</a></dd>
+			
+			<dd><a class="exampleLink" href="index.html#example_EncodeToString">EncodeToString</a></dd>
+			
+			</dl>
+		</div>
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../../src/encoding/hex/hex.go">hex.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+		
+			<h2 id="pkg-variables">Variables</h2>
+			
+				<p>ErrLength reports an attempt to decode an odd-length input
+using <a href="index.html#Decode">Decode</a> or <a href="index.html#DecodeString">DecodeString</a>.
+The stream-based Decoder returns <a href="http://localhost:8080/io#ErrUnexpectedEOF">io.ErrUnexpectedEOF</a> instead of ErrLength.
+
+				<pre>var <span id="ErrLength">ErrLength</span> = <a href="../../errors/index.html">errors</a>.<a href="../../errors/index.html#New">New</a>(&#34;encoding/hex: odd length hex string&#34;)</pre>
+			
+		
+		
+			
+			
+			<h2 id="AppendDecode">func <a href="../../../src/encoding/hex/hex.go?s=3973:4023#L108">AppendDecode</a>
+				<a class="permalink" href="index.html#AppendDecode">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func AppendDecode(dst, src []<a href="../../builtin/index.html#byte">byte</a>) ([]<a href="../../builtin/index.html#byte">byte</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+			<p>AppendDecode appends the hexadecimally decoded src to dst
+and returns the extended buffer.
+If the input is malformed, it returns the partially decoded src and an error.
+
+			
+			
+
+		
+			
+			
+			<h2 id="AppendEncode">func <a href="../../../src/encoding/hex/hex.go?s=2128:2169#L47">AppendEncode</a>
+				<a class="permalink" href="index.html#AppendEncode">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func AppendEncode(dst, src []<a href="../../builtin/index.html#byte">byte</a>) []<a href="../../builtin/index.html#byte">byte</a></pre>
+			<p>AppendEncode appends the hexadecimally encoded src to dst
+and returns the extended buffer.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Decode">func <a href="../../../src/encoding/hex/hex.go?s=3215:3256#L77">Decode</a>
+				<a class="permalink" href="index.html#Decode">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Decode(dst, src []<a href="../../builtin/index.html#byte">byte</a>) (<a href="../../builtin/index.html#int">int</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+			<p>Decode decodes src into <a href="index.html#DecodedLen">DecodedLen</a>(len(src)) bytes,
+returning the actual number of bytes written to dst.
+<p>Decode expects that src contains only hexadecimal
+characters and that src has even length.
+If the input is malformed, Decode returns the number
+of bytes decoded before the error.
+
+			<div id="example_Decode" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">src := []byte(&#34;48656c6c6f20476f7068657221&#34;)
+
+dst := make([]byte, hex.DecodedLen(len(src)))
+n, err := hex.Decode(dst, src)
+if err != nil {
+    log.Fatal(err)
+}
+
+fmt.Printf(&#34;%s\n&#34;, dst[:n])
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">Hello Gopher!
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="DecodeString">func <a href="../../../src/encoding/hex/hex.go?s=4611:4654#L128">DecodeString</a>
+				<a class="permalink" href="index.html#DecodeString">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func DecodeString(s <a href="../../builtin/index.html#string">string</a>) ([]<a href="../../builtin/index.html#byte">byte</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+			<p>DecodeString returns the bytes represented by the hexadecimal string s.
+<p>DecodeString expects that src contains only hexadecimal
+characters and that src has even length.
+If the input is malformed, DecodeString returns
+the bytes decoded before the error.
+
+			<div id="example_DecodeString" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">const s = &#34;48656c6c6f20476f7068657221&#34;
+decoded, err := hex.DecodeString(s)
+if err != nil {
+    log.Fatal(err)
+}
+
+fmt.Printf(&#34;%s\n&#34;, decoded)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">Hello Gopher!
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="DecodedLen">func <a href="../../../src/encoding/hex/hex.go?s=2863:2889#L68">DecodedLen</a>
+				<a class="permalink" href="index.html#DecodedLen">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func DecodedLen(x <a href="../../builtin/index.html#int">int</a>) <a href="../../builtin/index.html#int">int</a></pre>
+			<p>DecodedLen returns the length of a decoding of x source bytes.
+Specifically, it returns x / 2.
+
+			
+			
+
+		
+			
+			
+			<h2 id="Dump">func <a href="../../../src/encoding/hex/hex.go?s=5032:5061#L138">Dump</a>
+				<a class="permalink" href="index.html#Dump">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Dump(data []<a href="../../builtin/index.html#byte">byte</a>) <a href="../../builtin/index.html#string">string</a></pre>
+			<p>Dump returns a string that contains a hex dump of the given data. The format
+of the hex dump matches the output of `hexdump -C` on the command line.
+
+			<div id="example_Dump" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">content := []byte(&#34;Go is an open source programming language.&#34;)
+
+fmt.Printf(&#34;%s&#34;, hex.Dump(content))
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">00000000  47 6f 20 69 73 20 61 6e  20 6f 70 65 6e 20 73 6f  |Go is an open so|
+00000010  75 72 63 65 20 70 72 6f  67 72 61 6d 6d 69 6e 67  |urce programming|
+00000020  20 6c 61 6e 67 75 61 67  65 2e                    | language.|
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Dumper">func <a href="../../../src/encoding/hex/hex.go?s=7608:7647#L234">Dumper</a>
+				<a class="permalink" href="index.html#Dumper">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Dumper(w <a href="../../io/index.html">io</a>.<a href="../../io/index.html#Writer">Writer</a>) <a href="../../io/index.html">io</a>.<a href="../../io/index.html#WriteCloser">WriteCloser</a></pre>
+			<p>Dumper returns a <a href="http://localhost:8080/io#WriteCloser">io.WriteCloser</a> that writes a hex dump of all written data to
+w. The format of the dump matches the output of `hexdump -C` on the command
+line.
+
+			<div id="example_Dumper" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">lines := []string{
+    &#34;Go is an open source programming language.&#34;,
+    &#34;\n&#34;,
+    &#34;We encourage all Go users to subscribe to golang-announce.&#34;,
+}
+
+stdoutDumper := hex.Dumper(os.Stdout)
+
+defer stdoutDumper.Close()
+
+for _, line := range lines {
+    stdoutDumper.Write([]byte(line))
+}
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">00000000  47 6f 20 69 73 20 61 6e  20 6f 70 65 6e 20 73 6f  |Go is an open so|
+00000010  75 72 63 65 20 70 72 6f  67 72 61 6d 6d 69 6e 67  |urce programming|
+00000020  20 6c 61 6e 67 75 61 67  65 2e 0a 57 65 20 65 6e  | language..We en|
+00000030  63 6f 75 72 61 67 65 20  61 6c 6c 20 47 6f 20 75  |courage all Go u|
+00000040  73 65 72 73 20 74 6f 20  73 75 62 73 63 72 69 62  |sers to subscrib|
+00000050  65 20 74 6f 20 67 6f 6c  61 6e 67 2d 61 6e 6e 6f  |e to golang-anno|
+00000060  75 6e 63 65 2e                                    |unce.|
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="Encode">func <a href="../../../src/encoding/hex/hex.go?s=1871:1903#L35">Encode</a>
+				<a class="permalink" href="index.html#Encode">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Encode(dst, src []<a href="../../builtin/index.html#byte">byte</a>) <a href="../../builtin/index.html#int">int</a></pre>
+			<p>Encode encodes src into <a href="index.html#EncodedLen">EncodedLen</a>(len(src))
+bytes of dst. As a convenience, it returns the number
+of bytes written to dst, but this value is always <a href="index.html#EncodedLen">EncodedLen</a>(len(src)).
+Encode implements hexadecimal encoding.
+
+			<div id="example_Encode" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">src := []byte(&#34;Hello Gopher!&#34;)
+
+dst := make([]byte, hex.EncodedLen(len(src)))
+hex.Encode(dst, src)
+
+fmt.Printf(&#34;%s\n&#34;, dst)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">48656c6c6f20476f7068657221
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="EncodeToString">func <a href="../../../src/encoding/hex/hex.go?s=4215:4253#L116">EncodeToString</a>
+				<a class="permalink" href="index.html#EncodeToString">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func EncodeToString(src []<a href="../../builtin/index.html#byte">byte</a>) <a href="../../builtin/index.html#string">string</a></pre>
+			<p>EncodeToString returns the hexadecimal encoding of src.
+
+			<div id="example_EncodeToString" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">src := []byte(&#34;Hello&#34;)
+encodedStr := hex.EncodeToString(src)
+
+fmt.Printf(&#34;%s\n&#34;, encodedStr)
+
+<span class="comment"></pre>
+			
+			<p>Output:</p>
+			<pre class="output">48656c6c6f
+</pre>
+			
+		
+	</div>
+</div>
+
+			
+
+		
+			
+			
+			<h2 id="EncodedLen">func <a href="../../../src/encoding/hex/hex.go?s=1599:1625#L29">EncodedLen</a>
+				<a class="permalink" href="index.html#EncodedLen">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func EncodedLen(n <a href="../../builtin/index.html#int">int</a>) <a href="../../builtin/index.html#int">int</a></pre>
+			<p>EncodedLen returns the length of an encoding of n source bytes.
+Specifically, it returns n * 2.
+
+			
+			
+
+		
+			
+			
+			<h2 id="NewDecoder">func <a href="../../../src/encoding/hex/hex.go?s=6457:6495#L194">NewDecoder</a>
+				<a class="permalink" href="index.html#NewDecoder">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func NewDecoder(r <a href="../../io/index.html">io</a>.<a href="../../io/index.html#Reader">Reader</a>) <a href="../../io/index.html">io</a>.<a href="../../io/index.html#Reader">Reader</a></pre>
+			<p>NewDecoder returns an <a href="http://localhost:8080/io#Reader">io.Reader</a> that decodes hexadecimal characters from r.
+NewDecoder expects that r contain only an even number of hexadecimal characters.
+
+			
+			
+
+		
+			
+			
+			<h2 id="NewEncoder">func <a href="../../../src/encoding/hex/hex.go?s=5732:5770#L165">NewEncoder</a>
+				<a class="permalink" href="index.html#NewEncoder">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func NewEncoder(w <a href="../../io/index.html">io</a>.<a href="../../io/index.html#Writer">Writer</a>) <a href="../../io/index.html">io</a>.<a href="../../io/index.html#Writer">Writer</a></pre>
+			<p>NewEncoder returns an <a href="http://localhost:8080/io#Writer">io.Writer</a> that writes lowercase hexadecimal characters to w.
+
+			
+			
+
+		
+		
+			
+			
+			<h2 id="InvalidByteError">type <a href="../../../src/encoding/hex/hex.go?s=2624:2650#L60">InvalidByteError</a>
+				<a class="permalink" href="index.html#InvalidByteError">&#xb6;</a>
+				
+				
+			</h2>
+			<p>InvalidByteError values describe errors resulting from an invalid byte in a hex string.
+
+			<pre>type InvalidByteError <a href="../../builtin/index.html#byte">byte</a></pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="InvalidByteError.Error">func (InvalidByteError) <a href="../../../src/encoding/hex/hex.go?s=2652:2692#L62">Error</a>
+					<a class="permalink" href="index.html#InvalidByteError.Error">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (e <a href="index.html#InvalidByteError">InvalidByteError</a>) Error() <a href="../../builtin/index.html#string">string</a></pre>
+				
+				
+				
+				
+			
+		
+	
+
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#375EAB">
+
+  <title>maphash - Go Documentation Server</title>
+
+<link type="text/css" rel="stylesheet" href="../../../lib/godoc/style.css">
+
+<script>window.initFuncs = [];</script>
+<script src="../../../lib/godoc/jquery.js" defer></script>
+
+
+
+<script>var goVersion = "go1.22.2";</script>
+<script src="../../../lib/godoc/godocs.js" defer></script>
+</head>
+<body>
+
+<div id='lowframe' style="position: fixed; bottom: 0; left: 0; height: 0; width: 100%; border-top: thin solid grey; background-color: white; overflow: auto;">
+...
+</div><!-- #lowframe -->
+
+<div id="topbar" class="wide"><div class="container">
+<div class="top-heading" id="heading-wide"><a href="../../../index.html">Go Documentation Server</a></div>
+<div class="top-heading" id="heading-narrow"><a href="../../../index.html">GoDoc</a></div>
+<a href="index.html#" id="menu-button"><span id="menu-button-arrow">&#9661;</span></a>
+<form method="GET" action="http://localhost:8080/search">
+<div id="menu">
+
+<span class="search-box"><input type="search" id="search" name="q" placeholder="Search" aria-label="Search" required><button type="submit"><span><!-- magnifying glass: --><svg width="24" height="24" viewBox="0 0 24 24"><title>submit search</title><path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/><path d="M0 0h24v24H0z" fill="none"/></svg></span></button></span>
+</div>
+</form>
+
+</div></div>
+
+
+
+<div id="page" class="wide">
+<div class="container">
+
+
+  <h1>
+    Package maphash
+    <span class="text-muted"></span>
+  </h1>
+
+
+
+
+
+
+
+<div id="nav"></div>
+
+
+<!--
+	Copyright 2009 The Go Authors. All rights reserved.
+	Use of this source code is governed by a BSD-style
+	license that can be found in the LICENSE file.
+-->
+<!--
+	Note: Static (i.e., not template-generated) href and id
+	attributes start with "pkg-" to make it impossible for
+	them to conflict with generated attributes (some of which
+	correspond to Go identifiers).
+-->
+
+	<script>
+	document.ANALYSIS_DATA = null;
+	document.CALLGRAPH = null;
+	</script>
+
+	
+		
+		<div id="short-nav">
+			<dl>
+			<dd><code>import "hash/maphash"</code></dd>
+			</dl>
+			<dl>
+			<dd><a href="index.html#pkg-overview" class="overviewLink">Overview</a></dd>
+			<dd><a href="index.html#pkg-index" class="indexLink">Index</a></dd>
+			
+				<dd><a href="index.html#pkg-examples" class="examplesLink">Examples</a></dd>
+			
+			
+			</dl>
+		</div>
+		<!-- The package's Name is printed as title by the top-level template -->
+		<div id="pkg-overview" class="toggleVisible">
+			<div class="collapsed">
+				<h2 class="toggleButton" title="Click to show Overview section">Overview ▹</h2>
+			</div>
+			<div class="expanded">
+				<h2 class="toggleButton" title="Click to hide Overview section">Overview ▾</h2>
+				<p>Package maphash provides hash functions on byte sequences.
+These hash functions are intended to be used to implement hash tables or
+other data structures that need to map arbitrary strings or byte
+sequences to a uniform distribution on unsigned 64-bit integers.
+Each different instance of a hash table or data structure should use its own <a href="index.html#Seed">Seed</a>.
+<p>The hash functions are not cryptographically secure.
+(See crypto/sha256 and crypto/sha512 for cryptographic use.)
+
+				<div id="example_" class="toggle">
+	<div class="collapsed">
+		<p class="exampleHeading toggleButton">▹ <span class="text">Example</span></p>
+	</div>
+	<div class="expanded">
+		<p class="exampleHeading toggleButton">▾ <span class="text">Example</span></p>
+		
+		
+		
+			<p>Code:</p>
+			<pre class="code">
+<span class="comment">// The zero Hash value is valid and ready to use; setting an</span>
+<span class="comment">// initial seed is not necessary.</span>
+var h maphash.Hash
+
+<span class="comment">// Add a string to the hash, and print the current hash value.</span>
+h.WriteString(&#34;hello, &#34;)
+fmt.Printf(&#34;%#x\n&#34;, h.Sum64())
+
+<span class="comment">// Append additional data (in the form of a byte array).</span>
+h.Write([]byte{&#39;w&#39;, &#39;o&#39;, &#39;r&#39;, &#39;l&#39;, &#39;d&#39;})
+fmt.Printf(&#34;%#x\n&#34;, h.Sum64())
+
+<span class="comment">// Reset discards all data previously added to the Hash, without</span>
+<span class="comment">// changing its seed.</span>
+h.Reset()
+
+<span class="comment">// Use SetSeed to create a new Hash h2 which will behave</span>
+<span class="comment">// identically to h.</span>
+var h2 maphash.Hash
+h2.SetSeed(h.Seed())
+
+h.WriteString(&#34;same&#34;)
+h2.WriteString(&#34;same&#34;)
+fmt.Printf(&#34;%#x == %#x\n&#34;, h.Sum64(), h2.Sum64())
+</pre>
+			
+		
+	</div>
+</div>
+
+			</div>
+		</div>
+
+		<div id="pkg-index" class="toggleVisible">
+		<div class="collapsed">
+			<h2 class="toggleButton" title="Click to show Index section">Index ▹</h2>
+		</div>
+		<div class="expanded">
+			<h2 class="toggleButton" title="Click to hide Index section">Index ▾</h2>
+
+		<!-- Table of contents for API; must be named manual-nav to turn off auto nav. -->
+			<div id="manual-nav">
+			<dl>
+			
+			
+			
+				
+				<dd><a href="index.html#Bytes">func Bytes(seed Seed, b []byte) uint64</a></dd>
+			
+				
+				<dd><a href="index.html#String">func String(seed Seed, s string) uint64</a></dd>
+			
+			
+				
+				<dd><a href="index.html#Hash">type Hash</a></dd>
+				
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Hash.BlockSize">func (h *Hash) BlockSize() int</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Hash.Reset">func (h *Hash) Reset()</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Hash.Seed">func (h *Hash) Seed() Seed</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Hash.SetSeed">func (h *Hash) SetSeed(seed Seed)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Hash.Size">func (h *Hash) Size() int</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Hash.Sum">func (h *Hash) Sum(b []byte) []byte</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Hash.Sum64">func (h *Hash) Sum64() uint64</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Hash.Write">func (h *Hash) Write(b []byte) (int, error)</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Hash.WriteByte">func (h *Hash) WriteByte(b byte) error</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#Hash.WriteString">func (h *Hash) WriteString(s string) (int, error)</a></dd>
+				
+			
+				
+				<dd><a href="index.html#Seed">type Seed</a></dd>
+				
+					
+					<dd>&nbsp; &nbsp; <a href="index.html#MakeSeed">func MakeSeed() Seed</a></dd>
+				
+				
+			
+			
+			</dl>
+			</div><!-- #manual-nav -->
+
+		
+		<div id="pkg-examples">
+			<h3>Examples</h3>
+			<div class="js-expandAll expandAll collapsed">(Expand All)</div>
+			<dl>
+			
+			<dd><a class="exampleLink" href="index.html#example_">Package</a></dd>
+			
+			</dl>
+		</div>
+		
+
+		
+			<h3>Package files</h3>
+			<p>
+			<span style="font-size:90%">
+			
+				<a href="../../../src/hash/maphash/maphash.go">maphash.go</a>
+			
+				<a href="../../../src/hash/maphash/maphash_runtime.go">maphash_runtime.go</a>
+			
+			</span>
+			</p>
+		
+		</div><!-- .expanded -->
+		</div><!-- #pkg-index -->
+
+		
+
+		
+		
+		
+			
+			
+			<h2 id="Bytes">func <a href="../../../src/hash/maphash/maphash.go?s=1459:1497#L28">Bytes</a>
+				<a class="permalink" href="index.html#Bytes">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func Bytes(seed <a href="index.html#Seed">Seed</a>, b []<a href="../../builtin/index.html#byte">byte</a>) <a href="../../builtin/index.html#uint64">uint64</a></pre>
+			<p>Bytes returns the hash of b with the given seed.
+<p>Bytes is equivalent to, but more convenient and efficient than:
+<pre>var h Hash
+h.SetSeed(seed)
+h.Write(b)
+return h.Sum64()
+</pre>
+
+			
+			
+
+		
+			
+			
+			<h2 id="String">func <a href="../../../src/hash/maphash/maphash.go?s=1997:2036#L52">String</a>
+				<a class="permalink" href="index.html#String">&#xb6;</a>
+				
+				
+			</h2>
+			<pre>func String(seed <a href="index.html#Seed">Seed</a>, s <a href="../../builtin/index.html#string">string</a>) <a href="../../builtin/index.html#uint64">uint64</a></pre>
+			<p>String returns the hash of s with the given seed.
+<p>String is equivalent to, but more convenient and efficient than:
+<pre>var h Hash
+h.SetSeed(seed)
+h.WriteString(s)
+return h.Sum64()
+</pre>
+
+			
+			
+
+		
+		
+			
+			
+			<h2 id="Hash">type <a href="../../../src/hash/maphash/maphash.go?s=3208:3477#L87">Hash</a>
+				<a class="permalink" href="index.html#Hash">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A Hash computes a seeded hash of a byte sequence.
+<p>The zero Hash is a valid Hash ready to use.
+A zero Hash chooses a random seed for itself during
+the first call to a Reset, Write, Seed, or Sum64 method.
+For control over the seed, use SetSeed.
+<p>The computed hash values depend only on the initial seed and
+the sequence of bytes provided to the Hash object, not on the way
+in which the bytes are provided. For example, the three sequences
+<pre>h.Write([]byte{&apos;f&apos;,&apos;o&apos;,&apos;o&apos;})
+h.WriteByte(&apos;f&apos;); h.WriteByte(&apos;o&apos;); h.WriteByte(&apos;o&apos;)
+h.WriteString(&quot;foo&quot;)
+</pre>
+<p>all have the same effect.
+<p>Hashes are intended to be collision-resistant, even for situations
+where an adversary controls the byte sequences being hashed.
+<p>A Hash is not safe for concurrent use by multiple goroutines, but a Seed is.
+If multiple goroutines must compute the same seeded hash,
+each can declare its own Hash and call SetSeed with a common Seed.
+
+			<pre>type Hash struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+
+			
+				
+				<h3 id="Hash.BlockSize">func (*Hash) <a href="../../../src/hash/maphash/maphash.go?s=8057:8087#L267">BlockSize</a>
+					<a class="permalink" href="index.html#Hash.BlockSize">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (h *<a href="index.html#Hash">Hash</a>) BlockSize() <a href="../../builtin/index.html#int">int</a></pre>
+				<p>BlockSize returns h&apos;s block size.
+
+				
+				
+				
+			
+				
+				<h3 id="Hash.Reset">func (*Hash) <a href="../../../src/hash/maphash/maphash.go?s=6611:6633#L205">Reset</a>
+					<a class="permalink" href="index.html#Hash.Reset">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (h *<a href="index.html#Hash">Hash</a>) Reset()</pre>
+				<p>Reset discards all bytes added to h.
+(The seed remains the same.)
+
+				
+				
+				
+			
+				
+				<h3 id="Hash.Seed">func (*Hash) <a href="../../../src/hash/maphash/maphash.go?s=6019:6045#L184">Seed</a>
+					<a class="permalink" href="index.html#Hash.Seed">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (h *<a href="index.html#Hash">Hash</a>) Seed() <a href="index.html#Seed">Seed</a></pre>
+				<p>Seed returns h&apos;s seed value.
+
+				
+				
+				
+			
+				
+				<h3 id="Hash.SetSeed">func (*Hash) <a href="../../../src/hash/maphash/maphash.go?s=6393:6426#L194">SetSeed</a>
+					<a class="permalink" href="index.html#Hash.SetSeed">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (h *<a href="index.html#Hash">Hash</a>) SetSeed(seed <a href="index.html#Seed">Seed</a>)</pre>
+				<p>SetSeed sets h to use seed, which must have been returned by <a href="index.html#MakeSeed">MakeSeed</a>
+or by another <a href="index.html#Hash.Seed">Hash.Seed</a> method.
+Two <a href="index.html#Hash">Hash</a> objects with the same seed behave identically.
+Two <a href="index.html#Hash">Hash</a> objects with different seeds will very likely behave differently.
+Any bytes added to h before this call will be discarded.
+
+				
+				
+				
+			
+				
+				<h3 id="Hash.Size">func (*Hash) <a href="../../../src/hash/maphash/maphash.go?s=7980:8005#L264">Size</a>
+					<a class="permalink" href="index.html#Hash.Size">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (h *<a href="index.html#Hash">Hash</a>) Size() <a href="../../builtin/index.html#int">int</a></pre>
+				<p>Size returns h&apos;s hash value size, 8 bytes.
+
+				
+				
+				
+			
+				
+				<h3 id="Hash.Sum">func (*Hash) <a href="../../../src/hash/maphash/maphash.go?s=7741:7776#L250">Sum</a>
+					<a class="permalink" href="index.html#Hash.Sum">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (h *<a href="index.html#Hash">Hash</a>) Sum(b []<a href="../../builtin/index.html#byte">byte</a>) []<a href="../../builtin/index.html#byte">byte</a></pre>
+				<p>Sum appends the hash&apos;s current 64-bit value to b.
+It exists for implementing <a href="http://localhost:8080/hash#Hash">hash.Hash</a>.
+For direct calls, it is more efficient to use <a href="index.html#Hash.Sum64">Hash.Sum64</a>.
+
+				
+				
+				
+			
+				
+				<h3 id="Hash.Sum64">func (*Hash) <a href="../../../src/hash/maphash/maphash.go?s=7231:7260#L228">Sum64</a>
+					<a class="permalink" href="index.html#Hash.Sum64">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (h *<a href="index.html#Hash">Hash</a>) Sum64() <a href="../../builtin/index.html#uint64">uint64</a></pre>
+				<p>Sum64 returns h&apos;s current 64-bit value, which depends on
+h&apos;s seed and the sequence of bytes added to h since the
+last call to <a href="index.html#Hash.Reset">Hash.Reset</a> or <a href="index.html#Hash.SetSeed">Hash.SetSeed</a>.
+<p>All bits of the Sum64 result are close to uniformly and
+independently distributed, so it can be safely reduced
+by using bit masking, shifting, or modular arithmetic.
+
+				
+				
+				
+			
+				
+				<h3 id="Hash.Write">func (*Hash) <a href="../../../src/hash/maphash/maphash.go?s=4577:4620#L127">Write</a>
+					<a class="permalink" href="index.html#Hash.Write">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (h *<a href="index.html#Hash">Hash</a>) Write(b []<a href="../../builtin/index.html#byte">byte</a>) (<a href="../../builtin/index.html#int">int</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+				<p>Write adds b to the sequence of bytes hashed by h.
+It always writes all of b and never fails; the count and error result are for implementing <a href="http://localhost:8080/io#Writer">io.Writer</a>.
+
+				
+				
+				
+			
+				
+				<h3 id="Hash.WriteByte">func (*Hash) <a href="../../../src/hash/maphash/maphash.go?s=4298:4336#L116">WriteByte</a>
+					<a class="permalink" href="index.html#Hash.WriteByte">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (h *<a href="index.html#Hash">Hash</a>) WriteByte(b <a href="../../builtin/index.html#byte">byte</a>) <a href="../../builtin/index.html#error">error</a></pre>
+				<p>WriteByte adds b to the sequence of bytes hashed by h.
+It never fails; the error result is for implementing <a href="http://localhost:8080/io#ByteWriter">io.ByteWriter</a>.
+
+				
+				
+				
+			
+				
+				<h3 id="Hash.WriteString">func (*Hash) <a href="../../../src/hash/maphash/maphash.go?s=5526:5575#L159">WriteString</a>
+					<a class="permalink" href="index.html#Hash.WriteString">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func (h *<a href="index.html#Hash">Hash</a>) WriteString(s <a href="../../builtin/index.html#string">string</a>) (<a href="../../builtin/index.html#int">int</a>, <a href="../../builtin/index.html#error">error</a>)</pre>
+				<p>WriteString adds the bytes of s to the sequence of bytes hashed by h.
+It always writes all of s and never fails; the count and error result are for implementing <a href="http://localhost:8080/io#StringWriter">io.StringWriter</a>.
+
+				
+				
+				
+			
+		
+			
+			
+			<h2 id="Seed">type <a href="../../../src/hash/maphash/maphash.go?s=1235:1265#L16">Seed</a>
+				<a class="permalink" href="index.html#Seed">&#xb6;</a>
+				
+				
+			</h2>
+			<p>A Seed is a random value that selects the specific hash function
+computed by a <a href="index.html#Hash">Hash</a>. If two Hashes use the same Seeds, they
+will compute the same hash values for any given input.
+If two Hashes use different Seeds, they are very likely to compute
+distinct hash values for any given input.
+<p>A Seed must be initialized by calling <a href="index.html#MakeSeed">MakeSeed</a>.
+The zero seed is uninitialized and not valid for use with <a href="index.html#Hash">Hash</a>&apos;s SetSeed method.
+<p>Each Seed value is local to a single process and cannot be serialized
+or otherwise recreated in a different process.
+
+			<pre>type Seed struct {
+    <span class="comment">// contains filtered or unexported fields</span>
+}
+</pre>
+
+			
+
+			
+
+			
+			
+			
+
+			
+				
+				<h3 id="MakeSeed">func <a href="../../../src/hash/maphash/maphash.go?s=7358:7378#L234">MakeSeed</a>
+					<a class="permalink" href="index.html#MakeSeed">&#xb6;</a>
+					
+					
+				</h3>
+				<pre>func MakeSeed() <a href="index.html#Seed">Seed</a></pre>
+				<p>MakeSeed returns a new random seed.
+
+				
+				
+			
+
+			
+		
+	
+
+	
+
+
+
+
+
+
+
+<div id="footer">
+Build version go1.22.2.<br>
+Except as <a href="https://developers.google.com/site-policies#restrictions">noted</a>,
+the content of this page is licensed under the
+Creative Commons Attribution 3.0 License,
+and code is licensed under a <a href="http://localhost:8080/LICENSE">BSD license</a>.<br>
+<a href="https://golang.org/doc/tos.html">Terms of Service</a> |
+<a href="https://www.google.com/intl/en/policies/privacy/">Privacy Policy</a>
+</div>
+
+</div><!-- .container -->
+</div><!-- #page -->
+</body>
+</html>

@@ -1,4 +1,4 @@
-name: Backend API Build & Deploy
+name: Backend API Deployment
 
 on:
   push:
@@ -26,12 +26,27 @@ jobs:
           cd src
           go build -o ../bin/lumina-backend
 
-      - name: Deploy to server
+      - name: Set up SSH
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+
+      - name: Add server to known_hosts
+        run: |
+          ssh-keyscan -p ${{ secrets.SERVER_PORT }} ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+
+      - name: Create directories on server
         env:
-          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
           SERVER_USER: ${{ secrets.SERVER_USER }}
           SERVER_HOST: ${{ secrets.SERVER_HOST }}
           SERVER_PORT: ${{ secrets.SERVER_PORT }}
         run: |
-          scp -P $SERVER_PORT bin/lumina-backend $SERVER_USER@$SERVER_HOST:/lumina-back-end
-          ssh -p $SERVER_PORT $SERVER_USER@$SERVER_HOST 'sudo systemctl restart lumina-back-end'
+          ssh -p $SERVER_PORT $SERVER_USER@$SERVER_HOST 'sudo mkdir -p /home/$SERVER_USER/lumina-backend/src && sudo mkdir -p /home/$SERVER_USER/lumina-backend/bin'
+
+      - name: Deploy to server
+        env:
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_PORT: ${{ secrets.SERVER_PORT }}
+        run: |
+          scp -P $SERVER_PORT -r * $SERVER_USER@$SERVER_HOST:/home/$SERVER_USER/lumina-backend

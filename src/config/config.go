@@ -36,10 +36,7 @@ var SmtpHost string
 var SmtpPort string
 
 func InitConfig() {
-	if err := godotenv.Load(); err != nil {
-		log.Fatal(err.Error())
-		return
-	}
+	godotenv.Load()
 
 	Port = getEnv("APP_PORT")
 	FrontAddr = getEnv("APP_FRONT_ADDR")

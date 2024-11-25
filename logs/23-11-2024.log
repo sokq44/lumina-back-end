@@ -1,0 +1,1022 @@
+[2024-11-23 21:16:41.761159271 +0100 CET m=+49.866878886] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-23 21:16:41.760752704 +0100 CET m=+49.866472309] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-23 21:17:32.718133454 +0100 CET m=+100.823853049] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-23 21:18:20.46133357 +0100 CET m=+148.567053175] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-23 21:18:20.461418152 +0100 CET m=+148.567137747] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-23 21:19:10.425465653 +0100 CET m=+198.531185248] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-23 21:19:36.873317505 +0100 CET m=+2.002013051] [localhost:3000] -> 
+{
+	unknown error -> provided password is incorrect or the user isn't verified:,
+	responded with HTTP status -> 401
+	responded with message -> "Provided password is wrong or the specified user isn't verified."
+}
+
+[2024-11-23 21:19:57.49438088 +0100 CET m=+22.623076436] [localhost:3000] -> 
+{
+	database error -> error while getting a user by id: sql: no rows in result set,
+	responded with HTTP status -> 404
+	responded with message -> "Error while trying to get user's data."
+}
+
+[2024-11-23 21:20:21.767832035 +0100 CET m=+46.896527572] [localhost:3000] -> 
+{
+	database error -> while getting a refresh token by user id: sql: no rows in result set,
+	responded with HTTP status -> 404
+	responded with message -> "There's no session associated with the provided user."
+}
+
+[2024-11-23 21:20:21.768599626 +0100 CET m=+46.897295162] [localhost:3000] -> 
+{
+	database error -> while getting a refresh token by user id: sql: no rows in result set,
+	responded with HTTP status -> 404
+	responded with message -> "There's no session associated with the provided user."
+}
+
+[2024-11-23 21:20:27.367018862 +0100 CET m=+52.495714418] [localhost:3000] -> 
+{
+	unknown error -> provided password is incorrect or the user isn't verified:,
+	responded with HTTP status -> 401
+	responded with message -> "Provided password is wrong or the specified user isn't verified."
+}
+
+[2024-11-23 21:21:08.354403577 +0100 CET m=+93.483099113] [localhost:3000] -> 
+{
+	database error -> while getting a refresh token by user id: sql: no rows in result set,
+	responded with HTTP status -> 404
+	responded with message -> "There's no session associated with the provided user."
+}
+
+[2024-11-23 21:21:08.354513437 +0100 CET m=+93.483208983] [localhost:3000] -> 
+{
+	database error -> while getting a refresh token by user id: sql: no rows in result set,
+	responded with HTTP status -> 404
+	responded with message -> "There's no session associated with the provided user."
+}
+
+[2024-11-23 21:21:23.383164865 +0100 CET m=+108.511860421] [localhost:3000] -> 
+{
+	unknown error -> provided password is incorrect or the user isn't verified:,
+	responded with HTTP status -> 401
+	responded with message -> "Provided password is wrong or the specified user isn't verified."
+}
+
+[2024-11-23 21:22:05.458651741 +0100 CET m=+150.587347277] [localhost:3000] -> 
+{
+	unknown error -> provided password is incorrect or the user isn't verified:,
+	responded with HTTP status -> 401
+	responded with message -> "Provided password is wrong or the specified user isn't verified."
+}
+
+[2024-11-23 21:24:12.298374653 +0100 CET m=+277.427070199] [localhost:3000] -> 
+{
+	database error -> while getting a refresh token by user id: sql: no rows in result set,
+	responded with HTTP status -> 404
+	responded with message -> "There's no session associated with the provided user."
+}
+
+[2024-11-23 21:24:12.29847576 +0100 CET m=+277.427171296] [localhost:3000] -> 
+{
+	database error -> while getting a refresh token by user id: sql: no rows in result set,
+	responded with HTTP status -> 404
+	responded with message -> "There's no session associated with the provided user."
+}
+
+[2024-11-23 21:24:14.763046574 +0100 CET m=+279.891742110] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-23 21:24:14.763058717 +0100 CET m=+279.891754253] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-23 21:24:16.720610339 +0100 CET m=+281.849305885] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-23 21:24:16.720598036 +0100 CET m=+281.849293572] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-23 21:24:26.640174744 +0100 CET m=+291.768870300] [localhost:3000] -> 
+{
+	unknown error -> provided password is incorrect or the user isn't verified:,
+	responded with HTTP status -> 401
+	responded with message -> "Provided password is wrong or the specified user isn't verified."
+}
+
+[2024-11-23 21:25:02.668187207 +0100 CET m=+327.796882743] [localhost:3000] -> 
+{
+	database error -> while getting a refresh token by user id: sql: no rows in result set,
+	responded with HTTP status -> 404
+	responded with message -> "There's no session associated with the provided user."
+}
+
+[2024-11-23 21:25:02.669074665 +0100 CET m=+327.797770201] [localhost:3000] -> 
+{
+	database error -> while getting a refresh token by user id: sql: no rows in result set,
+	responded with HTTP status -> 404
+	responded with message -> "There's no session associated with the provided user."
+}
+
+[2024-11-23 21:25:09.60703917 +0100 CET m=+2.376483075] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-23 21:25:09.619184824 +0100 CET m=+2.388628719] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-23 21:25:16.3998954 +0100 CET m=+9.169339295] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-23 21:25:17.709615226 +0100 CET m=+10.479059131] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-23 21:25:17.709654049 +0100 CET m=+10.479097944] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-23 21:25:22.294377476 +0100 CET m=+15.063821381] [localhost:3000] -> 
+{
+	unknown error -> provided password is incorrect or the user isn't verified:,
+	responded with HTTP status -> 401
+	responded with message -> "Provided password is wrong or the specified user isn't verified."
+}
+
+[2024-11-23 22:56:50.18210364 +0100 CET m=+118.239261178] [localhost:3000] -> 
+{
+	database error -> error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 500
+	responded with message -> "There was an error while trying to initialize a password change procedure."
+}
+
+[2024-11-23 22:58:14.097850505 +0100 CET m=+202.155008053] [localhost:3000] -> 
+{
+	database error -> error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 500
+	responded with message -> "There was an error while trying to initialize a password change procedure."
+}
+
+[2024-11-23 22:58:18.780795601 +0100 CET m=+206.837953149] [localhost:3000] -> 
+{
+	database error -> error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 500
+	responded with message -> "There was an error while trying to initialize a password change procedure."
+}
+
+[2024-11-23 22:58:19.331526005 +0100 CET m=+207.388683553] [localhost:3000] -> 
+{
+	database error -> error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 500
+	responded with message -> "There was an error while trying to initialize a password change procedure."
+}
+
+[2024-11-23 22:58:19.58791337 +0100 CET m=+207.645070898] [localhost:3000] -> 
+{
+	database error -> error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 500
+	responded with message -> "There was an error while trying to initialize a password change procedure."
+}
+
+[2024-11-23 22:58:21.482754539 +0100 CET m=+209.539912077] [localhost:3000] -> 
+{
+	database error -> error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 500
+	responded with message -> "There was an error while trying to initialize a password change procedure."
+}
+
+[2024-11-23 22:58:22.232055829 +0100 CET m=+210.289213377] [localhost:3000] -> 
+{
+	database error -> error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 500
+	responded with message -> "There was an error while trying to initialize a password change procedure."
+}
+
+[2024-11-23 22:58:22.697470932 +0100 CET m=+210.754628470] [localhost:3000] -> 
+{
+	database error -> error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 500
+	responded with message -> "There was an error while trying to initialize a password change procedure."
+}
+
+[2024-11-23 22:58:22.905948101 +0100 CET m=+210.963105649] [localhost:3000] -> 
+{
+	database error -> error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 500
+	responded with message -> "There was an error while trying to initialize a password change procedure."
+}
+
+[2024-11-23 22:58:23.231097301 +0100 CET m=+211.288254849] [localhost:3000] -> 
+{
+	database error -> error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 500
+	responded with message -> "There was an error while trying to initialize a password change procedure."
+}
+
+[2024-11-23 22:58:40.076063687 +0100 CET m=+228.133221225] [localhost:3000] -> 
+{
+	database error -> error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 500
+	responded with message -> "There was an error while trying to initialize a password change procedure."
+}
+
+[2024-11-23 22:58:46.248202844 +0100 CET m=+234.305360392] [localhost:3000] -> 
+{
+	database error -> error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 500
+	responded with message -> "There was an error while trying to initialize a password change procedure."
+}
+
+[2024-11-23 22:58:55.852174978 +0100 CET m=+243.909332526] [localhost:3000] -> 
+{
+	database error -> error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 500
+	responded with message -> "There was an error while trying to initialize a password change procedure."
+}
+
+[2024-11-23 22:58:56.907985203 +0100 CET m=+244.965142731] [localhost:3000] -> 
+{
+	database error -> error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 500
+	responded with message -> "There was an error while trying to initialize a password change procedure."
+}
+
+[2024-11-23 22:58:57.49435075 +0100 CET m=+245.551508298] [localhost:3000] -> 
+{
+	database error -> error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 500
+	responded with message -> "There was an error while trying to initialize a password change procedure."
+}
+
+[2024-11-23 22:59:21.731398531 +0100 CET m=+269.788556079] [localhost:3000] -> 
+{
+	database error -> error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 500
+	responded with message -> "There was an error while trying to initialize a password change procedure."
+}
+
+[2024-11-23 22:59:32.218549239 +0100 CET m=+280.275706777] [localhost:3000] -> 
+{
+	database error -> error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 500
+	responded with message -> "There was an error while trying to initialize a password change procedure."
+}
+
+[2024-11-23 22:59:40.044381997 +0100 CET m=+288.101539535] [localhost:3000] -> 
+{
+	database error -> error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 500
+	responded with message -> "There was an error while trying to initialize a password change procedure."
+}
+
+[2024-11-23 22:59:41.142169874 +0100 CET m=+289.199327422] [localhost:3000] -> 
+{
+	database error -> error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 500
+	responded with message -> "There was an error while trying to initialize a password change procedure."
+}
+
+[2024-11-23 22:59:41.745099901 +0100 CET m=+289.802257479] [localhost:3000] -> 
+{
+	database error -> error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 500
+	responded with message -> "There was an error while trying to initialize a password change procedure."
+}
+
+[2024-11-23 23:00:24.467140773 +0100 CET m=+332.524298321] [localhost:3000] -> 
+{
+	database error -> error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 500
+	responded with message -> "There was an error while trying to initialize a password change procedure."
+}
+
+[2024-11-23 23:00:32.040337513 +0100 CET m=+340.097495061] [localhost:3000] -> 
+{
+	database error -> error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 500
+	responded with message -> "There was an error while trying to initialize a password change procedure."
+}
+
+[2024-11-23 23:00:33.553151212 +0100 CET m=+341.610308760] [localhost:3000] -> 
+{
+	database error -> error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 500
+	responded with message -> "There was an error while trying to initialize a password change procedure."
+}
+
+[2024-11-23 23:00:34.444500499 +0100 CET m=+342.501658047] [localhost:3000] -> 
+{
+	database error -> error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 500
+	responded with message -> "There was an error while trying to initialize a password change procedure."
+}
+
+[2024-11-23 23:00:35.286891594 +0100 CET m=+343.344049122] [localhost:3000] -> 
+{
+	database error -> error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 500
+	responded with message -> "There was an error while trying to initialize a password change procedure."
+}
+
+[2024-11-23 23:00:56.64203286 +0100 CET m=+364.699190398] [localhost:3000] -> 
+{
+	database error -> error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 500
+	responded with message -> "There was an error while trying to initialize a password change procedure."
+}
+
+[2024-11-23 23:00:57.355571065 +0100 CET m=+365.412728613] [localhost:3000] -> 
+{
+	database error -> error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 500
+	responded with message -> "There was an error while trying to initialize a password change procedure."
+}
+
+[2024-11-23 23:03:28.027575338 +0100 CET m=+3.280403009] [localhost:3000] -> 
+{
+	database error -> duplicate entry error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 409
+	responded with message -> "A password change request already exists for this user."
+}
+
+[2024-11-23 23:03:35.449458901 +0100 CET m=+10.702286582] [localhost:3000] -> 
+{
+	database error -> duplicate entry error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 409
+	responded with message -> "A password change request already exists for this user."
+}
+
+[2024-11-23 23:03:40.550914675 +0100 CET m=+15.803742346] [localhost:3000] -> 
+{
+	database error -> duplicate entry error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 409
+	responded with message -> "A password change request already exists for this user."
+}
+
+[2024-11-23 23:03:41.967291711 +0100 CET m=+17.220119392] [localhost:3000] -> 
+{
+	database error -> duplicate entry error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 409
+	responded with message -> "A password change request already exists for this user."
+}
+
+[2024-11-23 23:03:42.833936239 +0100 CET m=+18.086763920] [localhost:3000] -> 
+{
+	database error -> duplicate entry error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 409
+	responded with message -> "A password change request already exists for this user."
+}
+
+[2024-11-23 23:03:43.682207148 +0100 CET m=+18.935034809] [localhost:3000] -> 
+{
+	database error -> duplicate entry error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 409
+	responded with message -> "A password change request already exists for this user."
+}
+
+[2024-11-23 23:03:43.870176334 +0100 CET m=+19.123004005] [localhost:3000] -> 
+{
+	database error -> duplicate entry error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 409
+	responded with message -> "A password change request already exists for this user."
+}
+
+[2024-11-23 23:03:44.027071444 +0100 CET m=+19.279899105] [localhost:3000] -> 
+{
+	database error -> duplicate entry error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 409
+	responded with message -> "A password change request already exists for this user."
+}
+
+[2024-11-23 23:03:44.18150578 +0100 CET m=+19.434333461] [localhost:3000] -> 
+{
+	database error -> duplicate entry error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 409
+	responded with message -> "A password change request already exists for this user."
+}
+
+[2024-11-23 23:03:44.35659276 +0100 CET m=+19.609420441] [localhost:3000] -> 
+{
+	database error -> duplicate entry error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 409
+	responded with message -> "A password change request already exists for this user."
+}
+
+[2024-11-23 23:03:44.514823229 +0100 CET m=+19.767650910] [localhost:3000] -> 
+{
+	database error -> duplicate entry error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 409
+	responded with message -> "A password change request already exists for this user."
+}
+
+[2024-11-23 23:03:44.647002808 +0100 CET m=+19.899830489] [localhost:3000] -> 
+{
+	database error -> duplicate entry error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 409
+	responded with message -> "A password change request already exists for this user."
+}
+
+[2024-11-23 23:03:44.800676423 +0100 CET m=+20.053504104] [localhost:3000] -> 
+{
+	database error -> duplicate entry error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 409
+	responded with message -> "A password change request already exists for this user."
+}
+
+[2024-11-23 23:03:44.941608065 +0100 CET m=+20.194435726] [localhost:3000] -> 
+{
+	database error -> duplicate entry error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 409
+	responded with message -> "A password change request already exists for this user."
+}
+
+[2024-11-23 23:03:45.094815025 +0100 CET m=+20.347642706] [localhost:3000] -> 
+{
+	database error -> duplicate entry error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 409
+	responded with message -> "A password change request already exists for this user."
+}
+
+[2024-11-23 23:03:45.227018269 +0100 CET m=+20.479845950] [localhost:3000] -> 
+{
+	database error -> duplicate entry error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 409
+	responded with message -> "A password change request already exists for this user."
+}
+
+[2024-11-23 23:03:45.375994154 +0100 CET m=+20.628821825] [localhost:3000] -> 
+{
+	database error -> duplicate entry error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 409
+	responded with message -> "A password change request already exists for this user."
+}
+
+[2024-11-23 23:03:45.517597541 +0100 CET m=+20.770425202] [localhost:3000] -> 
+{
+	database error -> duplicate entry error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 409
+	responded with message -> "A password change request already exists for this user."
+}
+
+[2024-11-23 23:04:37.080512816 +0100 CET m=+72.333340497] [localhost:3000] -> 
+{
+	database error -> duplicate entry error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 409
+	responded with message -> "A password change request already exists for this user."
+}
+
+[2024-11-23 23:04:45.117109544 +0100 CET m=+80.369937205] [localhost:3000] -> 
+{
+	database error -> error while getting a user by id: sql: no rows in result set,
+	responded with HTTP status -> 404
+	responded with message -> "Error while trying to get user's data."
+}
+
+[2024-11-23 23:05:06.372469179 +0100 CET m=+101.625296860] [localhost:3000] -> 
+{
+	database error -> duplicate entry error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 409
+	responded with message -> "A password change request already exists for this user."
+}
+
+[2024-11-23 23:05:12.828425076 +0100 CET m=+108.081252757] [localhost:3000] -> 
+{
+	database error -> duplicate entry error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 409
+	responded with message -> "A password change request already exists for this user."
+}
+
+[2024-11-23 23:05:15.957747592 +0100 CET m=+111.210575263] [localhost:3000] -> 
+{
+	database error -> duplicate entry error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 409
+	responded with message -> "A password change request already exists for this user."
+}
+
+[2024-11-23 23:05:16.701799168 +0100 CET m=+111.954626830] [localhost:3000] -> 
+{
+	database error -> duplicate entry error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 409
+	responded with message -> "A password change request already exists for this user."
+}
+
+[2024-11-23 23:05:23.022397695 +0100 CET m=+118.275225366] [localhost:3000] -> 
+{
+	database error -> duplicate entry error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 409
+	responded with message -> "A password change request already exists for this user."
+}
+
+[2024-11-23 23:05:25.193543156 +0100 CET m=+120.446370837] [localhost:3000] -> 
+{
+	database error -> duplicate entry error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 409
+	responded with message -> "A password change request already exists for this user."
+}
+
+[2024-11-23 23:05:50.289328852 +0100 CET m=+145.542156523] [localhost:3000] -> 
+{
+	database error -> duplicate entry error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 409
+	responded with message -> "A password change request already exists for this user."
+}
+
+[2024-11-23 23:05:52.97619789 +0100 CET m=+148.229025571] [localhost:3000] -> 
+{
+	database error -> duplicate entry error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 409
+	responded with message -> "A password change request already exists for this user."
+}
+
+[2024-11-23 23:05:53.987522551 +0100 CET m=+149.240350232] [localhost:3000] -> 
+{
+	database error -> duplicate entry error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 409
+	responded with message -> "A password change request already exists for this user."
+}
+
+[2024-11-23 23:05:54.503451991 +0100 CET m=+149.756279652] [localhost:3000] -> 
+{
+	database error -> duplicate entry error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 409
+	responded with message -> "A password change request already exists for this user."
+}
+
+[2024-11-23 23:05:54.801980414 +0100 CET m=+150.054808095] [localhost:3000] -> 
+{
+	database error -> duplicate entry error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 409
+	responded with message -> "A password change request already exists for this user."
+}
+
+[2024-11-23 23:05:54.944780173 +0100 CET m=+150.197607854] [localhost:3000] -> 
+{
+	database error -> duplicate entry error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 409
+	responded with message -> "A password change request already exists for this user."
+}
+
+[2024-11-23 23:05:55.087482577 +0100 CET m=+150.340310248] [localhost:3000] -> 
+{
+	database error -> duplicate entry error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 409
+	responded with message -> "A password change request already exists for this user."
+}
+
+[2024-11-23 23:05:55.222486441 +0100 CET m=+150.475314122] [localhost:3000] -> 
+{
+	database error -> duplicate entry error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 409
+	responded with message -> "A password change request already exists for this user."
+}
+
+[2024-11-23 23:05:55.390933401 +0100 CET m=+150.643761072] [localhost:3000] -> 
+{
+	database error -> duplicate entry error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 409
+	responded with message -> "A password change request already exists for this user."
+}
+
+[2024-11-23 23:05:55.524472407 +0100 CET m=+150.777300088] [localhost:3000] -> 
+{
+	database error -> duplicate entry error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 409
+	responded with message -> "A password change request already exists for this user."
+}
+
+[2024-11-23 23:05:55.656810217 +0100 CET m=+150.909637888] [localhost:3000] -> 
+{
+	database error -> duplicate entry error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 409
+	responded with message -> "A password change request already exists for this user."
+}
+
+[2024-11-23 23:05:55.794004601 +0100 CET m=+151.046832282] [localhost:3000] -> 
+{
+	database error -> duplicate entry error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 409
+	responded with message -> "A password change request already exists for this user."
+}
+
+[2024-11-23 23:05:55.945161862 +0100 CET m=+151.197989543] [localhost:3000] -> 
+{
+	database error -> duplicate entry error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 409
+	responded with message -> "A password change request already exists for this user."
+}
+
+[2024-11-23 23:05:56.092251341 +0100 CET m=+151.345079032] [localhost:3000] -> 
+{
+	database error -> duplicate entry error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 409
+	responded with message -> "A password change request already exists for this user."
+}
+
+[2024-11-23 23:05:56.235277279 +0100 CET m=+151.488104940] [localhost:3000] -> 
+{
+	database error -> duplicate entry error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 409
+	responded with message -> "A password change request already exists for this user."
+}
+
+[2024-11-23 23:05:56.364484687 +0100 CET m=+151.617312368] [localhost:3000] -> 
+{
+	database error -> duplicate entry error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 409
+	responded with message -> "A password change request already exists for this user."
+}
+
+[2024-11-23 23:05:56.501940287 +0100 CET m=+151.754767968] [localhost:3000] -> 
+{
+	database error -> duplicate entry error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 409
+	responded with message -> "A password change request already exists for this user."
+}
+
+[2024-11-23 23:05:56.642435858 +0100 CET m=+151.895263539] [localhost:3000] -> 
+{
+	database error -> duplicate entry error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 409
+	responded with message -> "A password change request already exists for this user."
+}
+
+[2024-11-23 23:06:23.995745437 +0100 CET m=+179.248573098] [localhost:3000] -> 
+{
+	database error -> duplicate entry error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 409
+	responded with message -> "A password change request already exists for this user."
+}
+
+[2024-11-23 23:06:26.067756071 +0100 CET m=+181.320583732] [localhost:3000] -> 
+{
+	database error -> duplicate entry error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 409
+	responded with message -> "A password change request already exists for this user."
+}
+
+[2024-11-23 23:06:27.886644488 +0100 CET m=+183.139472159] [localhost:3000] -> 
+{
+	database error -> duplicate entry error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 409
+	responded with message -> "A password change request already exists for this user."
+}
+
+[2024-11-23 23:06:29.521719306 +0100 CET m=+184.774546967] [localhost:3000] -> 
+{
+	database error -> duplicate entry error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 409
+	responded with message -> "A password change request already exists for this user."
+}
+
+[2024-11-23 23:07:15.530938095 +0100 CET m=+230.783765756] [localhost:3000] -> 
+{
+	database error -> duplicate entry error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 409
+	responded with message -> "A password change request already exists for this user."
+}
+
+[2024-11-23 23:07:21.453089935 +0100 CET m=+236.705917596] [localhost:3000] -> 
+{
+	database error -> error while getting a user by id: sql: no rows in result set,
+	responded with HTTP status -> 404
+	responded with message -> "Error while trying to get user's data."
+}
+
+[2024-11-23 23:07:28.587152515 +0100 CET m=+243.839980186] [localhost:3000] -> 
+{
+	database error -> duplicate entry error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 409
+	responded with message -> "A password change request already exists for this user."
+}
+
+[2024-11-23 23:26:15.976241312 +0100 CET m=+18.187473207] [localhost:3000] -> 
+{
+	database error -> error while getting a password change by token: sql: no rows in result set,
+	responded with HTTP status -> 404
+	responded with message -> "This URL is invalid or has expired."
+}
+
+[2024-11-23 23:27:40.046239098 +0100 CET m=+102.257470983] [localhost:3000] -> 
+{
+	database error -> duplicate entry error while creating a password change token: Error 1062 (23000): Duplicate entry '' for key 'password_change.password_change_unique_user_id',
+	responded with HTTP status -> 409
+	responded with message -> "A password change request already exists for this user."
+}
+
+[2024-11-23 23:28:15.677940639 +0100 CET m=+137.889172524] [localhost:3000] -> 
+{
+	database error -> error while getting a password change by token: sql: no rows in result set,
+	responded with HTTP status -> 404
+	responded with message -> "This URL is invalid or has expired."
+}
+
+[2024-11-23 23:31:12.591531182 +0100 CET m=+141.102826562] [localhost:3000] -> 
+{
+	database error -> error while getting a password change by token: sql: no rows in result set,
+	responded with HTTP status -> 404
+	responded with message -> "This URL is invalid or has expired."
+}
+
+[2024-11-23 23:31:24.524518152 +0100 CET m=+8.168725497] [localhost:3000] -> 
+{
+	database error -> error while getting a password change by token: sql: no rows in result set,
+	responded with HTTP status -> 404
+	responded with message -> "No such password change request was found."
+}
+
+[2024-11-23 23:31:56.183983624 +0100 CET m=+39.828190969] [localhost:3000] -> 
+{
+	database error -> error while getting a password change by token: sql: no rows in result set,
+	responded with HTTP status -> 404
+	responded with message -> "No such password change request was found."
+}
+
+[2024-11-23 23:32:14.146375799 +0100 CET m=+10.206149010] [localhost:3000] -> 
+{
+	database error -> error while getting a password change by token: sql: no rows in result set,
+	responded with HTTP status -> 404
+	responded with message -> "No such password change request was found."
+}
+
+[2024-11-23 23:32:46.47125802 +0100 CET m=+42.531031231] [localhost:3000] -> 
+{
+	database error -> error while getting a password change by token: sql: no rows in result set,
+	responded with HTTP status -> 404
+	responded with message -> "No such password change request was found."
+}
+
+[2024-11-23 23:33:12.814465184 +0100 CET m=+68.874238395] [localhost:3000] -> 
+{
+	database error -> error while getting a password change by token: sql: no rows in result set,
+	responded with HTTP status -> 404
+	responded with message -> "No such password change request was found."
+}
+
+[2024-11-23 23:33:54.20839943 +0100 CET m=+8.748970234] [localhost:3000] -> 
+{
+	database error -> error while getting a password change by token: sql: no rows in result set,
+	responded with HTTP status -> 404
+	responded with message -> "No such password change request was found."
+}
+
+[2024-11-23 23:34:16.488068849 +0100 CET m=+7.586672048] [localhost:3000] -> 
+{
+	database error -> error while getting a password change by token: sql: no rows in result set,
+	responded with HTTP status -> 404
+	responded with message -> "No such password change request was found."
+}
+
+[2024-11-23 23:35:47.707922725 +0100 CET m=+98.806525914] [localhost:3000] -> 
+{
+	database error -> error while getting a password change by token: sql: no rows in result set,
+	responded with HTTP status -> 404
+	responded with message -> "No such password change request was found."
+}
+
+[2024-11-23 23:39:41.949931461 +0100 CET m=+333.048534640] [localhost:3000] -> 
+{
+	database error -> while getting a refresh token by user id: sql: no rows in result set,
+	responded with HTTP status -> 404
+	responded with message -> "There's no session associated with the provided user."
+}
+
+[2024-11-23 23:39:41.949938594 +0100 CET m=+333.048541773] [localhost:3000] -> 
+{
+	database error -> while getting a refresh token by user id: sql: no rows in result set,
+	responded with HTTP status -> 404
+	responded with message -> "There's no session associated with the provided user."
+}
+
+[2024-11-23 23:40:16.232245829 +0100 CET m=+367.330849008] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-23 23:40:18.910231242 +0100 CET m=+370.008834431] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-23 23:40:20.411549461 +0100 CET m=+371.510152650] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-23 23:40:26.94520676 +0100 CET m=+378.043809949] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-23 23:40:55.654026579 +0100 CET m=+406.752629759] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-23 23:41:00.719223922 +0100 CET m=+411.817827101] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-23 23:41:05.751388358 +0100 CET m=+416.849991537] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-23 23:41:16.842786932 +0100 CET m=+427.941390111] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-23 23:41:19.738740047 +0100 CET m=+430.837343226] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-23 23:41:28.298109277 +0100 CET m=+439.396712456] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-23 23:41:33.802580492 +0100 CET m=+444.901183681] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-23 23:41:34.540001496 +0100 CET m=+445.638604675] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-23 23:41:34.689085877 +0100 CET m=+445.787689057] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-23 23:41:39.831200488 +0100 CET m=+450.929803667] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-23 23:41:48.451391481 +0100 CET m=+459.549994660] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-23 23:41:48.4514964 +0100 CET m=+459.550099589] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-23 23:41:56.46556506 +0100 CET m=+467.564168239] [localhost:3000] -> 
+{
+	unknown error -> provided password is incorrect or the user isn't verified:,
+	responded with HTTP status -> 401
+	responded with message -> "Provided password is wrong or the specified user isn't verified."
+}
+
+[2024-11-23 23:42:08.076408971 +0100 CET m=+479.175012160] [localhost:3000] -> 
+{
+	unknown error -> provided password is incorrect or the user isn't verified:,
+	responded with HTTP status -> 401
+	responded with message -> "Provided password is wrong or the specified user isn't verified."
+}
+
+[2024-11-23 23:54:45.805156447 +0100 CET m=+1236.903759626] [localhost:3000] -> 
+{
+	database error -> while getting a refresh token by user id: sql: no rows in result set,
+	responded with HTTP status -> 404
+	responded with message -> "There's no session associated with the provided user."
+}
+
+[2024-11-23 23:54:45.805149634 +0100 CET m=+1236.903752813] [localhost:3000] -> 
+{
+	database error -> while getting a refresh token by user id: sql: no rows in result set,
+	responded with HTTP status -> 404
+	responded with message -> "There's no session associated with the provided user."
+}
+
+[2024-11-23 23:55:36.952310627 +0100 CET m=+1288.050913806] [localhost:3000] -> 
+{
+	database error -> while getting a refresh token by user id: sql: no rows in result set,
+	responded with HTTP status -> 404
+	responded with message -> "There's no session associated with the provided user."
+}
+
+[2024-11-23 23:55:36.952315095 +0100 CET m=+1288.050918275] [localhost:3000] -> 
+{
+	database error -> while getting a refresh token by user id: sql: no rows in result set,
+	responded with HTTP status -> 404
+	responded with message -> "There's no session associated with the provided user."
+}
+
+[2024-11-23 23:56:08.745709719 +0100 CET m=+1319.844312898] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-23 23:56:08.760607018 +0100 CET m=+1319.859210207] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+

@@ -1,0 +1,12 @@
+[2024-11-08 23:59:39.12652526 +0100 CET m=+1.152928072] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+[2024-11-08 23:59:40.063538326 +0100 CET m=+2.089941128] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}

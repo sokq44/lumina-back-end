@@ -1,0 +1,1092 @@
+[2024-11-24 00:27:13.188040024 +0100 CET m=+10.144359099] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:27:37.27218096 +0100 CET m=+34.228500055] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:27:38.701842054 +0100 CET m=+35.658161149] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:27:38.828637157 +0100 CET m=+35.784956232] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:27:38.954493148 +0100 CET m=+35.910812233] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:31:56.320365717 +0100 CET m=+293.276684802] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:31:56.339423813 +0100 CET m=+293.295742898] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:32:05.32595855 +0100 CET m=+302.282277655] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:32:05.338564021 +0100 CET m=+302.294883116] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:32:19.799726679 +0100 CET m=+316.756045804] [localhost:3000] -> 
+{
+	unknown error -> provided password is incorrect or the user isn't verified:,
+	responded with HTTP status -> 401
+	responded with message -> "Provided password is wrong or the specified user isn't verified."
+}
+
+[2024-11-24 00:32:49.845891701 +0100 CET m=+346.802210796] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:32:49.867190179 +0100 CET m=+346.823509275] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:34:31.346209856 +0100 CET m=+448.302528951] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:34:31.368142187 +0100 CET m=+448.324461272] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:34:31.449144705 +0100 CET m=+448.405463790] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:34:31.464916876 +0100 CET m=+448.421235961] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:34:35.17084274 +0100 CET m=+452.127161825] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:34:35.176416247 +0100 CET m=+452.132735342] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:34:44.955403031 +0100 CET m=+461.911722116] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:34:44.975306221 +0100 CET m=+461.931625306] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:34:45.058430876 +0100 CET m=+462.014749962] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:34:45.06986778 +0100 CET m=+462.026186996] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:34:47.411258883 +0100 CET m=+464.367577968] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:34:47.420776715 +0100 CET m=+464.377095810] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:34:57.554311419 +0100 CET m=+474.510630524] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:34:57.560516214 +0100 CET m=+474.516835309] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:34:59.662907224 +0100 CET m=+476.619226320] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:34:59.668281032 +0100 CET m=+476.624600107] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:35:08.485228905 +0100 CET m=+485.441547990] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:35:08.491656202 +0100 CET m=+485.447975287] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:35:25.250493576 +0100 CET m=+502.206812671] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:35:25.269652644 +0100 CET m=+502.225971729] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:35:25.357096326 +0100 CET m=+502.313415411] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:35:25.379305082 +0100 CET m=+502.335624177] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:35:37.324812388 +0100 CET m=+4.215260839] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:35:37.331308055 +0100 CET m=+4.221756516] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:35:50.07737133 +0100 CET m=+16.967819811] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:35:50.092386856 +0100 CET m=+16.982835337] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:35:50.158582825 +0100 CET m=+17.049031306] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:35:50.169253074 +0100 CET m=+17.059701535] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:35:53.590087418 +0100 CET m=+20.480535909] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:35:53.591822741 +0100 CET m=+20.482271222] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:36:07.689076511 +0100 CET m=+34.579525002] [localhost:3000] -> 
+{
+	database error -> error while getting a user by id: sql: no rows in result set,
+	responded with HTTP status -> 404
+	responded with message -> "Error while trying to get user's data."
+}
+
+[2024-11-24 00:37:01.652583485 +0100 CET m=+88.543031946] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:01.652682353 +0100 CET m=+88.543130814] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:18.163317056 +0100 CET m=+105.053765537] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:18.163512317 +0100 CET m=+105.053960798] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:18.212703186 +0100 CET m=+105.103151647] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:18.213833952 +0100 CET m=+105.104282423] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:18.966191047 +0100 CET m=+105.856639508] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:18.966291778 +0100 CET m=+105.856740239] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:18.99180802 +0100 CET m=+105.882256491] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:18.995826326 +0100 CET m=+105.886274797] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:19.64713464 +0100 CET m=+106.537583131] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:19.647215924 +0100 CET m=+106.537664395] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:19.672741224 +0100 CET m=+106.563189695] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:19.675108366 +0100 CET m=+106.565556827] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:19.946190628 +0100 CET m=+106.836639099] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:19.946279506 +0100 CET m=+106.836727977] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:19.986362592 +0100 CET m=+106.876811053] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:19.989181862 +0100 CET m=+106.879630343] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:20.266133171 +0100 CET m=+107.156581652] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:20.266326388 +0100 CET m=+107.156774869] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:20.294504472 +0100 CET m=+107.184952933] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:20.294623227 +0100 CET m=+107.185071688] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:20.543118235 +0100 CET m=+107.433566696] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:20.546496095 +0100 CET m=+107.436944566] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:20.574400229 +0100 CET m=+107.464848700] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:20.574599917 +0100 CET m=+107.465048389] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:20.735394526 +0100 CET m=+107.625843007] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:20.735508722 +0100 CET m=+107.625957203] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:20.761308473 +0100 CET m=+107.651756934] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:20.767683621 +0100 CET m=+107.658132082] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:21.094251368 +0100 CET m=+107.984699829] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:21.094325158 +0100 CET m=+107.984773609] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:21.111160536 +0100 CET m=+108.001609007] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:21.111249155 +0100 CET m=+108.001697616] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:21.432273701 +0100 CET m=+108.322722182] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:21.432378961 +0100 CET m=+108.322827442] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:21.450669571 +0100 CET m=+108.341118042] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:21.45075891 +0100 CET m=+108.341207371] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:21.75434772 +0100 CET m=+108.644796201] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:21.754461085 +0100 CET m=+108.644909566] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:21.784905278 +0100 CET m=+108.675353760] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:21.788392556 +0100 CET m=+108.678841027] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:22.317602315 +0100 CET m=+109.208050796] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:22.31769992 +0100 CET m=+109.208148402] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:22.337805895 +0100 CET m=+109.228254356] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:22.339010602 +0100 CET m=+109.229459073] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:22.802455529 +0100 CET m=+109.692903990] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:22.802533207 +0100 CET m=+109.692981668] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:22.821209088 +0100 CET m=+109.711657559] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:22.821302124 +0100 CET m=+109.711750585] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:23.281401252 +0100 CET m=+110.171849713] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:23.28146313 +0100 CET m=+110.171911591] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:23.299727249 +0100 CET m=+110.190175710] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:23.299851445 +0100 CET m=+110.190299916] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:23.68934768 +0100 CET m=+110.579796141] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:23.693803917 +0100 CET m=+110.584252388] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:23.723137092 +0100 CET m=+110.613585553] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:23.723256358 +0100 CET m=+110.613704820] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:23.853629898 +0100 CET m=+110.744078359] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:23.853759564 +0100 CET m=+110.744208025] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:23.874241533 +0100 CET m=+110.764690004] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:23.874276148 +0100 CET m=+110.764724609] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:24.027347311 +0100 CET m=+110.917795782] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:24.029202882 +0100 CET m=+110.919651353] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:24.046362105 +0100 CET m=+110.936810576] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:24.046399075 +0100 CET m=+110.936847546] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:24.388284169 +0100 CET m=+111.278732630] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:24.390285717 +0100 CET m=+111.280734178] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:24.424382532 +0100 CET m=+111.314831004] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:24.424475048 +0100 CET m=+111.314923509] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:24.577295094 +0100 CET m=+111.467743555] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:24.577396226 +0100 CET m=+111.467844687] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:24.596602664 +0100 CET m=+111.487051125] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:24.596647158 +0100 CET m=+111.487095619] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:24.717910078 +0100 CET m=+111.608358559] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:24.719455772 +0100 CET m=+111.609904253] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:24.76272862 +0100 CET m=+111.653177101] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:24.764141181 +0100 CET m=+111.654589662] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:25.29950644 +0100 CET m=+112.189954922] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:25.299586011 +0100 CET m=+112.190034493] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:25.335018822 +0100 CET m=+112.225467303] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:25.335245663 +0100 CET m=+112.225694144] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:34.86302859 +0100 CET m=+121.753477061] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:34.86407171 +0100 CET m=+121.754520191] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:57.92363592 +0100 CET m=+144.814084381] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:37:57.936542242 +0100 CET m=+144.826990713] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:38:00.219678749 +0100 CET m=+147.110127230] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:38:00.225973013 +0100 CET m=+147.116421494] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:38:02.695957148 +0100 CET m=+149.586405619] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:38:02.703258414 +0100 CET m=+149.593706895] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:38:02.755188772 +0100 CET m=+149.645637283] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:38:02.821091495 +0100 CET m=+149.711539966] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:38:03.744801357 +0100 CET m=+150.635249828] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:38:03.79321952 +0100 CET m=+150.683667991] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:38:04.05477468 +0100 CET m=+150.945223152] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:38:04.070169746 +0100 CET m=+150.960618227] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:38:16.001208399 +0100 CET m=+162.891656860] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:38:16.185179458 +0100 CET m=+163.075627929] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:38:30.054381253 +0100 CET m=+176.944829734] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:38:30.17098967 +0100 CET m=+177.061438141] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:38:31.738411506 +0100 CET m=+178.628859977] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:38:31.979024005 +0100 CET m=+178.869472466] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:38:59.052571226 +0100 CET m=+205.943019687] [localhost:3000] -> 
+{
+	unknown error -> provided password is incorrect or the user isn't verified:,
+	responded with HTTP status -> 401
+	responded with message -> "Provided password is wrong or the specified user isn't verified."
+}
+
+[2024-11-24 00:39:55.456506427 +0100 CET m=+262.346954908] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:39:55.456759607 +0100 CET m=+262.347208088] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:40:04.383363719 +0100 CET m=+271.273812200] [localhost:3000] -> 
+{
+	unknown error -> provided password is incorrect or the user isn't verified:,
+	responded with HTTP status -> 401
+	responded with message -> "Provided password is wrong or the specified user isn't verified."
+}
+
+[2024-11-24 00:40:12.04079111 +0100 CET m=+278.931239581] [localhost:3000] -> 
+{
+	unknown error -> provided password is incorrect or the user isn't verified:,
+	responded with HTTP status -> 401
+	responded with message -> "Provided password is wrong or the specified user isn't verified."
+}
+
+[2024-11-24 00:40:29.900455572 +0100 CET m=+296.790904054] [localhost:3000] -> 
+{
+	database error -> while getting a refresh token by user id: sql: no rows in result set,
+	responded with HTTP status -> 404
+	responded with message -> "There's no session associated with the provided user."
+}
+
+[2024-11-24 00:40:29.900635193 +0100 CET m=+296.791083674] [localhost:3000] -> 
+{
+	database error -> while getting a refresh token by user id: sql: no rows in result set,
+	responded with HTTP status -> 404
+	responded with message -> "There's no session associated with the provided user."
+}
+
+[2024-11-24 00:40:37.795625286 +0100 CET m=+304.686073757] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:40:37.795779198 +0100 CET m=+304.686227669] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:40:40.040732834 +0100 CET m=+306.931181315] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+
+[2024-11-24 00:40:40.040913867 +0100 CET m=+306.931362348] [localhost:3000] -> 
+{
+	jwt error -> no access_token cookie present,
+	responded with HTTP status -> 401
+	responded with message -> "There was no authentication medium present in the request."
+}
+

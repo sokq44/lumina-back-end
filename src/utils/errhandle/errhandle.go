@@ -33,6 +33,11 @@ var shouldVerbose bool
 func Init(l string, v bool) {
 	location = l
 	shouldVerbose = v
+
+	err := os.MkdirAll(location, os.ModePerm)
+	if err != nil {
+		log.Fatalf("failed to create the logs directory")
+	}
 }
 
 func (e *Error) Handle(w http.ResponseWriter, r *http.Request) bool {

@@ -12,14 +12,11 @@ import (
 	"net/http"
 )
 
-// TODO: General Documentation
-// TODO: automatic logs directory creation
-
 func main() {
 	config.InitConfig()
 	database.InitDb()
 	emails.InitEmails()
-	errhandle.Init("/home/sokq/Projects/lumina/lumina-back-end/logs", true)
+	errhandle.Init("./../logs", true)
 
 	port := config.Port
 

@@ -41,7 +41,7 @@ jobs:
           SERVER_HOST: ${{ secrets.SERVER_HOST }}
           SERVER_PORT: ${{ secrets.SERVER_PORT }}
         run: |
-          ssh -p $SERVER_PORT $SERVER_USER@$SERVER_HOST 'sudo mkdir -p /home/$SERVER_USER/lumina-back-end/src /home/$SERVER_USER/lumina-back-end/bin'
+          ssh -p $SERVER_PORT $SERVER_USER@$SERVER_HOST 'sudo mkdir -p /home/$SERVER_USER/lumina-back-end/src && sudo mkdir -p /home/$SERVER_USER/lumina-back-end/bin'
 
       - name: Deploy to server
         env:

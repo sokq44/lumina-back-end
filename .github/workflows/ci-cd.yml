@@ -49,7 +49,7 @@ jobs:
           SERVER_HOST: ${{ secrets.SERVER_HOST }}
           SERVER_PORT: ${{ secrets.SERVER_PORT }}
         run: |
-          scp -P $SERVER_PORT -r . $SERVER_USER@$SERVER_HOST:/home/$SERVER_USER/lumina-back-end/src
+          scp -P $SERVER_PORT -r * $SERVER_USER@$SERVER_HOST:/home/$SERVER_USER/lumina-back-end
 
       - name: Build on server
         env:

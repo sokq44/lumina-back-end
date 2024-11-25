@@ -9,3 +9,6 @@ bin/
 
 # logs
 log/
+
+# vscode
+.vscode

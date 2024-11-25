@@ -51,8 +51,15 @@ var RegisterUser http.HandlerFunc = func(w http.ResponseWriter, r *http.Request)
 		return
 	}
 	if exists {
-		w.WriteHeader(http.StatusConflict)
-		return
+		e := errhandle.Error{
+			Type:          errhandle.DatabaseError,
+			ServerMessage: "user already exists",
+			ClientMessage: "A user with these credentials already exists.",
+			Status:        http.StatusConflict,
+		}
+		if e.Handle(w, r) {
+			return
+		}
 	}
 
 	u.Password = crypt.Sha256(body.Password)
@@ -161,8 +168,15 @@ var LoginUser http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
 
 	hashedPasswd := crypt.Sha256(body.Password)
 	if !user.Verified || hashedPasswd != user.Password {
-		w.WriteHeader(http.StatusForbidden)
-		return
+		e := errhandle.Error{
+			Type:          errhandle.HandlerError,
+			ServerMessage: "provided password is incorrect or the user isn't verified:",
+			ClientMessage: "Provided password is wrong or the specified user isn't verified.",
+			Status:        http.StatusUnauthorized,
+		}
+		if e.Handle(w, r) {
+			return
+		}
 	}
 
 	now := time.Now()

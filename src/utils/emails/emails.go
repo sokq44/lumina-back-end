@@ -80,7 +80,7 @@ func (client *SmtpClient) SendEmail(receiver string, subject string, body string
 
 func (client *SmtpClient) SendVerificationEmail(receiver string, token string) *errhandle.Error {
 	front := config.FrontAddr
-	emailBody := fmt.Sprintf("Verification Link: %s/verify-email/%s", front, token)
+	emailBody := fmt.Sprintf("Verification Link: %s/email/%s", front, token)
 
 	err := client.SendEmail(receiver, "Subject: Email Verification\r\n", emailBody)
 	if err != nil {
@@ -92,7 +92,7 @@ func (client *SmtpClient) SendVerificationEmail(receiver string, token string) *
 
 func (client *SmtpClient) SendPasswordChangeEmail(receiver string, token string) *errhandle.Error {
 	front := config.FrontAddr
-	emailBody := fmt.Sprintf("Change your password here: %s/change-password/%s", front, token)
+	emailBody := fmt.Sprintf("Change your password here: %s/user/password/%s", front, token)
 
 	err := client.SendEmail(receiver, "Subject: Change Your Password\r\n", emailBody)
 	if err != nil {

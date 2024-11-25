@@ -41,5 +41,5 @@ jobs:
           SERVER_HOST: ${{ secrets.SERVER_HOST }}
           SERVER_PORT: ${{ secrets.SERVER_PORT }}
         run: |
-          scp -P $SERVER_PORT bin/lumina-backend $SERVER_USER@$SERVER_HOST:/lumina-backend
+          scp -P $SERVER_PORT bin/lumina-backend $SERVER_USER@$SERVER_HOST:/home/$SERVER_USER/lumina-backend
           ssh -p $SERVER_PORT $SERVER_USER@$SERVER_HOST 'sudo systemctl restart lumina-back-end'

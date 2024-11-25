@@ -13,12 +13,13 @@ import (
 )
 
 // TODO: General Documentation
+// TODO: automatic logs directory creation
 
 func main() {
 	config.InitConfig()
 	database.InitDb()
 	emails.InitEmails()
-	errhandle.Init("/home/sokq/Projects/article-app/backend/logs", true)
+	errhandle.Init("/home/sokq/Projects/lumina/lumina-back-end/logs", true)
 
 	port := config.Port
 
@@ -93,6 +94,7 @@ func main() {
 			handlers.ChangePassword,
 		),
 	)
+
 	http.HandleFunc(
 		"/user/password-change-init",
 		middleware.Method(

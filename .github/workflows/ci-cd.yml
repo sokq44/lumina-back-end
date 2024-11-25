@@ -35,6 +35,14 @@ jobs:
         run: |
           ssh-keyscan -p ${{ secrets.SERVER_PORT }} ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
 
+      - name: Create directories on server
+        env:
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_HOST: ${{ secrets.SERVER_HOST }}
+          SERVER_PORT: ${{ secrets.SERVER_PORT }}
+        run: |
+          ssh -p $SERVER_PORT $SERVER_USER@$SERVER_HOST 'mkdir -p /home/$SERVER_USER/lumina-back-end/src /home/$SERVER_USER/lumina-back-end/bin'
+
       - name: Deploy to server
         env:
           SERVER_USER: ${{ secrets.SERVER_USER }}

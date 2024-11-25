@@ -41,7 +41,7 @@ jobs:
           SERVER_HOST: ${{ secrets.SERVER_HOST }}
           SERVER_PORT: ${{ secrets.SERVER_PORT }}
         run: |
-          ssh -p $SERVER_PORT $SERVER_USER@$SERVER_HOST 'sudo mkdir -p /home/$SERVER_USER/lumina-back-end/src && sudo mkdir -p /home/$SERVER_USER/lumina-back-end/bin'
+          ssh -p $SERVER_PORT $SERVER_USER@$SERVER_HOST 'sudo mkdir -p /home/$SERVER_USER/lumina-backend/src && sudo mkdir -p /home/$SERVER_USER/lumina-backend/bin'
 
       - name: Deploy to server
         env:
@@ -49,12 +49,4 @@ jobs:
           SERVER_HOST: ${{ secrets.SERVER_HOST }}
           SERVER_PORT: ${{ secrets.SERVER_PORT }}
         run: |
-          scp -P $SERVER_PORT -r * $SERVER_USER@$SERVER_HOST:/home/$SERVER_USER/lumina-back-end
-
-      - name: Build on server
-        env:
-          SERVER_USER: ${{ secrets.SERVER_USER }}
-          SERVER_HOST: ${{ secrets.SERVER_HOST }}
-          SERVER_PORT: ${{ secrets.SERVER_PORT }}
-        run: |
-          ssh -p $SERVER_PORT $SERVER_USER@$SERVER_HOST 'cd /home/$SERVER_USER/lumina-back-end/src && go build -o ../bin/lumina-backend'
+          scp -P $SERVER_PORT -r * $SERVER_USER@$SERVER_HOST:/home/$SERVER_USER/lumina-backend

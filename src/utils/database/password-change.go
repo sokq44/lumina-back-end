@@ -6,6 +6,8 @@ import (
 	"database/sql"
 	"fmt"
 	"net/http"
+
+	"github.com/go-sql-driver/mysql"
 )
 
 func (db *Database) CreatePasswordChange(p models.PasswordChange) *errhandle.Error {
@@ -15,6 +17,14 @@ func (db *Database) CreatePasswordChange(p models.PasswordChange) *errhandle.Err
 	)
 
 	if err != nil {
+		if mysqlErr, ok := err.(*mysql.MySQLError); ok && mysqlErr.Number == 1062 {
+			return &errhandle.Error{
+				Type:          errhandle.DatabaseError,
+				ServerMessage: fmt.Sprintf("duplicate entry error while creating a password change token: %v", err),
+				ClientMessage: "A password change request already exists for this user.",
+				Status:        http.StatusConflict,
+			}
+		}
 		return &errhandle.Error{
 			Type:          errhandle.DatabaseError,
 			ServerMessage: fmt.Sprintf("error while creating a password change token: %v", err),
@@ -41,7 +51,7 @@ func (db *Database) GetPasswordChangeByToken(token string) (*models.PasswordChan
 		return nil, &errhandle.Error{
 			Type:          errhandle.DatabaseError,
 			ServerMessage: fmt.Sprintf("error while getting a password change by token: %v", err),
-			ClientMessage: "This URL is invalid or has expired.",
+			ClientMessage: "No such password change request was found.",
 			Status:        http.StatusNotFound,
 		}
 	} else if err != nil {

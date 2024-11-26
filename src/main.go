@@ -7,17 +7,26 @@ import (
 	"backend/utils/database"
 	"backend/utils/emails"
 	"backend/utils/errhandle"
+	"flag"
 	"fmt"
 	"log"
 	"net/http"
 )
 
-func main() {
-	config.InitConfig()
+func initApplication() {
+	configPath := flag.String("config", "./.env", "Path to the [.env] configuration file.")
+	logsPath := flag.String("logs", "../logs", "Path to the [logs] directory.")
+	verbose := flag.Bool("verbose", false, "Should verbose to the standard output?")
+
+	flag.Parse()
+
+	config.InitConfig(*configPath)
 	database.InitDb()
 	emails.InitEmails()
-	errhandle.Init("./../logs", true)
+	errhandle.Init(*logsPath, *verbose)
+}
 
+func initServer() {
 	port := config.Port
 
 	http.HandleFunc(
@@ -104,4 +113,9 @@ func main() {
 	if err := http.ListenAndServe(fmt.Sprintf(":%s", port), nil); err != nil {
 		log.Fatal("Error while trying to start the server.")
 	}
+}
+
+func main() {
+	initApplication()
+	initServer()
 }

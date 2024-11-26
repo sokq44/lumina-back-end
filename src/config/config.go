@@ -35,8 +35,10 @@ var SmtpPass string
 var SmtpHost string
 var SmtpPort string
 
-func InitConfig() {
-	godotenv.Load()
+func InitConfig(file string) {
+	if err := godotenv.Load(file); err != nil {
+		log.Fatalln(err)
+	}
 
 	Port = getEnv("APP_PORT")
 	FrontAddr = getEnv("APP_FRONT_ADDR")

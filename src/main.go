@@ -13,22 +13,22 @@ import (
 	"net/http"
 )
 
-func initApplication() {
-	configPath := flag.String("config", "./.env", "Path to the [.env] configuration file.")
-	logsPath := flag.String("logs", "../logs", "Path to the [logs] directory.")
-	verbose := flag.Bool("verbose", false, "Should verbose to the standard output?")
+func initApplication() string {
+	appPort := flag.String("p", "8080", "Port on which the application runs.")
+	logsPath := flag.String("l", "./lumina-logs", "Path to the [logs] directory.")
+	verbose := flag.Bool("v", false, "Should verbose to the standard output?")
 
 	flag.Parse()
 
-	config.InitConfig(*configPath)
+	config.InitConfig()
 	database.InitDb()
 	emails.InitEmails()
 	errhandle.Init(*logsPath, *verbose)
+
+	return *appPort
 }
 
-func initServer() {
-	port := config.Port
-
+func initServer(port string) {
 	http.HandleFunc(
 		"/user/login",
 		middleware.Method(
@@ -116,6 +116,6 @@ func initServer() {
 }
 
 func main() {
-	initApplication()
-	initServer()
+	port := initApplication()
+	initServer(port)
 }

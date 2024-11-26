@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"log"
 	"net/http"
-	"os"
 	"time"
 
 	"github.com/go-sql-driver/mysql"
@@ -51,7 +50,7 @@ func InitDb() {
 		log.Fatalf("failed to connect to the database: %v", err.Error())
 	}
 
-	log.Printf("intialized the database service (%v:%v)", os.Getenv("DB_HOST"), os.Getenv("DB_PORT"))
+	log.Printf("intialized the database service (%v:%v)", host, port)
 
 	go db.StartCleaningDb()
 }

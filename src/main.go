@@ -14,7 +14,7 @@ import (
 )
 
 func initApplication() string {
-	appPort := flag.String("p", "8080", "Port on which the application runs.")
+	appPort := flag.String("p", "3000", "Port on which the application runs.")
 	logsPath := flag.String("l", "./lumina-logs", "Path to the [logs] directory.")
 	verbose := flag.Bool("v", false, "Should verbose to the standard output?")
 
@@ -109,7 +109,7 @@ func initServer(port string) {
 		),
 	)
 
-	log.Println("serving on http://localhost:"+port, "(press ctrl + c to stop the process)")
+	log.Println("serving on http://0.0.0.0:"+port, "(press ctrl + c to stop the process)")
 	if err := http.ListenAndServe(fmt.Sprintf(":%s", port), nil); err != nil {
 		log.Fatal("Error while trying to start the server.")
 	}

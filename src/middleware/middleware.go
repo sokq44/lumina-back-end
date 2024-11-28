@@ -23,7 +23,6 @@ func CORS(next http.HandlerFunc) http.HandlerFunc {
 
 		next.ServeHTTP(w, r)
 	})
-
 }
 
 func Authenticate(next http.HandlerFunc) http.HandlerFunc {

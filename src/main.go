@@ -31,85 +31,103 @@ func initApplication() string {
 func initServer(port string) {
 	http.HandleFunc(
 		"/user/login",
-		middleware.Method(
-			"POST",
-			handlers.LoginUser,
+		middleware.CORS(
+			middleware.Method(
+				"POST",
+				handlers.LoginUser,
+			),
 		),
 	)
 
 	http.HandleFunc(
 		"/user/register",
-		middleware.Method(
-			"POST",
-			handlers.RegisterUser,
+		middleware.CORS(
+			middleware.Method(
+				"POST",
+				handlers.RegisterUser,
+			),
 		),
 	)
 
 	http.HandleFunc(
 		"/user/verify-email",
-		middleware.Method(
-			"PATCH",
-			handlers.VerifyEmail,
+		middleware.CORS(
+			middleware.Method(
+				"PATCH",
+				handlers.VerifyEmail,
+			),
 		),
 	)
 
 	http.HandleFunc(
 		"/user/logout",
-		middleware.Authenticate(
-			middleware.Method(
-				"DELETE",
-				handlers.LogoutUser,
+		middleware.CORS(
+			middleware.Authenticate(
+				middleware.Method(
+					"DELETE",
+					handlers.LogoutUser,
+				),
 			),
 		),
 	)
 
 	http.HandleFunc(
 		"/user/logged-in",
-		middleware.Authenticate(
-			middleware.Method(
-				"GET",
-				func(w http.ResponseWriter, r *http.Request) {},
+		middleware.CORS(
+			middleware.Authenticate(
+				middleware.Method(
+					"GET",
+					func(w http.ResponseWriter, r *http.Request) {},
+				),
 			),
 		),
 	)
 
 	http.HandleFunc(
 		"/user/get-user",
-		middleware.Authenticate(
-			middleware.Method(
-				"GET",
-				handlers.GetUser,
+		middleware.CORS(
+			middleware.Authenticate(
+				middleware.Method(
+					"GET",
+					handlers.GetUser,
+				),
 			),
 		),
 	)
 
 	http.HandleFunc(
 		"/user/modify-user",
-		middleware.Authenticate(
-			middleware.Method(
-				"PATCH",
-				handlers.ModifyUser,
+		middleware.CORS(
+			middleware.Authenticate(
+				middleware.Method(
+					"PATCH",
+					handlers.ModifyUser,
+				),
 			),
 		),
 	)
 
 	http.HandleFunc(
 		"/user/change-password",
-		middleware.Method(
-			"PATCH",
-			handlers.ChangePassword,
+		middleware.CORS(
+			middleware.Method(
+				"PATCH",
+				handlers.ChangePassword,
+			),
 		),
 	)
 
 	http.HandleFunc(
 		"/user/password-change-init",
-		middleware.Method(
-			"POST",
-			handlers.PasswordChangeInit,
+		middleware.CORS(
+			middleware.Method(
+				"POST",
+				handlers.PasswordChangeInit,
+			),
 		),
 	)
 
-	log.Println("serving on http://0.0.0.0:"+port, "(press ctrl + c to stop the process)")
+	log.Println("serving on http://localhost:"+port, "(press ctrl + c to stop the process)")
 	if err := http.ListenAndServe(fmt.Sprintf(":%s", port), nil); err != nil {
 		log.Fatal("Error while trying to start the server.")
 	}

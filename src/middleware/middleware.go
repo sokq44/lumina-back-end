@@ -74,6 +74,8 @@ func Authenticate(next http.HandlerFunc) http.HandlerFunc {
 				HttpOnly: true,
 				Path:     "/",
 				Expires:  time.Unix(0, 0),
+				Secure:   true,
+				SameSite: http.SameSiteNoneMode,
 			})
 
 			http.SetCookie(w, &http.Cookie{
@@ -82,6 +84,8 @@ func Authenticate(next http.HandlerFunc) http.HandlerFunc {
 				HttpOnly: true,
 				Path:     "/",
 				Expires:  time.Unix(0, 0),
+				Secure:   true,
+				SameSite: http.SameSiteNoneMode,
 			})
 
 			w.WriteHeader(http.StatusUnauthorized)

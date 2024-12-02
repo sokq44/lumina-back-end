@@ -160,6 +160,7 @@ var LoginUser http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// TODO: Check whether the refresh token is valid
 	refreshToken, _ := db.GetRefreshTokenByUserId(user.Id)
 	if refreshToken != nil {
 		w.WriteHeader(http.StatusOK)
@@ -201,6 +202,8 @@ var LoginUser http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
 		HttpOnly: true,
 		Path:     "/",
 		Expires:  now.Add(time.Duration(config.JwtAccExpTime)),
+		Secure:   true,
+		SameSite: http.SameSiteNoneMode,
 	})
 
 	http.SetCookie(w, &http.Cookie{
@@ -209,6 +212,8 @@ var LoginUser http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
 		HttpOnly: true,
 		Path:     "/",
 		Expires:  now.Add(time.Duration(config.JwtRefExpTime)),
+		Secure:   true,
+		SameSite: http.SameSiteNoneMode,
 	})
 
 	w.WriteHeader(http.StatusOK)

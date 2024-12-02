@@ -9,6 +9,7 @@ bin/
 
 # logs
 logs/
+lumina-logs/
 
 # vscode
 .vscode

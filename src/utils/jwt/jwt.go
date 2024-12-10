@@ -4,6 +4,7 @@ import (
 	"backend/config"
 	"backend/models"
 	"backend/utils/crypt"
+	"backend/utils/database"
 	"backend/utils/errhandle"
 	"crypto/hmac"
 	"crypto/sha256"
@@ -17,6 +18,8 @@ import (
 )
 
 type Claims map[string]interface{}
+
+var db = database.GetDb()
 
 func CreateHeader() (string, *errhandle.Error) {
 	header := map[string]string{
@@ -69,8 +72,13 @@ func GenerateToken(claims Claims) (string, *errhandle.Error) {
 		return "", err
 	}
 
+	latestSecret, err := db.GetLatestSecrets()
+	if err != nil {
+		return "", err
+	}
+
 	headerPayload := fmt.Sprintf("%s.%s", header, payload)
-	signature := CreateSignature(headerPayload, config.JwtSecret)
+	signature := CreateSignature(headerPayload, latestSecret[0].Secret)
 	newJWT := fmt.Sprintf("%s.%s.%s", header, payload, signature)
 
 	return newJWT, nil
@@ -120,7 +128,7 @@ func DecodePayload(token string) (Claims, *errhandle.Error) {
 		return nil, &errhandle.Error{
 			Type:          errhandle.JwtError,
 			ServerMessage: "token doesn't contain 3 parts",
-			ClientMessage: "An error occurred while processing your request.",
+			ClientMessage: "Error has occurred while processing your request.",
 			Status:        http.StatusInternalServerError,
 		}
 	}

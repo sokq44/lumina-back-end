@@ -10,9 +10,10 @@ var (
 	FrontAddr        string
 	EmailVerTime     int
 	PasswdChangeTime int
-	JwtSecret        string
 	JwtAccExpTime    int
 	JwtRefExpTime    int
+	JwtSecretGenInt  int
+	JwtSecretExpTime int
 	DbUser           string
 	DbPass           string
 	DbNet            string
@@ -31,9 +32,10 @@ func InitConfig() {
 	FrontAddr = getEnv("LUMINA_APP_FRONT_ADDR")
 	EmailVerTime = getEnvInt("LUMINA_APP_EMAIL_VER_TIME")
 	PasswdChangeTime = getEnvInt("LUMINA_APP_PASSWD_VER_TIME")
-	JwtSecret = getEnv("LUMINA_APP_JWT_SECRET")
 	JwtAccExpTime = getEnvInt("LUMINA_APP_JWT_ACCESS_EXP_TIME")
 	JwtRefExpTime = getEnvInt("LUMINA_APP_JWT_REFRESH_EXP_TIME")
+	JwtSecretGenInt = getEnvInt("LUMINA_APP_JWT_SECRET_GEN_INTERVAL")
+	JwtSecretExpTime = getEnvInt("LUMINA_APP_JWT_SECRET_EXP_TIME")
 	DbUser = getEnv("LUMINA_DB_USER")
 	DbPass = getEnv("LUMINA_DB_PASSWD")
 	DbNet = getEnv("LUMINA_DB_NET")

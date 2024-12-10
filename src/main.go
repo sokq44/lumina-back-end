@@ -127,7 +127,6 @@ func initServer(port string) {
 		),
 	)
 
-	log.Println("serving on http://localhost:"+port, "(press ctrl + c to stop the process)")
 	if err := http.ListenAndServe(fmt.Sprintf(":%s", port), nil); err != nil {
 		log.Fatal("Error while trying to start the server.")
 	}

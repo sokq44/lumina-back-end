@@ -30,7 +30,7 @@ CREATE TABLE
         CONSTRAINT fk_users_refresh_tokens FOREIGN KEY (user_id) REFERENCES users (id),
         CONSTRAINT refresh_tokens_unique_user_id UNIQUE (user_id)
     );
-    
+
 CREATE TABLE
     IF NOT EXISTS password_change (
         id VARCHAR(36) PRIMARY KEY NOT NULL DEFAULT (uuid ()),
@@ -39,4 +39,11 @@ CREATE TABLE
         user_id VARCHAR(36) NOT NULL,
         CONSTRAINT fk_users_password_change FOREIGN KEY (user_id) REFERENCES users (id),
         CONSTRAINT password_change_unique_user_id UNIQUE (user_id)
+    );
+
+CREATE TABLE
+    IF NOT EXISTS secrets (
+        id VARCHAR(36) PRIMARY KEY NOT NULL DEFAULT (uuid ()),
+        secret VARCHAR(64) NOT NULL,
+        expires DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
     );

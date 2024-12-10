@@ -39,7 +39,15 @@ func Authenticate(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		if !jwt.WasGeneratedWithSecret(refreshToken, config.JwtSecret) || !jwt.WasGeneratedWithSecret(accessToken, config.JwtSecret) {
+		secrets, err := db.GetLatestSecrets()
+		if err.Handle(w, r) {
+			return
+		}
+
+		if !jwt.WasGeneratedWithSecret(refreshToken, secrets[0].Secret) ||
+			!jwt.WasGeneratedWithSecret(accessToken, secrets[0].Secret) ||
+			!jwt.WasGeneratedWithSecret(refreshToken, secrets[1].Secret) ||
+			!jwt.WasGeneratedWithSecret(accessToken, secrets[1].Secret) {
 			e := errhandle.Error{
 				Type:          errhandle.JwtError,
 				ServerMessage: "one of the tokens or both weren't created with the server secret",

@@ -52,7 +52,12 @@ func InitDb() {
 
 	log.Printf("intialized the database service (%v:%v)", host, port)
 
+	for range 2 {
+		db.GenerateSecret()
+	}
+
 	go db.StartCleaningDb()
+	go db.StartGeneratingSecrets()
 }
 
 func GetDb() *Database {
@@ -90,6 +95,11 @@ func (db *Database) CleanDb() *errhandle.Error {
 		return err
 	}
 
+	secrets, err := db.GetExpiredSecrets()
+	if err != nil {
+		return err
+	}
+
 	for _, v := range verifications {
 		if err := db.DeleteEmailVerificationById(v.Id); err != nil {
 			return err
@@ -111,6 +121,12 @@ func (db *Database) CleanDb() *errhandle.Error {
 		}
 	}
 
+	for _, s := range secrets {
+		if err := db.DeleteSecretById(s.Id); err != nil {
+			return err
+		}
+	}
+
 	return nil
 }
 
@@ -124,5 +140,20 @@ func (db *Database) StartCleaningDb() {
 		}
 
 		log.Println("deleted all unverified users and hunging email verification from the database")
+	}
+}
+
+func (db *Database) StartGeneratingSecrets() {
+	interval := time.Duration(config.JwtSecretGenInt)
+	ticker := time.NewTicker(interval)
+
+	defer ticker.Stop()
+
+	for range ticker.C {
+		if db.GenerateSecret().Handle(nil, nil) {
+			break
+		}
+
+		log.Println("generated a new jwt secret")
 	}
 }

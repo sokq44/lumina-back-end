@@ -31,7 +31,7 @@ func (db *Database) GetRefreshTokenByUserId(userId string) (*models.RefreshToken
 	var rawTime string
 
 	err := db.Connection.QueryRow(
-		"SELECT * FROM refresh_tokens where user_id=?;",
+		"SELECT * FROM refresh_tokens WHERE user_id=?;",
 		userId,
 	).Scan(&token.Id, &token.Token, &rawTime, &token.UserId)
 

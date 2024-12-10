@@ -45,8 +45,10 @@ func (e *Error) Handle(w http.ResponseWriter, r *http.Request) bool {
 		return false
 	}
 
-	w.WriteHeader(e.Status)
-	w.Write([]byte(e.ClientMessage))
+	if w != nil {
+		w.WriteHeader(e.Status)
+		w.Write([]byte(e.ClientMessage))
+	}
 
 	var logMessage string
 	var typeString string
@@ -71,7 +73,10 @@ func (e *Error) Handle(w http.ResponseWriter, r *http.Request) bool {
 		typeString, e.ServerMessage, e.Status, e.ClientMessage,
 	)
 
-	host := r.Host
+	var host string
+	if r != nil {
+		host = r.Host
+	}
 	now := time.Now()
 	logMessage = fmt.Sprintf("[%v] [%s] -> %s", now, host, logMessage)
 

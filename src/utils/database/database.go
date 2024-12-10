@@ -91,6 +91,11 @@ func (db *Database) CleanDb() *errhandle.Error {
 		return err
 	}
 
+	secrets, err := db.GetExpiredSecrets()
+	if err != nil {
+		return err
+	}
+
 	for _, v := range verifications {
 		if err := db.DeleteEmailVerificationById(v.Id); err != nil {
 			return err
@@ -108,6 +113,12 @@ func (db *Database) CleanDb() *errhandle.Error {
 
 	for _, p := range passwordChanges {
 		if err := db.DeletePasswordChangeById(p.Id); err != nil {
+			return err
+		}
+	}
+
+	for _, s := range secrets {
+		if err := db.DeleteSecretById(s.Id); err != nil {
 			return err
 		}
 	}

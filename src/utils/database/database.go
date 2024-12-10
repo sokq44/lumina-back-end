@@ -52,6 +52,10 @@ func InitDb() {
 
 	log.Printf("intialized the database service (%v:%v)", host, port)
 
+	for range 2 {
+		db.GenerateSecret()
+	}
+
 	go db.StartCleaningDb()
 	go db.StartGeneratingSecrets()
 }

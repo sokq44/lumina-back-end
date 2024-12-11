@@ -15,7 +15,7 @@ import (
 
 func initApplication() string {
 	appPort := flag.String("p", "3000", "Port on which the application runs.")
-	logsPath := flag.String("l", "./lumina-logs", "Path to the [logs] directory.")
+	logsPath := flag.String("l", "./../logs", "Path to the [logs] directory.")
 	verbose := flag.Bool("v", false, "Should verbose to the standard output?")
 
 	flag.Parse()

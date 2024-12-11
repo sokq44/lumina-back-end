@@ -1,6 +1,7 @@
 package errhandle
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"net/http"
@@ -47,7 +48,10 @@ func (e *Error) Handle(w http.ResponseWriter, r *http.Request) bool {
 
 	if w != nil {
 		w.WriteHeader(e.Status)
-		w.Write([]byte(e.ClientMessage))
+		_, err := w.Write([]byte(e.ClientMessage))
+		if err != nil {
+			log.Println("error while writing a response")
+		}
 	}
 
 	var logMessage string
@@ -86,7 +90,7 @@ func (e *Error) Handle(w http.ResponseWriter, r *http.Request) bool {
 
 	fullPath := filepath.Join(location, now.Format("02-01-2006")+".log")
 	file, err := os.OpenFile(fullPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
-	if err != os.ErrExist && err != nil {
+	if !errors.Is(err, os.ErrExist) && err != nil {
 		log.Println("error while creating the log file", err)
 	} else {
 		_, err = file.WriteString(fmt.Sprintf("%s\n", logMessage))
@@ -94,7 +98,10 @@ func (e *Error) Handle(w http.ResponseWriter, r *http.Request) bool {
 			log.Println("error while writing a log")
 		}
 	}
-	file.Close()
+	err = file.Close()
+	if err != nil {
+		log.Println("error while closing the log file")
+	}
 
 	return true
 }

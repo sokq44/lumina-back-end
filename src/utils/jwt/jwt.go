@@ -156,8 +156,7 @@ func DecodePayload(token string) (Claims, *errhandle.Error) {
 func WasGeneratedWithSecret(token string, secret string) bool {
 	parts := strings.Split(token, ".")
 	headerPayload := fmt.Sprintf("%s.%s", parts[0], parts[1])
-
-	var signature string = CreateSignature(headerPayload, secret)
+	signature := CreateSignature(headerPayload, secret)
 
 	return strings.Compare(signature, parts[2]) == 0
 }

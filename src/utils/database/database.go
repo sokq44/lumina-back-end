@@ -26,7 +26,7 @@ func InitDb() {
 	host := config.DbHost
 	port := config.DbPort
 	dbname := config.DbName
-	cleanupInterval := config.DbCleanumInt
+	cleanupInterval := config.DbCleanupInt
 
 	db.CleanupInterval = time.Duration(cleanupInterval)
 
@@ -139,7 +139,7 @@ func (db *Database) StartCleaningDb() {
 			break
 		}
 
-		log.Println("deleted all unverified users and hunging email verification from the database")
+		log.Println("deleted all unverified users and hanging email verification from the database")
 	}
 }
 

@@ -5,13 +5,14 @@ import (
 	"backend/utils/database"
 	"backend/utils/errhandle"
 	"backend/utils/jwt"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
 )
 
 func CORS(next http.HandlerFunc) http.HandlerFunc {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 		origin := r.Header.Get("Origin")
 		if origin != "" {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
@@ -26,7 +27,7 @@ func CORS(next http.HandlerFunc) http.HandlerFunc {
 		}
 
 		next.ServeHTTP(w, r)
-	})
+	}
 }
 
 func Authenticate(next http.HandlerFunc) http.HandlerFunc {
@@ -68,9 +69,13 @@ func Authenticate(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		/* Check whether the refresh token has expired. If it has, delete the cookies and reply with 401.*/
+		refreshTokenDb, e := db.GetRefreshTokenByUserId(claimsRefresh["user"].(string))
+		if e.Handle(w, r) {
+			return
+		}
+
 		expiresRefresh := int64(claimsRefresh["exp"].(float64))
-		if expiresRefresh < now.Unix() {
+		if expiresRefresh < now.Unix() || now.After(refreshTokenDb.Expires) {
 			e := db.DeleteRefreshTokenByToken(refreshToken)
 			if e.Handle(w, r) {
 				return
@@ -96,11 +101,17 @@ func Authenticate(next http.HandlerFunc) http.HandlerFunc {
 				SameSite: http.SameSiteNoneMode,
 			})
 
-			w.WriteHeader(http.StatusUnauthorized)
-			return
+			e = &errhandle.Error{
+				Type:          errhandle.JwtError,
+				ServerMessage: "refresh token has expired",
+				ClientMessage: "Your authentication medium has expired.",
+				Status:        http.StatusUnauthorized,
+			}
+			if e.Handle(w, r) {
+				return
+			}
 		}
 
-		/* Check whether refresh token is assigned to the right person (db). */
 		userId := claimsRefresh["user"].(string)
 		tk, e := db.GetRefreshTokenByUserId(userId)
 		if e.Handle(w, r) {
@@ -111,8 +122,7 @@ func Authenticate(next http.HandlerFunc) http.HandlerFunc {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}
-
-		/* Check whether the access token has expired, if it has, issue another one. */
+		
 		expiresAccess := int64(claimsAccess["exp"].(float64))
 		if expiresAccess < now.Unix() {
 			user, e := db.GetUserById(claimsAccess["user"].(string))
@@ -151,7 +161,7 @@ func Method(method string, next http.HandlerFunc) http.HandlerFunc {
 
 func getRefAccFromRequest(r *http.Request) (string, string, *errhandle.Error) {
 	access, err := r.Cookie("access_token")
-	if err == http.ErrNoCookie {
+	if errors.Is(err, http.ErrNoCookie) {
 		return "", "", &errhandle.Error{
 			Type:          errhandle.JwtError,
 			ServerMessage: "no access_token cookie present",
@@ -168,7 +178,7 @@ func getRefAccFromRequest(r *http.Request) (string, string, *errhandle.Error) {
 	}
 
 	refresh, err := r.Cookie("refresh_token")
-	if err == http.ErrNoCookie {
+	if errors.Is(err, http.ErrNoCookie) {
 		return "", "", &errhandle.Error{
 			Type:          errhandle.JwtError,
 			ServerMessage: "no refresh_token cookie present",

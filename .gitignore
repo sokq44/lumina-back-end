@@ -13,3 +13,6 @@ lumina-logs/
 
 # vscode
 .vscode
+
+# jetbrains
+.idea

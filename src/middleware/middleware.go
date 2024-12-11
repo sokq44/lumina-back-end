@@ -7,6 +7,7 @@ import (
 	"backend/utils/jwt"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 )
@@ -46,9 +47,9 @@ func Authenticate(next http.HandlerFunc) http.HandlerFunc {
 		}
 
 		if !jwt.WasGeneratedWithSecret(refreshToken, secrets[0].Secret) ||
-			!jwt.WasGeneratedWithSecret(accessToken, secrets[0].Secret) ||
 			!jwt.WasGeneratedWithSecret(refreshToken, secrets[1].Secret) ||
-			!jwt.WasGeneratedWithSecret(accessToken, secrets[1].Secret) {
+			(accessToken != "" && !jwt.WasGeneratedWithSecret(accessToken, secrets[0].Secret)) ||
+			(accessToken != "" && !jwt.WasGeneratedWithSecret(accessToken, secrets[1].Secret)) {
 			e := errhandle.Error{
 				Type:          errhandle.JwtError,
 				ServerMessage: "one of the tokens or both weren't created with the server secret",
@@ -64,18 +65,14 @@ func Authenticate(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		claimsAccess, e := jwt.DecodePayload(accessToken)
-		if e.Handle(w, r) {
-			return
-		}
-
-		refreshTokenDb, e := db.GetRefreshTokenByUserId(claimsRefresh["user"].(string))
+		userId := claimsRefresh["user"].(string)
+		tk, e := db.GetRefreshTokenByUserId(userId)
 		if e.Handle(w, r) {
 			return
 		}
 
 		expiresRefresh := int64(claimsRefresh["exp"].(float64))
-		if expiresRefresh < now.Unix() || now.After(refreshTokenDb.Expires) {
+		if expiresRefresh < now.Unix() || now.After(tk.Expires) {
 			e := db.DeleteRefreshTokenByToken(refreshToken)
 			if e.Handle(w, r) {
 				return
@@ -112,20 +109,21 @@ func Authenticate(next http.HandlerFunc) http.HandlerFunc {
 			}
 		}
 
-		userId := claimsRefresh["user"].(string)
-		tk, e := db.GetRefreshTokenByUserId(userId)
-		if e.Handle(w, r) {
-			return
+		if tk.UserId != userId {
+			e = &errhandle.Error{
+				Type:          errhandle.JwtError,
+				ServerMessage: "refresh token doesn't belong to the user",
+				ClientMessage: "Your authentication medium doesn't belong to you.",
+				Status:        http.StatusUnauthorized,
+			}
+			if e.Handle(w, r) {
+				return
+			}
 		}
 
-		if tk.UserId != userId {
-			w.WriteHeader(http.StatusUnauthorized)
-			return
-		}
-		
-		expiresAccess := int64(claimsAccess["exp"].(float64))
-		if expiresAccess < now.Unix() {
-			user, e := db.GetUserById(claimsAccess["user"].(string))
+		if accessToken == "" {
+			log.Println("debugging: access token has expired")
+			user, e := db.GetUserById(userId)
 			if e.Handle(w, r) {
 				return
 			}
@@ -161,14 +159,7 @@ func Method(method string, next http.HandlerFunc) http.HandlerFunc {
 
 func getRefAccFromRequest(r *http.Request) (string, string, *errhandle.Error) {
 	access, err := r.Cookie("access_token")
-	if errors.Is(err, http.ErrNoCookie) {
-		return "", "", &errhandle.Error{
-			Type:          errhandle.JwtError,
-			ServerMessage: "no access_token cookie present",
-			ClientMessage: "There was no authentication medium present in the request.",
-			Status:        http.StatusUnauthorized,
-		}
-	} else if err != nil {
+	if err != nil && !errors.Is(err, http.ErrNoCookie) {
 		return "", "", &errhandle.Error{
 			Type:          errhandle.JwtError,
 			ServerMessage: fmt.Sprintf("while trying to retrieve the access_token cookie -> %v", err),
@@ -194,5 +185,10 @@ func getRefAccFromRequest(r *http.Request) (string, string, *errhandle.Error) {
 		}
 	}
 
-	return access.Value, refresh.Value, nil
+	if access != nil {
+		return access.Value, refresh.Value, nil
+	} else {
+		return "", refresh.Value, nil
+	}
+
 }

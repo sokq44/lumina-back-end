@@ -5,6 +5,7 @@ import (
 	"backend/models"
 	"backend/utils/crypt"
 	"backend/utils/errhandle"
+	"database/sql"
 	"fmt"
 	"net/http"
 	"time"
@@ -47,7 +48,12 @@ func (db *Database) GetLatestSecrets() ([]models.Secret, *errhandle.Error) {
 			Status:        http.StatusInternalServerError,
 		}
 	}
-	defer rows.Close()
+	defer func(rows *sql.Rows) {
+		err := rows.Close()
+		if err != nil {
+			fmt.Println("while closing rows: ", err)
+		}
+	}(rows)
 
 	for rows.Next() {
 		var secret models.Secret

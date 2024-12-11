@@ -14,10 +14,10 @@ import (
 	"time"
 )
 
-var db *database.Database = database.GetDb()
-var em *emails.SmtpClient = emails.GetEmails()
+var db = database.GetDb()
+var em = emails.GetEmails()
 
-var RegisterUser http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
+func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	type RequestBody struct {
 		Username string `json:"username"`
 		Email    string `json:"email"`
@@ -89,7 +89,7 @@ var RegisterUser http.HandlerFunc = func(w http.ResponseWriter, r *http.Request)
 	w.WriteHeader(http.StatusCreated)
 }
 
-var VerifyEmail http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
+func VerifyEmail(w http.ResponseWriter, r *http.Request) {
 	type RequestBody struct {
 		Token string `json:"token"`
 	}
@@ -136,7 +136,7 @@ var VerifyEmail http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) 
 	w.WriteHeader(http.StatusNoContent)
 }
 
-var LoginUser http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
+func LoginUser(w http.ResponseWriter, r *http.Request) {
 	type RequestBody struct {
 		Email    string `json:"email"`
 		Password string `json:"password"`
@@ -160,9 +160,10 @@ var LoginUser http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// TODO: Check whether the refresh token is valid
 	refreshToken, _ := db.GetRefreshTokenByUserId(user.Id)
-	if refreshToken != nil {
+	if refreshToken != nil && time.Now().After(refreshToken.Expires) {
+		db.DeleteRefreshTokenById(refreshToken.Id)
+	} else if refreshToken != nil {
 		w.WriteHeader(http.StatusOK)
 		return
 	}
@@ -219,7 +220,7 @@ var LoginUser http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-var LogoutUser http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
+func LogoutUser(w http.ResponseWriter, r *http.Request) {
 	refreshCookie, err := r.Cookie("refresh_token")
 	if err != nil {
 		e := errhandle.Error{
@@ -257,7 +258,7 @@ var LogoutUser http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 }
 
-var GetUser http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
+func GetUser(w http.ResponseWriter, r *http.Request) {
 	access, err := r.Cookie("access_token")
 	if err != nil {
 		e := errhandle.Error{
@@ -299,7 +300,7 @@ var GetUser http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-var ModifyUser http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
+func ModifyUser(w http.ResponseWriter, r *http.Request) {
 	type RequestBody struct {
 		Username string `json:"username"`
 		Email    string `json:"email"`
@@ -323,7 +324,7 @@ var ModifyUser http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var newUser models.User = models.User{
+	var newUser = models.User{
 		Id:       user.Id,
 		Username: body.Username,
 		Email:    body.Email,
@@ -338,7 +339,7 @@ var ModifyUser http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-var PasswordChangeInit http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
+func PasswordChangeInit(w http.ResponseWriter, r *http.Request) {
 	type RequestBody struct {
 		Email string `json:"email"`
 	}
@@ -383,7 +384,7 @@ var PasswordChangeInit http.HandlerFunc = func(w http.ResponseWriter, r *http.Re
 	w.WriteHeader(http.StatusCreated)
 }
 
-var ChangePassword http.HandlerFunc = func(w http.ResponseWriter, r *http.Request) {
+func ChangePassword(w http.ResponseWriter, r *http.Request) {
 	type RequestBody struct {
 		Password string `json:"password"`
 		Token    string `json:"token"`

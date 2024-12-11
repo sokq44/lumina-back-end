@@ -4,6 +4,7 @@ import (
 	"backend/models"
 	"backend/utils/errhandle"
 	"database/sql"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -17,7 +18,8 @@ func (db *Database) CreatePasswordChange(p models.PasswordChange) *errhandle.Err
 	)
 
 	if err != nil {
-		if mysqlErr, ok := err.(*mysql.MySQLError); ok && mysqlErr.Number == 1062 {
+		var mysqlErr *mysql.MySQLError
+		if errors.As(err, &mysqlErr) && mysqlErr.Number == 1062 {
 			return &errhandle.Error{
 				Type:          errhandle.DatabaseError,
 				ServerMessage: fmt.Sprintf("duplicate entry error while creating a password change token: %v", err),
@@ -47,7 +49,7 @@ func (db *Database) GetPasswordChangeByToken(token string) (*models.PasswordChan
 		token,
 	).Scan(&id, &tk, &expires, &userId)
 
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return nil, &errhandle.Error{
 			Type:          errhandle.DatabaseError,
 			ServerMessage: fmt.Sprintf("error while getting a password change by token: %v", err),

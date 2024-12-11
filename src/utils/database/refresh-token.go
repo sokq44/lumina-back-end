@@ -4,6 +4,7 @@ import (
 	"backend/models"
 	"backend/utils/errhandle"
 	"database/sql"
+	"errors"
 	"fmt"
 	"net/http"
 )
@@ -35,7 +36,7 @@ func (db *Database) GetRefreshTokenByUserId(userId string) (*models.RefreshToken
 		userId,
 	).Scan(&token.Id, &token.Token, &rawTime, &token.UserId)
 
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return nil, &errhandle.Error{
 			Type:          errhandle.DatabaseError,
 			ServerMessage: fmt.Sprintf("while getting a refresh token by user id: %v", err),
@@ -46,7 +47,7 @@ func (db *Database) GetRefreshTokenByUserId(userId string) (*models.RefreshToken
 		return nil, &errhandle.Error{
 			Type:          errhandle.DatabaseError,
 			ServerMessage: fmt.Sprintf("while getting a refresh token by user id: %v", err),
-			ClientMessage: "An error occured while processing your request.",
+			ClientMessage: "An error occurred while processing your request.",
 			Status:        http.StatusInternalServerError,
 		}
 	}

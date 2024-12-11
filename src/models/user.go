@@ -16,7 +16,7 @@ type User struct {
 	Verified bool
 }
 
-func (user *User) Validate(passhashed bool) *errhandle.Error {
+func (user *User) Validate(passHashed bool) *errhandle.Error {
 	if len(user.Username) < 5 || len(user.Username) > 20 {
 		return &errhandle.Error{
 			Type:          errhandle.ModelError,
@@ -36,7 +36,7 @@ func (user *User) Validate(passhashed bool) *errhandle.Error {
 		}
 	}
 
-	if !passhashed && (len(user.Password) < 9 || !hasUppercase(user.Password) || !hasDigit(user.Password) || !hasSpecialChar(user.Password)) {
+	if !passHashed && (len(user.Password) < 9 || !hasUppercase(user.Password) || !hasDigit(user.Password) || !hasSpecialChar(user.Password)) {
 		return &errhandle.Error{
 			Type:          errhandle.ModelError,
 			ServerMessage: "password must contain a capital letter, a special character, a digit and be at least 9 characters long",

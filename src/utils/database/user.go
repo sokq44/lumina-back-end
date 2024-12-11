@@ -4,6 +4,7 @@ import (
 	"backend/models"
 	"backend/utils/errhandle"
 	"database/sql"
+	"errors"
 	"fmt"
 	"net/http"
 )
@@ -18,7 +19,7 @@ func (db *Database) CreateUser(u models.User) *errhandle.Error {
 		return &errhandle.Error{
 			Type:          errhandle.DatabaseError,
 			ServerMessage: fmt.Sprintf("while creating a new user -> %v", err),
-			ClientMessage: "An error accurred while creating a new user.",
+			ClientMessage: "An error occurred while creating a new user.",
 			Status:        http.StatusInternalServerError,
 		}
 	}
@@ -32,7 +33,7 @@ func (db *Database) UpdateUser(u models.User) *errhandle.Error {
 		u.Username, u.Email, u.Password, u.Verified, u.Id,
 	)
 
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return &errhandle.Error{
 			Type:          errhandle.DatabaseError,
 			ServerMessage: fmt.Sprintf("while updating a user -> %v", err),
@@ -74,7 +75,7 @@ func (db *Database) GetUserById(id string) (*models.User, *errhandle.Error) {
 		id,
 	).Scan(&user.Username, &user.Email, &user.Verified)
 
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return nil, &errhandle.Error{
 			Type:          errhandle.DatabaseError,
 			ServerMessage: fmt.Sprintf("error while getting a user by id: %v", err),
@@ -104,7 +105,7 @@ func (db *Database) GetUserByEmail(email string) (*models.User, *errhandle.Error
 		email,
 	).Scan(&id, &username, &password, &verified)
 
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return nil, &errhandle.Error{
 			Type:          errhandle.DatabaseError,
 			ServerMessage: fmt.Sprintf("error while getting a user by id: %v", err),
@@ -138,7 +139,7 @@ func (db *Database) UserExists(u models.User) (bool, *errhandle.Error) {
 		u.Username, u.Email,
 	).Scan(&id)
 
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return false, nil
 	} else if err != nil {
 		return false, &errhandle.Error{
@@ -158,7 +159,7 @@ func (db *Database) VerifyUser(id string) *errhandle.Error {
 		id,
 	)
 
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return &errhandle.Error{
 			Type:          errhandle.DatabaseError,
 			ServerMessage: fmt.Sprintf("error while verifying a user: %v", err),

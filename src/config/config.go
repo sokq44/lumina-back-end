@@ -20,7 +20,7 @@ var (
 	DbHost           string
 	DbPort           string
 	DbName           string
-	DbCleanumInt     int
+	DbCleanupInt     int
 	SmtpFrom         string
 	SmtpUser         string
 	SmtpPass         string
@@ -42,7 +42,7 @@ func InitConfig() {
 	DbHost = getEnv("LUMINA_DB_HOST")
 	DbPort = getEnv("LUMINA_DB_PORT")
 	DbName = getEnv("LUMINA_DB_DBNAME")
-	DbCleanumInt = getEnvInt("LUMINA_DB_CLEANUP_INTERVAL")
+	DbCleanupInt = getEnvInt("LUMINA_DB_CLEANUP_INTERVAL")
 	SmtpFrom = getEnv("LUMINA_SMTP_FROM")
 	SmtpUser = getEnv("LUMINA_SMTP_USER")
 	SmtpPass = getEnv("LUMINA_SMTP_PASSWD")

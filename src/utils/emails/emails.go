@@ -34,7 +34,13 @@ func InitEmails() {
 	if err != nil {
 		log.Fatalf("failed to connect to the SMTP server: %v", err.Error())
 	}
-	defer conn.Close()
+	
+	defer func(conn *smtp.Client) {
+		err := conn.Close()
+		if err != nil {
+			log.Fatalf("failed to close the SMTP connection: %v", err)
+		}
+	}(conn)
 
 	tlsConfig := &tls.Config{
 		InsecureSkipVerify: true,

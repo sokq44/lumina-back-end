@@ -4,6 +4,7 @@ import (
 	"backend/models"
 	"backend/utils/errhandle"
 	"database/sql"
+	"errors"
 	"fmt"
 	"net/http"
 )
@@ -37,7 +38,7 @@ func (db *Database) GetEmailVerificationByToken(token string) (*models.EmailVeri
 		token,
 	).Scan(&id, &tk, &expires, &userId)
 
-	if err == sql.ErrNoRows {
+	if errors.Is(err, sql.ErrNoRows) {
 		return nil, &errhandle.Error{
 			Type:          errhandle.DatabaseError,
 			ServerMessage: fmt.Sprintf("error while getting an email verification by token: %v", err),

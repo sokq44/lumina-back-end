@@ -9,6 +9,7 @@ import (
 var (
 	Host             string
 	FrontAddr        string
+	AssetsPath       string
 	EmailVerTime     int
 	PasswdChangeTime int
 	JwtAccExpTime    int
@@ -32,6 +33,7 @@ var (
 func InitConfig() {
 	Host = getEnv("LUMINA_APP_HOST")
 	FrontAddr = getEnv("LUMINA_APP_FRONT_ADDR")
+	AssetsPath = getEnv("LUMINA_APP_ASSETS_PATH")
 	EmailVerTime = getEnvInt("LUMINA_APP_EMAIL_VER_TIME")
 	PasswdChangeTime = getEnvInt("LUMINA_APP_PASSWD_VER_TIME")
 	JwtAccExpTime = getEnvInt("LUMINA_APP_JWT_ACCESS_EXP_TIME")

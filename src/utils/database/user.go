@@ -9,8 +9,6 @@ import (
 	"net/http"
 )
 
-//	TODO: Profile Image for the creation, update and retrieval processes
-
 func (db *Database) CreateUser(u models.User) *errhandle.Error {
 	_, err := db.Connection.Exec(
 		"INSERT INTO users (id, username, email, image_url, password) values (?, ?, ?, ?, ?);",
@@ -31,8 +29,8 @@ func (db *Database) CreateUser(u models.User) *errhandle.Error {
 
 func (db *Database) UpdateUser(u models.User) *errhandle.Error {
 	_, err := db.Connection.Exec(
-		"UPDATE users SET username=?, email=?, password=?, verified=? WHERE id=?",
-		u.Username, u.Email, u.Password, u.Verified, u.Id,
+		"UPDATE users SET username=?, email=?, image_url=?, password=?, verified=? WHERE id=?",
+		u.Username, u.Email, u.ImageUrl, u.Password, u.Verified, u.Id,
 	)
 
 	if errors.Is(err, sql.ErrNoRows) {

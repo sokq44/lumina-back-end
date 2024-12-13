@@ -11,8 +11,8 @@ import (
 
 func (db *Database) CreateUser(u models.User) *errhandle.Error {
 	_, err := db.Connection.Exec(
-		"INSERT INTO users (id, username, email, password) values (?, ?, ?, ?);",
-		u.Id, u.Username, u.Email, u.Password,
+		"INSERT INTO users (id, username, email, image_url, password) values (?, ?, ?, ?, ?);",
+		u.Id, u.Username, u.Email, u.ImageUrl, u.Password,
 	)
 
 	if err != nil {
@@ -29,8 +29,8 @@ func (db *Database) CreateUser(u models.User) *errhandle.Error {
 
 func (db *Database) UpdateUser(u models.User) *errhandle.Error {
 	_, err := db.Connection.Exec(
-		"UPDATE users SET username=?, email=?, password=?, verified=? WHERE id=?",
-		u.Username, u.Email, u.Password, u.Verified, u.Id,
+		"UPDATE users SET username=?, email=?, image_url=?, password=?, verified=? WHERE id=?",
+		u.Username, u.Email, u.ImageUrl, u.Password, u.Verified, u.Id,
 	)
 
 	if errors.Is(err, sql.ErrNoRows) {
@@ -71,9 +71,9 @@ func (db *Database) GetUserById(id string) (*models.User, *errhandle.Error) {
 	user := &models.User{Id: id}
 
 	err := db.Connection.QueryRow(
-		"SELECT username, email, verified FROM users WHERE id=?;",
+		"SELECT username, email, image_url, password, verified FROM users WHERE id=?;",
 		id,
-	).Scan(&user.Username, &user.Email, &user.Verified)
+	).Scan(&user.Username, &user.Email, &user.ImageUrl, &user.Password, &user.Verified)
 
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, &errhandle.Error{
@@ -95,15 +95,12 @@ func (db *Database) GetUserById(id string) (*models.User, *errhandle.Error) {
 }
 
 func (db *Database) GetUserByEmail(email string) (*models.User, *errhandle.Error) {
-	var id string
-	var username string
-	var password string
-	var verified bool
+	user := &models.User{Email: email}
 
 	err := db.Connection.QueryRow(
-		"SELECT id, username, password, verified FROM users WHERE email=?;",
+		"SELECT id, username, image_url, password, verified FROM users WHERE email=?;",
 		email,
-	).Scan(&id, &username, &password, &verified)
+	).Scan(&user.Id, &user.Username, &user.ImageUrl, &user.Password, &user.Verified)
 
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, &errhandle.Error{
@@ -119,13 +116,6 @@ func (db *Database) GetUserByEmail(email string) (*models.User, *errhandle.Error
 			ClientMessage: "An error occurred while processing your request.",
 			Status:        http.StatusInternalServerError,
 		}
-	}
-
-	user := &models.User{
-		Id:       id,
-		Username: username,
-		Password: password,
-		Verified: verified,
 	}
 
 	return user, nil

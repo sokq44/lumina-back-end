@@ -12,6 +12,7 @@ type User struct {
 	Id       string
 	Username string `json:"username"`
 	Email    string `json:"email"`
+	ImageUrl string `json:"image"`
 	Password string `json:"password"`
 	Verified bool
 }

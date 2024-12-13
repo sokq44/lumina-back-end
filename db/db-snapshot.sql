@@ -7,6 +7,7 @@ CREATE TABLE
         id VARCHAR(36) PRIMARY KEY NOT NULL DEFAULT (uuid ()),
         username VARCHAR(50) NOT NULL,
         email VARCHAR(255) NOT NULL,
+        image_url VARCHAR(255) NOT NULL,
         password VARCHAR(64) NOT NULL,
         verified BOOLEAN NOT NULL DEFAULT FALSE
     );

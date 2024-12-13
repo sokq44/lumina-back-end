@@ -40,6 +40,7 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	u := models.User{
 		Username: body.Username,
 		Email:    body.Email,
+		ImageUrl: config.Host + "/images/default.png",
 		Password: body.Password,
 	}
 	if u.Validate(false).Handle(w, r) {
@@ -286,6 +287,7 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 	userData := map[string]string{
 		"username": user.Username,
 		"email":    user.Email,
+		"image":    user.ImageUrl,
 	}
 	if err := json.NewEncoder(w).Encode(userData); err != nil {
 		e := errhandle.Error{
@@ -304,6 +306,7 @@ func ModifyUser(w http.ResponseWriter, r *http.Request) {
 	type RequestBody struct {
 		Username string `json:"username"`
 		Email    string `json:"email"`
+		ImageUrl string `json:"image"`
 	}
 
 	var body RequestBody
@@ -328,6 +331,7 @@ func ModifyUser(w http.ResponseWriter, r *http.Request) {
 		Id:       user.Id,
 		Username: body.Username,
 		Email:    body.Email,
+		ImageUrl: body.ImageUrl,
 		Password: user.Password,
 		Verified: user.Verified,
 	}

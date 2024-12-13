@@ -127,6 +127,18 @@ func initServer(port string) {
 		),
 	)
 
+	http.HandleFunc(
+		"/assets/add-image",
+		middleware.CORS(
+			middleware.Method(
+				"POST",
+				middleware.Authenticate(
+					handlers.AddImage,
+				),
+			),
+		),
+	)
+
 	if err := http.ListenAndServe(fmt.Sprintf(":%s", port), nil); err != nil {
 		log.Fatal("Error while trying to start the server.")
 	}

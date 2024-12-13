@@ -40,6 +40,7 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	u := models.User{
 		Username: body.Username,
 		Email:    body.Email,
+		ImageUrl: config.Host + "/static/default.png",
 		Password: body.Password,
 	}
 	if u.Validate(false).Handle(w, r) {
@@ -286,6 +287,7 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 	userData := map[string]string{
 		"username": user.Username,
 		"email":    user.Email,
+		"imageUrl": user.ImageUrl,
 	}
 	if err := json.NewEncoder(w).Encode(userData); err != nil {
 		e := errhandle.Error{

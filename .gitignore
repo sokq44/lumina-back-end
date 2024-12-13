@@ -11,6 +11,9 @@ bin/
 logs/
 lumina-logs/
 
+# static files
+static/
+
 # vscode
 .vscode
 

@@ -128,12 +128,12 @@ func initServer(port string) {
 	)
 
 	http.HandleFunc(
-		"/assets/add-image",
+		"/assets/add",
 		middleware.CORS(
 			middleware.Method(
 				"POST",
 				middleware.Authenticate(
-					handlers.AddImage,
+					handlers.AddAsset,
 				),
 			),
 		),

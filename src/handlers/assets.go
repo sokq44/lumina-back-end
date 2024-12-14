@@ -12,7 +12,7 @@ import (
 	"path/filepath"
 )
 
-func AddImage(w http.ResponseWriter, r *http.Request) {
+func AddAsset(w http.ResponseWriter, r *http.Request) {
 	if err := r.ParseMultipartForm(10 << 20); err != nil {
 		e := errhandle.Error{
 			Type:          errhandle.HandlerError,

@@ -9,6 +9,7 @@ import (
 	"backend/utils/errhandle"
 	"backend/utils/jwt"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -246,6 +247,8 @@ func LogoutUser(w http.ResponseWriter, r *http.Request) {
 		HttpOnly: true,
 		Path:     "/",
 		Expires:  time.Unix(0, 0),
+		Secure:   true,
+		SameSite: http.SameSiteNoneMode,
 	})
 
 	http.SetCookie(w, &http.Cookie{
@@ -254,6 +257,8 @@ func LogoutUser(w http.ResponseWriter, r *http.Request) {
 		HttpOnly: true,
 		Path:     "/",
 		Expires:  time.Unix(0, 0),
+		Secure:   true,
+		SameSite: http.SameSiteNoneMode,
 	})
 
 	w.WriteHeader(http.StatusOK)
@@ -431,5 +436,76 @@ func ChangePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
+	access, refresh, e := GetRefAccFromRequest(r)
+	if e.Handle(w, r) {
+		return
+	}
+
+	if access != "" && refresh != "" {
+		http.SetCookie(w, &http.Cookie{
+			Name:     "access_token",
+			Value:    "",
+			HttpOnly: true,
+			Path:     "/",
+			Expires:  time.Unix(0, 0),
+			Secure:   true,
+			SameSite: http.SameSiteNoneMode,
+		})
+		http.SetCookie(w, &http.Cookie{
+			Name:     "refresh_token",
+			Value:    "",
+			HttpOnly: true,
+			Path:     "/",
+			Expires:  time.Unix(0, 0),
+			Secure:   true,
+			SameSite: http.SameSiteNoneMode,
+		})
+
+		refreshToken, e := db.GetRefreshTokenByUserId(user.Id)
+		if e != nil && e.Status == http.StatusNotFound {
+			w.WriteHeader(http.StatusOK)
+			return
+		} else if e != nil && e.Handle(w, r) {
+			return
+		}
+
+		if db.DeleteRefreshTokenById(refreshToken.Id).Handle(w, r) {
+			return
+		}
+	}
+}
+
+func GetRefAccFromRequest(r *http.Request) (string, string, *errhandle.Error) {
+	access, err := r.Cookie("access_token")
+	if err != nil && !errors.Is(err, http.ErrNoCookie) {
+		return "", "", &errhandle.Error{
+			Type:          errhandle.JwtError,
+			ServerMessage: fmt.Sprintf("while trying to retrieve the access_token cookie -> %v", err),
+			ClientMessage: "An error has occurred while processing your request.",
+			Status:        http.StatusInternalServerError,
+		}
+	}
+
+	refresh, err := r.Cookie("refresh_token")
+	if errors.Is(err, http.ErrNoCookie) {
+		return "", "", &errhandle.Error{
+			Type:          errhandle.JwtError,
+			ServerMessage: "no refresh_token cookie present",
+			ClientMessage: "There was no authentication medium present in the request.",
+			Status:        http.StatusUnauthorized,
+		}
+	} else if err != nil {
+		return "", "", &errhandle.Error{
+			Type:          errhandle.JwtError,
+			ServerMessage: fmt.Sprintf("while trying to retrieve the refresh_token cookie -> %v", err),
+			ClientMessage: "An error has occurred while processing your request.",
+			Status:        http.StatusInternalServerError,
+		}
+	}
+
+	if access != nil {
+		return access.Value, refresh.Value, nil
+	} else {
+		return "", refresh.Value, nil
+	}
 }

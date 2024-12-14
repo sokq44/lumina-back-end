@@ -2,11 +2,10 @@ package middleware
 
 import (
 	"backend/config"
+	"backend/handlers"
 	"backend/utils/database"
 	"backend/utils/errhandle"
 	"backend/utils/jwt"
-	"errors"
-	"fmt"
 	"log"
 	"net/http"
 	"time"
@@ -36,7 +35,7 @@ func Authenticate(next http.HandlerFunc) http.HandlerFunc {
 		db := database.GetDb()
 		now := time.Now()
 
-		accessToken, refreshToken, e := getRefAccFromRequest(r)
+		accessToken, refreshToken, e := handlers.GetRefAccFromRequest(r)
 		if e.Handle(w, r) {
 			return
 		}
@@ -155,40 +154,4 @@ func Method(method string, next http.HandlerFunc) http.HandlerFunc {
 
 		next(w, r)
 	}
-}
-
-func getRefAccFromRequest(r *http.Request) (string, string, *errhandle.Error) {
-	access, err := r.Cookie("access_token")
-	if err != nil && !errors.Is(err, http.ErrNoCookie) {
-		return "", "", &errhandle.Error{
-			Type:          errhandle.JwtError,
-			ServerMessage: fmt.Sprintf("while trying to retrieve the access_token cookie -> %v", err),
-			ClientMessage: "An error has occurred while processing your request.",
-			Status:        http.StatusInternalServerError,
-		}
-	}
-
-	refresh, err := r.Cookie("refresh_token")
-	if errors.Is(err, http.ErrNoCookie) {
-		return "", "", &errhandle.Error{
-			Type:          errhandle.JwtError,
-			ServerMessage: "no refresh_token cookie present",
-			ClientMessage: "There was no authentication medium present in the request.",
-			Status:        http.StatusUnauthorized,
-		}
-	} else if err != nil {
-		return "", "", &errhandle.Error{
-			Type:          errhandle.JwtError,
-			ServerMessage: fmt.Sprintf("while trying to retrieve the refresh_token cookie -> %v", err),
-			ClientMessage: "An error has occurred while processing your request.",
-			Status:        http.StatusInternalServerError,
-		}
-	}
-
-	if access != nil {
-		return access.Value, refresh.Value, nil
-	} else {
-		return "", refresh.Value, nil
-	}
-
 }

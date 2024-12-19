@@ -1,17 +1,17 @@
 package assets
 
 import (
-	"backend/utils/errhandle"
+	"backend/utils/problems"
 	"fmt"
 	"net/http"
 	"os"
 )
 
-func CreateAsset(filename string, data []byte) *errhandle.Error {
+func CreateAsset(filename string, data []byte) *problems.Problem {
 	f, err := os.Create(filename)
 	if err != nil {
-		return &errhandle.Error{
-			Type:          errhandle.HandlerError,
+		return &problems.Problem{
+			Type:          problems.AssetProblem,
 			ServerMessage: fmt.Sprintf("while creating the file -> %v", err),
 			ClientMessage: "An error occurred while processing your request.",
 			Status:        http.StatusInternalServerError,
@@ -19,8 +19,8 @@ func CreateAsset(filename string, data []byte) *errhandle.Error {
 	}
 	_, err = f.Write(data)
 	if err != nil {
-		return &errhandle.Error{
-			Type:          errhandle.HandlerError,
+		return &problems.Problem{
+			Type:          problems.AssetProblem,
 			ServerMessage: fmt.Sprintf("while writing the file -> %v", err),
 			ClientMessage: "An error occurred while processing your request.",
 			Status:        http.StatusInternalServerError,
@@ -28,8 +28,8 @@ func CreateAsset(filename string, data []byte) *errhandle.Error {
 	}
 
 	if err := f.Close(); err != nil {
-		return &errhandle.Error{
-			Type:          errhandle.HandlerError,
+		return &problems.Problem{
+			Type:          problems.AssetProblem,
 			ServerMessage: fmt.Sprintf("while closing the file -> %v", err),
 			ClientMessage: "An error occurred while processing your request.",
 			Status:        http.StatusInternalServerError,

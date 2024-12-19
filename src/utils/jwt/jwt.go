@@ -5,10 +5,11 @@ import (
 	"backend/models"
 	"backend/utils/crypt"
 	"backend/utils/database"
-	"backend/utils/errhandle"
+	"backend/utils/problems"
 	"crypto/hmac"
 	"crypto/sha256"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strings"
@@ -21,7 +22,7 @@ type Claims map[string]interface{}
 
 var db = database.GetDb()
 
-func CreateHeader() (string, *errhandle.Error) {
+func CreateHeader() (string, *problems.Problem) {
 	header := map[string]string{
 		"typ": "JWT",
 		"alg": "HS256",
@@ -29,8 +30,8 @@ func CreateHeader() (string, *errhandle.Error) {
 
 	headerJson, err := json.Marshal(header)
 	if err != nil {
-		return "", &errhandle.Error{
-			Type:          errhandle.JwtError,
+		return "", &problems.Problem{
+			Type:          problems.JwtProblem,
 			ServerMessage: fmt.Sprintf("while creating header -> %v", err),
 			ClientMessage: "An error occurred while processing your request.",
 			Status:        http.StatusInternalServerError,
@@ -40,11 +41,11 @@ func CreateHeader() (string, *errhandle.Error) {
 	return crypt.Base64UrlEncode(headerJson), nil
 }
 
-func CreatePayload(claims Claims) (string, *errhandle.Error) {
+func CreatePayload(claims Claims) (string, *problems.Problem) {
 	payloadJson, err := json.Marshal(claims)
 	if err != nil {
-		return "", &errhandle.Error{
-			Type:          errhandle.JwtError,
+		return "", &problems.Problem{
+			Type:          problems.JwtProblem,
 			ServerMessage: fmt.Sprintf("while creating payload -> %v", err),
 			ClientMessage: "An error occurred while processing your request.",
 			Status:        http.StatusInternalServerError,
@@ -61,7 +62,7 @@ func CreateSignature(headerPayload, secret string) string {
 	return crypt.Base64UrlEncode(h.Sum(nil))
 }
 
-func GenerateToken(claims Claims) (string, *errhandle.Error) {
+func GenerateToken(claims Claims) (string, *problems.Problem) {
 	header, err := CreateHeader()
 	if err != nil {
 		return "", err
@@ -84,7 +85,7 @@ func GenerateToken(claims Claims) (string, *errhandle.Error) {
 	return newJWT, nil
 }
 
-func GenerateAccessToken(userId string, now time.Time) (string, *errhandle.Error) {
+func GenerateAccessToken(userId string, now time.Time) (string, *problems.Problem) {
 	expires := time.Duration(config.JwtAccExpTime)
 	claims := Claims{
 		"user": userId,
@@ -100,7 +101,7 @@ func GenerateAccessToken(userId string, now time.Time) (string, *errhandle.Error
 	return token, nil
 }
 
-func GenerateRefreshToken(userId string, now time.Time) (models.RefreshToken, *errhandle.Error) {
+func GenerateRefreshToken(userId string, now time.Time) (models.RefreshToken, *problems.Problem) {
 	expires := time.Duration(config.JwtRefExpTime)
 	id := uuid.New().String()
 	claims := Claims{
@@ -122,11 +123,11 @@ func GenerateRefreshToken(userId string, now time.Time) (models.RefreshToken, *e
 	}, nil
 }
 
-func DecodePayload(token string) (Claims, *errhandle.Error) {
+func DecodePayload(token string) (Claims, *problems.Problem) {
 	parts := strings.Split(token, ".")
 	if len(parts) != 3 {
-		return nil, &errhandle.Error{
-			Type:          errhandle.JwtError,
+		return nil, &problems.Problem{
+			Type:          problems.JwtProblem,
 			ServerMessage: "token doesn't contain 3 parts",
 			ClientMessage: "Error has occurred while processing your request.",
 			Status:        http.StatusInternalServerError,
@@ -142,8 +143,8 @@ func DecodePayload(token string) (Claims, *errhandle.Error) {
 
 	var claims Claims
 	if err := json.Unmarshal(payloadBytes, &claims); err != nil {
-		return nil, &errhandle.Error{
-			Type:          errhandle.JwtError,
+		return nil, &problems.Problem{
+			Type:          problems.JwtProblem,
 			ServerMessage: fmt.Sprintf("while decoding payload-> %v", err),
 			ClientMessage: "An error occurred while processing your request.",
 			Status:        http.StatusInternalServerError,
@@ -159,4 +160,39 @@ func WasGeneratedWithSecret(token string, secret string) bool {
 	signature := CreateSignature(headerPayload, secret)
 
 	return strings.Compare(signature, parts[2]) == 0
+}
+
+func GetRefAccFromRequest(r *http.Request) (string, string, *problems.Problem) {
+	access, err := r.Cookie("access_token")
+	if err != nil && !errors.Is(err, http.ErrNoCookie) {
+		return "", "", &problems.Problem{
+			Type:          problems.JwtProblem,
+			ServerMessage: fmt.Sprintf("while trying to retrieve the access_token cookie -> %v", err),
+			ClientMessage: "An error has occurred while processing your request.",
+			Status:        http.StatusInternalServerError,
+		}
+	}
+
+	refresh, err := r.Cookie("refresh_token")
+	if errors.Is(err, http.ErrNoCookie) {
+		return "", "", &problems.Problem{
+			Type:          problems.JwtProblem,
+			ServerMessage: "no refresh_token cookie present",
+			ClientMessage: "There was no authentication medium present in the request.",
+			Status:        http.StatusUnauthorized,
+		}
+	} else if err != nil {
+		return "", "", &problems.Problem{
+			Type:          problems.JwtProblem,
+			ServerMessage: fmt.Sprintf("while trying to retrieve the refresh_token cookie -> %v", err),
+			ClientMessage: "An error has occurred while processing your request.",
+			Status:        http.StatusInternalServerError,
+		}
+	}
+
+	if access != nil {
+		return access.Value, refresh.Value, nil
+	} else {
+		return "", refresh.Value, nil
+	}
 }

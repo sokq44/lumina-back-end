@@ -1,4 +1,4 @@
-package errhandle
+package problems
 
 import (
 	"errors"
@@ -10,22 +10,23 @@ import (
 	"time"
 )
 
-type ErrorType byte
+type ProblemType byte
 
-type Error struct {
-	Type          ErrorType
+type Problem struct {
+	Type          ProblemType
 	ServerMessage string
 	ClientMessage string
 	Status        int
 }
 
 const (
-	DatabaseError ErrorType = 1
-	EmailsError   ErrorType = 2
-	CryptError    ErrorType = 3
-	JwtError      ErrorType = 4
-	ModelError    ErrorType = 5
-	HandlerError  ErrorType = 6
+	DatabaseProblem ProblemType = 1
+	EmailsProblem   ProblemType = 2
+	CryptProblem    ProblemType = 3
+	JwtProblem      ProblemType = 4
+	ModelProblem    ProblemType = 5
+	AssetProblem    ProblemType = 6
+	HandlerProblem  ProblemType = 7
 )
 
 var location string
@@ -41,7 +42,7 @@ func Init(l string, v bool) {
 	}
 }
 
-func (e *Error) Handle(w http.ResponseWriter, r *http.Request) bool {
+func (e *Problem) Handle(w http.ResponseWriter, r *http.Request) bool {
 	if e == nil {
 		return false
 	}
@@ -50,7 +51,7 @@ func (e *Error) Handle(w http.ResponseWriter, r *http.Request) bool {
 		w.WriteHeader(e.Status)
 		_, err := w.Write([]byte(e.ClientMessage))
 		if err != nil {
-			log.Println("error while writing a response")
+			log.Println("problem while writing a response")
 		}
 	}
 
@@ -58,18 +59,22 @@ func (e *Error) Handle(w http.ResponseWriter, r *http.Request) bool {
 	var typeString string
 
 	switch e.Type {
-	case DatabaseError:
-		typeString = "database error"
-	case EmailsError:
-		typeString = "emails error"
-	case CryptError:
-		typeString = "crypt error"
-	case JwtError:
-		typeString = "jwt error"
-	case ModelError:
-		typeString = "model error"
+	case DatabaseProblem:
+		typeString = "database problem"
+	case EmailsProblem:
+		typeString = "emails problem"
+	case CryptProblem:
+		typeString = "crypt problem"
+	case JwtProblem:
+		typeString = "jwt problem"
+	case ModelProblem:
+		typeString = "model problem"
+	case AssetProblem:
+		typeString = "asset problem"
+	case HandlerProblem:
+		typeString = "handler problem"
 	default:
-		typeString = "unknown error"
+		typeString = "unknown problem"
 	}
 
 	logMessage = fmt.Sprintf(
@@ -91,16 +96,16 @@ func (e *Error) Handle(w http.ResponseWriter, r *http.Request) bool {
 	fullPath := filepath.Join(location, now.Format("02-01-2006")+".log")
 	file, err := os.OpenFile(fullPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if !errors.Is(err, os.ErrExist) && err != nil {
-		log.Println("error while creating the log file", err)
+		log.Println("Problem while creating the log file", err)
 	} else {
 		_, err = file.WriteString(fmt.Sprintf("%s\n", logMessage))
 		if err != nil {
-			log.Println("error while writing a log")
+			log.Println("problem while writing a log")
 		}
 	}
 	err = file.Close()
 	if err != nil {
-		log.Println("error while closing the log file")
+		log.Println("problem while closing the log file")
 	}
 
 	return true

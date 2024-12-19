@@ -2,22 +2,22 @@ package database
 
 import (
 	"backend/models"
-	"backend/utils/errhandle"
+	"backend/utils/problems"
 	"database/sql"
 	"errors"
 	"fmt"
 	"net/http"
 )
 
-func (db *Database) CreateRefreshToken(token models.RefreshToken) *errhandle.Error {
+func (db *Database) CreateRefreshToken(token models.RefreshToken) *problems.Problem {
 	_, err := db.Connection.Exec(
 		"INSERT INTO refresh_tokens (id, token, expires, user_id) values(?, ?, ?, ?)",
 		token.Id, token.Token, token.Expires, token.UserId,
 	)
 
 	if err != nil {
-		return &errhandle.Error{
-			Type:          errhandle.DatabaseError,
+		return &problems.Problem{
+			Type:          problems.DatabaseProblem,
 			ServerMessage: fmt.Sprintf("error while creating a refresh token: %v", err),
 			ClientMessage: "An error occurred while trying to store your session.",
 			Status:        http.StatusInternalServerError,
@@ -27,7 +27,7 @@ func (db *Database) CreateRefreshToken(token models.RefreshToken) *errhandle.Err
 	return nil
 }
 
-func (db *Database) GetRefreshTokenByUserId(userId string) (*models.RefreshToken, *errhandle.Error) {
+func (db *Database) GetRefreshTokenByUserId(userId string) (*models.RefreshToken, *problems.Problem) {
 	var token models.RefreshToken
 	var rawTime string
 
@@ -37,15 +37,15 @@ func (db *Database) GetRefreshTokenByUserId(userId string) (*models.RefreshToken
 	).Scan(&token.Id, &token.Token, &rawTime, &token.UserId)
 
 	if errors.Is(err, sql.ErrNoRows) {
-		return nil, &errhandle.Error{
-			Type:          errhandle.DatabaseError,
+		return nil, &problems.Problem{
+			Type:          problems.DatabaseProblem,
 			ServerMessage: fmt.Sprintf("while getting a refresh token by user id: %v", err),
 			ClientMessage: "There's no session associated with the provided user.",
 			Status:        http.StatusNotFound,
 		}
 	} else if err != nil {
-		return nil, &errhandle.Error{
-			Type:          errhandle.DatabaseError,
+		return nil, &problems.Problem{
+			Type:          problems.DatabaseProblem,
 			ServerMessage: fmt.Sprintf("while getting a refresh token by user id: %v", err),
 			ClientMessage: "An error occurred while processing your request.",
 			Status:        http.StatusInternalServerError,
@@ -62,15 +62,15 @@ func (db *Database) GetRefreshTokenByUserId(userId string) (*models.RefreshToken
 	return &token, nil
 }
 
-func (db *Database) DeleteRefreshTokenById(id string) *errhandle.Error {
+func (db *Database) DeleteRefreshTokenById(id string) *problems.Problem {
 	_, err := db.Connection.Exec(
 		"DELETE FROM refresh_tokens WHERE id=?;",
 		id,
 	)
 
 	if err != nil {
-		return &errhandle.Error{
-			Type:          errhandle.DatabaseError,
+		return &problems.Problem{
+			Type:          problems.DatabaseProblem,
 			ServerMessage: fmt.Sprintf("error while deleting a refresh token by id: %v", err),
 			ClientMessage: "An error occurred while processing your request.",
 			Status:        http.StatusInternalServerError,
@@ -80,15 +80,15 @@ func (db *Database) DeleteRefreshTokenById(id string) *errhandle.Error {
 	return nil
 }
 
-func (db *Database) DeleteRefreshTokenByToken(token string) *errhandle.Error {
+func (db *Database) DeleteRefreshTokenByToken(token string) *problems.Problem {
 	_, err := db.Connection.Exec(
 		"DELETE FROM refresh_tokens WHERE token=?;",
 		token,
 	)
 
 	if err != nil {
-		return &errhandle.Error{
-			Type:          errhandle.DatabaseError,
+		return &problems.Problem{
+			Type:          problems.DatabaseProblem,
 			ServerMessage: fmt.Sprintf("error while deleting a refresh token by token: %v", err),
 			ClientMessage: "An error occurred while processing your request.",
 			Status:        http.StatusInternalServerError,
@@ -98,12 +98,12 @@ func (db *Database) DeleteRefreshTokenByToken(token string) *errhandle.Error {
 	return nil
 }
 
-func (db *Database) GetExpiredRefreshTokens() ([]models.RefreshToken, *errhandle.Error) {
+func (db *Database) GetExpiredRefreshTokens() ([]models.RefreshToken, *problems.Problem) {
 	rows, err := db.Connection.Query("SELECT * FROM refresh_tokens WHERE expires <= NOW();")
 
 	if err != nil {
-		return nil, &errhandle.Error{
-			Type:          errhandle.DatabaseError,
+		return nil, &problems.Problem{
+			Type:          problems.DatabaseProblem,
 			ServerMessage: fmt.Sprintf("error while trying to retrieve expired refresh tokens: %v", err),
 			Status:        http.StatusInternalServerError,
 		}
@@ -114,8 +114,8 @@ func (db *Database) GetExpiredRefreshTokens() ([]models.RefreshToken, *errhandle
 		var token models.RefreshToken
 		var rawTime string
 		if err := rows.Scan(&token.Id, &token.Token, &rawTime, &token.UserId); err != nil {
-			return nil, &errhandle.Error{
-				Type:          errhandle.DatabaseError,
+			return nil, &problems.Problem{
+				Type:          problems.DatabaseProblem,
 				ServerMessage: fmt.Sprintf("error while scanning expired refresh tokens: %v", err),
 				Status:        http.StatusInternalServerError,
 			}

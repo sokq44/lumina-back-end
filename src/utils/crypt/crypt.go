@@ -1,7 +1,7 @@
 package crypt
 
 import (
-	"backend/utils/errhandle"
+	"backend/utils/problems"
 	"crypto/rand"
 	"encoding/base64"
 	"encoding/binary"
@@ -122,11 +122,11 @@ func Majority(x, y, z uint32) uint32 {
 	return (x & y) ^ (x & z) ^ (y & z)
 }
 
-func RandomString(length int) (string, *errhandle.Error) {
+func RandomString(length int) (string, *problems.Problem) {
 	bytes := make([]byte, length)
 	if _, err := rand.Read(bytes); err != nil {
-		return "", &errhandle.Error{
-			Type:          errhandle.CryptError,
+		return "", &problems.Problem{
+			Type:          problems.CryptProblem,
 			ServerMessage: fmt.Sprintf("error while generating a random string: %v", err),
 			ClientMessage: "There was an error while processing your request.",
 			Status:        http.StatusInternalServerError,
@@ -146,11 +146,11 @@ func Base64UrlEncode(input []byte) string {
 	return base64.RawURLEncoding.EncodeToString(input)
 }
 
-func Base64UrlDecode(input string) ([]byte, *errhandle.Error) {
+func Base64UrlDecode(input string) ([]byte, *problems.Problem) {
 	bytes, err := base64.RawURLEncoding.DecodeString(input)
 	if err != nil {
-		return nil, &errhandle.Error{
-			Type:          errhandle.CryptError,
+		return nil, &problems.Problem{
+			Type:          problems.CryptProblem,
 			ServerMessage: fmt.Sprintf("while decoding a base 64 URL string: %v", err),
 			ClientMessage: "There was an error while processing your request.",
 			Status:        http.StatusInternalServerError,

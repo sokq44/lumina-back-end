@@ -26,7 +26,7 @@ func (db *Database) CreateArticle(article models.Article) *problems.Problem {
 }
 
 func (db *Database) GetArticlesByUserId(userId string) ([]models.Article, *problems.Problem) {
-	rows, err := db.Connection.Query("SELECT * FROM articles WHERE user_id = ?;", userId)
+	rows, err := db.Connection.Query("SELECT id, title, content, created_at FROM articles WHERE user_id = ?;", userId)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, &problems.Problem{
 			Type:          problems.DatabaseProblem,
@@ -47,7 +47,7 @@ func (db *Database) GetArticlesByUserId(userId string) ([]models.Article, *probl
 	for rows.Next() {
 		var article models.Article
 		var rawTime string
-		if err := rows.Scan(&article.Id, &article.Title, &article.Content, &article.UserId, &rawTime); err != nil {
+		if err := rows.Scan(&article.Id, &article.Title, &article.Content, &rawTime); err != nil {
 			return nil, &problems.Problem{
 				Type:          problems.DatabaseProblem,
 				ServerMessage: fmt.Sprintf("while scanning articles -> %v", err),

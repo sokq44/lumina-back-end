@@ -45,4 +45,6 @@ func assignAssetsHandlers() {
 
 func assignArticlesHandlers() {
 	http.HandleFunc(ArticlesPath+"/add", middleware.CORS(middleware.Method("POST", middleware.Authenticate(AddArticle))))
+
+	http.HandleFunc(ArticlesPath+"/get", middleware.CORS(middleware.Method("GET", middleware.Authenticate(GetArticles))))
 }

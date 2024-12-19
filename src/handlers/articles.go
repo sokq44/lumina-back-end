@@ -5,6 +5,7 @@ import (
 	"backend/utils/jwt"
 	"backend/utils/problems"
 	"encoding/json"
+	"fmt"
 	"net/http"
 )
 
@@ -17,8 +18,8 @@ func AddArticle(w http.ResponseWriter, r *http.Request) {
 	var body RequestBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		p := problems.Problem{
-			Type:          problems.HandlerError,
-			ServerMessage: "while decoding the request body -> " + err.Error(),
+			Type:          problems.HandlerProblem,
+			ServerMessage: fmt.Sprintf("while decoding the request body -> %v", err),
 			ClientMessage: "An error occurred while processing your request.",
 			Status:        http.StatusBadRequest,
 		}
@@ -62,5 +63,14 @@ func GetArticles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	json.NewEncoder(w).Encode(articles)
+	if err := json.NewEncoder(w).Encode(articles); err != nil {
+		p := problems.Problem{
+			Type:          problems.HandlerProblem,
+			ServerMessage: fmt.Sprintf("while encoding the response body -> %c", err),
+			ClientMessage: "An error occurred while processing your request.",
+			Status:        http.StatusInternalServerError,
+		}
+		p.Handle(w, r)
+		return
+	}
 }

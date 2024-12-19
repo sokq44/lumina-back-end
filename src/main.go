@@ -28,15 +28,9 @@ func initApplication() string {
 	return *appPort
 }
 
-func initServer(port string) {
-	initApplication()
-
+func main() {
+	port := initApplication()
 	if err := http.ListenAndServe(fmt.Sprintf(":%s", port), nil); err != nil {
 		log.Fatal("Error while trying to start the server.")
 	}
-}
-
-func main() {
-	port := initApplication()
-	initServer(port)
 }

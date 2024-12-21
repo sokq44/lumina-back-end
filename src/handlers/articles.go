@@ -74,3 +74,25 @@ func GetArticles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+func DeleteArticle(w http.ResponseWriter, r *http.Request) {
+	type RequestBody struct {
+		Id string `json:"id"`
+	}
+
+	var body RequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		p := problems.Problem{
+			Type:          problems.HandlerProblem,
+			ServerMessage: fmt.Sprintf("while decoding the request body -> %v", err),
+			ClientMessage: "An error occurred while processing your request.",
+			Status:        http.StatusBadRequest,
+		}
+		p.Handle(w, r)
+		return
+	}
+
+	if db.DeleteArticleById(body.Id).Handle(w, r) {
+		return
+	}
+}

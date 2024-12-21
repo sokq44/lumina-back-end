@@ -67,3 +67,24 @@ func (db *Database) GetArticlesByUserId(userId string) ([]models.Article, *probl
 
 	return articles, nil
 }
+
+func (db *Database) DeleteArticleById(id string) *problems.Problem {
+	_, err := db.Connection.Exec("DELETE FROM articles WHERE id = ?;", id)
+	if errors.Is(err, sql.ErrNoRows) {
+		return &problems.Problem{
+			Type:          problems.DatabaseProblem,
+			ServerMessage: fmt.Sprintf("while deleting article by id -> %v", err),
+			ClientMessage: "There is no such article.",
+			Status:        http.StatusNotFound,
+		}
+	} else if err != nil {
+		return &problems.Problem{
+			Type:          problems.DatabaseProblem,
+			ServerMessage: fmt.Sprintf("while deleting article by id -> %v", err),
+			ClientMessage: "An error occurred while processing your request.",
+			Status:        http.StatusInternalServerError,
+		}
+	}
+
+	return nil
+}

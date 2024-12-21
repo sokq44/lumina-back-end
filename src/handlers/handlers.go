@@ -11,6 +11,12 @@ const (
 	ArticlesPath = "/articles"
 )
 
+var (
+	CORS   = middleware.CORS
+	Auth   = middleware.Authenticate
+	Method = middleware.Method
+)
+
 func Empty(http.ResponseWriter, *http.Request) {}
 
 func InitHandlers() {
@@ -20,31 +26,33 @@ func InitHandlers() {
 }
 
 func assignUserHandlers() {
-	http.HandleFunc(UserPath+"/login", middleware.CORS(middleware.Method("POST", LoginUser)))
+	http.HandleFunc(UserPath+"/login", CORS(Method("POST", LoginUser)))
 
-	http.HandleFunc(UserPath+"/register", middleware.CORS(middleware.Method("POST", RegisterUser)))
+	http.HandleFunc(UserPath+"/register", CORS(Method("POST", RegisterUser)))
 
-	http.HandleFunc(UserPath+"/verify-email", middleware.CORS(middleware.Method("PATCH", VerifyEmail)))
+	http.HandleFunc(UserPath+"/verify-email", CORS(Method("PATCH", VerifyEmail)))
 
-	http.HandleFunc(UserPath+"/logout", middleware.CORS(middleware.Authenticate(middleware.Method("DELETE", LogoutUser))))
+	http.HandleFunc(UserPath+"/logout", CORS(Auth(Method("DELETE", LogoutUser))))
 
-	http.HandleFunc(UserPath+"/logged-in", middleware.CORS(middleware.Authenticate(middleware.Method("GET", Empty))))
+	http.HandleFunc(UserPath+"/logged-in", CORS(Auth(Method("GET", Empty))))
 
-	http.HandleFunc(UserPath+"/get-user", middleware.CORS(middleware.Authenticate(middleware.Method("GET", GetUser))))
+	http.HandleFunc(UserPath+"/get-user", CORS(Auth(Method("GET", GetUser))))
 
-	http.HandleFunc(UserPath+"/modify-user", middleware.CORS(middleware.Authenticate(middleware.Method("PATCH", ModifyUser))))
+	http.HandleFunc(UserPath+"/modify-user", CORS(Auth(Method("PATCH", ModifyUser))))
 
-	http.HandleFunc(UserPath+"/change-password", middleware.CORS(middleware.Method("PATCH", ChangePassword)))
+	http.HandleFunc(UserPath+"/change-password", CORS(Method("PATCH", ChangePassword)))
 
-	http.HandleFunc(UserPath+"/password-change-init", middleware.CORS(middleware.Method("POST", PasswordChangeInit)))
+	http.HandleFunc(UserPath+"/password-change-init", CORS(Method("POST", PasswordChangeInit)))
 }
 
 func assignAssetsHandlers() {
-	http.HandleFunc(AssetsPath+"/add", middleware.CORS(middleware.Method("POST", middleware.Authenticate(AddAsset))))
+	http.HandleFunc(AssetsPath+"/add", CORS(Method("POST", Auth(AddAsset))))
 }
 
 func assignArticlesHandlers() {
-	http.HandleFunc(ArticlesPath+"/add", middleware.CORS(middleware.Method("POST", middleware.Authenticate(AddArticle))))
+	http.HandleFunc(ArticlesPath+"/add", CORS(Method("POST", Auth(AddArticle))))
 
-	http.HandleFunc(ArticlesPath+"/get", middleware.CORS(middleware.Method("GET", middleware.Authenticate(GetArticles))))
+	http.HandleFunc(ArticlesPath+"/get", CORS(Method("GET", Auth(GetArticles))))
+
+	http.HandleFunc(ArticlesPath+"/delete", CORS(Method("DELETE", Auth(DeleteArticle))))
 }

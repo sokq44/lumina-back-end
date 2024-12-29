@@ -12,6 +12,9 @@ import (
 	"net/http"
 )
 
+// TODO: Article Model Validation
+// TODO: Article likes and dislikes
+
 func initApplication() string {
 	appPort := flag.String("p", "3000", "Port on which the application runs.")
 	logsPath := flag.String("l", "./../logs", "Path to the [logs] directory.")

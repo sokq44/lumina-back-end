@@ -6,7 +6,9 @@ import (
 	"backend/utils/problems"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
+	"time"
 )
 
 func AddArticle(w http.ResponseWriter, r *http.Request) {
@@ -48,6 +50,14 @@ func AddArticle(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetArticles(w http.ResponseWriter, r *http.Request) {
+	type ResponseData struct {
+		Id        string    `json:"id"`
+		Title     string    `json:"title"`
+		Content   string    `json:"content"`
+		CreatedAt time.Time `json:"created_at"`
+		User      string    `json:"user"`
+	}
+
 	_, access, p := jwt.GetRefAccFromRequest(r)
 	if p.Handle(w, r) {
 		return
@@ -63,10 +73,70 @@ func GetArticles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := json.NewEncoder(w).Encode(articles); err != nil {
+	var articlesResponse []ResponseData
+	for _, article := range articles {
+		user, p := db.GetUserById(article.UserId)
+		if p.Handle(w, r) {
+			return
+		}
+
+		articlesResponse = append(articlesResponse, ResponseData{
+			Id:        article.Id,
+			Title:     article.Title,
+			Content:   article.Content,
+			CreatedAt: article.CreatedAt,
+			User:      user.Username,
+		})
+	}
+
+	if err := json.NewEncoder(w).Encode(articlesResponse); err != nil {
 		p := problems.Problem{
 			Type:          problems.HandlerProblem,
-			ServerMessage: fmt.Sprintf("while encoding the response body -> %c", err),
+			ServerMessage: fmt.Sprintf("while encoding the response body -> %v", err),
+			ClientMessage: "An error occurred while processing your request.",
+			Status:        http.StatusInternalServerError,
+		}
+		p.Handle(w, r)
+		return
+	}
+}
+
+func GetArticle(w http.ResponseWriter, r *http.Request) {
+	type ResponseData struct {
+		Id        string    `json:"id"`
+		Title     string    `json:"title"`
+		Content   string    `json:"content"`
+		CreatedAt time.Time `json:"created_at"`
+		User      string    `json:"user"`
+	}
+
+	query := r.URL.Query()
+	id := query.Get("article")
+
+	log.Println(id)
+
+	article, p := db.GetArticleById(id)
+	if p.Handle(w, r) {
+		return
+	}
+
+	user, p := db.GetUserById(article.UserId)
+	if p.Handle(w, r) {
+		return
+	}
+
+	response := ResponseData{
+		Id:        article.Id,
+		Title:     article.Title,
+		Content:   article.Content,
+		CreatedAt: article.CreatedAt,
+		User:      user.Username,
+	}
+
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		p := problems.Problem{
+			Type:          problems.HandlerProblem,
+			ServerMessage: fmt.Sprintf("while encoding the response body -> %v", err),
 			ClientMessage: "An error occurred while processing your request.",
 			Status:        http.StatusInternalServerError,
 		}

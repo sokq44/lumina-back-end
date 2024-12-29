@@ -50,9 +50,11 @@ func assignAssetsHandlers() {
 }
 
 func assignArticlesHandlers() {
-	http.HandleFunc(ArticlesPath+"/add", CORS(Method("POST", Auth(AddArticle))))
+	http.HandleFunc(ArticlesPath+"/create", CORS(Method("POST", Auth(AddArticle))))
 
-	http.HandleFunc(ArticlesPath+"/get", CORS(Method("GET", Auth(GetArticles))))
+	http.HandleFunc(ArticlesPath+"/get", CORS(Method("GET", Auth(GetArticle))))
+
+	http.HandleFunc(ArticlesPath+"/get-all", CORS(Method("GET", Auth(GetArticles))))
 
 	http.HandleFunc(ArticlesPath+"/delete", CORS(Method("DELETE", Auth(DeleteArticle))))
 }

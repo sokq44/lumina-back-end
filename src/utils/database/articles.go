@@ -25,13 +25,48 @@ func (db *Database) CreateArticle(article models.Article) *problems.Problem {
 	return nil
 }
 
+func (db *Database) GetArticleById(id string) (*models.Article, *problems.Problem) {
+	var article models.Article
+	var rawTime string
+
+	err := db.Connection.QueryRow(
+		"SELECT id, title, content, created_at, user_id FROM articles WHERE id = ?;",
+		id,
+	).Scan(&article.Id, &article.Title, &article.Content, &rawTime, &article.UserId)
+
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, &problems.Problem{
+			Type:          problems.DatabaseProblem,
+			ServerMessage: fmt.Sprintf("while getting article by id -> %v", err),
+			ClientMessage: "There is no such article.",
+			Status:        http.StatusNotFound,
+		}
+	} else if err != nil {
+		return nil, &problems.Problem{
+			Type:          problems.DatabaseProblem,
+			ServerMessage: fmt.Sprintf("while getting article by id -> %v", err),
+			ClientMessage: "An error occurred while processing your request.",
+			Status:        http.StatusInternalServerError,
+		}
+	}
+
+	time, p := parseTime(rawTime)
+	if p != nil {
+		return nil, p
+	}
+
+	article.CreatedAt = time
+
+	return &article, nil
+}
+
 func (db *Database) GetArticlesByUserId(userId string) ([]models.Article, *problems.Problem) {
 	rows, err := db.Connection.Query("SELECT id, title, content, created_at FROM articles WHERE user_id = ?;", userId)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, &problems.Problem{
 			Type:          problems.DatabaseProblem,
 			ServerMessage: fmt.Sprintf("while getting articles by user id -> %v", err),
-			ClientMessage: "There are no articles associated with that person.",
+			ClientMessage: "There are no articles associated with you.",
 			Status:        http.StatusNotFound,
 		}
 	} else if err != nil {

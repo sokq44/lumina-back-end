@@ -5,7 +5,6 @@ import (
 	"backend/utils/database"
 	"backend/utils/jwt"
 	"backend/utils/problems"
-	"log"
 	"net/http"
 	"time"
 )
@@ -117,7 +116,6 @@ func Authenticate(next http.HandlerFunc) http.HandlerFunc {
 		}
 
 		if accessToken == "" {
-			log.Println("debugging: access token has expired")
 			user, p := db.GetUserById(userId)
 			if p.Handle(w, r) {
 				return

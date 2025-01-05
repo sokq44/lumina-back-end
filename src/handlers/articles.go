@@ -6,13 +6,13 @@ import (
 	"backend/utils/problems"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 )
 
-func AddArticle(w http.ResponseWriter, r *http.Request) {
+func SaveArticle(w http.ResponseWriter, r *http.Request) {
 	type RequestBody struct {
+		Id      string `json:"id"`
 		Title   string `json:"title"`
 		Content string `json:"content"`
 	}
@@ -39,12 +39,40 @@ func AddArticle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	article := models.Article{
-		Title:   body.Title,
-		Content: body.Content,
-		UserId:  claims["user"].(string),
+	if body.Id == "" {
+		article := models.Article{
+			Title:   body.Title,
+			Content: body.Content,
+			UserId:  claims["user"].(string),
+		}
+		if db.CreateArticle(article).Handle(w, r) {
+			return
+		}
+	} else {
+		article := models.Article{
+			Id:      body.Id,
+			Title:   body.Title,
+			Content: body.Content,
+			UserId:  claims["user"].(string),
+		}
+		if db.UpdateArticle(article).Handle(w, r) {
+			return
+		}
 	}
-	if db.CreateArticle(article).Handle(w, r) {
+
+	retrievedArticle, p := db.GetArticleByTitle(body.Title)
+	if p.Handle(w, r) {
+		return
+	}
+
+	if err := json.NewEncoder(w).Encode(retrievedArticle.Id); err != nil {
+		p := problems.Problem{
+			Type:          problems.HandlerProblem,
+			ServerMessage: fmt.Sprintf("while encoding the response body -> %v", err),
+			ClientMessage: "An error occurred while processing your request.",
+			Status:        http.StatusInternalServerError,
+		}
+		p.Handle(w, r)
 		return
 	}
 }
@@ -112,8 +140,6 @@ func GetArticle(w http.ResponseWriter, r *http.Request) {
 
 	query := r.URL.Query()
 	id := query.Get("article")
-
-	log.Println(id)
 
 	article, p := db.GetArticleById(id)
 	if p.Handle(w, r) {

@@ -13,6 +13,7 @@ import (
 )
 
 // TODO: Article Model Validation
+// TODO: Article overwriting upon saving the same article
 // TODO: Article likes and dislikes
 
 func initApplication() string {

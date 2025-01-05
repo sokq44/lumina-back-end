@@ -25,6 +25,29 @@ func (db *Database) CreateArticle(article models.Article) *problems.Problem {
 	return nil
 }
 
+func (db *Database) UpdateArticle(article models.Article) *problems.Problem {
+	_, err := db.Connection.Exec("UPDATE articles SET title = ?, content = ?, user_id = ? WHERE id = ?;",
+		article.Title, article.Content, article.UserId, article.Id,
+	)
+	if errors.Is(err, sql.ErrNoRows) {
+		return &problems.Problem{
+			Type:          problems.DatabaseProblem,
+			ServerMessage: fmt.Sprintf("while updating article -> %v", err),
+			ClientMessage: "There is no such article.",
+			Status:        http.StatusNotFound,
+		}
+	} else if err != nil {
+		return &problems.Problem{
+			Type:          problems.DatabaseProblem,
+			ServerMessage: fmt.Sprintf("while updating article -> %v", err),
+			ClientMessage: "An error occurred while updating the article.",
+			Status:        http.StatusInternalServerError,
+		}
+	}
+
+	return nil
+}
+
 func (db *Database) GetArticleById(id string) (*models.Article, *problems.Problem) {
 	var article models.Article
 	var rawTime string
@@ -32,6 +55,41 @@ func (db *Database) GetArticleById(id string) (*models.Article, *problems.Proble
 	err := db.Connection.QueryRow(
 		"SELECT id, title, content, created_at, user_id FROM articles WHERE id = ?;",
 		id,
+	).Scan(&article.Id, &article.Title, &article.Content, &rawTime, &article.UserId)
+
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, &problems.Problem{
+			Type:          problems.DatabaseProblem,
+			ServerMessage: fmt.Sprintf("while getting article by id -> %v", err),
+			ClientMessage: "There is no such article.",
+			Status:        http.StatusNotFound,
+		}
+	} else if err != nil {
+		return nil, &problems.Problem{
+			Type:          problems.DatabaseProblem,
+			ServerMessage: fmt.Sprintf("while getting article by id -> %v", err),
+			ClientMessage: "An error occurred while processing your request.",
+			Status:        http.StatusInternalServerError,
+		}
+	}
+
+	time, p := parseTime(rawTime)
+	if p != nil {
+		return nil, p
+	}
+
+	article.CreatedAt = time
+
+	return &article, nil
+}
+
+func (db *Database) GetArticleByTitle(title string) (*models.Article, *problems.Problem) {
+	var article models.Article
+	var rawTime string
+
+	err := db.Connection.QueryRow(
+		"SELECT id, title, content, created_at, user_id FROM articles WHERE title = ?;",
+		title,
 	).Scan(&article.Id, &article.Title, &article.Content, &rawTime, &article.UserId)
 
 	if errors.Is(err, sql.ErrNoRows) {

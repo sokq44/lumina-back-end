@@ -2,7 +2,7 @@ package database
 
 import (
 	"backend/config"
-	"backend/utils/errhandle"
+	"backend/utils/problems"
 	"database/sql"
 	"fmt"
 	"log"
@@ -64,12 +64,12 @@ func GetDb() *Database {
 	return &db
 }
 
-func parseTime(t string) (time.Time, *errhandle.Error) {
+func parseTime(t string) (time.Time, *problems.Problem) {
 	parsed, err := time.Parse("2006-01-02 15:04:05", t)
 
 	if err != nil {
-		return time.Time{}, &errhandle.Error{
-			Type:          errhandle.DatabaseError,
+		return time.Time{}, &problems.Problem{
+			Type:          problems.DatabaseProblem,
 			ServerMessage: fmt.Sprintf("while parsing datetime -> %v", err),
 			ClientMessage: "An error occurred while processing your request.",
 			Status:        http.StatusInternalServerError,
@@ -79,7 +79,7 @@ func parseTime(t string) (time.Time, *errhandle.Error) {
 	return parsed, nil
 }
 
-func (db *Database) CleanDb() *errhandle.Error {
+func (db *Database) CleanDb() *problems.Problem {
 	verifications, err := db.GetExpiredEmailVerifications()
 	if err != nil {
 		return err

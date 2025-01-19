@@ -6,10 +6,9 @@ import (
 	"backend/utils/crypt"
 	"backend/utils/database"
 	"backend/utils/emails"
-	"backend/utils/errhandle"
 	"backend/utils/jwt"
+	"backend/utils/problems"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -27,15 +26,14 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 
 	var body RequestBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		e := errhandle.Error{
-			Type:          errhandle.HandlerError,
+		p := problems.Problem{
+			Type:          problems.HandlerProblem,
 			ServerMessage: fmt.Sprintf("error while retrieving the access_token cookie: %v", err),
 			ClientMessage: "An error has occurred while processing your request.",
 			Status:        http.StatusBadRequest,
 		}
-		if e.Handle(w, r) {
-			return
-		}
+		p.Handle(w, r)
+		return
 	}
 
 	u := models.User{
@@ -48,20 +46,19 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	exists, e := db.UserExists(u)
-	if e.Handle(w, r) {
+	exists, p := db.UserExists(u)
+	if p.Handle(w, r) {
 		return
 	}
 	if exists {
-		e := errhandle.Error{
-			Type:          errhandle.DatabaseError,
+		p := problems.Problem{
+			Type:          problems.DatabaseProblem,
 			ServerMessage: "user already exists",
 			ClientMessage: "A user with these credentials already exists.",
 			Status:        http.StatusConflict,
 		}
-		if e.Handle(w, r) {
-			return
-		}
+		p.Handle(w, r)
+		return
 	}
 
 	u.Password = crypt.Sha256(body.Password)
@@ -69,8 +66,8 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token, e := crypt.RandomString(128)
-	if e.Handle(w, r) {
+	token, p := crypt.RandomString(128)
+	if p.Handle(w, r) {
 		return
 	}
 
@@ -98,40 +95,37 @@ func VerifyEmail(w http.ResponseWriter, r *http.Request) {
 
 	var body RequestBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		e := errhandle.Error{
-			Type:          errhandle.HandlerError,
+		p := problems.Problem{
+			Type:          problems.HandlerProblem,
 			ServerMessage: fmt.Sprintf("error while retrieving the access_token cookie: %v", err),
 			ClientMessage: "An error has occurred while processing your request.",
 			Status:        http.StatusBadRequest,
 		}
-		if e.Handle(w, r) {
-			return
-		}
+		p.Handle(w, r)
+		return
 	}
 
-	emailValidation, e := db.GetEmailVerificationByToken(body.Token)
-	if e.Handle(w, r) {
+	emailValidation, p := db.GetEmailVerificationByToken(body.Token)
+	if p.Handle(w, r) {
 		return
 	}
 
 	if emailValidation.Expires.Before(time.Now()) {
-		e := errhandle.Error{
-			Type:          errhandle.DatabaseError,
+		p := problems.Problem{
+			Type:          problems.DatabaseProblem,
 			ServerMessage: "email validation token has expired",
 			ClientMessage: "The verification link is invalid or has expired.",
 			Status:        http.StatusGone,
 		}
-		e.Handle(w, r)
+		p.Handle(w, r)
 		return
 	}
 
-	e = db.DeleteEmailVerificationById(emailValidation.Id)
-	if e.Handle(w, r) {
+	if db.DeleteEmailVerificationById(emailValidation.Id).Handle(w, r) {
 		return
 	}
 
-	e = db.VerifyUser(emailValidation.UserId)
-	if e.Handle(w, r) {
+	if db.VerifyUser(emailValidation.UserId).Handle(w, r) {
 		return
 	}
 
@@ -146,19 +140,18 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 
 	var body RequestBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		e := errhandle.Error{
-			Type:          errhandle.HandlerError,
+		p := problems.Problem{
+			Type:          problems.HandlerProblem,
 			ServerMessage: fmt.Sprintf("error while retrieving the access_token cookie: %v", err),
 			ClientMessage: "An error has occurred while processing your request.",
 			Status:        http.StatusBadRequest,
 		}
-		if e.Handle(w, r) {
-			return
-		}
+		p.Handle(w, r)
+		return
 	}
 
-	user, e := db.GetUserByEmail(body.Email)
-	if e.Handle(w, r) {
+	user, p := db.GetUserByEmail(body.Email)
+	if p.Handle(w, r) {
 		return
 	}
 
@@ -172,30 +165,28 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 
 	hashedPasswd := crypt.Sha256(body.Password)
 	if !user.Verified || hashedPasswd != user.Password {
-		e := errhandle.Error{
-			Type:          errhandle.HandlerError,
+		p := problems.Problem{
+			Type:          problems.HandlerProblem,
 			ServerMessage: "provided password is incorrect or the user isn't verified:",
 			ClientMessage: "Provided password is wrong or the specified user isn't verified.",
 			Status:        http.StatusUnauthorized,
 		}
-		if e.Handle(w, r) {
-			return
-		}
+		p.Handle(w, r)
+		return
 	}
 
 	now := time.Now()
-	access, e := jwt.GenerateAccessToken(user.Id, now)
-	if e.Handle(w, r) {
+	access, p := jwt.GenerateAccessToken(user.Id, now)
+	if p.Handle(w, r) {
 		return
 	}
 
-	refresh, e := jwt.GenerateRefreshToken(user.Id, now)
-	if e.Handle(w, r) {
+	refresh, p := jwt.GenerateRefreshToken(user.Id, now)
+	if p.Handle(w, r) {
 		return
 	}
 
-	e = db.CreateRefreshToken(refresh)
-	if e.Handle(w, r) {
+	if db.CreateRefreshToken(refresh).Handle(w, r) {
 		return
 	}
 
@@ -218,26 +209,22 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 		Secure:   true,
 		SameSite: http.SameSiteNoneMode,
 	})
-
-	w.WriteHeader(http.StatusOK)
 }
 
 func LogoutUser(w http.ResponseWriter, r *http.Request) {
 	refreshCookie, err := r.Cookie("refresh_token")
 	if err != nil {
-		e := errhandle.Error{
-			Type:          errhandle.HandlerError,
+		p := problems.Problem{
+			Type:          problems.HandlerProblem,
 			ServerMessage: fmt.Sprintf("error while retrieving the refresh_token cookie: %v", err),
 			ClientMessage: "An error has occurred while processing your request.",
 			Status:        http.StatusInternalServerError,
 		}
-		if e.Handle(w, r) {
-			return
-		}
+		p.Handle(w, r)
+		return
 	}
 
-	e := db.DeleteRefreshTokenByToken(refreshCookie.Value)
-	if e.Handle(w, r) {
+	if db.DeleteRefreshTokenByToken(refreshCookie.Value).Handle(w, r) {
 		return
 	}
 
@@ -260,32 +247,28 @@ func LogoutUser(w http.ResponseWriter, r *http.Request) {
 		Secure:   true,
 		SameSite: http.SameSiteNoneMode,
 	})
-
-	w.WriteHeader(http.StatusOK)
 }
 
 func GetUser(w http.ResponseWriter, r *http.Request) {
 	access, err := r.Cookie("access_token")
 	if err != nil {
-		e := errhandle.Error{
-			Type:          errhandle.HandlerError,
+		p := problems.Problem{
+			Type:          problems.HandlerProblem,
 			ServerMessage: fmt.Sprintf("error while retrieving the access_token cookie: %v", err),
 			ClientMessage: "An error has occurred while processing your request.",
 			Status:        http.StatusInternalServerError,
 		}
-		if e.Handle(w, r) {
-			return
-		}
-	}
-
-	claims, e := jwt.DecodePayload(access.Value)
-	if e.Handle(w, r) {
+		p.Handle(w, r)
 		return
 	}
 
-	userId := claims["user"].(string)
-	user, e := db.GetUserById(userId)
-	if e.Handle(w, r) {
+	claims, p := jwt.DecodePayload(access.Value)
+	if p.Handle(w, r) {
+		return
+	}
+
+	user, p := db.GetUserById(claims["user"].(string))
+	if p.Handle(w, r) {
 		return
 	}
 
@@ -295,15 +278,14 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 		"image":    user.ImageUrl,
 	}
 	if err := json.NewEncoder(w).Encode(userData); err != nil {
-		e := errhandle.Error{
-			Type:          errhandle.HandlerError,
+		p := problems.Problem{
+			Type:          problems.HandlerProblem,
 			ServerMessage: fmt.Sprintf("error while encoding json data to the response: %v", err),
 			ClientMessage: "An error has occurred while processing your request.",
 			Status:        http.StatusInternalServerError,
 		}
-		if e.Handle(w, r) {
-			return
-		}
+		p.Handle(w, r)
+		return
 	}
 }
 
@@ -316,19 +298,18 @@ func ModifyUser(w http.ResponseWriter, r *http.Request) {
 
 	var body RequestBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		e := errhandle.Error{
-			Type:          errhandle.HandlerError,
+		p := problems.Problem{
+			Type:          problems.HandlerProblem,
 			ServerMessage: fmt.Sprintf("error while retrieving the access_token cookie: %v", err),
 			ClientMessage: "An error has occurred while processing your request.",
 			Status:        http.StatusBadRequest,
 		}
-		if e.Handle(w, r) {
-			return
-		}
+		p.Handle(w, r)
+		return
 	}
 
-	user, e := db.GetUserByEmail(body.Email)
-	if e.Handle(w, r) {
+	user, p := db.GetUserByEmail(body.Email)
+	if p.Handle(w, r) {
 		return
 	}
 
@@ -355,8 +336,8 @@ func PasswordChangeInit(w http.ResponseWriter, r *http.Request) {
 
 	var body RequestBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		e := errhandle.Error{
-			Type:          errhandle.HandlerError,
+		e := problems.Problem{
+			Type:          problems.HandlerProblem,
 			ServerMessage: fmt.Sprintf("error while retrieving the access_token cookie: %v", err),
 			ClientMessage: "An error has occurred while processing your request.",
 			Status:        http.StatusBadRequest,
@@ -366,23 +347,23 @@ func PasswordChangeInit(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	u, e := db.GetUserByEmail(body.Email)
-	if e.Handle(w, r) {
+	user, p := db.GetUserByEmail(body.Email)
+	if p.Handle(w, r) {
 		return
 	}
 
-	token, e := crypt.RandomString(128)
-	if e.Handle(w, r) {
+	token, p := crypt.RandomString(128)
+	if p.Handle(w, r) {
 		return
 	}
 
 	duration := time.Duration(config.PasswdChangeTime)
-	passwdChange := models.PasswordChange{
+	passwordChange := models.PasswordChange{
 		Token:   token,
-		UserId:  u.Id,
+		UserId:  user.Id,
 		Expires: time.Now().Add(duration),
 	}
-	if db.CreatePasswordChange(passwdChange).Handle(w, r) {
+	if db.CreatePasswordChange(passwordChange).Handle(w, r) {
 		return
 	}
 
@@ -401,8 +382,8 @@ func ChangePassword(w http.ResponseWriter, r *http.Request) {
 
 	var body RequestBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		e := errhandle.Error{
-			Type:          errhandle.HandlerError,
+		e := problems.Problem{
+			Type:          problems.HandlerProblem,
 			ServerMessage: fmt.Sprintf("error while retrieving the access_token cookie: %v", err),
 			ClientMessage: "An error has occurred while processing your request.",
 			Status:        http.StatusBadRequest,
@@ -412,13 +393,13 @@ func ChangePassword(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	passwordChange, e := db.GetPasswordChangeByToken(body.Token)
-	if e.Handle(w, r) {
+	passwordChange, p := db.GetPasswordChangeByToken(body.Token)
+	if p.Handle(w, r) {
 		return
 	}
 
-	user, e := db.GetUserById(passwordChange.UserId)
-	if e.Handle(w, r) {
+	user, p := db.GetUserById(passwordChange.UserId)
+	if p.Handle(w, r) {
 		return
 	}
 
@@ -436,8 +417,8 @@ func ChangePassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	access, refresh, e := GetRefAccFromRequest(r)
-	if e.Handle(w, r) {
+	access, refresh, p := jwt.GetRefAccFromRequest(r)
+	if p.Handle(w, r) {
 		return
 	}
 
@@ -461,51 +442,16 @@ func ChangePassword(w http.ResponseWriter, r *http.Request) {
 			SameSite: http.SameSiteNoneMode,
 		})
 
-		refreshToken, e := db.GetRefreshTokenByUserId(user.Id)
-		if e != nil && e.Status == http.StatusNotFound {
+		refreshToken, p := db.GetRefreshTokenByUserId(user.Id)
+		if p != nil && p.Status == http.StatusNotFound {
 			w.WriteHeader(http.StatusOK)
 			return
-		} else if e != nil && e.Handle(w, r) {
+		} else if p != nil && p.Handle(w, r) {
 			return
 		}
 
 		if db.DeleteRefreshTokenById(refreshToken.Id).Handle(w, r) {
 			return
 		}
-	}
-}
-
-func GetRefAccFromRequest(r *http.Request) (string, string, *errhandle.Error) {
-	access, err := r.Cookie("access_token")
-	if err != nil && !errors.Is(err, http.ErrNoCookie) {
-		return "", "", &errhandle.Error{
-			Type:          errhandle.JwtError,
-			ServerMessage: fmt.Sprintf("while trying to retrieve the access_token cookie -> %v", err),
-			ClientMessage: "An error has occurred while processing your request.",
-			Status:        http.StatusInternalServerError,
-		}
-	}
-
-	refresh, err := r.Cookie("refresh_token")
-	if errors.Is(err, http.ErrNoCookie) {
-		return "", "", &errhandle.Error{
-			Type:          errhandle.JwtError,
-			ServerMessage: "no refresh_token cookie present",
-			ClientMessage: "There was no authentication medium present in the request.",
-			Status:        http.StatusUnauthorized,
-		}
-	} else if err != nil {
-		return "", "", &errhandle.Error{
-			Type:          errhandle.JwtError,
-			ServerMessage: fmt.Sprintf("while trying to retrieve the refresh_token cookie -> %v", err),
-			ClientMessage: "An error has occurred while processing your request.",
-			Status:        http.StatusInternalServerError,
-		}
-	}
-
-	if access != nil {
-		return access.Value, refresh.Value, nil
-	} else {
-		return "", refresh.Value, nil
 	}
 }

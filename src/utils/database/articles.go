@@ -6,15 +6,17 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	"net/http"
 )
 
-func (db *Database) CreateArticle(article models.Article) *problems.Problem {
-	_, err := db.Connection.Exec("INSERT INTO articles (title, content, user_id) VALUES (?, ?, ?);",
-		article.Title, article.Content, article.UserId,
+func (db *Database) CreateArticle(article *models.Article) (string, *problems.Problem) {
+	id := uuid.New().String()
+	_, err := db.Connection.Exec("INSERT INTO articles (id, title, content, user_id) VALUES (?, ?, ?, ?);",
+		id, article.Title, article.Content, article.UserId,
 	)
 	if err != nil {
-		return &problems.Problem{
+		return "", &problems.Problem{
 			Type:          problems.DatabaseProblem,
 			ServerMessage: fmt.Sprintf("while creating a new article -> %v", err),
 			ClientMessage: "An error occurred while creating a new article.",
@@ -22,12 +24,12 @@ func (db *Database) CreateArticle(article models.Article) *problems.Problem {
 		}
 	}
 
-	return nil
+	return id, nil
 }
 
-func (db *Database) UpdateArticle(article models.Article) *problems.Problem {
-	_, err := db.Connection.Exec("UPDATE articles SET title = ?, content = ?, user_id = ? WHERE id = ?;",
-		article.Title, article.Content, article.UserId, article.Id,
+func (db *Database) UpdateArticle(article *models.Article) *problems.Problem {
+	_, err := db.Connection.Exec("UPDATE articles SET title = ?, content = ?, user_id = ?, public = ? WHERE id = ?;",
+		article.Title, article.Content, article.UserId, article.Public, article.Id,
 	)
 	if errors.Is(err, sql.ErrNoRows) {
 		return &problems.Problem{
@@ -53,9 +55,9 @@ func (db *Database) GetArticleById(id string) (*models.Article, *problems.Proble
 	var rawTime string
 
 	err := db.Connection.QueryRow(
-		"SELECT id, title, content, created_at, user_id FROM articles WHERE id = ?;",
+		"SELECT id, title, content, created_at, user_id, public FROM articles WHERE id = ?;",
 		id,
-	).Scan(&article.Id, &article.Title, &article.Content, &rawTime, &article.UserId)
+	).Scan(&article.Id, &article.Title, &article.Content, &rawTime, &article.UserId, &article.Public)
 
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, &problems.Problem{
@@ -88,9 +90,9 @@ func (db *Database) GetArticleByTitle(title string) (*models.Article, *problems.
 	var rawTime string
 
 	err := db.Connection.QueryRow(
-		"SELECT id, title, content, created_at, user_id FROM articles WHERE title = ?;",
+		"SELECT id, title, content, created_at, user_id, public FROM articles WHERE title = ?;",
 		title,
-	).Scan(&article.Id, &article.Title, &article.Content, &rawTime, &article.UserId)
+	).Scan(&article.Id, &article.Title, &article.Content, &rawTime, &article.UserId, &article.Public)
 
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, &problems.Problem{
@@ -119,7 +121,7 @@ func (db *Database) GetArticleByTitle(title string) (*models.Article, *problems.
 }
 
 func (db *Database) GetArticlesByUserId(userId string) ([]models.Article, *problems.Problem) {
-	rows, err := db.Connection.Query("SELECT id, title, content, created_at FROM articles WHERE user_id = ?;", userId)
+	rows, err := db.Connection.Query("SELECT id, title, content, created_at, public FROM articles WHERE user_id = ?;", userId)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, &problems.Problem{
 			Type:          problems.DatabaseProblem,
@@ -140,7 +142,7 @@ func (db *Database) GetArticlesByUserId(userId string) ([]models.Article, *probl
 	for rows.Next() {
 		var article models.Article
 		var rawTime string
-		if err := rows.Scan(&article.Id, &article.Title, &article.Content, &rawTime); err != nil {
+		if err := rows.Scan(&article.Id, &article.Title, &article.Content, &rawTime, &article.Public); err != nil {
 			return nil, &problems.Problem{
 				Type:          problems.DatabaseProblem,
 				ServerMessage: fmt.Sprintf("while scanning articles -> %v", err),

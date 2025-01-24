@@ -15,6 +15,7 @@ func SaveArticle(w http.ResponseWriter, r *http.Request) {
 		Id      string `json:"id"`
 		Title   string `json:"title"`
 		Content string `json:"content"`
+		Public  bool   `json:"public"`
 	}
 
 	var body RequestBody
@@ -39,28 +40,33 @@ func SaveArticle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	var id string
 	if body.Id == "" {
-		article := models.Article{
+		article := &models.Article{
 			Title:   body.Title,
+			Public:  body.Public,
 			Content: body.Content,
 			UserId:  claims["user"].(string),
 		}
-		if db.CreateArticle(article).Handle(w, r) {
+		id, p = db.CreateArticle(article)
+		if p.Handle(w, r) {
 			return
 		}
 	} else {
-		article := models.Article{
+		article := &models.Article{
 			Id:      body.Id,
 			Title:   body.Title,
+			Public:  body.Public,
 			Content: body.Content,
 			UserId:  claims["user"].(string),
 		}
 		if db.UpdateArticle(article).Handle(w, r) {
 			return
 		}
+		id = body.Id
 	}
 
-	retrievedArticle, p := db.GetArticleByTitle(body.Title)
+	retrievedArticle, p := db.GetArticleById(id)
 	if p.Handle(w, r) {
 		return
 	}
@@ -80,10 +86,11 @@ func SaveArticle(w http.ResponseWriter, r *http.Request) {
 func GetArticles(w http.ResponseWriter, r *http.Request) {
 	type ResponseData struct {
 		Id        string    `json:"id"`
+		User      string    `json:"user"`
 		Title     string    `json:"title"`
+		Public    bool      `json:"public"`
 		Content   string    `json:"content"`
 		CreatedAt time.Time `json:"created_at"`
-		User      string    `json:"user"`
 	}
 
 	_, access, p := jwt.GetRefAccFromRequest(r)
@@ -111,6 +118,7 @@ func GetArticles(w http.ResponseWriter, r *http.Request) {
 		articlesResponse = append(articlesResponse, ResponseData{
 			Id:        article.Id,
 			Title:     article.Title,
+			Public:    article.Public,
 			Content:   article.Content,
 			CreatedAt: article.CreatedAt,
 			User:      user.Username,
@@ -132,10 +140,11 @@ func GetArticles(w http.ResponseWriter, r *http.Request) {
 func GetArticle(w http.ResponseWriter, r *http.Request) {
 	type ResponseData struct {
 		Id        string    `json:"id"`
+		User      string    `json:"user"`
 		Title     string    `json:"title"`
+		Public    bool      `json:"public"`
 		Content   string    `json:"content"`
 		CreatedAt time.Time `json:"created_at"`
-		User      string    `json:"user"`
 	}
 
 	query := r.URL.Query()
@@ -154,6 +163,7 @@ func GetArticle(w http.ResponseWriter, r *http.Request) {
 	response := ResponseData{
 		Id:        article.Id,
 		Title:     article.Title,
+		Public:    article.Public,
 		Content:   article.Content,
 		CreatedAt: article.CreatedAt,
 		User:      user.Username,

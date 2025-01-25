@@ -56,5 +56,7 @@ func assignArticlesHandlers() {
 
 	http.HandleFunc(ArticlesPath+"/get-all", CORS(Method("GET", Auth(GetArticles))))
 
+	http.HandleFunc(ArticlesPath+"/get-suggested", CORS(Method("GET", Auth(GetSuggestedArticles))))
+
 	http.HandleFunc(ArticlesPath+"/delete", CORS(Method("DELETE", Auth(DeleteArticle))))
 }

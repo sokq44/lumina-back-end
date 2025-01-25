@@ -181,6 +181,48 @@ func GetArticle(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func GetSuggestedArticles(w http.ResponseWriter, r *http.Request) {
+	type ResponseData struct {
+		Id        string    `json:"id"`
+		User      string    `json:"user"`
+		Title     string    `json:"title"`
+		Content   string    `json:"content"`
+		CreatedAt time.Time `json:"created_at"`
+	}
+
+	articles, p := db.GetPublicArticles()
+	if p.Handle(w, r) {
+		return
+	}
+
+	response := make([]ResponseData, 0)
+	for _, article := range articles {
+		user, p := db.GetUserByArticleId(article.Id)
+		if p.Handle(w, r) {
+			return
+		}
+
+		response = append(response, ResponseData{
+			Id:        article.Id,
+			User:      user.Username,
+			Title:     article.Title,
+			Content:   article.Content,
+			CreatedAt: article.CreatedAt,
+		})
+	}
+
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		p = &problems.Problem{
+			Type:          problems.HandlerProblem,
+			ServerMessage: fmt.Sprintf("error while encoding response for GetSuggestedArticles handler -> %v", err),
+			ClientMessage: "An error occurred while processing your request.",
+			Status:        http.StatusInternalServerError,
+		}
+		p.Handle(w, r)
+		return
+	}
+}
+
 func DeleteArticle(w http.ResponseWriter, r *http.Request) {
 	type RequestBody struct {
 		Id string `json:"id"`

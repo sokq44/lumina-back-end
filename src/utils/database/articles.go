@@ -163,6 +163,81 @@ func (db *Database) GetArticlesByUserId(userId string) ([]models.Article, *probl
 	return articles, nil
 }
 
+func (db *Database) GetPublicArticles() ([]models.Article, *problems.Problem) {
+	rows, err := db.Connection.Query("SELECT id, title, content, user_id, created_at FROM articles WHERE public=TRUE;")
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, &problems.Problem{
+			Type:          problems.DatabaseProblem,
+			ServerMessage: fmt.Sprintf("error while retrieving all articles -> %v", err),
+			ClientMessage: "No articles have been found.",
+			Status:        http.StatusNotFound,
+		}
+	} else if err != nil {
+		return nil, &problems.Problem{
+			Type:          problems.DatabaseProblem,
+			ServerMessage: fmt.Sprintf("error while retrieving all articles -> %v", err),
+			ClientMessage: "An error occurred while retrieving articles.",
+			Status:        http.StatusInternalServerError,
+		}
+	}
+
+	articles := make([]models.Article, 0)
+	for rows.Next() {
+		var article models.Article
+		var rawTime string
+		if err := rows.Scan(&article.Id, &article.Title, &article.Content, &article.UserId, &rawTime); err != nil {
+			return nil, &problems.Problem{
+				Type:          problems.DatabaseProblem,
+				ServerMessage: fmt.Sprintf("error while scanning an article row -> %v", err),
+				ClientMessage: "An error occurred while retrieving articles.",
+				Status:        http.StatusInternalServerError,
+			}
+		}
+
+		time, p := parseTime(rawTime)
+		if p != nil {
+			return nil, p
+		}
+
+		article.CreatedAt = time
+		article.Public = true
+		articles = append(articles, article)
+	}
+
+	return articles, nil
+}
+
+func (db *Database) GetUserByArticleId(id string) (*models.User, *problems.Problem) {
+	article, p := db.GetArticleById(id)
+	if p != nil {
+		return nil, p
+	}
+
+	user := new(models.User)
+	err := db.Connection.QueryRow(
+		"SELECT username, email, password, verified, image_url FROM users WHERE id=?",
+		article.UserId,
+	).Scan(&user.Username, &user.Email, &user.Password, &user.Verified, &user.ImageUrl)
+
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, &problems.Problem{
+			Type:          problems.DatabaseProblem,
+			ServerMessage: fmt.Sprintf("error while retrieving user by article id -> %v", err),
+			ClientMessage: "Couldn't find any user affiliated with certain article.",
+			Status:        http.StatusNotFound,
+		}
+	} else if err != nil {
+		return nil, &problems.Problem{
+			Type:          problems.DatabaseProblem,
+			ServerMessage: fmt.Sprintf("error while retrieving user by article id -> %v", err),
+			ClientMessage: "An error occurred while processing your request.",
+			Status:        http.StatusInternalServerError,
+		}
+	}
+
+	return user, nil
+}
+
 func (db *Database) DeleteArticleById(id string) *problems.Problem {
 	_, err := db.Connection.Exec("DELETE FROM articles WHERE id = ?;", id)
 	if errors.Is(err, sql.ErrNoRows) {

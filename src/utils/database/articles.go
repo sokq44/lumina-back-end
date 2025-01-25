@@ -164,7 +164,7 @@ func (db *Database) GetArticlesByUserId(userId string) ([]models.Article, *probl
 }
 
 func (db *Database) GetPublicArticles() ([]models.Article, *problems.Problem) {
-	rows, err := db.Connection.Query("SELECT id, title, content, user_id, created_at FROM articles WHERE public=TRUE;")
+	rows, err := db.Connection.Query("SELECT id, title, content, user_id, created_at FROM articles WHERE public=TRUE ORDER BY created_at DESC;")
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, &problems.Problem{
 			Type:          problems.DatabaseProblem,

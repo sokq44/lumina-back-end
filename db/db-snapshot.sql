@@ -63,6 +63,7 @@ CREATE TABLE IF NOT EXISTS articles
     title      VARCHAR(36)             NOT NULL,
     content    LONGTEXT                NOT NULL,
     user_id    VARCHAR(36)             NOT NULL,
+    public     BOOL                    NOT NULL DEFAULT FALSE,
     created_at DATETIME                NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_users_articles FOREIGN KEY (user_id) REFERENCES users (id)

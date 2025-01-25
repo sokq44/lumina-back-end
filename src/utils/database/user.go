@@ -11,8 +11,8 @@ import (
 
 func (db *Database) CreateUser(u models.User) *problems.Problem {
 	_, err := db.Connection.Exec(
-		"INSERT INTO users (id, username, email, image_url, password) values (?, ?, ?, ?, ?);",
-		u.Id, u.Username, u.Email, u.ImageUrl, u.Password,
+		"INSERT INTO users (username, email, image_url, password) values (?, ?, ?, ?);",
+		u.Username, u.Email, u.ImageUrl, u.Password,
 	)
 
 	if err != nil {
@@ -123,7 +123,6 @@ func (db *Database) GetUserByEmail(email string) (*models.User, *problems.Proble
 
 func (db *Database) UserExists(u models.User) (bool, *problems.Problem) {
 	var id string
-
 	err := db.Connection.QueryRow(
 		"SELECT id FROM users WHERE username=? or email=?;",
 		u.Username, u.Email,

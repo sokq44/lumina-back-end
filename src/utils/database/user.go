@@ -11,8 +11,8 @@ import (
 
 func (db *Database) CreateUser(u models.User) *problems.Problem {
 	_, err := db.Connection.Exec(
-		"INSERT INTO users (username, email, image_url, password) values (?, ?, ?, ?);",
-		u.Username, u.Email, u.ImageUrl, u.Password,
+		"INSERT INTO users (id, username, email, image_url, password) values (?, ?, ?, ?, ?);",
+		u.Id, u.Username, u.Email, u.ImageUrl, u.Password,
 	)
 
 	if err != nil {

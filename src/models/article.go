@@ -7,6 +7,7 @@ type Article struct {
 	Title     string    `json:"title"`
 	Content   string    `json:"content"`
 	UserId    string    `json:"user_id"`
+	BannerUrl string    `json:"banner"`
 	Public    bool      `json:"public"`
 	CreatedAt time.Time `json:"created_at"`
 }

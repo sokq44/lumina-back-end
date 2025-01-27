@@ -77,12 +77,12 @@ func AddAsset(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	fileName := "/pp-" + random + extension
+	fileName := random + extension
 	if assets.CreateAsset(config.AssetsPath+fileName, fileBytes).Handle(w, r) {
 		return
 	}
 
-	_, err = w.Write([]byte(config.Host + "/images" + fileName))
+	_, err = w.Write([]byte(config.Host + "/images/" + fileName))
 	if err != nil {
 		p := problems.Problem{
 			Type:          problems.HandlerProblem,

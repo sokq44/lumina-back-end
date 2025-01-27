@@ -78,7 +78,7 @@ func AddAsset(w http.ResponseWriter, r *http.Request) {
 	}
 
 	fileName := random + extension
-	if assets.CreateAsset(config.AssetsPath+fileName, fileBytes).Handle(w, r) {
+	if assets.CreateAsset(config.AssetsPath+"/"+fileName, fileBytes).Handle(w, r) {
 		return
 	}
 

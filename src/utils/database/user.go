@@ -123,7 +123,6 @@ func (db *Database) GetUserByEmail(email string) (*models.User, *problems.Proble
 
 func (db *Database) UserExists(u models.User) (bool, *problems.Problem) {
 	var id string
-
 	err := db.Connection.QueryRow(
 		"SELECT id FROM users WHERE username=? or email=?;",
 		u.Username, u.Email,

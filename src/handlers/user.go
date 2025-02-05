@@ -10,6 +10,7 @@ import (
 	"backend/utils/problems"
 	"encoding/json"
 	"fmt"
+	"github.com/google/uuid"
 	"net/http"
 	"time"
 )
@@ -37,6 +38,7 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	u := models.User{
+		Id:       uuid.New().String(),
 		Username: body.Username,
 		Email:    body.Email,
 		ImageUrl: config.Host + "/images/default.png",

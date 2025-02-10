@@ -91,6 +91,7 @@ func GetArticles(w http.ResponseWriter, r *http.Request) {
 	type ResponseData struct {
 		Id        string    `json:"id"`
 		User      string    `json:"user"`
+		UserImage string    `json:"user_image"`
 		Title     string    `json:"title"`
 		Public    bool      `json:"public"`
 		BannerUrl string    `json:"banner"`
@@ -128,6 +129,7 @@ func GetArticles(w http.ResponseWriter, r *http.Request) {
 			BannerUrl: article.BannerUrl,
 			CreatedAt: article.CreatedAt,
 			User:      user.Username,
+			UserImage: user.ImageUrl,
 		})
 	}
 
@@ -147,6 +149,7 @@ func GetArticle(w http.ResponseWriter, r *http.Request) {
 	type ResponseData struct {
 		Id        string    `json:"id"`
 		User      string    `json:"user"`
+		UserImage string    `json:"user_image"`
 		Title     string    `json:"title"`
 		BannerUrl string    `json:"banner"`
 		Content   string    `json:"content"`
@@ -175,6 +178,7 @@ func GetArticle(w http.ResponseWriter, r *http.Request) {
 		BannerUrl: article.BannerUrl,
 		CreatedAt: article.CreatedAt,
 		User:      user.Username,
+		UserImage: user.ImageUrl,
 	}
 
 	if err := json.NewEncoder(w).Encode(response); err != nil {
@@ -193,6 +197,7 @@ func GetSuggestedArticles(w http.ResponseWriter, r *http.Request) {
 	type ResponseData struct {
 		Id        string    `json:"id"`
 		User      string    `json:"user"`
+		UserImage string    `json:"user_image"`
 		Title     string    `json:"title"`
 		BannerUrl string    `json:"banner"`
 		Content   string    `json:"content"`
@@ -213,11 +218,12 @@ func GetSuggestedArticles(w http.ResponseWriter, r *http.Request) {
 
 		response = append(response, ResponseData{
 			Id:        article.Id,
-			User:      user.Username,
 			Title:     article.Title,
 			Content:   article.Content,
 			BannerUrl: article.BannerUrl,
 			CreatedAt: article.CreatedAt,
+			User:      user.Username,
+			UserImage: user.ImageUrl,
 		})
 	}
 

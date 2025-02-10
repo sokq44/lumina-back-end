@@ -43,7 +43,7 @@ func InitEmails() {
 	}(conn)
 
 	tlsConfig := &tls.Config{
-		InsecureSkipVerify: true,
+		InsecureSkipVerify: false,
 		ServerName:         host,
 	}
 	if err = conn.StartTLS(tlsConfig); err != nil {

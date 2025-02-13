@@ -13,8 +13,8 @@ import (
 )
 
 // TODO: Article Model Validation
-// TODO: Article overwriting upon saving the same article
 // TODO: Article likes and dislikes
+// TODO: handling multiple sessions from many devices
 
 func initApplication() string {
 	appPort := flag.String("p", "3000", "Port on which the application runs.")

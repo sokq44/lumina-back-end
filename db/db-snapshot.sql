@@ -1,4 +1,4 @@
-CREATE DATABASE IF NOT EXISTS articles;
+CREATE DATABASE IF NOT EXISTS lumina;
 
 USE articles;
 

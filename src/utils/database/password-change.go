@@ -2,7 +2,7 @@ package database
 
 import (
 	"backend/models"
-	"backend/utils/errhandle"
+	"backend/utils/problems"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -11,7 +11,7 @@ import (
 	"github.com/go-sql-driver/mysql"
 )
 
-func (db *Database) CreatePasswordChange(p models.PasswordChange) *errhandle.Error {
+func (db *Database) CreatePasswordChange(p models.PasswordChange) *problems.Problem {
 	_, err := db.Connection.Exec(
 		"INSERT INTO password_change (token, expires, user_id) values (?, ?, ?);",
 		p.Token, p.Expires, p.UserId,
@@ -20,15 +20,15 @@ func (db *Database) CreatePasswordChange(p models.PasswordChange) *errhandle.Err
 	if err != nil {
 		var mysqlErr *mysql.MySQLError
 		if errors.As(err, &mysqlErr) && mysqlErr.Number == 1062 {
-			return &errhandle.Error{
-				Type:          errhandle.DatabaseError,
+			return &problems.Problem{
+				Type:          problems.DatabaseProblem,
 				ServerMessage: fmt.Sprintf("duplicate entry error while creating a password change token: %v", err),
 				ClientMessage: "A password change request already exists for this user.",
 				Status:        http.StatusConflict,
 			}
 		}
-		return &errhandle.Error{
-			Type:          errhandle.DatabaseError,
+		return &problems.Problem{
+			Type:          problems.DatabaseProblem,
 			ServerMessage: fmt.Sprintf("error while creating a password change token: %v", err),
 			ClientMessage: "There was an error while trying to initialize a password change procedure.",
 			Status:        http.StatusInternalServerError,
@@ -38,7 +38,7 @@ func (db *Database) CreatePasswordChange(p models.PasswordChange) *errhandle.Err
 	return nil
 }
 
-func (db *Database) GetPasswordChangeByToken(token string) (*models.PasswordChange, *errhandle.Error) {
+func (db *Database) GetPasswordChangeByToken(token string) (*models.PasswordChange, *problems.Problem) {
 	var id string
 	var tk string
 	var userId string
@@ -50,15 +50,15 @@ func (db *Database) GetPasswordChangeByToken(token string) (*models.PasswordChan
 	).Scan(&id, &tk, &expires, &userId)
 
 	if errors.Is(err, sql.ErrNoRows) {
-		return nil, &errhandle.Error{
-			Type:          errhandle.DatabaseError,
+		return nil, &problems.Problem{
+			Type:          problems.DatabaseProblem,
 			ServerMessage: fmt.Sprintf("error while getting a password change by token: %v", err),
 			ClientMessage: "No such password change request was found.",
 			Status:        http.StatusNotFound,
 		}
 	} else if err != nil {
-		return nil, &errhandle.Error{
-			Type:          errhandle.DatabaseError,
+		return nil, &problems.Problem{
+			Type:          problems.DatabaseProblem,
 			ServerMessage: fmt.Sprintf("error while getting a password change by token: %v", err),
 			Status:        http.StatusInternalServerError,
 		}
@@ -79,15 +79,15 @@ func (db *Database) GetPasswordChangeByToken(token string) (*models.PasswordChan
 	return passwordChange, nil
 }
 
-func (db *Database) DeletePasswordChangeById(id string) *errhandle.Error {
+func (db *Database) DeletePasswordChangeById(id string) *problems.Problem {
 	_, err := db.Connection.Exec(
 		"DELETE FROM password_change WHERE id=?;",
 		id,
 	)
 
 	if err != nil {
-		return &errhandle.Error{
-			Type:          errhandle.DatabaseError,
+		return &problems.Problem{
+			Type:          problems.DatabaseProblem,
 			ServerMessage: fmt.Sprintf("error while deleting a password change by id: %v", err),
 			ClientMessage: "An error occurred while processing your request.",
 			Status:        http.StatusInternalServerError,
@@ -97,12 +97,12 @@ func (db *Database) DeletePasswordChangeById(id string) *errhandle.Error {
 	return nil
 }
 
-func (db *Database) GetExpiredPasswordChanges() ([]models.PasswordChange, *errhandle.Error) {
+func (db *Database) GetExpiredPasswordChanges() ([]models.PasswordChange, *problems.Problem) {
 	rows, err := db.Connection.Query("SELECT * FROM password_change WHERE expires <= NOW();")
 
 	if err != nil {
-		return nil, &errhandle.Error{
-			Type:          errhandle.DatabaseError,
+		return nil, &problems.Problem{
+			Type:          problems.DatabaseProblem,
 			ServerMessage: fmt.Sprintf("error while trying to retrieve expired password changes: %v", err),
 			Status:        http.StatusInternalServerError,
 		}
@@ -113,8 +113,8 @@ func (db *Database) GetExpiredPasswordChanges() ([]models.PasswordChange, *errha
 		var passwordChange models.PasswordChange
 		var rawTime string
 		if err := rows.Scan(&passwordChange.Id, &passwordChange.Token, &rawTime, &passwordChange.UserId); err != nil {
-			return nil, &errhandle.Error{
-				Type:          errhandle.DatabaseError,
+			return nil, &problems.Problem{
+				Type:          problems.DatabaseProblem,
 				ServerMessage: fmt.Sprintf("error while scanning expired password changes: %v", err),
 				Status:        http.StatusInternalServerError,
 			}

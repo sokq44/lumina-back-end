@@ -2,7 +2,7 @@ package emails
 
 import (
 	"backend/config"
-	"backend/utils/errhandle"
+	"backend/utils/problems"
 	"crypto/tls"
 	"fmt"
 	"log"
@@ -34,7 +34,7 @@ func InitEmails() {
 	if err != nil {
 		log.Fatalf("failed to connect to the SMTP server: %v", err.Error())
 	}
-	
+
 	defer func(conn *smtp.Client) {
 		err := conn.Close()
 		if err != nil {
@@ -43,7 +43,7 @@ func InitEmails() {
 	}(conn)
 
 	tlsConfig := &tls.Config{
-		InsecureSkipVerify: true,
+		InsecureSkipVerify: false,
 		ServerName:         host,
 	}
 	if err = conn.StartTLS(tlsConfig); err != nil {
@@ -67,14 +67,14 @@ func GetEmails() *SmtpClient {
 	return &emails
 }
 
-func (client *SmtpClient) SendEmail(receiver string, subject string, body string) *errhandle.Error {
+func (client *SmtpClient) SendEmail(receiver string, subject string, body string) *problems.Problem {
 	auth := smtp.PlainAuth("", client.User, client.Passwd, client.Host)
 	addr := fmt.Sprintf("%s:%s", client.Host, client.Port)
 	msg := []byte(fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: %s\r\n\r\n%s", client.From, receiver, subject, body))
 
 	if err := smtp.SendMail(addr, auth, client.From, []string{receiver}, msg); err != nil {
-		return &errhandle.Error{
-			Type:          errhandle.EmailsError,
+		return &problems.Problem{
+			Type:          problems.EmailsProblem,
 			ServerMessage: fmt.Sprintf("while trying to send an email -> %v", err),
 			ClientMessage: "An error occurred while processing your request.",
 			Status:        http.StatusInternalServerError,
@@ -84,7 +84,7 @@ func (client *SmtpClient) SendEmail(receiver string, subject string, body string
 	return nil
 }
 
-func (client *SmtpClient) SendVerificationEmail(receiver string, token string) *errhandle.Error {
+func (client *SmtpClient) SendVerificationEmail(receiver string, token string) *problems.Problem {
 	front := config.FrontAddr
 	emailBody := fmt.Sprintf("Verification Link: %s/email/%s", front, token)
 
@@ -96,7 +96,7 @@ func (client *SmtpClient) SendVerificationEmail(receiver string, token string) *
 	return nil
 }
 
-func (client *SmtpClient) SendPasswordChangeEmail(receiver string, token string) *errhandle.Error {
+func (client *SmtpClient) SendPasswordChangeEmail(receiver string, token string) *problems.Problem {
 	front := config.FrontAddr
 	emailBody := fmt.Sprintf("Change your password here: %s/user/password/%s", front, token)
 

@@ -2,22 +2,22 @@ package database
 
 import (
 	"backend/models"
-	"backend/utils/errhandle"
+	"backend/utils/problems"
 	"database/sql"
 	"errors"
 	"fmt"
 	"net/http"
 )
 
-func (db *Database) CreateEmailVerification(e models.EmailVerification) *errhandle.Error {
+func (db *Database) CreateEmailVerification(e models.EmailVerification) *problems.Problem {
 	_, err := db.Connection.Exec(
 		"INSERT INTO email_verification (token, expires, user_id) values (?, ?, ?);",
 		e.Token, e.Expires, e.UserId,
 	)
 
 	if err != nil {
-		return &errhandle.Error{
-			Type:          errhandle.DatabaseError,
+		return &problems.Problem{
+			Type:          problems.DatabaseProblem,
 			ServerMessage: fmt.Sprintf("error while creating an email verification: %v", err),
 			ClientMessage: "An error occurred while processing your request.",
 			Status:        http.StatusInternalServerError,
@@ -27,7 +27,7 @@ func (db *Database) CreateEmailVerification(e models.EmailVerification) *errhand
 	return nil
 }
 
-func (db *Database) GetEmailVerificationByToken(token string) (*models.EmailVerification, *errhandle.Error) {
+func (db *Database) GetEmailVerificationByToken(token string) (*models.EmailVerification, *problems.Problem) {
 	var id string
 	var tk string
 	var userId string
@@ -39,15 +39,15 @@ func (db *Database) GetEmailVerificationByToken(token string) (*models.EmailVeri
 	).Scan(&id, &tk, &expires, &userId)
 
 	if errors.Is(err, sql.ErrNoRows) {
-		return nil, &errhandle.Error{
-			Type:          errhandle.DatabaseError,
+		return nil, &problems.Problem{
+			Type:          problems.DatabaseProblem,
 			ServerMessage: fmt.Sprintf("error while getting an email verification by token: %v", err),
 			ClientMessage: "The verification link is invalid or has expired.",
 			Status:        http.StatusNotFound,
 		}
 	} else if err != nil {
-		return nil, &errhandle.Error{
-			Type:          errhandle.DatabaseError,
+		return nil, &problems.Problem{
+			Type:          problems.DatabaseProblem,
 			ServerMessage: fmt.Sprintf("error while getting an email verification by token: %v", err),
 			ClientMessage: "An error occurred while processing your request.",
 			Status:        http.StatusInternalServerError,
@@ -69,15 +69,15 @@ func (db *Database) GetEmailVerificationByToken(token string) (*models.EmailVeri
 	return emailVerification, nil
 }
 
-func (db *Database) DeleteEmailVerificationById(id string) *errhandle.Error {
+func (db *Database) DeleteEmailVerificationById(id string) *problems.Problem {
 	_, err := db.Connection.Exec(
 		"DELETE FROM email_verification WHERE id=?;",
 		id,
 	)
 
 	if err != nil {
-		return &errhandle.Error{
-			Type:          errhandle.DatabaseError,
+		return &problems.Problem{
+			Type:          problems.DatabaseProblem,
 			ServerMessage: fmt.Sprintf("error while deleting an email verification by id: %v", err),
 			ClientMessage: "An error occurred while processing your request.",
 			Status:        http.StatusInternalServerError,
@@ -87,12 +87,12 @@ func (db *Database) DeleteEmailVerificationById(id string) *errhandle.Error {
 	return nil
 }
 
-func (db *Database) GetExpiredEmailVerifications() ([]models.EmailVerification, *errhandle.Error) {
+func (db *Database) GetExpiredEmailVerifications() ([]models.EmailVerification, *problems.Problem) {
 	rows, err := db.Connection.Query("SELECT * FROM email_verification WHERE expires <= NOW();")
 
 	if err != nil {
-		return nil, &errhandle.Error{
-			Type:          errhandle.DatabaseError,
+		return nil, &problems.Problem{
+			Type:          problems.DatabaseProblem,
 			ServerMessage: fmt.Sprintf("error while trying to retrieve expired email verifications: %v", err),
 			Status:        http.StatusInternalServerError,
 		}
@@ -103,8 +103,8 @@ func (db *Database) GetExpiredEmailVerifications() ([]models.EmailVerification, 
 		var verification models.EmailVerification
 		var rawTime string
 		if err := rows.Scan(&verification.Id, &verification.Token, &rawTime, &verification.UserId); err != nil {
-			return nil, &errhandle.Error{
-				Type:          errhandle.DatabaseError,
+			return nil, &problems.Problem{
+				Type:          problems.DatabaseProblem,
 				ServerMessage: fmt.Sprintf("error while scanning expired email verifications: %v", err),
 				Status:        http.StatusInternalServerError,
 			}

@@ -4,14 +4,14 @@ import (
 	"backend/config"
 	"backend/models"
 	"backend/utils/crypt"
-	"backend/utils/errhandle"
+	"backend/utils/problems"
 	"database/sql"
 	"fmt"
 	"net/http"
 	"time"
 )
 
-func (db *Database) GenerateSecret() *errhandle.Error {
+func (db *Database) GenerateSecret() *problems.Problem {
 	randomString, err := crypt.RandomString(64)
 	if err != nil {
 		return err
@@ -27,8 +27,8 @@ func (db *Database) GenerateSecret() *errhandle.Error {
 	)
 
 	if e != nil {
-		return &errhandle.Error{
-			Type:          errhandle.DatabaseError,
+		return &problems.Problem{
+			Type:          problems.DatabaseProblem,
 			ServerMessage: fmt.Sprintf("while generating a new jwt secret: %v", e),
 		}
 	}
@@ -36,13 +36,13 @@ func (db *Database) GenerateSecret() *errhandle.Error {
 	return nil
 }
 
-func (db *Database) GetLatestSecrets() ([]models.Secret, *errhandle.Error) {
+func (db *Database) GetLatestSecrets() ([]models.Secret, *problems.Problem) {
 	secrets := make([]models.Secret, 2)
 
 	rows, err := db.Connection.Query("SELECT id, secret, expires FROM secrets ORDER BY expires DESC LIMIT 2;")
 	if err != nil {
-		return nil, &errhandle.Error{
-			Type:          errhandle.DatabaseError,
+		return nil, &problems.Problem{
+			Type:          problems.DatabaseProblem,
 			ServerMessage: fmt.Sprintf("while getting the latest jwt secret: %v", err),
 			ClientMessage: "There's been an error while creating session.",
 			Status:        http.StatusInternalServerError,
@@ -59,8 +59,8 @@ func (db *Database) GetLatestSecrets() ([]models.Secret, *errhandle.Error) {
 		var secret models.Secret
 		var rawTime string
 		if err := rows.Scan(&secret.Id, &secret.Secret, &rawTime); err != nil {
-			return nil, &errhandle.Error{
-				Type:          errhandle.DatabaseError,
+			return nil, &problems.Problem{
+				Type:          problems.DatabaseProblem,
 				ServerMessage: fmt.Sprintf("while scanning jwt secrets: %v", err),
 				ClientMessage: "There's been an error while creating session.",
 				Status:        http.StatusInternalServerError,
@@ -77,8 +77,8 @@ func (db *Database) GetLatestSecrets() ([]models.Secret, *errhandle.Error) {
 	}
 
 	if err := rows.Err(); err != nil {
-		return nil, &errhandle.Error{
-			Type:          errhandle.DatabaseError,
+		return nil, &problems.Problem{
+			Type:          problems.DatabaseProblem,
 			ServerMessage: fmt.Sprintf("while iterating over jwt secrets: %v", err),
 			ClientMessage: "There's been an error while creating session.",
 			Status:        http.StatusInternalServerError,
@@ -88,12 +88,12 @@ func (db *Database) GetLatestSecrets() ([]models.Secret, *errhandle.Error) {
 	return secrets, nil
 }
 
-func (db *Database) GetExpiredSecrets() ([]models.Secret, *errhandle.Error) {
+func (db *Database) GetExpiredSecrets() ([]models.Secret, *problems.Problem) {
 	rows, err := db.Connection.Query("SELECT * FROM secrets WHERE expires <= NOW();")
 
 	if err != nil {
-		return nil, &errhandle.Error{
-			Type:          errhandle.DatabaseError,
+		return nil, &problems.Problem{
+			Type:          problems.DatabaseProblem,
 			ServerMessage: fmt.Sprintf("error while trying to retrieve expired jwt secrets: %v", err),
 			Status:        http.StatusInternalServerError,
 		}
@@ -104,8 +104,8 @@ func (db *Database) GetExpiredSecrets() ([]models.Secret, *errhandle.Error) {
 		var secret models.Secret
 		var rawTime string
 		if err := rows.Scan(&secret.Id, &secret.Secret, &rawTime); err != nil {
-			return nil, &errhandle.Error{
-				Type:          errhandle.DatabaseError,
+			return nil, &problems.Problem{
+				Type:          problems.DatabaseProblem,
 				ServerMessage: fmt.Sprintf("error while scanning expired jwt secret: %v", err),
 				Status:        http.StatusInternalServerError,
 			}
@@ -123,15 +123,15 @@ func (db *Database) GetExpiredSecrets() ([]models.Secret, *errhandle.Error) {
 	return expired, nil
 }
 
-func (db *Database) DeleteSecretById(id string) *errhandle.Error {
+func (db *Database) DeleteSecretById(id string) *problems.Problem {
 	_, err := db.Connection.Exec(
 		"DELETE FROM secrets WHERE id=?;",
 		id,
 	)
 
 	if err != nil {
-		return &errhandle.Error{
-			Type:          errhandle.DatabaseError,
+		return &problems.Problem{
+			Type:          problems.DatabaseProblem,
 			ServerMessage: fmt.Sprintf("error while deleting a jwt secret by id: %v", err),
 			Status:        http.StatusInternalServerError,
 		}

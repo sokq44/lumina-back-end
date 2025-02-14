@@ -28,21 +28,23 @@ func InitHandlers() {
 func assignUserHandlers() {
 	http.HandleFunc(UserPath+"/login", CORS(Method("POST", LoginUser)))
 
+	http.HandleFunc(UserPath+"/logged-in", CORS(Auth(Method("GET", Empty))))
+
 	http.HandleFunc(UserPath+"/register", CORS(Method("POST", RegisterUser)))
+
+	http.HandleFunc(UserPath+"/get-user", CORS(Auth(Method("GET", GetUser))))
 
 	http.HandleFunc(UserPath+"/verify-email", CORS(Method("PATCH", VerifyEmail)))
 
 	http.HandleFunc(UserPath+"/logout", CORS(Auth(Method("DELETE", LogoutUser))))
-
-	http.HandleFunc(UserPath+"/logged-in", CORS(Auth(Method("GET", Empty))))
-
-	http.HandleFunc(UserPath+"/get-user", CORS(Auth(Method("GET", GetUser))))
 
 	http.HandleFunc(UserPath+"/modify-user", CORS(Auth(Method("PATCH", ModifyUser))))
 
 	http.HandleFunc(UserPath+"/change-password", CORS(Method("PATCH", ChangePassword)))
 
 	http.HandleFunc(UserPath+"/password-change-init", CORS(Method("POST", PasswordChangeInit)))
+
+	http.HandleFunc(UserPath+"/password-change-valid", CORS(Method("GET", PasswordChangeValid)))
 }
 
 func assignAssetsHandlers() {

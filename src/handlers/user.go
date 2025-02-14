@@ -418,42 +418,25 @@ func ChangePassword(w http.ResponseWriter, r *http.Request) {
 	if db.UpdateUser(*user).Handle(w, r) {
 		return
 	}
+}
 
-	access, refresh, p := jwt.GetRefAccFromRequest(r)
+func PasswordChangeValid(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query()
+	token := query.Get("token")
+
+	passwordChange, p := db.GetPasswordChangeByToken(token)
 	if p.Handle(w, r) {
 		return
 	}
 
-	if access != "" && refresh != "" {
-		http.SetCookie(w, &http.Cookie{
-			Name:     "access_token",
-			Value:    "",
-			HttpOnly: true,
-			Path:     "/",
-			Expires:  time.Unix(0, 0),
-			Secure:   true,
-			SameSite: http.SameSiteNoneMode,
-		})
-		http.SetCookie(w, &http.Cookie{
-			Name:     "refresh_token",
-			Value:    "",
-			HttpOnly: true,
-			Path:     "/",
-			Expires:  time.Unix(0, 0),
-			Secure:   true,
-			SameSite: http.SameSiteNoneMode,
-		})
-
-		refreshToken, p := db.GetRefreshTokenByUserId(user.Id)
-		if p != nil && p.Status == http.StatusNotFound {
-			w.WriteHeader(http.StatusOK)
-			return
-		} else if p != nil && p.Handle(w, r) {
-			return
+	if passwordChange.Expires.Before(time.Now()) {
+		p := problems.Problem{
+			Type:          problems.HandlerProblem,
+			ServerMessage: "password change token has expired.",
+			ClientMessage: "The link you used has expired. For security purposes, password reset links are only valid for a limited time. Please request a new link to reset your password.",
+			Status:        http.StatusGone,
 		}
-
-		if db.DeleteRefreshTokenById(refreshToken.Id).Handle(w, r) {
-			return
-		}
+		p.Handle(w, r)
+		return
 	}
 }

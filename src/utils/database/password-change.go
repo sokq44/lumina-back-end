@@ -7,11 +7,41 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/go-sql-driver/mysql"
 )
 
 func (db *Database) CreatePasswordChange(p models.PasswordChange) *problems.Problem {
+	row := db.Connection.QueryRow("SELECT id, expires FROM password_change WHERE user_id=?", p.UserId)
+	if row != nil {
+		var id string
+		var raw string
+
+		err := row.Scan(&id, &raw)
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
+			return &problems.Problem{
+				Type:          problems.DatabaseProblem,
+				ServerMessage: fmt.Sprintf("while scanning a row for the CreatePasswordChange function -> %v", err),
+				ClientMessage: "An error has occurred while processing your Request.",
+				Status:        http.StatusInternalServerError,
+			}
+		} else if !errors.Is(err, sql.ErrNoRows) {
+			expires, p := parseTime(raw)
+			if p != nil {
+				return p
+			}
+
+			if expires.Before(time.Now()) {
+				p = db.DeletePasswordChangeById(id)
+				if p != nil {
+					return p
+				}
+			}
+		}
+
+	}
+
 	_, err := db.Connection.Exec(
 		"INSERT INTO password_change (token, expires, user_id) values (?, ?, ?);",
 		p.Token, p.Expires, p.UserId,
@@ -53,7 +83,7 @@ func (db *Database) GetPasswordChangeByToken(token string) (*models.PasswordChan
 		return nil, &problems.Problem{
 			Type:          problems.DatabaseProblem,
 			ServerMessage: fmt.Sprintf("error while getting a password change by token: %v", err),
-			ClientMessage: "No such password change request was found.",
+			ClientMessage: "We couldn’t find a valid password reset request. Please check your link or request a new password reset.",
 			Status:        http.StatusNotFound,
 		}
 	} else if err != nil {

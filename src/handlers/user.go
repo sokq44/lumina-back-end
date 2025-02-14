@@ -30,7 +30,7 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 		p := problems.Problem{
 			Type:          problems.HandlerProblem,
 			ServerMessage: fmt.Sprintf("error while retrieving the access_token cookie: %v", err),
-			ClientMessage: "An error has occurred while processing your request.",
+			ClientMessage: "An unexpected error has occurred while processing your request.",
 			Status:        http.StatusBadRequest,
 		}
 		p.Handle(w, r)
@@ -100,7 +100,7 @@ func VerifyEmail(w http.ResponseWriter, r *http.Request) {
 		p := problems.Problem{
 			Type:          problems.HandlerProblem,
 			ServerMessage: fmt.Sprintf("error while retrieving the access_token cookie: %v", err),
-			ClientMessage: "An error has occurred while processing your request.",
+			ClientMessage: "An unexpected error has occurred while processing your request.",
 			Status:        http.StatusBadRequest,
 		}
 		p.Handle(w, r)
@@ -145,7 +145,7 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 		p := problems.Problem{
 			Type:          problems.HandlerProblem,
 			ServerMessage: fmt.Sprintf("error while retrieving the access_token cookie: %v", err),
-			ClientMessage: "An error has occurred while processing your request.",
+			ClientMessage: "An unexpected error has occurred while processing your request.",
 			Status:        http.StatusBadRequest,
 		}
 		p.Handle(w, r)
@@ -219,7 +219,7 @@ func LogoutUser(w http.ResponseWriter, r *http.Request) {
 		p := problems.Problem{
 			Type:          problems.HandlerProblem,
 			ServerMessage: fmt.Sprintf("error while retrieving the refresh_token cookie: %v", err),
-			ClientMessage: "An error has occurred while processing your request.",
+			ClientMessage: "An unexpected error has occurred while processing your request.",
 			Status:        http.StatusInternalServerError,
 		}
 		p.Handle(w, r)
@@ -257,7 +257,7 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 		p := problems.Problem{
 			Type:          problems.HandlerProblem,
 			ServerMessage: fmt.Sprintf("error while retrieving the access_token cookie: %v", err),
-			ClientMessage: "An error has occurred while processing your request.",
+			ClientMessage: "An unexpected error has occurred while processing your request.",
 			Status:        http.StatusInternalServerError,
 		}
 		p.Handle(w, r)
@@ -283,7 +283,7 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 		p := problems.Problem{
 			Type:          problems.HandlerProblem,
 			ServerMessage: fmt.Sprintf("error while encoding json data to the response: %v", err),
-			ClientMessage: "An error has occurred while processing your request.",
+			ClientMessage: "An unexpected error has occurred while processing your request.",
 			Status:        http.StatusInternalServerError,
 		}
 		p.Handle(w, r)
@@ -303,7 +303,7 @@ func ModifyUser(w http.ResponseWriter, r *http.Request) {
 		p := problems.Problem{
 			Type:          problems.HandlerProblem,
 			ServerMessage: fmt.Sprintf("error while retrieving the access_token cookie: %v", err),
-			ClientMessage: "An error has occurred while processing your request.",
+			ClientMessage: "An unexpected error has occurred while processing your request.",
 			Status:        http.StatusBadRequest,
 		}
 		p.Handle(w, r)
@@ -341,7 +341,7 @@ func PasswordChangeInit(w http.ResponseWriter, r *http.Request) {
 		e := problems.Problem{
 			Type:          problems.HandlerProblem,
 			ServerMessage: fmt.Sprintf("error while retrieving the access_token cookie: %v", err),
-			ClientMessage: "An error has occurred while processing your request.",
+			ClientMessage: "An unexpected error has occurred while processing your request.",
 			Status:        http.StatusBadRequest,
 		}
 		if e.Handle(w, r) {
@@ -387,7 +387,7 @@ func ChangePassword(w http.ResponseWriter, r *http.Request) {
 		e := problems.Problem{
 			Type:          problems.HandlerProblem,
 			ServerMessage: fmt.Sprintf("error while retrieving the access_token cookie: %v", err),
-			ClientMessage: "An error has occurred while processing your request.",
+			ClientMessage: "An unexpected error has occurred while processing your request.",
 			Status:        http.StatusBadRequest,
 		}
 		if e.Handle(w, r) {

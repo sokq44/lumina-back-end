@@ -23,7 +23,7 @@ func (db *Database) CreatePasswordChange(p models.PasswordChange) *problems.Prob
 			return &problems.Problem{
 				Type:          problems.DatabaseProblem,
 				ServerMessage: fmt.Sprintf("while scanning a row for the CreatePasswordChange function -> %v", err),
-				ClientMessage: "An error has occurred while processing your Request.",
+				ClientMessage: "An unexpected error has occurred while processing your request.",
 				Status:        http.StatusInternalServerError,
 			}
 		} else if !errors.Is(err, sql.ErrNoRows) {

@@ -168,7 +168,7 @@ func GetRefAccFromRequest(r *http.Request) (string, string, *problems.Problem) {
 		return "", "", &problems.Problem{
 			Type:          problems.JwtProblem,
 			ServerMessage: fmt.Sprintf("while trying to retrieve the access_token cookie -> %v", err),
-			ClientMessage: "An error has occurred while processing your request.",
+			ClientMessage: "An unexpected error has occurred while processing your request.",
 			Status:        http.StatusInternalServerError,
 		}
 	}
@@ -185,7 +185,7 @@ func GetRefAccFromRequest(r *http.Request) (string, string, *problems.Problem) {
 		return "", "", &problems.Problem{
 			Type:          problems.JwtProblem,
 			ServerMessage: fmt.Sprintf("while trying to retrieve the refresh_token cookie -> %v", err),
-			ClientMessage: "An error has occurred while processing your request.",
+			ClientMessage: "An unexpected error has occurred while processing your request.",
 			Status:        http.StatusInternalServerError,
 		}
 	}

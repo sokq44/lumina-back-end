@@ -159,7 +159,7 @@ func (db *Database) VerifyUser(id string) *problems.Problem {
 		return &problems.Problem{
 			Type:          problems.DatabaseProblem,
 			ServerMessage: fmt.Sprintf("error while verifying a user: %v", err),
-			ClientMessage: "An error has occurred while processing your request.",
+			ClientMessage: "An unexpected error has occurred while processing your request.",
 			Status:        http.StatusInternalServerError,
 		}
 	}

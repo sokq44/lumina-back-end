@@ -30,7 +30,7 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 		p := problems.Problem{
 			Type:          problems.HandlerProblem,
 			ServerMessage: fmt.Sprintf("error while retrieving the access_token cookie: %v", err),
-			ClientMessage: "An error has occurred while processing your request.",
+			ClientMessage: "An unexpected error has occurred while processing your request.",
 			Status:        http.StatusBadRequest,
 		}
 		p.Handle(w, r)
@@ -100,7 +100,7 @@ func VerifyEmail(w http.ResponseWriter, r *http.Request) {
 		p := problems.Problem{
 			Type:          problems.HandlerProblem,
 			ServerMessage: fmt.Sprintf("error while retrieving the access_token cookie: %v", err),
-			ClientMessage: "An error has occurred while processing your request.",
+			ClientMessage: "An unexpected error has occurred while processing your request.",
 			Status:        http.StatusBadRequest,
 		}
 		p.Handle(w, r)
@@ -145,7 +145,7 @@ func LoginUser(w http.ResponseWriter, r *http.Request) {
 		p := problems.Problem{
 			Type:          problems.HandlerProblem,
 			ServerMessage: fmt.Sprintf("error while retrieving the access_token cookie: %v", err),
-			ClientMessage: "An error has occurred while processing your request.",
+			ClientMessage: "An unexpected error has occurred while processing your request.",
 			Status:        http.StatusBadRequest,
 		}
 		p.Handle(w, r)
@@ -219,7 +219,7 @@ func LogoutUser(w http.ResponseWriter, r *http.Request) {
 		p := problems.Problem{
 			Type:          problems.HandlerProblem,
 			ServerMessage: fmt.Sprintf("error while retrieving the refresh_token cookie: %v", err),
-			ClientMessage: "An error has occurred while processing your request.",
+			ClientMessage: "An unexpected error has occurred while processing your request.",
 			Status:        http.StatusInternalServerError,
 		}
 		p.Handle(w, r)
@@ -257,7 +257,7 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 		p := problems.Problem{
 			Type:          problems.HandlerProblem,
 			ServerMessage: fmt.Sprintf("error while retrieving the access_token cookie: %v", err),
-			ClientMessage: "An error has occurred while processing your request.",
+			ClientMessage: "An unexpected error has occurred while processing your request.",
 			Status:        http.StatusInternalServerError,
 		}
 		p.Handle(w, r)
@@ -283,7 +283,7 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 		p := problems.Problem{
 			Type:          problems.HandlerProblem,
 			ServerMessage: fmt.Sprintf("error while encoding json data to the response: %v", err),
-			ClientMessage: "An error has occurred while processing your request.",
+			ClientMessage: "An unexpected error has occurred while processing your request.",
 			Status:        http.StatusInternalServerError,
 		}
 		p.Handle(w, r)
@@ -303,7 +303,7 @@ func ModifyUser(w http.ResponseWriter, r *http.Request) {
 		p := problems.Problem{
 			Type:          problems.HandlerProblem,
 			ServerMessage: fmt.Sprintf("error while retrieving the access_token cookie: %v", err),
-			ClientMessage: "An error has occurred while processing your request.",
+			ClientMessage: "An unexpected error has occurred while processing your request.",
 			Status:        http.StatusBadRequest,
 		}
 		p.Handle(w, r)
@@ -341,7 +341,7 @@ func PasswordChangeInit(w http.ResponseWriter, r *http.Request) {
 		e := problems.Problem{
 			Type:          problems.HandlerProblem,
 			ServerMessage: fmt.Sprintf("error while retrieving the access_token cookie: %v", err),
-			ClientMessage: "An error has occurred while processing your request.",
+			ClientMessage: "An unexpected error has occurred while processing your request.",
 			Status:        http.StatusBadRequest,
 		}
 		if e.Handle(w, r) {
@@ -387,7 +387,7 @@ func ChangePassword(w http.ResponseWriter, r *http.Request) {
 		e := problems.Problem{
 			Type:          problems.HandlerProblem,
 			ServerMessage: fmt.Sprintf("error while retrieving the access_token cookie: %v", err),
-			ClientMessage: "An error has occurred while processing your request.",
+			ClientMessage: "An unexpected error has occurred while processing your request.",
 			Status:        http.StatusBadRequest,
 		}
 		if e.Handle(w, r) {
@@ -418,42 +418,25 @@ func ChangePassword(w http.ResponseWriter, r *http.Request) {
 	if db.UpdateUser(*user).Handle(w, r) {
 		return
 	}
+}
 
-	access, refresh, p := jwt.GetRefAccFromRequest(r)
+func PasswordChangeValid(w http.ResponseWriter, r *http.Request) {
+	query := r.URL.Query()
+	token := query.Get("token")
+
+	passwordChange, p := db.GetPasswordChangeByToken(token)
 	if p.Handle(w, r) {
 		return
 	}
 
-	if access != "" && refresh != "" {
-		http.SetCookie(w, &http.Cookie{
-			Name:     "access_token",
-			Value:    "",
-			HttpOnly: true,
-			Path:     "/",
-			Expires:  time.Unix(0, 0),
-			Secure:   true,
-			SameSite: http.SameSiteNoneMode,
-		})
-		http.SetCookie(w, &http.Cookie{
-			Name:     "refresh_token",
-			Value:    "",
-			HttpOnly: true,
-			Path:     "/",
-			Expires:  time.Unix(0, 0),
-			Secure:   true,
-			SameSite: http.SameSiteNoneMode,
-		})
-
-		refreshToken, p := db.GetRefreshTokenByUserId(user.Id)
-		if p != nil && p.Status == http.StatusNotFound {
-			w.WriteHeader(http.StatusOK)
-			return
-		} else if p != nil && p.Handle(w, r) {
-			return
+	if passwordChange.Expires.Before(time.Now()) {
+		p := problems.Problem{
+			Type:          problems.HandlerProblem,
+			ServerMessage: "password change token has expired.",
+			ClientMessage: "The link you used has expired. For security purposes, password reset links are only valid for a limited time. Please request a new link to reset your password.",
+			Status:        http.StatusGone,
 		}
-
-		if db.DeleteRefreshTokenById(refreshToken.Id).Handle(w, r) {
-			return
-		}
+		p.Handle(w, r)
+		return
 	}
 }

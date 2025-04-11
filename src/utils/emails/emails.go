@@ -3,76 +3,60 @@ package emails
 import (
 	"backend/config"
 	"backend/utils/problems"
-	"crypto/tls"
+	"context"
 	"fmt"
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awsconfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/service/ses"
+	"github.com/aws/aws-sdk-go-v2/service/ses/types"
 	"log"
 	"net/http"
-	"net/smtp"
 )
 
-type SmtpClient struct {
+type Client struct {
 	From   string
-	User   string
-	Passwd string
-	Host   string
-	Port   string
+	Client *ses.Client
 }
 
-var emails SmtpClient
+var emails Client
 
 func InitEmails() {
-	from := config.SmtpFrom
-	user := config.SmtpUser
-	passwd := config.SmtpPass
-	host := config.SmtpHost
-	port := config.SmtpPort
-
-	auth := smtp.PlainAuth("", user, passwd, host)
-
-	addr := fmt.Sprintf("%s:%s", host, port)
-	conn, err := smtp.Dial(addr)
+	cfg, err := awsconfig.LoadDefaultConfig(context.TODO())
 	if err != nil {
-		log.Fatalf("failed to connect to the SMTP server: %v", err.Error())
+		log.Fatalf("unable to load SDK config, %v", err)
 	}
 
-	defer func(conn *smtp.Client) {
-		err := conn.Close()
-		if err != nil {
-			log.Fatalf("failed to close the SMTP connection: %v", err)
-		}
-	}(conn)
+	emails.From = config.AwsSesFrom
+	emails.Client = ses.NewFromConfig(cfg)
 
-	tlsConfig := &tls.Config{
-		InsecureSkipVerify: false,
-		ServerName:         host,
-	}
-	if err = conn.StartTLS(tlsConfig); err != nil {
-		log.Fatalf("failed to start TLS: %v", err)
-	}
-
-	if err = conn.Auth(auth); err != nil {
-		log.Fatalf("failed to authenticate with the SMTP server: %v", err)
-	}
-
-	emails.From = from
-	emails.User = user
-	emails.Passwd = passwd
-	emails.Host = host
-	emails.Port = port
-
-	log.Printf("initialized the smtp service (%v:%v)", host, port)
+	log.Println("Initialized the AWS SES service.")
 }
 
-func GetEmails() *SmtpClient {
+func GetEmails() *Client {
 	return &emails
 }
 
-func (client *SmtpClient) SendEmail(receiver string, subject string, body string) *problems.Problem {
-	auth := smtp.PlainAuth("", client.User, client.Passwd, client.Host)
-	addr := fmt.Sprintf("%s:%s", client.Host, client.Port)
-	msg := []byte(fmt.Sprintf("From: %s\r\nTo: %s\r\nSubject: %s\r\n\r\n%s", client.From, receiver, subject, body))
+func (smtpClient *Client) SendEmail(recipient string, subject string, body string) *problems.Problem {
 
-	if err := smtp.SendMail(addr, auth, client.From, []string{receiver}, msg); err != nil {
+	input := &ses.SendEmailInput{
+		Destination: &types.Destination{
+			ToAddresses: []string{recipient},
+		},
+		Message: &types.Message{
+			Body: &types.Body{
+				Text: &types.Content{
+					Data: aws.String(body),
+				},
+			},
+			Subject: &types.Content{
+				Data: aws.String(subject),
+			},
+		},
+		Source: aws.String(smtpClient.From),
+	}
+
+	_, err := smtpClient.Client.SendEmail(context.TODO(), input)
+	if err != nil {
 		return &problems.Problem{
 			Type:          problems.EmailsProblem,
 			ServerMessage: fmt.Sprintf("while trying to send an email -> %v", err),
@@ -84,11 +68,11 @@ func (client *SmtpClient) SendEmail(receiver string, subject string, body string
 	return nil
 }
 
-func (client *SmtpClient) SendVerificationEmail(receiver string, token string) *problems.Problem {
+func (smtpClient *Client) SendVerificationEmail(receiver string, token string) *problems.Problem {
 	front := config.FrontAddr
 	emailBody := fmt.Sprintf("Verification Link: %s/email/%s", front, token)
 
-	err := client.SendEmail(receiver, "Subject: Email Verification\r\n", emailBody)
+	err := smtpClient.SendEmail(receiver, "Email Verification", emailBody)
 	if err != nil {
 		return err
 	}
@@ -96,11 +80,11 @@ func (client *SmtpClient) SendVerificationEmail(receiver string, token string) *
 	return nil
 }
 
-func (client *SmtpClient) SendPasswordChangeEmail(receiver string, token string) *problems.Problem {
+func (smtpClient *Client) SendPasswordChangeEmail(receiver string, token string) *problems.Problem {
 	front := config.FrontAddr
 	emailBody := fmt.Sprintf("Change your password here: %s/user/password/%s", front, token)
 
-	err := client.SendEmail(receiver, "Subject: Change Your Password\r\n", emailBody)
+	err := smtpClient.SendEmail(receiver, "Change Your Password", emailBody)
 	if err != nil {
 		return err
 	}

@@ -34,7 +34,15 @@ func initApplication() string {
 
 func main() {
 	port := initApplication()
+
+	client := emails.GetEmails()
+	problem := client.SendEmail("sokq44@gmail.com", "Testing SES", "Trying to send emails through aws SES API.")
+	if problem.Handle(nil, nil) {
+		return
+	}
+
 	if err := http.ListenAndServe(fmt.Sprintf(":%s", port), nil); err != nil {
 		log.Fatal("Error while trying to start the server.")
 	}
+
 }

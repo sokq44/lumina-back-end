@@ -37,7 +37,6 @@ func GetEmails() *Client {
 }
 
 func (smtpClient *Client) SendEmail(recipient string, subject string, body string) *problems.Problem {
-
 	input := &ses.SendEmailInput{
 		Destination: &types.Destination{
 			ToAddresses: []string{recipient},

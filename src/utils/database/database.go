@@ -50,7 +50,7 @@ func InitDb() {
 		log.Fatalf("failed to connect to the database: %v", err.Error())
 	}
 
-	log.Printf("intialized the database service (%v:%v)", host, port)
+	log.Println("Intialized the database service.")
 
 	for range 2 {
 		db.GenerateSecret()

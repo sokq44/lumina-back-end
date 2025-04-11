@@ -23,11 +23,7 @@ var (
 	DbPort           string
 	DbName           string
 	DbCleanupInt     int
-	SmtpFrom         string
-	SmtpUser         string
-	SmtpPass         string
-	SmtpHost         string
-	SmtpPort         string
+	AwsSesFrom       string
 )
 
 func InitConfig() {
@@ -47,11 +43,7 @@ func InitConfig() {
 	DbPort = getEnv("LUMINA_DB_PORT")
 	DbName = getEnv("LUMINA_DB_DBNAME")
 	DbCleanupInt = getEnvInt("LUMINA_DB_CLEANUP_INTERVAL")
-	SmtpFrom = getEnv("LUMINA_SMTP_FROM")
-	SmtpUser = getEnv("LUMINA_SMTP_USER")
-	SmtpPass = getEnv("LUMINA_SMTP_PASSWD")
-	SmtpHost = getEnv("LUMINA_SMTP_HOST")
-	SmtpPort = getEnv("LUMINA_SMTP_PORT")
+	AwsSesFrom = getEnv("AWS_SES_FROM")
 }
 
 func getEnv(key string) string {

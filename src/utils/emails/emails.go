@@ -81,7 +81,7 @@ func (smtpClient *Client) SendVerificationEmail(receiver string, token string) *
 
 func (smtpClient *Client) SendPasswordChangeEmail(receiver string, token string) *problems.Problem {
 	front := config.FrontAddr
-	emailBody := fmt.Sprintf("Change your password here: %s/user/password/%s", front, token)
+	emailBody := fmt.Sprintf("Change your password here: %s/password/%s", front, token)
 
 	err := smtpClient.SendEmail(receiver, "Change Your Password", emailBody)
 	if err != nil {

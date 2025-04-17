@@ -11,11 +11,12 @@ bin/
 logs/
 lumina-logs/
 
-# static files
+# static
 static/
 
-# vscode
+# IDEs
 .vscode
-
-# jetbrains
 .idea
+
+# building & deployment
+Makefile

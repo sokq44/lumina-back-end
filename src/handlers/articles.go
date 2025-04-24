@@ -256,6 +256,10 @@ func DeleteArticle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if db.DeleteArticlesCommentByArticleId(body.Id).Handle(w, r) {
+		return
+	}
+
 	if db.DeleteArticleById(body.Id).Handle(w, r) {
 		return
 	}

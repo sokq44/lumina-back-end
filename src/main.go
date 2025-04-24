@@ -12,8 +12,6 @@ import (
 	"net/http"
 )
 
-// TODO: Article Model Validation
-// TODO: Article likes and dislikes
 // TODO: handling multiple sessions from many devices
 
 func initApplication() string {

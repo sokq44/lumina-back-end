@@ -45,9 +45,13 @@ func InitHandlers() {
 	http.HandleFunc(AssetsPath+"/add", CORS(Method("POST", Auth(AddAsset))))
 
 	/* Comments */
-	http.HandleFunc(CommentsPath+"/article/comment", CORS(Auth(Method("POST", CreateArticleComment))))
-	http.HandleFunc(CommentsPath+"/article/update", CORS(Auth(Method("PATCH", UpdateArticleComment))))  // TODO: Validate whether the user is the author of the comment
-	http.HandleFunc(CommentsPath+"/article/delete", CORS(Auth(Method("DELETE", DeleteArticleComment)))) // TODO: Validate whether the user is the author of the comment
+	http.HandleFunc(CommentsPath+"/article/create", CORS(Auth(Method("POST", CreateArticleComment))))
+	http.HandleFunc(CommentsPath+"/article/update", CORS(Auth(Method("PATCH", UpdateArticleComment))))
+	http.HandleFunc(CommentsPath+"/article/delete", CORS(Auth(Method("DELETE", DeleteArticleComment))))
+
+	//http.HandleFunc(CommentsPath+"/article/create", CORS(Method("POST", CreateArticleComment)))
+	//http.HandleFunc(CommentsPath+"/article/update", CORS(Method("PATCH", UpdateArticleComment)))
+	//http.HandleFunc(CommentsPath+"/article/delete", CORS(Method("DELETE", DeleteArticleComment)))
 
 	/* Discussions */
 	http.HandleFunc(DiscussionsPath+"/article/start", CORS(Auth(Method("POST", emptyHandler))))       // TODO: Implement

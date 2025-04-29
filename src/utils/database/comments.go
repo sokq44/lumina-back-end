@@ -28,12 +28,13 @@ func (db *Database) CreateComment(c models.Comment) (string, *problems.Problem) 
 
 func (db *Database) GetCommentById(id string) (*models.Comment, *problems.Problem) {
 	comment := &models.Comment{Id: id}
-	var rawTime string
+	var rawCreatedAt string
+	var rawLastModified string
 
 	err := db.Connection.QueryRow(
-		"SELECT (user_id, content, created_at, last_modified) FROM comments WHERE id LIKE ?",
+		"SELECT user_id, content, created_at, last_modified FROM comments WHERE id LIKE ?;",
 		id,
-	).Scan(&comment.UserId, &comment.Content, rawTime, &comment.LastModified)
+	).Scan(&comment.UserId, &comment.Content, &rawCreatedAt, &rawLastModified)
 	if err != nil {
 		return nil, &problems.Problem{
 			Type:          problems.DatabaseProblem,
@@ -43,19 +44,25 @@ func (db *Database) GetCommentById(id string) (*models.Comment, *problems.Proble
 		}
 	}
 
-	parsedTime, p := parseTime(rawTime)
-	if p == nil {
-		comment.CreatedAt = parsedTime
-	} else {
+	parsedCreatedAt, p := parseTime(rawCreatedAt)
+	if p != nil {
 		return nil, p
 	}
+
+	parsedLastModified, p := parseTime(rawLastModified)
+	if p != nil {
+		return nil, p
+	}
+
+	comment.CreatedAt = parsedCreatedAt
+	comment.LastModified = parsedLastModified
 
 	return comment, nil
 }
 
 func (db *Database) UpdateComment(c models.Comment) *problems.Problem {
 	_, err := db.Connection.Exec(
-		"UPDATE comments SET user_id=?, content=?, created_at=?, last_modified=? WHERE id LIKE ?",
+		"UPDATE comments SET user_id=?, content=?, created_at=?, last_modified=? WHERE id LIKE ?;",
 		c.UserId, c.Content, c.CreatedAt, c.LastModified, c.Id,
 	)
 	if err != nil {

@@ -69,13 +69,12 @@ CREATE TABLE IF NOT EXISTS comments
 (
     id            VARCHAR(36) PRIMARY KEY NOT NULL DEFAULT (uuid()),
     user_id       VARCHAR(36)             NOT NULL,
-    content       VARCHAR(36)             NOT NULL,
+    content       VARCHAR(255)            NOT NULL,
     created_at    DATETIME                NOT NULL DEFAULT CURRENT_TIMESTAMP,
     last_modified DATETIME                NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
     CONSTRAINT fk_users_comments FOREIGN KEY (user_id) REFERENCES users (id)
 );
-
 
 CREATE TABLE IF NOT EXISTS discussions
 (

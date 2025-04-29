@@ -20,3 +20,6 @@ static/
 
 # building & deployment
 Makefile
+
+# tests
+tests/

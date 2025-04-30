@@ -1,6 +1,7 @@
 package problems
 
 import (
+	"backend/utils/logs"
 	"errors"
 	"fmt"
 	"log"
@@ -51,7 +52,7 @@ func (e *Problem) Handle(w http.ResponseWriter, r *http.Request) bool {
 		w.WriteHeader(e.Status)
 		_, err := w.Write([]byte(e.ClientMessage))
 		if err != nil {
-			log.Println("problem while writing a response")
+			logs.Error("problem while writing a response")
 		}
 	}
 

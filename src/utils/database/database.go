@@ -2,6 +2,7 @@ package database
 
 import (
 	"backend/config"
+	"backend/utils/logs"
 	"backend/utils/problems"
 	"database/sql"
 	"fmt"
@@ -50,7 +51,7 @@ func InitDb() {
 		log.Fatalf("failed to connect to the database: %v", err.Error())
 	}
 
-	log.Println("Intialized the database service.")
+	logs.Success("Intialized the database service.")
 
 	for range 2 {
 		db.GenerateSecret()

@@ -79,7 +79,7 @@ func (e *Problem) Handle(w http.ResponseWriter, r *http.Request) bool {
 	}
 
 	logMessage = fmt.Sprintf(
-		"\n{\n\t%s -> %s,\n\tresponded with HTTP status -> %d\n\tresponded with message -> \"%s\"\n}\n",
+		"{\n\t%s -> %s,\n\tresponded with HTTP status -> %d\n\tresponded with message -> \"%s\"\n}\n",
 		typeString, e.ServerMessage, e.Status, e.ClientMessage,
 	)
 
@@ -87,26 +87,25 @@ func (e *Problem) Handle(w http.ResponseWriter, r *http.Request) bool {
 	if r != nil {
 		host = r.Host
 	}
-	now := time.Now()
-	logMessage = fmt.Sprintf("[%v] [%s] -> %s", now, host, logMessage)
 
+	logMessage = fmt.Sprintf("[%s] -> %s", host, logMessage)
 	if shouldVerbose {
-		log.Println(logMessage)
+		logs.Error(logMessage)
 	}
 
-	fullPath := filepath.Join(location, now.Format("02-01-2006")+".log")
+	fullPath := filepath.Join(location, time.Now().Format("02-01-2006")+".log")
 	file, err := os.OpenFile(fullPath, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
 	if !errors.Is(err, os.ErrExist) && err != nil {
-		log.Println("Problem while creating the log file", err)
+		logs.Error(fmt.Sprintf("while creating the log file -> %v", err))
 	} else {
 		_, err = file.WriteString(fmt.Sprintf("%s\n", logMessage))
 		if err != nil {
-			log.Println("problem while writing a log")
+			logs.Error("problem while writing a log")
 		}
 	}
 	err = file.Close()
 	if err != nil {
-		log.Println("problem while closing the log file")
+		logs.Error("problem while closing the log file")
 	}
 
 	return true

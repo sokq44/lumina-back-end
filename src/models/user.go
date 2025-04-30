@@ -2,7 +2,6 @@ package models
 
 import (
 	"backend/utils/problems"
-	"log"
 	"net/http"
 	"regexp"
 	"strings"
@@ -55,7 +54,6 @@ func hasUppercase(s string) bool {
 			return true
 		}
 	}
-	log.Println("no upper")
 	return false
 }
 
@@ -65,7 +63,6 @@ func hasDigit(s string) bool {
 			return true
 		}
 	}
-	log.Println("no digit")
 	return false
 }
 
@@ -76,6 +73,5 @@ func hasSpecialChar(s string) bool {
 			return true
 		}
 	}
-	log.Println("no special")
 	return false
 }

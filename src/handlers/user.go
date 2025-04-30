@@ -10,9 +10,10 @@ import (
 	"backend/utils/problems"
 	"encoding/json"
 	"fmt"
-	"github.com/google/uuid"
 	"net/http"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 var db = database.GetDb()

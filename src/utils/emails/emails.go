@@ -2,6 +2,7 @@ package emails
 
 import (
 	"backend/config"
+	"backend/utils/logs"
 	"backend/utils/problems"
 	"context"
 	"fmt"
@@ -29,7 +30,7 @@ func InitEmails() {
 	emails.From = config.AwsSesFrom
 	emails.Client = ses.NewFromConfig(cfg)
 
-	log.Println("Initialized the AWS SES service.")
+	logs.Success("Initialized the AWS SES service.")
 }
 
 func GetEmails() *Client {

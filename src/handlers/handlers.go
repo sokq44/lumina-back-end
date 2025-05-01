@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"backend/docs"
 	"backend/middleware"
 	"net/http"
 )
@@ -21,7 +22,13 @@ var (
 
 func emptyHandler(http.ResponseWriter, *http.Request) {}
 
-func InitHandlers() {
+func InitHandlers(dev bool, port string) {
+	/* Docs */
+	if dev {
+		http.HandleFunc(docs.Path, CORS(Method("GET", docs.GetSwagger(port))))
+		http.HandleFunc(docs.OpenAPIPath, CORS(Method("GET", docs.GetOpenAPISpec(port))))
+	}
+
 	/* User */
 	http.HandleFunc(UserPath+"/login", CORS(Method("POST", LoginUser)))
 	http.HandleFunc(UserPath+"/get-user", CORS(Auth(Method("GET", GetUser))))
@@ -48,10 +55,6 @@ func InitHandlers() {
 	http.HandleFunc(CommentsPath+"/article/create", CORS(Auth(Method("POST", CreateArticleComment))))
 	http.HandleFunc(CommentsPath+"/article/update", CORS(Auth(Method("PATCH", UpdateArticleComment))))
 	http.HandleFunc(CommentsPath+"/article/delete", CORS(Auth(Method("DELETE", DeleteArticleComment))))
-
-	//http.HandleFunc(CommentsPath+"/article/create", CORS(Method("POST", CreateArticleComment)))
-	//http.HandleFunc(CommentsPath+"/article/update", CORS(Method("PATCH", UpdateArticleComment)))
-	//http.HandleFunc(CommentsPath+"/article/delete", CORS(Method("DELETE", DeleteArticleComment)))
 
 	/* Discussions */
 	http.HandleFunc(DiscussionsPath+"/article/start", CORS(Auth(Method("POST", emptyHandler))))       // TODO: Implement

@@ -57,6 +57,6 @@ func InitHandlers(dev bool, port string) {
 	http.HandleFunc(CommentsPath+"/article/delete", CORS(Auth(Method("DELETE", DeleteArticleComment))))
 
 	/* Discussions */
-	http.HandleFunc(DiscussionsPath+"/article/start", CORS(Auth(Method("POST", emptyHandler))))       // TODO: Implement
-	http.HandleFunc(DiscussionsPath+"/article/contribute", CORS(Auth(Method("PATCH", emptyHandler)))) // TODO: Implement
+	http.HandleFunc(DiscussionsPath+"/article/create", CORS(Auth(Method("POST", CreateArticleDiscussion))))
+	http.HandleFunc(DiscussionsPath+"/article/update", CORS(Auth(Method("PATCH", UpdateArticleDiscussion))))
 }

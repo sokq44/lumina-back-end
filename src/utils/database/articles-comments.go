@@ -1,10 +1,12 @@
 package database
 
 import (
+	"backend/models"
 	"backend/utils/problems"
 	"fmt"
-	"github.com/google/uuid"
 	"net/http"
+
+	"github.com/google/uuid"
 )
 
 func (db *Database) CreateArticlesComment(articleId string, commentId string) (string, *problems.Problem) {
@@ -51,4 +53,32 @@ func (db *Database) DeleteArticlesCommentByCommentId(commentId string) *problems
 	}
 
 	return nil
+}
+
+func (db *Database) GetArticleByCommentId(commentId string) (*models.Article, *problems.Problem) {
+	var article *models.Article
+	var rawTime string
+	err := db.Connection.QueryRow(`
+		SELECT id, title, content, created_at, user_id, banner_url, public 
+		FROM articles 
+		JOIN articles_comments ON articles.id=articles_comments.article_id 
+		WHERE articles_comments.comment_id=?`,
+		commentId,
+	).Scan(&article.Id, &article.Title, &article.Content, &rawTime, &article.UserId, &article.BannerUrl, &article.Public)
+	if err != nil {
+		return nil, &problems.Problem{
+			Type:          problems.DatabaseProblem,
+			ServerMessage: fmt.Sprintf("while trying to get article by comment's id -> %v", err),
+			ClientMessage: "An unexpected error has occurred while processing your request.",
+			Status:        http.StatusInternalServerError,
+		}
+	}
+
+	parsedTime, p := parseTime(rawTime)
+	if p != nil {
+		return nil, p
+	}
+
+	article.CreatedAt = parsedTime
+	return article, nil
 }

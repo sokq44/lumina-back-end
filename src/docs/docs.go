@@ -50,6 +50,10 @@ var descriptions []string = []string{
 	"Unauthorized to update the comment.",
 	"Comment deleted successfully.",
 	"Unauthorized to delete the comment.",
+	"Discussion created successfully.",
+	"Previous comment or article not found.",
+	"Comment added to the discussion successfully.",
+	"Discussion or article not found.",
 }
 
 func CreateOpenAPISpec() *openapi3.T {
@@ -829,7 +833,7 @@ func CreateOpenAPISpec() *openapi3.T {
 		},
 	})
 
-	/* comments/articles/update endpoint */
+	/* comments/article/update endpoint */
 	responses = openapi3.NewResponses()
 	responses.Set("200", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
@@ -879,7 +883,7 @@ func CreateOpenAPISpec() *openapi3.T {
 		},
 	})
 
-	/* comments/articles/delete endpoint */
+	/* comments/article/delete endpoint */
 	responses = openapi3.NewResponses()
 	responses.Set("200", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
@@ -918,6 +922,151 @@ func CreateOpenAPISpec() *openapi3.T {
 										"id": {Value: &openapi3.Schema{Type: StringType}},
 									},
 									Required: []string{"id"},
+								},
+							},
+						},
+					},
+				},
+			},
+			Responses: responses,
+		},
+	})
+
+	/* discussions/article/create endppoint */
+	responses = openapi3.NewResponses()
+	responses.Set("201", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: &descriptions[33],
+			Content: openapi3.Content{
+				"text/plain": &openapi3.MediaType{
+					Schema: &openapi3.SchemaRef{
+						Value: &openapi3.Schema{
+							Type: StringType,
+						},
+					},
+				},
+			},
+		},
+	})
+	responses.Set("400", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: &descriptions[5],
+		},
+	})
+	responses.Set("404", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: &descriptions[34],
+		},
+	})
+	responses.Set("500", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: &descriptions[7],
+		},
+	})
+	paths.Set("/discussions/article/create", &openapi3.PathItem{
+		Post: &openapi3.Operation{
+			Summary: "Create a discussion for an article.",
+			Tags:    []string{"Discussions"},
+			RequestBody: &openapi3.RequestBodyRef{
+				Value: &openapi3.RequestBody{
+					Description: "Details of the discussion to be created.",
+					Required:    true,
+					Content: openapi3.Content{
+						"application/json": &openapi3.MediaType{
+							Schema: &openapi3.SchemaRef{
+								Value: &openapi3.Schema{
+									Type: ObjectType,
+									Properties: map[string]*openapi3.SchemaRef{
+										"prev_id": {
+											Value: &openapi3.Schema{
+												Type:        StringType,
+												Description: "ID of the previous comment in the discussion.",
+											},
+										},
+										"comment": {
+											Value: &openapi3.Schema{
+												Type: ObjectType,
+												Properties: map[string]*openapi3.SchemaRef{
+													"content": {
+														Value: &openapi3.Schema{
+															Type:        StringType,
+															Description: "Content of the comment.",
+														},
+													},
+												},
+												Required: []string{"content"},
+											},
+										},
+									},
+									Required: []string{"prev_id", "comment"},
+								},
+							},
+						},
+					},
+				},
+			},
+			Responses: responses,
+		},
+	})
+
+	/* discussions/article/update endppoint */
+	responses = openapi3.NewResponses()
+	responses.Set("200", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: &descriptions[35],
+		},
+	})
+	responses.Set("400", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: &descriptions[5],
+		},
+	})
+	responses.Set("404", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: &descriptions[36],
+		},
+	})
+	responses.Set("500", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: &descriptions[7],
+		},
+	})
+	paths.Set("/discussions/article/update", &openapi3.PathItem{
+		Patch: &openapi3.Operation{
+			Summary: "Add a comment to an existing discussion.",
+			Tags:    []string{"Discussions"},
+			RequestBody: &openapi3.RequestBodyRef{
+				Value: &openapi3.RequestBody{
+					Description: "Details of the comment to be added to the discussion.",
+					Required:    true,
+					Content: openapi3.Content{
+						"application/json": &openapi3.MediaType{
+							Schema: &openapi3.SchemaRef{
+								Value: &openapi3.Schema{
+									Type: ObjectType,
+									Properties: map[string]*openapi3.SchemaRef{
+										"discussion_id": {
+											Value: &openapi3.Schema{
+												Type:        StringType,
+												Description: "ID of the discussion to update.",
+											},
+										},
+										"comment": {
+											Value: &openapi3.Schema{
+												Type: ObjectType,
+												Properties: map[string]*openapi3.SchemaRef{
+													"content": {
+														Value: &openapi3.Schema{
+															Type:        StringType,
+															Description: "Content of the comment.",
+														},
+													},
+												},
+												Required: []string{"content"},
+											},
+										},
+									},
+									Required: []string{"discussion_id", "comment"},
 								},
 							},
 						},

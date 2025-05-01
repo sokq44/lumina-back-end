@@ -39,6 +39,9 @@ func CreateArticleComment(w http.ResponseWriter, r *http.Request) {
 	}
 	body.Comment.UserId = claims["user"].(string)
 
+	now := time.Now()
+	body.Comment.CreatedAt = now
+	body.Comment.LastModified = now
 	commentId, p := db.CreateComment(body.Comment)
 	if p.Handle(w, r) {
 		return

@@ -11,12 +11,12 @@ import (
 	"github.com/getkin/kin-openapi/openapi3"
 )
 
-const Path = "/docs/"
-const OpenAPIPath = "/openapi.json/"
+const Path string = "/docs/"
+const OpenAPIPath string = "/openapi.json/"
 
-var StringType = openapi3.NewStringSchema().Type
-var ObjectType = openapi3.NewObjectSchema().Type
-var descriptions = []string{
+var StringType *openapi3.Types = openapi3.NewStringSchema().Type
+var ObjectType *openapi3.Types = openapi3.NewObjectSchema().Type
+var descriptions []string = []string{
 	"User details retrieved successfully.",
 	"User logged out successfully.",
 	"User is logged in.",
@@ -38,6 +38,18 @@ var descriptions = []string{
 	"Password change token is valid.",
 	"The password change token has expired.",
 	"The password change token is invalid.",
+	"Article retrieved successfully.",
+	"Article not found.",
+	"Article saved successfully.",
+	"Articles retrieved successfully.",
+	"Article deleted successfully.",
+	"Articles retrieved successfully.",
+	"Asset added successfully.",
+	"Comment created successfully.",
+	"Comment updated successfully.",
+	"Unauthorized to update the comment.",
+	"Comment deleted successfully.",
+	"Unauthorized to delete the comment.",
 }
 
 func CreateOpenAPISpec() *openapi3.T {
@@ -463,6 +475,450 @@ func CreateOpenAPISpec() *openapi3.T {
 						Schema: &openapi3.SchemaRef{
 							Value: &openapi3.Schema{
 								Type: StringType,
+							},
+						},
+					},
+				},
+			},
+			Responses: responses,
+		},
+	})
+
+	/* articles/get endpoint */
+	responses = openapi3.NewResponses()
+	responses.Set("200", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: &descriptions[21],
+			Content: openapi3.Content{
+				"application/json": &openapi3.MediaType{
+					Schema: &openapi3.SchemaRef{
+						Value: &openapi3.Schema{
+							Type: ObjectType,
+							Properties: map[string]*openapi3.SchemaRef{
+								"id":        {Value: &openapi3.Schema{Type: StringType}},
+								"user":      {Value: &openapi3.Schema{Type: StringType}},
+								"userImage": {Value: &openapi3.Schema{Type: StringType}},
+								"title":     {Value: &openapi3.Schema{Type: StringType}},
+								"banner":    {Value: &openapi3.Schema{Type: StringType}},
+								"content":   {Value: &openapi3.Schema{Type: StringType}},
+								"public":    {Value: &openapi3.Schema{Type: StringType}},
+								"createdAt": {Value: &openapi3.Schema{Type: StringType}},
+							},
+						},
+					},
+				},
+			},
+		},
+	})
+	responses.Set("404", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: &descriptions[22],
+		},
+	})
+	responses.Set("500", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: &descriptions[7],
+		},
+	})
+	paths.Set("/articles/get", &openapi3.PathItem{
+		Get: &openapi3.Operation{
+			Summary: "Retrieve an article by its ID.",
+			Tags:    []string{"Articles"},
+			Parameters: []*openapi3.ParameterRef{
+				{
+					Value: &openapi3.Parameter{
+						Name:        "article",
+						In:          "query",
+						Description: "ID of the article to retrieve.",
+						Required:    true,
+						Schema: &openapi3.SchemaRef{
+							Value: &openapi3.Schema{
+								Type: StringType,
+							},
+						},
+					},
+				},
+			},
+			Responses: responses,
+		},
+	})
+
+	/* articles/save endpoint */
+	responses = openapi3.NewResponses()
+	responses.Set("200", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: &descriptions[23],
+		},
+	})
+	responses.Set("400", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: &descriptions[5],
+		},
+	})
+	responses.Set("500", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: &descriptions[7],
+		},
+	})
+	paths.Set("/articles/save", &openapi3.PathItem{
+		Put: &openapi3.Operation{
+			Summary: "Save or update an article.",
+			Tags:    []string{"Articles"},
+			RequestBody: &openapi3.RequestBodyRef{
+				Value: &openapi3.RequestBody{
+					Description: "Article details to save or update.",
+					Required:    true,
+					Content: openapi3.Content{
+						"application/json": &openapi3.MediaType{
+							Schema: &openapi3.SchemaRef{
+								Value: &openapi3.Schema{
+									Type: ObjectType,
+									Properties: map[string]*openapi3.SchemaRef{
+										"id":      {Value: &openapi3.Schema{Type: StringType}},
+										"title":   {Value: &openapi3.Schema{Type: StringType}},
+										"banner":  {Value: &openapi3.Schema{Type: StringType}},
+										"content": {Value: &openapi3.Schema{Type: StringType}},
+										"public":  {Value: &openapi3.Schema{Type: StringType}},
+									},
+									Required: []string{"title", "content", "public"},
+								},
+							},
+						},
+					},
+				},
+			},
+			Responses: responses,
+		},
+	})
+
+	/* articles/get-all endpoint */
+	responses = openapi3.NewResponses()
+	responses.Set("200", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: &descriptions[24],
+			Content: openapi3.Content{
+				"application/json": &openapi3.MediaType{
+					Schema: &openapi3.SchemaRef{
+						Value: &openapi3.Schema{
+							Type:  ObjectType,
+							Items: &openapi3.SchemaRef{Value: &openapi3.Schema{Type: ObjectType}},
+						},
+					},
+				},
+			},
+		},
+	})
+	responses.Set("500", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: &descriptions[7],
+		},
+	})
+	paths.Set("/articles/get-all", &openapi3.PathItem{
+		Get: &openapi3.Operation{
+			Summary:   "Retrieve all articles for the authenticated user.",
+			Tags:      []string{"Articles"},
+			Responses: responses,
+		},
+	})
+
+	/* articles/delete endpoint */
+	responses = openapi3.NewResponses()
+	responses.Set("200", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: &descriptions[25],
+		},
+	})
+	responses.Set("400", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: &descriptions[5],
+		},
+	})
+	responses.Set("404", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: &descriptions[22],
+		},
+	})
+	responses.Set("500", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: &descriptions[7],
+		},
+	})
+	paths.Set("/articles/delete", &openapi3.PathItem{
+		Delete: &openapi3.Operation{
+			Summary: "Delete an article by its ID.",
+			Tags:    []string{"Articles"},
+			RequestBody: &openapi3.RequestBodyRef{
+				Value: &openapi3.RequestBody{
+					Description: "ID of the article to delete.",
+					Required:    true,
+					Content: openapi3.Content{
+						"application/json": &openapi3.MediaType{
+							Schema: &openapi3.SchemaRef{
+								Value: &openapi3.Schema{
+									Type: ObjectType,
+									Properties: map[string]*openapi3.SchemaRef{
+										"id": {Value: &openapi3.Schema{Type: StringType}},
+									},
+									Required: []string{"id"},
+								},
+							},
+						},
+					},
+				},
+			},
+			Responses: responses,
+		},
+	})
+
+	/* articles/get-suggested */
+	responses = openapi3.NewResponses()
+	responses.Set("200", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: &descriptions[26],
+			Content: openapi3.Content{
+				"application/json": &openapi3.MediaType{
+					Schema: &openapi3.SchemaRef{
+						Value: &openapi3.Schema{
+							Type: ObjectType,
+							Items: &openapi3.SchemaRef{
+								Value: &openapi3.Schema{
+									Type: ObjectType,
+									Properties: map[string]*openapi3.SchemaRef{
+										"id":        {Value: &openapi3.Schema{Type: StringType}},
+										"user":      {Value: &openapi3.Schema{Type: StringType}},
+										"userImage": {Value: &openapi3.Schema{Type: StringType}},
+										"title":     {Value: &openapi3.Schema{Type: StringType}},
+										"banner":    {Value: &openapi3.Schema{Type: StringType}},
+										"content":   {Value: &openapi3.Schema{Type: StringType}},
+										"createdAt": {Value: &openapi3.Schema{Type: StringType}},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	})
+	responses.Set("500", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: &descriptions[7],
+		},
+	})
+	paths.Set("/articles/get-suggested", &openapi3.PathItem{
+		Get: &openapi3.Operation{
+			Summary:   "Retrieve suggested articles.",
+			Tags:      []string{"Articles"},
+			Responses: responses,
+		},
+	})
+
+	/* assets/add endpoint */
+	responses = openapi3.NewResponses()
+	responses.Set("200", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: &descriptions[27],
+			Content: openapi3.Content{
+				"text/plain": &openapi3.MediaType{
+					Schema: &openapi3.SchemaRef{
+						Value: &openapi3.Schema{
+							Type: StringType,
+						},
+					},
+				},
+			},
+		},
+	})
+	responses.Set("400", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: &descriptions[5],
+		},
+	})
+	responses.Set("500", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: &descriptions[7],
+		},
+	})
+	paths.Set("/assets/add", &openapi3.PathItem{
+		Post: &openapi3.Operation{
+			Summary: "Add a new asset.",
+			Tags:    []string{"Assets"},
+			RequestBody: &openapi3.RequestBodyRef{
+				Value: &openapi3.RequestBody{
+					Description: "Multipart form data containing the asset file.",
+					Required:    true,
+					Content: openapi3.Content{
+						"multipart/form-data": &openapi3.MediaType{
+							Schema: &openapi3.SchemaRef{
+								Value: &openapi3.Schema{
+									Type: ObjectType,
+									Properties: map[string]*openapi3.SchemaRef{
+										"image":    {Value: &openapi3.Schema{Type: StringType, Format: "binary"}},
+										"filename": {Value: &openapi3.Schema{Type: StringType}},
+									},
+									Required: []string{"image", "filename"},
+								},
+							},
+						},
+					},
+				},
+			},
+			Responses: responses,
+		},
+	})
+
+	/* comments/article/create endpoint */
+	responses = openapi3.NewResponses()
+	responses.Set("200", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: &descriptions[28],
+			Content: openapi3.Content{
+				"text/plain": &openapi3.MediaType{
+					Schema: &openapi3.SchemaRef{
+						Value: &openapi3.Schema{
+							Type: StringType,
+						},
+					},
+				},
+			},
+		},
+	})
+	responses.Set("400", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: &descriptions[5],
+		},
+	})
+	responses.Set("500", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: &descriptions[7],
+		},
+	})
+	paths.Set("/comments/article/create", &openapi3.PathItem{
+		Post: &openapi3.Operation{
+			Summary: "Create a comment for an article.",
+			Tags:    []string{"Comments"},
+			RequestBody: &openapi3.RequestBodyRef{
+				Value: &openapi3.RequestBody{
+					Description: "Details of the comment to be created.",
+					Required:    true,
+					Content: openapi3.Content{
+						"application/json": &openapi3.MediaType{
+							Schema: &openapi3.SchemaRef{
+								Value: &openapi3.Schema{
+									Type: ObjectType,
+									Properties: map[string]*openapi3.SchemaRef{
+										"comment": {
+											Value: &openapi3.Schema{
+												Type: ObjectType,
+												Properties: map[string]*openapi3.SchemaRef{
+													"content": {Value: &openapi3.Schema{Type: StringType}},
+												},
+												Required: []string{"content"},
+											},
+										},
+										"article_id": {Value: &openapi3.Schema{Type: StringType}},
+									},
+									Required: []string{"comment", "article_id"},
+								},
+							},
+						},
+					},
+				},
+			},
+			Responses: responses,
+		},
+	})
+
+	/* comments/articles/update endpoint */
+	responses = openapi3.NewResponses()
+	responses.Set("200", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: &descriptions[29],
+		},
+	})
+	responses.Set("400", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: &descriptions[5],
+		},
+	})
+	responses.Set("401", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: &descriptions[30],
+		},
+	})
+	responses.Set("500", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: &descriptions[7],
+		},
+	})
+	paths.Set("/comments/article/update", &openapi3.PathItem{
+		Patch: &openapi3.Operation{
+			Summary: "Update a comment for an article.",
+			Tags:    []string{"Comments"},
+			RequestBody: &openapi3.RequestBodyRef{
+				Value: &openapi3.RequestBody{
+					Description: "Details of the comment to be updated.",
+					Required:    true,
+					Content: openapi3.Content{
+						"application/json": &openapi3.MediaType{
+							Schema: &openapi3.SchemaRef{
+								Value: &openapi3.Schema{
+									Type: ObjectType,
+									Properties: map[string]*openapi3.SchemaRef{
+										"content":    {Value: &openapi3.Schema{Type: StringType}},
+										"comment_id": {Value: &openapi3.Schema{Type: StringType}},
+									},
+									Required: []string{"content", "comment_id"},
+								},
+							},
+						},
+					},
+				},
+			},
+			Responses: responses,
+		},
+	})
+
+	/* comments/articles/delete endpoint */
+	responses = openapi3.NewResponses()
+	responses.Set("200", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: &descriptions[31],
+		},
+	})
+	responses.Set("400", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: &descriptions[5],
+		},
+	})
+	responses.Set("401", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: &descriptions[32],
+		},
+	})
+	responses.Set("500", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: &descriptions[7],
+		},
+	})
+	paths.Set("/comments/article/delete", &openapi3.PathItem{
+		Delete: &openapi3.Operation{
+			Summary: "Delete a comment for an article.",
+			Tags:    []string{"Comments"},
+			RequestBody: &openapi3.RequestBodyRef{
+				Value: &openapi3.RequestBody{
+					Description: "ID of the comment to delete.",
+					Required:    true,
+					Content: openapi3.Content{
+						"application/json": &openapi3.MediaType{
+							Schema: &openapi3.SchemaRef{
+								Value: &openapi3.Schema{
+									Type: ObjectType,
+									Properties: map[string]*openapi3.SchemaRef{
+										"id": {Value: &openapi3.Schema{Type: StringType}},
+									},
+									Required: []string{"id"},
+								},
 							},
 						},
 					},

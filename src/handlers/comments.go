@@ -65,6 +65,77 @@ func CreateArticleComment(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+func GetAllArticleComments(w http.ResponseWriter, r *http.Request) {
+	type UserResponse struct {
+		Id       string `json:"id"`
+		Email    string `json:"email"`
+		ImageUrl string `json:"image"`
+		Username string `json:"username"`
+	}
+
+	type ResponseElement struct {
+		Id           string       `json:"id"`
+		User         UserResponse `json:"user"`
+		Content      string       `json:"content"`
+		CreatedAt    time.Time    `json:"created_at"`
+		LastModified time.Time    `json:"last_modified"`
+	}
+
+	query := r.URL.Query()
+	articleId := query.Get("articleId")
+
+	if articleId == "" {
+		if err := json.NewEncoder(w).Encode([]ResponseElement{}); err != nil {
+			p := problems.Problem{
+				Type:          problems.HandlerProblem,
+				ServerMessage: fmt.Sprintf("while trying to encode empty array (endpoint for getting all comments for an article) -> %v", err),
+				ClientMessage: "An error occurred while processing your request.",
+				Status:        http.StatusInternalServerError,
+			}
+			p.Handle(w, r)
+			return
+		}
+	}
+
+	comments, p := db.GetCommentsByArticleId(articleId)
+	if p.Handle(w, r) {
+		return
+	}
+
+	var response []ResponseElement
+	for _, comment := range comments {
+		element := ResponseElement{
+			Id:           comment.Id,
+			Content:      comment.Content,
+			CreatedAt:    comment.CreatedAt,
+			LastModified: comment.LastModified,
+		}
+
+		user, p := db.GetUserById(comment.UserId)
+		if p.Handle(w, r) {
+			return
+		}
+
+		element.User.Id = user.Id
+		element.User.Email = user.Email
+		element.User.ImageUrl = user.ImageUrl
+		element.User.Username = user.Username
+
+		response = append(response, element)
+	}
+
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		p := problems.Problem{
+			Type:          problems.HandlerProblem,
+			ServerMessage: fmt.Sprintf("while trying to encode comments (endpoint for getting all comments for an article) -> %v", err),
+			ClientMessage: "An error occurred while processing your request.",
+			Status:        http.StatusInternalServerError,
+		}
+		p.Handle(w, r)
+		return
+	}
+}
+
 func UpdateArticleComment(w http.ResponseWriter, r *http.Request) {
 	type RequestBody struct {
 		Content   string `json:"content"`

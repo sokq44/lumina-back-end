@@ -83,7 +83,8 @@ func CreateArticleDiscussion(w http.ResponseWriter, r *http.Request) {
 	}
 
 	/* Creating discussion row in the database. */
-	discussionId, p := db.CreateDiscussion(models.Discussion{CreatedAt: now})
+	discussion := models.Discussion{CreatedAt: now}
+	discussionId, p := db.CreateDiscussion(discussion)
 	if p.Handle(w, r) {
 		return
 	}

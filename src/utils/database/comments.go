@@ -3,9 +3,12 @@ package database
 import (
 	"backend/models"
 	"backend/utils/problems"
+	"database/sql"
+	"errors"
 	"fmt"
-	"github.com/google/uuid"
 	"net/http"
+
+	"github.com/google/uuid"
 )
 
 func (db *Database) CreateComment(c models.Comment) (string, *problems.Problem) {
@@ -58,6 +61,69 @@ func (db *Database) GetCommentById(id string) (*models.Comment, *problems.Proble
 	comment.LastModified = parsedLastModified
 
 	return comment, nil
+}
+
+func (db *Database) GetCommentsByArticleId(id string) ([]models.Comment, *problems.Problem) {
+	rows, err := db.Connection.Query(`
+	SELECT
+		comments.id,
+		comments.user_id,
+		comments.content,
+		comments.created_at,
+		comments.last_modified
+	FROM
+		comments
+		JOIN articles_comments ON comments.id = articles_comments.comment_id
+	WHERE
+		articles_comments.article_id LIKE ?;`, id)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, &problems.Problem{
+			Type:          problems.DatabaseProblem,
+			ServerMessage: fmt.Sprintf("while fetching comments by article's ID -> %v", err),
+			ClientMessage: "There are no comments for this article.",
+			Status:        http.StatusNotFound,
+		}
+	} else if err != nil {
+		return nil, &problems.Problem{
+			Type:          problems.DatabaseProblem,
+			ServerMessage: fmt.Sprintf("while fetching comments by article's ID -> %v", err),
+			ClientMessage: "An error occurred while processing your request.",
+			Status:        http.StatusInternalServerError,
+		}
+	}
+
+	comments := make([]models.Comment, 0)
+	for rows.Next() {
+		var rawCreatedAt string
+		var rawLastModified string
+		var comment models.Comment
+
+		err = rows.Scan(&comment.Id, &comment.UserId, &comment.Content, &rawCreatedAt, &rawLastModified)
+		if err != nil {
+			return nil, &problems.Problem{
+				Type:          problems.DatabaseProblem,
+				ServerMessage: fmt.Sprintf("while fetching comments by article's ID and scanning a row -> %v", err),
+				ClientMessage: "An error occurred while processing your request.",
+				Status:        http.StatusInternalServerError,
+			}
+		}
+
+		createdAt, p := parseTime(rawCreatedAt)
+		if p != nil {
+			return nil, p
+		}
+
+		lastModified, p := parseTime(rawCreatedAt)
+		if p != nil {
+			return nil, p
+		}
+
+		comment.CreatedAt = createdAt
+		comment.LastModified = lastModified
+		comments = append(comments, comment)
+	}
+
+	return comments, nil
 }
 
 func (db *Database) UpdateComment(c models.Comment) *problems.Problem {

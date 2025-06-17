@@ -20,7 +20,7 @@ var (
 	Auth   = middleware.Authenticate
 )
 
-func emptyHandler(http.ResponseWriter, *http.Request) {}
+func EmptyHandler(http.ResponseWriter, *http.Request) {}
 
 func InitHandlers(dev bool, port string) {
 	/* Docs */
@@ -35,7 +35,7 @@ func InitHandlers(dev bool, port string) {
 	http.HandleFunc(UserPath+"/register", CORS(Method("POST", RegisterUser)))
 	http.HandleFunc(UserPath+"/verify-email", CORS(Method("PATCH", VerifyEmail)))
 	http.HandleFunc(UserPath+"/logout", CORS(Auth(Method("DELETE", LogoutUser))))
-	http.HandleFunc(UserPath+"/logged-in", CORS(Auth(Method("GET", emptyHandler))))
+	http.HandleFunc(UserPath+"/logged-in", CORS(Auth(Method("GET", EmptyHandler))))
 	http.HandleFunc(UserPath+"/modify-user", CORS(Auth(Method("PATCH", ModifyUser))))
 	http.HandleFunc(UserPath+"/change-password", CORS(Method("PATCH", ChangePassword)))
 	http.HandleFunc(UserPath+"/password-change-init", CORS(Method("POST", PasswordChangeInit)))
@@ -52,6 +52,7 @@ func InitHandlers(dev bool, port string) {
 	http.HandleFunc(AssetsPath+"/add", CORS(Method("POST", Auth(AddAsset))))
 
 	/* Comments */
+	http.HandleFunc(CommentsPath+"/article/all", CORS(Method("GET", GetAllArticleComments)))
 	http.HandleFunc(CommentsPath+"/article/create", CORS(Auth(Method("POST", CreateArticleComment))))
 	http.HandleFunc(CommentsPath+"/article/update", CORS(Auth(Method("PATCH", UpdateArticleComment))))
 	http.HandleFunc(CommentsPath+"/article/delete", CORS(Auth(Method("DELETE", DeleteArticleComment))))

@@ -276,6 +276,7 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userData := map[string]string{
+		"id":       user.Id,
 		"username": user.Username,
 		"email":    user.Email,
 		"image":    user.ImageUrl,

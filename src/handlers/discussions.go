@@ -16,11 +16,6 @@ func CreateArticleDiscussion(w http.ResponseWriter, r *http.Request) {
 		Comment models.Comment `json:"comment"`
 	}
 
-	type ResponseBody struct {
-		CommentId    string `json:"comment_id"`
-		DiscussionId string `json:"discussion_id"`
-	}
-
 	var body RequestBody
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		p := problems.Problem{
@@ -94,9 +89,9 @@ func CreateArticleDiscussion(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := ResponseBody{
-		CommentId:    commentId,
-		DiscussionId: discussionId,
+	response := map[string]string{
+		"comment_id":    commentId,
+		"discussion_id": discussionId,
 	}
 	if err := json.NewEncoder(w).Encode(response); err != nil {
 		p = &problems.Problem{

@@ -102,13 +102,14 @@ func GetAllArticleComments(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var response []ResponseElement
+	response := make([]map[string]interface{}, 0)
 	for _, comment := range comments {
-		element := ResponseElement{
-			Id:           comment.Id,
-			Content:      comment.Content,
-			CreatedAt:    comment.CreatedAt,
-			LastModified: comment.LastModified,
+		element := map[string]interface{}{
+			"id":            comment.Id,
+			"content":       comment.Content,
+			"created_at":    comment.CreatedAt,
+			"last_modified": comment.LastModified,
+			"user":          map[string]string{},
 		}
 
 		user, p := db.GetUserById(comment.UserId)
@@ -116,10 +117,12 @@ func GetAllArticleComments(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		element.User.Id = user.Id
-		element.User.Email = user.Email
-		element.User.ImageUrl = user.ImageUrl
-		element.User.Username = user.Username
+		element["user"] = map[string]string{
+			"id":       user.Id,
+			"email":    user.Email,
+			"image":    user.ImageUrl,
+			"username": user.Username,
+		}
 
 		response = append(response, element)
 	}
@@ -186,21 +189,8 @@ func UpdateArticleComment(w http.ResponseWriter, r *http.Request) {
 }
 
 func DeleteArticleComment(w http.ResponseWriter, r *http.Request) {
-	type RequestBody struct {
-		Id string `json:"id"`
-	}
-
-	var body RequestBody
-	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
-		p := problems.Problem{
-			Type:          problems.HandlerProblem,
-			ServerMessage: fmt.Sprintf("(comments endpoint) while decoding the request body -> %v", err),
-			ClientMessage: "An error occurred while processing your request.",
-			Status:        http.StatusBadRequest,
-		}
-		p.Handle(w, r)
-		return
-	}
+	query := r.URL.Query()
+	id := query.Get("id")
 
 	/* Checking whether request sender is the author of the comment. */
 	_, access, p := jwt.GetRefAccFromRequest(r)
@@ -213,7 +203,7 @@ func DeleteArticleComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	commentFromDb, p := db.GetCommentById(body.Id)
+	commentFromDb, p := db.GetCommentById(id)
 	if p.Handle(w, r) {
 		return
 	}
@@ -221,12 +211,13 @@ func DeleteArticleComment(w http.ResponseWriter, r *http.Request) {
 	if commentFromDb.UserId != claims["user"].(string) {
 		p = &problems.Problem{
 			Type:          problems.HandlerProblem,
-			ServerMessage: fmt.Sprintf("Request sender isn't the author of comment (%s).", body.Id),
+			ServerMessage: fmt.Sprintf("Request sender isn't the author of comment (%s).", id),
 			ClientMessage: "You can't delete this comment.",
 			Status:        http.StatusUnauthorized,
 		}
 		p.Handle(w, r)
 	} else {
-		db.DeleteCommentById(body.Id).Handle(w, r)
+		db.DeleteArticlesCommentByCommentId(id).Handle(w, r)
+		db.DeleteCommentById(id).Handle(w, r)
 	}
 }

@@ -75,7 +75,7 @@ func (db *Database) GetCommentsByArticleId(id string) ([]models.Comment, *proble
 		comments
 		JOIN articles_comments ON comments.id = articles_comments.comment_id
 	WHERE
-		articles_comments.article_id LIKE ?;`, id)
+		articles_comments.article_id LIKE ? ORDER BY created_at DESC;`, id)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, &problems.Problem{
 			Type:          problems.DatabaseProblem,
@@ -113,7 +113,7 @@ func (db *Database) GetCommentsByArticleId(id string) ([]models.Comment, *proble
 			return nil, p
 		}
 
-		lastModified, p := parseTime(rawCreatedAt)
+		lastModified, p := parseTime(rawLastModified)
 		if p != nil {
 			return nil, p
 		}

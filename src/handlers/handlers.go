@@ -44,9 +44,9 @@ func InitHandlers(dev bool, port string) {
 	/* Articles */
 	http.HandleFunc(ArticlesPath+"/get", CORS(Method("GET", GetArticle)))
 	http.HandleFunc(ArticlesPath+"/save", CORS(Method("PUT", Auth(SaveArticle))))
-	http.HandleFunc(ArticlesPath+"/get-all", CORS(Method("GET", Auth(GetArticles))))
+	http.HandleFunc(ArticlesPath+"/all", CORS(Method("GET", Auth(GetArticles))))
 	http.HandleFunc(ArticlesPath+"/delete", CORS(Method("DELETE", Auth(DeleteArticle))))
-	http.HandleFunc(ArticlesPath+"/get-suggested", CORS(Method("GET", Auth(GetSuggestedArticles))))
+	http.HandleFunc(ArticlesPath+"/suggested", CORS(Method("GET", Auth(GetSuggestedArticles))))
 
 	/* Assets */
 	http.HandleFunc(AssetsPath+"/add", CORS(Method("POST", Auth(AddAsset))))

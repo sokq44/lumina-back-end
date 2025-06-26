@@ -8,6 +8,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 )
 
@@ -99,6 +100,22 @@ func GetArticles(w http.ResponseWriter, r *http.Request) {
 		CreatedAt time.Time `json:"created_at"`
 	}
 
+	query := r.URL.Query()
+	q := query.Get("q")
+	limitstr := query.Get("limit")
+
+	limit, err := strconv.Atoi(limitstr)
+	if err != nil {
+		p := problems.Problem{
+			Type:          problems.HandlerProblem,
+			ServerMessage: fmt.Sprintf("Failed to parse limit from string to int -> %v", err),
+			ClientMessage: "An unexpected error occurred while processing your request.",
+			Status:        http.StatusInternalServerError,
+		}
+		p.Handle(w, r)
+		return
+	}
+
 	_, access, p := jwt.GetRefAccFromRequest(r)
 	if p.Handle(w, r) {
 		return
@@ -109,7 +126,7 @@ func GetArticles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	articles, p := db.GetArticlesByUserId(claims["user"].(string))
+	articles, p := db.GetArticlesByUserId(claims["user"].(string), q, limit)
 	if p.Handle(w, r) {
 		return
 	}
@@ -204,7 +221,23 @@ func GetSuggestedArticles(w http.ResponseWriter, r *http.Request) {
 		CreatedAt time.Time `json:"created_at"`
 	}
 
-	articles, p := db.GetPublicArticles()
+	query := r.URL.Query()
+	q := query.Get("q")
+	limitstr := query.Get("limit")
+
+	limit, err := strconv.Atoi(limitstr)
+	if err != nil {
+		p := problems.Problem{
+			Type:          problems.HandlerProblem,
+			ServerMessage: fmt.Sprintf("Failed to parse limit from string to int -> %v", err),
+			ClientMessage: "An unexpected error occurred while processing your request.",
+			Status:        http.StatusInternalServerError,
+		}
+		p.Handle(w, r)
+		return
+	}
+
+	articles, p := db.GetPublicArticles(q, limit)
 	if p.Handle(w, r) {
 		return
 	}

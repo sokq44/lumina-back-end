@@ -10,7 +10,7 @@ This is the back-end section of Lumina which is a platform designed to empower i
 
 Contributions of all kinds are welcome in order to make Lumina better! Whether it's fixing bugs, adding new features, improving documentation, or suggesting ideas, your input is highly valued.
 
-Found a bug or have a feature request? Open an issue [here](https://github.com/sokq44/lumina-front-end/issues) and provide as much detail as possible.
+Found a bug or have a feature request? Open an issue [here](https://github.com/sokq44/lumina-back-end/issues) and provide as much detail as possible.
 
 ## License
 

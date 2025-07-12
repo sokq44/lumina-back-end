@@ -2,7 +2,6 @@
   <img width="50" src="https://illumina-me.org/images/logo.png" alt="Lumina Logo">
 </p>
 
-<h1 align="center" style="color: #484848; font-weight: bold;">Lumina</h1>
 ## About
 
 This is the back-end section of Lumina which is a platform designed to empower individuals to share their knowledge and insights through writing. It enables users to craft and publish articles on a variety of topics, fostering a community built on learning and collaboration. With a focus on simplicity and accessibility, the platform encourages users to contribute their expertise and engage with others, creating a hub for idea exchange and intellectual growth. Whether you're a seasoned expert or a curious learner, the application is your gateway to sharing, discovering, and expanding knowledge.

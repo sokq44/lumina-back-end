@@ -10,9 +10,10 @@ import (
 	"backend/utils/problems"
 	"encoding/json"
 	"fmt"
-	"github.com/google/uuid"
 	"net/http"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 var db = database.GetDb()
@@ -275,6 +276,7 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	userData := map[string]string{
+		"id":       user.Id,
 		"username": user.Username,
 		"email":    user.Email,
 		"image":    user.ImageUrl,

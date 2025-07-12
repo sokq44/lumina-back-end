@@ -2,6 +2,7 @@ package database
 
 import (
 	"backend/config"
+	"backend/utils/logs"
 	"backend/utils/problems"
 	"database/sql"
 	"fmt"
@@ -50,7 +51,7 @@ func InitDb() {
 		log.Fatalf("failed to connect to the database: %v", err.Error())
 	}
 
-	log.Println("Intialized the database service.")
+	logs.Success("Intialized the database service.")
 
 	for range 2 {
 		db.GenerateSecret()
@@ -139,7 +140,7 @@ func (db *Database) StartCleaningDb() {
 			break
 		}
 
-		log.Println("deleted all unverified users and hanging email verification from the database")
+		logs.Info("deleted all unverified users and hanging email verification from the database")
 	}
 }
 
@@ -154,6 +155,6 @@ func (db *Database) StartGeneratingSecrets() {
 			break
 		}
 
-		log.Println("generated a new jwt secret")
+		logs.Info("generated a new jwt secret")
 	}
 }

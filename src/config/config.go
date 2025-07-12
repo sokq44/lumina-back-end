@@ -16,6 +16,7 @@ var (
 	JwtRefExpTime    int
 	JwtSecretGenInt  int
 	JwtSecretExpTime int
+	SwaggerPath      string
 	DbUser           string
 	DbPass           string
 	DbNet            string
@@ -36,6 +37,7 @@ func InitConfig() {
 	JwtRefExpTime = getEnvInt("LUMINA_APP_JWT_REFRESH_EXP_TIME")
 	JwtSecretGenInt = getEnvInt("LUMINA_APP_JWT_SECRET_GEN_INTERVAL")
 	JwtSecretExpTime = getEnvInt("LUMINA_APP_JWT_SECRET_EXP_TIME")
+	SwaggerPath = getEnv("LUMINA_APP_SWAGGER_PATH")
 	DbUser = getEnv("LUMINA_DB_USER")
 	DbPass = getEnv("LUMINA_DB_PASSWD")
 	DbNet = getEnv("LUMINA_DB_NET")

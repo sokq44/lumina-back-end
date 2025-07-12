@@ -6,8 +6,9 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
 	"net/http"
+
+	"github.com/google/uuid"
 )
 
 func (db *Database) CreateArticle(article *models.Article) (string, *problems.Problem) {
@@ -121,8 +122,15 @@ func (db *Database) GetArticleByTitle(title string) (*models.Article, *problems.
 	return article, nil
 }
 
-func (db *Database) GetArticlesByUserId(userId string) ([]models.Article, *problems.Problem) {
-	rows, err := db.Connection.Query("SELECT id, title, content, created_at, public, banner_url FROM articles WHERE user_id = ?;", userId)
+func (db *Database) GetArticlesByUserId(userId, phrase string, limit int) ([]models.Article, *problems.Problem) {
+	query := `
+    SELECT a.id, a.title, a.content, a.created_at, a.public, a.banner_url
+    FROM articles a
+    WHERE a.user_id = ? AND a.title LIKE ?
+    ORDER BY a.created_at DESC
+    LIMIT ?;`
+
+	rows, err := db.Connection.Query(query, userId, "%"+phrase+"%", limit)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, &problems.Problem{
 			Type:          problems.DatabaseProblem,
@@ -165,8 +173,16 @@ func (db *Database) GetArticlesByUserId(userId string) ([]models.Article, *probl
 	return articles, nil
 }
 
-func (db *Database) GetPublicArticles() ([]models.Article, *problems.Problem) {
-	rows, err := db.Connection.Query("SELECT id, title, content, user_id, banner_url, created_at FROM articles WHERE public=TRUE ORDER BY created_at DESC;")
+func (db *Database) GetPublicArticles(phrase string, limit int) ([]models.Article, *problems.Problem) {
+	query := `
+    SELECT a.id, a.title, a.content, a.user_id, a.banner_url, a.created_at
+    FROM articles a
+    JOIN users u ON a.user_id = u.id
+    WHERE a.public=TRUE AND (a.title LIKE ? OR u.username LIKE ?)
+    ORDER BY a.created_at DESC
+    LIMIT ?;`
+
+	rows, err := db.Connection.Query(query, "%"+phrase+"%", "%"+phrase+"%", limit)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, &problems.Problem{
 			Type:          problems.DatabaseProblem,

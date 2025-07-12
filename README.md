@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="50" src="https://illumina-me.org/images/logo.png" alt="Lumina Logo">
+  <img width="350" src="https://illumina-me.org/images/logo-text.png" alt="Lumina Logo">
 </p>
 
 ## About

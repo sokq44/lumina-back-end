@@ -16,7 +16,7 @@ Found a bug or have a feature request? Open an issue [here](https://github.com/s
 
 This project is licensed under the [Creative Commons Attribution-NonCommercial 4.0 International License (CC BY-NC 4.0)](https://creativecommons.org/licenses/by-nc/4.0/).
 
-You are free to share and adapt the material for non-commercial purposes, provided you give appropriate credit. For more details, see the [LICENSE](./LICENSE.txt) file.
+You are free to share and adapt the material for non-commercial purposes, provided you give appropriate credit. For more details, see the [LICENSE](./LICENSE) file.
 
 ## Contact
 

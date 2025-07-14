@@ -140,8 +140,8 @@ func (db *Database) GetExpiredPasswordChanges() ([]models.PasswordChange, *probl
 
 	var expired []models.PasswordChange
 	for rows.Next() {
-		var passwordChange models.PasswordChange
 		var rawTime string
+		var passwordChange models.PasswordChange
 		if err := rows.Scan(&passwordChange.Id, &passwordChange.Token, &rawTime, &passwordChange.UserId); err != nil {
 			return nil, &problems.Problem{
 				Type:          problems.DatabaseProblem,

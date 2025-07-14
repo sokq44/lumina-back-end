@@ -81,50 +81,61 @@ func parseTime(t string) (time.Time, *problems.Problem) {
 }
 
 func (db *Database) CleanDb() *problems.Problem {
-	verifications, err := db.GetExpiredEmailVerifications()
-	if err != nil {
-		return err
+	verifications, p := db.GetExpiredEmailVerifications()
+	if p != nil {
+		return p
 	}
 
-	tokens, err := db.GetExpiredRefreshTokens()
-	if err != nil {
-		return err
+	tokens, p := db.GetExpiredRefreshTokens()
+	if p != nil {
+		return p
 	}
 
-	passwordChanges, err := db.GetExpiredPasswordChanges()
-	if err != nil {
-		return err
+	emailChanges, p := db.GetExpiredEmailChanges()
+	if p != nil {
+		return p
 	}
 
-	secrets, err := db.GetExpiredSecrets()
-	if err != nil {
-		return err
+	passwordChanges, p := db.GetExpiredPasswordChanges()
+	if p != nil {
+		return p
+	}
+
+	secrets, p := db.GetExpiredSecrets()
+	if p != nil {
+		return p
 	}
 
 	for _, v := range verifications {
-		if err := db.DeleteEmailVerificationById(v.Id); err != nil {
-			return err
+		if p := db.DeleteEmailVerificationById(v.Id); p != nil {
+			return p
 		}
-		if err := db.DeleteUserById(v.UserId); err != nil {
-			return err
+		if p := db.DeleteUserById(v.UserId); p != nil {
+			return p
 		}
 	}
 
 	for _, t := range tokens {
-		if err := db.DeleteRefreshTokenById(t.Id); err != nil {
-			return err
+		if p := db.DeleteRefreshTokenById(t.Id); p != nil {
+			return p
 		}
 	}
 
-	for _, p := range passwordChanges {
-		if err := db.DeletePasswordChangeById(p.Id); err != nil {
-			return err
+	for _, ec := range emailChanges {
+		if p := db.DeleteEmailChangeById(ec.Id); p != nil {
+			return p
+		}
+	}
+
+	for _, pc := range passwordChanges {
+		if p := db.DeletePasswordChangeById(pc.Id); p != nil {
+			return p
 		}
 	}
 
 	for _, s := range secrets {
-		if err := db.DeleteSecretById(s.Id); err != nil {
-			return err
+		if p := db.DeleteSecretById(s.Id); p != nil {
+			return p
 		}
 	}
 

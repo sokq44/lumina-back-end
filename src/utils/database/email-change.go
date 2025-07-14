@@ -35,7 +35,7 @@ func (db *Database) CreateEmailChange(e models.EmailChange) *problems.Problem {
 			}
 
 			if expires.Before(time.Now()) {
-				p = db.DeletePasswordChangeById(id)
+				p = db.DeleteEmailChangeById(id)
 				if p != nil {
 					return p
 				}
@@ -114,4 +114,39 @@ func (db *Database) DeleteEmailChangeById(id string) *problems.Problem {
 	}
 
 	return nil
+}
+
+func (db *Database) GetExpiredEmailChanges() ([]models.EmailChange, *problems.Problem) {
+	rows, err := db.Connection.Query("SELECT * FROM email_change WHERE expires <= NOW();")
+
+	if err != nil {
+		return nil, &problems.Problem{
+			Type:          problems.DatabaseProblem,
+			ServerMessage: fmt.Sprintf("error while trying to retrieve expired password changes: %v", err),
+			Status:        http.StatusInternalServerError,
+		}
+	}
+
+	var expired []models.EmailChange
+	for rows.Next() {
+		var rawTime string
+		var emailChange models.EmailChange
+		if err := rows.Scan(&emailChange.Id, &emailChange.Token, &emailChange.NewEmail, &rawTime, &emailChange.UserId); err != nil {
+			return nil, &problems.Problem{
+				Type:          problems.DatabaseProblem,
+				ServerMessage: fmt.Sprintf("error while scanning expired email changes: %v", err),
+				Status:        http.StatusInternalServerError,
+			}
+		}
+
+		parsed, err := parseTime(rawTime)
+		if err != nil {
+			return nil, err
+		}
+
+		emailChange.Expires = parsed
+		expired = append(expired, emailChange)
+	}
+
+	return expired, nil
 }

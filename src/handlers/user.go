@@ -395,9 +395,7 @@ func ChangePassword(w http.ResponseWriter, r *http.Request) {
 	}
 
 	user.Password = crypt.Sha256(body.Password)
-	if db.UpdateUser(*user).Handle(w, r) {
-		return
-	}
+	db.UpdateUser(*user).Handle(w, r)
 }
 
 func PasswordChangeValid(w http.ResponseWriter, r *http.Request) {
@@ -417,7 +415,6 @@ func PasswordChangeValid(w http.ResponseWriter, r *http.Request) {
 			Status:        http.StatusGone,
 		}
 		p.Handle(w, r)
-		return
 	}
 }
 
@@ -462,6 +459,8 @@ func EmailChangeInit(w http.ResponseWriter, r *http.Request) {
 	if em.SendEmailChangeEmail(body.NewEmail, token).Handle(w, r) {
 		return
 	}
+
+	w.WriteHeader(http.StatusCreated)
 }
 
 func ChangeEmail(w http.ResponseWriter, r *http.Request) {
@@ -486,11 +485,26 @@ func ChangeEmail(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if emailChange.Expires.Before(time.Now()) {
+		p := problems.Problem{
+			Type:          problems.HandlerProblem,
+			ServerMessage: "email change token has expired.",
+			ClientMessage: "The link you used has expired. For security purposes, email change links are only valid for a limited time. Please request a new link to change your email.",
+			Status:        http.StatusGone,
+		}
+		p.Handle(w, r)
+		return
+	}
+
 	user, p := db.GetUserById(emailChange.UserId)
 	if p.Handle(w, r) {
 		return
 	}
 
 	user.Email = emailChange.NewEmail
+	if user.Validate(false).Handle(w, r) {
+		return
+	}
+
 	db.UpdateUser(*user).Handle(w, r)
 }

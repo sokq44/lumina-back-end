@@ -19,14 +19,15 @@ func (db *Database) CreatePasswordChange(p models.PasswordChange) *problems.Prob
 		var raw string
 
 		err := row.Scan(&id, &raw)
-		if err != nil && !errors.Is(err, sql.ErrNoRows) {
-			return &problems.Problem{
-				Type:          problems.DatabaseProblem,
-				ServerMessage: fmt.Sprintf("while scanning a row for the CreatePasswordChange function -> %v", err),
-				ClientMessage: "An unexpected error has occurred while processing your request.",
-				Status:        http.StatusInternalServerError,
+		if !errors.Is(err, sql.ErrNoRows) {
+			if err != nil {
+				return &problems.Problem{
+					Type:          problems.DatabaseProblem,
+					ServerMessage: fmt.Sprintf("while scanning a row for the CreatePasswordChange function -> %v", err),
+					ClientMessage: "An unexpected error has occurred while processing your request.",
+					Status:        http.StatusInternalServerError,
+				}
 			}
-		} else if !errors.Is(err, sql.ErrNoRows) {
 			expires, p := parseTime(raw)
 			if p != nil {
 				return p
@@ -46,7 +47,6 @@ func (db *Database) CreatePasswordChange(p models.PasswordChange) *problems.Prob
 		"INSERT INTO password_change (token, expires, user_id) values (?, ?, ?);",
 		p.Token, p.Expires, p.UserId,
 	)
-
 	if err != nil {
 		var mysqlErr *mysql.MySQLError
 		if errors.As(err, &mysqlErr) && mysqlErr.Number == 1062 {
@@ -83,7 +83,7 @@ func (db *Database) GetPasswordChangeByToken(token string) (*models.PasswordChan
 		return nil, &problems.Problem{
 			Type:          problems.DatabaseProblem,
 			ServerMessage: fmt.Sprintf("error while getting a password change by token: %v", err),
-			ClientMessage: "We couldn’t find a valid password reset request. Please check your link or request a new password reset.",
+			ClientMessage: "We couldn't find a valid password reset request. Please check your link or request a new password reset.",
 			Status:        http.StatusNotFound,
 		}
 	} else if err != nil {

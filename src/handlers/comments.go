@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"backend/models"
-	"backend/utils/jwt"
 	"backend/utils/problems"
 	"encoding/json"
 	"fmt"
@@ -29,19 +28,16 @@ func CreateArticleComment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	/* Assigning correct user id to the comment structure. */
-	_, access, p := jwt.GetRefAccFromRequest(r)
-	if p.Handle(w, r) {
-		return
-	}
-	claims, p := jwt.DecodePayload(access)
-	if p.Handle(w, r) {
-		return
-	}
-	body.Comment.UserId = claims["user"].(string)
-
 	now := time.Now()
+	user, p := GetUserFromRequest(r)
+	if p.Handle(w, r) {
+		return
+	}
+
+	body.Comment.UserId = user.Id
 	body.Comment.CreatedAt = now
 	body.Comment.LastModified = now
+
 	commentId, p := db.CreateComment(body.Comment)
 	if p.Handle(w, r) {
 		return
@@ -158,12 +154,7 @@ func UpdateArticleComment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	/* Checking whether request sender is the author of the comment. */
-	_, access, p := jwt.GetRefAccFromRequest(r)
-	if p.Handle(w, r) {
-		return
-	}
-
-	claims, p := jwt.DecodePayload(access)
+	user, p := GetUserFromRequest(r)
 	if p.Handle(w, r) {
 		return
 	}
@@ -173,7 +164,7 @@ func UpdateArticleComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if comment.UserId != claims["user"].(string) {
+	if comment.UserId != user.Id {
 		p = &problems.Problem{
 			Type:          problems.HandlerProblem,
 			ServerMessage: fmt.Sprintf("Request sender isn't the author of comment (%s).", comment.Id),
@@ -193,12 +184,7 @@ func DeleteArticleComment(w http.ResponseWriter, r *http.Request) {
 	id := query.Get("id")
 
 	/* Checking whether request sender is the author of the comment. */
-	_, access, p := jwt.GetRefAccFromRequest(r)
-	if p.Handle(w, r) {
-		return
-	}
-
-	claims, p := jwt.DecodePayload(access)
+	user, p := GetUserFromRequest(r)
 	if p.Handle(w, r) {
 		return
 	}
@@ -208,7 +194,7 @@ func DeleteArticleComment(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if commentFromDb.UserId != claims["user"].(string) {
+	if commentFromDb.UserId != user.Id {
 		p = &problems.Problem{
 			Type:          problems.HandlerProblem,
 			ServerMessage: fmt.Sprintf("Request sender isn't the author of comment (%s).", id),

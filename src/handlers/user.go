@@ -4,8 +4,6 @@ import (
 	"backend/config"
 	"backend/models"
 	"backend/utils/crypt"
-	"backend/utils/database"
-	"backend/utils/emails"
 	"backend/utils/jwt"
 	"backend/utils/problems"
 	"encoding/json"
@@ -15,9 +13,6 @@ import (
 
 	"github.com/google/uuid"
 )
-
-var db = database.GetDb()
-var em = emails.GetEmails()
 
 func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	type RequestBody struct {
@@ -30,7 +25,7 @@ func RegisterUser(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
 		p := problems.Problem{
 			Type:          problems.HandlerProblem,
-			ServerMessage: fmt.Sprintf("error while retrieving the access_token cookie: %v", err),
+			ServerMessage: fmt.Sprintf("error while decoding request body: %v", err),
 			ClientMessage: "An unexpected error has occurred while processing your request.",
 			Status:        http.StatusBadRequest,
 		}
@@ -253,24 +248,7 @@ func LogoutUser(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetUser(w http.ResponseWriter, r *http.Request) {
-	access, err := r.Cookie("access_token")
-	if err != nil {
-		p := problems.Problem{
-			Type:          problems.HandlerProblem,
-			ServerMessage: fmt.Sprintf("error while retrieving the access_token cookie: %v", err),
-			ClientMessage: "An unexpected error has occurred while processing your request.",
-			Status:        http.StatusInternalServerError,
-		}
-		p.Handle(w, r)
-		return
-	}
-
-	claims, p := jwt.DecodePayload(access.Value)
-	if p.Handle(w, r) {
-		return
-	}
-
-	user, p := db.GetUserById(claims["user"].(string))
+	user, p := GetUserFromRequest(r)
 	if p.Handle(w, r) {
 		return
 	}
@@ -441,4 +419,78 @@ func PasswordChangeValid(w http.ResponseWriter, r *http.Request) {
 		p.Handle(w, r)
 		return
 	}
+}
+
+func EmailChangeInit(w http.ResponseWriter, r *http.Request) {
+	type RequestBody struct {
+		NewEmail string `json:"new_email"`
+	}
+
+	var body RequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		p := problems.Problem{
+			Type:          problems.HandlerProblem,
+			ServerMessage: fmt.Sprintf("error while decoding the request body: %v", err),
+			ClientMessage: "An unexpected error has occurred while processing your request.",
+			Status:        http.StatusBadRequest,
+		}
+		p.Handle(w, r)
+		return
+	}
+
+	user, p := GetUserFromRequest(r)
+	if p.Handle(w, r) {
+		return
+	}
+
+	token, p := crypt.RandomString(128)
+	if p.Handle(w, r) {
+		return
+	}
+
+	duration := time.Duration(config.EmailChangeTime)
+	emailChange := models.EmailChange{
+		Token:    token,
+		NewEmail: body.NewEmail,
+		UserId:   user.Id,
+		Expires:  time.Now().Add(duration),
+	}
+	if db.CreateEmailChange(emailChange).Handle(w, r) {
+		return
+	}
+
+	if em.SendEmailChangeEmail(body.NewEmail, token).Handle(w, r) {
+		return
+	}
+}
+
+func ChangeEmail(w http.ResponseWriter, r *http.Request) {
+	type RequestBody struct {
+		Token string `json:"token"`
+	}
+
+	var body RequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		p := problems.Problem{
+			Type:          problems.HandlerProblem,
+			ServerMessage: fmt.Sprintf("error while decoding the request body: %v", err),
+			ClientMessage: "An unexpected error has occurred while processing your request.",
+			Status:        http.StatusBadRequest,
+		}
+		p.Handle(w, r)
+		return
+	}
+
+	emailChange, p := db.GetEmailChangeByToken(body.Token)
+	if p.Handle(w, r) {
+		return
+	}
+
+	user, p := db.GetUserById(emailChange.UserId)
+	if p.Handle(w, r) {
+		return
+	}
+
+	user.Email = emailChange.NewEmail
+	db.UpdateUser(*user).Handle(w, r)
 }

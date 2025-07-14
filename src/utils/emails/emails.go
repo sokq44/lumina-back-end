@@ -6,12 +6,13 @@ import (
 	"backend/utils/problems"
 	"context"
 	"fmt"
+	"log"
+	"net/http"
+
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awsconfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/service/ses"
 	"github.com/aws/aws-sdk-go-v2/service/ses/types"
-	"log"
-	"net/http"
 )
 
 type Client struct {
@@ -69,8 +70,7 @@ func (smtpClient *Client) SendEmail(recipient string, subject string, body strin
 }
 
 func (smtpClient *Client) SendVerificationEmail(receiver string, token string) *problems.Problem {
-	front := config.FrontAddr
-	emailBody := fmt.Sprintf("Verification Link: %s/email/%s", front, token)
+	emailBody := fmt.Sprintf("Verification Link: %s/email/%s", config.FrontAddr, token)
 
 	err := smtpClient.SendEmail(receiver, "Email Verification", emailBody)
 	if err != nil {
@@ -81,13 +81,11 @@ func (smtpClient *Client) SendVerificationEmail(receiver string, token string) *
 }
 
 func (smtpClient *Client) SendPasswordChangeEmail(receiver string, token string) *problems.Problem {
-	front := config.FrontAddr
-	emailBody := fmt.Sprintf("Change your password here: %s/password/%s", front, token)
+	emailBody := fmt.Sprintf("Change your password here: %s/password/%s", config.FrontAddr, token)
+	return smtpClient.SendEmail(receiver, "Change Your Password", emailBody)
+}
 
-	err := smtpClient.SendEmail(receiver, "Change Your Password", emailBody)
-	if err != nil {
-		return err
-	}
-
-	return nil
+func (smtpClient *Client) SendEmailChangeEmail(receiver string, token string) *problems.Problem {
+	emailBody := fmt.Sprintf("Change your email here: %s/password/%s", config.FrontAddr, token)
+	return smtpClient.SendEmail(receiver, "Change Your Password", emailBody)
 }

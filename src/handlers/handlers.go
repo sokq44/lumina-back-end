@@ -3,6 +3,12 @@ package handlers
 import (
 	"backend/docs"
 	"backend/middleware"
+	"backend/models"
+	"backend/utils/database"
+	"backend/utils/emails"
+	"backend/utils/jwt"
+	"backend/utils/problems"
+	"fmt"
 	"net/http"
 )
 
@@ -15,12 +21,34 @@ const (
 )
 
 var (
+	db = database.GetDb()
+	em = emails.GetEmails()
+
 	CORS   = middleware.CORS
 	Method = middleware.Method
 	Auth   = middleware.Authenticate
 )
 
 func EmptyHandler(http.ResponseWriter, *http.Request) {}
+
+func GetUserFromRequest(r *http.Request) (*models.User, *problems.Problem) {
+	access, err := r.Cookie("access_token")
+	if err != nil {
+		return nil, &problems.Problem{
+			Type:          problems.HandlerProblem,
+			ServerMessage: fmt.Sprintf("error while retrieving the access_token cookie: %v", err),
+			ClientMessage: "An unexpected error has occurred while processing your request.",
+			Status:        http.StatusInternalServerError,
+		}
+	}
+
+	claims, p := jwt.DecodePayload(access.Value)
+	if p != nil {
+		return nil, p
+	}
+
+	return db.GetUserById(claims["user"].(string))
+}
 
 func InitHandlers(dev bool, port string) {
 	/* Docs */
@@ -35,9 +63,11 @@ func InitHandlers(dev bool, port string) {
 	http.HandleFunc(UserPath+"/register", CORS(Method("POST", RegisterUser)))
 	http.HandleFunc(UserPath+"/verify-email", CORS(Method("PATCH", VerifyEmail)))
 	http.HandleFunc(UserPath+"/logout", CORS(Auth(Method("DELETE", LogoutUser))))
+	http.HandleFunc(UserPath+"/change-email", CORS(Method("PATCH", ChangeEmail)))
 	http.HandleFunc(UserPath+"/logged-in", CORS(Auth(Method("GET", EmptyHandler))))
 	http.HandleFunc(UserPath+"/modify-user", CORS(Auth(Method("PATCH", ModifyUser))))
 	http.HandleFunc(UserPath+"/change-password", CORS(Method("PATCH", ChangePassword)))
+	http.HandleFunc(UserPath+"/email-change-init", CORS(Auth(Method("POST", EmailChangeInit))))
 	http.HandleFunc(UserPath+"/password-change-init", CORS(Method("POST", PasswordChangeInit)))
 	http.HandleFunc(UserPath+"/password-change-valid", CORS(Method("GET", PasswordChangeValid)))
 

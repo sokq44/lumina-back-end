@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"backend/models"
-	"backend/utils/jwt"
 	"backend/utils/problems"
 	"encoding/json"
 	"fmt"
@@ -52,19 +51,15 @@ func CreateArticleDiscussion(w http.ResponseWriter, r *http.Request) {
 	}
 
 	/* Assigning correct data to the new comment's structure. */
-	_, access, p := jwt.GetRefAccFromRequest(r)
-	if p.Handle(w, r) {
-		return
-	}
-	claims, p := jwt.DecodePayload(access)
+	user, p := GetUserFromRequest(r)
 	if p.Handle(w, r) {
 		return
 	}
 
 	now := time.Now()
+	body.Comment.UserId = user.Id
 	body.Comment.CreatedAt = now
 	body.Comment.LastModified = now
-	body.Comment.UserId = claims["user"].(string)
 
 	commentId, p := db.CreateComment(body.Comment)
 	if p.Handle(w, r) {
@@ -155,19 +150,15 @@ func UpdateArticleDiscussion(w http.ResponseWriter, r *http.Request) {
 	}
 
 	/* Assigning correct data to the new comment's structure. */
-	_, access, p := jwt.GetRefAccFromRequest(r)
-	if p.Handle(w, r) {
-		return
-	}
-	claims, p := jwt.DecodePayload(access)
+	user, p := GetUserFromRequest(r)
 	if p.Handle(w, r) {
 		return
 	}
 
 	now := time.Now()
+	body.Comment.UserId = user.Id
 	body.Comment.CreatedAt = now
 	body.Comment.LastModified = now
-	body.Comment.UserId = claims["user"].(string)
 
 	commentId, p := db.CreateComment(body.Comment)
 	if p.Handle(w, r) {

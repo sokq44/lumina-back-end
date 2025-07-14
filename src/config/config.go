@@ -11,6 +11,7 @@ var (
 	FrontAddr        string
 	AssetsPath       string
 	EmailVerTime     int
+	EmailChangeTime  int
 	PasswdChangeTime int
 	JwtAccExpTime    int
 	JwtRefExpTime    int
@@ -34,6 +35,7 @@ func InitConfig() {
 	EmailVerTime = getEnvInt("LUMINA_APP_EMAIL_VER_TIME")
 	PasswdChangeTime = getEnvInt("LUMINA_APP_PASSWD_VER_TIME")
 	JwtAccExpTime = getEnvInt("LUMINA_APP_JWT_ACCESS_EXP_TIME")
+	EmailChangeTime = getEnvInt("LUMINA_APP_EMAIL_CHANGE_TIME")
 	JwtRefExpTime = getEnvInt("LUMINA_APP_JWT_REFRESH_EXP_TIME")
 	JwtSecretGenInt = getEnvInt("LUMINA_APP_JWT_SECRET_GEN_INTERVAL")
 	JwtSecretExpTime = getEnvInt("LUMINA_APP_JWT_SECRET_EXP_TIME")

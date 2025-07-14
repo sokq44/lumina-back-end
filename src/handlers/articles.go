@@ -3,7 +3,6 @@ package handlers
 import (
 	"backend/config"
 	"backend/models"
-	"backend/utils/jwt"
 	"backend/utils/problems"
 	"encoding/json"
 	"fmt"
@@ -33,12 +32,7 @@ func SaveArticle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, access, p := jwt.GetRefAccFromRequest(r)
-	if p.Handle(w, r) {
-		return
-	}
-
-	claims, p := jwt.DecodePayload(access)
+	user, p := GetUserFromRequest(r)
 	if p.Handle(w, r) {
 		return
 	}
@@ -50,7 +44,7 @@ func SaveArticle(w http.ResponseWriter, r *http.Request) {
 			Public:    body.Public,
 			Content:   body.Content,
 			BannerUrl: config.Host + "/images/default-banner.png",
-			UserId:    claims["user"].(string),
+			UserId:    user.Id,
 		}
 		id, p = db.CreateArticle(article)
 		if p.Handle(w, r) {
@@ -63,7 +57,7 @@ func SaveArticle(w http.ResponseWriter, r *http.Request) {
 			Public:    body.Public,
 			Content:   body.Content,
 			BannerUrl: body.BannerUrl,
-			UserId:    claims["user"].(string),
+			UserId:    user.Id,
 		}
 		if db.UpdateArticle(article).Handle(w, r) {
 			return
@@ -116,17 +110,12 @@ func GetArticles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	_, access, p := jwt.GetRefAccFromRequest(r)
+	user, p := GetUserFromRequest(r)
 	if p.Handle(w, r) {
 		return
 	}
 
-	claims, p := jwt.DecodePayload(access)
-	if p.Handle(w, r) {
-		return
-	}
-
-	articles, p := db.GetArticlesByUserId(claims["user"].(string), q, limit)
+	articles, p := db.GetArticlesByUserId(user.Id, q, limit)
 	if p.Handle(w, r) {
 		return
 	}

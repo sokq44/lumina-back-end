@@ -16,44 +16,9 @@ const OpenAPIPath string = "/openapi.json/"
 
 var StringType *openapi3.Types = openapi3.NewStringSchema().Type
 var ObjectType *openapi3.Types = openapi3.NewObjectSchema().Type
-var descriptions []string = []string{
-	"User details retrieved successfully.",
-	"User logged out successfully.",
-	"User is logged in.",
-	"User is not logged in.",
-	"User registered successfully.",
-	"Invalid request body.",
-	"User with these credentials already exists.",
-	"Unexpected server error.",
-	"Login successful.",
-	"Invalid credentials or user not verified.",
-	"Email verified successfully.",
-	"The verification link is invalid or has expired.",
-	"The verification link has expired.",
-	"User details updated successfully.",
-	"Password change request initialized successfully.",
-	"User with the provided email does not exist.",
-	"Password changed successfully.",
-	"The password change token is invalid or has expired.",
-	"Password change token is valid.",
-	"The password change token has expired.",
-	"The password change token is invalid.",
-	"Article retrieved successfully.",
-	"Article not found.",
-	"Article saved successfully.",
-	"Articles retrieved successfully.",
-	"Article deleted successfully.",
-	"Articles retrieved successfully.",
-	"Asset added successfully.",
-	"Comment created successfully.",
-	"Comment updated successfully.",
-	"Unauthorized to update the comment.",
-	"Comment deleted successfully.",
-	"Unauthorized to delete the comment.",
-	"Discussion created successfully.",
-	"Previous comment or article not found.",
-	"Comment added to the discussion successfully.",
-	"Discussion or article not found.",
+
+func NewStringPtr(s string) *string {
+	return &s
 }
 
 func CreateOpenAPISpec() *openapi3.T {
@@ -63,7 +28,7 @@ func CreateOpenAPISpec() *openapi3.T {
 	responses := openapi3.NewResponses()
 	responses.Set("200", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[0],
+			Description: NewStringPtr("User details retrieved successfully."),
 			Content: openapi3.Content{
 				"application/json": &openapi3.MediaType{
 					Schema: &openapi3.SchemaRef{
@@ -82,12 +47,12 @@ func CreateOpenAPISpec() *openapi3.T {
 	})
 	responses.Set("401", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[3],
+			Description: NewStringPtr("User is not logged in."),
 		},
 	})
 	responses.Set("500", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[7],
+			Description: NewStringPtr("Unexpected server error."),
 		},
 	})
 	paths.Set("/user/get-user", &openapi3.PathItem{
@@ -102,17 +67,17 @@ func CreateOpenAPISpec() *openapi3.T {
 	responses = openapi3.NewResponses()
 	responses.Set("200", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[2],
+			Description: NewStringPtr("User is logged in."),
 		},
 	})
 	responses.Set("401", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[3],
+			Description: NewStringPtr("User is not logged in."),
 		},
 	})
 	responses.Set("500", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[7],
+			Description: NewStringPtr("Unexpected server error."),
 		},
 	})
 	paths.Set("/user/logged-in", &openapi3.PathItem{
@@ -127,22 +92,22 @@ func CreateOpenAPISpec() *openapi3.T {
 	responses = openapi3.NewResponses()
 	responses.Set("201", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[4],
+			Description: NewStringPtr("User registered successfully."),
 		},
 	})
 	responses.Set("400", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[5],
+			Description: NewStringPtr("Invalid request body."),
 		},
 	})
 	responses.Set("409", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[6],
+			Description: NewStringPtr("User with these credentials already exists."),
 		},
 	})
 	responses.Set("500", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[7],
+			Description: NewStringPtr("Unexpected server error."),
 		},
 	})
 	paths.Set("/user/register", &openapi3.PathItem{
@@ -178,22 +143,22 @@ func CreateOpenAPISpec() *openapi3.T {
 	responses = openapi3.NewResponses()
 	responses.Set("200", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[8],
+			Description: NewStringPtr("Login successful."),
 		},
 	})
 	responses.Set("400", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[5],
+			Description: NewStringPtr("Invalid request body."),
 		},
 	})
 	responses.Set("401", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[9],
+			Description: NewStringPtr("Invalid credentials or user not verified."),
 		},
 	})
 	responses.Set("500", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[7],
+			Description: NewStringPtr("Unexpected server error."),
 		},
 	})
 	paths.Set("/user/login", &openapi3.PathItem{
@@ -228,27 +193,27 @@ func CreateOpenAPISpec() *openapi3.T {
 	responses = openapi3.NewResponses()
 	responses.Set("204", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[10],
+			Description: NewStringPtr("Email verified successfully."),
 		},
 	})
 	responses.Set("400", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[5],
+			Description: NewStringPtr("Invalid request body."),
 		},
 	})
 	responses.Set("404", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[11],
+			Description: NewStringPtr("The verification link is invalid or has expired."),
 		},
 	})
 	responses.Set("410", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[12],
+			Description: NewStringPtr("The verification link has expired."),
 		},
 	})
 	responses.Set("500", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[7],
+			Description: NewStringPtr("Unexpected server error."),
 		},
 	})
 	paths.Set("/user/verify-email", &openapi3.PathItem{
@@ -282,12 +247,12 @@ func CreateOpenAPISpec() *openapi3.T {
 	responses = openapi3.NewResponses()
 	responses.Set("200", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[1],
+			Description: NewStringPtr("User logged out successfully."),
 		},
 	})
 	responses.Set("500", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[7],
+			Description: NewStringPtr("Unexpected server error."),
 		},
 	})
 	paths.Set("/user/logout", &openapi3.PathItem{
@@ -302,17 +267,17 @@ func CreateOpenAPISpec() *openapi3.T {
 	responses = openapi3.NewResponses()
 	responses.Set("200", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[13],
+			Description: NewStringPtr("User details updated successfully."),
 		},
 	})
 	responses.Set("400", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[5],
+			Description: NewStringPtr("Invalid request body."),
 		},
 	})
 	responses.Set("500", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[7],
+			Description: NewStringPtr("Unexpected server error."),
 		},
 	})
 	paths.Set("/user/modify-user", &openapi3.PathItem{
@@ -348,22 +313,22 @@ func CreateOpenAPISpec() *openapi3.T {
 	responses = openapi3.NewResponses()
 	responses.Set("201", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[14],
+			Description: NewStringPtr("Password change request initialized successfully."),
 		},
 	})
 	responses.Set("400", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[5],
+			Description: NewStringPtr("Invalid request body."),
 		},
 	})
 	responses.Set("404", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[15],
+			Description: NewStringPtr("User with the provided email does not exist."),
 		},
 	})
 	responses.Set("500", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[7],
+			Description: NewStringPtr("Unexpected server error."),
 		},
 	})
 	paths.Set("/user/password-change-init", &openapi3.PathItem{
@@ -397,22 +362,22 @@ func CreateOpenAPISpec() *openapi3.T {
 	responses = openapi3.NewResponses()
 	responses.Set("200", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[16],
+			Description: NewStringPtr("Password changed successfully."),
 		},
 	})
 	responses.Set("400", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[5],
+			Description: NewStringPtr("Invalid request body."),
 		},
 	})
 	responses.Set("404", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[17],
+			Description: NewStringPtr("The password change token is invalid or has expired."),
 		},
 	})
 	responses.Set("500", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[7],
+			Description: NewStringPtr("Unexpected server error."),
 		},
 	})
 	paths.Set("/user/change-password", &openapi3.PathItem{
@@ -447,22 +412,22 @@ func CreateOpenAPISpec() *openapi3.T {
 	responses = openapi3.NewResponses()
 	responses.Set("200", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[18],
+			Description: NewStringPtr("Password change token is valid."),
 		},
 	})
 	responses.Set("410", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[19],
+			Description: NewStringPtr("The password change token has expired."),
 		},
 	})
 	responses.Set("404", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[20],
+			Description: NewStringPtr("The password change token is invalid."),
 		},
 	})
 	responses.Set("500", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[7],
+			Description: NewStringPtr("Unexpected server error."),
 		},
 	})
 	paths.Set("/user/password-change-valid", &openapi3.PathItem{
@@ -488,11 +453,114 @@ func CreateOpenAPISpec() *openapi3.T {
 		},
 	})
 
+	/* user/email-change-init endpoint */
+	responses = openapi3.NewResponses()
+	responses.Set("201", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: NewStringPtr("Email change request initialized successfully."),
+		},
+	})
+	responses.Set("400", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: NewStringPtr("Invalid request body."),
+		},
+	})
+	responses.Set("409", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: NewStringPtr("An email change request already exists for this user."),
+		},
+	})
+	responses.Set("500", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: NewStringPtr("Unexpected server error."),
+		},
+	})
+	paths.Set("/user/email-change-init", &openapi3.PathItem{
+		Post: &openapi3.Operation{
+			Summary: "Initialize an email change request.",
+			Tags:    []string{"User"},
+			RequestBody: &openapi3.RequestBodyRef{
+				Value: &openapi3.RequestBody{
+					Description: "New email address for the user.",
+					Required:    true,
+					Content: openapi3.Content{
+						"application/json": &openapi3.MediaType{
+							Schema: &openapi3.SchemaRef{
+								Value: &openapi3.Schema{
+									Type: ObjectType,
+									Properties: map[string]*openapi3.SchemaRef{
+										"new_email": {Value: &openapi3.Schema{Type: StringType}},
+									},
+									Required: []string{"new_email"},
+								},
+							},
+						},
+					},
+				},
+			},
+			Responses: responses,
+		},
+	})
+
+	/* user/change-email endpoint */
+	responses = openapi3.NewResponses()
+	responses.Set("200", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: NewStringPtr("Email changed successfully."),
+		},
+	})
+	responses.Set("400", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: NewStringPtr("Invalid request body."),
+		},
+	})
+	responses.Set("404", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: NewStringPtr("The email change token is invalid or has expired."),
+		},
+	})
+	responses.Set("410", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: NewStringPtr("The email change token has expired."),
+		},
+	})
+	responses.Set("500", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: NewStringPtr("Unexpected server error."),
+		},
+	})
+	paths.Set("/user/change-email", &openapi3.PathItem{
+		Patch: &openapi3.Operation{
+			Summary: "Change user's email address.",
+			Tags:    []string{"User"},
+			RequestBody: &openapi3.RequestBodyRef{
+				Value: &openapi3.RequestBody{
+					Description: "Email change token.",
+					Required:    true,
+					Content: openapi3.Content{
+						"application/json": &openapi3.MediaType{
+							Schema: &openapi3.SchemaRef{
+								Value: &openapi3.Schema{
+									Type: ObjectType,
+									Properties: map[string]*openapi3.SchemaRef{
+										"token": {Value: &openapi3.Schema{Type: StringType}},
+									},
+									Required: []string{"token"},
+								},
+							},
+						},
+					},
+				},
+			},
+			Responses: responses,
+		},
+	})
+
 	/* articles/get endpoint */
 	responses = openapi3.NewResponses()
 	responses.Set("200", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[21],
+			Description: NewStringPtr("Article retrieved successfully."),
 			Content: openapi3.Content{
 				"application/json": &openapi3.MediaType{
 					Schema: &openapi3.SchemaRef{
@@ -516,12 +584,12 @@ func CreateOpenAPISpec() *openapi3.T {
 	})
 	responses.Set("404", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[22],
+			Description: NewStringPtr("Article not found."),
 		},
 	})
 	responses.Set("500", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[7],
+			Description: NewStringPtr("Unexpected server error."),
 		},
 	})
 	paths.Set("/articles/get", &openapi3.PathItem{
@@ -551,17 +619,17 @@ func CreateOpenAPISpec() *openapi3.T {
 	responses = openapi3.NewResponses()
 	responses.Set("200", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[23],
+			Description: NewStringPtr("Article saved successfully."),
 		},
 	})
 	responses.Set("400", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[5],
+			Description: NewStringPtr("Invalid request body."),
 		},
 	})
 	responses.Set("500", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[7],
+			Description: NewStringPtr("Unexpected server error."),
 		},
 	})
 	paths.Set("/articles/save", &openapi3.PathItem{
@@ -599,7 +667,7 @@ func CreateOpenAPISpec() *openapi3.T {
 	responses = openapi3.NewResponses()
 	responses.Set("200", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[24],
+			Description: NewStringPtr("Articles retrieved successfully."),
 			Content: openapi3.Content{
 				"application/json": &openapi3.MediaType{
 					Schema: &openapi3.SchemaRef{
@@ -614,7 +682,7 @@ func CreateOpenAPISpec() *openapi3.T {
 	})
 	responses.Set("500", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[7],
+			Description: NewStringPtr("Unexpected server error."),
 		},
 	})
 	paths.Set("/articles/get-all", &openapi3.PathItem{
@@ -629,22 +697,22 @@ func CreateOpenAPISpec() *openapi3.T {
 	responses = openapi3.NewResponses()
 	responses.Set("200", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[25],
+			Description: NewStringPtr("Article deleted successfully."),
 		},
 	})
 	responses.Set("400", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[5],
+			Description: NewStringPtr("Invalid request body."),
 		},
 	})
 	responses.Set("404", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[22],
+			Description: NewStringPtr("Article not found."),
 		},
 	})
 	responses.Set("500", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[7],
+			Description: NewStringPtr("Unexpected server error."),
 		},
 	})
 	paths.Set("/articles/delete", &openapi3.PathItem{
@@ -678,7 +746,7 @@ func CreateOpenAPISpec() *openapi3.T {
 	responses = openapi3.NewResponses()
 	responses.Set("200", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[26],
+			Description: NewStringPtr("Articles retrieved successfully."),
 			Content: openapi3.Content{
 				"application/json": &openapi3.MediaType{
 					Schema: &openapi3.SchemaRef{
@@ -706,7 +774,7 @@ func CreateOpenAPISpec() *openapi3.T {
 	})
 	responses.Set("500", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[7],
+			Description: NewStringPtr("Unexpected server error."),
 		},
 	})
 	paths.Set("/articles/get-suggested", &openapi3.PathItem{
@@ -721,7 +789,7 @@ func CreateOpenAPISpec() *openapi3.T {
 	responses = openapi3.NewResponses()
 	responses.Set("200", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[27],
+			Description: NewStringPtr("Asset added successfully."),
 			Content: openapi3.Content{
 				"text/plain": &openapi3.MediaType{
 					Schema: &openapi3.SchemaRef{
@@ -735,12 +803,12 @@ func CreateOpenAPISpec() *openapi3.T {
 	})
 	responses.Set("400", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[5],
+			Description: NewStringPtr("Invalid request body."),
 		},
 	})
 	responses.Set("500", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[7],
+			Description: NewStringPtr("Unexpected server error."),
 		},
 	})
 	paths.Set("/assets/add", &openapi3.PathItem{
@@ -775,7 +843,7 @@ func CreateOpenAPISpec() *openapi3.T {
 	responses = openapi3.NewResponses()
 	responses.Set("200", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[28],
+			Description: NewStringPtr("Comment created successfully."),
 			Content: openapi3.Content{
 				"text/plain": &openapi3.MediaType{
 					Schema: &openapi3.SchemaRef{
@@ -789,12 +857,12 @@ func CreateOpenAPISpec() *openapi3.T {
 	})
 	responses.Set("400", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[5],
+			Description: NewStringPtr("Invalid request body."),
 		},
 	})
 	responses.Set("500", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[7],
+			Description: NewStringPtr("Unexpected server error."),
 		},
 	})
 	paths.Set("/comments/article/create", &openapi3.PathItem{
@@ -837,22 +905,22 @@ func CreateOpenAPISpec() *openapi3.T {
 	responses = openapi3.NewResponses()
 	responses.Set("200", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[29],
+			Description: NewStringPtr("Comment updated successfully."),
 		},
 	})
 	responses.Set("400", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[5],
+			Description: NewStringPtr("Invalid request body."),
 		},
 	})
 	responses.Set("401", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[30],
+			Description: NewStringPtr("Unauthorized to update the comment."),
 		},
 	})
 	responses.Set("500", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[7],
+			Description: NewStringPtr("Unexpected server error."),
 		},
 	})
 	paths.Set("/comments/article/update", &openapi3.PathItem{
@@ -887,22 +955,22 @@ func CreateOpenAPISpec() *openapi3.T {
 	responses = openapi3.NewResponses()
 	responses.Set("200", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[31],
+			Description: NewStringPtr("Comment deleted successfully."),
 		},
 	})
 	responses.Set("400", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[5],
+			Description: NewStringPtr("Invalid request body."),
 		},
 	})
 	responses.Set("401", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[32],
+			Description: NewStringPtr("Unauthorized to delete the comment."),
 		},
 	})
 	responses.Set("500", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[7],
+			Description: NewStringPtr("Unexpected server error."),
 		},
 	})
 	paths.Set("/comments/article/delete", &openapi3.PathItem{
@@ -936,7 +1004,7 @@ func CreateOpenAPISpec() *openapi3.T {
 	responses = openapi3.NewResponses()
 	responses.Set("201", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[33],
+			Description: NewStringPtr("Discussion created successfully."),
 			Content: openapi3.Content{
 				"text/plain": &openapi3.MediaType{
 					Schema: &openapi3.SchemaRef{
@@ -950,17 +1018,17 @@ func CreateOpenAPISpec() *openapi3.T {
 	})
 	responses.Set("400", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[5],
+			Description: NewStringPtr("Invalid request body."),
 		},
 	})
 	responses.Set("404", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[34],
+			Description: NewStringPtr("Previous comment or article not found."),
 		},
 	})
 	responses.Set("500", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[7],
+			Description: NewStringPtr("Unexpected server error."),
 		},
 	})
 	paths.Set("/discussions/article/create", &openapi3.PathItem{
@@ -1013,22 +1081,22 @@ func CreateOpenAPISpec() *openapi3.T {
 	responses = openapi3.NewResponses()
 	responses.Set("200", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[35],
+			Description: NewStringPtr("Comment added to the discussion successfully."),
 		},
 	})
 	responses.Set("400", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[5],
+			Description: NewStringPtr("Invalid request body."),
 		},
 	})
 	responses.Set("404", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[36],
+			Description: NewStringPtr("Discussion or article not found."),
 		},
 	})
 	responses.Set("500", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
-			Description: &descriptions[7],
+			Description: NewStringPtr("Unexpected server error."),
 		},
 	})
 	paths.Set("/discussions/article/update", &openapi3.PathItem{

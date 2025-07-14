@@ -86,6 +86,6 @@ func (smtpClient *Client) SendPasswordChangeEmail(receiver string, token string)
 }
 
 func (smtpClient *Client) SendEmailChangeEmail(receiver string, token string) *problems.Problem {
-	emailBody := fmt.Sprintf("Change your email here: %s/password/%s", config.FrontAddr, token)
-	return smtpClient.SendEmail(receiver, "Change Your Password", emailBody)
+	emailBody := fmt.Sprintf("Change your email here: %s/email/change/%s", config.FrontAddr, token)
+	return smtpClient.SendEmail(receiver, "Change Your Email", emailBody)
 }

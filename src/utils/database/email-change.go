@@ -44,7 +44,7 @@ func (db *Database) CreateEmailChange(e models.EmailChange) *problems.Problem {
 	}
 
 	_, err := db.Connection.Exec(
-		"INSERT INTO email_chane (token, new_email, expires, user_id) VALUES (?, ?, ?, ?)",
+		"INSERT INTO email_change (token, new_email, expires, user_id) VALUES (?, ?, ?, ?)",
 		e.Token, e.NewEmail, e.Expires, e.UserId,
 	)
 	if err != nil {
@@ -81,14 +81,14 @@ func (db *Database) GetEmailChangeByToken(token string) (*models.EmailChange, *p
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, &problems.Problem{
 			Type:          problems.DatabaseProblem,
-			ServerMessage: fmt.Sprintf("error while getting a password change by token: %v", err),
-			ClientMessage: "We couldn't find a valid password reset request. Please check your link or request a new password reset.",
+			ServerMessage: fmt.Sprintf("error while getting an email change by token: %v", err),
+			ClientMessage: "We couldn't find a valid email change request. Please check your link or request a new email change.",
 			Status:        http.StatusNotFound,
 		}
 	} else if err != nil {
 		return nil, &problems.Problem{
 			Type:          problems.DatabaseProblem,
-			ServerMessage: fmt.Sprintf("error while getting a password change by token: %v", err),
+			ServerMessage: fmt.Sprintf("error while getting an email change by token: %v", err),
 			Status:        http.StatusInternalServerError,
 		}
 	}

@@ -13,6 +13,7 @@ import (
 )
 
 const (
+	AuthPath        = "/auth"
 	UserPath        = "/user"
 	AssetsPath      = "/assets"
 	ArticlesPath    = "/articles"
@@ -57,19 +58,21 @@ func InitHandlers(dev bool, port string) {
 		http.HandleFunc(docs.OpenAPIPath, CORS(Method("GET", docs.GetOpenAPISpec(port))))
 	}
 
+	/* Session */
+	http.HandleFunc(AuthPath+"/login", CORS(Method("POST", Login)))
+	http.HandleFunc(AuthPath+"/register", CORS(Method("POST", Register)))
+	http.HandleFunc(AuthPath+"/check", CORS(Auth(Method("GET", EmptyHandler))))
+	http.HandleFunc(AuthPath+"/logout", CORS(Auth(Method("DELETE", Logout))))
+
 	/* User */
-	http.HandleFunc(UserPath+"/login", CORS(Method("POST", LoginUser)))
-	http.HandleFunc(UserPath+"/get-user", CORS(Auth(Method("GET", GetUser))))
-	http.HandleFunc(UserPath+"/register", CORS(Method("POST", RegisterUser)))
-	http.HandleFunc(UserPath+"/verify-email", CORS(Method("PATCH", VerifyEmail)))
-	http.HandleFunc(UserPath+"/logout", CORS(Auth(Method("DELETE", LogoutUser))))
-	http.HandleFunc(UserPath+"/logged-in", CORS(Auth(Method("GET", EmptyHandler))))
-	http.HandleFunc(UserPath+"/modify-user", CORS(Auth(Method("PATCH", ModifyUser))))
-	http.HandleFunc(UserPath+"/change-email", CORS(Auth(Method("PATCH", ChangeEmail))))
-	http.HandleFunc(UserPath+"/change-password", CORS(Method("PATCH", ChangePassword)))
-	http.HandleFunc(UserPath+"/email-change-init", CORS(Auth(Method("POST", EmailChangeInit))))
-	http.HandleFunc(UserPath+"/password-change-init", CORS(Method("POST", PasswordChangeInit)))
-	http.HandleFunc(UserPath+"/password-change-valid", CORS(Method("GET", PasswordChangeValid)))
+	http.HandleFunc(UserPath+"/get", CORS(Auth(Method("GET", GetUser))))
+	http.HandleFunc(UserPath+"/update", CORS(Auth(Method("PATCH", ModifyUser))))
+	http.HandleFunc(UserPath+"/email/init", CORS(Auth(Method("POST", EmailChangeInit))))
+	http.HandleFunc(UserPath+"/email/verify", CORS(Method("PATCH", VerifyEmail)))
+	http.HandleFunc(UserPath+"/email/change", CORS(Auth(Method("PATCH", ChangeEmail))))
+	http.HandleFunc(UserPath+"/password/init", CORS(Method("POST", PasswordChangeInit)))
+	http.HandleFunc(UserPath+"/password/valid", CORS(Method("GET", PasswordChangeValid)))
+	http.HandleFunc(UserPath+"/password/change", CORS(Method("PATCH", ChangePassword)))
 
 	/* Articles */
 	http.HandleFunc(ArticlesPath+"/get", CORS(Method("GET", GetArticle)))

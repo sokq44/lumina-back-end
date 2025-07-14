@@ -24,7 +24,7 @@ func NewStringPtr(s string) *string {
 func CreateOpenAPISpec() *openapi3.T {
 	paths := openapi3.NewPaths()
 
-	/* user/get-user endpoint */
+	/* user/get endpoint */
 	responses := openapi3.NewResponses()
 	responses.Set("200", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
@@ -55,7 +55,7 @@ func CreateOpenAPISpec() *openapi3.T {
 			Description: NewStringPtr("Unexpected server error."),
 		},
 	})
-	paths.Set("/user/get-user", &openapi3.PathItem{
+	paths.Set("/user/get", &openapi3.PathItem{
 		Get: &openapi3.Operation{
 			Summary:   "Get user details.",
 			Tags:      []string{"User"},
@@ -63,7 +63,7 @@ func CreateOpenAPISpec() *openapi3.T {
 		},
 	})
 
-	/* user/logged-in */
+	/* auth/check */
 	responses = openapi3.NewResponses()
 	responses.Set("200", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
@@ -80,7 +80,7 @@ func CreateOpenAPISpec() *openapi3.T {
 			Description: NewStringPtr("Unexpected server error."),
 		},
 	})
-	paths.Set("/user/logged-in", &openapi3.PathItem{
+	paths.Set("/auth/check", &openapi3.PathItem{
 		Get: &openapi3.Operation{
 			Summary:   "Check whether user is logged in.",
 			Tags:      []string{"User"},
@@ -88,7 +88,7 @@ func CreateOpenAPISpec() *openapi3.T {
 		},
 	})
 
-	/* user/register endpoint */
+	/* auth/register endpoint */
 	responses = openapi3.NewResponses()
 	responses.Set("201", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
@@ -110,7 +110,7 @@ func CreateOpenAPISpec() *openapi3.T {
 			Description: NewStringPtr("Unexpected server error."),
 		},
 	})
-	paths.Set("/user/register", &openapi3.PathItem{
+	paths.Set("/auth/register", &openapi3.PathItem{
 		Post: &openapi3.Operation{
 			Summary: "Register a new user.",
 			Tags:    []string{"User"},
@@ -139,7 +139,7 @@ func CreateOpenAPISpec() *openapi3.T {
 		},
 	})
 
-	/* user/login endpoint */
+	/* auth/login endpoint */
 	responses = openapi3.NewResponses()
 	responses.Set("200", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
@@ -161,7 +161,7 @@ func CreateOpenAPISpec() *openapi3.T {
 			Description: NewStringPtr("Unexpected server error."),
 		},
 	})
-	paths.Set("/user/login", &openapi3.PathItem{
+	paths.Set("/auth/login", &openapi3.PathItem{
 		Post: &openapi3.Operation{
 			Summary: "Log into user's account.",
 			Tags:    []string{"User"},
@@ -243,7 +243,7 @@ func CreateOpenAPISpec() *openapi3.T {
 		},
 	})
 
-	/* user/logout endpoint */
+	/* auth/logout endpoint */
 	responses = openapi3.NewResponses()
 	responses.Set("200", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
@@ -255,7 +255,7 @@ func CreateOpenAPISpec() *openapi3.T {
 			Description: NewStringPtr("Unexpected server error."),
 		},
 	})
-	paths.Set("/user/logout", &openapi3.PathItem{
+	paths.Set("/auth/logout", &openapi3.PathItem{
 		Delete: &openapi3.Operation{
 			Summary:   "Logs user out of their account.",
 			Tags:      []string{"User"},
@@ -263,7 +263,7 @@ func CreateOpenAPISpec() *openapi3.T {
 		},
 	})
 
-	/* user/modify-user endpoint */
+	/* user/update endpoint */
 	responses = openapi3.NewResponses()
 	responses.Set("200", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
@@ -280,7 +280,7 @@ func CreateOpenAPISpec() *openapi3.T {
 			Description: NewStringPtr("Unexpected server error."),
 		},
 	})
-	paths.Set("/user/modify-user", &openapi3.PathItem{
+	paths.Set("/user/update", &openapi3.PathItem{
 		Patch: &openapi3.Operation{
 			Summary: "Modify user details.",
 			Tags:    []string{"User"},
@@ -309,7 +309,7 @@ func CreateOpenAPISpec() *openapi3.T {
 		},
 	})
 
-	/* user/password-change-init endpoint */
+	/* user/password/init endpoint */
 	responses = openapi3.NewResponses()
 	responses.Set("201", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
@@ -331,7 +331,7 @@ func CreateOpenAPISpec() *openapi3.T {
 			Description: NewStringPtr("Unexpected server error."),
 		},
 	})
-	paths.Set("/user/password-change-init", &openapi3.PathItem{
+	paths.Set("/user/password/init", &openapi3.PathItem{
 		Post: &openapi3.Operation{
 			Summary: "Initialize a password change request.",
 			Tags:    []string{"User"},
@@ -358,7 +358,7 @@ func CreateOpenAPISpec() *openapi3.T {
 		},
 	})
 
-	/* user/change-password endpoint */
+	/* user/password/change endpoint */
 	responses = openapi3.NewResponses()
 	responses.Set("200", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
@@ -380,7 +380,7 @@ func CreateOpenAPISpec() *openapi3.T {
 			Description: NewStringPtr("Unexpected server error."),
 		},
 	})
-	paths.Set("/user/change-password", &openapi3.PathItem{
+	paths.Set("/user/password/change", &openapi3.PathItem{
 		Patch: &openapi3.Operation{
 			Summary: "Change user's password.",
 			Tags:    []string{"User"},
@@ -408,7 +408,7 @@ func CreateOpenAPISpec() *openapi3.T {
 		},
 	})
 
-	/* user/password-change-valid endpoint */
+	/* user/password/valid endpoint */
 	responses = openapi3.NewResponses()
 	responses.Set("200", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
@@ -430,7 +430,7 @@ func CreateOpenAPISpec() *openapi3.T {
 			Description: NewStringPtr("Unexpected server error."),
 		},
 	})
-	paths.Set("/user/password-change-valid", &openapi3.PathItem{
+	paths.Set("/user/password/valid", &openapi3.PathItem{
 		Get: &openapi3.Operation{
 			Summary: "Validate password change token.",
 			Tags:    []string{"User"},
@@ -453,7 +453,7 @@ func CreateOpenAPISpec() *openapi3.T {
 		},
 	})
 
-	/* user/email-change-init endpoint */
+	/* user/email/init endpoint */
 	responses = openapi3.NewResponses()
 	responses.Set("201", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
@@ -475,7 +475,7 @@ func CreateOpenAPISpec() *openapi3.T {
 			Description: NewStringPtr("Unexpected server error."),
 		},
 	})
-	paths.Set("/user/email-change-init", &openapi3.PathItem{
+	paths.Set("/user/email/init", &openapi3.PathItem{
 		Post: &openapi3.Operation{
 			Summary: "Initialize an email change request.",
 			Tags:    []string{"User"},
@@ -502,7 +502,7 @@ func CreateOpenAPISpec() *openapi3.T {
 		},
 	})
 
-	/* user/change-email endpoint */
+	/* user/email/change endpoint */
 	responses = openapi3.NewResponses()
 	responses.Set("200", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
@@ -529,7 +529,7 @@ func CreateOpenAPISpec() *openapi3.T {
 			Description: NewStringPtr("Unexpected server error."),
 		},
 	})
-	paths.Set("/user/change-email", &openapi3.PathItem{
+	paths.Set("/user/email/change", &openapi3.PathItem{
 		Patch: &openapi3.Operation{
 			Summary: "Change user's email address.",
 			Tags:    []string{"User"},
@@ -663,7 +663,7 @@ func CreateOpenAPISpec() *openapi3.T {
 		},
 	})
 
-	/* articles/get-all endpoint */
+	/* articles//all endpoint */
 	responses = openapi3.NewResponses()
 	responses.Set("200", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
@@ -685,7 +685,7 @@ func CreateOpenAPISpec() *openapi3.T {
 			Description: NewStringPtr("Unexpected server error."),
 		},
 	})
-	paths.Set("/articles/get-all", &openapi3.PathItem{
+	paths.Set("/articles/all", &openapi3.PathItem{
 		Get: &openapi3.Operation{
 			Summary:   "Retrieve all articles for the authenticated user.",
 			Tags:      []string{"Articles"},
@@ -742,7 +742,7 @@ func CreateOpenAPISpec() *openapi3.T {
 		},
 	})
 
-	/* articles/get-suggested */
+	/* articles/suggested */
 	responses = openapi3.NewResponses()
 	responses.Set("200", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
@@ -777,7 +777,7 @@ func CreateOpenAPISpec() *openapi3.T {
 			Description: NewStringPtr("Unexpected server error."),
 		},
 	})
-	paths.Set("/articles/get-suggested", &openapi3.PathItem{
+	paths.Set("/articles/suggested", &openapi3.PathItem{
 		Get: &openapi3.Operation{
 			Summary:   "Retrieve suggested articles.",
 			Tags:      []string{"Articles"},

@@ -328,3 +328,69 @@ func ChangeEmail(w http.ResponseWriter, r *http.Request) {
 
 	db.DeleteEmailChangeById(emailChange.Id).Handle(w, r)
 }
+
+func AddSocial(w http.ResponseWriter, r *http.Request) {
+	type RequestBody struct {
+		Type  models.SocialType `json:"type"`
+		Value string            `json:"value"`
+		Label string            `json:"label"`
+	}
+
+	var body RequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		p := problems.Problem{
+			Type:          problems.HandlerProblem,
+			ServerMessage: fmt.Sprintf("error while decoding the request body: %v", err),
+			ClientMessage: "An unexpected error has occurred while processing your request.",
+			Status:        http.StatusBadRequest,
+		}
+		p.Handle(w, r)
+		return
+	}
+
+	user, p := GetUserFromRequest(r)
+	if p.Handle(w, r) {
+		return
+	}
+
+	social := models.UserSocialPlatform{
+		Type:   body.Type,
+		Value:  body.Value,
+		Label:  body.Label,
+		UserId: user.Id,
+	}
+	if db.UserAddSocial(social).Handle(w, r) {
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func RemoveSocial(w http.ResponseWriter, r *http.Request) {
+	type RequestBody struct {
+		Type models.SocialType `json:"type"`
+	}
+
+	var body RequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		p := problems.Problem{
+			Type:          problems.HandlerProblem,
+			ServerMessage: fmt.Sprintf("error while decoding the request body: %v", err),
+			ClientMessage: "An unexpected error has occurred while processing your request.",
+			Status:        http.StatusBadRequest,
+		}
+		p.Handle(w, r)
+		return
+	}
+
+	user, p := GetUserFromRequest(r)
+	if p.Handle(w, r) {
+		return
+	}
+
+	if db.UserRemoveSocial(user.Id, body.Type).Handle(w, r) {
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}

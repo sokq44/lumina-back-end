@@ -91,6 +91,7 @@ func (db *Database) GetCommentsByArticleId(id string) ([]models.Comment, *proble
 			Status:        http.StatusInternalServerError,
 		}
 	}
+	defer rows.Close()
 
 	comments := make([]models.Comment, 0)
 	for rows.Next() {

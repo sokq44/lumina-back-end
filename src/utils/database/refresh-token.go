@@ -100,14 +100,15 @@ func (db *Database) DeleteRefreshTokenByToken(token string) *problems.Problem {
 
 func (db *Database) GetExpiredRefreshTokens() ([]models.RefreshToken, *problems.Problem) {
 	rows, err := db.Connection.Query("SELECT * FROM refresh_tokens WHERE expires <= NOW();")
-
 	if err != nil {
+		rows.Close()
 		return nil, &problems.Problem{
 			Type:          problems.DatabaseProblem,
 			ServerMessage: fmt.Sprintf("error while trying to retrieve expired refresh tokens: %v", err),
 			Status:        http.StatusInternalServerError,
 		}
 	}
+	defer rows.Close()
 
 	var expired []models.RefreshToken
 	for rows.Next() {

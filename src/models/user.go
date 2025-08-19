@@ -8,12 +8,14 @@ import (
 )
 
 type User struct {
-	Id       string `json:"id"`
-	Username string `json:"username"`
-	Email    string `json:"email"`
-	ImageUrl string `json:"image"`
-	Password string `json:"password"`
-	Verified bool
+	Id         string `json:"id"`
+	Username   string `json:"username"`
+	Email      string `json:"email"`
+	ImageUrl   string `json:"image"`
+	Password   string `json:"password"`
+	Bio        string
+	Favourites string
+	Verified   bool
 }
 
 func (user *User) Validate(passHashed bool) *problems.Problem {

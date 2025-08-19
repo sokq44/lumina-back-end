@@ -89,14 +89,15 @@ func (db *Database) DeleteEmailVerificationById(id string) *problems.Problem {
 
 func (db *Database) GetExpiredEmailVerifications() ([]models.EmailVerification, *problems.Problem) {
 	rows, err := db.Connection.Query("SELECT * FROM email_verification WHERE expires <= NOW();")
-
 	if err != nil {
+		rows.Close()
 		return nil, &problems.Problem{
 			Type:          problems.DatabaseProblem,
 			ServerMessage: fmt.Sprintf("error while trying to retrieve expired email verifications: %v", err),
 			Status:        http.StatusInternalServerError,
 		}
 	}
+	defer rows.Close()
 
 	var expired []models.EmailVerification
 	for rows.Next() {

@@ -556,6 +556,101 @@ func CreateOpenAPISpec() *openapi3.T {
 		},
 	})
 
+	/* user/social/add endpoint */
+	responses = openapi3.NewResponses()
+	responses.Set("204", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: NewStringPtr("Social platform added successfully."),
+		},
+	})
+	responses.Set("400", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: NewStringPtr("Invalid request body."),
+		},
+	})
+	responses.Set("409", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: NewStringPtr("This social platform is already linked to your account."),
+		},
+	})
+	responses.Set("500", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: NewStringPtr("Unexpected server error."),
+		},
+	})
+	paths.Set("/user/social/add", &openapi3.PathItem{
+		Patch: &openapi3.Operation{
+			Summary: "Add a social platform to the authenticated user.",
+			Tags:    []string{"User"},
+			RequestBody: &openapi3.RequestBodyRef{
+				Value: &openapi3.RequestBody{
+					Description: "Social platform details to add.",
+					Required:    true,
+					Content: openapi3.Content{
+						"application/json": &openapi3.MediaType{
+							Schema: &openapi3.SchemaRef{
+								Value: &openapi3.Schema{
+									Type: ObjectType,
+									Properties: map[string]*openapi3.SchemaRef{
+										"type":  {Value: &openapi3.Schema{Type: StringType}},
+										"value": {Value: &openapi3.Schema{Type: StringType}},
+										"label": {Value: &openapi3.Schema{Type: StringType}},
+									},
+									Required: []string{"type", "value", "label"},
+								},
+							},
+						},
+					},
+				},
+			},
+			Responses: responses,
+		},
+	})
+
+	/* user/social/remove endpoint */
+	responses = openapi3.NewResponses()
+	responses.Set("204", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: NewStringPtr("Social platform removed successfully."),
+		},
+	})
+	responses.Set("400", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: NewStringPtr("Invalid request body."),
+		},
+	})
+	responses.Set("500", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: NewStringPtr("Unexpected server error."),
+		},
+	})
+	paths.Set("/user/social/remove", &openapi3.PathItem{
+		Delete: &openapi3.Operation{
+			Summary: "Remove a social platform from the authenticated user.",
+			Tags:    []string{"User"},
+			RequestBody: &openapi3.RequestBodyRef{
+				Value: &openapi3.RequestBody{
+					Description: "Social platform type to remove.",
+					Required:    true,
+					Content: openapi3.Content{
+						"application/json": &openapi3.MediaType{
+							Schema: &openapi3.SchemaRef{
+								Value: &openapi3.Schema{
+									Type: ObjectType,
+									Properties: map[string]*openapi3.SchemaRef{
+										"type": {Value: &openapi3.Schema{Type: StringType}},
+									},
+									Required: []string{"type"},
+								},
+							},
+						},
+					},
+				},
+			},
+			Responses: responses,
+		},
+	})
+
 	/* articles/get endpoint */
 	responses = openapi3.NewResponses()
 	responses.Set("200", &openapi3.ResponseRef{

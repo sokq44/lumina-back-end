@@ -129,14 +129,15 @@ func (db *Database) DeletePasswordChangeById(id string) *problems.Problem {
 
 func (db *Database) GetExpiredPasswordChanges() ([]models.PasswordChange, *problems.Problem) {
 	rows, err := db.Connection.Query("SELECT * FROM password_change WHERE expires <= NOW();")
-
 	if err != nil {
+		rows.Close()
 		return nil, &problems.Problem{
 			Type:          problems.DatabaseProblem,
 			ServerMessage: fmt.Sprintf("error while trying to retrieve expired password changes: %v", err),
 			Status:        http.StatusInternalServerError,
 		}
 	}
+	defer rows.Close()
 
 	var expired []models.PasswordChange
 	for rows.Next() {

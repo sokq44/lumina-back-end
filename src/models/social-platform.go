@@ -40,17 +40,17 @@ func (t *SocialType) UnmarshalJSON(data []byte) error {
 func SocialPlatformGetName(t SocialType) string {
 	switch t {
 	case GithubST:
-		return "Github"
+		return "github"
 	case TwitterST:
-		return "Twitter"
+		return "twitter"
 	case FacebookST:
-		return "Facebook"
+		return "facebook"
 	case LinkedInST:
-		return "LinkedIn"
+		return "linkedin"
 	case InstagramST:
-		return "Instagram"
+		return "instagram"
 	default:
-		return "Unknown"
+		return "unknown"
 	}
 }
 

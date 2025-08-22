@@ -48,7 +48,6 @@ CREATE TABLE
         expires DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
         user_id VARCHAR(36) NOT NULL,
         CONSTRAINT fk_users_refresh_tokens FOREIGN KEY (user_id) REFERENCES users (id),
-        CONSTRAINT refresh_tokens_unique_user_id UNIQUE (user_id)
     );
 
 CREATE TABLE

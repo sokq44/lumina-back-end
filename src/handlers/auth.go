@@ -109,60 +109,93 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	refreshToken, _ := db.GetRefreshTokenByUserId(user.Id)
-	if refreshToken != nil && time.Now().After(refreshToken.Expires) {
-		db.DeleteRefreshTokenById(refreshToken.Id)
-	} else if refreshToken != nil {
-		w.WriteHeader(http.StatusOK)
+	refreshTokens, refDbProblem := db.GetRefreshTokensByUserId(user.Id)
+	if refDbProblem.Handle(w, r) {
 		return
 	}
 
-	hashedPasswd := crypt.Sha256(body.Password)
-	if !user.Verified || hashedPasswd != user.Password {
-		p := problems.Problem{
-			Type:          problems.HandlerProblem,
-			ServerMessage: "provided password is incorrect or the user isn't verified:",
-			ClientMessage: "Provided password is wrong or the specified user isn't verified.",
-			Status:        http.StatusUnauthorized,
+	_, refFromReq, refCookieProblem := jwt.GetRefAccFromRequest(r)
+	if refCookieProblem.Handle(w, r) {
+		return
+	}
+
+	if refFromReq != "" && refreshTokens != nil {
+		i := -1
+		for _, refreshToken := range refreshTokens {
+			i++
+			if refreshToken.Token == refFromReq {
+				break
+			}
 		}
-		p.Handle(w, r)
-		return
+
+		if i >= 0 && time.Now().Before(refreshTokens[i].Expires) {
+			// If user has some refresh_token cookie, there is a refresh_token record
+			// in the database with his id, the token from cookie matches one from
+			// the database and the token hasn't expired, then we're good to go.
+			w.WriteHeader(http.StatusOK)
+			return
+		}
 	}
 
-	now := time.Now()
-	access, p := jwt.GenerateAccessToken(user.Id, now)
-	if p.Handle(w, r) {
-		return
+	if (refFromReq == "" && refCookieProblem == nil) || (refreshTokens == nil && refDbProblem == nil) {
+		hashedPasswd := crypt.Sha256(body.Password)
+		if hashedPasswd != user.Password {
+			p := problems.Problem{
+				Type:          problems.HandlerProblem,
+				ServerMessage: "provided password is incorrect or the user isn't verified:",
+				ClientMessage: "Provided password is wrong or the specified user isn't verified.",
+				Status:        http.StatusUnauthorized,
+			}
+			p.Handle(w, r)
+			return
+		}
+
+		if !user.Verified {
+			p := problems.Problem{
+				Type:          problems.HandlerProblem,
+				ServerMessage: "Provided user hasn't been verified yet.",
+				ClientMessage: "Provided user hasn't been verified yet.",
+				Status:        http.StatusUnauthorized,
+			}
+			p.Handle(w, r)
+			return
+		}
+
+		now := time.Now()
+		access, p := jwt.GenerateAccessToken(user.Id, now)
+		if p.Handle(w, r) {
+			return
+		}
+
+		refresh, p := jwt.GenerateRefreshToken(user.Id, now)
+		if p.Handle(w, r) {
+			return
+		}
+
+		if db.CreateRefreshToken(refresh).Handle(w, r) {
+			return
+		}
+
+		http.SetCookie(w, &http.Cookie{
+			Name:     "access_token",
+			Value:    access,
+			HttpOnly: true,
+			Path:     "/",
+			Expires:  now.Add(time.Duration(config.JwtAccExpTime)),
+			Secure:   true,
+			SameSite: http.SameSiteNoneMode,
+		})
+
+		http.SetCookie(w, &http.Cookie{
+			Name:     "refresh_token",
+			Value:    refresh.Token,
+			HttpOnly: true,
+			Path:     "/",
+			Expires:  now.Add(time.Duration(config.JwtRefExpTime)),
+			Secure:   true,
+			SameSite: http.SameSiteNoneMode,
+		})
 	}
-
-	refresh, p := jwt.GenerateRefreshToken(user.Id, now)
-	if p.Handle(w, r) {
-		return
-	}
-
-	if db.CreateRefreshToken(refresh).Handle(w, r) {
-		return
-	}
-
-	http.SetCookie(w, &http.Cookie{
-		Name:     "access_token",
-		Value:    access,
-		HttpOnly: true,
-		Path:     "/",
-		Expires:  now.Add(time.Duration(config.JwtAccExpTime)),
-		Secure:   true,
-		SameSite: http.SameSiteNoneMode,
-	})
-
-	http.SetCookie(w, &http.Cookie{
-		Name:     "refresh_token",
-		Value:    refresh.Token,
-		HttpOnly: true,
-		Path:     "/",
-		Expires:  now.Add(time.Duration(config.JwtRefExpTime)),
-		Secure:   true,
-		SameSite: http.SameSiteNoneMode,
-	})
 }
 
 func Logout(w http.ResponseWriter, r *http.Request) {

@@ -35,9 +35,27 @@ func CreateOpenAPISpec() *openapi3.T {
 						Value: &openapi3.Schema{
 							Type: ObjectType,
 							Properties: map[string]*openapi3.SchemaRef{
-								"username": {Value: &openapi3.Schema{Type: StringType}},
-								"email":    {Value: &openapi3.Schema{Type: StringType}},
-								"image":    {Value: &openapi3.Schema{Type: StringType}},
+								"id":         {Value: &openapi3.Schema{Type: StringType}},
+								"bio":        {Value: &openapi3.Schema{Type: StringType}},
+								"email":      {Value: &openapi3.Schema{Type: StringType}},
+								"image":      {Value: &openapi3.Schema{Type: StringType}},
+								"username":   {Value: &openapi3.Schema{Type: StringType}},
+								"favourites": {Value: &openapi3.Schema{Type: StringType}},
+								"socials": {
+									Value: &openapi3.Schema{
+										Type: openapi3.NewArraySchema().Type,
+										Items: &openapi3.SchemaRef{
+											Value: &openapi3.Schema{
+												Type: ObjectType,
+												Properties: map[string]*openapi3.SchemaRef{
+													"type":  {Value: &openapi3.Schema{Type: StringType}},
+													"label": {Value: &openapi3.Schema{Type: StringType}},
+													"value": {Value: &openapi3.Schema{Type: StringType}},
+												},
+											},
+										},
+									},
+								},
 							},
 						},
 					},
@@ -45,6 +63,7 @@ func CreateOpenAPISpec() *openapi3.T {
 			},
 		},
 	})
+	//
 	responses.Set("401", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
 			Description: NewStringPtr("User is not logged in."),
@@ -294,11 +313,13 @@ func CreateOpenAPISpec() *openapi3.T {
 								Value: &openapi3.Schema{
 									Type: ObjectType,
 									Properties: map[string]*openapi3.SchemaRef{
-										"username": {Value: &openapi3.Schema{Type: StringType}},
-										"email":    {Value: &openapi3.Schema{Type: StringType}},
-										"image":    {Value: &openapi3.Schema{Type: StringType}},
+										"username":   {Value: &openapi3.Schema{Type: StringType}},
+										"email":      {Value: &openapi3.Schema{Type: StringType}},
+										"image":      {Value: &openapi3.Schema{Type: StringType}},
+										"bio":        {Value: &openapi3.Schema{Type: StringType}},
+										"favourites": {Value: &openapi3.Schema{Type: StringType}},
 									},
-									Required: []string{"username", "email", "image"},
+									Required: []string{"username", "email", "image", "bio", "favourites"},
 								},
 							},
 						},

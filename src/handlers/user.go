@@ -61,12 +61,29 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userData := map[string]string{
-		"id":       user.Id,
-		"username": user.Username,
-		"email":    user.Email,
-		"image":    user.ImageUrl,
+	socials, p := db.GetSocialPlatformsByUserId(user.Id)
+	if p.Handle(w, r) {
+		return
 	}
+
+	userData := map[string]any{
+		"id":         user.Id,
+		"bio":        user.Bio,
+		"email":      user.Email,
+		"image":      user.ImageUrl,
+		"username":   user.Username,
+		"favourites": user.Favourites,
+		"socials":    []map[string]string{},
+	}
+	for _, social := range socials {
+		s := map[string]string{
+			"type":  models.SocialPlatformGetName(social.Type),
+			"label": social.Label,
+			"value": social.Value,
+		}
+		userData["socials"] = append(userData["socials"].([]map[string]string), s)
+	}
+
 	if err := json.NewEncoder(w).Encode(userData); err != nil {
 		p := problems.Problem{
 			Type:          problems.HandlerProblem,
@@ -81,9 +98,11 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 
 func ModifyUser(w http.ResponseWriter, r *http.Request) {
 	type RequestBody struct {
-		Username string `json:"username"`
-		Email    string `json:"email"`
-		ImageUrl string `json:"image"`
+		Username   string `json:"username"`
+		Email      string `json:"email"`
+		ImageUrl   string `json:"image"`
+		Bio        string `json:"bio"`
+		Favourites string `json:"favourites"`
 	}
 
 	var body RequestBody
@@ -104,12 +123,14 @@ func ModifyUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var newUser = models.User{
-		Id:       user.Id,
-		Username: body.Username,
-		Email:    body.Email,
-		ImageUrl: body.ImageUrl,
-		Password: user.Password,
-		Verified: user.Verified,
+		Id:         user.Id,
+		Username:   body.Username,
+		Email:      body.Email,
+		ImageUrl:   body.ImageUrl,
+		Password:   user.Password,
+		Verified:   user.Verified,
+		Bio:        body.Bio,
+		Favourites: body.Favourites,
 	}
 	if newUser.Validate(true).Handle(w, r) {
 		return

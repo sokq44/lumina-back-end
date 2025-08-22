@@ -27,39 +27,39 @@ func (db *Database) CreateRefreshToken(token models.RefreshToken) *problems.Prob
 	return nil
 }
 
-func (db *Database) GetRefreshTokenByUserId(userId string) (*models.RefreshToken, *problems.Problem) {
-	var token models.RefreshToken
-	var rawTime string
-
-	err := db.Connection.QueryRow(
-		"SELECT * FROM refresh_tokens WHERE user_id=?;",
+func (db *Database) GetRefreshTokensByUserId(userId string) ([]models.RefreshToken, *problems.Problem) {
+	rows, err := db.Connection.Query(
+		"SELECT id, token, expires, user_id FROM refresh_tokens WHERE user_id=?;",
 		userId,
-	).Scan(&token.Id, &token.Token, &rawTime, &token.UserId)
+	)
 
 	if errors.Is(err, sql.ErrNoRows) {
-		return nil, &problems.Problem{
-			Type:          problems.DatabaseProblem,
-			ServerMessage: fmt.Sprintf("while getting a refresh token by user id: %v", err),
-			ClientMessage: "There's no session associated with the provided user.",
-			Status:        http.StatusNotFound,
-		}
+		return nil, nil
 	} else if err != nil {
 		return nil, &problems.Problem{
 			Type:          problems.DatabaseProblem,
-			ServerMessage: fmt.Sprintf("while getting a refresh token by user id: %v", err),
+			ServerMessage: fmt.Sprintf("while getting refresh tokens by user id: %v", err),
 			ClientMessage: "An error occurred while processing your request.",
 			Status:        http.StatusInternalServerError,
 		}
 	}
 
-	t, e := parseTime(rawTime)
-	if e != nil {
-		return nil, e
+	refreshTokens := make([]models.RefreshToken, 0)
+	for rows.Next() {
+		var raw string
+		var r models.RefreshToken
+
+		rows.Scan(&r.Id, &r.Token, &raw, &r.UserId)
+		t, p := parseTime(raw)
+		if p != nil {
+			return nil, p
+		}
+
+		r.Expires = t
+		refreshTokens = append(refreshTokens, r)
 	}
 
-	token.Expires = t
-
-	return &token, nil
+	return refreshTokens, nil
 }
 
 func (db *Database) DeleteRefreshTokenById(id string) *problems.Problem {

@@ -282,3 +282,117 @@ func (db *Database) DeleteArticleById(id string) *problems.Problem {
 
 	return nil
 }
+
+func (db *Database) GetArticleReadsByArticleId(id string) (int, *problems.Problem) {
+	var reads int
+	q := "SELECT COUNT(*) FROM articles_reads WHERE article_id=?;"
+	err := db.Connection.QueryRow(q, id).Scan(&reads)
+	if errors.Is(err, sql.ErrNoRows) {
+		return 0, nil
+	} else if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return -1, &problems.Problem{
+			Type:          problems.DatabaseProblem,
+			ServerMessage: fmt.Sprintf("while trying to get the number of article's reads -> %v", err),
+			ClientMessage: "An error occurred while processing your request.",
+		}
+	}
+
+	return reads, nil
+}
+
+func (db *Database) GetArticleRatingsByArticleId(id string) ([]int, *problems.Problem) {
+	q := "SELECT rating FROM articles_ratings WHERE article_id=?;"
+	rows, err := db.Connection.Query(q, id)
+	if errors.Is(err, sql.ErrNoRows) {
+		return []int{}, nil
+	} else if err != nil && errors.Is(err, sql.ErrNoRows) {
+		return nil, &problems.Problem{
+			Type:          problems.DatabaseProblem,
+			ServerMessage: fmt.Sprintf("while trying to get ratings of an article -> %v", err),
+			ClientMessage: "An error occurred while processing your request.",
+		}
+	}
+	defer rows.Close()
+
+	ratings := make([]int, 0)
+	for rows.Next() {
+		var rating int
+		if err := rows.Scan(&rating); err != nil {
+			return nil, &problems.Problem{
+				Type:          problems.DatabaseProblem,
+				ServerMessage: fmt.Sprintf("while trying to scan of the ratings of an article -> %v", err),
+				ClientMessage: "An error occurred while processing your request.",
+			}
+		}
+		ratings = append(ratings, rating)
+	}
+
+	if rows.Err() != nil {
+		return nil, &problems.Problem{
+			Type:          problems.DatabaseProblem,
+			ServerMessage: fmt.Sprintf("error iterating article's rating rows: %v", err),
+			ClientMessage: "An error occurred while processing your request.",
+			Status:        http.StatusInternalServerError,
+		}
+	}
+
+	return ratings, nil
+}
+
+func (db *Database) UpdateArticleRead(articleId, userId string) *problems.Problem {
+	q := "SELECT 1 FROM articles_reads WHERE article_id=? AND user_id=?;"
+	err := db.Connection.QueryRow(q, articleId, userId).Err()
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return &problems.Problem{
+			Type:          problems.DatabaseProblem,
+			ServerMessage: fmt.Sprintf("while trying to establish whether a user has already seen an article -> %v", err),
+			ClientMessage: "An error occurred while processing your request.",
+			Status:        http.StatusInternalServerError,
+		}
+	}
+
+	if errors.Is(err, sql.ErrNoRows) {
+		q = "INSERT INTO articles_reads (article_id, user_id) VALUES (? , ?);"
+		_, err = db.Connection.Exec(q, articleId, userId)
+		if err != nil {
+			return &problems.Problem{
+				Type:          problems.DatabaseProblem,
+				ServerMessage: fmt.Sprintf("while trying to insert a new articles_reads row -> %v", err),
+				ClientMessage: "An error occurred while processing your request.",
+				Status:        http.StatusInternalServerError,
+			}
+		}
+	}
+
+	return nil
+}
+
+func (db *Database) UpdateArticleRating(articleId, userId string, rating int) *problems.Problem {
+	q := "SELECT 1 FROM articles_ratings WHERE article_id=? AND user_id=?;"
+	err := db.Connection.QueryRow(q, articleId, userId).Err()
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return &problems.Problem{
+			Type:          problems.DatabaseProblem,
+			ServerMessage: fmt.Sprintf("while trying to establish whether a user has already seen an article -> %v", err),
+			ClientMessage: "An error occurred while processing your request.",
+			Status:        http.StatusInternalServerError,
+		}
+	}
+
+	if errors.Is(err, sql.ErrNoRows) {
+		q = "INSERT INTO articles_reads (rating, article_id, user_id) VALUES (? , ?, ?);"
+	} else {
+		q = "UPDATE articles_reads SET rating=? WHERE user_id=? AND article_id=?"
+	}
+	_, err = db.Connection.Exec(q, rating, articleId, userId)
+	if err != nil {
+		return &problems.Problem{
+			Type:          problems.DatabaseProblem,
+			ServerMessage: fmt.Sprintf("while trying to insert a new articles_reads row -> %v", err),
+			ClientMessage: "An error occurred while processing your request.",
+			Status:        http.StatusInternalServerError,
+		}
+	}
+
+	return nil
+}

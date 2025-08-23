@@ -116,6 +116,23 @@ CREATE TABLE
     );
 
 CREATE TABLE
+    IF NOT EXISTS articles_reads (
+        user_id VARCHAR(36) NOT NULL,
+        article_id VARCHAR(36) NOT NULL,
+        CONSTRAINT fk_users_articles_reads FOREIGN KEY (user_id) REFERENCES users (id),
+        CONSTRAINT fk_articles_articles_reads FOREIGN KEY (article_id) REFERENCES articles (id),
+    );
+
+CREATE TABLE
+    IF NOT EXISTS articles_ratings (
+        user_id VARCHAR(36) NOT NULL,
+        article_id VARCHAR(36) NOT NULL,
+        rating TINYINT UNSIGNED NOT NULL,
+        CONSTRAINT fk_users_article_ratings FOREIGN KEY (user_id) REFERENCES users (id),
+        CONSTRAINT fk_articles_article_ratings FOREIGN KEY (article_id) REFERENCES articles (id),
+    );
+
+CREATE TABLE
     IF NOT EXISTS articles_comments (
         id VARCHAR(36) PRIMARY KEY NOT NULL DEFAULT (uuid ()),
         article_id VARCHAR(36) NOT NULL,

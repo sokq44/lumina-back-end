@@ -14,6 +14,7 @@ import (
 const Path string = "/docs/"
 const OpenAPIPath string = "/openapi.json/"
 
+var IntegerType *openapi3.Types = openapi3.NewInt32Schema().Type
 var StringType *openapi3.Types = openapi3.NewStringSchema().Type
 var ObjectType *openapi3.Types = openapi3.NewObjectSchema().Type
 
@@ -690,6 +691,15 @@ func CreateOpenAPISpec() *openapi3.T {
 								"content":   {Value: &openapi3.Schema{Type: StringType}},
 								"public":    {Value: &openapi3.Schema{Type: StringType}},
 								"createdAt": {Value: &openapi3.Schema{Type: StringType}},
+								"reads":     {Value: &openapi3.Schema{Type: IntegerType, Format: "int32"}},
+								"ratings": {
+									Value: &openapi3.Schema{
+										Type: openapi3.NewArraySchema().Type,
+										Items: &openapi3.SchemaRef{
+											Value: &openapi3.Schema{Type: IntegerType, Format: "int32"},
+										},
+									},
+								},
 							},
 						},
 					},
@@ -778,7 +788,7 @@ func CreateOpenAPISpec() *openapi3.T {
 		},
 	})
 
-	/* articles//all endpoint */
+	/* articles/all endpoint */
 	responses = openapi3.NewResponses()
 	responses.Set("200", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
@@ -787,8 +797,31 @@ func CreateOpenAPISpec() *openapi3.T {
 				"application/json": &openapi3.MediaType{
 					Schema: &openapi3.SchemaRef{
 						Value: &openapi3.Schema{
-							Type:  ObjectType,
-							Items: &openapi3.SchemaRef{Value: &openapi3.Schema{Type: ObjectType}},
+							Type: openapi3.NewArraySchema().Type,
+							Items: &openapi3.SchemaRef{
+								Value: &openapi3.Schema{
+									Type: ObjectType,
+									Properties: map[string]*openapi3.SchemaRef{
+										"id":        {Value: &openapi3.Schema{Type: StringType}},
+										"user":      {Value: &openapi3.Schema{Type: StringType}},
+										"userImage": {Value: &openapi3.Schema{Type: StringType}},
+										"title":     {Value: &openapi3.Schema{Type: StringType}},
+										"banner":    {Value: &openapi3.Schema{Type: StringType}},
+										"content":   {Value: &openapi3.Schema{Type: StringType}},
+										"public":    {Value: &openapi3.Schema{Type: StringType}},
+										"createdAt": {Value: &openapi3.Schema{Type: StringType}},
+										"reads":     {Value: &openapi3.Schema{Type: IntegerType, Format: "int32"}},
+										"ratings": {
+											Value: &openapi3.Schema{
+												Type: openapi3.NewArraySchema().Type,
+												Items: &openapi3.SchemaRef{
+													Value: &openapi3.Schema{Type: IntegerType, Format: "int32"},
+												},
+											},
+										},
+									},
+								},
+							},
 						},
 					},
 				},
@@ -866,18 +899,27 @@ func CreateOpenAPISpec() *openapi3.T {
 				"application/json": &openapi3.MediaType{
 					Schema: &openapi3.SchemaRef{
 						Value: &openapi3.Schema{
-							Type: ObjectType,
+							Type: openapi3.NewArraySchema().Type,
 							Items: &openapi3.SchemaRef{
 								Value: &openapi3.Schema{
 									Type: ObjectType,
 									Properties: map[string]*openapi3.SchemaRef{
-										"id":        {Value: &openapi3.Schema{Type: StringType}},
-										"user":      {Value: &openapi3.Schema{Type: StringType}},
-										"userImage": {Value: &openapi3.Schema{Type: StringType}},
-										"title":     {Value: &openapi3.Schema{Type: StringType}},
-										"banner":    {Value: &openapi3.Schema{Type: StringType}},
-										"content":   {Value: &openapi3.Schema{Type: StringType}},
-										"createdAt": {Value: &openapi3.Schema{Type: StringType}},
+										"id":         {Value: &openapi3.Schema{Type: StringType}},
+										"user":       {Value: &openapi3.Schema{Type: StringType}},
+										"user_image": {Value: &openapi3.Schema{Type: StringType}},
+										"title":      {Value: &openapi3.Schema{Type: StringType}},
+										"banner":     {Value: &openapi3.Schema{Type: StringType}},
+										"content":    {Value: &openapi3.Schema{Type: StringType}},
+										"created_at": {Value: &openapi3.Schema{Type: StringType}},
+										"reads":      {Value: &openapi3.Schema{Type: IntegerType, Format: "int32"}},
+										"ratings": {
+											Value: &openapi3.Schema{
+												Type: openapi3.NewArraySchema().Type,
+												Items: &openapi3.SchemaRef{
+													Value: &openapi3.Schema{Type: IntegerType, Format: "int32"},
+												},
+											},
+										},
 									},
 								},
 							},

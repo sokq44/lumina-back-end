@@ -92,6 +92,8 @@ func GetArticles(w http.ResponseWriter, r *http.Request) {
 		BannerUrl string    `json:"banner"`
 		Content   string    `json:"content"`
 		CreatedAt time.Time `json:"created_at"`
+		Reads     int       `json:"reads"`
+		Ratings   []int     `json:"ratings"`
 	}
 
 	query := r.URL.Query()
@@ -127,6 +129,16 @@ func GetArticles(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		ratings, p := db.GetArticleRatingsByArticleId(article.Id)
+		if p.Handle(w, r) {
+			return
+		}
+
+		reads, p := db.GetArticleReadsByArticleId(article.Id)
+		if p.Handle(w, r) {
+			return
+		}
+
 		articlesResponse = append(articlesResponse, ResponseData{
 			Id:        article.Id,
 			Title:     article.Title,
@@ -136,6 +148,8 @@ func GetArticles(w http.ResponseWriter, r *http.Request) {
 			CreatedAt: article.CreatedAt,
 			User:      user.Username,
 			UserImage: user.ImageUrl,
+			Ratings:   ratings,
+			Reads:     reads,
 		})
 	}
 
@@ -153,6 +167,8 @@ func GetArticles(w http.ResponseWriter, r *http.Request) {
 
 func GetArticle(w http.ResponseWriter, r *http.Request) {
 	type ResponseData struct {
+		Reads     int       `json:"reads"`
+		Ratings   []int     `json:"ratings"`
 		Id        string    `json:"id"`
 		User      string    `json:"user"`
 		UserImage string    `json:"user_image"`
@@ -176,6 +192,16 @@ func GetArticle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	ratings, p := db.GetArticleRatingsByArticleId(article.Id)
+	if p.Handle(w, r) {
+		return
+	}
+
+	reads, p := db.GetArticleReadsByArticleId(article.Id)
+	if p.Handle(w, r) {
+		return
+	}
+
 	response := ResponseData{
 		Id:        article.Id,
 		Title:     article.Title,
@@ -185,6 +211,8 @@ func GetArticle(w http.ResponseWriter, r *http.Request) {
 		CreatedAt: article.CreatedAt,
 		User:      user.Username,
 		UserImage: user.ImageUrl,
+		Ratings:   ratings,
+		Reads:     reads,
 	}
 
 	if err := json.NewEncoder(w).Encode(response); err != nil {
@@ -208,6 +236,8 @@ func GetSuggestedArticles(w http.ResponseWriter, r *http.Request) {
 		BannerUrl string    `json:"banner"`
 		Content   string    `json:"content"`
 		CreatedAt time.Time `json:"created_at"`
+		Reads     int       `json:"reads"`
+		Ratings   []int     `json:"ratings"`
 	}
 
 	query := r.URL.Query()
@@ -238,6 +268,16 @@ func GetSuggestedArticles(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		ratings, p := db.GetArticleRatingsByArticleId(article.Id)
+		if p.Handle(w, r) {
+			return
+		}
+
+		reads, p := db.GetArticleReadsByArticleId(article.Id)
+		if p.Handle(w, r) {
+			return
+		}
+
 		response = append(response, ResponseData{
 			Id:        article.Id,
 			Title:     article.Title,
@@ -246,6 +286,8 @@ func GetSuggestedArticles(w http.ResponseWriter, r *http.Request) {
 			CreatedAt: article.CreatedAt,
 			User:      user.Username,
 			UserImage: user.ImageUrl,
+			Ratings:   ratings,
+			Reads:     reads,
 		})
 	}
 

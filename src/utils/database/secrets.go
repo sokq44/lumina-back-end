@@ -69,7 +69,7 @@ func (db *Database) GetLatestSecrets() ([]models.Secret, *problems.Problem) {
 		secrets = append(secrets, secret)
 	}
 
-	if err := rows.Err(); err != nil {
+	if rows.Err() != nil {
 		return nil, &problems.Problem{
 			Type:          problems.DatabaseProblem,
 			ServerMessage: fmt.Sprintf("while iterating over jwt secrets: %v", err),

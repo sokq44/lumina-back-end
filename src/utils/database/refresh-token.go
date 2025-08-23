@@ -45,13 +45,11 @@ func (db *Database) GetRefreshTokensByUserId(userId string) ([]models.RefreshTok
 	}
 	defer rows.Close()
 
-	// collect all refresh tokens
 	refreshTokens := make([]models.RefreshToken, 0)
 	for rows.Next() {
 		var raw string
 		var r models.RefreshToken
 
-		// handle scan errors
 		if err := rows.Scan(&r.Id, &r.Token, &raw, &r.UserId); err != nil {
 			return nil, &problems.Problem{
 				Type:          problems.DatabaseProblem,
@@ -70,8 +68,7 @@ func (db *Database) GetRefreshTokensByUserId(userId string) ([]models.RefreshTok
 		refreshTokens = append(refreshTokens, r)
 	}
 
-	// catch any error encountered during iteration
-	if err := rows.Err(); err != nil {
+	if rows.Err() != nil {
 		return nil, &problems.Problem{
 			Type:          problems.DatabaseProblem,
 			ServerMessage: fmt.Sprintf("error iterating refresh token rows: %v", err),

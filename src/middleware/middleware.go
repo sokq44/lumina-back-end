@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"backend/config"
+	"backend/models"
 	"backend/utils/database"
 	"backend/utils/jwt"
 	"backend/utils/problems"
@@ -38,14 +39,19 @@ func Authenticate(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
+		if refreshToken == "" {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+
 		secrets, p := db.GetLatestSecrets()
 		if p.Handle(w, r) {
 			return
 		}
 
-		if !jwt.WasGeneratedWithSecret(refreshToken, secrets[0].Secret) ||
-			!jwt.WasGeneratedWithSecret(refreshToken, secrets[1].Secret) ||
-			(accessToken != "" && !jwt.WasGeneratedWithSecret(accessToken, secrets[0].Secret)) ||
+		if !jwt.WasGeneratedWithSecret(refreshToken, secrets[0].Secret) &&
+			!jwt.WasGeneratedWithSecret(refreshToken, secrets[1].Secret) &&
+			(accessToken != "" && !jwt.WasGeneratedWithSecret(accessToken, secrets[0].Secret)) &&
 			(accessToken != "" && !jwt.WasGeneratedWithSecret(accessToken, secrets[1].Secret)) {
 			p := problems.Problem{
 				Type:          problems.JwtProblem,
@@ -63,13 +69,55 @@ func Authenticate(next http.HandlerFunc) http.HandlerFunc {
 		}
 
 		userId := claimsRefresh["user"].(string)
-		tk, p := db.GetRefreshTokenByUserId(userId)
-		if p.Handle(w, r) {
+		refreshTokens, p := db.GetRefreshTokensByUserId(userId)
+		if refreshTokens == nil && p == nil {
+			p := problems.Problem{
+				Type:          problems.HandlerProblem,
+				ServerMessage: "there have been no refresh tokens found for the user",
+				ClientMessage: "Authentication failed.",
+				Status:        http.StatusUnauthorized,
+			}
+			p.Handle(w, r)
+			return
+		} else if p.Handle(w, r) {
 			return
 		}
 
-		expiresRefresh := int64(claimsRefresh["exp"].(float64))
-		if expiresRefresh < now.Unix() || now.After(tk.Expires) {
+		var refreshTokenDb *models.RefreshToken = nil
+		for _, r := range refreshTokens {
+			if r.Token == refreshToken {
+				refreshTokenDb = &r
+				break
+			}
+		}
+
+		if refreshTokenDb == nil {
+			p := problems.Problem{
+				Type:          problems.HandlerProblem,
+				ServerMessage: "there have been no refresh tokens associated with the user",
+				ClientMessage: "Authentication failed.",
+				Status:        http.StatusUnauthorized,
+			}
+			p.Handle(w, r)
+			return
+		}
+
+		if refreshTokenDb.UserId != userId {
+			p := problems.Problem{
+				Type:          problems.JwtProblem,
+				ServerMessage: "refresh token doesn't belong to the user",
+				ClientMessage: "Your authentication medium doesn't belong to you.",
+				Status:        http.StatusUnauthorized,
+			}
+			p.Handle(w, r)
+			return
+		}
+
+		refExpFromCookie := int64(claimsRefresh["exp"].(float64))
+		if refExpFromCookie < now.Unix() || now.After(refreshTokenDb.Expires) {
+			// Either the expiration date inside the refresh_token cookie
+			// or the refresh_token database record has passed.
+
 			if db.DeleteRefreshTokenByToken(refreshToken).Handle(w, r) {
 				return
 			}
@@ -98,17 +146,6 @@ func Authenticate(next http.HandlerFunc) http.HandlerFunc {
 				Type:          problems.JwtProblem,
 				ServerMessage: "refresh token has expired",
 				ClientMessage: "Your authentication medium has expired.",
-				Status:        http.StatusUnauthorized,
-			}
-			p.Handle(w, r)
-			return
-		}
-
-		if tk.UserId != userId {
-			p := problems.Problem{
-				Type:          problems.JwtProblem,
-				ServerMessage: "refresh token doesn't belong to the user",
-				ClientMessage: "Your authentication medium doesn't belong to you.",
 				Status:        http.StatusUnauthorized,
 			}
 			p.Handle(w, r)

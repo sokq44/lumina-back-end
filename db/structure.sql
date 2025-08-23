@@ -8,8 +8,27 @@ CREATE TABLE
         username VARCHAR(50) NOT NULL,
         email VARCHAR(255) NOT NULL,
         image_url VARCHAR(255) NOT NULL,
+        bio VARCHAR(255) NOT NULL DEFAULT "",
+        favourites VARCHAR(255) NOT NULL DEFAULT "",
         password VARCHAR(64) NOT NULL,
         verified BOOLEAN NOT NULL DEFAULT FALSE
+    );
+
+CREATE TABLE
+    IF NOT EXISTS socials (
+        type INT PRIMARY KEY NOT NULL AUTO_INCREMENT,
+        name VARCHAR(64) NOT NULL
+    );
+
+CREATE TABLE
+    IF NOT EXISTS user_socials (
+        id VARCHAR(36) PRIMARY KEY NOT NULL DEFAULT (uuid ()),
+        user_id VARCHAR(36) NOT NULL,
+        social_type INT NOT NULL,
+        value VARCHAR(255) NOT NULL,
+        label VARCHAR(255) NOT NULL,
+        CONSTRAINT fk_users_user_socials FOREIGN KEY (user_id) REFERENCES users (id),
+        CONSTRAINT fk_socials_user_socials FOREIGN KEY (social_type) REFERENCES socials (type)
     );
 
 CREATE TABLE
@@ -29,7 +48,6 @@ CREATE TABLE
         expires DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
         user_id VARCHAR(36) NOT NULL,
         CONSTRAINT fk_users_refresh_tokens FOREIGN KEY (user_id) REFERENCES users (id),
-        CONSTRAINT refresh_tokens_unique_user_id UNIQUE (user_id)
     );
 
 CREATE TABLE

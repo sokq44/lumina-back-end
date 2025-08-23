@@ -61,12 +61,29 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userData := map[string]string{
-		"id":       user.Id,
-		"username": user.Username,
-		"email":    user.Email,
-		"image":    user.ImageUrl,
+	socials, p := db.GetSocialPlatformsByUserId(user.Id)
+	if p.Handle(w, r) {
+		return
 	}
+
+	userData := map[string]any{
+		"id":         user.Id,
+		"bio":        user.Bio,
+		"email":      user.Email,
+		"image":      user.ImageUrl,
+		"username":   user.Username,
+		"favourites": user.Favourites,
+		"socials":    []map[string]string{},
+	}
+	for _, social := range socials {
+		s := map[string]string{
+			"type":  models.SocialPlatformGetName(social.Type),
+			"label": social.Label,
+			"value": social.Value,
+		}
+		userData["socials"] = append(userData["socials"].([]map[string]string), s)
+	}
+
 	if err := json.NewEncoder(w).Encode(userData); err != nil {
 		p := problems.Problem{
 			Type:          problems.HandlerProblem,
@@ -81,9 +98,11 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 
 func ModifyUser(w http.ResponseWriter, r *http.Request) {
 	type RequestBody struct {
-		Username string `json:"username"`
-		Email    string `json:"email"`
-		ImageUrl string `json:"image"`
+		Username   string `json:"username"`
+		Email      string `json:"email"`
+		ImageUrl   string `json:"image"`
+		Bio        string `json:"bio"`
+		Favourites string `json:"favourites"`
 	}
 
 	var body RequestBody
@@ -104,12 +123,14 @@ func ModifyUser(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var newUser = models.User{
-		Id:       user.Id,
-		Username: body.Username,
-		Email:    body.Email,
-		ImageUrl: body.ImageUrl,
-		Password: user.Password,
-		Verified: user.Verified,
+		Id:         user.Id,
+		Username:   body.Username,
+		Email:      body.Email,
+		ImageUrl:   body.ImageUrl,
+		Password:   user.Password,
+		Verified:   user.Verified,
+		Bio:        body.Bio,
+		Favourites: body.Favourites,
 	}
 	if newUser.Validate(true).Handle(w, r) {
 		return
@@ -327,4 +348,70 @@ func ChangeEmail(w http.ResponseWriter, r *http.Request) {
 	}
 
 	db.DeleteEmailChangeById(emailChange.Id).Handle(w, r)
+}
+
+func AddSocial(w http.ResponseWriter, r *http.Request) {
+	type RequestBody struct {
+		Type  models.SocialType `json:"type"`
+		Value string            `json:"value"`
+		Label string            `json:"label"`
+	}
+
+	var body RequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		p := problems.Problem{
+			Type:          problems.HandlerProblem,
+			ServerMessage: fmt.Sprintf("error while decoding the request body: %v", err),
+			ClientMessage: "An unexpected error has occurred while processing your request.",
+			Status:        http.StatusBadRequest,
+		}
+		p.Handle(w, r)
+		return
+	}
+
+	user, p := GetUserFromRequest(r)
+	if p.Handle(w, r) {
+		return
+	}
+
+	social := models.UserSocialPlatform{
+		Type:   body.Type,
+		Value:  body.Value,
+		Label:  body.Label,
+		UserId: user.Id,
+	}
+	if db.UserAddSocial(social).Handle(w, r) {
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func RemoveSocial(w http.ResponseWriter, r *http.Request) {
+	type RequestBody struct {
+		Type models.SocialType `json:"type"`
+	}
+
+	var body RequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		p := problems.Problem{
+			Type:          problems.HandlerProblem,
+			ServerMessage: fmt.Sprintf("error while decoding the request body: %v", err),
+			ClientMessage: "An unexpected error has occurred while processing your request.",
+			Status:        http.StatusBadRequest,
+		}
+		p.Handle(w, r)
+		return
+	}
+
+	user, p := GetUserFromRequest(r)
+	if p.Handle(w, r) {
+		return
+	}
+
+	if db.UserRemoveSocial(user.Id, body.Type).Handle(w, r) {
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
 }

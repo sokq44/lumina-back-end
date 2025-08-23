@@ -13,8 +13,6 @@ import (
 	"net/http"
 )
 
-// TODO: handling multiple sessions from many devices
-
 var logo = `
 ██╗      ██╗   ██╗ ███╗   ███╗ ██╗ ███╗   ██╗  █████╗
 ██║      ██║   ██║ ████╗ ████║ ██║ ████╗  ██║ ██╔══██╗
@@ -49,5 +47,4 @@ func main() {
 	if err := http.ListenAndServe(fmt.Sprintf(":%s", port), nil); err != nil {
 		log.Fatal("Error while trying to start the server.", err)
 	}
-
 }

@@ -73,6 +73,8 @@ func InitHandlers(dev bool, port string) {
 	http.HandleFunc(UserPath+"/password/init", CORS(Method("POST", PasswordChangeInit)))
 	http.HandleFunc(UserPath+"/password/valid", CORS(Method("GET", PasswordChangeValid)))
 	http.HandleFunc(UserPath+"/password/change", CORS(Method("PATCH", ChangePassword)))
+	http.HandleFunc(UserPath+"/social/add", CORS(Auth(Method("PATCH", AddSocial))))
+	http.HandleFunc(UserPath+"/social/remove", CORS(Auth(Method("DELETE", RemoveSocial))))
 
 	/* Articles */
 	http.HandleFunc(ArticlesPath+"/get", CORS(Method("GET", GetArticle)))

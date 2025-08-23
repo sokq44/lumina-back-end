@@ -132,6 +132,7 @@ func (db *Database) GetArticlesByUserId(userId, phrase string, limit int) ([]mod
 
 	rows, err := db.Connection.Query(query, userId, "%"+phrase+"%", limit)
 	if errors.Is(err, sql.ErrNoRows) {
+		rows.Close()
 		return nil, &problems.Problem{
 			Type:          problems.DatabaseProblem,
 			ServerMessage: fmt.Sprintf("while getting articles by user id -> %v", err),
@@ -139,6 +140,7 @@ func (db *Database) GetArticlesByUserId(userId, phrase string, limit int) ([]mod
 			Status:        http.StatusNotFound,
 		}
 	} else if err != nil {
+		rows.Close()
 		return nil, &problems.Problem{
 			Type:          problems.DatabaseProblem,
 			ServerMessage: fmt.Sprintf("while getting articles by user id -> %v", err),
@@ -146,6 +148,7 @@ func (db *Database) GetArticlesByUserId(userId, phrase string, limit int) ([]mod
 			Status:        http.StatusInternalServerError,
 		}
 	}
+	defer rows.Close()
 
 	articles := make([]models.Article, 0)
 	for rows.Next() {
@@ -184,6 +187,7 @@ func (db *Database) GetPublicArticles(phrase string, limit int) ([]models.Articl
 
 	rows, err := db.Connection.Query(query, "%"+phrase+"%", "%"+phrase+"%", limit)
 	if errors.Is(err, sql.ErrNoRows) {
+		rows.Close()
 		return nil, &problems.Problem{
 			Type:          problems.DatabaseProblem,
 			ServerMessage: fmt.Sprintf("error while retrieving all articles -> %v", err),
@@ -191,6 +195,7 @@ func (db *Database) GetPublicArticles(phrase string, limit int) ([]models.Articl
 			Status:        http.StatusNotFound,
 		}
 	} else if err != nil {
+		rows.Close()
 		return nil, &problems.Problem{
 			Type:          problems.DatabaseProblem,
 			ServerMessage: fmt.Sprintf("error while retrieving all articles -> %v", err),
@@ -198,6 +203,7 @@ func (db *Database) GetPublicArticles(phrase string, limit int) ([]models.Articl
 			Status:        http.StatusInternalServerError,
 		}
 	}
+	defer rows.Close()
 
 	articles := make([]models.Article, 0)
 	for rows.Next() {

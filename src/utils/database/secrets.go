@@ -5,7 +5,6 @@ import (
 	"backend/models"
 	"backend/utils/crypt"
 	"backend/utils/problems"
-	"database/sql"
 	"fmt"
 	"net/http"
 	"time"
@@ -37,8 +36,7 @@ func (db *Database) GenerateSecret() *problems.Problem {
 }
 
 func (db *Database) GetLatestSecrets() ([]models.Secret, *problems.Problem) {
-	secrets := make([]models.Secret, 2)
-
+	secrets := make([]models.Secret, 0)
 	rows, err := db.Connection.Query("SELECT id, secret, expires FROM secrets ORDER BY expires DESC LIMIT 2;")
 	if err != nil {
 		return nil, &problems.Problem{
@@ -48,12 +46,7 @@ func (db *Database) GetLatestSecrets() ([]models.Secret, *problems.Problem) {
 			Status:        http.StatusInternalServerError,
 		}
 	}
-	defer func(rows *sql.Rows) {
-		err := rows.Close()
-		if err != nil {
-			fmt.Println("while closing rows: ", err)
-		}
-	}(rows)
+	defer rows.Close()
 
 	for rows.Next() {
 		var secret models.Secret
@@ -90,14 +83,15 @@ func (db *Database) GetLatestSecrets() ([]models.Secret, *problems.Problem) {
 
 func (db *Database) GetExpiredSecrets() ([]models.Secret, *problems.Problem) {
 	rows, err := db.Connection.Query("SELECT * FROM secrets WHERE expires <= NOW();")
-
 	if err != nil {
+		rows.Close()
 		return nil, &problems.Problem{
 			Type:          problems.DatabaseProblem,
 			ServerMessage: fmt.Sprintf("error while trying to retrieve expired jwt secrets: %v", err),
 			Status:        http.StatusInternalServerError,
 		}
 	}
+	defer rows.Close()
 
 	var expired []models.Secret
 	for rows.Next() {

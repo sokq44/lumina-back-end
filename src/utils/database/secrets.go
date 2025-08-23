@@ -39,7 +39,6 @@ func (db *Database) GetLatestSecrets() ([]models.Secret, *problems.Problem) {
 	secrets := make([]models.Secret, 0)
 	rows, err := db.Connection.Query("SELECT id, secret, expires FROM secrets ORDER BY expires DESC LIMIT 2;")
 	if err != nil {
-		rows.Close()
 		return nil, &problems.Problem{
 			Type:          problems.DatabaseProblem,
 			ServerMessage: fmt.Sprintf("while getting the latest jwt secret: %v", err),

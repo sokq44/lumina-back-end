@@ -39,7 +39,7 @@ func Authenticate(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		if accessToken == "" || refreshToken == "" {
+		if refreshToken == "" {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
 		}

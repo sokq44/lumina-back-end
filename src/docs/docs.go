@@ -63,7 +63,6 @@ func CreateOpenAPISpec() *openapi3.T {
 			},
 		},
 	})
-	//
 	responses.Set("401", &openapi3.ResponseRef{
 		Value: &openapi3.Response{
 			Description: NewStringPtr("User is not logged in."),

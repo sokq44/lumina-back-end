@@ -43,13 +43,24 @@ func (db *Database) GetRefreshTokensByUserId(userId string) ([]models.RefreshTok
 			Status:        http.StatusInternalServerError,
 		}
 	}
+	defer rows.Close()
 
+	// collect all refresh tokens
 	refreshTokens := make([]models.RefreshToken, 0)
 	for rows.Next() {
 		var raw string
 		var r models.RefreshToken
 
-		rows.Scan(&r.Id, &r.Token, &raw, &r.UserId)
+		// handle scan errors
+		if err := rows.Scan(&r.Id, &r.Token, &raw, &r.UserId); err != nil {
+			return nil, &problems.Problem{
+				Type:          problems.DatabaseProblem,
+				ServerMessage: fmt.Sprintf("error scanning refresh token row: %v", err),
+				ClientMessage: "An error occurred while processing your request.",
+				Status:        http.StatusInternalServerError,
+			}
+		}
+
 		t, p := parseTime(raw)
 		if p != nil {
 			return nil, p
@@ -57,6 +68,16 @@ func (db *Database) GetRefreshTokensByUserId(userId string) ([]models.RefreshTok
 
 		r.Expires = t
 		refreshTokens = append(refreshTokens, r)
+	}
+
+	// catch any error encountered during iteration
+	if err := rows.Err(); err != nil {
+		return nil, &problems.Problem{
+			Type:          problems.DatabaseProblem,
+			ServerMessage: fmt.Sprintf("error iterating refresh token rows: %v", err),
+			ClientMessage: "An error occurred while processing your request.",
+			Status:        http.StatusInternalServerError,
+		}
 	}
 
 	return refreshTokens, nil

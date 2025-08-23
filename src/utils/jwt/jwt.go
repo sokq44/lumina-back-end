@@ -178,7 +178,7 @@ func GetRefAccFromRequest(r *http.Request) (string, string, *problems.Problem) {
 	refresh, err := r.Cookie("refresh_token")
 	if errors.Is(err, http.ErrNoCookie) {
 		return "", "", nil
-	} else if err != nil {
+	} else if err != nil && !errors.Is(err, http.ErrNoCookie) {
 		return "", "", &problems.Problem{
 			Type:          problems.JwtProblem,
 			ServerMessage: fmt.Sprintf("while trying to retrieve the refresh_token cookie -> %v", err),

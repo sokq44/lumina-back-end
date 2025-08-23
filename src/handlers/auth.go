@@ -139,22 +139,11 @@ func Login(w http.ResponseWriter, r *http.Request) {
 
 	if (refFromReq == "" && refCookieProblem == nil) || (refreshTokens == nil && refDbProblem == nil) {
 		hashedPasswd := crypt.Sha256(body.Password)
-		if hashedPasswd != user.Password {
+		if hashedPasswd != user.Password || !user.Verified {
 			p := problems.Problem{
 				Type:          problems.HandlerProblem,
 				ServerMessage: "provided password is incorrect or the user isn't verified:",
-				ClientMessage: "Provided password is wrong or the specified user isn't verified.",
-				Status:        http.StatusUnauthorized,
-			}
-			p.Handle(w, r)
-			return
-		}
-
-		if !user.Verified {
-			p := problems.Problem{
-				Type:          problems.HandlerProblem,
-				ServerMessage: "Provided user hasn't been verified yet.",
-				ClientMessage: "Provided user hasn't been verified yet.",
+				ClientMessage: "Invalid email or password",
 				Status:        http.StatusUnauthorized,
 			}
 			p.Handle(w, r)

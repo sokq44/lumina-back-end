@@ -13,13 +13,6 @@ import (
 	"net/http"
 )
 
-// TODO: handling multiple sessions from many devices
-
-/* CHANGES:
-- Updated the user/get endpoint so that it provides bio, favourites and socials
-- Added a new feature (multisession)
-*/
-
 var logo = `
 ██╗      ██╗   ██╗ ███╗   ███╗ ██╗ ███╗   ██╗  █████╗
 ██║      ██║   ██║ ████╗ ████║ ██║ ████╗  ██║ ██╔══██╗

@@ -339,9 +339,10 @@ func (db *Database) GetArticleRatingsByArticleId(id string) ([]int, *problems.Pr
 	return ratings, nil
 }
 
-func (db *Database) UpdateArticleRead(articleId, userId string) *problems.Problem {
+func (db *Database) UpdateArticleReads(articleId, userId string) *problems.Problem {
+	var dummy int
 	q := "SELECT 1 FROM articles_reads WHERE article_id=? AND user_id=?;"
-	err := db.Connection.QueryRow(q, articleId, userId).Err()
+	err := db.Connection.QueryRow(q, articleId, userId).Scan(&dummy)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return &problems.Problem{
 			Type:          problems.DatabaseProblem,
@@ -367,9 +368,10 @@ func (db *Database) UpdateArticleRead(articleId, userId string) *problems.Proble
 	return nil
 }
 
-func (db *Database) UpdateArticleRating(articleId, userId string, rating int) *problems.Problem {
+func (db *Database) UpdateArticleRatings(articleId, userId string, rating int) *problems.Problem {
+	var dummy int
 	q := "SELECT 1 FROM articles_ratings WHERE article_id=? AND user_id=?;"
-	err := db.Connection.QueryRow(q, articleId, userId).Err()
+	err := db.Connection.QueryRow(q, articleId, userId).Scan(&dummy)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return &problems.Problem{
 			Type:          problems.DatabaseProblem,
@@ -380,10 +382,11 @@ func (db *Database) UpdateArticleRating(articleId, userId string, rating int) *p
 	}
 
 	if errors.Is(err, sql.ErrNoRows) {
-		q = "INSERT INTO articles_reads (rating, article_id, user_id) VALUES (? , ?, ?);"
+		q = "INSERT INTO articles_ratings (rating, article_id, user_id) VALUES (? , ?, ?);"
 	} else {
-		q = "UPDATE articles_reads SET rating=? WHERE user_id=? AND article_id=?"
+		q = "UPDATE articles_ratings SET rating=? WHERE article_id=? AND user_id=?"
 	}
+
 	_, err = db.Connection.Exec(q, rating, articleId, userId)
 	if err != nil {
 		return &problems.Problem{

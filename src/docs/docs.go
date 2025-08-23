@@ -942,6 +942,105 @@ func CreateOpenAPISpec() *openapi3.T {
 		},
 	})
 
+	/* articles/read endpoint */
+	responses = openapi3.NewResponses()
+	responses.Set("204", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: NewStringPtr("Article read status updated successfully."),
+		},
+	})
+	responses.Set("400", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: NewStringPtr("Invalid request body."),
+		},
+	})
+	responses.Set("401", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: NewStringPtr("Unauthorized to update read status."),
+		},
+	})
+	responses.Set("500", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: NewStringPtr("Unexpected server error."),
+		},
+	})
+	paths.Set("/articles/read", &openapi3.PathItem{
+		Patch: &openapi3.Operation{
+			Summary: "Mark an article as read by the authenticated user.",
+			Tags:    []string{"Articles"},
+			RequestBody: &openapi3.RequestBodyRef{
+				Value: &openapi3.RequestBody{
+					Description: "ID of the article to mark as read.",
+					Required:    true,
+					Content: openapi3.Content{
+						"application/json": &openapi3.MediaType{
+							Schema: &openapi3.SchemaRef{
+								Value: &openapi3.Schema{
+									Type: ObjectType,
+									Properties: map[string]*openapi3.SchemaRef{
+										"article_id": {Value: &openapi3.Schema{Type: StringType}},
+									},
+									Required: []string{"article_id"},
+								},
+							},
+						},
+					},
+				},
+			},
+			Responses: responses,
+		},
+	})
+
+	/* articles/rate endpoint */
+	responses = openapi3.NewResponses()
+	responses.Set("204", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: NewStringPtr("Article rating updated successfully."),
+		},
+	})
+	responses.Set("400", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: NewStringPtr("Invalid request body or rating (rating must be <0; 5>)."),
+		},
+	})
+	responses.Set("401", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: NewStringPtr("Unauthorized to rate the article."),
+		},
+	})
+	responses.Set("500", &openapi3.ResponseRef{
+		Value: &openapi3.Response{
+			Description: NewStringPtr("Unexpected server error."),
+		},
+	})
+	paths.Set("/articles/rate", &openapi3.PathItem{
+		Patch: &openapi3.Operation{
+			Summary: "Rate an article as the authenticated user.",
+			Tags:    []string{"Articles"},
+			RequestBody: &openapi3.RequestBodyRef{
+				Value: &openapi3.RequestBody{
+					Description: "ID of the article and rating value.",
+					Required:    true,
+					Content: openapi3.Content{
+						"application/json": &openapi3.MediaType{
+							Schema: &openapi3.SchemaRef{
+								Value: &openapi3.Schema{
+									Type: ObjectType,
+									Properties: map[string]*openapi3.SchemaRef{
+										"article_id": {Value: &openapi3.Schema{Type: StringType}},
+										"rating":     {Value: &openapi3.Schema{Type: IntegerType, Format: "int32"}},
+									},
+									Required: []string{"article_id", "rating"},
+								},
+							},
+						},
+					},
+				},
+			},
+			Responses: responses,
+		},
+	})
+
 	/* assets/add endpoint */
 	responses = openapi3.NewResponses()
 	responses.Set("200", &openapi3.ResponseRef{

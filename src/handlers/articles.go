@@ -328,3 +328,73 @@ func DeleteArticle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
+
+func UpdateArticleReads(w http.ResponseWriter, r *http.Request) {
+	type RequestBody struct {
+		ArticleId string `json:"article_id"`
+	}
+
+	var body RequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		p := problems.Problem{
+			Type:          problems.HandlerProblem,
+			ServerMessage: fmt.Sprintf("while decoding the request body -> %v", err),
+			ClientMessage: "An error occurred while processing your request.",
+			Status:        http.StatusBadRequest,
+		}
+		p.Handle(w, r)
+		return
+	}
+
+	user, p := GetUserFromRequest(r)
+	if p.Handle(w, r) {
+		return
+	}
+
+	if db.UpdateArticleReads(body.ArticleId, user.Id).Handle(w, r) {
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}
+
+func UpdateArticleRatings(w http.ResponseWriter, r *http.Request) {
+	type RequestBody struct {
+		ArticleId string `json:"article_id"`
+		Rating    int    `json:"rating"`
+	}
+
+	var body RequestBody
+	if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+		p := problems.Problem{
+			Type:          problems.HandlerProblem,
+			ServerMessage: "Wrong rating was provided (< 0 or > 5)",
+			ClientMessage: "Please provide a rating between 1 and 5. Ratings outside this range are not accepted.",
+			Status:        http.StatusBadRequest,
+		}
+		p.Handle(w, r)
+		return
+	}
+
+	if body.Rating < 0 || body.Rating > 5 {
+		p := problems.Problem{
+			Type:          problems.HandlerProblem,
+			ServerMessage: "Wrong rating was provided (< 0 or > 5)",
+			ClientMessage: "Article may only be rated between 1 and 5.",
+			Status:        http.StatusBadRequest,
+		}
+		p.Handle(w, r)
+		return
+	}
+
+	user, p := GetUserFromRequest(r)
+	if p.Handle(w, r) {
+		return
+	}
+
+	if db.UpdateArticleRatings(body.ArticleId, user.Id, body.Rating).Handle(w, r) {
+		return
+	}
+
+	w.WriteHeader(http.StatusNoContent)
+}

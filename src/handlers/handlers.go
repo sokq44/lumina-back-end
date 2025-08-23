@@ -82,6 +82,8 @@ func InitHandlers(dev bool, port string) {
 	http.HandleFunc(ArticlesPath+"/all", CORS(Method("GET", Auth(GetArticles))))
 	http.HandleFunc(ArticlesPath+"/delete", CORS(Method("DELETE", Auth(DeleteArticle))))
 	http.HandleFunc(ArticlesPath+"/suggested", CORS(Method("GET", Auth(GetSuggestedArticles))))
+	http.HandleFunc(ArticlesPath+"/read", CORS(Method("PATCH", Auth(UpdateArticleReads))))
+	http.HandleFunc(ArticlesPath+"/rate", CORS(Method("PATCH", Auth(UpdateArticleRatings))))
 
 	/* Assets */
 	http.HandleFunc(AssetsPath+"/add", CORS(Method("POST", Auth(AddAsset))))

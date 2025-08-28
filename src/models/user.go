@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"regexp"
 	"strings"
+	"time"
 )
 
 type User struct {
@@ -16,6 +17,7 @@ type User struct {
 	Bio        string
 	Favourites string
 	Verified   bool
+	CreatedAt  time.Time
 }
 
 func (user *User) Validate(passHashed bool) *problems.Problem {

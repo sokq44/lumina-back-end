@@ -8,6 +8,7 @@ import (
 	"backend/utils/emails"
 	"backend/utils/jwt"
 	"backend/utils/problems"
+	"errors"
 	"fmt"
 	"net/http"
 )
@@ -16,6 +17,7 @@ const (
 	AuthPath        = "/auth"
 	UserPath        = "/user"
 	AssetsPath      = "/assets"
+	ProfilePath     = "/profile"
 	ArticlesPath    = "/articles"
 	CommentsPath    = "/comments"
 	DiscussionsPath = "/discussions"
@@ -34,7 +36,9 @@ func EmptyHandler(http.ResponseWriter, *http.Request) {}
 
 func GetUserFromRequest(r *http.Request) (*models.User, *problems.Problem) {
 	access, err := r.Cookie("access_token")
-	if err != nil {
+	if errors.Is(err, http.ErrNoCookie) {
+		return nil, nil
+	} else if err != nil && !errors.Is(err, http.ErrNoCookie) {
 		return nil, &problems.Problem{
 			Type:          problems.HandlerProblem,
 			ServerMessage: fmt.Sprintf("error while retrieving the access_token cookie: %v", err),
@@ -70,6 +74,8 @@ func InitHandlers(dev bool, port string) {
 	http.HandleFunc(UserPath+"/email/init", CORS(Auth(Method("POST", EmailChangeInit))))
 	http.HandleFunc(UserPath+"/email/verify", CORS(Method("PATCH", VerifyEmail)))
 	http.HandleFunc(UserPath+"/email/change", CORS(Auth(Method("PATCH", ChangeEmail))))
+	http.HandleFunc(UserPath+"/profile/get", CORS(Method("GET", GetProfile)))
+	http.HandleFunc(UserPath+"/profile/update", CORS(Auth(Method("PATCH", UpdateProfile))))
 	http.HandleFunc(UserPath+"/password/init", CORS(Method("POST", PasswordChangeInit)))
 	http.HandleFunc(UserPath+"/password/valid", CORS(Method("GET", PasswordChangeValid)))
 	http.HandleFunc(UserPath+"/password/change", CORS(Method("PATCH", ChangePassword)))

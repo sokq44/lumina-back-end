@@ -8,12 +8,12 @@ import (
 type SocialType uint8
 
 const (
-	UnknownST   SocialType = 0
 	GithubST    SocialType = 1
 	TwitterST   SocialType = 2
 	FacebookST  SocialType = 3
 	LinkedInST  SocialType = 4
 	InstagramST SocialType = 5
+	UnknownST   SocialType = 6
 )
 
 type UserSocialPlatform struct {

@@ -64,7 +64,7 @@ func (db *Database) GetCommentById(id string) (*models.Comment, *problems.Proble
 }
 
 func (db *Database) GetCommentsByArticleId(id string) ([]models.Comment, *problems.Problem) {
-	rows, err := db.Connection.Query(`
+	q := `
 	SELECT
 		comments.id,
 		comments.user_id,
@@ -75,7 +75,9 @@ func (db *Database) GetCommentsByArticleId(id string) ([]models.Comment, *proble
 		comments
 		JOIN articles_comments ON comments.id = articles_comments.comment_id
 	WHERE
-		articles_comments.article_id LIKE ? ORDER BY created_at DESC;`, id)
+		articles_comments.article_id LIKE ? ORDER BY created_at DESC;`
+
+	rows, err := db.Connection.Query(q, id)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, &problems.Problem{
 			Type:          problems.DatabaseProblem,
@@ -125,6 +127,32 @@ func (db *Database) GetCommentsByArticleId(id string) ([]models.Comment, *proble
 	}
 
 	return comments, nil
+}
+
+func (db *Database) GetCommentsCountByArticleId(articleId string) (int, *problems.Problem) {
+	q := `
+	SELECT
+		COUNT(*)
+	FROM
+		comments
+		JOIN articles_comments ON comments.id = articles_comments.comment_id
+	WHERE
+		articles_comments.article_id LIKE ?;`
+
+	var count int
+	err := db.Connection.QueryRow(q, articleId).Scan(&count)
+	if errors.Is(err, sql.ErrNoRows) {
+		return 0, nil
+	} else if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return -1, &problems.Problem{
+			Type:          problems.DatabaseProblem,
+			ServerMessage: fmt.Sprintf("while trying to retrieve the count of comments of an article -> %v", err),
+			ClientMessage: "An error occurred while processing your request",
+			Status:        http.StatusInternalServerError,
+		}
+	}
+
+	return count, nil
 }
 
 func (db *Database) UpdateComment(c models.Comment) *problems.Problem {

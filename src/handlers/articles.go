@@ -16,6 +16,7 @@ func SaveArticle(w http.ResponseWriter, r *http.Request) {
 		Id        string `json:"id"`
 		Title     string `json:"title"`
 		Content   string `json:"content"`
+		TLDR      string `json:"tldr"`
 		BannerUrl string `json:"banner"`
 		Public    bool   `json:"public"`
 	}
@@ -38,27 +39,22 @@ func SaveArticle(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var id string
+	article := &models.Article{
+		Title:   body.Title,
+		Public:  body.Public,
+		Content: body.Content,
+		TLDR:    body.TLDR,
+		UserId:  user.Id,
+	}
 	if body.Id == "" {
-		article := &models.Article{
-			Title:     body.Title,
-			Public:    body.Public,
-			Content:   body.Content,
-			BannerUrl: config.Host + "/images/default-banner.png",
-			UserId:    user.Id,
-		}
+		article.BannerUrl = config.Host + "/images/default-banner.png"
 		id, p = db.CreateArticle(article)
 		if p.Handle(w, r) {
 			return
 		}
 	} else {
-		article := &models.Article{
-			Id:        body.Id,
-			Title:     body.Title,
-			Public:    body.Public,
-			Content:   body.Content,
-			BannerUrl: body.BannerUrl,
-			UserId:    user.Id,
-		}
+		article.Id = body.Id
+		article.BannerUrl = body.BannerUrl
 		if db.UpdateArticle(article).Handle(w, r) {
 			return
 		}
@@ -91,8 +87,10 @@ func GetArticles(w http.ResponseWriter, r *http.Request) {
 		Public    bool      `json:"public"`
 		BannerUrl string    `json:"banner"`
 		Content   string    `json:"content"`
+		TLDR      string    `json:"tldr"`
 		CreatedAt time.Time `json:"created_at"`
 		Reads     int       `json:"reads"`
+		Comments  int       `json:"comments"`
 		Ratings   []int     `json:"ratings"`
 	}
 
@@ -117,7 +115,7 @@ func GetArticles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	articles, p := db.GetArticlesByUserId(user.Id, q, limit)
+	articles, p := db.SearchArticlesByUserId(user.Id, q, limit)
 	if p.Handle(w, r) {
 		return
 	}
@@ -129,7 +127,7 @@ func GetArticles(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		ratings, p := db.GetArticleRatingsByArticleId(article.Id)
+		ratings, _, p := db.GetArticleRatingsByArticleId(article.Id)
 		if p.Handle(w, r) {
 			return
 		}
@@ -139,17 +137,24 @@ func GetArticles(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		count, p := db.GetCommentsCountByArticleId(article.Id)
+		if p.Handle(w, r) {
+			return
+		}
+
 		articlesResponse = append(articlesResponse, ResponseData{
 			Id:        article.Id,
 			Title:     article.Title,
 			Public:    article.Public,
 			Content:   article.Content,
+			TLDR:      article.TLDR,
 			BannerUrl: article.BannerUrl,
 			CreatedAt: article.CreatedAt,
 			User:      user.Username,
 			UserImage: user.ImageUrl,
 			Ratings:   ratings,
 			Reads:     reads,
+			Comments:  count,
 		})
 	}
 
@@ -168,6 +173,8 @@ func GetArticles(w http.ResponseWriter, r *http.Request) {
 func GetArticle(w http.ResponseWriter, r *http.Request) {
 	type ResponseData struct {
 		Reads     int       `json:"reads"`
+		Comments  int       `json:"comments"`
+		MyRating  int       `json:"my_rating"`
 		Ratings   []int     `json:"ratings"`
 		Id        string    `json:"id"`
 		User      string    `json:"user"`
@@ -175,12 +182,24 @@ func GetArticle(w http.ResponseWriter, r *http.Request) {
 		Title     string    `json:"title"`
 		BannerUrl string    `json:"banner"`
 		Content   string    `json:"content"`
+		TLDR      string    `json:"tldr"`
 		Public    bool      `json:"public"`
 		CreatedAt time.Time `json:"created_at"`
 	}
 
 	query := r.URL.Query()
 	id := query.Get("article")
+
+	sessionUser, p := GetUserFromRequest(r)
+	if p.Handle(w, r) {
+		return
+	}
+
+	if sessionUser != nil && p == nil {
+		if db.UpdateArticleReads(id, sessionUser.Id).Handle(w, r) {
+			return
+		}
+	}
 
 	article, p := db.GetArticleById(id)
 	if p.Handle(w, r) {
@@ -192,12 +211,26 @@ func GetArticle(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	ratings, p := db.GetArticleRatingsByArticleId(article.Id)
+	ratings, userIds, p := db.GetArticleRatingsByArticleId(article.Id)
 	if p.Handle(w, r) {
 		return
 	}
 
+	myRating := -1
+	if sessionUser != nil {
+		for i := 0; i < len(ratings); i++ {
+			if userIds[i] == sessionUser.Id {
+				myRating = ratings[i]
+			}
+		}
+	}
+
 	reads, p := db.GetArticleReadsByArticleId(article.Id)
+	if p.Handle(w, r) {
+		return
+	}
+
+	count, p := db.GetCommentsCountByArticleId(article.Id)
 	if p.Handle(w, r) {
 		return
 	}
@@ -209,10 +242,13 @@ func GetArticle(w http.ResponseWriter, r *http.Request) {
 		Content:   article.Content,
 		BannerUrl: article.BannerUrl,
 		CreatedAt: article.CreatedAt,
+		TLDR:      article.TLDR,
 		User:      user.Username,
 		UserImage: user.ImageUrl,
 		Ratings:   ratings,
 		Reads:     reads,
+		Comments:  count,
+		MyRating:  myRating,
 	}
 
 	if err := json.NewEncoder(w).Encode(response); err != nil {
@@ -235,8 +271,10 @@ func GetSuggestedArticles(w http.ResponseWriter, r *http.Request) {
 		Title     string    `json:"title"`
 		BannerUrl string    `json:"banner"`
 		Content   string    `json:"content"`
+		TLDR      string    `json:"tldr"`
 		CreatedAt time.Time `json:"created_at"`
 		Reads     int       `json:"reads"`
+		Comments  int       `json:"comments"`
 		Ratings   []int     `json:"ratings"`
 	}
 
@@ -256,7 +294,7 @@ func GetSuggestedArticles(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	articles, p := db.GetPublicArticles(q, limit)
+	articles, p := db.SearchPublicArticles(q, limit)
 	if p.Handle(w, r) {
 		return
 	}
@@ -268,7 +306,7 @@ func GetSuggestedArticles(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		ratings, p := db.GetArticleRatingsByArticleId(article.Id)
+		ratings, _, p := db.GetArticleRatingsByArticleId(article.Id)
 		if p.Handle(w, r) {
 			return
 		}
@@ -278,16 +316,23 @@ func GetSuggestedArticles(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
+		count, p := db.GetCommentsCountByArticleId(article.Id)
+		if p.Handle(w, r) {
+			return
+		}
+
 		response = append(response, ResponseData{
 			Id:        article.Id,
 			Title:     article.Title,
 			Content:   article.Content,
+			TLDR:      article.TLDR,
 			BannerUrl: article.BannerUrl,
 			CreatedAt: article.CreatedAt,
 			User:      user.Username,
 			UserImage: user.ImageUrl,
 			Ratings:   ratings,
 			Reads:     reads,
+			Comments:  count,
 		})
 	}
 

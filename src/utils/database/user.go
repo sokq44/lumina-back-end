@@ -92,6 +92,38 @@ func (db *Database) GetUserById(id string) (*models.User, *problems.Problem) {
 	return user, nil
 }
 
+func (db *Database) GetUserByUsername(id string) (*models.User, *problems.Problem) {
+	var rawT string
+	u := &models.User{Id: id}
+	q := "SELECT username, email, image_url, password, verified, bio, favourites, created_at FROM users WHERE username=?;"
+	row := db.Connection.QueryRow(q, id)
+	err := row.Scan(&u.Username, &u.Email, &u.ImageUrl, &u.Password, &u.Verified, &u.Bio, &u.Favourites, &rawT)
+
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, &problems.Problem{
+			Type:          problems.DatabaseProblem,
+			ServerMessage: fmt.Sprintf("error while getting a user by id: %v", err),
+			ClientMessage: "Error while trying to get user's data.",
+			Status:        http.StatusNotFound,
+		}
+	} else if err != nil {
+		return nil, &problems.Problem{
+			Type:          problems.DatabaseProblem,
+			ServerMessage: fmt.Sprintf("error while getting a user by id: %v", err),
+			ClientMessage: "An error occurred while processing your request.",
+			Status:        http.StatusInternalServerError,
+		}
+	}
+
+	t, p := parseTime(rawT)
+	if p != nil {
+		return nil, p
+	}
+	u.CreatedAt = t
+
+	return u, nil
+}
+
 func (db *Database) GetUserByEmail(email string) (*models.User, *problems.Problem) {
 	user := &models.User{Email: email}
 

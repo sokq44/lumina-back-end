@@ -61,11 +61,6 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	socials, p := db.GetSocialPlatformsByUserId(user.Id)
-	if p.Handle(w, r) {
-		return
-	}
-
 	userData := map[string]any{
 		"id":         user.Id,
 		"bio":        user.Bio,
@@ -73,15 +68,6 @@ func GetUser(w http.ResponseWriter, r *http.Request) {
 		"image":      user.ImageUrl,
 		"username":   user.Username,
 		"favourites": user.Favourites,
-		"socials":    []map[string]string{},
-	}
-	for _, social := range socials {
-		s := map[string]string{
-			"type":  models.SocialPlatformGetName(social.Type),
-			"label": social.Label,
-			"value": social.Value,
-		}
-		userData["socials"] = append(userData["socials"].([]map[string]string), s)
 	}
 
 	if err := json.NewEncoder(w).Encode(userData); err != nil {
